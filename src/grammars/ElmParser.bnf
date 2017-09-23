@@ -13,6 +13,7 @@
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
+    // declare tokens used by manual/external parse rules
     tokens = [
         CASE_OF='CASE_OF'
         LET='LET'

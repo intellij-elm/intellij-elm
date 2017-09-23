@@ -1,9 +1,9 @@
 <idea-plugin version="2">
-    <id>com.klazuka.eplug</id>
-    <name>Keith Elm Plugin</name>
+    <id>org.elm.plugin</id>
+    <name>Elm Plugin</name>
     <version>1.0</version>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">
-        YourCompany
+    <vendor email="klazuka@gmail.com" url="https://github.com/klazuka">
+        Keith Lazuka
     </vendor>
 
     <description><![CDATA[
@@ -25,8 +25,8 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
-        <lang.parserDefinition language="Elm"
-                               implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
+        <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
+        <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
     </extensions>
 
     <actions>

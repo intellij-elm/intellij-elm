@@ -5,15 +5,14 @@ import com.intellij.psi.FileViewProvider
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 
-class ElmFile(viewProvider: FileViewProvider
-) : PsiFileBase(viewProvider, ElmLanguage) {
+class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage) {
 
-    override fun getFileType()
-            = ElmFileType
+    override fun getFileType()=
+            ElmFileType
 
-    override fun toString()
-            = "Elm File"
+    override fun toString() =
+            "Elm File"
 
-    override fun getIcon(flags: Int)
-            = super.getIcon(flags)
+    override fun getIcon(flags: Int) =
+            super.getIcon(flags)
 }

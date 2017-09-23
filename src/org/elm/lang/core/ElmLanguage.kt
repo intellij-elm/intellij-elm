@@ -18,17 +18,17 @@ class ElmIcons {
 
 
 object ElmFileType : LanguageFileType(ElmLanguage) {
-    override fun getIcon()
-            = ElmIcons.file
+    override fun getIcon() =
+            ElmIcons.file
 
-    override fun getName()
-            = "Elm file"
+    override fun getName() =
+            "Elm file"
 
-    override fun getDefaultExtension()
-            = "elm"
+    override fun getDefaultExtension() =
+            "elm"
 
-    override fun getDescription()
-            = "Elm language file"
+    override fun getDescription() =
+            "Elm language file"
 }
 
 
