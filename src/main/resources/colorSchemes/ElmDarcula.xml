@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list>
+    <option name="org.elm.TYPE_ANNOTATION_SIGNATURE_TYPES">
+        <value>
+            <option name="FOREGROUND" value="#68B3C1"/>
+            <option name="FONT_TYPE" value="1"/>
+        </value>
+    </option>
+    <option name="org.elm.TYPE">
+        <value>
+            <option name="FOREGROUND" value="#96c876"/>
+        </value>
+    </option>
+
+    <option name="org.elm.ARROW">
+        <value>
+            <option name="FOREGROUND" value="#bd6a81"/>
+        </value>
+    </option>
+    <option name="org.elm.OPERATOR">
+        <value>
+            <option name="FOREGROUND" value="#bd6a81"/>
+        </value>
+    </option>
+
+    <!--
+        Elm standard style does a lot of grouping and
+        left-alignment of lines using punctuation. So
+        we set these punctuation elements to the same color
+        so that it reads nicely as a single column.
+    -->
+    <option name="org.elm.PARENTHESIS">
+        <value>
+            <option name="FOREGROUND" value="#67a5c7"/>
+        </value>
+    </option>
+    <option name="org.elm.BRACES">
+        <value>
+            <option name="FOREGROUND" value="#67a5c7"/>
+        </value>
+    </option>
+    <option name="org.elm.BRACKETS">
+        <value>
+            <option name="FOREGROUND" value="#67a5c7"/>
+        </value>
+    </option>
+    <option name="org.elm.COMMA">
+        <value>
+            <option name="FOREGROUND" value="#67a5c7"/>
+        </value>
+    </option>
+    <option name="org.elm.PIPE">
+        <value>
+            <option name="FOREGROUND" value="#67a5c7"/>
+        </value>
+    </option>
+    <option name="org.elm.EQ">
+        <value>
+            <option name="FOREGROUND" value="#67a5c7"/>
+        </value>
+    </option>
+</list>

@@ -19,3 +19,30 @@ val ELM_COMMENTS = tokenSetOf(
         END_COMMENT,
         COMMENT_CONTENT
 )
+
+val ELM_KEYWORDS = tokenSetOf(
+        WHERE,
+        MODULE,
+        IMPORT,
+        AS,
+        EXPOSING,
+        IF,
+        THEN,
+        ELSE,
+        CASE,
+        OF,
+        LET,
+        IN,
+        TYPE,
+        ALIAS,
+        PORT,
+        INFIXL,
+        INFIX,
+        INFIXR,
+        RESERVED
+)
+
+val ELM_OPERATORS = tokenSetOf(
+        OPERATOR,
+        LIST_CONSTRUCTOR
+)
