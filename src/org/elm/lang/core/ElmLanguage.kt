@@ -4,17 +4,10 @@ import com.intellij.lang.Language
 import com.intellij.openapi.fileTypes.FileTypeConsumer
 import com.intellij.openapi.fileTypes.FileTypeFactory
 import com.intellij.openapi.fileTypes.LanguageFileType
-import com.intellij.openapi.util.IconLoader
+import org.elm.ide.icons.ElmIcons
 
 
 object ElmLanguage : Language("Elm")
-
-
-class ElmIcons {
-    companion object {
-        val file = IconLoader.getIcon("/org/elm/ide/icons/jar-gray.png")
-    }
-}
 
 
 object ElmFileType : LanguageFileType(ElmLanguage) {
