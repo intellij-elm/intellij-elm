@@ -45,7 +45,7 @@ private blank ::=
     | FRESH_LINE
     | comment
 
-module_declaration ::= [ effect | PORT ] MODULE upper_case_path [ WHERE record ] EXPOSING exposed_values { methods = [getModuleName isExposingAll getReferencesStream] }
+module_declaration ::= [ effect | PORT ] MODULE upper_case_path [ WHERE record ] EXPOSING exposed_values
 
 private exposed_values ::= LEFT_PARENTHESIS (DOUBLE_DOT | list_of_values) RIGHT_PARENTHESIS
 

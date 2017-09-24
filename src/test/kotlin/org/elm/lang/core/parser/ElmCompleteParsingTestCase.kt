@@ -11,9 +11,13 @@ import com.intellij.psi.PsiFile
 
 class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
 
+    fun testCaseOf() = doTest(true)
     fun testComments() = doTest(true)
     fun testImports() = doTest(true)
+    fun testFieldAccessor() = doTest(true)
+    fun testLetIn() = doTest(true)
     fun testLiterals() = doTest(true)
+    fun testModulesEffect() = doTest(true)
     fun testModulesExposingAll() = doTest(true)
     fun testModulesExposingSome() = doTest(true)
     fun testModulesQualifiedName() = doTest(true)
