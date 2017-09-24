@@ -11,6 +11,9 @@ object ElmLanguage : Language("Elm")
 
 
 object ElmFileType : LanguageFileType(ElmLanguage) {
+
+    val EXTENSION = "elm"
+
     override fun getIcon() =
             ElmIcons.file
 
@@ -18,7 +21,7 @@ object ElmFileType : LanguageFileType(ElmLanguage) {
             "Elm file"
 
     override fun getDefaultExtension() =
-            "elm"
+            EXTENSION
 
     override fun getDescription() =
             "Elm language file"
@@ -27,6 +30,6 @@ object ElmFileType : LanguageFileType(ElmLanguage) {
 
 class ElmFileTypeFactory : FileTypeFactory() {
     override fun createFileTypes(consumer: FileTypeConsumer) {
-        consumer.consume(ElmFileType, "elm")
+        consumer.consume(ElmFileType, ElmFileType.EXTENSION)
     }
 }
