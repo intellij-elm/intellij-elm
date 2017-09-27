@@ -24,14 +24,16 @@ class CaseOfParser(private val header: Parser,
         var result: Boolean
         val marker = enter_section_(builder)
         result = this.header.parse(builder, level + 1)
-        // TODO [kl] cleanup (ported from Java)
+
         result = result && IndentationTokenTypeRemapper.use({ reMapper, resultInner ->
-            this@CaseOfParser.indentation = IndentationHelper.getIndentationOfPreviousToken(builder)
-            reMapper.pushIndentation(this@CaseOfParser.indentation)
+            indentation = IndentationHelper.getIndentationOfPreviousToken(builder)
+            reMapper.pushIndentation(indentation)
             builder.setTokenTypeRemapper(reMapper)
-            return@use (resultInner && this@CaseOfParser.branch.parse(builder, level + 1)
-                               && this@CaseOfParser.separatedBranches(builder, level + 1))
+            return@use (resultInner
+                    && branch.parse(builder, level + 1)
+                    && separatedBranches(builder, level + 1))
         }, result)
+
         exit_section_(builder, marker, CASE_OF, result)
         return result
     }

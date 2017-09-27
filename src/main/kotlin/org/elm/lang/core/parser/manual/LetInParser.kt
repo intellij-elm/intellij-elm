@@ -24,17 +24,19 @@ class LetInParser(val innerValueDeclaration: Parser,
         var result: Boolean
         val marker = enter_section_(builder)
         result = consumeToken(builder, LET)
-        // TODO [kl] cleanup (ported from Java)
+
         result = result && IndentationTokenTypeRemapper.use({reMapper, resultInner ->
             builder.setTokenTypeRemapper(reMapper)
             if (resultInner) {
                 val indentationValue = IndentationHelper.getIndentationOfPreviousToken(builder)
                 reMapper.pushIndentation(indentationValue)
             }
-            return@use (resultInner && this@LetInParser.innerValueDeclaration.parse(builder, level + 1)
-                                    && this@LetInParser.otherValueDeclarations.parse(builder, level + 1)
-                                    && consumeToken(builder, IN))
+            return@use (resultInner
+                    && this@LetInParser.innerValueDeclaration.parse(builder, level + 1)
+                    && this@LetInParser.otherValueDeclarations.parse(builder, level + 1)
+                    && consumeToken(builder, IN))
         }, result)
+
         result = result && this.expression.parse(builder, level + 1)
         exit_section_(builder, marker, LET_IN, result)
         return result
