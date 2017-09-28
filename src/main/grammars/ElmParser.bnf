@@ -111,7 +111,10 @@ tuple_type ::=
     | LEFT_PARENTHESIS type_definition (COMMA type_definition)+ RIGHT_PARENTHESIS
 
 type_declaration ::=
-    TYPE upper_case_id (lower_case_id)* EQ union_member (PIPE union_member)*
+    TYPE upper_case_id (lower_case_id)* EQ union_member (PIPE union_member)* {
+        implements = ["org.elm.lang.core.psi.ext.ElmNameIdentifierOwner"]
+        extends = "org.elm.lang.core.psi.ext.ElmNamedElementImpl"
+    }
 union_member ::=
     upper_case_id single_type_definition*
 
