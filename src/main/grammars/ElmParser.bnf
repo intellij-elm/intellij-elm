@@ -13,19 +13,27 @@
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
-    // declare tokens used by manual/external parse rules
     tokens = [
-        CASE_OF='CASE_OF'
-        LET='LET'
-        IN='IN'
-        LET_IN='LET_IN'
-        RESERVED='RESERVED'
+        // tokens used by manual/external parse rules
         UPPER_CASE_PATH='UPPER_CASE_PATH'
         LOWER_CASE_PATH='LOWER_CASE_PATH'
         MIXED_CASE_PATH='MIXED_CASE_PATH'
         FIELD_ACCESS='FIELD_ACCESS'
         DOT='DOT'
         EFFECT='EFFECT'
+
+        // tokens used by the lexer but not visible to PsiBuilder parser
+        // TODO [kl] cleanup the mess of 'comment' tokens
+        RESERVED='RESERVED'
+        COMMENT='COMMENT'
+        COMMENT_CONTENT='COMMENT_CONTENT'
+        LINE_COMMENT='LINE_COMMENT'
+        START_COMMENT='START_COMMENT'
+        START_DOC_COMMENT='START_DOC_COMMENT'
+        DOC_COMMENT='DOC_COMMENT'
+        END_COMMENT='END_COMMENT'
+        NEWLINE='NEWLINE'
+        TAB='TAB'
     ]
 }
 
@@ -33,17 +41,10 @@
 // https://github.com/JetBrains/Grammar-Kit
 // https://github.com/JetBrains/Grammar-Kit/blob/master/HOWTO.md
 
-elmFile ::= blank* [module_declaration] import_item* declaration_item*
-
-private declaration_item ::= (declaration|blank)
-
-private import_item ::= (import_clause|blank)
-
-private blank ::=
-    WHITE_SPACE
-    | INDENTATION
-    | FRESH_LINE
-    | comment
+elmFile ::= [module_declaration] body
+private body ::= import_clauses? top_declarations VIRTUAL_END_SECTION
+private import_clauses ::= import_clause [VIRTUAL_END_DECL import_clauses]
+private top_declarations ::= declaration [VIRTUAL_END_DECL top_declarations]
 
 module_declaration ::= [ effect | PORT ] MODULE upper_case_path [ WHERE record ] EXPOSING exposed_values
 
@@ -68,26 +69,21 @@ as_clause ::= AS upper_case_id
 
 exposing_clause ::= EXPOSING exposed_values
 
-comment ::=
-    LINE_COMMENT
-    | level_comment
-    | doc_comment
-
-level_comment ::= START_COMMENT COMMENT_CONTENT* END_COMMENT
-doc_comment ::= START_DOC_COMMENT COMMENT_CONTENT* END_COMMENT
-
 private declaration ::=
     value_declaration
     | type_alias_declaration
     | type_declaration
     | type_annotation
     | operator_config
+/* TODO [kl] re-enable after the big refactoring (see HaskForce BNF for ideas)
+  (previously the recovery relied on FRESH_LINE, which no longer exists)
 {
     pin = 1
     recoverWhile = declaration_recover
 }
+*/
 
-value_declaration ::= value_declaration_left EQ expression SEPARATION_BY_INDENTATION*
+value_declaration ::= value_declaration_left EQ expression
 
 type_alias_declaration ::=
     TYPE ALIAS upper_case_id (lower_case_id)* EQ type_definition
@@ -201,21 +197,16 @@ field ::=
 if_else ::=
     IF expression THEN expression ELSE expression
 
-external case_of ::=
-    parseCaseOf case_of_header case_of_branch one_or_more_separations
-case_of_header ::=
-    CASE expression OF
+
+case_of ::=
+    CASE expression OF <<non_empty_decls case_of_branch>> VIRTUAL_END_SECTION
 case_of_branch ::=
     pattern ARROW expression
 
-glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
-one_or_more_separations ::= SEPARATION_BY_INDENTATION+
+let_in ::=
+    LET <<non_empty_decls inner_declaration>> VIRTUAL_END_SECTION IN expression
 
-external let_in ::=
-    parseLetIn inner_declaration other_values_declarations expression
-private other_values_declarations ::=
-    (one_or_more_separations inner_declaration)* SEPARATION_BY_INDENTATION*
 private inner_declaration ::=
     inner_value_declaration
     | inner_type_annotation
@@ -223,6 +214,7 @@ inner_value_declaration ::=
     internal_value_declaration_left EQ expression
 inner_type_annotation ::=
     lower_case_id COLON type_definition
+
 
 // patterns:
 pattern ::=
@@ -257,9 +249,11 @@ private operator_config_keyword ::=
     | INFIX
     | INFIXR
 
-private declaration_recover ::= !(FRESH_LINE)
+glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
+
 
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
+private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL <<p>>)*
 
 lower_case_id ::= LOWER_CASE_IDENTIFIER
 

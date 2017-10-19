@@ -3,12 +3,16 @@ package org.elm.lang.core.parser
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
 import com.intellij.lang.ParserDefinition.SpaceRequirements.MAY
+import com.intellij.lang.PsiBuilder
+import com.intellij.lang.PsiParser
 import com.intellij.openapi.project.Project
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.TokenType
+import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 import org.elm.lang.core.ElmLanguage
+import org.elm.lang.core.lexer.ElmIncrementalLexer
 import org.elm.lang.core.lexer.ElmLexer
 import org.elm.lang.core.parser.manual.ElmManualPsiElementFactory
 import org.elm.lang.core.psi.ELM_COMMENTS
@@ -23,7 +27,7 @@ class ElmParserDefinition : ParserDefinition {
     }
 
     override fun createLexer(project: Project?) =
-            ElmLexer()
+            ElmLexer(ElmIncrementalLexer())
 
     override fun getWhitespaceTokens() =
             TokenSet.create(TokenType.WHITE_SPACE)
@@ -35,7 +39,18 @@ class ElmParserDefinition : ParserDefinition {
             TokenSet.create(ElmTypes.STRING_LITERAL)
 
     override fun createParser(project: Project?) =
-            ElmParser()
+            // TODO [kl] factor this out
+            object: PsiParser {
+                override fun parse(root: IElementType, builder: PsiBuilder): ASTNode {
+                    builder.setTokenTypeRemapper { source, _, _, _ ->
+                        if (source == ElmTypes.NEWLINE || source == ElmTypes.TAB)
+                            TokenType.WHITE_SPACE
+                        else
+                            source
+                    }
+                    return ElmParser().parse(root, builder)
+                }
+            }
 
     override fun getFileNodeType() =
             FILE

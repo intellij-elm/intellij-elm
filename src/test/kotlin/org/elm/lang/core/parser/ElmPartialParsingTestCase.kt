@@ -13,15 +13,15 @@ import com.intellij.psi.PsiFile
  * Tests parser recovery (`pin` and `recoverWhile` attributes from Elm parser BNF)
  * by constructing PSI trees from syntactically invalid files.
  */
-class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
-
-    // insert your test here
-
-    override fun checkResult(targetDataName: String?, file: PsiFile) {
-        check(hasError(file)) {
-            "Invalid file was parsed successfully: ${file.name}"
-        }
-        super.checkResult(targetDataName, file)
-    }
-
-}
+// TODO add tests
+//class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
+//
+//    // insert your test here
+//
+//    override fun checkResult(targetDataName: String?, file: PsiFile) {
+//        check(hasError(file)) {
+//            "Invalid file was parsed successfully: ${file.name}"
+//        }
+//        super.checkResult(targetDataName, file)
+//    }
+//}

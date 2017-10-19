@@ -12,24 +12,6 @@ import org.elm.lang.core.psi.ElmTypes
 class ElmParserUtil : GeneratedParserUtilBase() {
     companion object {
 
-        // case_of_header case_of_branch (case_of_one_or_more_separation case_of_branch)*
-        @JvmStatic fun parseCaseOf(builder: PsiBuilder, level: Int, header: Parser, branch: Parser, oneOrMoreSeparations: Parser): Boolean {
-            return CaseOfParser(
-                    header,
-                    branch,
-                    oneOrMoreSeparations
-            ).parse(builder, level)
-        }
-
-        // LET inner_value_declaration other_value_declarations IN expression
-        @JvmStatic fun parseLetIn(builder: PsiBuilder, level: Int, innerValueDeclaration: Parser, otherValueDeclarations: Parser, expression: Parser): Boolean {
-            return LetInParser(
-                    innerValueDeclaration,
-                    otherValueDeclarations,
-                    expression
-            ).parse(builder, level)
-        }
-
         @JvmStatic fun parseUpperCasePath(builder: PsiBuilder, level: Int, upperCaseId: Parser): Boolean {
             return PathParser(
                     ElmTypes.UPPER_CASE_PATH,

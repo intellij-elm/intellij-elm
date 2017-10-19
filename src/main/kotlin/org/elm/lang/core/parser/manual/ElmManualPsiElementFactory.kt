@@ -10,8 +10,6 @@ object ElmManualPsiElementFactory {
 
     fun createElement(node: ASTNode?) =
             when (node?.elementType) {
-                ElmTypes.CASE_OF ->         ElmCaseOfImpl(node)
-                ElmTypes.LET_IN ->          ElmLetInImpl(node)
                 ElmTypes.UPPER_CASE_PATH -> ElmUpperCasePathImpl(node)
                 ElmTypes.LOWER_CASE_PATH -> ElmLowerCasePathImpl(node)
                 ElmTypes.MIXED_CASE_PATH -> ElmMixedCasePathImpl(node)
