@@ -253,8 +253,11 @@ glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
-private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL <<p>>)*
-private meta decls ::= [<<p>> (VIRTUAL_END_DECL <<p>>)*]
+
+// TODO [kl] try fixing the lexer so that mutiple VIRTUAL_END_DECL are not emitted
+// when top-level comments are encountered
+private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL+ <<p>>)*
+private meta decls ::= [VIRTUAL_END_DECL* <<p>> (VIRTUAL_END_DECL+ <<p>>)*]
 
 lower_case_id ::= LOWER_CASE_IDENTIFIER
 
