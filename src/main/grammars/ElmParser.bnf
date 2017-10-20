@@ -42,9 +42,9 @@
 // https://github.com/JetBrains/Grammar-Kit/blob/master/HOWTO.md
 
 elmFile ::= [module_declaration] body
-private body ::= import_clauses? top_declarations VIRTUAL_END_SECTION
-private import_clauses ::= import_clause [VIRTUAL_END_DECL import_clauses]
-private top_declarations ::= declaration [VIRTUAL_END_DECL top_declarations]
+private body ::= import_clauses top_declarations VIRTUAL_END_SECTION?
+private import_clauses ::= <<decls import_clause>>
+private top_declarations ::= <<decls declaration>>
 
 module_declaration ::= [ effect | PORT ] MODULE upper_case_path [ WHERE record ] EXPOSING exposed_values
 
@@ -254,6 +254,7 @@ glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
 private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL <<p>>)*
+private meta decls ::= [<<p>> (VIRTUAL_END_DECL <<p>>)*]
 
 lower_case_id ::= LOWER_CASE_IDENTIFIER
 

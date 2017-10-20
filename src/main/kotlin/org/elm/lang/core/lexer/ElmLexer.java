@@ -32,7 +32,6 @@ public class ElmLexer extends LexerBase {
 
     private final static TokenSet CONTEXT_CREATING_KEYWORDS = TokenSet.create(LET, OF);
 
-    // TODO [kl] original author included comments in the whitespace, does that make sense for us?
     private final static TokenSet COMMENT_TOKENS = TokenSet.create(COMMENT, DOC_COMMENT, LINE_COMMENT);
     private final static TokenSet WHITE_SPACE_TOKENS = TokenSet.orSet(TokenSet.create(TokenType.WHITE_SPACE, TAB), COMMENT_TOKENS);
 
@@ -153,6 +152,7 @@ public class ElmLexer extends LexerBase {
 
         } else if (state == State.NORMAL) {
 
+            // TODO [kl] why did I have to add the null check on currentToken?
             if (beginOfLine && !WHITE_SPACE_TOKENS.contains(token.tokenType) && currentToken != null) {
 
                 int indent = getIndent(token);
@@ -251,12 +251,11 @@ public class ElmLexer extends LexerBase {
         int tokenStart = lexer.getTokenStart();
         int tokenEnd = lexer.getTokenEnd();
 
-        // TODO [kl] do I need to add my other 'comment' token types here?? use COMMENT_TOKENS??
-        if (tokenType == NEWLINE || tokenType == COMMENT) {
+        if (tokenType == NEWLINE) {
             firstColumnOffset = tokenEnd;
             additionalTabIndent = 0;
             beginOfLine = true;
-            return new Token(tokenType == NEWLINE ? TokenType.WHITE_SPACE : tokenType, tokenStart, tokenEnd);
+            return new Token(TokenType.WHITE_SPACE, tokenStart, tokenEnd);
         } else if (beginOfLine && tokenType == TAB) {
 
             // We have tabs at the beginning of line.
