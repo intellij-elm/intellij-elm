@@ -1,9 +1,9 @@
 Elm File
-  ElmModuleDeclarationImpl(MODULE_DECLARATION)
+  ElmModuleDeclaration(MODULE_DECLARATION)
     PsiElement(MODULE)('module')
     PsiWhiteSpace(' ')
-    ElmUpperCasePathImpl(UPPER_CASE_PATH)
-      ElmUpperCaseIdImpl(UPPER_CASE_ID)
+    ElmUpperCasePath(UPPER_CASE_PATH)
+      ElmUpperCaseId(UPPER_CASE_ID)
         PsiElement(UPPER_CASE_IDENTIFIER)('Foo')
     PsiWhiteSpace(' ')
     PsiElement(EXPOSING)('exposing')

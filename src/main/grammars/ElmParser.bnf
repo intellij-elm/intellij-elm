@@ -1,15 +1,9 @@
 {
-    parserClass="org.elm.lang.core.parser.ElmParser"
-    extends="org.elm.lang.core.psi.ElmPsiElement"
-
+    generate = [ psi = "no" ]
     psiClassPrefix="Elm"
-    psiImplClassSuffix="Impl"
-    psiPackage="org.elm.lang.core.psi.interfaces"
-    psiImplPackage="org.elm.lang.core.psi.impl"
-
-    parserUtilClass="org.elm.lang.core.parser.manual.ElmParserUtil"
-
+    parserClass="org.elm.lang.core.parser.ElmParser"
     elementTypeHolderClass="org.elm.lang.core.psi.ElmTypes"
+    parserUtilClass="org.elm.lang.core.parser.manual.ElmParserUtil"
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
@@ -63,7 +57,9 @@ exposed_union_constructors ::=
 private list_of_union_constructors ::=
     <<non_empty_list upper_case_id>>
 
-import_clause ::= IMPORT upper_case_path [AS upper_case_id] [EXPOSING exposed_values]
+import_clause ::= IMPORT upper_case_path [as_clause] [exposing_clause]
+as_clause ::= AS upper_case_id
+exposing_clause ::= EXPOSING exposed_values
 
 private declaration ::=
     value_declaration

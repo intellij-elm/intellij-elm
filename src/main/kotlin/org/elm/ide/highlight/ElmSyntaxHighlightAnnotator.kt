@@ -4,9 +4,10 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.interfaces.*
+
 
 import org.elm.ide.color.ElmColor
+import org.elm.lang.core.psi.elements.*
 
 
 class ElmSyntaxHighlightAnnotator : Annotator {

@@ -1,20 +1,18 @@
 package org.elm.lang.core.parser.manual
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElement
-import com.intellij.psi.tree.IElementType
-import org.elm.lang.core.psi.impl.*
 import org.elm.lang.core.psi.ElmTypes
+import org.elm.lang.core.psi.elements.*
 
 object ElmManualPsiElementFactory {
 
-    fun createElement(node: ASTNode?) =
-            when (node?.elementType) {
-                ElmTypes.UPPER_CASE_PATH -> ElmUpperCasePathImpl(node)
-                ElmTypes.LOWER_CASE_PATH -> ElmLowerCasePathImpl(node)
-                ElmTypes.MIXED_CASE_PATH -> ElmMixedCasePathImpl(node)
-                ElmTypes.FIELD_ACCESS ->    ElmFieldAccessImpl(node)
-                ElmTypes.EFFECT ->          ElmEffectImpl(node)
+    fun createElement(node: ASTNode) =
+            when (node.elementType) {
+                ElmTypes.UPPER_CASE_PATH -> ElmUpperCasePath(node)
+                ElmTypes.LOWER_CASE_PATH -> ElmLowerCasePath(node)
+                ElmTypes.MIXED_CASE_PATH -> ElmMixedCasePath(node)
+                ElmTypes.FIELD_ACCESS -> ElmFieldAccess(node)
+                ElmTypes.EFFECT -> ElmEffect(node)
                 else ->                     null
             }
 }

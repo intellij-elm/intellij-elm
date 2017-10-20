@@ -12,6 +12,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 %unicode
 %function advance
 %type IElementType
+// TODO [kl] get rid of this EOF thing and maybe that will fix the layout lexer null checks?
 %eof{  return;
 %eof}
 

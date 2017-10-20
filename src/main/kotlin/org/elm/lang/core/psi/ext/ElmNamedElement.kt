@@ -8,8 +8,8 @@ import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.interfaces.ElmLowerCaseId
-import org.elm.lang.core.psi.interfaces.ElmUpperCaseId
+import org.elm.lang.core.psi.elements.ElmLowerCaseId
+import org.elm.lang.core.psi.elements.ElmUpperCaseId
 
 
 interface ElmNamedElement : PsiNamedElement
