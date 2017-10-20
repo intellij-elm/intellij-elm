@@ -24,7 +24,7 @@ abstract class ElmParsingTestCaseBase(@NonNls dataPath: String)
     , ElmTestCase {
 
     override fun getTestDataPath() =
-            ElmTestCase.resourcesPath
+            ElmTestCase.testResourcesPath
 
     protected fun hasError(file: PsiFile): Boolean {
         var hasErrors = false
