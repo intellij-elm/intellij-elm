@@ -5,10 +5,11 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmVisitor
-import org.elm.lang.core.psi.ext.ElmNamedElementImpl
+import org.elm.lang.core.psi.ElmNameIdentifierOwner
+import org.elm.lang.core.psi.ElmNamedElementImpl
 
 
-class ElmTypeDeclaration(node: ASTNode) : ElmNamedElementImpl(node) {
+class ElmTypeDeclaration(node: ASTNode) : ElmNamedElementImpl(node), ElmNameIdentifierOwner {
 
     fun accept(visitor: ElmVisitor) {
         visitor.visitTypeDeclaration(this)

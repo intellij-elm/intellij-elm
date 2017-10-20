@@ -7,8 +7,6 @@ import com.intellij.psi.PsiFileFactory
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.ext.childOfType
-
 
 
 class ElmPsiFactory(private val project: Project)

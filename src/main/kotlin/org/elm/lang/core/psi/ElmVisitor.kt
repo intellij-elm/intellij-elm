@@ -3,7 +3,6 @@ package org.elm.lang.core.psi
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.ext.ElmNameIdentifierOwner
 
 class ElmVisitor : PsiElementVisitor() {
 
