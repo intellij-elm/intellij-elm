@@ -63,11 +63,7 @@ exposed_union_constructors ::=
 private list_of_union_constructors ::=
     <<non_empty_list upper_case_id>>
 
-import_clause ::= IMPORT upper_case_path [as_clause] [exposing_clause]
-
-as_clause ::= AS upper_case_id
-
-exposing_clause ::= EXPOSING exposed_values
+import_clause ::= IMPORT upper_case_path [AS upper_case_id] [EXPOSING exposed_values]
 
 private declaration ::=
     value_declaration
