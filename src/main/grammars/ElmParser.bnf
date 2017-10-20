@@ -19,12 +19,10 @@
         // tokens used by the lexer but not visible to PsiBuilder parser
         // TODO [kl] cleanup the mess of 'comment' tokens
         RESERVED='RESERVED'
-        COMMENT='COMMENT'
-        COMMENT_CONTENT='COMMENT_CONTENT'
         LINE_COMMENT='LINE_COMMENT'
         START_COMMENT='START_COMMENT'
         START_DOC_COMMENT='START_DOC_COMMENT'
-        DOC_COMMENT='DOC_COMMENT'
+        COMMENT_CONTENT='COMMENT_CONTENT'
         END_COMMENT='END_COMMENT'
         NEWLINE='NEWLINE'
         TAB='TAB'
@@ -246,11 +244,11 @@ glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
 
-// TODO [kl] try fixing the lexer so that mutiple VIRTUAL_END_DECL are not emitted
-// when top-level comments are encountered
-private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL+ <<p>>)*
-private meta decls ::= [VIRTUAL_END_DECL* <<p>> (VIRTUAL_END_DECL+ <<p>>)*]
+
+// TODO [kl] cleanup the duplication
+private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL <<p>>)*
+private meta decls ::= [VIRTUAL_END_DECL? <<p>> (VIRTUAL_END_DECL <<p>>)*]
+
 
 lower_case_id ::= LOWER_CASE_IDENTIFIER
-
 upper_case_id ::= UPPER_CASE_IDENTIFIER

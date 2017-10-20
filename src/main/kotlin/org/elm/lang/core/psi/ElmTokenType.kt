@@ -16,8 +16,8 @@ val ELM_COMMENTS = tokenSetOf(
         LINE_COMMENT,
         START_COMMENT,
         START_DOC_COMMENT,
-        END_COMMENT,
-        COMMENT_CONTENT
+        COMMENT_CONTENT,
+        END_COMMENT
 )
 
 val ELM_KEYWORDS = tokenSetOf(

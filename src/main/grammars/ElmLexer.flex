@@ -12,9 +12,6 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 %unicode
 %function advance
 %type IElementType
-// TODO [kl] get rid of this EOF thing and maybe that will fix the layout lexer null checks?
-%eof{  return;
-%eof}
 
 %{
     private int commentLevel = 0;
@@ -137,6 +134,7 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     {Operator}                  { return OPERATOR; }
     {WhiteSpace}                { return TokenType.WHITE_SPACE; }
     {Newline}                   { return NEWLINE; }
+    {Tab}                       { return TAB; }
 }
 
 . {
