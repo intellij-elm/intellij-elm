@@ -16,6 +16,9 @@ class GlobalScope(val project: Project) {
         fun implicitlyImportsModule(moduleDecl: ElmModuleDeclaration) =
                 moduleDecl.elmFile.isCore() && defaultImports.contains(moduleDecl.name)
 
+        /**
+         * Modules that the Elm compiler treats as being implicitly imported.
+         */
         val defaultImports = listOf(
                 "Basics",
                 "List",
@@ -27,6 +30,21 @@ class GlobalScope(val project: Project) {
                 "Platform",
                 "Platform.Cmd",
                 "Platform.Sub"
+        )
+
+        /**
+         * Values and Types that are built-in to the Elm compiler. Any occurrences of
+         * these symbols should be treated as always resolved.
+         */
+        val builtInSymbols = listOf(
+                "Bool",
+                "True",
+                "False",
+                "String",
+                "Char",
+                "Int",
+                "Float",
+                "List"
         )
     }
 
