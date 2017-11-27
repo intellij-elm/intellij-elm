@@ -4,22 +4,17 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
-class ElmOperatorDeclarationLeft(node: ASTNode) : ElmPsiElement(node) {
-
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitOperatorDeclarationLeft(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
+/**
+ * The declaration of an operator function
+ *
+ * e.g. `(=>) a b = (a, b)`
+ *
+ * @see [ElmFunctionDeclarationLeft]
+ */
+class ElmOperatorDeclarationLeft(node: ASTNode) : ElmPsiElementImpl(node) {
 
     val operatorAsFunction: ElmOperatorAsFunction
         get() = findNotNullChildByClass(ElmOperatorAsFunction::class.java)

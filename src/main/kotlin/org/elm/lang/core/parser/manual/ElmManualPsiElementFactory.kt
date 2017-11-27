@@ -8,11 +8,11 @@ object ElmManualPsiElementFactory {
 
     fun createElement(node: ASTNode) =
             when (node.elementType) {
-                ElmTypes.UPPER_CASE_PATH -> ElmUpperCasePath(node)
-                ElmTypes.LOWER_CASE_PATH -> ElmLowerCasePath(node)
-                ElmTypes.MIXED_CASE_PATH -> ElmMixedCasePath(node)
-                ElmTypes.FIELD_ACCESS -> ElmFieldAccess(node)
-                ElmTypes.EFFECT -> ElmEffect(node)
-                else ->                     null
+                ElmTypes.UPPER_CASE_QID ->              ElmUpperCaseQID(node)
+                ElmTypes.FIELD_ACCESS ->                ElmFieldAccess(node)
+                ElmTypes.VALUE_QID ->                   ElmValueQID(node)
+                ElmTypes.FIELD_ACCESSOR_FUNCTION ->     ElmFieldAccessorFunction(node)
+                ElmTypes.EFFECT ->                      ElmEffect(node)
+                else ->                                 null
             }
 }

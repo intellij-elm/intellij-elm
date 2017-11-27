@@ -2,26 +2,35 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.SimpleUnionConstructorReference
 
 
-class ElmUnionPattern(node: ASTNode) : ElmPsiElement(node) {
+class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitUnionPattern(this)
-    }
+    /** The union constructor */
+    val upperCaseQID: ElmUpperCaseQID
+        get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
+    /** pattern matching on the arguments (if any) to the union constructor */
     val patternList: List<ElmPattern>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
 
+
+    override val referenceNameElement: PsiElement
+        get() {
+            // TODO [kl] handle qualified references
+            return upperCaseQID.upperCaseIdentifierList.last()
+        }
+
+    override val referenceName: String
+        get() = referenceNameElement.text
+
+    override fun getReference(): PsiReference {
+        return SimpleUnionConstructorReference(this)
+    }
 }

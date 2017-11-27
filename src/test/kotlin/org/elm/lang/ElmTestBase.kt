@@ -129,7 +129,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
     }
 
     inner class InlineFile(private @Language("Elm") val code: String, val name: String = "main.elm") {
-        private val hasCaretMarker = "/*caret*/" in code
+        private val hasCaretMarker = "{-caret-}" in code
 
         init {
             myFixture.configureByText(name, replaceCaretMarker(code))
@@ -137,7 +137,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
         fun withCaret() {
             check(hasCaretMarker) {
-                "Please, add `/*caret*/` marker to\n$code"
+                "Please, add `{-caret-}` marker to\n$code"
             }
         }
     }
@@ -164,7 +164,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
                 "More than one `$marker` marker:\n$text"
             }
 
-            val data = text.drop(markerOffset).removePrefix(caretMarker).takeWhile { it != '\n' }.trim()
+            val data = text.drop(markerOffset).removePrefix(caretMarker).takeWhile { !it.isWhitespace() }.trim()
             val markerPosition = myFixture.editor.offsetToLogicalPosition(markerOffset + caretMarker.length - 1)
             val previousLine = LogicalPosition(markerPosition.line - 1, markerPosition.column)
             val elementOffset = myFixture.editor.logicalPositionToOffset(previousLine)
@@ -175,7 +175,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         return Triple(element, data, offset)
     }
 
-    protected fun replaceCaretMarker(text: String) = text.replace("/*caret*/", "<caret>")
+    protected fun replaceCaretMarker(text: String) = text.replace("{-caret-}", "<caret>")
 
     protected fun applyQuickFix(name: String) {
         val action = myFixture.findSingleIntention(name)

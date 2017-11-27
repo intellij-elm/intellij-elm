@@ -26,13 +26,27 @@ SOFTWARE.
 
 package org.elm.lang.core.psi
 
+import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiUtilCore
+import java.util.Stack
 
 
 val PsiElement.ancestors: Sequence<PsiElement> get() = generateSequence(this) { it.parent }
+
+/**
+ * Extracts node's element type
+ *
+ * NOTE: when we eventually add stub support, the Rust plugin advises
+ * that you be careful here not to switch to AST from stubs.
+ */
+val PsiElement.elementType: IElementType
+    get() = PsiUtilCore.getElementType(this)
 
 
 inline fun <reified T : PsiElement> PsiElement.parentOfType(strict: Boolean = true, minStartOffset: Int = -1): T? =
@@ -49,6 +63,29 @@ inline fun <reified T : PsiElement> PsiElement.childOfType(strict: Boolean = tru
 
 inline fun <reified T : PsiElement> PsiElement.descendantsOfType(): Collection<T> =
         PsiTreeUtil.findChildrenOfType(this, T::class.java)
+
+fun PsiFile.descendantOfType(elementType: IElementType): PsiElement? {
+    // TODO [kl] surely IntelliJ provides a util function for finding a Psi leaf of a specific type?
+    val stack = Stack<ASTNode>()
+    stack.addAll(children.map { it.node }.toList())
+
+    while (stack.isNotEmpty()) {
+        val node = stack.pop()
+        if (node.elementType == elementType)
+            return node.psi
+        else
+            stack.addAll(node.getChildren(null))
+    }
+    return null
+}
+
+/**
+ * Computes the start offset of the receiver relative to [owner].
+ *
+ * The receiver must be a descendant of [owner]
+ */
+fun PsiElement.offsetIn(owner: PsiElement): Int =
+    ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
 
 /**
  * Finds first sibling that is neither comment, nor whitespace before given element.

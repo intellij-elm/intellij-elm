@@ -2,28 +2,17 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 
 
-class ElmInnerTypeAnnotation(node: ASTNode) : ElmPsiElement(node) {
+class ElmInnerTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitInnerTypeAnnotation(this)
-    }
+    val lowerCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
-    val lowerCaseId: ElmLowerCaseId
-        get() = findNotNullChildByClass(ElmLowerCaseId::class.java)
-
-    val typeDefinition: ElmTypeDefinition
-        get() = findNotNullChildByClass(ElmTypeDefinition::class.java)
+    val typeRef: ElmTypeRef
+        get() = findNotNullChildByClass(ElmTypeRef::class.java)
 
 }

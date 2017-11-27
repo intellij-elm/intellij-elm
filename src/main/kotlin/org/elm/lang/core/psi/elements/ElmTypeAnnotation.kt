@@ -2,31 +2,37 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.LocalTopLevelValueReference
 
 
-class ElmTypeAnnotation(node: ASTNode) : ElmPsiElement(node) {
+/**
+ * Either [lowerCaseIdentifier] or [operatorAsFunction] is non-null
+ */
+class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitTypeAnnotation(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
-    val lowerCaseId: ElmLowerCaseId?
-        get() = findChildByClass(ElmLowerCaseId::class.java)
+    val lowerCaseIdentifier: PsiElement?
+        get() = findChildByType(LOWER_CASE_IDENTIFIER)
 
     val operatorAsFunction: ElmOperatorAsFunction?
         get() = findChildByClass(ElmOperatorAsFunction::class.java)
 
-    val typeDefinition: ElmTypeDefinition
-        get() = findNotNullChildByClass(ElmTypeDefinition::class.java)
+    val typeRef: ElmTypeRef
+        get() = findNotNullChildByClass(ElmTypeRef::class.java)
 
+    override val referenceNameElement: PsiElement
+        get() = lowerCaseIdentifier
+                    ?: operatorAsFunction?.operator
+                    ?: throw RuntimeException("cannot determine type annotations's ref name element")
+
+    override val referenceName: String
+        get() = referenceNameElement.text
+
+    override fun getReference(): PsiReference {
+        return LocalTopLevelValueReference(this)
+    }
 }

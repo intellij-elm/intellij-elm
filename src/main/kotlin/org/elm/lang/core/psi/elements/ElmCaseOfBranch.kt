@@ -2,21 +2,11 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElementVisitor
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
-class ElmCaseOfBranch(node: ASTNode) : ElmPsiElement(node) {
-
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitCaseOfBranch(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
+class ElmCaseOfBranch(node: ASTNode) : ElmPsiElementImpl(node) {
 
     val pattern: ElmPattern
         get() = findNotNullChildByClass(ElmPattern::class.java)
@@ -24,4 +14,10 @@ class ElmCaseOfBranch(node: ASTNode) : ElmPsiElement(node) {
     val expression: ElmExpression
         get() = findNotNullChildByClass(ElmExpression::class.java)
 
+
+    /**
+     * Named elements introduced by pattern destructuring on the left-hand side of the branch.
+     */
+    val destructuredNames: List<ElmNamedElement>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java).toList()
 }

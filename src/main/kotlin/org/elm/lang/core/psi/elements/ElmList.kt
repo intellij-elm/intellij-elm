@@ -4,22 +4,10 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
-class ElmList(node: ASTNode) : ElmPsiElement(node) {
-
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitList(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
+class ElmList(node: ASTNode) : ElmPsiElementImpl(node) {
 
     val expressionList: List<ElmExpression>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmExpression::class.java)

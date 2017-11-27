@@ -2,28 +2,28 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 
 
-class ElmFieldType(node: ASTNode) : ElmPsiElement(node) {
+/**
+ * The definition of a record field's type.
+ *
+ * e.g. `name : String` in the record definition `type alias Person = { name : String }`
+ */
+class ElmFieldType(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitFieldType(this)
-    }
+    /**
+     * The name of a field in a record literal type definition
+     */
+    val lowerCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
-    val lowerCaseId: ElmLowerCaseId
-        get() = findNotNullChildByClass(ElmLowerCaseId::class.java)
-
-    val typeDefinition: ElmTypeDefinition
-        get() = findNotNullChildByClass(ElmTypeDefinition::class.java)
+    /**
+     * The definition of the type of the field.
+     */
+    val typeRef: ElmTypeRef
+        get() = findNotNullChildByClass(ElmTypeRef::class.java)
 
 }

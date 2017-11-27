@@ -46,12 +46,12 @@ fun fileTree(builder: FileTreeBuilder.() -> Unit): FileTree {
 }
 
 fun fileTreeFromText(@Language("Elm") text: String): FileTree {
-    val fileSeparator = """^\s* //- (\S+)\s*$""".toRegex(RegexOption.MULTILINE)
+    val fileSeparator = """^--@ (\S+)\s*$""".toRegex(RegexOption.MULTILINE)
     val fileNames = fileSeparator.findAll(text).map { it.groupValues[1] }.toList()
     val fileTexts = fileSeparator.split(text).filter(String::isNotBlank).map { it.trimIndent() }
 
     check(fileNames.size == fileTexts.size) {
-        "Have you placed `//- filename.elm` markers?"
+        "Have you placed `--@ filename.elm` markers?"
     }
 
     fun fill(dir: Entry.Directory, path: List<String>, contents: String) {
@@ -88,7 +88,7 @@ class FileTree(private val rootDirectory: Entry.Directory) {
                     is Entry.File -> {
                         val vFile = root.findChild(name) ?: root.createChildData(root, name)
                         VfsUtil.saveText(vFile, replaceCaretMarker(entry.text))
-                        if (hasCaretMarker(entry.text) || "//^" in entry.text) {
+                        if (hasCaretMarker(entry.text) || "--^" in entry.text) {
                             filesWithCaret += components.joinToString(separator = "/")
                         }
                     }
@@ -217,5 +217,5 @@ private fun findElementInFile(file: PsiFile, marker: String): PsiElement {
             error { "No element found, offset = $elementOffset" }
 }
 
-fun replaceCaretMarker(text: String): String = text.replace("/*caret*/", "<caret>")
-fun hasCaretMarker(text: String): Boolean = text.contains("/*caret*/")
+fun replaceCaretMarker(text: String): String = text.replace("{-caret-}", "<caret>")
+fun hasCaretMarker(text: String): Boolean = text.contains("{-caret-}")

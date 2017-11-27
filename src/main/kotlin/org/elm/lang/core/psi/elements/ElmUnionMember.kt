@@ -2,27 +2,22 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmNamedElementImpl
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.IdentifierCase
 
 
-class ElmUnionMember(node: ASTNode) : ElmPsiElement(node) {
+class ElmUnionMember(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.UPPER) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitUnionMember(this)
-    }
+    /** the union tag/constructor */
+    val upperCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
-    val lowerCaseIdList: List<ElmLowerCaseId>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerCaseId::class.java)
+    val typeVariableRefList: List<ElmTypeVariableRef>
+        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeVariableRef::class.java)
 
     val recordTypeList: List<ElmRecordType>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmRecordType::class.java)
@@ -30,10 +25,7 @@ class ElmUnionMember(node: ASTNode) : ElmPsiElement(node) {
     val tupleTypeList: List<ElmTupleType>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTupleType::class.java)
 
-    val typeDefinitionList: List<ElmTypeDefinition>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeDefinition::class.java)
-
-    val upperCaseId: ElmUpperCaseId
-        get() = findNotNullChildByClass(ElmUpperCaseId::class.java)
+    val typeRefList: List<ElmTypeRef>
+        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeRef::class.java)
 
 }

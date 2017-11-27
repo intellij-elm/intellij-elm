@@ -1,26 +1,19 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmNamedElementImpl
+import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.IdentifierCase
+
 
 /**
- * The 'as Foo' in 'import MyModule as Foo'
+ * Introduces an alias name for the imported module.
+ *
+ * e.g. the 'as U' in 'import Data.User as U'
  */
-class ElmAsClause(node: ASTNode) : ElmPsiElement(node) {
+class ElmAsClause(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.UPPER) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitAsClause(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
-    val upperCaseId: ElmUpperCaseId
-        get() = findNotNullChildByClass(ElmUpperCaseId::class.java)
+    val upperCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 }

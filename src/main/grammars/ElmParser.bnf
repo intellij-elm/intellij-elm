@@ -9,10 +9,10 @@
 
     tokens = [
         // tokens used by manual/external parse rules
-        UPPER_CASE_PATH='UPPER_CASE_PATH'
-        LOWER_CASE_PATH='LOWER_CASE_PATH'
-        MIXED_CASE_PATH='MIXED_CASE_PATH'
+        UPPER_CASE_QID='UPPER_CASE_QID'
+        VALUE_QID='VALUE_QID'
         FIELD_ACCESS='FIELD_ACCESS'
+        FIELD_ACCESSOR_FUNCTION='FIELD_ACCESSOR_FUNCTION'
         DOT='DOT'
         EFFECT='EFFECT'
 
@@ -29,35 +29,55 @@
     ]
 }
 
-// docs:
-// https://github.com/JetBrains/Grammar-Kit
-// https://github.com/JetBrains/Grammar-Kit/blob/master/HOWTO.md
 
 elmFile ::= [module_declaration] body
+
+module_declaration ::= [ effect | PORT ] MODULE upper_case_qid [ WHERE record ] exposing_list
+
 private body ::= import_clauses top_declarations VIRTUAL_END_SECTION?
+
 private import_clauses ::= <<decls import_clause>>
+
 private top_declarations ::= <<decls declaration>>
 
-module_declaration ::= [ effect | PORT ] MODULE upper_case_path [ WHERE record ] EXPOSING exposed_values
 
-private exposed_values ::= LEFT_PARENTHESIS (DOUBLE_DOT | list_of_values) RIGHT_PARENTHESIS
 
-private list_of_values ::= <<non_empty_list exposed_value>>
+// MODULE DECLARATION
 
-private exposed_value ::=
-    lower_case_id
+
+exposing_list ::= EXPOSING LEFT_PARENTHESIS (DOUBLE_DOT | list_of_values) RIGHT_PARENTHESIS
+
+private list_of_values ::= <<non_empty_list exposed_item>>
+
+private exposed_item ::=
+    exposed_value
     | operator_as_function
-    | exposed_union
-exposed_union ::=
-    upper_case_id [exposed_union_constructors]
-exposed_union_constructors ::=
-    LEFT_PARENTHESIS (DOUBLE_DOT | list_of_union_constructors) RIGHT_PARENTHESIS
-private list_of_union_constructors ::=
-    <<non_empty_list upper_case_id>>
+    | exposed_type
 
-import_clause ::= IMPORT upper_case_path [as_clause] [exposing_clause]
-as_clause ::= AS upper_case_id
-exposing_clause ::= EXPOSING exposed_values
+exposed_value ::= LOWER_CASE_IDENTIFIER
+
+exposed_type ::=
+    UPPER_CASE_IDENTIFIER [exposed_union_constructors]
+
+exposed_union_constructors ::=
+    LEFT_PARENTHESIS (DOUBLE_DOT | (<<non_empty_list exposed_union_constructor>>)) RIGHT_PARENTHESIS
+
+exposed_union_constructor ::=
+    UPPER_CASE_IDENTIFIER
+
+
+
+// IMPORT DECLARATION
+
+
+import_clause ::= IMPORT upper_case_qid [as_clause] [exposing_list]
+
+as_clause ::= AS UPPER_CASE_IDENTIFIER
+
+
+
+// TOP-LEVEL DECLARATIONS
+
 
 private declaration ::=
     value_declaration
@@ -73,46 +93,75 @@ private declaration ::=
 }
 */
 
-value_declaration ::= value_declaration_left EQ expression
+value_declaration ::= internal_value_declaration_left EQ expression
 
-type_alias_declaration ::=
-    TYPE ALIAS upper_case_id (lower_case_id)* EQ type_definition
-type_definition ::=
-    list_of_single_type_definitions (ARROW list_of_single_type_definitions)*
-private list_of_single_type_definitions ::=
-    upper_case_path (single_type_definition)+
-    | single_type_definition
-private single_type_definition ::=
-    upper_case_path
-    | lower_case_id
-    | record_type
-    | tuple_type
-    | LEFT_PARENTHESIS type_definition RIGHT_PARENTHESIS
-record_type ::=
-    LEFT_BRACE [[record_base] <<non_empty_list field_type>>] RIGHT_BRACE
-field_type ::=
-    lower_case_id COLON type_definition
-tuple_type ::=
-    unit
-    | LEFT_PARENTHESIS type_definition (COMMA type_definition)+ RIGHT_PARENTHESIS
-
-type_declaration ::=
-    TYPE upper_case_id (lower_case_id)* EQ union_member (PIPE union_member)*
-union_member ::=
-    upper_case_id single_type_definition*
-
-type_annotation ::= ([PORT] lower_case_id | operator_as_function) COLON type_definition
-
-private value_declaration_left ::=
-    internal_value_declaration_left
 private internal_value_declaration_left ::=
     function_declaration_left
     | operator_declaration_left
     | pattern
+
 function_declaration_left ::=
-    lower_case_id pattern+
+    LOWER_CASE_IDENTIFIER pattern*
+
 operator_declaration_left ::=
     operator_as_function pattern*
+
+
+
+// TYPE DECLARATIONS AND REFERENCES
+
+
+type_declaration ::=
+    TYPE UPPER_CASE_IDENTIFIER (lower_type_name)* EQ union_member (PIPE union_member)*
+
+lower_type_name ::= LOWER_CASE_IDENTIFIER
+
+union_member ::=
+    UPPER_CASE_IDENTIFIER single_type_ref*
+
+
+type_alias_declaration ::=
+    TYPE ALIAS UPPER_CASE_IDENTIFIER lower_type_name* EQ type_ref
+
+type_ref ::=
+    type_ref_inner (ARROW type_ref_inner)*
+
+private type_ref_inner ::=
+    parametric_type_ref
+    | single_type_ref
+
+parametric_type_ref ::= upper_case_qid (single_type_ref)+
+
+private single_type_ref ::=
+    upper_path_type_ref
+    | type_variable_ref
+    | record_type
+    | tuple_type
+    | LEFT_PARENTHESIS type_ref RIGHT_PARENTHESIS
+
+upper_path_type_ref ::=
+    upper_case_qid
+
+type_variable_ref ::=
+    LOWER_CASE_IDENTIFIER
+
+record_type ::=
+    LEFT_BRACE [[record_base] <<non_empty_list field_type>>] RIGHT_BRACE
+
+field_type ::=
+    LOWER_CASE_IDENTIFIER COLON type_ref
+
+tuple_type ::=
+    unit
+    | LEFT_PARENTHESIS type_ref (COMMA type_ref)+ RIGHT_PARENTHESIS
+
+
+type_annotation ::= ([PORT] LOWER_CASE_IDENTIFIER | operator_as_function) COLON type_ref
+
+
+
+// EXPRESSIONS
+
 
 expression ::= list_of_operands (operator list_of_operands)*
 
@@ -126,8 +175,9 @@ private operator ::=
 
 private operand ::=
     literal
-    | referenced_value
     | field_access
+    | value_expr
+    | field_accessor_function
     | operator_as_function
     | parenthesed_expression
     | tuple_constructor
@@ -147,16 +197,18 @@ private literal ::=
     | NUMBER_LITERAL
     | CHAR_LITERAL
 
-external field_access ::= parseFieldAccess
+anonymous_function ::= BACKSLASH pattern+ ARROW expression
+
+external field_accessor_function ::= parseFieldAccessorFunction
 external effect ::= parseEffect
 
-external upper_case_path ::= parseUpperCasePath upper_case_id
-external lower_case_path ::= parseLowerCasePath lower_case_id
-external mixed_case_path ::= parseMixedCasePath upper_case_id lower_case_id
+external field_access ::= parseFieldAccess
+external value_qid ::= parseValueQID
+external upper_case_qid ::= parseUpperCaseQID
 
-private referenced_value ::=
-    lower_case_path
-    | mixed_case_path
+value_expr ::=
+    value_qid
+    | upper_case_qid
 
 operator_as_function ::=
     LEFT_PARENTHESIS operator RIGHT_PARENTHESIS
@@ -164,10 +216,13 @@ operator_as_function ::=
 private tuple ::=
     unit
     | non_empty_tuple
+
 non_empty_tuple ::=
     LEFT_PARENTHESIS expression (COMMA expression)+ RIGHT_PARENTHESIS
+
 tuple_constructor ::=
     LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
+
 unit ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
 
@@ -176,10 +231,12 @@ list ::=
 
 record ::=
     LEFT_BRACE [[record_base] <<non_empty_list field>>] RIGHT_BRACE
+
 private record_base ::=
-    lower_case_id PIPE
+    LOWER_CASE_IDENTIFIER PIPE
+
 field ::=
-    lower_case_id EQ expression
+    LOWER_CASE_IDENTIFIER EQ expression
 
 if_else ::=
     IF expression THEN expression ELSE expression
@@ -187,6 +244,7 @@ if_else ::=
 
 case_of ::=
     CASE expression OF <<non_empty_decls case_of_branch>> VIRTUAL_END_SECTION
+
 case_of_branch ::=
     pattern ARROW expression
 
@@ -197,18 +255,26 @@ let_in ::=
 private inner_declaration ::=
     inner_value_declaration
     | inner_type_annotation
+
 inner_value_declaration ::=
     internal_value_declaration_left EQ expression
+
 inner_type_annotation ::=
-    lower_case_id COLON type_definition
+    LOWER_CASE_IDENTIFIER COLON type_ref
 
 
-// patterns:
+
+// PATTERNS
+
+
 pattern ::=
-    single_pattern (LIST_CONSTRUCTOR single_pattern)* [AS lower_case_id]
+    single_pattern (LIST_CONSTRUCTOR single_pattern)* [pattern_as]
+
+pattern_as ::= AS LOWER_CASE_IDENTIFIER
+
 private single_pattern ::=
     UNDERSCORE
-    | lower_case_id
+    | lower_pattern
     | union_pattern
     | tuple_pattern
     | unit
@@ -216,21 +282,32 @@ private single_pattern ::=
     | record_pattern
     | literal
     | parenthesed_pattern
-private record_pattern ::=
-    LEFT_BRACE <<non_empty_list lower_case_id>> RIGHT_BRACE
+
+lower_pattern ::= LOWER_CASE_IDENTIFIER
+
+record_pattern ::=
+    LEFT_BRACE <<non_empty_list lower_pattern>> RIGHT_BRACE
+
 private list_pattern ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list pattern>>] RIGHT_SQUARE_BRACKET
+
 union_pattern ::=
-    upper_case_path pattern*
-private tuple_pattern ::=
+    upper_case_qid pattern*
+
+tuple_pattern ::=
     LEFT_PARENTHESIS pattern (COMMA pattern)+ RIGHT_PARENTHESIS
+
 private parenthesed_pattern ::=
     LEFT_PARENTHESIS pattern RIGHT_PARENTHESIS
 
-anonymous_function ::= BACKSLASH pattern+ ARROW expression
+
+
+// MISC
+
 
 operator_config ::=
     operator_config_keyword NUMBER_LITERAL operator
+
 private operator_config_keyword ::=
     INFIXL
     | INFIX
@@ -239,13 +316,13 @@ private operator_config_keyword ::=
 glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 
+
+// UTILITY
+
+
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
 
 
 // TODO [kl] cleanup the duplication
 private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL <<p>>)*
 private meta decls ::= [VIRTUAL_END_DECL? <<p>> (VIRTUAL_END_DECL <<p>>)*]
-
-
-lower_case_id ::= LOWER_CASE_IDENTIFIER
-upper_case_id ::= UPPER_CASE_IDENTIFIER

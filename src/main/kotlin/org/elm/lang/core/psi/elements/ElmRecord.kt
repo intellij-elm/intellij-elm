@@ -2,29 +2,31 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 
 
-class ElmRecord(node: ASTNode) : ElmPsiElement(node) {
+/**
+ * A record literal value
+ *
+ * e.g. { name = "George", age = 42 }
+ */
+class ElmRecord(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitRecord(this)
-    }
+    /**
+     * The name of the existing record which is to be updated, or null
+     * if this record literal is constructing a completely new value.
+     *
+     * e.g. person in `{ person | age = person.age + 1 }`
+     */
+    val baseRecordIdentifier: PsiElement?
+        get() = findChildByType(LOWER_CASE_IDENTIFIER)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
+    /**
+     * The fields to set in the new record.
+     */
     val fieldList: List<ElmField>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmField::class.java)
-
-    val lowerCaseId: ElmLowerCaseId?
-        get() = findChildByClass(ElmLowerCaseId::class.java)
-
 }

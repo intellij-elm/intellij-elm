@@ -2,29 +2,33 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 
 
-class ElmRecordType(node: ASTNode) : ElmPsiElement(node) {
+/**
+ * A record type definition
+ *
+ * e.g. { name : String, age : Int }
+ */
+class ElmRecordType(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitRecordType(this)
-    }
+    /**
+     * The type variable representing a generic record which this
+     * definition extends.
+     *
+     * e.g. entity in `{ entity | vx : Float, vy: Float }`
+     */
+    val baseTypeIdentifier: PsiElement?
+        get() = findChildByType(LOWER_CASE_IDENTIFIER)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
+    /**
+     * The definition of the fields which comprise the record proper.
+     */
     val fieldTypeList: List<ElmFieldType>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmFieldType::class.java)
-
-    val lowerCaseId: ElmLowerCaseId?
-        get() = findChildByClass(ElmLowerCaseId::class.java)
 
 }

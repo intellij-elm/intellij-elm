@@ -2,28 +2,28 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 
 
-class ElmField(node: ASTNode) : ElmPsiElement(node) {
+/**
+ * A field assignment in a record literal.
+ *
+ * e.g. `name = "George"` in `{ name = "George", age = 42 }`
+ */
+class ElmField(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitField(this)
-    }
+    /**
+     * The name of the field to bind to [expression].
+     */
+    val lowerCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
+    /**
+     * The field's expression value.
+     */
     val expression: ElmExpression
         get() = findNotNullChildByClass(ElmExpression::class.java)
-
-    val lowerCaseId: ElmLowerCaseId
-        get() = findNotNullChildByClass(ElmLowerCaseId::class.java)
 
 }

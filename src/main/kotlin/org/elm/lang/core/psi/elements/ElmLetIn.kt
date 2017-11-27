@@ -4,22 +4,10 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
-class ElmLetIn(node: ASTNode) : ElmPsiElement(node) {
-
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitLetIn(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
+class ElmLetIn(node: ASTNode) : ElmPsiElementImpl(node) {
 
     val expression: ElmExpression
         get() = findNotNullChildByClass(ElmExpression::class.java)

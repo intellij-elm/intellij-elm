@@ -2,38 +2,55 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmPsiFactory
 
 
-class ElmModuleDeclaration(node: ASTNode) : ElmPsiElement(node) {
+/**
+ * The module declaration at the top of a file.
+ *
+ * e.g. `module Data.User exposing (User, encode, decoder)`
+ *
+ * Role:
+ * - give the module a name
+ * - expose values and types
+ */
+class ElmModuleDeclaration(node: ASTNode) : ElmPsiElementImpl(node), ElmNamedElement {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitModuleDeclaration(this)
-    }
+    /**
+     * The fully-qualified name of the module
+     */
+    val upperCaseQID: ElmUpperCaseQID
+        get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
+    /**
+     * The values and types exposed by this module
+     */
+    val exposingList: ElmExposingList
+        get() = findNotNullChildByClass(ElmExposingList::class.java)
 
-    val upperCasePath: ElmUpperCasePath
-        get() = findNotNullChildByClass(ElmUpperCasePath::class.java)
-
-    val exposedUnionList: List<ElmExposedUnion>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmExposedUnion::class.java)
-
-    val lowerCaseIdList: List<ElmLowerCaseId>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerCaseId::class.java)
-
-    val operatorAsFunctionList: List<ElmOperatorAsFunction>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmOperatorAsFunction::class.java)
-
+    /**
+     * Very rare. This will only appear in Effect Manager modules.
+     */
     val effectModuleDetailRecord: ElmRecord?
         get() = findChildByClass(ElmRecord::class.java)
 
+
+    val exposesAll: Boolean
+        get() = exposingList.doubleDot != null
+
+
+    override fun getName() =
+            upperCaseQID.text
+
+    override fun setName(name: String): PsiElement {
+        val newQID = ElmPsiFactory(project).createUpperCaseQID(name)
+        upperCaseQID.replace(newQID)
+        return this
+    }
+
+    override fun getTextOffset() =
+            upperCaseQID.textOffset
 }

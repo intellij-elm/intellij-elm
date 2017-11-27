@@ -4,22 +4,11 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
-class ElmListOfOperands(node: ASTNode) : ElmPsiElement(node) {
+class ElmListOfOperands(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitListOfOperands(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
 
     // TODO [kl] cleanup this mess. The caller has no idea which states are valid here.
 
@@ -71,4 +60,7 @@ class ElmListOfOperands(node: ASTNode) : ElmPsiElement(node) {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmUnit::class.java)
     }
 
+    fun getFieldAccessList(): List<ElmFieldAccess> {
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmFieldAccess::class.java)
+    }
 }

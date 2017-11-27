@@ -2,34 +2,70 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
+import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmVisitor
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.childOfType
+import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReferenceBase
+import org.elm.lang.core.resolve.scope.ImportScope
 
 
 /**
+ * An import declaration at the top of the module.
+ *
  * e.g. 'import Data.User exposing (User, name, age)'
+ *
+ * Role:
+ * - refers to the module from which values and types should be imported
+ * - possibly introduces an alias name for the module
+ * - expose individual values and types from the module
  */
-class ElmImportClause(node: ASTNode) : ElmPsiElement(node) {
+class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
-    fun accept(visitor: ElmVisitor) {
-        visitor.visitImportClause(this)
-    }
-
-    override fun accept(visitor: PsiElementVisitor) {
-        if (visitor is ElmVisitor)
-            accept(visitor)
-        else
-            super.accept(visitor)
-    }
-
-    val modulePath: ElmUpperCasePath
-        get() = findNotNullChildByClass(ElmUpperCasePath::class.java)
+    val moduleQID: ElmUpperCaseQID
+        get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
     val asClause: ElmAsClause?
         get() = findChildByClass(ElmAsClause::class.java)
 
-    val exposingClause: ElmExposingClause?
-        get() = findChildByClass(ElmExposingClause::class.java)
+    val exposingList: ElmExposingList?
+        get() = findChildByClass(ElmExposingList::class.java)
 
+
+
+    val exposesAll: Boolean
+        get() = exposingList?.doubleDot != null
+
+
+    override val referenceNameElement: PsiElement
+        get() = moduleQID
+
+    override val referenceName: String
+        get() = referenceNameElement.text
+
+    override fun getReference(): PsiReference {
+        return ModuleNameReference(this)
+    }
+}
+
+
+/**
+ * A reference to a module from an import declaration.
+ *
+ * The import declaration can "see" all modules in the project.
+ */
+private class ModuleNameReference(importDecl: ElmImportClause): ElmReferenceBase<ElmImportClause>(importDecl) {
+
+    override fun getVariants(): Array<ElmNamedElement> {
+        return ImportScope.allElmFiles(element.project)
+                .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
+                .toTypedArray()
+    }
+
+    override fun resolve(): ElmPsiElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 }
