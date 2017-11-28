@@ -14,9 +14,17 @@ fun modulePathToFile(moduleName: String, project: Project): ElmFile? {
 
     // TODO [kl] re-visit this choice for `GlobalSearchScope`
     val scope = GlobalSearchScope.projectScope(project)
+
+    val pathSuffix = if (relativeModulePath.isNotEmpty())
+                        "/src/" + relativeModulePath + "/" + filename
+                     else
+                        "/src/" + filename
+
     val file = FilenameIndex.getFilesByName(project, filename, scope)
-            .find { it.virtualFile.path.endsWith(relativeModulePath + "/" + filename)}
+            .find { it.virtualFile.path.endsWith(pathSuffix)}
             ?: return null
+
+//    println("finding module with pathSuffix=$pathSuffix, got=$file")
 
     if (file !is ElmFile)
         error("must be an Elm file")

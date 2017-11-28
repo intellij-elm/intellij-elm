@@ -29,8 +29,7 @@ abstract class ElmResolveTestBase : ElmTestBase() {
     }
 
     protected fun stubOnlyResolve(@Language("Elm") code: String) {
-        val testProject = fileTreeFromText(code)
-                .createAndOpenFileWithCaretMarker()
+        fileTreeFromText(code).createAndOpenFileWithCaretMarker()
 
         // TODO [kl] re-enable this check once we add stub support
         // this code was copied from the IntelliJ Rust plugin which designed their

@@ -19,6 +19,10 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 
 
     // TODO [kl] revisit how we determine this
-    fun isCore() =
-            virtualFile?.path?.contains("packages/elm-lang/core/") ?: false
+    fun isCore(): Boolean {
+        val path = virtualFile?.path
+        val isCore = path?.contains("packages/elm-lang/core/") ?: false
+//        println("Checking path: $path, isCore=$isCore")
+        return isCore
+    }
 }
