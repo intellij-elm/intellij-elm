@@ -13,8 +13,9 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 class GlobalScope(val project: Project) {
 
     companion object {
-        fun implicitlyImportsModule(moduleDecl: ElmModuleDeclaration) =
-                moduleDecl.elmFile.isCore() && defaultImports.contains(moduleDecl.name)
+        fun implicitlyImportsModule(moduleDecl: ElmModuleDeclaration): Boolean {
+            return moduleDecl.elmFile.isCore() && defaultImports.contains(moduleDecl.name)
+        }
 
         /**
          * Modules that the Elm compiler treats as being implicitly imported.
@@ -28,8 +29,8 @@ class GlobalScope(val project: Project) {
                 "Tuple",
                 "Debug",
                 "Platform",
-                "Platform.Cmd",
-                "Platform.Sub"
+                "Cmd", // actually Platform.Cmd but aliased as `Cmd` by the Elm compiler
+                "Sub"  // actually Platform.Sub but aliased as `Sub` by the Elm compiler
         )
 
         /**

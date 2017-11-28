@@ -42,8 +42,17 @@ class ElmModuleDeclaration(node: ASTNode) : ElmPsiElementImpl(node), ElmNamedEle
         get() = exposingList.doubleDot != null
 
 
-    override fun getName() =
-            upperCaseQID.text
+    override fun getName(): String {
+        val fullName = upperCaseQID.text
+        // EVIL HACK to support the implicit, aliased import of Platform.Cmd and Platform.Sub
+        // modules from Elm Core.
+        // TODO [kl] re-visit this when I don't have a migraine
+        return when (fullName) {
+            "Platform.Cmd" -> "Cmd"
+            "Platform.Sub" -> "Sub"
+            else -> fullName
+        }
+    }
 
     override fun setName(name: String): PsiElement {
         val newQID = ElmPsiFactory(project).createUpperCaseQID(name)

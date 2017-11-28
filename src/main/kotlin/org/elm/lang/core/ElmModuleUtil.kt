@@ -7,10 +7,14 @@ import org.elm.lang.core.psi.ElmFile
 
 
 fun modulePathToFile(moduleName: String, project: Project): ElmFile? {
-    val (relativeModulePath, filename) = toFileSystemParts(moduleName)
+    var (relativeModulePath, filename) = toFileSystemParts(moduleName)
 
     if (relativeModulePath == "Native") // TODO [kl] is this the right place to handle JS files?
         return null
+
+    // EVIL HACK for simulating the aliased import of Platform.Cmd and Platform.Sub modules
+    if (moduleName == "Cmd" || moduleName == "Sub")
+        relativeModulePath = "Platform"
 
     // TODO [kl] re-visit this choice for `GlobalSearchScope`
     val scope = GlobalSearchScope.projectScope(project)
