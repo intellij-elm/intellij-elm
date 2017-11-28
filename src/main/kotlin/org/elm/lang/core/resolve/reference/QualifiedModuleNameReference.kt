@@ -6,6 +6,7 @@ import com.intellij.psi.PsiReferenceBase
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.childOfType
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmUpperCaseQID
@@ -16,11 +17,17 @@ import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 /**
- * Base class for qualified module-name references from the value and type namespaces.
+ * Qualified module-name reference from the value or type namespaces.
  *
  * e.g. `Data.User` in the expression `Data.User.name defaultUser`
+ *
+ * @param elem the Psi element which owns the reference
+ * @param elementQID the QID (qualified ID) element within `elem`
  */
-abstract class ElmQualifiedReferenceBase<T:ElmPsiElement>(elem: T): PsiReferenceBase<T>(elem) {
+class QualifiedModuleNameReference<T:ElmPsiElement>(
+        elem: T,
+        val elementQID: ElmQID
+): PsiReferenceBase<T>(elem) {
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] consider inverting this loop to reduce iterations
@@ -38,11 +45,6 @@ abstract class ElmQualifiedReferenceBase<T:ElmPsiElement>(elem: T): PsiReference
     override fun resolve(): ElmPsiElement? {
         return getVariants().find { it.name == refText }
     }
-
-    /** The Psi element QID (either [ElmUpperCaseQID] or [ElmValueQID]) which contains
-     * the qualified module reference.
-     */
-    abstract val elementQID: ElmPsiElement
 
     val refText: String
         get() = elementQID.text.split(".").dropLast(1).joinToString(".")

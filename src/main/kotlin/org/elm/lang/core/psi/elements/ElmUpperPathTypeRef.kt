@@ -5,7 +5,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.QualifiedTypeModuleNameReference
+import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
 import org.elm.lang.core.resolve.reference.QualifiedTypeReference
 import org.elm.lang.core.resolve.reference.SimpleTypeReference
 
@@ -35,7 +35,7 @@ class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReference
     override fun getReferences(): Array<PsiReference> {
         return if (upperCaseQID.upperCaseIdentifierList.size > 1)
             arrayOf(QualifiedTypeReference(this, upperCaseQID),
-                    QualifiedTypeModuleNameReference(this, upperCaseQID))
+                    QualifiedModuleNameReference(this, upperCaseQID))
         else
             arrayOf(SimpleTypeReference(this))
     }

@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 
@@ -14,7 +15,7 @@ import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
  *
  * e.g. `Json.Decode.string`
  */
-class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
 
     /**
      * The qualifiers which identify the module/alias, if any.

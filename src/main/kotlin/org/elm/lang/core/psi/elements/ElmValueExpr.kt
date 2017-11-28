@@ -2,16 +2,15 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.elements.Flavor.BareConstructor
 import org.elm.lang.core.psi.elements.Flavor.BareValue
 import org.elm.lang.core.psi.elements.Flavor.QualifiedConstructor
 import org.elm.lang.core.psi.elements.Flavor.QualifiedValue
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.ElmQualifiedReferenceBase
 import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
+import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
 import org.elm.lang.core.resolve.reference.QualifiedValueReference
 import org.elm.lang.core.resolve.reference.SimpleUnionOrRecordConstructorReference
 
@@ -71,28 +70,10 @@ class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement
     override fun getReferences() =
             when (flavor) {
                 QualifiedValue ->           arrayOf(QualifiedValueReference(this, valueQID!!),
-                                                    QualifiedValueModuleNameReference(this))
+                                                    QualifiedModuleNameReference(this, valueQID!!))
                 QualifiedConstructor ->     arrayOf(QualifiedConstructorReference(this, upperCaseQID!!),
-                                                    QualifiedConstructorModuleNameReference(this))
+                                                    QualifiedModuleNameReference(this, upperCaseQID!!))
                 BareValue ->                arrayOf(LexicalValueReference(this))
                 BareConstructor ->          arrayOf(SimpleUnionOrRecordConstructorReference(this))
             }
-}
-
-/**
- * The module-prefix portion of the qualified value reference
- */
-private class QualifiedValueModuleNameReference(valueExpr: ElmValueExpr): ElmQualifiedReferenceBase<ElmValueExpr>(valueExpr) {
-
-    override val elementQID: ElmPsiElement
-        get() = element.valueQID!!
-}
-
-/**
- * The module-prefix portion of the qualified union or record constructor reference
- */
-private class QualifiedConstructorModuleNameReference(valueExpr: ElmValueExpr): ElmQualifiedReferenceBase<ElmValueExpr>(valueExpr) {
-
-    override val elementQID: ElmPsiElement
-        get() = element.upperCaseQID!!
 }

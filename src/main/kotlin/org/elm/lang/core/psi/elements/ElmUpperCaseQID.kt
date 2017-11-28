@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 
 /**
@@ -10,7 +11,7 @@ import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
  * and it may contain an additional qualifier prefix which identifies the module/alias
  * from which the identifier may be obtained.
  */
-class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
 
     /**
      * Guaranteed to contain at least one element

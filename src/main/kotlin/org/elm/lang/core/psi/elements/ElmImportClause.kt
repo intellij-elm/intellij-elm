@@ -3,7 +3,6 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
@@ -35,7 +34,6 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
         get() = findChildByClass(ElmExposingList::class.java)
 
 
-
     val exposesAll: Boolean
         get() = exposingList?.doubleDot != null
 
@@ -46,26 +44,14 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference(): PsiReference {
-        return ModuleNameReference(this)
-    }
-}
+    override fun getReference() =
+            object : ElmReferenceBase<ElmImportClause>(this) {
+                override fun getVariants(): Array<ElmNamedElement> =
+                        ImportScope.allElmFiles(element.project)
+                                .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
+                                .toTypedArray()
 
-
-/**
- * A reference to a module from an import declaration.
- *
- * The import declaration can "see" all modules in the project.
- */
-private class ModuleNameReference(importDecl: ElmImportClause): ElmReferenceBase<ElmImportClause>(importDecl) {
-
-    override fun getVariants(): Array<ElmNamedElement> {
-        return ImportScope.allElmFiles(element.project)
-                .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
-                .toTypedArray()
-    }
-
-    override fun resolve(): ElmPsiElement? {
-        return getVariants().find { it.name == element.referenceName }
-    }
+                override fun resolve(): ElmPsiElement? =
+                        getVariants().find { it.name == element.referenceName }
+            }
 }
