@@ -7,6 +7,8 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmQualifiedReferenceBase
+import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
 import org.elm.lang.core.resolve.reference.SimpleUnionConstructorReference
 
 
@@ -23,14 +25,24 @@ class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
 
     override val referenceNameElement: PsiElement
         get() {
-            // TODO [kl] handle qualified references
             return upperCaseQID.upperCaseIdentifierList.last()
         }
 
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference(): PsiReference {
-        return SimpleUnionConstructorReference(this)
+    override fun getReference() =
+            references.first()
+
+    override fun getReferences(): Array<PsiReference> {
+        if (upperCaseQID.isQualified)
+            return arrayOf(
+                    QualifiedConstructorReference(this, upperCaseQID),
+                    object : ElmQualifiedReferenceBase<ElmReferenceElement>(this) {
+                        override val elementQID = upperCaseQID
+                    })
+        else
+            return arrayOf(SimpleUnionConstructorReference(this))
     }
+
 }

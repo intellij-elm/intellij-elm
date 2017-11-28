@@ -41,6 +41,22 @@ type Page = Home
 """)
 
 
+    fun `test qualified union constructor ref in pattern destructuring`() = stubOnlyResolve(
+"""
+--@ main.elm
+import App
+title page =
+    case page of
+        App.Home -> "home"
+            --^App.elm
+
+--@ App.elm
+module App exposing (Page(Home))
+type Page = Home
+""")
+
+
+
     fun `test qualified type alias ref`() = stubOnlyResolve(
 """
 --@ main.elm

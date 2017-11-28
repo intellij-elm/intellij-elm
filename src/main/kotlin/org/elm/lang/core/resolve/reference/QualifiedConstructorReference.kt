@@ -18,6 +18,7 @@ class QualifiedConstructorReference(referenceElement: ElmReferenceElement, val u
                 .dropLast(1)
                 .joinToString(".") { it.text }
 
+        // TODO [kl] depending on context, we may need to restrict the variants to just union constructors
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 ?.getExposedUnionOrRecordConstructors()
                 ?.toTypedArray()
