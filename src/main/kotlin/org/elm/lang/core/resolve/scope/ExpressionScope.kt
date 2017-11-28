@@ -3,6 +3,7 @@ package org.elm.lang.core.resolve.scope
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.elements.ElmAnonymousFunction
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmLetIn
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
@@ -36,6 +37,10 @@ class ExpressionScope(val element: PsiElement) {
             }
 
             if (it is ElmCaseOfBranch) {
+                results.addAll(it.destructuredNames)
+            }
+
+            if (it is ElmAnonymousFunction) {
                 results.addAll(it.destructuredNames)
             }
 

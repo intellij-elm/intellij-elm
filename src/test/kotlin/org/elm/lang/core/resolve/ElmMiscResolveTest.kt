@@ -26,4 +26,26 @@ f x =
          --^
 """)
 
+
+
+    fun `test lambda parameter ref`() = checkByCode(
+"""
+f = \x -> x
+   --X  --^
+""")
+
+
+    fun `test lambda parameter destructured record field ref`() = checkByCode(
+"""
+f = \{x} -> x
+    --X   --^
+""")
+
+
+    fun `test lambda parameter destructured tuple ref`() = checkByCode(
+"""
+f = \(x,y) -> x
+    --X     --^
+""")
+
 }
