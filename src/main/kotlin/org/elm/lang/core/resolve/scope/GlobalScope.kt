@@ -1,7 +1,7 @@
 package org.elm.lang.core.resolve.scope
 
 import com.intellij.openapi.project.Project
-import org.elm.lang.core.modulePathToFile
+import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 
@@ -53,7 +53,7 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleValues(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-            modulePathToFile(moduleName, project)
+            ElmModuleIndex.getFileByModuleName(moduleName, project)
                     ?.let { ModuleScope(it).getVisibleValues() }
                     ?: emptyList()
 
@@ -67,7 +67,7 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                modulePathToFile(moduleName, project)
+                ElmModuleIndex.getFileByModuleName(moduleName, project)
                         ?.let { ModuleScope(it).getVisibleTypes() }
                         ?: emptyList()
 
@@ -85,7 +85,7 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleUnionOrRecordConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                modulePathToFile(moduleName, project)
+                ElmModuleIndex.getFileByModuleName(moduleName, project)
                         ?.let { ModuleScope(it).getVisibleUnionOrRecordConstructors() }
                         ?: emptyList()
 

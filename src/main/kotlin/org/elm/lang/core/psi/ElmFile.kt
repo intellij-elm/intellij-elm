@@ -5,6 +5,7 @@ import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiFile
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
+import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), PsiFile {
 
@@ -25,4 +26,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 //        println("Checking path: $path, isCore=$isCore")
         return isCore
     }
+
+    fun getModuleName() =
+            findChildByClass(ElmModuleDeclaration::class.java)?.upperCaseQID?.text
 }

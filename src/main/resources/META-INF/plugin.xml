@@ -29,6 +29,7 @@
         <annotator language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlightAnnotator"/>
         <annotator language="Elm" implementationClass="org.elm.ide.annotator.ElmUnresolvedReferenceAnnotator"/>
         <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage" />
+        <fileBasedIndex implementation="org.elm.lang.core.ElmModuleIndex" />
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
