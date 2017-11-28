@@ -6,13 +6,9 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.text.CharArrayCharSequence
-import com.intellij.util.text.CharArrayUtil
 import org.elm.lang.core.psi.ELM_COMMENTS
-
-import java.util.Deque
-import java.util.LinkedList
-
 import org.elm.lang.core.psi.ElmTypes.*
+import java.util.*
 
 
 /**
@@ -145,6 +141,13 @@ class ElmLexer(private val lexer: Lexer) : LexerBase() {
                         state = State.RETURN_PENDING
                     }
                 }
+            } else if (!beginOfLine && token.tokenType == IN && currentToken?.tokenType != VIRTUAL_END_SECTION) {
+                // Reached the end of let declarations where the 'in' keyword is on the same line
+                // as the last 'let' declaration. Close out the section.
+                indentStack.pop()
+                pendingToken = token
+                nextToken = synthesizeEndSectionToken()
+                state = State.RETURN_PENDING
             }
 
             if (nextToken == null) {
