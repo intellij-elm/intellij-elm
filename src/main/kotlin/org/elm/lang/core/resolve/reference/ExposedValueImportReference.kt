@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve.reference
 
-import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmImportClause
@@ -21,7 +20,4 @@ class ExposedValueImportReference(exposedValue: ElmExposedValue) : ElmReferenceB
                 ?: emptyArray()
     }
 
-    override fun resolve(): PsiElement? {
-        return getVariants().firstOrNull { it.name == element.referenceName }
-    }
 }

@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve.reference
 
-import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposedUnionConstructor
@@ -26,7 +25,4 @@ class ExposedUnionConstructorReference(exposedUnionConstructor: ElmExposedUnionC
         }
     }
 
-    override fun resolve(): PsiElement? {
-        return getVariants().firstOrNull { it.name == element.referenceName }
-    }
 }

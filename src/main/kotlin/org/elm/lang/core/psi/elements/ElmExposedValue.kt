@@ -2,11 +2,11 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.ExposedValueImportReference
 import org.elm.lang.core.resolve.reference.ExposedValueModuleReference
 
@@ -28,12 +28,12 @@ class ElmExposedValue(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference(): PsiReference {
+    override fun getReference(): ElmReference {
         // TODO [kl] cleanup
         val moduleDecl = parentOfType<ElmModuleDeclaration>()
         return if (moduleDecl != null)
             ExposedValueModuleReference(this)
-               else
+        else
             ExposedValueImportReference(this)
     }
 }

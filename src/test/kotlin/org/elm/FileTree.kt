@@ -37,6 +37,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiManager
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.utils.fullyRefreshDirectory
 import org.intellij.lang.annotations.Language
 
@@ -149,15 +150,12 @@ class TestProject(
                 ?: error("No parent of type ${T::class.java} for ${element.text}")
     }
 
-    // TODO [kl] narrow T once we have our own reference element Psi type.
-    // The original code from the Rust plugin had T : RsReferenceElement,
-    // which also guaranteed that `reference()` does not return null.
-    inline fun <reified T : PsiElement> checkReferenceIsResolved(
+    inline fun <reified T : ElmReferenceElement> checkReferenceIsResolved(
             path: String,
             shouldNotResolve: Boolean = false
     ) {
         val ref = findElementInFile<T>(path)
-        val res = ref.reference!!.resolve()
+        val res = ref.reference.resolve()
         if (shouldNotResolve) {
             check(res == null) {
                 "Reference ${ref.text} should be unresolved in `$path`"

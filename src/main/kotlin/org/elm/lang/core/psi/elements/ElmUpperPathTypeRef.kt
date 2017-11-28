@@ -2,9 +2,9 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
 import org.elm.lang.core.resolve.reference.QualifiedTypeReference
 import org.elm.lang.core.resolve.reference.SimpleTypeReference
@@ -29,10 +29,10 @@ class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReference
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference() =
+    override fun getReference(): ElmReference =
             getReferences().first()
 
-    override fun getReferences(): Array<PsiReference> {
+    override fun getReferences(): Array<ElmReference> {
         return if (upperCaseQID.upperCaseIdentifierList.size > 1)
             arrayOf(QualifiedTypeReference(this, upperCaseQID),
                     QualifiedModuleNameReference(this, upperCaseQID))

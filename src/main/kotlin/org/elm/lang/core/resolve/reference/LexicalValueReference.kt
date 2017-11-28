@@ -1,7 +1,6 @@
 package org.elm.lang.core.resolve.reference
 
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ExpressionScope
 
@@ -14,7 +13,4 @@ class LexicalValueReference(element: ElmReferenceElement): ElmReferenceBase<ElmR
         return ExpressionScope(element).getVisibleValues().toTypedArray()
     }
 
-    override fun resolve(): ElmPsiElement? {
-        return getVariants().firstOrNull { it.name == element.referenceName }
-    }
 }

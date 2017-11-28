@@ -8,6 +8,7 @@ import org.elm.lang.core.psi.elements.Flavor.BareValue
 import org.elm.lang.core.psi.elements.Flavor.QualifiedConstructor
 import org.elm.lang.core.psi.elements.Flavor.QualifiedValue
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -64,10 +65,10 @@ class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement
         get() = referenceNameElement.text
 
 
-    override fun getReference() =
+    override fun getReference(): ElmReference =
             getReferences().first()
 
-    override fun getReferences() =
+    override fun getReferences(): Array<ElmReference> =
             when (flavor) {
                 QualifiedValue ->           arrayOf(QualifiedValueReference(this, valueQID!!),
                                                     QualifiedModuleNameReference(this, valueQID!!))

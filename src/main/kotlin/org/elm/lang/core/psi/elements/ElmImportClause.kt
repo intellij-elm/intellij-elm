@@ -4,7 +4,6 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.childOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
@@ -50,8 +49,5 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
                         ImportScope.allElmFiles(element.project)
                                 .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
                                 .toTypedArray()
-
-                override fun resolve(): ElmPsiElement? =
-                        getVariants().find { it.name == element.referenceName }
             }
 }

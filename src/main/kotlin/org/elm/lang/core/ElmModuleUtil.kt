@@ -15,7 +15,7 @@ fun modulePathToFile(moduleName: String, project: Project): ElmFile? {
     // TODO [kl] re-visit this choice for `GlobalSearchScope`
     val scope = GlobalSearchScope.projectScope(project)
     val file = FilenameIndex.getFilesByName(project, filename, scope)
-            .firstOrNull { it.virtualFile.path.endsWith(relativeModulePath + "/" + filename)}
+            .find { it.virtualFile.path.endsWith(relativeModulePath + "/" + filename)}
             ?: return null
 
     if (file !is ElmFile)

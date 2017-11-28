@@ -36,7 +36,7 @@ class ModuleScope(val elmFile: ElmFile) {
      * The [qualifierPrefix] may be either a module name or an import alias.
      */
     fun importDeclForQualifierPrefix(qualifierPrefix: String) =
-            elmFile.descendantsOfType<ElmImportClause>().firstOrNull {
+            elmFile.descendantsOfType<ElmImportClause>().find {
                 toName(it.moduleQID) == qualifierPrefix || it.asClause?.name == qualifierPrefix
             }
 

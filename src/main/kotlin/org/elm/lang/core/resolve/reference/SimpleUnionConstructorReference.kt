@@ -1,7 +1,6 @@
 package org.elm.lang.core.resolve.reference
 
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 
@@ -13,6 +12,4 @@ class SimpleUnionConstructorReference(element: ElmReferenceElement): ElmReferenc
     override fun getVariants(): Array<ElmNamedElement> =
             ModuleScope(element.elmFile).getVisibleUnionOrRecordConstructors().toTypedArray()
 
-    override fun resolve(): ElmPsiElement? =
-            getVariants().firstOrNull { it.name == element.referenceName }
 }

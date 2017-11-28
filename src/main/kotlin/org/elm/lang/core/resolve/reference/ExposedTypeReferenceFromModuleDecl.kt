@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve.reference
 
-import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -15,7 +14,4 @@ class ExposedTypeReferenceFromModuleDecl(exposedType: ElmExposedType) : ElmRefer
         return ModuleScope(element.elmFile).getDeclaredTypes().toTypedArray()
     }
 
-    override fun resolve(): PsiElement? {
-        return getVariants().firstOrNull { it.name == element.referenceName }
-    }
 }

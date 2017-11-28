@@ -3,6 +3,7 @@ package org.elm.lang.core.resolve.reference
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.elementType
@@ -11,7 +12,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 
 
 abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
-    : PsiReferenceBase<T>(element) {
+    : ElmReference, PsiReferenceBase<T>(element) {
 
     override fun calculateDefaultRangeInElement(): TextRange {
         // TODO [kl] eventually introduce the reference anchor concept from the
@@ -40,5 +41,13 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
         }
         identifier.replace(newId)
         return element
+    }
+
+    /**
+     * Default implementation of resolve should be good enough in most cases assuming
+     * that the subclass implements [getVariants] sensibly.
+     */
+    override fun resolve(): ElmPsiElement? {
+        return getVariants().find { it.name == element.referenceName }
     }
 }

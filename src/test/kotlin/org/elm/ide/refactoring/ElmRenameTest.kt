@@ -9,7 +9,7 @@ import org.intellij.lang.annotations.Language
 
 class ElmRenameTest: ElmTestBase() {
 
-    fun testValueDeclRename() {
+    fun `test value decl rename`() {
         doTest("quux",
 """
 foo : Int
@@ -21,7 +21,7 @@ quux = 42
 bar = quux + 2
 """)}
 
-    fun testFunctionParameterRename() {
+    fun `test function parameter rename`() {
         doTest("z",
 """
 f x{-caret-} y = x + y
@@ -29,7 +29,7 @@ f x{-caret-} y = x + y
 f z y = z + y
 """)}
 
-    fun testUnionTypeRename() {
+    fun `test union type rename`() {
         doTest("Quux",
 """
 type Foo{-caret-} = A | B
@@ -41,7 +41,7 @@ type Bar = C Quux
 f : Quux -> String
 """)}
 
-    fun testTypeAliasRename() {
+    fun `test type alias rename`() {
         doTest("Quux",
 """
 type alias Foo{-caret-} = Int
@@ -55,7 +55,7 @@ f : Quux -> String
 
 
     // TODO [kl] improve this test by also verifying that the FILE is renamed (currently not implemented in the plugin)
-    fun testModuleRenameFromDataUserToQuux() {
+    fun `test module rename from Data_User to Quux`() {
         checkByDirectory(
 """
 --@ Data/User.elm
@@ -88,7 +88,7 @@ g = f (Quux.User "joe")
         }
     }
 
-    fun testImportAliasRename() {
+    fun `test import alias rename`() {
         checkByDirectory(
 """
 --@ Data/User.elm

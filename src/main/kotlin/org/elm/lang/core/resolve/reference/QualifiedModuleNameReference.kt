@@ -27,7 +27,7 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 class QualifiedModuleNameReference<T:ElmPsiElement>(
         elem: T,
         val elementQID: ElmQID
-): PsiReferenceBase<T>(elem) {
+): PsiReferenceBase<T>(elem), ElmReference {
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] consider inverting this loop to reduce iterations

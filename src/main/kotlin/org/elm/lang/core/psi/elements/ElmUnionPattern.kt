@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
 import org.elm.lang.core.resolve.reference.SimpleUnionConstructorReference
@@ -30,10 +31,10 @@ class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference() =
+    override fun getReference(): ElmReference =
             references.first()
 
-    override fun getReferences() =
+    override fun getReferences(): Array<ElmReference> =
             if (upperCaseQID.isQualified)
                 arrayOf(QualifiedConstructorReference(this, upperCaseQID),
                         QualifiedModuleNameReference(this, upperCaseQID))
