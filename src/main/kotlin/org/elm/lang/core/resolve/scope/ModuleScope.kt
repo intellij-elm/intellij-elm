@@ -3,12 +3,7 @@ package org.elm.lang.core.resolve.scope
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.descendantsOfType
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmUnionMember
-import org.elm.lang.core.psi.elements.ElmUpperCaseQID
-import org.elm.lang.core.psi.elements.ElmValueDeclaration
+import org.elm.lang.core.psi.elements.*
 
 
 /**
@@ -46,8 +41,12 @@ class ModuleScope(val elmFile: ElmFile) {
 
 
     fun getDeclaredValues(): List<ElmNamedElement> {
-        return elmFile.findChildrenByClass(ElmValueDeclaration::class.java).toList()
+        val valueDecls = elmFile.findChildrenByClass(ElmValueDeclaration::class.java).toList()
                 .flatMap { it.declaredNames(includeParameters = false) }
+
+        val portDecls = elmFile.findChildrenByClass(ElmPortAnnotation::class.java).toList()
+
+        return listOf(valueDecls, portDecls).flatten()
     }
 
 

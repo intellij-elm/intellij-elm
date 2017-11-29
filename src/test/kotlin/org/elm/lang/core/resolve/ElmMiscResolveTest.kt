@@ -48,4 +48,14 @@ f = \(x,y) -> x
     --X     --^
 """)
 
+
+    fun `test port ref`() = checkByCode(
+"""
+port foo : String -> Cmd msg
+     --X
+
+update msg model = (model, foo "blah")
+                           --^
+""")
+
 }

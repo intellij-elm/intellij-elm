@@ -370,4 +370,17 @@ import Data.User
 module Data.User exposing (..)
 """)
 
+
+    fun `test port ref`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Ports exposing (foo)
+                       --^Ports.elm
+
+--@ Ports.elm
+port module Ports exposing (foo)
+port foo : String -> Cmd msg
+""")
+
+
 }

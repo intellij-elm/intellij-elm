@@ -42,6 +42,8 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
     val typeRef: ElmTypeRef
         get() = findNotNullChildByClass(ElmTypeRef::class.java)
 
+
+
     override val referenceNameElement: PsiElement
         get() = lowerCaseIdentifier
                     ?: operatorAsFunction?.operator

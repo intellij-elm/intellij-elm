@@ -84,6 +84,7 @@ private declaration ::=
     | type_alias_declaration
     | type_declaration
     | type_annotation
+    | port_annotation
     | operator_config
 /* TODO [kl] re-enable after the big refactoring (see HaskForce BNF for ideas)
   (previously the recovery relied on FRESH_LINE, which no longer exists)
@@ -156,7 +157,9 @@ tuple_type ::=
     | LEFT_PARENTHESIS type_ref (COMMA type_ref)+ RIGHT_PARENTHESIS
 
 
-type_annotation ::= ([PORT] LOWER_CASE_IDENTIFIER | operator_as_function) COLON type_ref
+type_annotation ::= (LOWER_CASE_IDENTIFIER | operator_as_function) COLON type_ref
+
+port_annotation ::= PORT LOWER_CASE_IDENTIFIER COLON type_ref
 
 
 

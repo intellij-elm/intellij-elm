@@ -82,4 +82,18 @@ module App exposing (Person)
 type alias Person = { name : String, age: Int }
 """)
 
+
+    fun `test qualified port ref`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Ports
+update msg model = (model, Ports.foo "blah")
+                                 --^Ports.elm
+
+--@ Ports.elm
+port module Ports exposing (foo)
+port foo : String -> Cmd msg
+""")
+
+
 }
