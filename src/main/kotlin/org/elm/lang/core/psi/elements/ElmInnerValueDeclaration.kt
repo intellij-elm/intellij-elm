@@ -2,7 +2,6 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
@@ -43,8 +42,8 @@ class ElmInnerValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
 
             if (includeParameters) {
                 // add parameters, including destructured names
-                val parameterNames = PsiTreeUtil.collectElementsOfType(functionDeclarationLeft, ElmLowerPattern::class.java)
-                namedElements.addAll(parameterNames)
+                namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft, ElmLowerPattern::class.java))
+                namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft, ElmPatternAs::class.java))
             }
         } else if (operatorDeclarationLeft != null) {
             // TODO [kl] handle operator decls

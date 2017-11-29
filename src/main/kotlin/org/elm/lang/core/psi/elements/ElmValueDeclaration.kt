@@ -23,9 +23,11 @@ class ElmValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
 
 
     /**
-     * Names that are declared on the left-hand side of the equals sign
-     * in a value declaration, including the name of the function/value itself
-     * as well as destructured names caused by pattern matching.
+     * Names that are declared on the left-hand side of the equals sign in a value
+     * declaration. In the basic case, this is the name of the function/value itself.
+     * Optionally may also include "parameters" to the function. Parameters are simple,
+     * lower-case identifiers like you would normally expect in a function, but also
+     * any destructured names caused by pattern matching.
      *
      * @param includeParameters include names declared as parameters to the function
      *                          (also includes destructured names). The default is `true`
@@ -39,8 +41,10 @@ class ElmValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
 
             if (includeParameters) {
                 // add parameters, including destructured names
-                val parameterNames = PsiTreeUtil.collectElementsOfType(functionDeclarationLeft, ElmLowerPattern::class.java)
-                namedElements.addAll(parameterNames)
+                namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft,
+                        ElmLowerPattern::class.java))
+                namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft,
+                        ElmPatternAs::class.java))
             }
         } else if (operatorDeclarationLeft != null) {
             // TODO [kl] handle operator decls

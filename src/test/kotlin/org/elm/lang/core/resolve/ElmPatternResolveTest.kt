@@ -63,4 +63,32 @@ f =
         g (320, 480)
 """)
 
+
+    fun `test pattern alias in function decl parameter`() = checkByCode(
+"""
+foo ((x, y) as point) = point
+               --X      --^
+""")
+
+
+    fun `test pattern alias in let-in decl`() = checkByCode(
+"""
+f =
+    let
+        g ((x, y) as point) = point
+                     --X      --^
+    in
+        g (320, 480)
+""")
+
+
+    fun `test pattern alias in case-of branch`() = checkByCode(
+"""
+f x =
+    case x of
+        ((x, y) as point) -> point
+                   --X       --^
+""")
+
+
 }
