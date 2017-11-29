@@ -50,6 +50,9 @@ class ElmModuleIndex : ScalarIndexExtension<String>() {
                 return if (moduleName == null) {
                     emptyMap()
                 } else if (moduleName.startsWith(PLATFORM_PREFIX)) {
+                    // The Elm compiler implicitly imports `Platform.Cmd` and `Platform.Sub`
+                    // using the aliases `Cmd` and `Sub` respectively. So we index them
+                    // under both the full module name as well as the alias.
                     mapOf(
                             moduleName to null,
                             moduleName.substring(PLATFORM_PREFIX.length) to null
