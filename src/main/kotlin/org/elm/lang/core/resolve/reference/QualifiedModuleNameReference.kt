@@ -3,6 +3,7 @@ package org.elm.lang.core.resolve.reference
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
+import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
@@ -13,7 +14,6 @@ import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 import org.elm.lang.core.psi.elements.ElmValueQID
 import org.elm.lang.core.psi.offsetIn
 import org.elm.lang.core.resolve.scope.GlobalScope
-import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 /**
@@ -30,8 +30,7 @@ class QualifiedModuleNameReference<T:ElmPsiElement>(
 ): PsiReferenceBase<T>(elem), ElmReference {
 
     override fun getVariants(): Array<ElmNamedElement> {
-        // TODO [kl] consider inverting this loop to reduce iterations
-        val moduleDecls = ImportScope.allElmFiles(element.project)
+        val moduleDecls = ElmModuleIndex.getAllModules(element.project)
                 .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
                 .filter { ModuleScope(element.elmFile).importsModule(it.name)
                     || GlobalScope.implicitlyImportsModule(it)

@@ -1,8 +1,5 @@
 package org.elm.lang.core.resolve.scope
 
-import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiManager
-import com.intellij.psi.search.FilenameIndex
 import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
@@ -28,12 +25,6 @@ class ImportScope(val elmFile: ElmFile) {
             val moduleName = importDecl.moduleQID.upperCaseIdentifierList.joinToString(".") { it.text }
             return ElmModuleIndex.getFileByModuleName(moduleName, importDecl.moduleQID.project)
                     ?.let { ImportScope(it) }
-        }
-
-        fun allElmFiles(project: Project): List<ElmFile> {
-            // TODO [kl] should we instead use [ElmModuleIndex]?
-            return FilenameIndex.getAllFilesByExt(project, "elm")
-                    .mapNotNull { PsiManager.getInstance(project).findFile(it) as? ElmFile }
         }
 
         /**
