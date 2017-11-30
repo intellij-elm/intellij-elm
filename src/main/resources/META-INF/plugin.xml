@@ -31,6 +31,7 @@
         <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage" />
         <fileBasedIndex implementation="org.elm.lang.core.ElmModuleIndex" />
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
+        <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher" />
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
