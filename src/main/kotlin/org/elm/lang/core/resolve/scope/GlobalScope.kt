@@ -73,7 +73,6 @@ class GlobalScope(val project: Project) {
 
         val rest = mutableListOf<ElmNamedElement>()
         rest.addAll(helper("Basics"))
-        rest.addAll(helper("List").filter { it.name == "List" })
         rest.addAll(helper("Maybe").filter { it.name == "Maybe" })
         rest.addAll(helper("Result").filter { it.name == "Result" })
         rest.addAll(helper("Platform").filter { it.name == "Program" })

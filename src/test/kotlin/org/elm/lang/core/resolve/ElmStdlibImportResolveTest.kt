@@ -1,7 +1,7 @@
 package org.elm.lang.core.resolve
 
 
-class ElmGlobalImportResolveTest: ElmResolveTestBase() {
+class ElmStdlibImportResolveTest : ElmResolveTestBase() {
 
     // TODO [kl] re-enable these tests once we can arrange to download Elm Core package
     // and configure a custom [LightProjectDescriptor] that includes Core as standard library.
