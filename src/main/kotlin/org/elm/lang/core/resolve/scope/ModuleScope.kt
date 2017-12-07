@@ -139,7 +139,7 @@ class ModuleScope(val elmFile: ElmFile) {
         val unionConstructors = elmFile.descendantsOfType<ElmUnionMember>()
         val recordConstructors = elmFile.descendantsOfType<ElmTypeAliasDeclaration>()
                                         .filter { it.typeRef.isRecord }
-        return listOf(unionConstructors, recordConstructors).flatten()
+        return listOf<Collection<ElmNamedElement>>(unionConstructors, recordConstructors).flatten()
     }
 
 

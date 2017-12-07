@@ -13,6 +13,7 @@ import com.intellij.psi.tree.IStubFileElementType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
+import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 
 
@@ -49,6 +50,7 @@ class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
 fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "MODULE_DECLARATION" -> ElmModuleDeclarationStub.Type
     "TYPE_DECLARATION" -> ElmTypeDeclarationStub.Type
+    "TYPE_ALIAS_DECLARATION" -> ElmTypeAliasDeclarationStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -105,6 +107,35 @@ class ElmTypeDeclarationStub(parent: StubElement<*>?,
                 ElmTypeDeclarationStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmTypeDeclarationStub, sink: IndexSink) {
+            // TODO [kl] index me
+        }
+    }
+}
+
+
+class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
+                               elementType: IStubElementType<*, *>,
+                               override val name: String
+): StubBase<ElmTypeAliasDeclaration>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmTypeAliasDeclarationStub, ElmTypeAliasDeclaration>("TYPE_ALIAS_DECLARATION") {
+
+        override fun serialize(stub: ElmTypeAliasDeclarationStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmTypeAliasDeclarationStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmTypeAliasDeclarationStub) =
+                ElmTypeAliasDeclaration(stub, this)
+
+        override fun createStub(psi: ElmTypeAliasDeclaration, parentStub: StubElement<*>?) =
+                ElmTypeAliasDeclarationStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmTypeAliasDeclarationStub, sink: IndexSink) {
             // TODO [kl] index me
         }
     }
