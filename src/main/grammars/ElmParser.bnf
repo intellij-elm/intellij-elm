@@ -10,6 +10,7 @@
     elementTypeFactory("module_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
     elementTypeFactory("type_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
     elementTypeFactory("type_alias_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
+    elementTypeFactory("union_member")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
 
     tokens = [
         // tokens used by manual/external parse rules

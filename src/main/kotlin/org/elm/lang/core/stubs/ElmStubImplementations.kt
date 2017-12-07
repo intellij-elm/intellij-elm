@@ -15,6 +15,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.ElmUnionMember
 
 
 class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
@@ -51,6 +52,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "MODULE_DECLARATION" -> ElmModuleDeclarationStub.Type
     "TYPE_DECLARATION" -> ElmTypeDeclarationStub.Type
     "TYPE_ALIAS_DECLARATION" -> ElmTypeAliasDeclarationStub.Type
+    "UNION_MEMBER" -> ElmUnionMemberStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -136,6 +138,35 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
                 ElmTypeAliasDeclarationStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmTypeAliasDeclarationStub, sink: IndexSink) {
+            // TODO [kl] index me
+        }
+    }
+}
+
+
+class ElmUnionMemberStub(parent: StubElement<*>?,
+                         elementType: IStubElementType<*, *>,
+                         override val name: String
+): StubBase<ElmUnionMember>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmUnionMemberStub, ElmUnionMember>("UNION_MEMBER") {
+
+        override fun serialize(stub: ElmUnionMemberStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmUnionMemberStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmUnionMemberStub) =
+                ElmUnionMember(stub, this)
+
+        override fun createStub(psi: ElmUnionMember, parentStub: StubElement<*>?) =
+                ElmUnionMemberStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmUnionMemberStub, sink: IndexSink) {
             // TODO [kl] index me
         }
     }
