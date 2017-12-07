@@ -3,7 +3,13 @@ package org.elm.lang.core.resolve.scope
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.descendantsOfType
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmPortAnnotation
+import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.ElmUnionMember
+import org.elm.lang.core.psi.elements.ElmUpperCaseQID
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
 /**
@@ -87,7 +93,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
 
     fun getDeclaredTypes(): List<ElmNamedElement> {
-        return listOf(
+        return listOf<List<ElmNamedElement>>(
                 elmFile.findChildrenByClass(ElmTypeDeclaration::class.java).toList(),
                 elmFile.findChildrenByClass(ElmTypeAliasDeclaration::class.java).toList()
         ).flatten()

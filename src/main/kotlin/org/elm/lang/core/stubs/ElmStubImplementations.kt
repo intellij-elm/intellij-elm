@@ -13,6 +13,7 @@ import com.intellij.psi.tree.IStubFileElementType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 
 
 class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
@@ -46,14 +47,15 @@ class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
 
 
 fun factory(name: String): ElmStubElementType<*, *> = when (name) {
-    // TODO [kl] manually map stubbable element names to type impls
     "MODULE_DECLARATION" -> ElmModuleDeclarationStub.Type
+    "TYPE_DECLARATION" -> ElmTypeDeclarationStub.Type
     else -> error("Unknown element $name")
 }
 
+
 class ElmModuleDeclarationStub(parent: StubElement<*>?,
                                elementType: IStubElementType<*, *>,
-                               override val name: String?
+                               override val name: String
 ): StubBase<ElmModuleDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmModuleDeclarationStub, ElmModuleDeclaration>("MODULE_DECLARATION") {
@@ -65,7 +67,7 @@ class ElmModuleDeclarationStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmModuleDeclarationStub(parentStub, this,
-                        dataStream.readNameAsString())
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmModuleDeclarationStub) =
                 ElmModuleDeclaration(stub, this)
@@ -74,6 +76,35 @@ class ElmModuleDeclarationStub(parent: StubElement<*>?,
                 ElmModuleDeclarationStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmModuleDeclarationStub, sink: IndexSink) {
+            // TODO [kl] index me
+        }
+    }
+}
+
+
+class ElmTypeDeclarationStub(parent: StubElement<*>?,
+                               elementType: IStubElementType<*, *>,
+                               override val name: String
+): StubBase<ElmTypeDeclaration>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmTypeDeclarationStub, ElmTypeDeclaration>("TYPE_DECLARATION") {
+
+        override fun serialize(stub: ElmTypeDeclarationStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmTypeDeclarationStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmTypeDeclarationStub) =
+                ElmTypeDeclaration(stub, this)
+
+        override fun createStub(psi: ElmTypeDeclaration, parentStub: StubElement<*>?) =
+                ElmTypeDeclarationStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmTypeDeclarationStub, sink: IndexSink) {
             // TODO [kl] index me
         }
     }

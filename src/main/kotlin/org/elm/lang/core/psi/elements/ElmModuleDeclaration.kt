@@ -54,9 +54,8 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
     override fun getName(): String {
         val stub = getStub() as? ElmNamedStub
         if (stub != null) {
-            // TODO [kl] why the optional string for `name`?
             // TODO [kl] how will the stub thing affect my Cmd and Sub hacks?
-            return stub.name!!
+            return stub.name
         }
 
         val fullName = upperCaseQID.text

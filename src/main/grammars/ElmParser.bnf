@@ -8,6 +8,7 @@
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
     elementTypeFactory("module_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
+    elementTypeFactory("type_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
 
     tokens = [
         // tokens used by manual/external parse rules
