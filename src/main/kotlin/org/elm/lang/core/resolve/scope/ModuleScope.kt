@@ -94,8 +94,8 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getDeclaredTypes(): List<ElmNamedElement> {
         return listOf<List<ElmNamedElement>>(
-                elmFile.findChildrenByClass(ElmTypeDeclaration::class.java).toList(),
-                elmFile.findChildrenByClass(ElmTypeAliasDeclaration::class.java).toList()
+                elmFile.getTypeDeclarations(),
+                elmFile.getTypeAliasDeclarations()
         ).flatten()
     }
 

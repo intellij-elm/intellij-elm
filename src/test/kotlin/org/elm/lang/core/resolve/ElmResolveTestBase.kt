@@ -1,5 +1,6 @@
 package org.elm.lang.core.resolve
 
+import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmNamedElement
@@ -29,16 +30,11 @@ abstract class ElmResolveTestBase : ElmTestBase() {
     }
 
     protected fun stubOnlyResolve(@Language("Elm") code: String) {
-        fileTreeFromText(code).createAndOpenFileWithCaretMarker()
+        val testProject = fileTreeFromText(code).createAndOpenFileWithCaretMarker()
 
-        // TODO [kl] re-enable this check once we add stub support
-        // this code was copied from the IntelliJ Rust plugin which designed their
-        // resolve tests to ensure that resolving an import can be done with just stubs.
-        /*
         checkAstNotLoaded(VirtualFileFilter { file ->
             !file.path.endsWith(testProject.fileWithCaret)
         })
-        */
 
         val (refElement, resolveFile) = findElementAndDataInEditor<ElmReferenceElement>()
 

@@ -9,9 +9,6 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
 
 class ElmValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    val expression: ElmExpression
-        get() = findNotNullChildByClass(ElmExpression::class.java)
-
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = findChildByClass(ElmFunctionDeclarationLeft::class.java)
 
@@ -21,6 +18,13 @@ class ElmValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
 
+
+    /**
+     * The 'body' of the declaration. This is the right-hand side which is bound
+     * to the name(s) on the left-hand side
+     */
+    val expression: ElmExpression
+        get() = findNotNullChildByClass(ElmExpression::class.java)
 
     /**
      * Names that are declared on the left-hand side of the equals sign in a value

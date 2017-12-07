@@ -3,11 +3,12 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmNamedElementImpl
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
 /**
@@ -23,7 +24,15 @@ import org.elm.lang.core.psi.IdentifierCase
  *
  * @see [ElmOperatorDeclarationLeft]
  */
-class ElmFunctionDeclarationLeft(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER) {
+class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub> {
+
+    constructor(node: ASTNode) :
+            super(node, IdentifierCase.LOWER)
+
+    constructor(stub: ElmFunctionDeclarationLeftStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType, IdentifierCase.LOWER)
+
+
 
     /**
      * The name given to the function/value

@@ -3,12 +3,11 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.childOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceBase
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
 /**
@@ -46,8 +45,6 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override fun getReference() =
             object : ElmReferenceBase<ElmImportClause>(this) {
                 override fun getVariants(): Array<ElmNamedElement> =
-                        ElmModuleIndex.getAllModules(element.project)
-                                .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
-                                .toTypedArray()
+                        ElmModulesIndex.getAll(element.project).toTypedArray()
             }
 }

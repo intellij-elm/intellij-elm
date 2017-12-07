@@ -7,10 +7,16 @@
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
-    elementTypeFactory("module_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
-    elementTypeFactory("type_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
-    elementTypeFactory("type_alias_declaration")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
-    elementTypeFactory("union_member")="org.elm.lang.core.stubs.ElmStubImplementationsKt.factory"
+    elementTypeFactory("module_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("type_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("type_alias_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("union_member")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("function_declaration_left")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("exposing_list")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("exposed_value")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("exposed_type")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("exposed_union_constructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("exposed_union_constructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     tokens = [
         // tokens used by manual/external parse rules

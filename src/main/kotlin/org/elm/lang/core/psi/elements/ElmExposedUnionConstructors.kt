@@ -2,9 +2,11 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes
+import org.elm.lang.core.stubs.ElmExposedUnionConstructorsStub
 
 
 /**
@@ -17,7 +19,14 @@ import org.elm.lang.core.psi.ElmTypes
  * 2. [doubleDot] is not-null, in which case all constructors are exposed
  *    (e.g. `import App exposing Page(..)`)
  */
-class ElmExposedUnionConstructors(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmExposedUnionConstructors : ElmStubbedElement<ElmExposedUnionConstructorsStub> {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmExposedUnionConstructorsStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
+
 
     val doubleDot: PsiElement?
         get() = findChildByType(ElmTypes.DOUBLE_DOT)

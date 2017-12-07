@@ -54,7 +54,7 @@ class GlobalScope(val project: Project) {
     fun getVisibleValues(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
             ElmModuleIndex.getFileByModuleName(moduleName, project)
-                    ?.let { ModuleScope(it).getVisibleValues() }
+                    ?.let { ModuleScope(it).getDeclaredValues() }
                     ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
@@ -68,7 +68,7 @@ class GlobalScope(val project: Project) {
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModuleIndex.getFileByModuleName(moduleName, project)
-                        ?.let { ModuleScope(it).getVisibleTypes() }
+                        ?.let { ModuleScope(it).getDeclaredTypes() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
@@ -85,7 +85,7 @@ class GlobalScope(val project: Project) {
     fun getVisibleUnionOrRecordConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModuleIndex.getFileByModuleName(moduleName, project)
-                        ?.let { ModuleScope(it).getVisibleUnionOrRecordConstructors() }
+                        ?.let { ModuleScope(it).getDeclaredUnionOrRecordConstructors() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()

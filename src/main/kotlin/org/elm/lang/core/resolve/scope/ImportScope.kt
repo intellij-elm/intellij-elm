@@ -4,9 +4,9 @@ import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
  * A scope that allows exposed values and types from the module named [elmFile]
@@ -23,8 +23,8 @@ class ImportScope(val elmFile: ElmFile) {
          */
         fun fromImportDecl(importDecl: ElmImportClause): ImportScope? {
             val moduleName = importDecl.moduleQID.upperCaseIdentifierList.joinToString(".") { it.text }
-            return ElmModuleIndex.getFileByModuleName(moduleName, importDecl.moduleQID.project)
-                    ?.let { ImportScope(it) }
+            return ElmModulesIndex.get(moduleName, importDecl.project)
+                    ?.let { ImportScope(it.elmFile) }
         }
 
         /**
@@ -46,7 +46,7 @@ class ImportScope(val elmFile: ElmFile) {
 
 
     fun getExposedValues(): List<ElmNamedElement> {
-        val moduleDecl = elmFile.findChildByClass(ElmModuleDeclaration::class.java)
+        val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
@@ -57,7 +57,7 @@ class ImportScope(val elmFile: ElmFile) {
     }
 
     fun getExposedTypes(): List<ElmNamedElement> {
-        val moduleDecl = elmFile.findChildByClass(ElmModuleDeclaration::class.java)
+        val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
@@ -68,7 +68,7 @@ class ImportScope(val elmFile: ElmFile) {
     }
 
     fun getExposedUnionOrRecordConstructors(): List<ElmNamedElement> {
-        val moduleDecl = elmFile.findChildByClass(ElmModuleDeclaration::class.java)
+        val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)

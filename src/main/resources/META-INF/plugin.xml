@@ -37,6 +37,8 @@
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
         <liveTemplateContext implementation="org.elm.ide.ElmLiveTemplateContext" />
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" />
+        <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex" />
+        <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex" />
     </extensions>
 
     <actions>

@@ -2,10 +2,12 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import com.intellij.psi.stubs.IStubElementType
+import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ExposedUnionConstructorReference
+import org.elm.lang.core.stubs.ElmExposedUnionConstructorStub
 
 
 /**
@@ -13,7 +15,14 @@ import org.elm.lang.core.resolve.reference.ExposedUnionConstructorReference
  *
  * e.g. `Home` in `import App exposing Page(Home)`
  */
-class ElmExposedUnionConstructor(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
+class ElmExposedUnionConstructor : ElmStubbedElement<ElmExposedUnionConstructorStub>, ElmReferenceElement {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmExposedUnionConstructorStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
+
 
     val upperCaseIdentifier: PsiElement
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
@@ -23,7 +32,7 @@ class ElmExposedUnionConstructor(node: ASTNode) : ElmPsiElementImpl(node), ElmRe
         get() = upperCaseIdentifier
 
     override val referenceName: String
-        get() = referenceNameElement.text
+        get() = getStub()?.refName ?: referenceNameElement.text
 
     override fun getReference() =
             ExposedUnionConstructorReference(this)

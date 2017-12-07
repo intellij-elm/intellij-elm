@@ -4,6 +4,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
+import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmStubbedElement
@@ -38,7 +39,8 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
      * The values and types exposed by this module
      */
     val exposingList: ElmExposingList
-        get() = findNotNullChildByClass(ElmExposingList::class.java)
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmExposingList::class.java)
+                    ?: error("module decl must have an exposing list")
 
     /**
      * Very rare. This will only appear in Effect Manager modules.
@@ -48,7 +50,13 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
 
     val exposesAll: Boolean
-        get() = exposingList.doubleDot != null
+        get() {
+            val stub = getStub()
+            if (stub != null) {
+                return stub.exposesAll
+            }
+            return exposingList.doubleDot != null
+        }
 
 
     override fun getName(): String {

@@ -3,18 +3,16 @@ package org.elm.lang.core.resolve.reference
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
-import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmQID
-import org.elm.lang.core.psi.childOfType
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 import org.elm.lang.core.psi.elements.ElmValueQID
 import org.elm.lang.core.psi.offsetIn
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
  * Qualified module-name reference from the value or type namespaces.
@@ -30,8 +28,7 @@ class QualifiedModuleNameReference<T:ElmPsiElement>(
 ): PsiReferenceBase<T>(elem), ElmReference {
 
     override fun getVariants(): Array<ElmNamedElement> {
-        val moduleDecls = ElmModuleIndex.getAllModules(element.project)
-                .mapNotNull { it.childOfType<ElmModuleDeclaration>() }
+        val moduleDecls = ElmModulesIndex.getAll(element.project)
                 .filter { ModuleScope(element.elmFile).importsModule(it.name)
                     || GlobalScope.implicitlyImportsModule(it)
                 }
