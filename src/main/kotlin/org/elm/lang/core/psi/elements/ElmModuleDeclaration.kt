@@ -3,9 +3,12 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import com.intellij.psi.stubs.IStubElementType
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.ElmStubbedElement
+import org.elm.lang.core.stubs.ElmModuleDeclarationStub
+import org.elm.lang.core.stubs.ElmNamedStub
 
 
 /**
@@ -17,7 +20,13 @@ import org.elm.lang.core.psi.ElmPsiFactory
  * - give the module a name
  * - expose values and types
  */
-class ElmModuleDeclaration(node: ASTNode) : ElmPsiElementImpl(node), ElmNamedElement {
+class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNamedElement {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmModuleDeclarationStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
 
     /**
      * The fully-qualified name of the module
@@ -43,6 +52,13 @@ class ElmModuleDeclaration(node: ASTNode) : ElmPsiElementImpl(node), ElmNamedEle
 
 
     override fun getName(): String {
+        val stub = getStub() as? ElmNamedStub
+        if (stub != null) {
+            // TODO [kl] why the optional string for `name`?
+            // TODO [kl] how will the stub thing affect my Cmd and Sub hacks?
+            return stub.name!!
+        }
+
         val fullName = upperCaseQID.text
         // EVIL HACK to support the implicit, aliased import of Platform.Cmd and Platform.Sub
         // modules from Elm Core.
