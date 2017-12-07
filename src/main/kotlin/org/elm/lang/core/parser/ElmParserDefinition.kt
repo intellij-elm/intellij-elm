@@ -9,9 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
-import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
-import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lexer.ElmIncrementalLexer
 import org.elm.lang.core.lexer.ElmLexer
 import org.elm.lang.core.parser.manual.ElmManualPsiElementFactory
@@ -19,13 +17,10 @@ import org.elm.lang.core.psi.ELM_COMMENTS
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmTypes
+import org.elm.lang.core.stubs.ElmFileStub
 
 
 class ElmParserDefinition : ParserDefinition {
-
-    companion object {
-        val FILE = IFileElementType(ElmLanguage)
-    }
 
     override fun createLexer(project: Project?) =
             ElmLexer(ElmIncrementalLexer())
@@ -54,7 +49,7 @@ class ElmParserDefinition : ParserDefinition {
             }
 
     override fun getFileNodeType() =
-            FILE
+            ElmFileStub.Type
 
     override fun createFile(viewProvider: FileViewProvider?) =
             ElmFile(viewProvider!!)

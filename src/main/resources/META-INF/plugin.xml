@@ -36,6 +36,7 @@
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
         <liveTemplateContext implementation="org.elm.ide.ElmLiveTemplateContext" />
+        <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" />
     </extensions>
 
     <actions>
