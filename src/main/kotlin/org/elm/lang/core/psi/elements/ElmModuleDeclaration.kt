@@ -5,6 +5,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.moduleLookupHack
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmStubbedElement
@@ -56,20 +57,8 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
     override fun getName(): String {
         val stub = getStub() as? ElmNamedStub
-        if (stub != null) {
-            // TODO [kl] how will the stub thing affect my Cmd and Sub hacks?
-            return stub.name
-        }
-
-        val fullName = upperCaseQID.text
-        // EVIL HACK to support the implicit, aliased import of Platform.Cmd and Platform.Sub
-        // modules from Elm Core.
-        // TODO [kl] re-visit this when I don't have a migraine
-        return when (fullName) {
-            "Platform.Cmd" -> "Cmd"
-            "Platform.Sub" -> "Sub"
-            else -> fullName
-        }
+        val fullName = if (stub != null) stub.name else upperCaseQID.text
+        return moduleLookupHack(fullName)
     }
 
     override fun setName(name: String): PsiElement {

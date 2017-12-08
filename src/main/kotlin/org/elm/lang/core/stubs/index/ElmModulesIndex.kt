@@ -6,6 +6,7 @@ import com.intellij.psi.stubs.IndexSink
 import com.intellij.psi.stubs.StringStubIndexExtension
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.psi.stubs.StubIndexKey
+import org.elm.lang.core.moduleLookupHack
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
@@ -25,18 +26,18 @@ class ElmModulesIndex: StringStubIndexExtension<ElmModuleDeclaration>() {
 
         fun index(stub: ElmModuleDeclarationStub, indexSink: IndexSink) {
             val key = makeKey(stub.psi)
-            if (key != null) {
-                indexSink.occurrence(KEY, key)
-            }
+            indexSink.occurrence(KEY, key)
         }
 
-        private fun makeKey(moduleDeclaration: ElmModuleDeclaration): String? {
-            // TODO [kl] what about the Cmd and Sub module name hacks?
-            return moduleDeclaration.name
-        }
+        private fun makeKey(moduleDeclaration: ElmModuleDeclaration) =
+                makeKey(moduleDeclaration.name)
+
+        private fun makeKey(moduleName: String) =
+                moduleLookupHack(moduleName)
 
         fun get(moduleName: String, project: Project): ElmModuleDeclaration? {
-            val matches = StubIndex.getElements(KEY, moduleName, project,
+            val key = makeKey(moduleName)
+            val matches = StubIndex.getElements(KEY, key, project,
                     GlobalSearchScope.allScope(project),
                     ElmModuleDeclaration::class.java)
 
