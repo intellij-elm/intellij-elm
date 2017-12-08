@@ -2,15 +2,24 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmStubbedElement
+import org.elm.lang.core.stubs.ElmValueDeclarationStub
 
 
-class ElmValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmValueDeclarationStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
+
 
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
-        get() = findChildByClass(ElmFunctionDeclarationLeft::class.java)
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
 
     val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
         get() = findChildByClass(ElmOperatorDeclarationLeft::class.java)

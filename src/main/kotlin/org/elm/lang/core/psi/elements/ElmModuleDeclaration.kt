@@ -50,13 +50,8 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
 
     val exposesAll: Boolean
-        get() {
-            val stub = getStub()
-            if (stub != null) {
-                return stub.exposesAll
-            }
-            return exposingList.doubleDot != null
-        }
+        get() = getStub()?.exposesAll
+                ?: (exposingList.doubleDot != null)
 
 
     override fun getName(): String {

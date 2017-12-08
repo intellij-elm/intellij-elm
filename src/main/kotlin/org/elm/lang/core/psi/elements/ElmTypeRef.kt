@@ -25,12 +25,4 @@ class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node) {
 
     val typeRefList: List<ElmTypeRef>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeRef::class.java)
-
-
-    // TODO [kl] this will be wrong in the case of a function type ref
-    // such as `Int -> { foo: String }`. We want to know that it is exclusively a record.
-    // We should see if we can get GrammarKit to parse this into a better data structure
-    // than what Kamil had.
-    val isRecord: Boolean
-        get() = recordTypeList.isNotEmpty()
 }

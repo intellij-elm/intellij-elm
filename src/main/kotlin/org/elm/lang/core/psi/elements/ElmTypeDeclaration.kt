@@ -9,6 +9,16 @@ import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.stubs.ElmTypeDeclarationStub
 
 
+/**
+ * Declares a union type
+ *
+ * e.g. `type Page = Home | Login | NotFound`
+ *
+ * If the union type is parametric, [lowerTypeNameList] will be non-empty. An example
+ * of a parametric type would be a binary tree: `type Tree a = Nil | Branch (Tree a) (Tree a)`.
+ * In which case, [lowerTypeNameList] would contain a single element representing the
+ * type variable `a`.
+ */
 class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub> {
 
     constructor(node: ASTNode) :
@@ -18,10 +28,16 @@ class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub> {
             super(stub, stubType, IdentifierCase.UPPER)
 
 
+    /**
+     * Zero-or-more parametric type variables which may appear in the union members.
+     */
     val lowerTypeNameList: List<ElmLowerTypeName>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
 
+    /**
+     * One or more union members which define the structure of the type.
+     */
     val unionMemberList: List<ElmUnionMember>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmUnionMember::class.java)
+        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmUnionMember::class.java)
 
 }

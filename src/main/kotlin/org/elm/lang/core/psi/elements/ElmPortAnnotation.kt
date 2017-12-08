@@ -3,9 +3,11 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmNamedElementImpl
+import com.intellij.psi.stubs.IStubElementType
+import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.stubs.ElmPortAnnotationStub
 
 
 /**
@@ -14,7 +16,14 @@ import org.elm.lang.core.psi.IdentifierCase
  * e.g. `port doSomething : String -> Int`
  *
  */
-class ElmPortAnnotation(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER) {
+class ElmPortAnnotation : ElmStubbedNamedElementImpl<ElmPortAnnotationStub> {
+
+    constructor(node: ASTNode) :
+            super(node, IdentifierCase.LOWER)
+
+    constructor(stub: ElmPortAnnotationStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType, IdentifierCase.LOWER)
+
 
     /**
      * The left-hand side of the type annotation which names the port

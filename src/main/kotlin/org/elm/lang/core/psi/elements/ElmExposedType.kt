@@ -36,7 +36,8 @@ class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElemen
 
 
     val exposesAll: Boolean
-        get() = exposedUnionConstructors?.doubleDot != null
+        get() = getStub()?.exposesAll
+                ?: (exposedUnionConstructors?.doubleDot != null)
 
 
     override val referenceNameElement: PsiElement

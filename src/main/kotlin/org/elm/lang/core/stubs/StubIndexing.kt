@@ -26,6 +26,10 @@ fun IndexSink.indexUnionMember(stub: ElmUnionMemberStub) {
     indexNamedStub(stub)
 }
 
+fun IndexSink.indexPortAnnotation(stub: ElmPortAnnotationStub) {
+    indexNamedStub(stub)
+}
+
 
 private fun IndexSink.indexNamedStub(stub: ElmNamedStub) {
     occurrence(ElmNamedElementIndex.KEY, stub.name)

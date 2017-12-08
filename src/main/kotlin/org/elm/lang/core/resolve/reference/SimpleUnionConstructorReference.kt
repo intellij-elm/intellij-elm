@@ -10,6 +10,6 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 class SimpleUnionConstructorReference(element: ElmReferenceElement): ElmReferenceBase<ElmReferenceElement>(element) {
 
     override fun getVariants(): Array<ElmNamedElement> =
-            ModuleScope(element.elmFile).getVisibleUnionOrRecordConstructors().toTypedArray()
+            ModuleScope(element.elmFile).getVisibleConstructors().toTypedArray()
 
 }

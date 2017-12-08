@@ -10,13 +10,12 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
+import org.elm.lang.core.stubs.ElmPortAnnotationStub
 import org.elm.lang.core.stubs.ElmTypeAliasDeclarationStub
 import org.elm.lang.core.stubs.ElmTypeDeclarationStub
+import org.elm.lang.core.stubs.ElmValueDeclarationStub
 
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), PsiFile {
@@ -44,17 +43,20 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     fun getModuleName() =
             getModuleDecl()?.name
 
-    fun getModuleDecl(): ElmModuleDeclaration? {
-        return getStubOrPsiChild(ElmModuleDeclarationStub.Type)
-    }
+    fun getModuleDecl() =
+            getStubOrPsiChild(ElmModuleDeclarationStub.Type)
 
-    fun getTypeDeclarations(): List<ElmTypeDeclaration> {
-        return getStubOrPsiChildren(ElmTypeDeclarationStub.Type, emptyArray())
-    }
+    fun getValueDeclarations() =
+            getStubOrPsiChildren(ElmValueDeclarationStub.Type, emptyArray())
 
-    fun getTypeAliasDeclarations(): List<ElmTypeAliasDeclaration> {
-        return getStubOrPsiChildren(ElmTypeAliasDeclarationStub.Type, emptyArray())
-    }
+    fun getTypeDeclarations() =
+            getStubOrPsiChildren(ElmTypeDeclarationStub.Type, emptyArray())
+
+    fun getTypeAliasDeclarations() =
+            getStubOrPsiChildren(ElmTypeAliasDeclarationStub.Type, emptyArray())
+
+    fun getPortAnnotations() =
+            getStubOrPsiChildren(ElmPortAnnotationStub.Type, emptyArray())
 
 
     // TODO [kl] I had to copy a bunch of stuff from StubBasedPsiElementBase to work with

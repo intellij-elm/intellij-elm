@@ -8,6 +8,7 @@ import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
+
 /**
  * A scope that allows exposed values and types from the module named [elmFile]
  * to be imported. You can think of it as the view of the module from the outside.
@@ -45,6 +46,9 @@ class ImportScope(val elmFile: ElmFile) {
     }
 
 
+    /**
+     * Returns all value declarations exposed by this module.
+     */
     fun getExposedValues(): List<ElmNamedElement> {
         val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
@@ -56,6 +60,9 @@ class ImportScope(val elmFile: ElmFile) {
                 .mapNotNull { it.reference.resolve() as? ElmNamedElement }
     }
 
+    /**
+     * Returns all union type and type alias declarations exposed by this module.
+     */
     fun getExposedTypes(): List<ElmNamedElement> {
         val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
@@ -67,12 +74,15 @@ class ImportScope(val elmFile: ElmFile) {
                 .mapNotNull { it.reference.resolve() as? ElmNamedElement }
     }
 
-    fun getExposedUnionOrRecordConstructors(): List<ElmNamedElement> {
+    /**
+     * Returns all union and record constructors exposed by this module.
+     */
+    fun getExposedConstructors(): List<ElmNamedElement> {
         val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope(elmFile).getDeclaredUnionOrRecordConstructors()
+            return ModuleScope(elmFile).getDeclaredConstructors()
 
         return moduleDecl.exposingList.exposedTypeList
                 .flatMap {
@@ -89,7 +99,7 @@ class ImportScope(val elmFile: ElmFile) {
                         else -> {
                             // It's either a record type or a union type without any exposed constructors
                             val targetType = it.reference.resolve() as? ElmTypeAliasDeclaration
-                            if (targetType != null && targetType.typeRef.isRecord)
+                            if (targetType != null && targetType.isRecordAlias)
                                 listOf(targetType)
                             else
                                 emptyList<ElmNamedElement>()

@@ -4,12 +4,8 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmPortAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmUnionMember
 import org.elm.lang.core.psi.elements.ElmUpperCaseQID
-import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
 /**
@@ -47,12 +43,10 @@ class ModuleScope(val elmFile: ElmFile) {
 
 
     fun getDeclaredValues(): List<ElmNamedElement> {
-        val valueDecls = elmFile.findChildrenByClass(ElmValueDeclaration::class.java).toList()
-                .flatMap { it.declaredNames(includeParameters = false) }
-
-        val portDecls = elmFile.findChildrenByClass(ElmPortAnnotation::class.java).toList()
-
-        return listOf(valueDecls, portDecls).flatten()
+        val valueDecls = elmFile.getValueDeclarations().flatMap {
+            it.declaredNames(includeParameters = false)
+        }
+        return listOf(valueDecls, elmFile.getPortAnnotations()).flatten()
     }
 
 
@@ -135,30 +129,30 @@ class ModuleScope(val elmFile: ElmFile) {
     // UNION CONSTRUCTORS AND RECORD CONSTRUCTORS
 
 
-    fun getDeclaredUnionOrRecordConstructors(): List<ElmNamedElement> {
-        val unionConstructors = elmFile.descendantsOfType<ElmUnionMember>()
-        val recordConstructors = elmFile.descendantsOfType<ElmTypeAliasDeclaration>()
-                                        .filter { it.typeRef.isRecord }
-        return listOf<Collection<ElmNamedElement>>(unionConstructors, recordConstructors).flatten()
+    fun getDeclaredConstructors(): List<ElmNamedElement> {
+        return listOf(
+                elmFile.getTypeDeclarations().flatMap { it.unionMemberList },
+                elmFile.getTypeAliasDeclarations().filter { it.isRecordAlias }
+        ).flatten()
     }
 
 
-    fun getVisibleUnionOrRecordConstructors(): List<ElmNamedElement> {
+    fun getVisibleConstructors(): List<ElmNamedElement> {
         val globallyExposedConstructors =
                 // TODO [kl] re-think this lame hack to avoid an infinite loop
                 if (elmFile.isCore())
                     emptyList()
                 else
                     GlobalScope(elmFile.project).getVisibleUnionOrRecordConstructors()
-        val topLevelConstructors = getDeclaredUnionOrRecordConstructors()
+        val topLevelConstructors = getDeclaredConstructors()
         val importedConstructors = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                .flatMap { getVisibleImportUnionOrRecordConstructors(it) }
+                .flatMap { getVisibleImportConstructors(it) }
         return listOf(globallyExposedConstructors, topLevelConstructors, importedConstructors).flatten()
     }
 
-    private fun getVisibleImportUnionOrRecordConstructors(importClause: ElmImportClause): List<ElmNamedElement> {
+    private fun getVisibleImportConstructors(importClause: ElmImportClause): List<ElmNamedElement> {
         val allExposedConstructors = ImportScope.fromImportDecl(importClause)
-                ?.getExposedUnionOrRecordConstructors()
+                ?.getExposedConstructors()
                 ?: return emptyList()
 
         if (importClause.exposesAll)

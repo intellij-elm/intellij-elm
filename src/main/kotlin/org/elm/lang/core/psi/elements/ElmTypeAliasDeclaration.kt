@@ -11,6 +11,12 @@ import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.stubs.ElmTypeAliasDeclarationStub
 
 
+/**
+ * Declares a type alias
+ *
+ * e.g. `type alias User = { name : String, age : Int }`
+ *
+ */
 class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarationStub> {
 
     constructor(node: ASTNode) :
@@ -33,4 +39,11 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
     val typeRef: ElmTypeRef
         get() = findNotNullChildByClass(ElmTypeRef::class.java)
 
+    // TODO [kl] this will be wrong in the case of a function type ref
+    // such as `Int -> { foo: String }`. We want to know that it is exclusively a record.
+    // We should see if we can get GrammarKit to parse [ElmTypeRef] into a better data structure
+    // than what Kamil had.
+    val isRecordAlias: Boolean
+        get() = getStub()?.isRecordAlias
+                ?: typeRef.recordTypeList.isNotEmpty()
 }

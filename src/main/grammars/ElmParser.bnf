@@ -17,6 +17,8 @@
     elementTypeFactory("exposed_type")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("exposed_union_constructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("exposed_union_constructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("value_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("port_annotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     tokens = [
         // tokens used by manual/external parse rules

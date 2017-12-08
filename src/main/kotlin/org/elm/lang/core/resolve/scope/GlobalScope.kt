@@ -85,7 +85,7 @@ class GlobalScope(val project: Project) {
     fun getVisibleUnionOrRecordConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModuleIndex.getFileByModuleName(moduleName, project)
-                        ?.let { ModuleScope(it).getDeclaredUnionOrRecordConstructors() }
+                        ?.let { ModuleScope(it).getDeclaredConstructors() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()

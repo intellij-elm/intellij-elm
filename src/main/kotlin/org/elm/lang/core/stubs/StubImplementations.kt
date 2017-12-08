@@ -20,9 +20,11 @@ import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
+import org.elm.lang.core.psi.elements.ElmPortAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionMember
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
 class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
@@ -66,6 +68,8 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "EXPOSED_TYPE" -> ElmExposedTypeStub.Type
     "EXPOSED_UNION_CONSTRUCTOR" -> ElmExposedUnionConstructorStub.Type
     "EXPOSED_UNION_CONSTRUCTORS" -> ElmExposedUnionConstructorsStub.Type
+    "VALUE_DECLARATION" -> ElmValueDeclarationStub.Type
+    "PORT_ANNOTATION" -> ElmPortAnnotationStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -132,8 +136,9 @@ class ElmTypeDeclarationStub(parent: StubElement<*>?,
 
 
 class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
-                               elementType: IStubElementType<*, *>,
-                               override val name: String
+                                  elementType: IStubElementType<*, *>,
+                                  override val name: String,
+                                  val isRecordAlias: Boolean
 ): StubBase<ElmTypeAliasDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmTypeAliasDeclarationStub, ElmTypeAliasDeclaration>("TYPE_ALIAS_DECLARATION") {
@@ -141,17 +146,19 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
         override fun serialize(stub: ElmTypeAliasDeclarationStub, dataStream: StubOutputStream) =
                 with(dataStream) {
                     writeName(stub.name)
+                    writeBoolean(stub.isRecordAlias)
                 }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmTypeAliasDeclarationStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameAsString() ?: error("expected non-null string"),
+                        dataStream.readBoolean())
 
         override fun createPsi(stub: ElmTypeAliasDeclarationStub) =
                 ElmTypeAliasDeclaration(stub, this)
 
         override fun createStub(psi: ElmTypeAliasDeclaration, parentStub: StubElement<*>?) =
-                ElmTypeAliasDeclarationStub(parentStub, this, psi.name)
+                ElmTypeAliasDeclarationStub(parentStub, this, psi.name, psi.isRecordAlias)
 
         override fun indexStub(stub: ElmTypeAliasDeclarationStub, sink: IndexSink) {
             sink.indexTypeAliasDecl(stub)
@@ -279,7 +286,8 @@ class ElmExposedValueStub(parent: StubElement<*>?,
 
 class ElmExposedTypeStub(parent: StubElement<*>?,
                          elementType: IStubElementType<*, *>,
-                         val refName: String
+                         val refName: String,
+                         val exposesAll: Boolean
 ): StubBase<ElmExposedType>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedTypeStub, ElmExposedType>("EXPOSED_TYPE") {
@@ -290,18 +298,20 @@ class ElmExposedTypeStub(parent: StubElement<*>?,
         override fun serialize(stub: ElmExposedTypeStub, dataStream: StubOutputStream) {
             with(dataStream) {
                 writeName(stub.refName)
+                writeBoolean(stub.exposesAll)
             }
         }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmExposedTypeStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameAsString()!!,
+                        dataStream.readBoolean())
 
         override fun createPsi(stub: ElmExposedTypeStub) =
                 ElmExposedType(stub, this)
 
         override fun createStub(psi: ElmExposedType, parentStub: StubElement<*>?) =
-                ElmExposedTypeStub(parentStub, this, psi.referenceName)
+                ElmExposedTypeStub(parentStub, this, psi.referenceName, psi.exposesAll)
 
         override fun indexStub(stub: ElmExposedTypeStub, sink: IndexSink) {
             // no-op
@@ -368,6 +378,63 @@ class ElmExposedUnionConstructorsStub(parent: StubElement<*>?,
         }
     }
 }
+
+class ElmValueDeclarationStub(parent: StubElement<*>?,
+                              elementType: IStubElementType<*, *>
+): StubBase<ElmValueDeclaration>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmValueDeclarationStub, ElmValueDeclaration>("VALUE_DECLARATION") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmValueDeclarationStub, dataStream: StubOutputStream) {
+            // nothing to write
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmValueDeclarationStub(parentStub, this)
+
+        override fun createPsi(stub: ElmValueDeclarationStub) =
+                ElmValueDeclaration(stub, this)
+
+        override fun createStub(psi: ElmValueDeclaration, parentStub: StubElement<*>?) =
+                ElmValueDeclarationStub(parentStub, this)
+
+        override fun indexStub(stub: ElmValueDeclarationStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
+
+class ElmPortAnnotationStub(parent: StubElement<*>?,
+                            elementType: IStubElementType<*, *>,
+                            override val name: String
+): StubBase<ElmPortAnnotation>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmPortAnnotationStub, ElmPortAnnotation>("PORT_ANNOTATION") {
+
+        override fun serialize(stub: ElmPortAnnotationStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmPortAnnotationStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmPortAnnotationStub) =
+                ElmPortAnnotation(stub, this)
+
+        override fun createStub(psi: ElmPortAnnotation, parentStub: StubElement<*>?) =
+                ElmPortAnnotationStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmPortAnnotationStub, sink: IndexSink) {
+            sink.indexPortAnnotation(stub)
+        }
+    }
+}
+
 
 
 private fun StubInputStream.readNameAsString(): String? = readName()?.string

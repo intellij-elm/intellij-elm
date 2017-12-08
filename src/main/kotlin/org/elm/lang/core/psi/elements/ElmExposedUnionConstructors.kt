@@ -33,6 +33,6 @@ class ElmExposedUnionConstructors : ElmStubbedElement<ElmExposedUnionConstructor
 
 
     val exposedUnionConstructors: List<ElmExposedUnionConstructor>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmExposedUnionConstructor::class.java)
+        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedUnionConstructor::class.java)
 
 }
