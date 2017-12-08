@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve.scope
 
-import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
@@ -35,9 +34,9 @@ class ImportScope(val elmFile: ElmFile) {
          */
         fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): ImportScope? {
             // handle implicit imports from Core
-            val targetFile = ElmModuleIndex.getFileByModuleName(qualifierPrefix, elmFile.project)
-            if (targetFile?.isCore() == true)
-                return ImportScope(targetFile)
+            val targetFile = ElmModulesIndex.get(qualifierPrefix, elmFile.project)
+            if (targetFile?.elmFile?.isCore() == true)
+                return ImportScope(targetFile.elmFile)
 
             // handle explicit import from within this module
             val importDecl = ModuleScope(elmFile).importDeclForQualifierPrefix(qualifierPrefix)

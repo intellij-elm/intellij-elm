@@ -143,7 +143,7 @@ class ModuleScope(val elmFile: ElmFile) {
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleUnionOrRecordConstructors()
+                    GlobalScope(elmFile.project).getVisibleConstructors()
         val topLevelConstructors = getDeclaredConstructors()
         val importedConstructors = elmFile.findChildrenByClass(ElmImportClause::class.java)
                 .flatMap { getVisibleImportConstructors(it) }

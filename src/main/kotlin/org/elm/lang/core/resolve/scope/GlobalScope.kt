@@ -1,9 +1,9 @@
 package org.elm.lang.core.resolve.scope
 
 import com.intellij.openapi.project.Project
-import org.elm.lang.core.ElmModuleIndex
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
 /**
@@ -50,11 +50,12 @@ class GlobalScope(val project: Project) {
     }
 
     // TODO [kl] this is crazy inefficient, and it should be easy to cache
+    // well, at least this is now stub-based, but it's still a lot of busy work and allocations.
 
     fun getVisibleValues(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-            ElmModuleIndex.getFileByModuleName(moduleName, project)
-                    ?.let { ModuleScope(it).getDeclaredValues() }
+            ElmModulesIndex.get(moduleName, project)
+                    ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                     ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
@@ -67,8 +68,8 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModuleIndex.getFileByModuleName(moduleName, project)
-                        ?.let { ModuleScope(it).getDeclaredTypes() }
+                ElmModulesIndex.get(moduleName, project)
+                        ?.let { ModuleScope(it.elmFile).getDeclaredTypes() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
@@ -82,10 +83,10 @@ class GlobalScope(val project: Project) {
     }
 
 
-    fun getVisibleUnionOrRecordConstructors(): List<ElmNamedElement> {
+    fun getVisibleConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModuleIndex.getFileByModuleName(moduleName, project)
-                        ?.let { ModuleScope(it).getDeclaredConstructors() }
+                ElmModulesIndex.get(moduleName, project)
+                        ?.let { ModuleScope(it.elmFile).getDeclaredConstructors() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
