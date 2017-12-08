@@ -21,4 +21,6 @@ class ElmLayoutLexerTest: ElmLexerTestCaseBase() {
     fun testLetIn() = doTest()
     fun testLetInSingleLineBug() = doTest()
     fun testCaseOf() = doTest()
+    fun testTypes() = doTest()
+    fun testTypeAnnotations() = doTest()
 }

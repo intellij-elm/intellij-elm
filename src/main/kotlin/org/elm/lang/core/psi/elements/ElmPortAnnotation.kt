@@ -13,7 +13,7 @@ import org.elm.lang.core.stubs.ElmPortAnnotationStub
 /**
  * A port annotation
  *
- * e.g. `port doSomething : String -> Int`
+ * e.g. `port doSomething : String -> Cmd Int`
  *
  */
 class ElmPortAnnotation : ElmStubbedNamedElementImpl<ElmPortAnnotationStub> {
