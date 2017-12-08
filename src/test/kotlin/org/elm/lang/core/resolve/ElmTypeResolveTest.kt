@@ -108,4 +108,15 @@ title : Person a -> String
 """)
 
 
+
+    fun `test union constructor ref should not resolve to a record constructor`() = checkByCode(
+"""
+type alias User = { name : String, age : Int }
+
+foo user =
+    case user of
+        User -> "foo"
+        --^unresolved
+""")
+
 }
