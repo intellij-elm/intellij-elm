@@ -99,15 +99,12 @@ private declaration ::=
     | type_annotation
     | port_annotation
     | operator_config
-/* TODO [kl] re-enable after the big refactoring (see HaskForce BNF for ideas)
-  (previously the recovery relied on FRESH_LINE, which no longer exists)
-{
-    pin = 1
-    recoverWhile = declaration_recover
-}
-*/
+    { recoverWhile = declaration_recover }
+
+private declaration_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
 
 value_declaration ::= internal_value_declaration_left EQ expression
+    { pin = 'EQ' }
 
 private internal_value_declaration_left ::=
     function_declaration_left
@@ -127,6 +124,7 @@ operator_declaration_left ::=
 
 type_declaration ::=
     TYPE UPPER_CASE_IDENTIFIER (lower_type_name)* EQ union_member (PIPE union_member)*
+    { pin = 2 }
 
 lower_type_name ::= LOWER_CASE_IDENTIFIER
 
@@ -136,6 +134,7 @@ union_member ::=
 
 type_alias_declaration ::=
     TYPE ALIAS UPPER_CASE_IDENTIFIER lower_type_name* EQ type_ref
+    { pin = 3 }
 
 type_ref ::=
     type_ref_inner (ARROW type_ref_inner)*
@@ -171,9 +170,10 @@ tuple_type ::=
 
 
 type_annotation ::= (LOWER_CASE_IDENTIFIER | operator_as_function) COLON type_ref
+    { pin = 'COLON' }
 
 port_annotation ::= PORT LOWER_CASE_IDENTIFIER COLON type_ref
-
+    { pin = 'COLON' }
 
 
 // EXPRESSIONS
