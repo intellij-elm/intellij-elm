@@ -32,6 +32,7 @@
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher" />
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
+        <lang.namesValidator language="Elm" implementationClass="org.elm.lang.refactoring.ElmNamesValidator" />
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
         <lang.refactoringSupport language="Elm" implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider" />
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
