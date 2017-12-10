@@ -30,10 +30,12 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
 
     /**
      * The 'body' of the declaration. This is the right-hand side which is bound
-     * to the name(s) on the left-hand side
+     * to the name(s) on the left-hand side.
+     *
+     * In a well-formed program, this will be non-null.
      */
-    val expression: ElmExpression
-        get() = findNotNullChildByClass(ElmExpression::class.java)
+    val expression: ElmExpression?
+        get() = findChildByClass(ElmExpression::class.java)
 
     /**
      * Names that are declared on the left-hand side of the equals sign in a value

@@ -35,9 +35,14 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
     val lowerTypeNameList: List<ElmLowerTypeName>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
 
-    /** The type which is being aliased */
-    val typeRef: ElmTypeRef
-        get() = findNotNullChildByClass(ElmTypeRef::class.java)
+    /**
+     * The type which is being aliased
+     *
+     * In a well-formed program, this will be non-null.
+     */
+    val typeRef: ElmTypeRef?
+        get() = findChildByClass(ElmTypeRef::class.java)
+
 
     // TODO [kl] this will be wrong in the case of a function type ref
     // such as `Int -> { foo: String }`. We want to know that it is exclusively a record.
@@ -45,5 +50,6 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
     // than what Kamil had.
     val isRecordAlias: Boolean
         get() = getStub()?.isRecordAlias
-                ?: typeRef.recordTypeList.isNotEmpty()
+                ?: typeRef?.recordTypeList?.isNotEmpty()
+                ?: false
 }

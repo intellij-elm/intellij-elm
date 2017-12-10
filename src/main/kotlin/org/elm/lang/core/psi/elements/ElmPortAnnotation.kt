@@ -38,8 +38,10 @@ class ElmPortAnnotation : ElmStubbedNamedElementImpl<ElmPortAnnotationStub> {
      * The right-hand side of the port annotation which give the port's type signature
      *
      * e.g. `String -> Int` in `port doSomething : String -> Int`
+     *
+     * In a well-formed program, this will be non-null.
      */
-    val typeRef: ElmTypeRef
-        get() = findNotNullChildByClass(ElmTypeRef::class.java)
+    val typeRef: ElmTypeRef?
+        get() = findChildByClass(ElmTypeRef::class.java)
 
 }

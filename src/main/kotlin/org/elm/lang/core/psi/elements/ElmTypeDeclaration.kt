@@ -35,7 +35,9 @@ class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub> {
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
 
     /**
-     * One or more union members which define the structure of the type.
+     * The union members which define the structure of the type.
+     *
+     * In a well-formed program, this will contain at least one element.
      */
     val unionMemberList: List<ElmUnionMember>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmUnionMember::class.java)

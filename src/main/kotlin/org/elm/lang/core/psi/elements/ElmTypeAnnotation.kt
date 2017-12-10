@@ -38,9 +38,11 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
      * The right-hand side of the type annotation which describes the type of the value.
      *
      * e.g. `String -> Int` in `length : String -> Int`
+     *
+     * In a well-formed program, this will be non-null.
      */
-    val typeRef: ElmTypeRef
-        get() = findNotNullChildByClass(ElmTypeRef::class.java)
+    val typeRef: ElmTypeRef?
+        get() = findChildByClass(ElmTypeRef::class.java)
 
 
 
