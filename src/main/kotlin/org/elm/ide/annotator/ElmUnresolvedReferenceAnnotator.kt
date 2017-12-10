@@ -3,23 +3,42 @@ package org.elm.ide.annotator
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
+import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmUpperCaseQID
+import org.elm.lang.core.psi.elements.ElmValueExpr
+import org.elm.lang.core.psi.elements.ElmValueQID
 import org.elm.lang.core.resolve.scope.GlobalScope
 
 class ElmUnresolvedReferenceAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
-        val ref = element.reference ?: return
-
-        if (ref.resolve() == null) {
-            // TODO [kl] re-visit this hack for suppressing errors on built-in symbols
-            // Kamil's plugin handled it by returning null for getReference() when the
-            // referring name is a built-in symbol, but our `ElmReferenceElement` says
-            // requires that `getReference()` returns a non-null value. We could relax
-            // this restriction, or maybe this hack is ok?
-            if (GlobalScope.builtInSymbols.contains(ref.canonicalText))
-                return
-
-            holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'")
+        for (ref in element.references) {
+            if (ref.resolve() == null && !safeToIgnore(ref, element)) {
+                holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'")
+            }
         }
     }
+
+    private fun safeToIgnore(ref: PsiReference, element: PsiElement): Boolean {
+        // Ignore refs to to built-in types and values
+        if (GlobalScope.builtInSymbols.contains(ref.canonicalText))
+            return true
+
+        // Ignore refs to Native (JavaScript) modules
+        if (element is ElmValueExpr && element.upperCaseQID?.isQualifiedNativeRef()
+                ?: element.valueQID?.isQualifiedNativeRef() ?: false) {
+            return true
+        } else if (element is ElmImportClause && element.moduleQID.isQualifiedNativeRef()) {
+            return true
+        }
+
+        return false
+    }
 }
+
+private fun ElmUpperCaseQID.isQualifiedNativeRef() =
+        isQualified && upperCaseIdentifierList.first().text == "Native"
+
+private fun ElmValueQID.isQualifiedNativeRef() =
+        isQualified && upperCaseIdentifierList.first().text == "Native"
