@@ -7,18 +7,18 @@
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
-    elementTypeFactory("module_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("type_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("type_alias_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("union_member")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("function_declaration_left")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("exposing_list")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("exposed_value")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("exposed_type")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("exposed_union_constructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("exposed_union_constructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("value_declaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("port_annotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ModuleDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeAliasDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UnionMember")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedUnionConstructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedUnionConstructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     tokens = [
         // tokens used by manual/external parse rules
@@ -42,40 +42,68 @@
     ]
 }
 
+/*
+OVERVIEW
+========
+This BNF grammar is interpreted by GrammarKit to produce a parser. Normally GrammarKit
+will also generate the `PsiElement`s along with the grammar, but this leads to an explosion
+of interfaces, implementation classes and convoluted inheritance. So instead we configure
+GrammarKit to only generate 2 things:
 
-elmFile ::= [module_declaration] body
+- the parser (gen/org/elm/lang/core/parser/ElmParser.java)
+- the element types (gen/org/elm/lang/core/psi/ElmTypes.java)
 
-module_declaration ::= [ effect | PORT ] MODULE upper_case_qid [ WHERE record ] exposing_list
+The actual PsiElement sub-classes which correspond to non-private grammar rules in this
+BNF are created and maintained by hand. The upside of this is that you can freely modify
+those PsiElement classes to implement additional interfaces, add helper methods and add
+doc comments. The downside is that they must be kept in-sync with the parser (and thereby
+this file).
 
-private body ::= import_clauses top_declarations VIRTUAL_END_SECTION?
+Each non-private rule corresponds to a PsiElement subclass of the same name prefixed by
+`Elm`. For instance, the `ModuleDeclaration` rule corresponds to the `ElmModuleDeclaration`
+PsiElement subclass.
 
-private import_clauses ::= <<decls import_clause>>
+CODE FORMATTING
+===============
+- tokens are in ALL_CAPS
+- grammar rules are in CamelCase
+- meta rules and recoverWhile predicates should be in snake_case
+ */
 
-private top_declarations ::= <<decls declaration>>
+
+ElmFile ::= [ModuleDeclaration] Body
+
+ModuleDeclaration ::= [ Effect | PORT ] MODULE UpperCaseQID [ WHERE Record ] ExposingList
+
+private Body ::= ImportClauses TopDeclarations VIRTUAL_END_SECTION?
+
+private ImportClauses ::= <<decls ImportClause>>
+
+private TopDeclarations ::= <<decls Declaration>>
 
 
 
 // MODULE DECLARATION
 
 
-exposing_list ::= EXPOSING LEFT_PARENTHESIS (DOUBLE_DOT | list_of_values) RIGHT_PARENTHESIS
+ExposingList ::= EXPOSING LEFT_PARENTHESIS (DOUBLE_DOT | ListOfValues) RIGHT_PARENTHESIS
 
-private list_of_values ::= <<non_empty_list exposed_item>>
+private ListOfValues ::= <<non_empty_list ExposedItem>>
 
-private exposed_item ::=
-    exposed_value
-    | operator_as_function
-    | exposed_type
+private ExposedItem ::=
+    ExposedValue
+    | OperatorAsFunction
+    | ExposedType
 
-exposed_value ::= LOWER_CASE_IDENTIFIER
+ExposedValue ::= LOWER_CASE_IDENTIFIER
 
-exposed_type ::=
-    UPPER_CASE_IDENTIFIER [exposed_union_constructors]
+ExposedType ::=
+    UPPER_CASE_IDENTIFIER [ExposedUnionConstructors]
 
-exposed_union_constructors ::=
-    LEFT_PARENTHESIS (DOUBLE_DOT | (<<non_empty_list exposed_union_constructor>>)) RIGHT_PARENTHESIS
+ExposedUnionConstructors ::=
+    LEFT_PARENTHESIS (DOUBLE_DOT | (<<non_empty_list ExposedUnionConstructor>>)) RIGHT_PARENTHESIS
 
-exposed_union_constructor ::=
+ExposedUnionConstructor ::=
     UPPER_CASE_IDENTIFIER
 
 
@@ -83,253 +111,254 @@ exposed_union_constructor ::=
 // IMPORT DECLARATION
 
 
-import_clause ::= IMPORT upper_case_qid [as_clause] [exposing_list]
+ImportClause ::= IMPORT UpperCaseQID [AsClause] [ExposingList]
 
-as_clause ::= AS UPPER_CASE_IDENTIFIER
+AsClause ::= AS UPPER_CASE_IDENTIFIER
 
 
 
 // TOP-LEVEL DECLARATIONS
 
 
-private declaration ::=
-    value_declaration
-    | type_alias_declaration
-    | type_declaration
-    | type_annotation
-    | port_annotation
-    | operator_config
+private Declaration ::=
+    ValueDeclaration
+    | TypeAliasDeclaration
+    | TypeDeclaration
+    | TypeAnnotation
+    | PortAnnotation
+    | OperatorConfig
     { recoverWhile = declaration_recover }
 
 private declaration_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
 
-value_declaration ::= internal_value_declaration_left EQ expression
+ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
     { pin = 'EQ' }
 
-private internal_value_declaration_left ::=
-    function_declaration_left
-    | operator_declaration_left
-    | pattern
+private InternalValueDeclarationLeft ::=
+    FunctionDeclarationLeft
+    | OperatorDeclarationLeft
+    | Pattern
 
-function_declaration_left ::=
-    LOWER_CASE_IDENTIFIER pattern*
+FunctionDeclarationLeft ::=
+    LOWER_CASE_IDENTIFIER Pattern*
 
-operator_declaration_left ::=
-    operator_as_function pattern*
+OperatorDeclarationLeft ::=
+    OperatorAsFunction Pattern*
 
 
 
 // TYPE DECLARATIONS AND REFERENCES
 
 
-type_declaration ::=
-    TYPE UPPER_CASE_IDENTIFIER (lower_type_name)* EQ union_member (PIPE union_member)*
+TypeDeclaration ::=
+    TYPE UPPER_CASE_IDENTIFIER (LowerTypeName)* EQ UnionMember (PIPE UnionMember)*
     { pin = 2 }
 
-lower_type_name ::= LOWER_CASE_IDENTIFIER
+LowerTypeName ::= LOWER_CASE_IDENTIFIER
 
-union_member ::=
-    UPPER_CASE_IDENTIFIER single_type_ref*
+UnionMember ::=
+    UPPER_CASE_IDENTIFIER SingleTypeRef*
 
 
-type_alias_declaration ::=
-    TYPE ALIAS UPPER_CASE_IDENTIFIER lower_type_name* EQ type_ref
+TypeAliasDeclaration ::=
+    TYPE ALIAS UPPER_CASE_IDENTIFIER LowerTypeName* EQ TypeRef
     { pin = 3 }
 
-type_ref ::=
-    type_ref_inner (ARROW type_ref_inner)*
+TypeRef ::=
+    TypeRefInner (ARROW TypeRefInner)*
 
-private type_ref_inner ::=
-    parametric_type_ref
-    | single_type_ref
+private TypeRefInner ::=
+    ParametricTypeRef
+    | SingleTypeRef
 
-parametric_type_ref ::= upper_case_qid (single_type_ref)+
+ParametricTypeRef ::= UpperCaseQID (SingleTypeRef)+
 
-private single_type_ref ::=
-    upper_path_type_ref
-    | type_variable_ref
-    | record_type
-    | tuple_type
-    | LEFT_PARENTHESIS type_ref RIGHT_PARENTHESIS
+private SingleTypeRef ::=
+    UpperPathTypeRef
+    | TypeVariableRef
+    | RecordType
+    | TupleType
+    | LEFT_PARENTHESIS TypeRef RIGHT_PARENTHESIS
 
-upper_path_type_ref ::=
-    upper_case_qid
+UpperPathTypeRef ::=
+    UpperCaseQID
 
-type_variable_ref ::=
+TypeVariableRef ::=
     LOWER_CASE_IDENTIFIER
 
-record_type ::=
-    LEFT_BRACE [[record_base] <<non_empty_list field_type>>] RIGHT_BRACE
+RecordType ::=
+    LEFT_BRACE [[RecordBase] <<non_empty_list FieldType>>] RIGHT_BRACE
 
-field_type ::=
-    LOWER_CASE_IDENTIFIER COLON type_ref
+FieldType ::=
+    LOWER_CASE_IDENTIFIER COLON TypeRef
 
-tuple_type ::=
-    unit
-    | LEFT_PARENTHESIS type_ref (COMMA type_ref)+ RIGHT_PARENTHESIS
+TupleType ::=
+    Unit
+    | LEFT_PARENTHESIS TypeRef (COMMA TypeRef)+ RIGHT_PARENTHESIS
 
 
-type_annotation ::= (LOWER_CASE_IDENTIFIER | operator_as_function) COLON type_ref
+TypeAnnotation ::= (LOWER_CASE_IDENTIFIER | OperatorAsFunction) COLON TypeRef
     { pin = 'COLON' }
 
-port_annotation ::= PORT LOWER_CASE_IDENTIFIER COLON type_ref
+PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
     { pin = 'COLON' }
+
 
 
 // EXPRESSIONS
 
 
-expression ::= list_of_operands (operator list_of_operands)*
+Expression ::= ListOfOperands (Operator ListOfOperands)*
 
-list_of_operands ::= [MINUS]operand+
+ListOfOperands ::= [MINUS]Operand+
 
-private operator ::=
+private Operator ::=
     OPERATOR
     | LIST_CONSTRUCTOR
     | MINUS
     | DOT
 
-private operand ::=
-    literal
-    | field_access
-    | value_expr
-    | field_accessor_function
-    | operator_as_function
-    | parenthesed_expression
-    | tuple_constructor
-    | tuple
-    | list
-    | record
-    | if_else
-    | case_of
-    | let_in
-    | anonymous_function
-    | glsl_code
+private Operand ::=
+    Literal
+    | FieldAccess
+    | ValueExpr
+    | FieldAccessorFunction
+    | OperatorAsFunction
+    | ParenthesedExpression
+    | TupleConstructor
+    | Tuple
+    | List
+    | Record
+    | IfElse
+    | CaseOf
+    | LetIn
+    | AnonymousFunction
+    | GlslCode
 
-parenthesed_expression ::= LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+ParenthesedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
-private literal ::=
+private Literal ::=
     STRING_LITERAL
     | NUMBER_LITERAL
     | CHAR_LITERAL
 
-anonymous_function ::= BACKSLASH pattern+ ARROW expression
+AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
 
-external field_accessor_function ::= parseFieldAccessorFunction
-external effect ::= parseEffect
+external FieldAccessorFunction ::= parseFieldAccessorFunction
+external Effect ::= parseEffect
 
-external field_access ::= parseFieldAccess
-external value_qid ::= parseValueQID
-external upper_case_qid ::= parseUpperCaseQID
+external FieldAccess ::= parseFieldAccess
+external ValueQID ::= parseValueQID
+external UpperCaseQID ::= parseUpperCaseQID
 
-value_expr ::=
-    value_qid
-    | upper_case_qid
+ValueExpr ::=
+    ValueQID
+    | UpperCaseQID
 
-operator_as_function ::=
-    LEFT_PARENTHESIS operator RIGHT_PARENTHESIS
+OperatorAsFunction ::=
+    LEFT_PARENTHESIS Operator RIGHT_PARENTHESIS
 
-private tuple ::=
-    unit
-    | non_empty_tuple
+private Tuple ::=
+    Unit
+    | NonEmptyTuple
 
-non_empty_tuple ::=
-    LEFT_PARENTHESIS expression (COMMA expression)+ RIGHT_PARENTHESIS
+NonEmptyTuple ::=
+    LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
 
-tuple_constructor ::=
+TupleConstructor ::=
     LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
-unit ::=
+Unit ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
 
-list ::=
-    LEFT_SQUARE_BRACKET [<<non_empty_list expression>>] RIGHT_SQUARE_BRACKET
+List ::=
+    LEFT_SQUARE_BRACKET [<<non_empty_list Expression>>] RIGHT_SQUARE_BRACKET
 
-record ::=
-    LEFT_BRACE [[record_base] <<non_empty_list field>>] RIGHT_BRACE
+Record ::=
+    LEFT_BRACE [[RecordBase] <<non_empty_list Field>>] RIGHT_BRACE
 
-private record_base ::=
+private RecordBase ::=
     LOWER_CASE_IDENTIFIER PIPE
 
-field ::=
-    LOWER_CASE_IDENTIFIER EQ expression
+Field ::=
+    LOWER_CASE_IDENTIFIER EQ Expression
 
-if_else ::=
-    IF expression THEN expression ELSE expression
-
-
-case_of ::=
-    CASE expression OF <<non_empty_decls case_of_branch>> VIRTUAL_END_SECTION
-
-case_of_branch ::=
-    pattern ARROW expression
+IfElse ::=
+    IF Expression THEN Expression ELSE Expression
 
 
-let_in ::=
-    LET <<non_empty_decls inner_declaration>> VIRTUAL_END_SECTION IN expression
+CaseOf ::=
+    CASE Expression OF <<non_empty_decls CaseOfBranch>> VIRTUAL_END_SECTION
 
-private inner_declaration ::=
-    inner_value_declaration
-    | inner_type_annotation
+CaseOfBranch ::=
+    Pattern ARROW Expression
 
-inner_value_declaration ::=
-    internal_value_declaration_left EQ expression
 
-inner_type_annotation ::=
-    LOWER_CASE_IDENTIFIER COLON type_ref
+LetIn ::=
+    LET <<non_empty_decls InnerDeclaration>> VIRTUAL_END_SECTION IN Expression
+
+private InnerDeclaration ::=
+    InnerValueDeclaration
+    | InnerTypeAnnotation
+
+InnerValueDeclaration ::=
+    InternalValueDeclarationLeft EQ Expression
+
+InnerTypeAnnotation ::=
+    LOWER_CASE_IDENTIFIER COLON TypeRef
 
 
 
 // PATTERNS
 
 
-pattern ::=
-    single_pattern (LIST_CONSTRUCTOR single_pattern)* [pattern_as]
+Pattern ::=
+    SinglePattern (LIST_CONSTRUCTOR SinglePattern)* [PatternAs]
 
-pattern_as ::= AS LOWER_CASE_IDENTIFIER
+PatternAs ::= AS LOWER_CASE_IDENTIFIER
 
-private single_pattern ::=
+private SinglePattern ::=
     UNDERSCORE
-    | lower_pattern
-    | union_pattern
-    | tuple_pattern
-    | unit
-    | list_pattern
-    | record_pattern
-    | literal
-    | parenthesed_pattern
+    | LowerPattern
+    | UnionPattern
+    | TuplePattern
+    | Unit
+    | ListPattern
+    | RecordPattern
+    | Literal
+    | ParenthesedPattern
 
-lower_pattern ::= LOWER_CASE_IDENTIFIER
+LowerPattern ::= LOWER_CASE_IDENTIFIER
 
-record_pattern ::=
-    LEFT_BRACE <<non_empty_list lower_pattern>> RIGHT_BRACE
+RecordPattern ::=
+    LEFT_BRACE <<non_empty_list LowerPattern>> RIGHT_BRACE
 
-private list_pattern ::=
-    LEFT_SQUARE_BRACKET [<<non_empty_list pattern>>] RIGHT_SQUARE_BRACKET
+private ListPattern ::=
+    LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
 
-union_pattern ::=
-    upper_case_qid pattern*
+UnionPattern ::=
+    UpperCaseQID Pattern*
 
-tuple_pattern ::=
-    LEFT_PARENTHESIS pattern (COMMA pattern)+ RIGHT_PARENTHESIS
+TuplePattern ::=
+    LEFT_PARENTHESIS Pattern (COMMA Pattern)+ RIGHT_PARENTHESIS
 
-private parenthesed_pattern ::=
-    LEFT_PARENTHESIS pattern RIGHT_PARENTHESIS
+private ParenthesedPattern ::=
+    LEFT_PARENTHESIS Pattern RIGHT_PARENTHESIS
 
 
 
 // MISC
 
 
-operator_config ::=
-    operator_config_keyword NUMBER_LITERAL operator
+OperatorConfig ::=
+    OperatorConfigKeyword NUMBER_LITERAL Operator
 
-private operator_config_keyword ::=
+private OperatorConfigKeyword ::=
     INFIXL
     | INFIX
     | INFIXR
 
-glsl_code ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
+GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 
 
