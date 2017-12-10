@@ -5,6 +5,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.ide.presentation.getPresentation
 import org.elm.lang.core.moduleLookupHack
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
@@ -69,4 +70,7 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
     override fun getTextOffset() =
             upperCaseQID.textOffset
+
+    override fun getPresentation() =
+            getPresentation(this)
 }

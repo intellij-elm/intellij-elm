@@ -30,6 +30,7 @@
         <annotator language="Elm" implementationClass="org.elm.ide.annotator.ElmUnresolvedReferenceAnnotator"/>
         <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage" />
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
+        <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor" />
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher" />
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
         <lang.findUsagesProvider language="Elm" implementationClass="org.elm.ide.search.ElmFindUsagesProvider" />

@@ -1,11 +1,13 @@
 package org.elm.lang.core.psi
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
+import org.elm.ide.presentation.getPresentation
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase.LOWER
@@ -13,7 +15,7 @@ import org.elm.lang.core.psi.IdentifierCase.UPPER
 import org.elm.lang.core.stubs.ElmNamedStub
 
 
-interface ElmNamedElement : ElmPsiElement, PsiNamedElement
+interface ElmNamedElement : ElmPsiElement, PsiNamedElement, NavigatablePsiElement
 
 
 interface ElmNameIdentifierOwner : ElmNamedElement, PsiNameIdentifierOwner {
@@ -46,6 +48,9 @@ open class ElmNamedElementImpl(node: ASTNode, val case: IdentifierCase) : ElmPsi
 
     override fun getTextOffset(): Int =
             nameIdentifier.textOffset
+
+    override fun getPresentation() =
+            getPresentation(this)
 }
 
 
@@ -85,6 +90,9 @@ open class ElmStubbedNamedElementImpl<StubT> : ElmStubbedElement<StubT>, ElmName
 
     override fun getTextOffset() =
             nameIdentifier.textOffset
+
+    override fun getPresentation() =
+            getPresentation(this)
 }
 
 
