@@ -3,6 +3,7 @@ package org.elm.lang.core.resolve.scope
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmAnonymousFunction
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmLetIn
@@ -32,7 +33,8 @@ class ExpressionScope(val element: PsiElement) {
 
             if (it is ElmLetIn) {
                 for (innerDecl in it.innerValueDeclarationList) {
-                    results.addAll(innerDecl.declaredNames())
+                    val includeParameters = element.ancestors.any { it === innerDecl }
+                    results.addAll(innerDecl.declaredNames(includeParameters))
                 }
             }
 

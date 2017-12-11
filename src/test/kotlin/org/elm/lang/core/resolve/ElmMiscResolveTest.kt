@@ -27,6 +27,27 @@ f x =
 """)
 
 
+    fun `test let-in should honor lexical scope in body expr`() = checkByCode(
+"""
+foo =
+    let
+        bar y = 0
+    in y
+     --^unresolved
+""")
+
+
+    fun `test let-in should honor lexical scope in sibling decl`() = checkByCode(
+"""
+foo =
+    let
+        bar y = 0
+        quux = y
+             --^unresolved
+    in
+        quux
+""")
+
 
     fun `test lambda parameter ref`() = checkByCode(
 """
