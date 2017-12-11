@@ -58,8 +58,20 @@ f : Quux -> String
 """)}
 
 
-    // TODO [kl] figure out why the test is broken but the plugin itself works correctly
 /*
+    This test has been disabled because there's a bug in our test configuration (or IntelliJ)
+    where the rename doesn't work. The root cause is that rename depends on Find Usages,
+    which in turn depends on a `FileBasedIndex` which IntelliJ manages that stores a mapping
+    from identifiers to files. For this to work correctly for the identifiers that Elm's
+    binary operators use (e.g. `++`) you must configure a WordsScanner to do the tokenization
+    correctly. I have done that configuration, and it works when you run the plugin for real,
+    but it appears that it is NOT working in the rename test (I have confirmed that the
+    Find Usages test DOES work correctly).
+
+    The root cause is that the rename test fails to find any matching files when it
+    calls PsiSearchHelperImpl.processElementsWithTextInGlobalScope(). Rather than
+    debugging this any further, I'm just going to disable the test.
+
     fun `test operator decl rename`() {
         doTest("##",
 """
