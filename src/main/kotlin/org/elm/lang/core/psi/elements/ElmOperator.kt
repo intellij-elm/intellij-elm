@@ -4,29 +4,20 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmTypes.LEFT_PARENTHESIS
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.SimpleOperatorReference
 
 
 /**
- * A binary operator treated as a function such that it can be passed as an argument
- * to another function.
+ * A binary operator used in an expression
  *
- * e.g. the `(+)` in the expression `foldl (+) 0`
+ * e.g. `x + y`
  */
-class ElmOperatorAsFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
+class ElmOperator(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
     val operator: PsiElement
         get() = findNotNullChildByType(OPERATOR_IDENTIFIER)
-
-    val leftParen: PsiElement
-        get() = findNotNullChildByType(LEFT_PARENTHESIS)
-
-    val rightParen: PsiElement
-        get() = findNotNullChildByType(RIGHT_PARENTHESIS)
 
 
     override val referenceNameElement: PsiElement

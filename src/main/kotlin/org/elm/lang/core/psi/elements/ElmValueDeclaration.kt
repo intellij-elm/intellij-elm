@@ -2,6 +2,7 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmNamedElement
@@ -22,7 +23,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
         get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
 
     val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
-        get() = findChildByClass(ElmOperatorDeclarationLeft::class.java)
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
 
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
@@ -53,21 +54,25 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
         if (functionDeclarationLeft != null) {
             // the most common case, a named function or value declaration
             namedElements.add(functionDeclarationLeft!!)
-
             if (includeParameters) {
-                // add parameters, including destructured names
-                namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft,
-                        ElmLowerPattern::class.java))
-                namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft,
-                        ElmPatternAs::class.java))
+                extractDestructuredParameters(functionDeclarationLeft!!, namedElements)
             }
         } else if (operatorDeclarationLeft != null) {
-            // TODO [kl] handle operator decls
+            // an operator declaration
+            namedElements.add(operatorDeclarationLeft!!)
+            if (includeParameters) {
+                extractDestructuredParameters(operatorDeclarationLeft!!, namedElements)
+            }
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
             namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))
         }
 
         return namedElements
+    }
+
+    private fun extractDestructuredParameters(parentElement: PsiElement, results: MutableList<ElmNamedElement>) {
+        results.addAll(PsiTreeUtil.collectElementsOfType(parentElement, ElmLowerPattern::class.java))
+        results.addAll(PsiTreeUtil.collectElementsOfType(parentElement, ElmPatternAs::class.java))
     }
 }

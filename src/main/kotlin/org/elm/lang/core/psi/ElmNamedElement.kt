@@ -9,8 +9,10 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import org.elm.ide.presentation.getPresentation
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase.LOWER
+import org.elm.lang.core.psi.IdentifierCase.OPERATOR
 import org.elm.lang.core.psi.IdentifierCase.UPPER
 import org.elm.lang.core.stubs.ElmNamedStub
 
@@ -30,6 +32,7 @@ open class ElmNamedElementImpl(node: ASTNode, val case: IdentifierCase) : ElmPsi
             when (case) {
                 UPPER -> findNotNullChildByType(UPPER_CASE_IDENTIFIER)
                 LOWER -> findNotNullChildByType(LOWER_CASE_IDENTIFIER)
+                OPERATOR -> findNotNullChildByType(OPERATOR_IDENTIFIER)
             }
 
     override fun getName(): String =
@@ -40,6 +43,7 @@ open class ElmNamedElementImpl(node: ASTNode, val case: IdentifierCase) : ElmPsi
         val newIdentifier = when (nameIdentifier.elementType) {
             UPPER_CASE_IDENTIFIER -> ElmPsiFactory(project).createUpperCaseIdentifier(name)
             LOWER_CASE_IDENTIFIER -> ElmPsiFactory(project).createLowerCaseIdentifier(name)
+            OPERATOR_IDENTIFIER -> ElmPsiFactory(project).createOperatorIdentifier(name)
             else -> error("unexpected name identifier type: ${nameIdentifier.elementType}")
         }
         nameIdentifier.replace(newIdentifier)
@@ -71,6 +75,7 @@ open class ElmStubbedNamedElementImpl<StubT> : ElmStubbedElement<StubT>, ElmName
             when (case) {
                 UPPER -> findNotNullChildByType(UPPER_CASE_IDENTIFIER)
                 LOWER -> findNotNullChildByType(LOWER_CASE_IDENTIFIER)
+                OPERATOR -> findNotNullChildByType(OPERATOR_IDENTIFIER)
             }
 
     override fun getName(): String {
@@ -82,6 +87,7 @@ open class ElmStubbedNamedElementImpl<StubT> : ElmStubbedElement<StubT>, ElmName
         val newIdentifier = when (nameIdentifier.elementType) {
             UPPER_CASE_IDENTIFIER -> ElmPsiFactory(project).createUpperCaseIdentifier(name)
             LOWER_CASE_IDENTIFIER -> ElmPsiFactory(project).createLowerCaseIdentifier(name)
+            OPERATOR_IDENTIFIER -> ElmPsiFactory(project).createOperatorIdentifier(name)
             else -> error("unexpected name identifier type: ${nameIdentifier.elementType}")
         }
         nameIdentifier.replace(newIdentifier)
@@ -98,5 +104,6 @@ open class ElmStubbedNamedElementImpl<StubT> : ElmStubbedElement<StubT>, ElmName
 
 enum class IdentifierCase {
     UPPER,
-    LOWER
+    LOWER,
+    OPERATOR
 }

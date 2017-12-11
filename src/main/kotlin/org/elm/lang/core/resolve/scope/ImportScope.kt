@@ -55,8 +55,12 @@ class ImportScope(val elmFile: ElmFile) {
         if (moduleDecl.exposesAll)
             return ModuleScope(elmFile).getDeclaredValues()
 
-        return moduleDecl.exposingList.exposedValueList
-                .mapNotNull { it.reference.resolve() as? ElmNamedElement }
+        val exposedValues = listOf(
+                moduleDecl.exposingList.exposedValueList,
+                moduleDecl.exposingList.exposedOperatorList)
+
+        return exposedValues.flatten()
+                .mapNotNull { it.reference?.resolve() as? ElmNamedElement }
     }
 
     /**

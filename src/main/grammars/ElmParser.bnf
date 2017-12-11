@@ -12,7 +12,9 @@
     elementTypeFactory("TypeAliasDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("UnionMember")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedUnionConstructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -92,8 +94,8 @@ private ListOfValues ::= <<non_empty_list ExposedItem>>
 
 private ExposedItem ::=
     ExposedValue
-    | OperatorAsFunction
     | ExposedType
+    | ExposedOperator
 
 ExposedValue ::= LOWER_CASE_IDENTIFIER
 
@@ -106,6 +108,8 @@ ExposedUnionConstructors ::=
 ExposedUnionConstructor ::=
     UPPER_CASE_IDENTIFIER
 
+ExposedOperator ::=
+    OperatorAsFunction_inner
 
 
 // IMPORT DECLARATION
@@ -143,7 +147,7 @@ FunctionDeclarationLeft ::=
     LOWER_CASE_IDENTIFIER Pattern*
 
 OperatorDeclarationLeft ::=
-    OperatorAsFunction Pattern*
+    OperatorAsFunction_inner Pattern*
 
 
 
@@ -197,7 +201,8 @@ TupleType ::=
     | LEFT_PARENTHESIS TypeRef (COMMA TypeRef)+ RIGHT_PARENTHESIS
 
 
-TypeAnnotation ::= (LOWER_CASE_IDENTIFIER | OperatorAsFunction) COLON TypeRef
+TypeAnnotation ::=
+    (LOWER_CASE_IDENTIFIER | OperatorAsFunction_inner) COLON TypeRef
     { pin = 'COLON' }
 
 PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
@@ -210,13 +215,16 @@ PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
 
 Expression ::= ListOfOperands (Operator ListOfOperands)*
 
-ListOfOperands ::= [MINUS]Operand+
+ListOfOperands ::= ['-']Operand+
 
-private Operator ::=
-    OPERATOR
-    | LIST_CONSTRUCTOR
-    | MINUS
-    | DOT
+Operator ::=
+    OPERATOR_IDENTIFIER
+
+OperatorAsFunction ::=
+    OperatorAsFunction_inner
+
+private OperatorAsFunction_inner ::=
+    LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
 private Operand ::=
     Literal
@@ -254,9 +262,6 @@ external UpperCaseQID ::= parseUpperCaseQID
 ValueExpr ::=
     ValueQID
     | UpperCaseQID
-
-OperatorAsFunction ::=
-    LEFT_PARENTHESIS Operator RIGHT_PARENTHESIS
 
 private Tuple ::=
     Unit
@@ -313,7 +318,7 @@ InnerTypeAnnotation ::=
 
 
 Pattern ::=
-    SinglePattern (LIST_CONSTRUCTOR SinglePattern)* [PatternAs]
+    SinglePattern ('::' SinglePattern)* [PatternAs]
 
 PatternAs ::= AS LOWER_CASE_IDENTIFIER
 
@@ -351,7 +356,7 @@ private ParenthesedPattern ::=
 
 
 OperatorConfig ::=
-    OperatorConfigKeyword NUMBER_LITERAL Operator
+    OperatorConfigKeyword NUMBER_LITERAL OPERATOR_IDENTIFIER
 
 private OperatorConfigKeyword ::=
     INFIXL

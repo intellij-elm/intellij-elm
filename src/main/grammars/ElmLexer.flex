@@ -104,13 +104,11 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     ","                         { return COMMA; }
     "="                         { return EQ; }
     "->"                        { return ARROW; }
-    "::"                        { return LIST_CONSTRUCTOR; }
     ":"                         { return COLON; }
     "|"                         { return PIPE; }
     "\\"                        { return BACKSLASH; }
     "_"                         { return UNDERSCORE; }
     "."                         { return DOT; }
-    "-"                         { return MINUS; }
     "[glsl|" {
         yybegin(IN_GLSL_CODE);
         return START_GLSL_CODE;
@@ -131,7 +129,7 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     {CharLiteral}               { return CHAR_LITERAL; }
     {NumberLiteral}             { return NUMBER_LITERAL; }
     {HexLiteral}                { return NUMBER_LITERAL; }
-    {Operator}                  { return OPERATOR; }
+    {Operator}                  { return OPERATOR_IDENTIFIER; }
     {WhiteSpace}                { return TokenType.WHITE_SPACE; }
     {Newline}                   { return NEWLINE; }
     {Tab}                       { return TAB; }

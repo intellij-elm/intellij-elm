@@ -10,6 +10,7 @@ import org.elm.lang.core.psi.ElmTypes.ANONYMOUS_FUNCTION
 import org.elm.lang.core.psi.ElmTypes.AS_CLAUSE
 import org.elm.lang.core.psi.ElmTypes.CASE_OF
 import org.elm.lang.core.psi.ElmTypes.CASE_OF_BRANCH
+import org.elm.lang.core.psi.ElmTypes.EXPOSED_OPERATOR
 import org.elm.lang.core.psi.ElmTypes.EXPOSED_TYPE
 import org.elm.lang.core.psi.ElmTypes.EXPOSED_UNION_CONSTRUCTOR
 import org.elm.lang.core.psi.ElmTypes.EXPOSED_UNION_CONSTRUCTORS
@@ -32,9 +33,11 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_PATTERN
 import org.elm.lang.core.psi.ElmTypes.LOWER_TYPE_NAME
 import org.elm.lang.core.psi.ElmTypes.MODULE_DECLARATION
 import org.elm.lang.core.psi.ElmTypes.NON_EMPTY_TUPLE
+import org.elm.lang.core.psi.ElmTypes.OPERATOR
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_AS_FUNCTION
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_CONFIG
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_DECLARATION_LEFT
+import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.PARAMETRIC_TYPE_REF
 import org.elm.lang.core.psi.ElmTypes.PARENTHESED_EXPRESSION
 import org.elm.lang.core.psi.ElmTypes.PATTERN
@@ -61,6 +64,7 @@ import org.elm.lang.core.psi.elements.ElmAnonymousFunction
 import org.elm.lang.core.psi.elements.ElmAsClause
 import org.elm.lang.core.psi.elements.ElmCaseOf
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
+import org.elm.lang.core.psi.elements.ElmExposedOperator
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposedUnionConstructor
 import org.elm.lang.core.psi.elements.ElmExposedUnionConstructors
@@ -82,6 +86,7 @@ import org.elm.lang.core.psi.elements.ElmLowerPattern
 import org.elm.lang.core.psi.elements.ElmLowerTypeName
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmNonEmptyTuple
+import org.elm.lang.core.psi.elements.ElmOperator
 import org.elm.lang.core.psi.elements.ElmOperatorAsFunction
 import org.elm.lang.core.psi.elements.ElmOperatorConfig
 import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
@@ -131,6 +136,7 @@ class ElmPsiFactory(private val project: Project)
                 AS_CLAUSE -> return ElmAsClause(node)
                 CASE_OF -> return ElmCaseOf(node)
                 CASE_OF_BRANCH -> return ElmCaseOfBranch(node)
+                EXPOSED_OPERATOR -> return ElmExposedOperator(node)
                 EXPOSED_TYPE -> return ElmExposedType(node)
                 EXPOSED_VALUE -> return ElmExposedValue(node)
                 EXPOSED_UNION_CONSTRUCTORS -> return ElmExposedUnionConstructors(node)
@@ -152,6 +158,7 @@ class ElmPsiFactory(private val project: Project)
                 LOWER_TYPE_NAME -> return ElmLowerTypeName(node)
                 MODULE_DECLARATION -> return ElmModuleDeclaration(node)
                 NON_EMPTY_TUPLE -> return ElmNonEmptyTuple(node)
+                OPERATOR -> return ElmOperator(node)
                 OPERATOR_AS_FUNCTION -> return ElmOperatorAsFunction(node)
                 OPERATOR_CONFIG -> return ElmOperatorConfig(node)
                 OPERATOR_DECLARATION_LEFT -> return ElmOperatorDeclarationLeft(node)
@@ -201,6 +208,10 @@ class ElmPsiFactory(private val project: Project)
                     ?.expression
                     ?.childOfType<ElmValueQID>()
                     ?: error("Failed to create value QID: `$text`")
+
+    fun createOperatorIdentifier(text: String): PsiElement =
+            createFromText("foo = x $text y", OPERATOR_IDENTIFIER)
+                    ?: error("Failed to create operator identifier: `$text`")
 
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)

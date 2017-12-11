@@ -13,6 +13,7 @@ import com.intellij.psi.stubs.StubOutputStream
 import com.intellij.psi.tree.IStubFileElementType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.elements.ElmExposedOperator
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposedUnionConstructor
 import org.elm.lang.core.psi.elements.ElmExposedUnionConstructors
@@ -20,6 +21,7 @@ import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
+import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmPortAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
@@ -63,7 +65,9 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "TYPE_ALIAS_DECLARATION" -> ElmTypeAliasDeclarationStub.Type
     "UNION_MEMBER" -> ElmUnionMemberStub.Type
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
+    "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type
     "EXPOSING_LIST" -> ElmExposingListStub.Type
+    "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
     "EXPOSED_VALUE" -> ElmExposedValueStub.Type
     "EXPOSED_TYPE" -> ElmExposedTypeStub.Type
     "EXPOSED_UNION_CONSTRUCTOR" -> ElmExposedUnionConstructorStub.Type
@@ -223,6 +227,34 @@ class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
     }
 }
 
+class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
+                                     elementType: IStubElementType<*, *>,
+                                     override val name: String
+): StubBase<ElmOperatorDeclarationLeft>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmOperatorDeclarationLeftStub, ElmOperatorDeclarationLeft>("OPERATOR_DECLARATION_LEFT") {
+
+        override fun serialize(stub: ElmOperatorDeclarationLeftStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmOperatorDeclarationLeftStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmOperatorDeclarationLeftStub) =
+                ElmOperatorDeclarationLeft(stub, this)
+
+        override fun createStub(psi: ElmOperatorDeclarationLeft, parentStub: StubElement<*>?) =
+                ElmOperatorDeclarationLeftStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmOperatorDeclarationLeftStub, sink: IndexSink) {
+            sink.indexOperatorDecl(stub)
+        }
+    }
+}
+
 
 class ElmExposingListStub(parent: StubElement<*>?,
                                      elementType: IStubElementType<*, *>
@@ -279,6 +311,38 @@ class ElmExposedValueStub(parent: StubElement<*>?,
                 ElmExposedValueStub(parentStub, this, psi.referenceName)
 
         override fun indexStub(stub: ElmExposedValueStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
+
+class ElmExposedOperatorStub(parent: StubElement<*>?,
+                             elementType: IStubElementType<*, *>,
+                             val refName: String
+): StubBase<ElmExposedOperator>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmExposedOperatorStub, ElmExposedOperator>("EXPOSED_OPERATOR") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmExposedOperatorStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmExposedOperatorStub(parentStub, this,
+                        dataStream.readNameAsString()!!)
+
+        override fun createPsi(stub: ElmExposedOperatorStub) =
+                ElmExposedOperator(stub, this)
+
+        override fun createStub(psi: ElmExposedOperator, parentStub: StubElement<*>?) =
+                ElmExposedOperatorStub(parentStub, this, psi.referenceName)
+
+        override fun indexStub(stub: ElmExposedOperatorStub, sink: IndexSink) {
             // no-op
         }
     }

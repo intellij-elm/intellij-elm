@@ -32,6 +32,11 @@ type alias MyChar = Char
 type alias MyList = List
 """)
 
+    fun `test built-in value refs have no errors`() = checkErrors("""
+x = True
+y = False
+""")
+
 
     fun `test qualified Native refs have no errors`() = checkErrors("""
 import Native.Scheduler

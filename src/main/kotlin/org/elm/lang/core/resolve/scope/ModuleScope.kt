@@ -78,7 +78,15 @@ class ModuleScope(val elmFile: ElmFile) {
                 ?.map { it.lowerCaseIdentifier.text }
                 ?.toSet()
                 ?: emptySet()
-        return allExposedValues.filter { locallyExposedNames.contains(it.name) }
+
+        val locallyExposedOperators = importClause.exposingList?.exposedOperatorList
+                ?.map { it.operatorIdentifier.text }
+                ?.toSet()
+                ?: emptySet()
+
+        return allExposedValues.filter {
+            it.name in locallyExposedNames || it.name in locallyExposedOperators
+        }
     }
 
 

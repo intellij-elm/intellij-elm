@@ -6,6 +6,7 @@ import com.intellij.psi.tree.IElementType
 import org.elm.lang.core.lexer.ElmIncrementalLexer
 import org.elm.lang.core.psi.ELM_IDENTIFIERS
 import org.elm.lang.core.psi.ELM_KEYWORDS
+import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 
 
 class ElmNamesValidator : NamesValidator {
@@ -15,8 +16,14 @@ class ElmNamesValidator : NamesValidator {
             getLexerType(name) in ELM_KEYWORDS
 
 
-    override fun isIdentifier(name: String, project: Project?) =
-            getLexerType(name) in ELM_IDENTIFIERS
+    override fun isIdentifier(name: String, project: Project?): Boolean {
+        // TODO [kl] eventually we will want to restrict this based on context
+        return when (getLexerType(name)) {
+            in ELM_IDENTIFIERS -> true
+            OPERATOR_IDENTIFIER -> true
+            else -> false
+        }
+    }
 }
 
 

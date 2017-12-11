@@ -42,6 +42,8 @@ f = LT
    --^ ...Basics.elm
 """)
 
+// TODO [kl] add a test to verify that operators like `(++)` are imported from Basics
+
 
 
     // List Module
@@ -99,7 +101,6 @@ f = Nothing
     --^ ...Maybe.elm
 """)
 */
-
 
 
 }

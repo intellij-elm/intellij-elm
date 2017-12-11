@@ -9,6 +9,7 @@ import org.intellij.lang.annotations.Language
 
 class ElmRenameTest: ElmTestBase() {
 
+
     fun `test value decl rename`() {
         doTest("quux",
 """
@@ -21,6 +22,7 @@ quux = 42
 bar = quux + 2
 """)}
 
+
     fun `test function parameter rename`() {
         doTest("z",
 """
@@ -28,6 +30,7 @@ f x{-caret-} y = x + y
 """, """
 f z y = z + y
 """)}
+
 
     fun `test union type rename`() {
         doTest("Quux",
@@ -41,6 +44,7 @@ type Bar = C Quux
 f : Quux -> String
 """)}
 
+
     fun `test type alias rename`() {
         doTest("Quux",
 """
@@ -52,6 +56,24 @@ type alias Quux = Int
 type Bar = C Quux
 f : Quux -> String
 """)}
+
+
+    // TODO [kl] figure out why the test is broken but the plugin itself works correctly
+/*
+    fun `test operator decl rename`() {
+        doTest("##",
+"""
+(**) : number -> number -> number
+(**) = (^)
+infixl 0 **
+x = 2 {-caret-}** 3
+""", """
+(##) : number -> number -> number
+(##) = (^)
+infixl 0 ##
+x = 2 ## 3
+""")}
+*/
 
 
     // TODO [kl] improve this test by also verifying that the FILE is renamed (currently not implemented in the plugin)

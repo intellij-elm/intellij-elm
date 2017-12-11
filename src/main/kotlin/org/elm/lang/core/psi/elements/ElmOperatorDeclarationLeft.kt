@@ -2,9 +2,13 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiElement
+import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
+import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
+import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.stubs.ElmOperatorDeclarationLeftStub
 
 
 /**
@@ -14,10 +18,17 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
  *
  * @see [ElmFunctionDeclarationLeft]
  */
-class ElmOperatorDeclarationLeft(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclarationLeftStub> {
 
-    val operatorAsFunction: ElmOperatorAsFunction
-        get() = findNotNullChildByClass(ElmOperatorAsFunction::class.java)
+    constructor(node: ASTNode) :
+            super(node, IdentifierCase.OPERATOR)
+
+    constructor(stub: ElmOperatorDeclarationLeftStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType, IdentifierCase.OPERATOR)
+
+
+    val operatorIdentifier: PsiElement
+        get() = findNotNullChildByType(OPERATOR_IDENTIFIER)
 
     val patternList: List<ElmPattern>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)

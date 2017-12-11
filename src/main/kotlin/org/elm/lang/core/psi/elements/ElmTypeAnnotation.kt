@@ -5,6 +5,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.LocalTopLevelValueReference
 
@@ -14,7 +15,7 @@ import org.elm.lang.core.resolve.reference.LocalTopLevelValueReference
  *
  * e.g. `length : String -> Int`
  *
- * Either [lowerCaseIdentifier] or [operatorAsFunction] is non-null
+ * Either [lowerCaseIdentifier] or [operatorIdentifier] is non-null
  */
 class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
@@ -31,8 +32,8 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
      *
      * e.g. `(++)` in `(++) : String -> String -> String`
      */
-    val operatorAsFunction: ElmOperatorAsFunction?
-        get() = findChildByClass(ElmOperatorAsFunction::class.java)
+    val operatorIdentifier: PsiElement?
+        get() = findChildByType(OPERATOR_IDENTIFIER)
 
     /**
      * The right-hand side of the type annotation which describes the type of the value.
@@ -48,7 +49,7 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
 
     override val referenceNameElement: PsiElement
         get() = lowerCaseIdentifier
-                    ?: operatorAsFunction?.operator
+                    ?: operatorIdentifier
                     ?: throw RuntimeException("cannot determine type annotations's ref name element")
 
     override val referenceName: String

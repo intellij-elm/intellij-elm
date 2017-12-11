@@ -14,6 +14,10 @@ fun IndexSink.indexFuncDecl(stub: ElmFunctionDeclarationLeftStub) {
     indexNamedStub(stub)
 }
 
+fun IndexSink.indexOperatorDecl(stub: ElmOperatorDeclarationLeftStub) {
+    indexNamedStub(stub)
+}
+
 fun IndexSink.indexTypeDecl(stub: ElmTypeDeclarationStub) {
     indexNamedStub(stub)
 }

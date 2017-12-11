@@ -18,11 +18,10 @@ import org.elm.lang.core.psi.ElmTypes.INFIXL
 import org.elm.lang.core.psi.ElmTypes.INFIXR
 import org.elm.lang.core.psi.ElmTypes.LET
 import org.elm.lang.core.psi.ElmTypes.LINE_COMMENT
-import org.elm.lang.core.psi.ElmTypes.LIST_CONSTRUCTOR
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.MODULE
 import org.elm.lang.core.psi.ElmTypes.OF
-import org.elm.lang.core.psi.ElmTypes.OPERATOR
+import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.PORT
 import org.elm.lang.core.psi.ElmTypes.RESERVED
 import org.elm.lang.core.psi.ElmTypes.START_COMMENT
@@ -70,8 +69,7 @@ val ELM_KEYWORDS = tokenSetOf(
 )
 
 val ELM_OPERATORS = tokenSetOf(
-        OPERATOR,
-        LIST_CONSTRUCTOR
+        OPERATOR_IDENTIFIER
 )
 
 val ELM_IDENTIFIERS = tokenSetOf(

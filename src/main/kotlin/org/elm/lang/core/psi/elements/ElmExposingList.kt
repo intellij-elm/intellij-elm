@@ -27,6 +27,6 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
     val exposedTypeList: List<ElmExposedType>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedType::class.java)
 
-    val operatorAsFunctionList: List<ElmOperatorAsFunction>
-        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmOperatorAsFunction::class.java)
+    val exposedOperatorList: List<ElmExposedOperator>
+        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedOperator::class.java)
 }

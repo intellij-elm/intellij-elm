@@ -383,4 +383,57 @@ port foo : String -> Cmd msg
 """)
 
 
+    // BINARY OPERATORS
+
+    fun `test binary operator in import exposing list`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Math exposing ((**))
+                      --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+
+    fun `test binary operator`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Math exposing ((**))
+f = 2 ** 3
+     --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+
+    fun `test binary operator via import exposing all`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Math exposing (..)
+f = 2 ** 3
+     --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+
+    fun `test binary operator as a function`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Math exposing ((**))
+f = (**) 2 3
+    --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+
 }

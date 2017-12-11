@@ -37,6 +37,9 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
             ElmTypes.UPPER_CASE_QID ->
                     factory.createUpperCaseQID(newElementName)
 
+            ElmTypes.OPERATOR_IDENTIFIER ->
+                    factory.createOperatorIdentifier(newElementName)
+
             else -> error("Unsupported identifier type for `$newElementName` (${identifier.elementType}")
         }
         identifier.replace(newId)
