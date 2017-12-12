@@ -28,14 +28,19 @@ class QualifiedModuleNameReference<T:ElmPsiElement>(
 ): PsiReferenceBase<T>(elem), ElmReference {
 
     override fun getVariants(): Array<ElmNamedElement> {
-        val moduleDecls = ElmModulesIndex.getAll(element.project)
-                .filter { ModuleScope(element.elmFile).importsModule(it.name)
-                    || GlobalScope.implicitlyImportsModule(it)
-                }
+        val moduleDecls =
+                ModuleScope(element.elmFile)
+                        .getImportDecls()
+                        .map { it.moduleQID.text }
+                        .let { ElmModulesIndex.getAll(it, element.project) }
+
+        val implicitDecls =
+                ElmModulesIndex.getAll(GlobalScope.defaultImports, element.project)
+                        .filter { it.elmFile.isCore() }
 
         val aliasDecls = ModuleScope(element.elmFile).getAliasDecls() as List<ElmNamedElement>
 
-        return listOf(moduleDecls, aliasDecls).flatten().toTypedArray()
+        return listOf(moduleDecls, implicitDecls, aliasDecls).flatten().toTypedArray()
     }
 
     override fun resolve(): ElmPsiElement? {

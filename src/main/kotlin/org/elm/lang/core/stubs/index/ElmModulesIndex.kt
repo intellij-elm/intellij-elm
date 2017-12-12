@@ -38,6 +38,9 @@ class ElmModulesIndex: StringStubIndexExtension<ElmModuleDeclaration>() {
         private fun makeKey(moduleName: String) =
                 moduleLookupHack(moduleName)
 
+        /**
+         * Return the module declaration for [moduleName], if any.
+         */
         fun get(moduleName: String, project: Project): ElmModuleDeclaration? {
             val key = makeKey(moduleName)
             val matches = StubIndex.getElements(KEY, key, project,
@@ -51,17 +54,28 @@ class ElmModulesIndex: StringStubIndexExtension<ElmModuleDeclaration>() {
             return matches.firstOrNull()
         }
 
-        fun getAll(project: Project): List<ElmModuleDeclaration> {
+        /**
+         * Returns all module declarations in [project] whose module name
+         * matches an item in [moduleNames]
+         */
+        fun getAll(moduleNames: Collection<String>, project: Project): List<ElmModuleDeclaration> {
             val index = StubIndex.getInstance()
             val results = mutableListOf<ElmModuleDeclaration>()
 
-            for (key in index.getAllKeys(KEY, project)) {
+            for (key in moduleNames) {
                 index.processElements(KEY, key, project, GlobalSearchScope.allScope(project),
                         ElmModuleDeclaration::class.java) {
                     results.add(it)
                 }
             }
             return results.sortedWith(elmAppVsLibraryComparator)
+        }
+
+        /**
+         * Returns all module declarations in [project]
+         */
+        fun getAll(project: Project): List<ElmModuleDeclaration> {
+            return getAll(StubIndex.getInstance().getAllKeys(KEY, project), project)
         }
     }
 }

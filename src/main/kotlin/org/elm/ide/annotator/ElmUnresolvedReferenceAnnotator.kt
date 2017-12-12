@@ -15,6 +15,9 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         for (ref in element.references) {
             if (ref.resolve() == null && !safeToIgnore(ref, element)) {
+                // TODO [kl] make this smarter in the case of qualified references
+                // so that we don't report a double error when really the problem
+                // is with the qualified module name reference.
                 holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'")
             }
         }

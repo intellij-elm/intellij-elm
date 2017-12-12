@@ -2,7 +2,6 @@ package org.elm.lang.core.resolve.scope
 
 import com.intellij.openapi.project.Project
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
@@ -13,10 +12,6 @@ import org.elm.lang.core.stubs.index.ElmModulesIndex
 class GlobalScope(val project: Project) {
 
     companion object {
-        fun implicitlyImportsModule(moduleDecl: ElmModuleDeclaration): Boolean {
-            return moduleDecl.elmFile.isCore() && defaultImports.contains(moduleDecl.name)
-        }
-
         /**
          * Modules that the Elm compiler treats as being implicitly imported.
          */
@@ -60,8 +55,8 @@ class GlobalScope(val project: Project) {
 
         val rest = mutableListOf<ElmNamedElement>()
         rest.addAll(helper("Basics"))
-        rest.addAll(helper("List").filter { it.name == "::" }) // TODO [kl] verify (::)
-        rest.addAll(helper("Platform.Cmd").filter { it.name == "!" }) // TODO [kl] verify (!)
+        rest.addAll(helper("List").filter { it.name == "::" })
+        rest.addAll(helper("Platform.Cmd").filter { it.name == "!" })
         return rest
     }
 
