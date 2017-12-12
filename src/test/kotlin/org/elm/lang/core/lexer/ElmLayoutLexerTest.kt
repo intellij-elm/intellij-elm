@@ -5,13 +5,13 @@ import com.intellij.lexer.Lexer
 /**
  * Test the lexer's ability to synthesize tokens related to offside rule.
  */
-class ElmLayoutLexerTest: ElmLexerTestCaseBase() {
+class ElmLayoutLexerTest: ElmLayoutLexerTestCaseBase() {
 
     override fun getTestDataPath() =
             "org/elm/lang/core/lexer/fixtures"
 
     override fun createLexer(): Lexer {
-        return ElmLexer(ElmIncrementalLexer())
+        return ElmLayoutLexer(ElmIncrementalLexer())
     }
 
     fun testBasics() = doTest()

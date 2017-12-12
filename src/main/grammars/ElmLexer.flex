@@ -7,6 +7,12 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 
 %%
 
+%{
+  public _ElmLexer() {
+    this((java.io.Reader)null);
+  }
+%}
+
 %class _ElmLexer
 %implements FlexLexer
 %unicode
