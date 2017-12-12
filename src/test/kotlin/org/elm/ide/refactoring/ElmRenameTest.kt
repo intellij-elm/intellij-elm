@@ -58,6 +58,17 @@ f : Quux -> String
 """)}
 
 
+    fun `test field access rename`() {
+        doTest("quux",
+"""
+foo : { b : String }
+foo a{-caret-} = a.b
+""", """
+foo : { b : String }
+foo quux = quux.b
+""")}
+
+
 /*
     This test has been disabled because there's a bug in our test configuration (or IntelliJ)
     where the rename doesn't work. The root cause is that rename depends on Find Usages,
