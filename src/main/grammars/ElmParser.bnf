@@ -290,17 +290,22 @@ Field ::=
 
 IfElse ::=
     IF Expression THEN Expression ELSE Expression
+    { pin = 'IF' }
 
 
 CaseOf ::=
     CASE Expression OF <<non_empty_decls CaseOfBranch>> VIRTUAL_END_SECTION
+    { pin = 'CASE' }
 
 CaseOfBranch ::=
     Pattern ARROW Expression
+    { pin = 1 }
+
 
 
 LetIn ::=
     LET <<non_empty_decls InnerDeclaration>> VIRTUAL_END_SECTION IN Expression
+    { pin = 'LET' }
 
 private InnerDeclaration ::=
     InnerValueDeclaration
@@ -308,9 +313,11 @@ private InnerDeclaration ::=
 
 InnerValueDeclaration ::=
     InternalValueDeclarationLeft EQ Expression
+    { pin = 'EQ' }
 
 InnerTypeAnnotation ::=
     LOWER_CASE_IDENTIFIER COLON TypeRef
+    { pin = 'COLON' }
 
 
 

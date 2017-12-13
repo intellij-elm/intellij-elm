@@ -7,10 +7,10 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
+/**
+ * A value declaration inside a `let/in` expression
+ */
 class ElmInnerValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
-
-    val expression: ElmExpression
-        get() = findNotNullChildByClass(ElmExpression::class.java)
 
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = findChildByClass(ElmFunctionDeclarationLeft::class.java)
@@ -20,6 +20,14 @@ class ElmInnerValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
 
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
+
+    /**
+     * The body expression on the right-hand-side
+     *
+     * In a well-formed program, this will be non-null
+     */
+    val expression: ElmExpression?
+        get() = findChildByClass(ElmExpression::class.java)
 
 
     // TODO [kl] duplicates code in ElmValueDeclaration. Maybe we can get rid
