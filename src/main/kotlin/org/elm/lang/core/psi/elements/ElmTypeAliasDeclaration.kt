@@ -5,6 +5,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
@@ -25,6 +26,9 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
     constructor(stub: ElmTypeAliasDeclarationStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType, IdentifierCase.UPPER)
 
+
+    override fun getIcon(flags: Int) =
+            ElmIcons.TYPE_ALIAS
 
 
     /** The new name (alias) which will hereafter refer to [typeRef] */

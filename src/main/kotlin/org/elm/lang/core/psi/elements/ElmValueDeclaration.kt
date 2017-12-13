@@ -2,9 +2,9 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.stubs.ElmValueDeclarationStub
@@ -18,6 +18,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
     constructor(stub: ElmValueDeclarationStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
+    override fun getIcon(flags: Int) =
+            ElmIcons.FUNCTION
 
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
@@ -54,15 +56,15 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
         if (functionDeclarationLeft != null) {
             // the most common case, a named function or value declaration
             namedElements.add(functionDeclarationLeft!!)
-            if (includeParameters) {
-                extractDestructuredParameters(functionDeclarationLeft!!, namedElements)
-            }
+            if (includeParameters)
+                namedElements.addAll(functionDeclarationLeft!!.namedParameters)
+
         } else if (operatorDeclarationLeft != null) {
             // an operator declaration
             namedElements.add(operatorDeclarationLeft!!)
-            if (includeParameters) {
-                extractDestructuredParameters(operatorDeclarationLeft!!, namedElements)
-            }
+            if (includeParameters)
+                namedElements.addAll(operatorDeclarationLeft!!.namedParameters)
+
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
             namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))
@@ -71,8 +73,16 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
         return namedElements
     }
 
-    private fun extractDestructuredParameters(parentElement: PsiElement, results: MutableList<ElmNamedElement>) {
-        results.addAll(PsiTreeUtil.collectElementsOfType(parentElement, ElmLowerPattern::class.java))
-        results.addAll(PsiTreeUtil.collectElementsOfType(parentElement, ElmPatternAs::class.java))
+    /**
+     * Names that are declared as parameters to a function or operator decl.
+     */
+    fun declaredParameters(): List<ElmNamedElement> {
+        if (functionDeclarationLeft != null) {
+            return functionDeclarationLeft!!.namedParameters
+        } else if (operatorDeclarationLeft != null) {
+            return operatorDeclarationLeft!!.namedParameters
+        } else {
+            return emptyList()
+        }
     }
 }

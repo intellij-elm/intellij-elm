@@ -36,6 +36,7 @@
         <lang.findUsagesProvider language="Elm" implementationClass="org.elm.ide.search.ElmFindUsagesProvider" />
         <lang.namesValidator language="Elm" implementationClass="org.elm.lang.refactoring.ElmNamesValidator" />
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
+        <lang.psiStructureViewFactory language="Elm" implementationClass="org.elm.ide.structure.ElmStructureViewFactory" />
         <lang.refactoringSupport language="Elm" implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider" />
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
         <liveTemplateContext implementation="org.elm.ide.ElmLiveTemplateContext" />

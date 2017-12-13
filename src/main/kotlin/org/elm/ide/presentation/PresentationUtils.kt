@@ -5,6 +5,7 @@ import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
 fun getPresentation(psi: ElmPsiElement): ItemPresentation {
@@ -14,10 +15,22 @@ fun getPresentation(psi: ElmPsiElement): ItemPresentation {
 }
 
 
-private fun presentableName(element: PsiElement): String? {
-    return when (element) {
-        is ElmNamedElement -> element.name
-        else -> null
-    }
-
+fun getPresentationForStructure(psi: ElmPsiElement): ItemPresentation {
+    val text = presentableName(psi)
+    // in the structure view, we might want to extend [text] to include
+    // things like the full type annotation for a function declaration.
+    return PresentationData(text, null, psi.getIcon(0), null)
 }
+
+
+private fun presentableName(element: PsiElement): String? =
+        when (element) {
+            is ElmNamedElement ->
+                element.name
+
+            is ElmValueDeclaration ->
+                element.declaredNames(includeParameters = false).firstOrNull()?.name
+
+            else ->
+                null
+        }

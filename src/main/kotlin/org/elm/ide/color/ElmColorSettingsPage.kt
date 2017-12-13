@@ -13,7 +13,7 @@ class ElmColorSettingsPage : ColorSettingsPage {
             "Elm"
 
     override fun getIcon() =
-            ElmIcons.file
+            ElmIcons.FILE
 
     override fun getAttributeDescriptors() =
             ATTRS

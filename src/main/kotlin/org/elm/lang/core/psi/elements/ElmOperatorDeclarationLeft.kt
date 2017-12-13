@@ -5,6 +5,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
@@ -33,4 +34,11 @@ class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclara
     val patternList: List<ElmPattern>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
 
+
+    val namedParameters: List<ElmNamedElement>
+        get() {
+            val results = mutableListOf<ElmNamedElement>()
+            results.addAll(PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java))
+            return results
+        }
 }
