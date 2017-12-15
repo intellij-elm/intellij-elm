@@ -87,6 +87,10 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 .filter { it.name.startsWith(qualifierPrefix) && it.name != qualifierPrefix }
                 .map { it.name.removePrefix("$qualifierPrefix.").substringBefore('.') }
                 .forEach { result.add(it) }
+
+        if (qualifierPrefix.isEmpty()) {
+            ModuleScope(file).getAliasDecls().forEach { result.add(it) }
+        }
     }
 
 }
