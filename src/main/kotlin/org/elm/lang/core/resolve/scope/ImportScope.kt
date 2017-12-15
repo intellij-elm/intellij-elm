@@ -35,7 +35,7 @@ class ImportScope(val elmFile: ElmFile) {
         fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): ImportScope? {
             // handle implicit imports from Core
             val targetFile = ElmModulesIndex.get(qualifierPrefix, elmFile.project)
-            if (targetFile?.elmFile?.isCore() == true)
+            if (targetFile?.elmFile?.isCore() == true && qualifierPrefix in GlobalScope.defaultImports)
                 return ImportScope(targetFile.elmFile)
 
             // handle explicit import from within this module
