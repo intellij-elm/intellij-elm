@@ -27,6 +27,16 @@ f = case user of { name, age } -> name{-caret-}
 """)
 
 
+    fun `test union constructor completion from pattern destructuring`() = doSingleCompletion(
+"""
+type MyState = State Int
+f (Sta{-caret-} n) = n
+""", """
+type MyState = State Int
+f (State{-caret-} n) = n
+""")
+
+
     fun `test union type completion in a type annotation`() = doSingleCompletion(
 """
 type Page = Home
@@ -82,7 +92,7 @@ g : User.User{-caret-}
 """)
 
 
-    fun `test qualified union constructor completion`() = doSingleCompletionMultiFile(
+    fun `test qualified union constructor completion in expr`() = doSingleCompletionMultiFile(
 """
 --@ main.elm
 import Page
@@ -98,6 +108,24 @@ defaultPage = Page.Home{-caret-}
 """)
 
 
+    fun `test qualified union constructor completion in pattern`() = doSingleCompletionMultiFile(
+"""
+--@ main.elm
+import Page
+defaultPage p = case p of
+    Page.Ho{-caret-}
+
+--@ Page.elm
+module Page exposing (..)
+type Page = Home
+""", """
+import Page
+defaultPage p = case p of
+    Page.Home{-caret-}
+
+""")
+
+
 
 
     fun `test does not complete union constructors in type namespace`() = checkNoCompletion(
@@ -107,14 +135,53 @@ f : NotF{-caret-}
 """)
 
 
-    fun `test module alias shadows full name`() = checkNoCompletionWithMultiFile(
+
+// TODO [kl] eventually code completion should add a 'dot' suffix when completing a module qualifier
+
+    fun `test value completion of module prefix, before dot`() = doSingleCompletionMultiFile(
 """
 --@ main.elm
-import Data.User as User
-g = Data.U{-caret-}
+import Data.User
+g = Dat{-caret-}
 
 --@ Data/User.elm
 module Data.User exposing (..)
+defaultUser = "Arnold"
+""", """
+import Data.User
+g = Data{-caret-}
+
+""")
+
+
+    fun `test value completion of module prefix, after dot`() = doSingleCompletionMultiFile(
+"""
+--@ main.elm
+import Data.User
+g = Data.{-caret-}
+
+--@ Data/User.elm
+module Data.User exposing (..)
+defaultUser = "Arnold"
+""", """
+import Data.User
+g = Data.User{-caret-}
+
+""")
+
+    fun `test value completion of module prefix, final step`() = doSingleCompletionMultiFile(
+"""
+--@ main.elm
+import Data.User
+g = Data.User.{-caret-}
+
+--@ Data/User.elm
+module Data.User exposing (..)
+defaultUser = "Arnold"
+""", """
+import Data.User
+g = Data.User.defaultUser{-caret-}
+
 """)
 
 }

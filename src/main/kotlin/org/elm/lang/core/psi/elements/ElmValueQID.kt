@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmQID
+import org.elm.lang.core.psi.ElmTypes.DOT
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 
@@ -20,7 +21,7 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
     /**
      * The qualifiers which identify the module/alias, if any.
      */
-    val upperCaseIdentifierList: List<PsiElement>
+    override val upperCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(UPPER_CASE_IDENTIFIER)
 
     /**
@@ -30,5 +31,5 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
     val isQualified: Boolean
-        get() = upperCaseIdentifierList.isNotEmpty()
+        get() = findChildByType<PsiElement>(DOT) != null
 }

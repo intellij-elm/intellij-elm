@@ -39,10 +39,12 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
     /**
      * The values and types exposed by this module
+     *
+     * In a well-formed program, this will be non-null.
      */
-    val exposingList: ElmExposingList
+    val exposingList: ElmExposingList?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmExposingList::class.java)
-                    ?: error("module decl must have an exposing list")
+
 
     /**
      * Very rare. This will only appear in Effect Manager modules.
@@ -53,7 +55,7 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
     val exposesAll: Boolean
         get() = getStub()?.exposesAll
-                ?: (exposingList.doubleDot != null)
+                ?: (exposingList?.doubleDot != null)
 
 
     override fun getName(): String {

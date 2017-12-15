@@ -55,9 +55,12 @@ class ImportScope(val elmFile: ElmFile) {
         if (moduleDecl.exposesAll)
             return ModuleScope(elmFile).getDeclaredValues()
 
+        val exposingList = moduleDecl.exposingList
+                ?: return emptyList()
+
         val exposedValues = listOf(
-                moduleDecl.exposingList.exposedValueList,
-                moduleDecl.exposingList.exposedOperatorList)
+                exposingList.exposedValueList,
+                exposingList.exposedOperatorList)
 
         return exposedValues.flatten()
                 .mapNotNull { it.reference?.resolve() as? ElmNamedElement }
@@ -73,8 +76,9 @@ class ImportScope(val elmFile: ElmFile) {
         if (moduleDecl.exposesAll)
             return ModuleScope(elmFile).getDeclaredTypes()
 
-        return moduleDecl.exposingList.exposedTypeList
-                .mapNotNull { it.reference.resolve() as? ElmNamedElement }
+        return moduleDecl.exposingList?.exposedTypeList
+                ?.mapNotNull { it.reference.resolve() as? ElmNamedElement }
+                ?: emptyList()
     }
 
     /**
@@ -87,8 +91,9 @@ class ImportScope(val elmFile: ElmFile) {
         if (moduleDecl.exposesAll)
             return ModuleScope(elmFile).getDeclaredConstructors()
 
-        return moduleDecl.exposingList.exposedTypeList
-                .flatMap {
+        return moduleDecl.exposingList
+                ?.exposedTypeList
+                ?.flatMap {
                     val ctors = it.exposedUnionConstructors
                     when {
                         it.exposesAll ->
@@ -109,5 +114,6 @@ class ImportScope(val elmFile: ElmFile) {
                         }
                     }
                 }
+                ?: emptyList()
     }
 }

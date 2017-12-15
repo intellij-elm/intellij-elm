@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmQID
+import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 
 /**
@@ -16,7 +17,7 @@ class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
     /**
      * Guaranteed to contain at least one element
      */
-    val upperCaseIdentifierList: List<PsiElement>
+    override val upperCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(UPPER_CASE_IDENTIFIER)
 
     /**
@@ -25,7 +26,8 @@ class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
      * module name in a module decl or import decl).
      *
      * TODO [kl] this double-duty is a bit strange. Maybe make a separate Psi element?
+     * TODO [kl] also consider moving it into [ElmQID]
      */
     val isQualified: Boolean
-        get() = upperCaseIdentifierList.size > 1
+        get() = findChildByType<PsiElement>(ElmTypes.DOT) != null
 }

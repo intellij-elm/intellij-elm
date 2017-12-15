@@ -76,6 +76,7 @@ CODE FORMATTING
 ElmFile ::= [ModuleDeclaration] Body
 
 ModuleDeclaration ::= [ Effect | PORT ] MODULE UpperCaseQID [ WHERE Record ] ExposingList
+    { pin = 3 }
 
 private Body ::= ImportClauses TopDeclarations VIRTUAL_END_SECTION?
 
@@ -116,6 +117,7 @@ ExposedOperator ::=
 
 
 ImportClause ::= IMPORT UpperCaseQID [AsClause] [ExposingList]
+    { pin = 2 }
 
 AsClause ::= AS UPPER_CASE_IDENTIFIER
 
