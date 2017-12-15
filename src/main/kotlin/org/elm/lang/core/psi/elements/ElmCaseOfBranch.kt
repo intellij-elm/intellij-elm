@@ -13,6 +13,8 @@ class ElmCaseOfBranch(node: ASTNode) : ElmPsiElementImpl(node) {
 
     /**
      * The pattern on the left-hand-side of the branch.
+     *
+     * In a well-formed program, this will be non-null.
      */
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
@@ -20,7 +22,7 @@ class ElmCaseOfBranch(node: ASTNode) : ElmPsiElementImpl(node) {
     /**
      * The body expression on the right-hand-side of the branch.
      *
-     * In a well-formed program, this will be non-null
+     * In a well-formed program, this will be non-null.
      */
     val expression: ElmExpression?
         get() = findChildByClass(ElmExpression::class.java)
