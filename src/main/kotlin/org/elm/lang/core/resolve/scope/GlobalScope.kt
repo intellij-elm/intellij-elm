@@ -32,16 +32,9 @@ class GlobalScope(val project: Project) {
          * Values and Types that are built-in to the Elm compiler. Any occurrences of
          * these symbols should be treated as always resolved.
          */
-        val builtInSymbols = listOf(
-                "Bool",
-                "True",
-                "False",
-                "String",
-                "Char",
-                "Int",
-                "Float",
-                "List"
-        )
+        val builtInValues = setOf("True", "False")
+        val builtInTypes = setOf("Bool", "String", "Char", "Int", "Float", "List")
+        val allBuiltInSymbols = builtInValues.union(builtInTypes)
     }
 
     // TODO [kl] this is crazy inefficient, and it should be easy to cache

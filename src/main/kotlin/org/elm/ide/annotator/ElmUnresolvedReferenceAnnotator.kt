@@ -25,7 +25,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
 
     private fun safeToIgnore(ref: PsiReference, element: PsiElement): Boolean {
         // Ignore refs to to built-in types and values
-        if (GlobalScope.builtInSymbols.contains(ref.canonicalText))
+        if (GlobalScope.allBuiltInSymbols.contains(ref.canonicalText))
             return true
 
         // Ignore refs to Native (JavaScript) modules

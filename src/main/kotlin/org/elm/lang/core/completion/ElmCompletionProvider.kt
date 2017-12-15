@@ -17,6 +17,7 @@ import org.elm.lang.core.psi.elements.ElmUnionPattern
 import org.elm.lang.core.psi.elements.ElmUpperPathTypeRef
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.resolve.scope.ExpressionScope
+import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmModulesIndex
@@ -51,6 +52,7 @@ class ElmCompletionProvider : CompletionProvider<CompletionParameters>() {
                     if (qualifierPrefix.isEmpty()) {
                         ExpressionScope(parent).getVisibleValues().forEach { result.add(it) }
                         ModuleScope(file).getVisibleConstructors().forEach { result.add(it) }
+                        GlobalScope.builtInValues.forEach { result.add(it) }
                     } else {
                         val importScope = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
                         importScope?.getExposedValues()?.forEach { result.add(it) }
@@ -72,6 +74,7 @@ class ElmCompletionProvider : CompletionProvider<CompletionParameters>() {
                 is ElmUpperPathTypeRef, is ElmParametricTypeRef -> {
                     if (qualifierPrefix.isEmpty()) {
                         ModuleScope(file).getVisibleTypes().forEach { result.add(it) }
+                        GlobalScope.builtInTypes.forEach { result.add(it) }
                     } else {
                         val importScope = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
                         importScope?.getExposedTypes()?.forEach { result.add(it) }

@@ -2,11 +2,7 @@ package org.elm.lang.core.completion
 
 class ElmStdlibCompletionTest: ElmCompletionTestBase() {
 
-    fun testDummy() {}
 
-
-    // TODO [kl] re-enable built-in type and value tests after I implement [CompletionContributor]
-    /*
     fun `test built-in type completion in a type annotation`() = doSingleCompletion(
 """
 name : Stri{-caret-}
@@ -21,7 +17,6 @@ x = Fal{-caret-}
 """, """
 x = False{-caret-}
 """)
-    */
 
 
     // TODO [kl] re-enable these tests once we can arrange to download Elm Core package
