@@ -135,6 +135,12 @@ f : NotF{-caret-}
 """)
 
 
+    fun `test does not complete number literals`() = checkNoCompletion(
+"""
+x = 42
+y = 4{-caret-}
+""")
+
 
 // TODO [kl] eventually code completion should add a 'dot' suffix when completing a module qualifier
 

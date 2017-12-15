@@ -9,6 +9,7 @@ import org.elm.lang.core.psi.ELM_IDENTIFIERS
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmQID
+import org.elm.lang.core.psi.ElmTypes.NUMBER_LITERAL
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmParametricTypeRef
 import org.elm.lang.core.psi.elements.ElmUnionMember
@@ -21,6 +22,13 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
+/**
+ * Most completions are provided by implementing [PsiReference.getVariants],
+ * but there are some things that cannot be expressed that way (keywords)
+ * or are difficult to express (qualified names).
+ *
+ * This class supplements the completions provided by the reference system.
+ */
 class ElmCompletionProvider : CompletionProvider<CompletionParameters>() {
 
     override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext?, result: CompletionResultSet) {
@@ -29,8 +37,12 @@ class ElmCompletionProvider : CompletionProvider<CompletionParameters>() {
         val grandParent = pos.parent?.parent
         val file = pos.containingFile as ElmFile
 
-
-        if (pos.elementType in ELM_IDENTIFIERS && parent is ElmQID) {
+        if (grandParent is ElmValueExpr && grandParent.prevSibling?.elementType == NUMBER_LITERAL) {
+            /*
+            Ignore this case in order to prevent IntelliJ from suggesting completions
+            when the caret is immediately after a number.
+            */
+        } else if (pos.elementType in ELM_IDENTIFIERS && parent is ElmQID) {
             val qualifierPrefix = parent.qualifierPrefix
             suggestQualifiers(qualifierPrefix, file, result)
 
