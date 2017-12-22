@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.TokenType.WHITE_SPACE
 import com.intellij.psi.tree.IElementType
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmTypes.ANONYMOUS_FUNCTION
@@ -212,6 +213,24 @@ class ElmPsiFactory(private val project: Project)
     fun createOperatorIdentifier(text: String): PsiElement =
             createFromText("foo = x $text y", OPERATOR_IDENTIFIER)
                     ?: error("Failed to create operator identifier: `$text`")
+
+    fun createImport(moduleName: String) =
+            "import $moduleName"
+                    .let { createFromText<ElmImportClause>(it) }
+                    ?: error("Failed to create import of $moduleName")
+
+    fun createImportExposing(moduleName: String, exposedNames: List<String>) =
+            "import $moduleName exposing (${exposedNames.joinToString(", ")})"
+                    .let { createFromText<ElmImportClause>(it) }
+                    ?: error("Failed to create import of $moduleName exposing $exposedNames")
+
+    fun createFreshLine() =
+            // TODO [kl] make this more specific by actually find a token which contains
+            // newline, not just any whitespace
+            PsiFileFactory.getInstance(project)
+                    .createFileFromText("DUMMY.elm", ElmFileType, "\n")
+                    .descendantOfType(WHITE_SPACE)
+                    ?: error("failed to create fresh line: should never happen")
 
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
