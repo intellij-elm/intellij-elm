@@ -1,13 +1,17 @@
 package org.elm.ide.intentions
 
 import com.intellij.lang.ASTNode
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentOfType
+import com.intellij.ui.components.JBList
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
@@ -18,6 +22,9 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.openapiext.toPsiFile
+import java.awt.Component
+import javax.swing.DefaultListCellRenderer
+import javax.swing.JList
 
 data class Context(val fullRefName: String, val candidates: List<Candidate>) {
     val importAsQualified: Boolean
@@ -156,10 +163,10 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
 
         // ensure that a freshline exists immediately following
         // where we are going to insert the new import clause.
-        var prevFreshline: ASTNode? = null
+        val prevFreshline: ASTNode
         if (insertPosition.elementType !== ElmTypes.NEWLINE) {
             prevFreshline = ElmPsiFactory(project).createFreshLine().getNode()
-            parent.addChild(prevFreshline!!, insertPosition)
+            parent.addChild(prevFreshline, insertPosition)
         } else {
             prevFreshline = insertPosition
         }
@@ -175,8 +182,37 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
     }
 
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
-        // TODO implement me
-        throw UnsupportedOperationException("not implemented")
+        require(context.candidates.isNotEmpty())
+        /* TODO [kl] this code was ported from Java. Check the Rust plugin
+           to see if they have a nicer way to build these picker UIs. */
+        val project = file.project
+        val list = JBList(context.candidates)
+        list.cellRenderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+                val result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+                text = (value as? Candidate)?.moduleName
+                return result
+            }
+        }
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        JBPopupFactory.getInstance().createListPopupBuilder(list)
+                .setTitle("Import from module:")
+                .setItemChoosenCallback {
+                    val value = list.getSelectedValue()
+                    if (value is Candidate) {
+                        runWriteActionToImportCandidate(value, file, context)
+                    }
+                }
+                .setFilteringEnabled { value -> (value as Candidate).moduleName }
+                .createPopup().showInBestPositionFor(editor!!)
+    }
+
+    private fun runWriteActionToImportCandidate(candidate: Candidate, file: ElmFile, context: Context) {
+        object : WriteCommandAction.Simple<Unit>(file.project) {
+            override fun run() {
+                addImportForCandidate(candidate, file, context)
+            }
+        }.execute()
     }
 }
 

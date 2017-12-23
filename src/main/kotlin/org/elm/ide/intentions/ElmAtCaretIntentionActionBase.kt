@@ -39,12 +39,12 @@ abstract class ElmAtCaretIntentionActionBase<Ctx> : BaseElementAtCaretIntentionA
      */
     abstract fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Ctx?
 
-    abstract fun invoke(project: Project, editor: Editor, ctx: Ctx)
+    abstract fun invoke(project: Project, editor: Editor, context: Ctx)
 
     final override fun invoke(project: Project, editor: Editor, element: PsiElement) {
-        val ctx = findApplicableContext(project, editor, element) ?: return
+        val context = findApplicableContext(project, editor, element) ?: return
         checkWriteAccessAllowed()
-        invoke(project, editor, ctx)
+        invoke(project, editor, context)
     }
 
     final override fun isAvailable(project: Project, editor: Editor, element: PsiElement): Boolean {
