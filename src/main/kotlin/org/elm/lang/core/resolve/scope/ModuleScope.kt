@@ -5,7 +5,6 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 
 
 /**
@@ -16,9 +15,6 @@ import org.elm.lang.core.psi.elements.ElmUpperCaseQID
  * @see ImportScope for the view of the module from the outside
  */
 class ModuleScope(val elmFile: ElmFile) {
-
-    private fun toName(moduleQID: ElmUpperCaseQID) =
-            moduleQID.upperCaseIdentifierList.joinToString(".") { it.text }
 
     fun getImportDecls() =
             elmFile.descendantsOfType<ElmImportClause>()
@@ -34,7 +30,7 @@ class ModuleScope(val elmFile: ElmFile) {
      */
     fun importDeclForQualifierPrefix(qualifierPrefix: String) =
             getImportDecls().find {
-                toName(it.moduleQID) == qualifierPrefix || it.asClause?.name == qualifierPrefix
+                it.moduleQID.text == qualifierPrefix || it.asClause?.name == qualifierPrefix
             }
 
 

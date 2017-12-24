@@ -68,6 +68,21 @@ main = Foo.bar{-caret-}
 """.trimStart())
 
 
+    fun `test expose a value with existing import`() = check(
+"""
+--@ main.elm
+import Foo
+main = bar{-caret-}
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""",
+"""
+import Foo exposing (bar)
+main = bar
+""")
+
+
     fun `test merge with existing exposed values`() = check(
 """
 --@ main.elm

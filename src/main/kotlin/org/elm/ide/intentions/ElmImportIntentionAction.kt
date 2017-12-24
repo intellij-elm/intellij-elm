@@ -17,7 +17,11 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.START_DOC_COMMENT
+import org.elm.lang.core.psi.elements.ElmExposedType
+import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.ElmUnionMember
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
@@ -67,11 +71,12 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         else
             factory.createImportExposing(candidate.moduleName, listOf(candidate.nameForImport))
 
-        // TODO [kl] find existing import
-        val existingImport: ElmImportClause? = null
+        val existingImport = ModuleScope(file).getImportDecls()
+                .find { it.moduleQID.text == candidate.moduleName }
         if (existingImport != null) {
             // merge with existing import
-            // TODO [kl]
+            val mergedImport = mergeImports(file, existingImport, newImport)
+            existingImport.replace(mergedImport)
         } else {
             // insert a new import clause
             val insertPosition = getInsertPosition(file, candidate.moduleName)
@@ -241,14 +246,57 @@ data class Candidate(
             val moduleDecl = element.elmFile.getModuleDecl() ?: return null
             val exposingList = moduleDecl.exposingList ?: return null
             val name = element.name!!
-            return if (moduleDecl.exposesAll || exposingList.exposesName(name))
-                Candidate(
+
+            // TODO [kl] cleanup: this is gross
+            var candidate: Candidate? = null
+            if (element is ElmUnionMember) {
+                val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
+                if (moduleDecl.exposesAll || exposingList.exposesConstructor(name, typeName))
+                    candidate = Candidate(
+                        moduleName = moduleDecl.name,
+                        name = name,
+                        nameForImport = "$typeName($name)",
+                        targetElement = element)
+            } else {
+                if (moduleDecl.exposesAll || exposingList.exposesName(name))
+                    candidate = Candidate(
                         moduleName = moduleDecl.name,
                         name = name,
                         nameForImport = name,
                         targetElement = element)
-            else
-                null
+            }
+            return candidate
         }
     }
 }
+
+
+/**
+ * Returns true if [name] can be found in the list of exposed values, constructors and types
+ *
+ * NOTE: this doesn't handle the case where a union type exposes all of its members.
+ * For that case, see [ElmExposingList.exposesConstructor]
+ *
+ * TODO [kl] cleanup: there's got to be a cleaner way to do this. it also seems like it
+ * should be able to share code with how resolving an import reference needs to make sure
+ * that the target element is actually exposed by the module. See [ImportScope]
+ */
+private fun ElmExposingList.exposesName(name: String): Boolean =
+        sequenceOf<List<ElmReferenceElement>>(
+                exposedValueList,
+                exposedTypeList,
+                exposedOperatorList)
+                .flatten()
+                .map { it.referenceName }
+                .contains(name)
+
+private fun ElmExposingList.exposesConstructor(constructorName: String, typeName: String): Boolean =
+        exposedTypeList.any {
+            (it.referenceName == typeName && it.exposesAll)
+            || it.exposesConstructorExplicitly(constructorName)
+        }
+
+private fun ElmExposedType.exposesConstructorExplicitly(name: String): Boolean =
+        exposedUnionConstructors?.exposedUnionConstructors
+                ?.any { it.referenceName == name }
+                ?: false

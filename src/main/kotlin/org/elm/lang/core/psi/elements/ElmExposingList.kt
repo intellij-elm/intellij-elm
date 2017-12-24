@@ -6,7 +6,6 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.DOUBLE_DOT
-import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.stubs.ElmExposingListStub
 
 
@@ -30,13 +29,4 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
 
     val exposedOperatorList: List<ElmExposedOperator>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedOperator::class.java)
-
-    /**
-     * Returns true if [name] can be found in the list of exposed values, constructors and types
-     */
-    fun exposesName(name: String): Boolean =
-            sequenceOf<List<ElmReferenceElement>>(exposedValueList, exposedTypeList, exposedOperatorList)
-                    .flatten()
-                    .map { it.referenceName }
-                    .contains(name)
 }
