@@ -1,5 +1,6 @@
 package org.elm.ide.intentions
 
+import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
 import org.intellij.lang.annotations.Language
 
@@ -138,11 +139,19 @@ module Foo exposing ()
 bar = 42
 """)
 
+
     protected fun check(@Language("Elm") before: String, @Language("Elm") after: String) {
-        fileTreeFromText(before).createAndOpenFileWithCaretMarker()
+        val testProject = fileTreeFromText(before).createAndOpenFileWithCaretMarker()
+
+        // auto-adding an import must be done using stubs only
+        checkAstNotLoaded(VirtualFileFilter { file ->
+            !file.path.endsWith(testProject.fileWithCaret)
+        })
+
         myFixture.launchAction(intention)
         myFixture.checkResult(replaceCaretMarker(after).trim())
     }
+
 
     protected fun verifyUnavailable(@Language("Elm") before: String) {
         fileTreeFromText(before).createAndOpenFileWithCaretMarker()
