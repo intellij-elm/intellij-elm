@@ -130,6 +130,25 @@ main = Settings
 """)
 
 
+    fun `test insert import after import`() = check(
+"""
+--@ main.elm
+import Foo exposing (bar)
+main = bar + quux{-caret-}
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+--@ Quux.elm
+module Quux exposing (quux)
+quux = 99
+""",
+"""
+import Foo exposing (bar)
+import Quux exposing (quux)
+main = bar + quux
+""")
+
+
     fun `test verify unavailable when value not exposed`() = verifyUnavailable(
 """
 --@ main.elm

@@ -6,22 +6,24 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentOfType
 import com.intellij.ui.components.JBList
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.ElmTypes.START_DOC_COMMENT
+import org.elm.lang.core.psi.ElmTypes.PORT_ANNOTATION
+import org.elm.lang.core.psi.ElmTypes.TYPE_ALIAS_DECLARATION
+import org.elm.lang.core.psi.ElmTypes.TYPE_ANNOTATION
+import org.elm.lang.core.psi.ElmTypes.TYPE_DECLARATION
+import org.elm.lang.core.psi.ElmTypes.VALUE_DECLARATION
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionMember
+import org.elm.lang.core.psi.tokenSetOf
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
@@ -30,10 +32,13 @@ import java.awt.Component
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JList
 
-data class Context(val fullRefName: String, val candidates: List<Candidate>) {
-    val importAsQualified: Boolean
-        get() = fullRefName.contains(".")
-}
+
+data class Context(
+        val fullRefName: String,
+        val candidates: List<Candidate>,
+        val isQualified: Boolean
+)
+
 
 class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
 
@@ -44,15 +49,33 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         if (element.parentOfType<ElmImportClause>() != null) return null
         val refElement = element.parentOfType<ElmReferenceElement>() ?: return null
 
-        val name = refElement.referenceName
+        val fullName = refElement.text      // e.g. `Html.div`
+        val name = refElement.referenceName // e.g. `div`
         val scope = GlobalSearchScope.allScope(project)
         val candidates = ElmNamedElementIndex.find(name, project, scope)
                 .mapNotNull { Candidate.fromNamedElement(it) }
+                .toMutableList()
 
-        if (candidates.isEmpty())
+        val isQualified: Boolean
+        if (fullName.contains(".")) {
+            isQualified = true
+            // exclude any modules that don't match the qualifier prefix
+            val qualifierPrefix = fullName.split(".").dropLast(1).joinToString(".")
+            candidates.removeIf { it.moduleName != qualifierPrefix }
+        } else {
+            isQualified = false
+        }
+
+        // De-dupe multiple results with the same module-name. Normally you would never
+        // have multiple modules with the same name, but until we start parsing the
+        // source roots out of the `elm-package.json` file, we will have to do this
+        // workaround.
+        val dedupedCandidates = candidates.associateBy { it.moduleName }.values
+
+        if (dedupedCandidates.isEmpty())
             return null
 
-        return Context(refElement.text, candidates)
+        return Context(name, dedupedCandidates.toList(), isQualified)
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
@@ -66,7 +89,7 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
 
     private fun addImportForCandidate(candidate: Candidate, file: ElmFile, context: Context) {
         val factory = ElmPsiFactory(file.project)
-        val newImport = if (context.importAsQualified)
+        val newImport = if (context.isQualified)
             factory.createImport(candidate.moduleName)
         else
             factory.createImportExposing(candidate.moduleName, listOf(candidate.nameForImport))
@@ -84,6 +107,18 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         }
     }
 
+    private fun doInsert(importClause: ElmImportClause, insertPosition: ASTNode) {
+        val parent = insertPosition.treeParent
+        val factory = ElmPsiFactory(importClause.project)
+        // insert the import clause followed by a newline immediately before `insertPosition`
+        val newlineNode = factory.createFreshLine().node
+        parent.addChild(newlineNode, insertPosition)
+        parent.addChild(importClause.node, newlineNode)
+    }
+
+    /**
+     * Returns the node which will *follow* the new import clause
+     */
     private fun getInsertPosition(file: ElmFile, moduleName: String): ASTNode {
         val existingImportClauses = ModuleScope(file).getImportDecls()
         return if (existingImportClauses.isEmpty())
@@ -92,39 +127,14 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
             getSortedInsertPosition(moduleName, existingImportClauses.toList())
     }
 
+    private val topLevelDeclarationTypes = tokenSetOf(
+            TYPE_DECLARATION, TYPE_ALIAS_DECLARATION, VALUE_DECLARATION,
+            TYPE_ANNOTATION, PORT_ANNOTATION
+    )
+
     private fun prepareInsertInNewSection(sourceFile: ElmFile): ASTNode {
-        val project = sourceFile.project
-        val moduleDecl = sourceFile.getModuleDecl()
-
-        if (moduleDecl == null) {
-            // source file does not have an explicit module declaration
-            // so just insert at the front of the file.
-            return sourceFile.node.firstChildNode
-        } else {
-            // it does have a module decl, so find the right place to insert
-            // the import after the module decl
-
-            // import clauses must come *after* module documentation comments
-            val importSectionAnchor = skipOverDocComments(moduleDecl)
-
-            // insert blanklines flanking the new import section
-            val newFreshline = ElmPsiFactory(project).createFreshLine().getNode()
-            sourceFile.node.addChild(newFreshline, importSectionAnchor!!.node)
-            val newFreshline2 = ElmPsiFactory(project).createFreshLine().getNode()
-            sourceFile.node.addChild(newFreshline2, newFreshline)
-            return newFreshline.treeNext
-        }
-    }
-
-    private fun skipOverDocComments(startElement: PsiElement): PsiElement? {
-        val elt = startElement.nextSibling
-                ?: return startElement
-
-        if (elt is PsiComment)
-            if (elt.tokenType === START_DOC_COMMENT)
-                return PsiTreeUtil.skipSiblingsForward(elt, PsiComment::class.java)
-
-        return elt
+        // prepare for insert immediately before the first top-level declaration
+        return sourceFile.node.findChildByType(topLevelDeclarationTypes)!!
     }
 
     private fun compareImportAndModule(importClause: ElmImportClause, moduleName: String): Int {
@@ -138,15 +148,21 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         // 3rd party libs in a second group, and project files in the
         // final group).
 
-        val firstImport = existingImportClauses[0]
-        val lastImport = existingImportClauses[existingImportClauses.size - 1]
+        val firstImport = existingImportClauses.first()
+        val lastImport = existingImportClauses.last()
 
         return when {
             compareImportAndModule(firstImport, moduleName) >= 0 ->
                 firstImport.node
 
-            compareImportAndModule(lastImport, moduleName) < 0 ->
-                lastImport.node.treeNext
+            compareImportAndModule(lastImport, moduleName) < 0 -> {
+                // go past the last import and its newline
+                var node = lastImport.node.treeNext
+                while (!node.textContains('\n')) {
+                    node = node.treeNext
+                }
+                return node.treeNext
+            }
 
             else ->
                 // find the correct position somewhere in the middle
@@ -161,37 +177,12 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         }
     }
 
-    private fun doInsert(importClause: ElmImportClause, insertPosition: ASTNode) {
-        val project = importClause.project
-        val parent = insertPosition.treeParent
-        val beforeInsertPosition = insertPosition.treePrev
-
-        // ensure that a freshline exists immediately following
-        // where we are going to insert the new import clause.
-        val prevFreshline: ASTNode
-        if (insertPosition.elementType !== ElmTypes.NEWLINE) {
-            prevFreshline = ElmPsiFactory(project).createFreshLine().getNode()
-            parent.addChild(prevFreshline, insertPosition)
-        } else {
-            prevFreshline = insertPosition
-        }
-
-        // insert the import clause before the freshline
-        parent.addChild(importClause.node, prevFreshline)
-
-        // ensure that freshline exists *before* the new import clause
-        if (beforeInsertPosition != null && beforeInsertPosition.elementType !== ElmTypes.NEWLINE) {
-            val newFreshline = ElmPsiFactory(project).createFreshLine().getNode()
-            parent.addChild(newFreshline, importClause.node)
-        }
-    }
-
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
         /* TODO [kl] this code was ported from Java. Check the Rust plugin
            to see if they have a nicer way to build these picker UIs. */
         val project = file.project
-        val list = JBList(context.candidates)
+        val list = JBList(context.candidates.sortedBy { it.moduleName })
         list.cellRenderer = object : DefaultListCellRenderer() {
             override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
                 val result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
@@ -201,7 +192,7 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         }
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
         JBPopupFactory.getInstance().createListPopupBuilder(list)
-                .setTitle("Import from module:")
+                .setTitle("Import '${context.fullRefName}' from module:")
                 .setItemChoosenCallback {
                     val value = list.getSelectedValue()
                     if (value is Candidate) {
