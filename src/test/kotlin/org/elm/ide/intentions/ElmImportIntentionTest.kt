@@ -35,6 +35,20 @@ main = Foo.bar
 """)
 
 
+    fun `test binary operator`() = check(
+"""
+--@ main.elm
+main = 2 **{-caret-} 3
+--@ Foo.elm
+module Foo exposing ((**))
+(**) a b = a ^ b
+""",
+"""
+import Foo exposing ((**))
+main = 2 ** 3
+""")
+
+
     fun `test import between module decl and value-decl`() = check(
 """
 --@ main.elm

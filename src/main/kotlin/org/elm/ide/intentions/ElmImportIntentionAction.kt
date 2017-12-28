@@ -21,6 +21,7 @@ import org.elm.lang.core.psi.ElmTypes.VALUE_DECLARATION
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionMember
 import org.elm.lang.core.psi.tokenSetOf
@@ -34,7 +35,7 @@ import javax.swing.JList
 
 
 data class Context(
-        val fullRefName: String,
+        val refName: String,
         val candidates: List<Candidate>,
         val isQualified: Boolean
 )
@@ -184,7 +185,8 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         val project = file.project
         val list = JBList(context.candidates.sortedBy { it.moduleName })
         list.cellRenderer = object : DefaultListCellRenderer() {
-            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int,
+                                                      isSelected: Boolean, cellHasFocus: Boolean): Component {
                 val result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
                 text = (value as? Candidate)?.moduleName
                 return result
@@ -192,7 +194,7 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
         }
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
         JBPopupFactory.getInstance().createListPopupBuilder(list)
-                .setTitle("Import '${context.fullRefName}' from module:")
+                .setTitle("Import '${context.refName}' from module:")
                 .setItemChoosenCallback {
                     val value = list.getSelectedValue()
                     if (value is Candidate) {
@@ -238,25 +240,27 @@ data class Candidate(
             val exposingList = moduleDecl.exposingList ?: return null
             val name = element.name!!
 
-            // TODO [kl] cleanup: this is gross
-            var candidate: Candidate? = null
-            if (element is ElmUnionMember) {
-                val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
-                if (moduleDecl.exposesAll || exposingList.exposesConstructor(name, typeName))
-                    candidate = Candidate(
-                        moduleName = moduleDecl.name,
-                        name = name,
-                        nameForImport = "$typeName($name)",
-                        targetElement = element)
-            } else {
-                if (moduleDecl.exposesAll || exposingList.exposesName(name))
-                    candidate = Candidate(
-                        moduleName = moduleDecl.name,
-                        name = name,
-                        nameForImport = name,
-                        targetElement = element)
+            val (nameForImport, isExposedDirectly) = when (element) {
+                is ElmUnionMember -> {
+                    val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
+                    Pair("$typeName($name)", exposingList.exposesConstructor(name, typeName))
+                }
+
+                is ElmOperatorDeclarationLeft ->
+                    Pair("($name)", exposingList.exposesName(name))
+
+                else ->
+                    Pair(name, exposingList.exposesName(name))
             }
-            return candidate
+
+            return if (moduleDecl.exposesAll || isExposedDirectly)
+                Candidate(
+                        moduleName = moduleDecl.name,
+                        name = name,
+                        nameForImport = nameForImport,
+                        targetElement = element)
+            else
+                null
         }
     }
 }
