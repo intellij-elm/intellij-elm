@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.elm.klazuka</id>
     <name>Elm</name>
-    <version>0.9.0</version>
+    <version>0.9.1</version>
     <vendor url="https://github.com/klazuka">
         Keith Lazuka
     </vendor>
@@ -18,6 +18,7 @@
           <li>Rename refactoring</li>
           <li>Syntax highlighting</li>
           <li>Mark unresolvable references as errors</li>
+          <li>'Import' quick fix for unresolved references</li>
           <li>Structure view</li>
           <li>Spell checking</li>
           <li>etc.</li>
@@ -26,6 +27,7 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>0.9.1</b> <em>(2017-12-28)</em> - added 'Import' quick fix for unresolved references</li>
             <li><b>0.9.0</b> <em>(2017-12-15)</em> - initial release</li>
         </ul>
     ]]>

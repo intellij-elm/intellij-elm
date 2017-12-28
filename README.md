@@ -11,6 +11,7 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * Rename refactoring
 * Syntax highlighting
 * Mark unresolvable references as errors
+* 'Import' quick fix for unresolved references
 * Structure view
 * and more...
 
