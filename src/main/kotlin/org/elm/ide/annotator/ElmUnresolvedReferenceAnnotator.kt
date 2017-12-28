@@ -4,6 +4,7 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
+import org.elm.ide.intentions.ElmImportIntentionAction
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 import org.elm.lang.core.psi.elements.ElmValueExpr
@@ -19,6 +20,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
                 // so that we don't report a double error when really the problem
                 // is with the qualified module name reference.
                 holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'")
+                        .also { it.registerFix(ElmImportIntentionAction()) }
             }
         }
     }

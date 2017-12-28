@@ -67,14 +67,14 @@ inline fun <reified T : PsiElement> PsiElement.descendantsOfType(): Collection<T
 fun PsiFile.descendantOfType(elementType: IElementType): PsiElement? {
     // TODO [kl] surely IntelliJ provides a util function for finding a Psi leaf of a specific type?
     val stack = Stack<ASTNode>()
-    stack.addAll(children.map { it.node }.toList())
+    stack.addAll(node.getChildren(null))
 
     while (stack.isNotEmpty()) {
-        val node = stack.pop()
-        if (node.elementType == elementType)
-            return node.psi
+        val candidate = stack.pop()
+        if (candidate.elementType == elementType)
+            return candidate.psi
         else
-            stack.addAll(node.getChildren(null))
+            stack.addAll(candidate.getChildren(null))
     }
     return null
 }
