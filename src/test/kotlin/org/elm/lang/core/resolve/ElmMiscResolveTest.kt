@@ -69,6 +69,12 @@ f = \(x,y) -> x
     --X     --^
 """)
 
+    fun `test lambda parameter destructured with alias`() = checkByCode(
+"""
+f = \((x,y) as point) -> point
+               --X       --^
+""")
+
 
     fun `test port ref`() = checkByCode(
 """

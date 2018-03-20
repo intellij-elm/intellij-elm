@@ -43,7 +43,7 @@ class ExpressionScope(val element: PsiElement) {
             }
 
             if (it is ElmAnonymousFunction) {
-                results.addAll(it.destructuredNames)
+                results.addAll(it.namedParameters)
             }
 
             return@treeWalkUp true // keep going
