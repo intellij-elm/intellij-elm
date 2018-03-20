@@ -24,7 +24,7 @@ module Main exposing (Page)
 
 type Page = Home
      --X
-""".trimStart()) // TODO [kl] remove `trimStart` once I fix the parse bug when module is on 2nd line
+""")
 
 
     fun `test union constructor ref`() = checkByCode(
@@ -56,7 +56,7 @@ module Main exposing (Page(Home))
 
 type Page = Home
             --X
-""".trimStart())
+""")
 
 
     fun `test type alias ref from module exposing list`() = checkByCode(
@@ -65,7 +65,7 @@ module Main exposing (Person)
                       --^
 type alias Person = { name : String, age: Int }
            --X
-""".trimStart())
+""")
 
 
     fun `test type alias ref in type annotation`() = checkByCode(

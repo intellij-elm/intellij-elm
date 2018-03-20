@@ -12,7 +12,6 @@ object ElmManualPsiElementFactory {
                 ElmTypes.FIELD_ACCESS ->                ElmFieldAccess(node)
                 ElmTypes.VALUE_QID ->                   ElmValueQID(node)
                 ElmTypes.FIELD_ACCESSOR_FUNCTION ->     ElmFieldAccessorFunction(node)
-                ElmTypes.EFFECT ->                      ElmEffect(node)
                 else ->                                 null
             }
 }

@@ -1,9 +1,6 @@
 Elm File
   ElmModuleDeclaration(MODULE_DECLARATION)
-    ElmEffect(EFFECT)
-      PsiElement(LOWER_CASE_IDENTIFIER)('effect')
-    PsiWhiteSpace(' ')
-    PsiElement(MODULE)('module')
+    PsiElement(EFFECT_MODULE)('effect module')
     PsiWhiteSpace(' ')
     ElmUpperCaseQID(UPPER_CASE_QID)
       PsiElement(UPPER_CASE_IDENTIFIER)('Time')

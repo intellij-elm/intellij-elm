@@ -29,7 +29,6 @@
         FIELD_ACCESS='FIELD_ACCESS'
         FIELD_ACCESSOR_FUNCTION='FIELD_ACCESSOR_FUNCTION'
         DOT='DOT'
-        EFFECT='EFFECT'
 
         // tokens used by the lexer but not visible to PsiBuilder parser
         // TODO [kl] cleanup the mess of 'comment' tokens
@@ -75,12 +74,12 @@ CODE FORMATTING
 
 ElmFile ::= [ModuleDeclaration] Body
 
-ModuleDeclaration ::= [ Effect | PORT ] MODULE UpperCaseQID [ WHERE Record ] ExposingList
+ModuleDeclaration ::= (MODULE | EFFECT_MODULE | PORT_MODULE) UpperCaseQID [ WHERE Record ] ExposingList
     { pin = 3 }
 
 private Body ::= ImportClauses TopDeclarations VIRTUAL_END_SECTION?
 
-private ImportClauses ::= <<decls ImportClause>>
+private ImportClauses ::= ImportClause*
 
 private TopDeclarations ::= <<decls Declaration>>
 
@@ -255,7 +254,6 @@ private Literal ::=
 AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
 
 external FieldAccessorFunction ::= parseFieldAccessorFunction
-external Effect ::= parseEffect
 
 external FieldAccess ::= parseFieldAccess
 external ValueQID ::= parseValueQID

@@ -50,6 +50,6 @@ module Foo exposing ((**))
                      --^
 (**) a b = a ^ b
 --X
-""".trimStart())
+""")
 
 }

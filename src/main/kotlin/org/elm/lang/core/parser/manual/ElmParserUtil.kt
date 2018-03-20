@@ -26,8 +26,5 @@ class ElmParserUtil : GeneratedParserUtilBase() {
 
         @JvmStatic fun parseFieldAccessorFunction(builder: PsiBuilder, level: Int) =
                 FieldAccessorFunctionParser().parse(builder, level)
-
-        @JvmStatic fun parseEffect(builder: PsiBuilder, level: Int) =
-                EffectParser().parse(builder, level)
     }
 }

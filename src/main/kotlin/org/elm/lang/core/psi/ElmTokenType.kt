@@ -7,6 +7,7 @@ import org.elm.lang.core.psi.ElmTypes.ALIAS
 import org.elm.lang.core.psi.ElmTypes.AS
 import org.elm.lang.core.psi.ElmTypes.CASE
 import org.elm.lang.core.psi.ElmTypes.COMMENT_CONTENT
+import org.elm.lang.core.psi.ElmTypes.EFFECT_MODULE
 import org.elm.lang.core.psi.ElmTypes.ELSE
 import org.elm.lang.core.psi.ElmTypes.END_COMMENT
 import org.elm.lang.core.psi.ElmTypes.EXPOSING
@@ -23,6 +24,7 @@ import org.elm.lang.core.psi.ElmTypes.MODULE
 import org.elm.lang.core.psi.ElmTypes.OF
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.PORT
+import org.elm.lang.core.psi.ElmTypes.PORT_MODULE
 import org.elm.lang.core.psi.ElmTypes.RESERVED
 import org.elm.lang.core.psi.ElmTypes.START_COMMENT
 import org.elm.lang.core.psi.ElmTypes.START_DOC_COMMENT
@@ -49,6 +51,8 @@ val ELM_COMMENTS = tokenSetOf(
 val ELM_KEYWORDS = tokenSetOf(
         WHERE,
         MODULE,
+        PORT_MODULE,
+        EFFECT_MODULE,
         IMPORT,
         AS,
         EXPOSING,
