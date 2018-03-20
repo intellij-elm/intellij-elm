@@ -14,6 +14,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 %}
 
 %class _ElmLexer
+%public
 %implements FlexLexer
 %unicode
 %function advance
