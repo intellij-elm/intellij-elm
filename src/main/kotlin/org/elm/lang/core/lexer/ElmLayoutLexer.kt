@@ -154,7 +154,9 @@ class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
                         state = State.RETURN_PENDING
                     }
                 }
-            } else if (!beginOfLine && token.tokenType == IN && currentToken?.tokenType != VIRTUAL_END_SECTION) {
+            } else if (!beginOfLine && token.tokenType == IN
+                    && currentToken?.tokenType != VIRTUAL_END_SECTION
+                    && indentStack.isNotEmpty()) {
                 // Reached the end of let declarations where the 'in' keyword is on the same line
                 // as the last 'let' declaration. Close out the section.
                 indentStack.pop()
