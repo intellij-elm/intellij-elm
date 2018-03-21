@@ -15,9 +15,6 @@ class ElmLayoutLexerTest: ElmLayoutLexerTestCaseBase() {
     }
 
     fun testBasics() = doTest()
-    fun testHeader() = doTest()
-    fun testPortModule() = doTest()
-    fun testEffectModule() = doTest()
     fun testLineComments() = doTest()
     fun testBlockComments() = doTest()
     fun testDocComments() = doTest()

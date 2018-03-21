@@ -7,12 +7,8 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.text.CharArrayCharSequence
 import org.elm.lang.core.psi.ELM_COMMENTS
-import org.elm.lang.core.psi.ElmTypes.EFFECT_MODULE
-import org.elm.lang.core.psi.ElmTypes.PORT_MODULE
-import org.elm.lang.core.psi.ElmTypes.IMPORT
 import org.elm.lang.core.psi.ElmTypes.IN
 import org.elm.lang.core.psi.ElmTypes.LET
-import org.elm.lang.core.psi.ElmTypes.MODULE
 import org.elm.lang.core.psi.ElmTypes.NEWLINE
 import org.elm.lang.core.psi.ElmTypes.OF
 import org.elm.lang.core.psi.ElmTypes.TAB
@@ -36,7 +32,6 @@ class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
     companion object {
         private val CONTEXT_CREATING_KEYWORDS = TokenSet.create(LET, OF)
         private val WHITE_SPACE_TOKENS = TokenSet.orSet(TokenSet.create(TokenType.WHITE_SPACE, TAB), ELM_COMMENTS)
-        private val HEADER_TOKENS = TokenSet.create(MODULE, EFFECT_MODULE, PORT_MODULE, IMPORT)
         private val TAB_STOP_GAP = 8
     }
 
@@ -50,11 +45,7 @@ class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
 
 
     private enum class State {
-        /** Start state: skipping any module and/or import declarations in the file header */
-        HEADER,
-
-        /** Normal state in the "body" of the Elm file (i.e. type and value declarations)
-         * Emits virtual tokens when offside rule matches. */
+        /** Start state: emits virtual tokens when offside rule matches */
         NORMAL,
 
         /** waiting for an appropriate token to establish a new section indent level */
@@ -83,7 +74,7 @@ class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
         }
 
         // Reset own state
-        state = State.HEADER
+        state = State.NORMAL
         indentStack.clear()
         indentStack.add(1) // top-level layout context is the first character of each line
         firstColumnOffset = 0
@@ -143,21 +134,6 @@ class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
             }
 
             advance = false
-
-        } else if (state == State.HEADER) {
-
-            val isFirstTokenOnTheLine = token.tokenStart - firstColumnOffset == 0
-
-            // Wait until we see something other than a module or import declaration at
-            // the beginning of the line before transitioning into the state that tracks
-            // whitespace offside rules.
-            if (isFirstTokenOnTheLine
-                    && !WHITE_SPACE_TOKENS.contains(token.tokenType)
-                    && !HEADER_TOKENS.contains(token.tokenType)) {
-                state = State.NORMAL
-            }
-
-            nextToken = token
 
         } else if (state == State.NORMAL) {
 

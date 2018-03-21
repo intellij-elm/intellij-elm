@@ -82,9 +82,7 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
 }
 
 <YYINITIAL> {
-    "effect module"             { return EFFECT_MODULE; } // since 'effect' is not a keyword,
-    "port module"               { return PORT_MODULE; }   // it's easier to denormalize the
-    "module"                    { return MODULE; }        // various 'module' flavors
+    "module"                    { return MODULE; }
     "where"                     { return WHERE; }
     "import"                    { return IMPORT; }
     "as"                        { return AS; }
