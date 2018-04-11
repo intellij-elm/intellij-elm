@@ -6,14 +6,18 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.text.CharArrayCharSequence
+import org.elm.lang.core.lexer.State.NORMAL
+import org.elm.lang.core.lexer.State.START
+import org.elm.lang.core.lexer.State.WAITING_FOR_SECTION_START
 import org.elm.lang.core.psi.ELM_COMMENTS
-import org.elm.lang.core.psi.ElmTypes.IN
+import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.LET
 import org.elm.lang.core.psi.ElmTypes.NEWLINE
 import org.elm.lang.core.psi.ElmTypes.OF
 import org.elm.lang.core.psi.ElmTypes.TAB
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_SECTION
+import org.elm.lang.core.psi.ElmTypes.VIRTUAL_OPEN_SECTION
 import java.util.LinkedList
 
 
@@ -23,238 +27,227 @@ import java.util.LinkedList
  * in the Elm language. This makes it possible to write a traditional parser
  * using GrammarKit.
  *
- * Ported from HaskellLayoutLexer in https://github.com/alexanderkiel/idea-haskell
- *
  * @see ElmIncrementalLexer
  */
 class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
 
-    companion object {
-        private val CONTEXT_CREATING_KEYWORDS = TokenSet.create(LET, OF)
-        private val WHITE_SPACE_TOKENS = TokenSet.orSet(TokenSet.create(TokenType.WHITE_SPACE, TAB), ELM_COMMENTS)
-        private val TAB_STOP_GAP = 8
-    }
-
-    private var state: State? = null
-    private var pendingToken: Token? = null
-    private val indentStack = LinkedList<Int>()
-    private var currentToken: Token? = null
-    private var firstColumnOffset = 0
-    private var additionalTabIndent = 0
-    private var beginOfLine = false
-
-
-    private enum class State {
-        /** Start state: emits virtual tokens when offside rule matches */
-        NORMAL,
-
-        /** waiting for an appropriate token to establish a new section indent level */
-        OPEN_SECTION,
-
-        /** a token has been buffered and should be returned next */
-        RETURN_PENDING
-    }
-
-    //---------------------------------------------------------------------------------------------
-    // Lexer Implementation
-    //---------------------------------------------------------------------------------------------
+    private lateinit var tokens: ArrayList<Token>
+    private var currentTokenIndex = 0
+    private val currentToken: Token
+        get() = tokens[currentTokenIndex]
 
     @Deprecated("")
     fun start(buffer: CharArray, startOffset: Int, endOffset: Int, initialState: Int) {
-        val arrayCharSequence = CharArrayCharSequence(*buffer)
-        start(arrayCharSequence, startOffset, endOffset, initialState)
+        start(CharArrayCharSequence(*buffer), startOffset, endOffset, initialState)
     }
 
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
-        if (startOffset != 0) {
-            throw IllegalArgumentException("do not support incremental lexing: startOffset == 0")
-        }
-        if (initialState != 0) {
-            throw IllegalArgumentException("do not support incremental lexing: initialState == 0")
-        }
-
-        // Reset own state
-        state = State.NORMAL
-        indentStack.clear()
-        indentStack.add(1) // top-level layout context is the first character of each line
-        firstColumnOffset = 0
-        additionalTabIndent = 0
-        beginOfLine = true
+        require (startOffset == 0) { "does not support incremental lexing: startOffset must be 0" }
+        require (initialState == 0) { "does not support incremental lexing: initialState must be 0" }
 
         // Start the incremental lexer
         lexer.start(buffer, startOffset, endOffset, initialState)
 
-        // Advance one step in order to determine our first token
-        advance()
+        tokens = doLayout(lexer)
+        currentTokenIndex = 0
     }
 
-    override fun getState(): Int {
-        // NOTE: the underlying lexer state does not fully capture the state of this object,
-        // but as long as we are never used as an incremental lexer (i.e. syntax highlighter),
-        // then this should be ok.
-        return lexer.state
-    }
+    override fun getState() = lexer.state
+    override fun getBufferSequence() = lexer.bufferSequence
+    override fun getBufferEnd() = lexer.bufferEnd
 
-    override fun getTokenType(): IElementType? =
-            currentToken!!.tokenType
-
-    override fun getTokenStart() =
-            currentToken!!.tokenStart
-
-    override fun getTokenEnd() =
-            currentToken!!.tokenEnd
+    override fun getTokenType() = currentToken.elementType
+    override fun getTokenStart() = currentToken.start
+    override fun getTokenEnd() = currentToken.end
 
     override fun advance() {
-        var nextToken: Token? = null
-        var advance = true
+        if (currentToken.isEOF)
+            return
 
-        val token: Token
-        if (state == State.RETURN_PENDING) {
-            token = pendingToken ?: throw IllegalStateException("no pending token to return")
-            pendingToken = null
-            state = State.NORMAL
-            advance = false
-        } else {
-            token = getTokenFromLexer()
-        }
-
-        if (token.tokenType == null) {
-
-            // End-of-File: Close all open contexts
-            if (!indentStack.isEmpty()) {
-                indentStack.pop()
-                // TODO [kl] why did I have to put in this hack to override tokenStart/tokenEnd?
-                // at this point, currentToken was the token BEFORE the EOF, and I had to make
-                // it so that the synthetic token uses the token just read from the lexer instead
-                // because currentToken isn't set until the end of this function. It seems like
-                // it would always be broken, but it only appears to be broken in the EOF case.
-                nextToken = synthesizeEndSectionToken(token.tokenStart, token.tokenEnd)
-            } else {
-                nextToken = token
-            }
-
-            advance = false
-
-        } else if (state == State.NORMAL) {
-
-            // TODO [kl] I also had to add a null check here for currentToken.
-            // Maybe the original code handled EOF in strange ways (or it has changed in
-            // later versions of IntelliJ?)
-            if (beginOfLine && !WHITE_SPACE_TOKENS.contains(token.tokenType) && currentToken != null) {
-                val indent = getIndent(token)
-                if (!indentStack.isEmpty()) {
-                    if (indentStack.peek() == indent) {
-                        pendingToken = token
-                        nextToken = synthesizeEndDeclarationToken()
-                        state = State.RETURN_PENDING
-                    } else if (indentStack.peek() > indent) {
-                        indentStack.pop()
-                        pendingToken = token
-                        nextToken = synthesizeEndSectionToken()
-                        state = State.RETURN_PENDING
-                    }
-                }
-            } else if (!beginOfLine && token.tokenType == IN
-                    && currentToken?.tokenType != VIRTUAL_END_SECTION
-                    && indentStack.isNotEmpty()) {
-                // Reached the end of let declarations where the 'in' keyword is on the same line
-                // as the last 'let' declaration. Close out the section.
-                indentStack.pop()
-                pendingToken = token
-                nextToken = synthesizeEndSectionToken()
-                state = State.RETURN_PENDING
-            }
-
-            if (nextToken == null) {
-                if (CONTEXT_CREATING_KEYWORDS.contains(token.tokenType)) {
-                    // We have to open a new context here
-                    // Output the current token and go into the OPEN_SECTION state
-                    nextToken = token
-                    state = State.OPEN_SECTION
-                } else {
-                    nextToken = token
-                }
-            }
-
-        } else if (state == State.OPEN_SECTION) {
-
-            if (WHITE_SPACE_TOKENS.contains(token.tokenType)) {
-                // Skip over white spaces
-                nextToken = token
-            } else if (token.tokenType == null) {
-                // EOF
-                nextToken = token
-                state = State.NORMAL
-            } else {
-                // Found the beginning of the section
-                indentStack.push(getIndent(token))
-                nextToken = token
-                state = State.NORMAL
-            }
-
-        } else {
-            throw IllegalStateException("unknown state")
-        }
-
-        // Unset clean line if something other than a white space or an implicit end-section is output
-        if (!WHITE_SPACE_TOKENS.contains(nextToken.tokenType) && (nextToken.tokenType !== VIRTUAL_END_SECTION || nextToken.tokenEnd != nextToken.tokenStart)) {
-            beginOfLine = false
-        }
-
-        currentToken = nextToken
-
-        if (advance) {
-            lexer.advance()
-        }
+        currentTokenIndex++
     }
+}
 
-    override fun getBufferSequence() =
-            lexer.bufferSequence
+private fun slurpTokens(lexer: Lexer): MutableList<Token> {
+    val tokens = ArrayList<Token>()
+    var line = Line()
+    var currentColumn = 0
+    while (true) {
+        val token = Token(lexer.tokenType, lexer.tokenStart, lexer.tokenEnd, currentColumn, line)
+        tokens.add(token)
 
-    override fun getBufferEnd() =
-            lexer.bufferEnd
-
-    //---------------------------------------------------------------------------------------------
-    // Helper Methods
-    //---------------------------------------------------------------------------------------------
-
-    private fun getTokenFromLexer(): Token {
-        val tokenType = lexer.tokenType
-        val tokenStart = lexer.tokenStart
-        val tokenEnd = lexer.tokenEnd
-
-        if (tokenType === NEWLINE) {
-            firstColumnOffset = tokenEnd
-            additionalTabIndent = 0
-            beginOfLine = true
-            return Token(TokenType.WHITE_SPACE, tokenStart, tokenEnd)
-        } else if (beginOfLine && tokenType === TAB) {
-            // We have tabs at the beginning of line.
-            // Lets correct the indent calculation
-            // Increment the additional indent which comes from tabs.
-            val token = Token(tokenType, tokenStart, tokenEnd)
-            additionalTabIndent += TAB_STOP_GAP - (getIndent(token) - 1) % TAB_STOP_GAP - 1
-            return token
-        } else {
-            return Token(tokenType, tokenStart, tokenEnd)
+        if (line.columnWhereCodeStarts == null && token.isCode) {
+            line.columnWhereCodeStarts = currentColumn
         }
+
+        currentColumn += token.end - token.start
+
+        if (token.isEOF) {
+            break
+        }
+        else if (token.elementType == NEWLINE) {
+            line = Line()
+            currentColumn = 0
+        }
+
+        lexer.advance()
     }
+    return tokens
+}
 
-    private fun synthesizeEndSectionToken() =
-            synthesizeEndSectionToken(currentToken!!.tokenStart, currentToken!!.tokenStart)
+private enum class State {
+    /** The start state. Do not perform layout until we get to the first real line of code
+     */
+    START,
 
-    private fun synthesizeEndSectionToken(tokenStart: Int, tokenEnd: Int) =
-            Token(VIRTUAL_END_SECTION, tokenStart, tokenEnd)
+    /** Waiting for the first line of code inside a let/in or case/of in order to open a new section. */
+    WAITING_FOR_SECTION_START,
 
-    private fun synthesizeEndDeclarationToken() =
-            Token(VIRTUAL_END_DECL, currentToken!!.tokenStart, currentToken!!.tokenStart)
-
-    private fun getIndent(token: Token) =
-            token.tokenStart - firstColumnOffset + 1 + additionalTabIndent
+    /**
+     * Looking to emit virtual delimiters between declarations at the same indent level
+     * and closing out sections when appropriate.
+     */
+    NORMAL
 }
 
 
-private data class Token(val tokenType: IElementType?, val tokenStart: Int, val tokenEnd: Int) {
+private fun doLayout(lexer: Lexer): ArrayList<Token> {
+    val tokens = slurpTokens(lexer)
+
+    // initial state
+    var i = 0
+    var state = START
+    val indentStack = IndentStack()
+    indentStack.push(0) // top-level is an implicit section
+
+    while (true) {
+        val token = tokens[i]
+
+        when (state) {
+            START -> {
+                if (token.isCode && token.column == 0) {
+                    state = NORMAL
+                }
+            }
+            WAITING_FOR_SECTION_START -> {
+                if (token.isCode && token.column > indentStack.peek()) {
+                    tokens.add(i, virtualToken(VIRTUAL_OPEN_SECTION, tokens[i-1]))
+                    i++
+                    state = NORMAL
+                    indentStack.push(token.column)
+                }
+                else if (token.isFirstSignificantTokenOnLine() && token.column <= indentStack.peek()) {
+                    // The Elm program is malformed: most likely because the new section is empty
+                    // (the user is still editing the text) or they did not indent the section.
+                    // The empty section case is a common workflow, so we must handle it by bailing
+                    // out of section building and re-process the token in the 'NORMAL' state.
+                    // If, instead, the problem is that the user did not indent the text,
+                    // tough luck (although we may want to handle this better in the future).
+                    state = NORMAL
+                    i--
+                }
+            }
+            NORMAL -> {
+                if (SECTION_CREATING_KEYWORDS.contains(token.elementType)) {
+                    state = WAITING_FOR_SECTION_START
+                } else if (token.isFirstSignificantTokenOnLine()) {
+                    val j = i
+                    while (token.column <= indentStack.peek()) {
+                        if (token.column == indentStack.peek()) {
+                            tokens.add(i, virtualToken(VIRTUAL_END_DECL, tokens[j-1]))
+                            i++
+                            break
+                        } else if (token.column < indentStack.peek()) {
+                            tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[j-1]))
+                            i++
+                            indentStack.pop()
+                        }
+                    }
+                } else if (isSingleLineLetIn(i, tokens)) {
+                    tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[i-1]))
+                    i++
+                    indentStack.pop()
+                }
+            }
+        }
+
+        i++
+        if (i >= tokens.size)
+            break
+    }
+
+    return ArrayList(tokens)
+}
+
+private fun isSingleLineLetIn(index: Int, tokens: List<Token>): Boolean {
+    /*
+    Elm allows for a let/in expression on a single line:
+    e.g. ```foo = let x = 0 in x + 1```
+    I don't know why you would ever do this, but some people do:
+    https://github.com/klazuka/intellij-elm/issues/20#issuecomment-374843581
+
+    If we didn't have special handling for it, the `let` section wouldn't
+    get closed-out until a subsequent line with less indent, which would be wrong.
+    */
+
+    val token = tokens[index]
+    if (token.elementType != ElmTypes.IN)
+        return false
+
+    val thisLine = token.line
+    var i = index
+    do {
+        val t = tokens[i--]
+        if (t.elementType == ElmTypes.LET)
+            return true
+    } while (t.line == thisLine && i < tokens.size)
+
+    return false
+}
+
+/**
+ * In a well-formed program, there would be no way to underflow the indent stack,
+ * but this lexer will be asked to lex malformed/partial Elm programs, so we need
+ * to guard against trying to use the stack when it's empty.
+ */
+private class IndentStack: LinkedList<Int>() {
+    override fun peek(): Int {
+        return if (super.isEmpty()) -1 else super.peek()
+    }
+
+    override fun pop(): Int {
+        return if (super.isEmpty()) -1 else super.pop()
+    }
+}
+
+private fun virtualToken(elementType: IElementType, precedesToken: Token): Token {
+    return Token(elementType = elementType,
+                 start       = precedesToken.start,
+                 end         = precedesToken.start, // yes, this is intentional
+                 column      = precedesToken.column,
+                 line        = precedesToken.line)
+}
+
+private val NON_CODE_TOKENS = TokenSet.orSet(TokenSet.create(TokenType.WHITE_SPACE, TAB, NEWLINE), ELM_COMMENTS)
+private val SECTION_CREATING_KEYWORDS = TokenSet.create(LET, OF)
+
+private class Line(var columnWhereCodeStarts: Int? = null)
+
+private class Token(val elementType: IElementType?,
+                    val start: Int,
+                    val end: Int,
+                    val column: Int,
+                    val line: Line) {
+
     override fun toString() =
-            "${tokenType.toString()} ($tokenStart, $tokenEnd)"
+            "${elementType.toString()} ($start, $end)"
+
+    val isEOF: Boolean
+        get() = elementType == null
+
+    val isCode: Boolean
+        get() = !NON_CODE_TOKENS.contains(elementType) && !isEOF
+
+    fun isFirstSignificantTokenOnLine() =
+            isCode && column == line.columnWhereCodeStarts
 }

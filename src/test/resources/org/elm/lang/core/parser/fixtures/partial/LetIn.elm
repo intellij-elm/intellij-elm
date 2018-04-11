@@ -1,11 +1,25 @@
 f1 = let
 
 f2 = let
-        x =
-     in
-        42 + x
+        x
 
 f3 = let
-        x = 100
+        x =
+
+f4 = let
+        x = 0
+
+
+f5 = let
+        x = 0
+        in
+
+f6 = let
+        x = 0
      in
-        type alias Garbage = x
+
+f7 = let
+        x = import Garbage
+        y = 1
+     in
+        y

@@ -8,7 +8,7 @@ class ElmSpellCheckerTest : ElmTestBase() {
 
 
     fun testNamedElement() = doTest(
-            """"<TYPO descr="Typo: In word 'wodlr'">wodlr</TYPO>" = 42""")
+            """<TYPO descr="Typo: In word 'wodlr'">wodlr</TYPO> = 42""")
 
 
     fun testComments() = doTest(

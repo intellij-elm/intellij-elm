@@ -26,13 +26,16 @@ SOFTWARE.
 
 package org.elm.lang.core.parser
 
+import com.intellij.lang.LanguageBraceMatching
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.ParsingTestCase
+import org.elm.ide.ElmPairedBraceMatcher
 import org.elm.lang.ElmTestCase
 import org.elm.lang.core.ElmFileType
+import org.elm.lang.core.ElmLanguage
 import org.jetbrains.annotations.NonNls
 
 
@@ -59,7 +62,9 @@ abstract class ElmParsingTestCaseBase(@NonNls dataPath: String)
         return hasErrors
     }
 
-    /* TODO [kl] why was the IntelliJ Rust plugin registering their BraceMatcher
-     * as an explicit extension in the `setUp` method.
-     */
+    override fun setUp() {
+        super.setUp()
+        // register the brace-matcher because GrammarKit uses it during error recovery
+        addExplicitExtension(LanguageBraceMatching.INSTANCE, ElmLanguage, ElmPairedBraceMatcher())
+    }
 }

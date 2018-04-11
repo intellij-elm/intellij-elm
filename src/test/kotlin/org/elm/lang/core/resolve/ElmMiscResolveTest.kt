@@ -78,6 +78,7 @@ f = \((x,y) as point) -> point
 
     fun `test port ref`() = checkByCode(
 """
+port module Ports exposing (..)
 port foo : String -> Cmd msg
      --X
 

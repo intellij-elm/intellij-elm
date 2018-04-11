@@ -39,7 +39,7 @@ import org.jetbrains.annotations.NonNls
 import java.io.IOException
 
 
-abstract class ElmLayoutLexerTestCaseBase : LexerTestCase(), ElmTestCase {
+abstract class ElmLexerTestCaseBase : LexerTestCase(), ElmTestCase {
     override fun getDirPath(): String = throw UnsupportedOperationException()
 
     // NOTE(matkad): this is basically a copy-paste of doFileTest.

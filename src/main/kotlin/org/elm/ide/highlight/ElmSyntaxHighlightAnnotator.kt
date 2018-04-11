@@ -15,7 +15,6 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         when (element) {
             is ElmValueDeclaration -> highlightValueDeclaration(holder, element)
-            is ElmEffect -> highlightElement(holder, element, ElmColor.KEYWORD)
             is ElmTypeAnnotation -> highlightTypeAnnotation(holder, element)
             is ElmUpperCaseQID -> highlightUpperCaseQID(holder, element)
         }

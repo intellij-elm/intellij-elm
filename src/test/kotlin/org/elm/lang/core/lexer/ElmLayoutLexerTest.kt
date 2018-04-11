@@ -4,23 +4,35 @@ import com.intellij.lexer.Lexer
 
 /**
  * Test the lexer's ability to synthesize tokens related to offside rule.
+ *
+ * @see ElmLayoutLexer
  */
-class ElmLayoutLexerTest: ElmLayoutLexerTestCaseBase() {
+class ElmLayoutLexerTest: ElmLexerTestCaseBase() {
 
     override fun getTestDataPath() =
-            "org/elm/lang/core/lexer/fixtures"
+            "org/elm/lang/core/lexer/layout/fixtures"
 
     override fun createLexer(): Lexer {
         return ElmLayoutLexer(ElmIncrementalLexer())
     }
 
+    override fun shouldTrim(): Boolean {
+        // do not trim newlines at the end because it can hide EOF bugs
+        return false
+    }
+
+    //    fun testKeith() = doTest()
+
     fun testBasics() = doTest()
-    fun testLineComments() = doTest()
-    fun testBlockComments() = doTest()
-    fun testDocComments() = doTest()
+    fun testHeader() = doTest()
+    fun testComments() = doTest()
+    fun testEmptyModule() = doTest()
     fun testLetIn() = doTest()
+    fun testLetInPartial() = doTest()
     fun testLetInSingleLineBug() = doTest()
     fun testCaseOf() = doTest()
+    fun testCaseFollowedByTopLevelDecl() = doTest()
+    fun testCaseOfPartial() = doTest()
     fun testTypes() = doTest()
     fun testTypeAnnotations() = doTest()
 }

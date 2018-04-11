@@ -29,7 +29,6 @@
         FIELD_ACCESS='FIELD_ACCESS'
         FIELD_ACCESSOR_FUNCTION='FIELD_ACCESSOR_FUNCTION'
         DOT='DOT'
-        EFFECT='EFFECT'
 
         // tokens used by the lexer but not visible to PsiBuilder parser
         // TODO [kl] cleanup the mess of 'comment' tokens
@@ -73,30 +72,55 @@ CODE FORMATTING
  */
 
 
-ElmFile ::= [ModuleDeclaration] Body
+ElmFile ::= !<<eof>> Module
+    {pin=1}
 
-ModuleDeclaration ::= [ Effect | PORT ] MODULE UpperCaseQID [ WHERE Record ] ExposingList
-    { pin = 3 }
 
-private Body ::= ImportClauses TopDeclarations VIRTUAL_END_SECTION?
+private Module ::=
+    ModuleDeclaration? VIRTUAL_END_DECL? ImportList? VIRTUAL_END_DECL? TopDeclList?
 
-private ImportClauses ::= <<decls ImportClause>>
+ModuleDeclaration ::=
+    PORT? MODULE UpperCaseQID ExposingList
+    | 'effect' MODULE UpperCaseQID WHERE Record ExposingList
+    { pin(".*")=UpperCaseQID; recoverWhile=module_recover }
 
-private TopDeclarations ::= <<decls Declaration>>
+// Recover from a module declaration by finding the next top-level statement. Typically
+// it will be sufficient to just search for VIRTUAL_END_DECL, but in the case of an Elm
+// file without a module declaration, we also need to look for the beginning of an import
+// or a top-level declaration. For performance reasons, tokens should be checked before
+// rules.
+private module_recover ::= !(VIRTUAL_END_DECL | IMPORT | Declaration)
+
+
+private generic_recover ::= !VIRTUAL_END_DECL
+
+private ImportList ::= Import (VIRTUAL_END_DECL Import)*
+private Import ::= ImportClause
+    {pin=1 recoverWhile=generic_recover}
+
+
+private TopDeclList ::= TopDecl (VIRTUAL_END_DECL TopDecl)*
+private TopDecl ::= !<<eof>> Declaration
+    {pin=1 recoverWhile=generic_recover}
+
 
 
 
 // MODULE DECLARATION
 
 
-ExposingList ::= EXPOSING LEFT_PARENTHESIS (DOUBLE_DOT | ListOfValues) RIGHT_PARENTHESIS
-
-private ListOfValues ::= <<non_empty_list ExposedItem>>
+ExposingList ::= EXPOSING LEFT_PARENTHESIS (DOUBLE_DOT | ExposedItem MoreExposedItems?) RIGHT_PARENTHESIS
+    {pin=1}
 
 private ExposedItem ::=
     ExposedValue
     | ExposedType
     | ExposedOperator
+    {recoverWhile=exposed_item_recover}
+
+private exposed_item_recover ::= !(COMMA | RIGHT_PARENTHESIS | VIRTUAL_END_DECL)
+
+private MoreExposedItems ::= (COMMA ExposedItem)+ {pin(".*")=1}
 
 ExposedValue ::= LOWER_CASE_IDENTIFIER
 
@@ -133,9 +157,6 @@ private Declaration ::=
     | TypeAnnotation
     | PortAnnotation
     | OperatorConfig
-    { recoverWhile = declaration_recover }
-
-private declaration_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
 
 ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
     { pin = 'EQ' }
@@ -157,14 +178,19 @@ OperatorDeclarationLeft ::=
 
 
 TypeDeclaration ::=
-    TYPE UPPER_CASE_IDENTIFIER (LowerTypeName)* EQ UnionMember (PIPE UnionMember)*
+    TYPE UPPER_CASE_IDENTIFIER (LowerTypeName)* EQ UnionMember MoreUnionMembers?
     { pin = 2 }
 
 LowerTypeName ::= LOWER_CASE_IDENTIFIER
 
 UnionMember ::=
     UPPER_CASE_IDENTIFIER SingleTypeRef*
+    { pin = 1; recoverWhile = union_member_recover }
 
+private union_member_recover ::= !(PIPE|VIRTUAL_END_DECL)
+
+private MoreUnionMembers ::= (PIPE UnionMember)+
+    { pin(".*") = 1 }
 
 TypeAliasDeclaration ::=
     TYPE ALIAS UPPER_CASE_IDENTIFIER LowerTypeName* EQ TypeRef
@@ -255,7 +281,6 @@ private Literal ::=
 AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
 
 external FieldAccessorFunction ::= parseFieldAccessorFunction
-external Effect ::= parseEffect
 
 external FieldAccess ::= parseFieldAccess
 external ValueQID ::= parseValueQID
@@ -296,22 +321,44 @@ IfElse ::=
 
 
 CaseOf ::=
-    CASE Expression OF <<non_empty_decls CaseOfBranch>> VIRTUAL_END_SECTION
+    CASE Expression CaseOfTail
     { pin = 'CASE' }
+
+// This decomposition of rules is really lame, but it's the only way I could figure out
+// how to get GrammarKit to not be too greedy and try parsing top-level declarations as
+// if they were case branches. Is there a better way?
+private CaseOfTail ::=
+    OF CaseOfTail2
+    {pin=1}
+
+private CaseOfTail2 ::=
+    VIRTUAL_OPEN_SECTION CaseOfBranch MoreCaseOfBranches? (VIRTUAL_END_SECTION|<<eof>>)
+    {pin=1}
 
 CaseOfBranch ::=
     Pattern ARROW Expression
-    { pin = 1 }
+    { pin = 1; recoverWhile=case_branch_recover }
 
+private case_branch_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
+
+private MoreCaseOfBranches ::= (VIRTUAL_END_DECL CaseOfBranch)+
+    { pin(".*")=1 }
 
 
 LetIn ::=
-    LET <<non_empty_decls InnerDeclaration>> VIRTUAL_END_SECTION IN Expression
+    LET LetInTail
     { pin = 'LET' }
+
+private LetInTail ::=
+    VIRTUAL_OPEN_SECTION InnerDeclaration MoreInnerDeclarations? VIRTUAL_END_SECTION IN Expression
+    { pin = 1 }
 
 private InnerDeclaration ::=
     InnerValueDeclaration
     | InnerTypeAnnotation
+    { recoverWhile=inner_decl_recover }
+
+private inner_decl_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
 
 InnerValueDeclaration ::=
     InternalValueDeclarationLeft EQ Expression
@@ -321,6 +368,8 @@ InnerTypeAnnotation ::=
     LOWER_CASE_IDENTIFIER COLON TypeRef
     { pin = 'COLON' }
 
+private MoreInnerDeclarations ::= (VIRTUAL_END_DECL InnerDeclaration)+
+    { pin(".*")=1 }
 
 
 // PATTERNS
@@ -380,8 +429,3 @@ GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
-
-
-// TODO [kl] cleanup the duplication
-private meta non_empty_decls ::= <<p>> (VIRTUAL_END_DECL <<p>>)*
-private meta decls ::= [VIRTUAL_END_DECL? <<p>> (VIRTUAL_END_DECL <<p>>)*]

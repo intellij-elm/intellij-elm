@@ -57,12 +57,12 @@ main = Foo.bar{-caret-}
 --@ Foo.elm
 module Foo exposing (bar)
 bar = 42
-""".trimStart(),
+""",
 """
 module Main exposing (..)
 import Foo
 main = Foo.bar{-caret-}
-""".trimStart())
+""")
 
 
     fun `test import between module decl and doc-comment`() = check(
@@ -74,13 +74,13 @@ main = Foo.bar{-caret-}
 --@ Foo.elm
 module Foo exposing (bar)
 bar = 42
-""".trimStart(),
+""",
 """
 module Main exposing (..)
 {-| this is a doc comment. it must be above imports -}
 import Foo
 main = Foo.bar{-caret-}
-""".trimStart())
+""")
 
 
     fun `test expose a value with existing import`() = check(

@@ -16,17 +16,23 @@ by constructing PSI trees from syntactically invalid files.
 class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
 
     fun testIfElse() = doTest(true)
+    fun testModuleDecl0() = doTest(true)
+    fun testModuleDecl1() = doTest(true)
+    fun testModuleDecl2() = doTest(true)
+    fun testModuleDecl3() = doTest(true)
+    fun testModuleDecl4() = doTest(true)
+    fun testImport() = doTest(true)
     fun testValueDecl() = doTest(true)
     fun testTypeDecl() = doTest(true)
     fun testTypeAliasDecl() = doTest(true)
     fun testTypeAnnotations() = doTest(true)
 
-    // the case-of and let-in tests are broken. The parse error recovery for these
-    // types of expressions works in most cases, but doesn't work in really malformed
-    // source texts.
-    // TODO [kl] level-up your GrammarKit-fu and improve the parse error recovery
-    //    fun testCaseOf() = doTest(true)
-    //    fun testLetIn() = doTest(true)
+    // The parse error recovery for case/of and let/in expressions is hard to get right
+    // due to the parse rules depending on indentation. In a partial program that the
+    // user is actively editing, the indentation can be screwed up. So we must test these
+    // partial expressions extensively.
+    fun testCaseOf() = doTest(true)
+    fun testLetIn() = doTest(true)
 
 
     override fun checkResult(targetDataName: String?, file: PsiFile) {
