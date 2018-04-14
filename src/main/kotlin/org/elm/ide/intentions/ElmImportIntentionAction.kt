@@ -33,15 +33,13 @@ import java.awt.Component
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JList
 
+class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<ElmImportIntentionAction.Context>() {
 
-data class Context(
-        val refName: String,
-        val candidates: List<Candidate>,
-        val isQualified: Boolean
-)
-
-
-class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<Context>() {
+    data class Context(
+            val refName: String,
+            val candidates: List<Candidate>,
+            val isQualified: Boolean
+    )
 
     override fun getText() = "Import"
     override fun getFamilyName() = text

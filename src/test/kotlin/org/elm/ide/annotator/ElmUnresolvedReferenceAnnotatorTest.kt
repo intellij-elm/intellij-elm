@@ -48,4 +48,12 @@ f = Native.Scheduler.succeed
 <error descr="Unresolved reference 'Foo.Native'">import Foo.Native</error>
 f = <error descr="Unresolved reference 'Foo.Native'"><error descr="Unresolved reference 'foobar'">Foo.Native.foobar</error></error>
 """)
+
+
+    fun `test type annotation refs have warning`() = checkWarnings("""
+<weak_warning descr="'f' does not exist">f : Int -> Bool</weak_warning>
+
+g : Int
+g = 0
+""")
 }
