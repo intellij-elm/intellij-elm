@@ -224,6 +224,15 @@ class ElmPsiFactory(private val project: Project)
                     .let { createFromText<ElmImportClause>(it) }
                     ?: error("Failed to create import of $moduleName exposing $exposedNames")
 
+    fun createValueDeclaration(name: String, argNames: List<String>): ElmValueDeclaration {
+        val s = if (argNames.isEmpty())
+            "$name = "
+        else
+            "$name ${argNames.joinToString(" ")} = "
+        return createFromText(s)
+                ?: error("Failed to create value declaration named $name")
+    }
+
     fun createFreshLine() =
             // TODO [kl] make this more specific by actually find a token which contains
             // newline, not just any whitespace
