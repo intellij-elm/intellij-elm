@@ -304,7 +304,8 @@ Unit ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
 
 List ::=
-    LEFT_SQUARE_BRACKET [<<non_empty_list Expression>>] RIGHT_SQUARE_BRACKET
+    LEFT_SQUARE_BRACKET [<<non_empty_list2 Expression>>] RIGHT_SQUARE_BRACKET
+    { pin = 1 }
 
 Record ::=
     LEFT_BRACE [[RecordBase] <<non_empty_list Field>>] RIGHT_BRACE
@@ -429,3 +430,5 @@ GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 
 private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
+// TODO [kl] consolidate once I make sure that this is safe to use everywhere
+private meta non_empty_list2 ::= <<p>> (COMMA <<p>>)* {pin(".*")=1}
