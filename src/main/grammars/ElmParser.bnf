@@ -296,6 +296,7 @@ private Tuple ::=
 
 NonEmptyTuple ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
+    {pin(".*")=2}
 
 TupleConstructor ::=
     LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
