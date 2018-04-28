@@ -22,6 +22,7 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testModulesExposingSome() = doTest(true)
     fun testModulesQualifiedName() = doTest(true)
     fun testOperators() = doTest(true)
+    fun testRecords() = doTest(true)
     fun testTuples() = doTest(true)
     fun testTypeAlias() = doTest(true)
     fun testTypeAnnotation() = doTest(true)

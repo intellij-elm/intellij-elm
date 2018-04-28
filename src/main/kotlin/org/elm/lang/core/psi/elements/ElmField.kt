@@ -22,8 +22,10 @@ class ElmField(node: ASTNode) : ElmPsiElementImpl(node) {
 
     /**
      * The field's expression value.
+     *
+     * In a well-formed program, this will be non-null.
      */
-    val expression: ElmExpression
-        get() = findNotNullChildByClass(ElmExpression::class.java)
+    val expression: ElmExpression?
+        get() = findChildByClass(ElmExpression::class.java)
 
 }

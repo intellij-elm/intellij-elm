@@ -51,9 +51,5 @@ Elm File
         ElmUpperCaseQID(UPPER_CASE_QID)
           PsiElement(UPPER_CASE_IDENTIFIER)('String')
   PsiWhiteSpace(' ')
-  PsiElement(LEFT_BRACE)('{')
-  PsiWhiteSpace(' ')
-  PsiElement(LOWER_CASE_IDENTIFIER)('garbage')
-  PsiWhiteSpace(' ')
-  PsiErrorElement:COLON or PIPE expected, got '}'
-    PsiElement(RIGHT_BRACE)('}')
+  PsiErrorElement:ARROW, LEFT_BRACE, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected, got '42'
+    PsiElement(NUMBER_LITERAL)('42')
