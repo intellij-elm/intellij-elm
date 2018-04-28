@@ -219,7 +219,8 @@ TypeVariableRef ::=
     LOWER_CASE_IDENTIFIER
 
 RecordType ::=
-    LEFT_BRACE [[RecordBase] <<non_empty_list FieldType>>] RIGHT_BRACE
+    LEFT_BRACE [[RecordBase] <<non_empty_list2 FieldType>>] RIGHT_BRACE
+    { pin = 1 }
 
 FieldType ::=
     LOWER_CASE_IDENTIFIER COLON TypeRef
@@ -296,6 +297,7 @@ private Tuple ::=
 
 NonEmptyTuple ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
+    {pin(".*")=2}
 
 TupleConstructor ::=
     LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
@@ -308,13 +310,27 @@ List ::=
     { pin = 1 }
 
 Record ::=
-    LEFT_BRACE [[RecordBase] <<non_empty_list Field>>] RIGHT_BRACE
+    LEFT_BRACE RecordInner? RIGHT_BRACE
+    { pin = 1 }
 
 private RecordBase ::=
     LOWER_CASE_IDENTIFIER PIPE
 
+private RecordInner ::=
+    RecordBase? RecordInnerFields
+    { recoverWhile = record_inner_recover }
+
+private RecordInnerFields ::=
+    Field (COMMA Field)*
+    { pin(".*") = 1 }
+
+private record_inner_recover ::=
+    !(RIGHT_BRACE|VIRTUAL_END_SECTION|VIRTUAL_END_DECL)
+
 Field ::=
     LOWER_CASE_IDENTIFIER EQ Expression
+    { pin = 2 }
+
 
 IfElse ::=
     IF Expression THEN Expression ELSE Expression
