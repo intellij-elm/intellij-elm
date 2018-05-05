@@ -43,7 +43,7 @@ class QualifiedModuleNameReference<T:ElmPsiElement>(
         return listOf(moduleDecls, implicitDecls, aliasDecls).flatten().toTypedArray()
     }
 
-    override fun resolve(): ElmPsiElement? {
+    override fun resolve(): ElmNamedElement? {
         return getVariants().find { it.name == refText }
     }
 

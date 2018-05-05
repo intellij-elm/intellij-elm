@@ -3,7 +3,7 @@ package org.elm.lang.core.resolve.reference
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
-import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.elementType
@@ -50,7 +50,7 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
      * Default implementation of resolve should be good enough in most cases assuming
      * that the subclass implements [getVariants] sensibly.
      */
-    override fun resolve(): ElmPsiElement? {
+    override fun resolve(): ElmNamedElement? {
         return getVariants().find { it.name == element.referenceName }
     }
 }
