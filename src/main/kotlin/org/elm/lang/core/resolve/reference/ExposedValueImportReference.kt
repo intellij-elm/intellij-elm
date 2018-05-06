@@ -9,7 +9,12 @@ import org.elm.lang.core.resolve.scope.ImportScope
 /**
  * A value reference from an `exposing` list in an import clause (points to a different file)
  */
-class ExposedValueImportReference(exposedValue: ElmExposedValue) : ElmReferenceBase<ElmExposedValue>(exposedValue) {
+class ExposedValueImportReference(exposedValue: ElmExposedValue)
+    : ElmReferenceCached<ElmExposedValue>(exposedValue) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         val importClause = element.parentOfType<ElmImportClause>()

@@ -6,7 +6,7 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.ElmReferenceBase
+import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ExpressionScope
 
 
@@ -32,7 +32,12 @@ class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEleme
 }
 
 
-class BaseRecordReference(element: ElmReferenceElement) : ElmReferenceBase<ElmReferenceElement>(element) {
+class BaseRecordReference(element: ElmReferenceElement)
+    : ElmReferenceCached<ElmReferenceElement>(element) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     /* TODO [kl] a more correct implementation would filter the visible values
        to those that we know are actually records. But we haven't implemented

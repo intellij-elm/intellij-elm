@@ -10,7 +10,12 @@ import org.elm.lang.core.resolve.scope.ImportScope
  * Reference from the name of a type in an import declaration's exposing list to its definition
  * in a different file.
  */
-class ExposedTypeReferenceFromImport(exposedType: ElmExposedType) : ElmReferenceBase<ElmExposedType>(exposedType) {
+class ExposedTypeReferenceFromImport(exposedType: ElmExposedType)
+    : ElmReferenceCached<ElmExposedType>(exposedType) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         val importClause = element.parentOfType<ElmImportClause>()

@@ -9,7 +9,7 @@ import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.ElmReferenceBase
+import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.ElmExposedOperatorStub
@@ -54,7 +54,11 @@ class ElmExposedOperator : ElmStubbedElement<ElmExposedOperatorStub>, ElmReferen
  * A binary operator reference from an 'exposing' list in a module declaration (points within the same file)
  */
 class ExposedOperatorModuleReference(exposedValue: ElmExposedOperator
-) : ElmReferenceBase<ElmExposedOperator>(exposedValue) {
+) : ElmReferenceCached<ElmExposedOperator>(exposedValue) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] verify: this was copied from ElmExposedValue's ref
@@ -66,7 +70,11 @@ class ExposedOperatorModuleReference(exposedValue: ElmExposedOperator
  * A binary operator reference from an `exposing` list in an import clause (points to a different file)
  */
 class ExposedOperatorImportReference(exposedValue: ElmExposedOperator
-) : ElmReferenceBase<ElmExposedOperator>(exposedValue) {
+) : ElmReferenceCached<ElmExposedOperator>(exposedValue) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] verify: this was copied from ElmExposedValue's ref
