@@ -3,7 +3,6 @@ package org.elm.lang.core.resolve.reference
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceBase
-import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.elementType
@@ -46,18 +45,13 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
         return element
     }
 
-    // Equality needs to be defined this way in order for the ResolveCache to work
+    // Equality needs to be defined this way in order for the ResolveCache to work.
     override fun equals(other: Any?): Boolean =
-            other is ElmReferenceBase<*> && element === other.element
+            other is ElmReferenceBase<*> &&
+                    element === other.element &&
+                    this.javaClass == other.javaClass
 
     override fun hashCode(): Int =
             element.hashCode()
 
-    /**
-     * Default implementation of resolve should be good enough in most cases assuming
-     * that the subclass implements [getVariants] sensibly.
-     */
-    override fun resolve(): ElmNamedElement? {
-        return getVariants().find { it.name == element.referenceName }
-    }
 }

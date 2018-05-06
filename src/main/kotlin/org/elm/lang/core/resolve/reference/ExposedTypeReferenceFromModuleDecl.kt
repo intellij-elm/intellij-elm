@@ -8,7 +8,12 @@ import org.elm.lang.core.resolve.scope.ModuleScope
  * Reference from the name of a type in the module's exposing list to its definition
  * in the same file.
  */
-class ExposedTypeReferenceFromModuleDecl(exposedType: ElmExposedType) : ElmReferenceBase<ElmExposedType>(exposedType) {
+class ExposedTypeReferenceFromModuleDecl(exposedType: ElmExposedType)
+    : ElmReferenceCached<ElmExposedType>(exposedType) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         return ModuleScope(element.elmFile).getDeclaredTypes().toTypedArray()

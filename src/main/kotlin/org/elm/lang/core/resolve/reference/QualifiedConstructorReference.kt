@@ -9,12 +9,12 @@ import org.elm.lang.core.resolve.scope.ImportScope
  * Qualified reference to a union constructor or record constructor
  */
 class QualifiedConstructorReference(referenceElement: ElmReferenceElement, val upperCaseQID: ElmUpperCaseQID
-) : ElmReferenceBase<ElmReferenceElement>(referenceElement) {
+) : ElmReferenceCached<ElmReferenceElement>(referenceElement) {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolve(): ElmNamedElement? =
+    override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> {

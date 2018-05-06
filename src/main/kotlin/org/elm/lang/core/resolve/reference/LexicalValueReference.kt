@@ -7,12 +7,13 @@ import org.elm.lang.core.resolve.scope.ExpressionScope
 /**
  * Reference to a value in lexical expression scope
  */
-class LexicalValueReference(element: ElmReferenceElement): ElmReferenceBase<ElmReferenceElement>(element) {
+class LexicalValueReference(element: ElmReferenceElement)
+    : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolve(): ElmNamedElement? =
+    override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> {

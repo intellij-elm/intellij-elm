@@ -5,12 +5,13 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 
-class SimpleUnionOrRecordConstructorReference(element: ElmReferenceElement): ElmReferenceBase<ElmReferenceElement>(element) {
+class SimpleUnionOrRecordConstructorReference(element: ElmReferenceElement)
+    : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolve(): ElmNamedElement? =
+    override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> {

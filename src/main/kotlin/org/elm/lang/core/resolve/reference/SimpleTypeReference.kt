@@ -8,12 +8,12 @@ import org.elm.lang.core.resolve.scope.ModuleScope
  * Reference to a type
  */
 class SimpleTypeReference(element: ElmReferenceElement)
-    : ElmReferenceBase<ElmReferenceElement>(element) {
+    : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolve(): ElmNamedElement? =
+    override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> {

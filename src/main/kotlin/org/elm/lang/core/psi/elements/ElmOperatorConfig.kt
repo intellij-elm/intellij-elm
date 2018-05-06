@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.ElmTypes.NUMBER_LITERAL
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.tokenSetOf
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.ElmReferenceBase
+import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 
@@ -50,7 +50,11 @@ class ElmOperatorConfig(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
  * Reference to a binary operator local to this file
  */
 class LocalOperatorReference(element: ElmReferenceElement)
-    : ElmReferenceBase<ElmReferenceElement>(element) {
+    : ElmReferenceCached<ElmReferenceElement>(element) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] filter the variants to just include binary operators
