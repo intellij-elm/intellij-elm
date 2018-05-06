@@ -7,7 +7,11 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 /**
  * A value reference from an 'exposing' list in a module declaration (points within the same file)
  */
-class ExposedValueModuleReference(exposedValue: ElmExposedValue) : ElmReferenceBase<ElmExposedValue>(exposedValue) {
+class ExposedValueModuleReference(exposedValue: ElmExposedValue) : ElmReferenceCached<ElmExposedValue>(exposedValue) {
+
+    override fun resolveInner(): ElmNamedElement? {
+        return getVariants().find { it.name == element.referenceName }
+    }
 
     override fun getVariants(): Array<ElmNamedElement> {
         return ModuleScope(element.elmFile).getDeclaredValues().toTypedArray()
