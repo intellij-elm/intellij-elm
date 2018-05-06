@@ -51,7 +51,11 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
                     element === other.element &&
                     this.javaClass == other.javaClass
 
-    override fun hashCode(): Int =
-            element.hashCode()
+    override fun hashCode(): Int {
+        var result = 7
+        result = 31 * result + element.hashCode()
+        result = 31 * result + javaClass.hashCode()
+        return result
+    }
 
 }
