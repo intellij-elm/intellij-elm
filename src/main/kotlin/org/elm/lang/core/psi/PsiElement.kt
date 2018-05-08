@@ -34,20 +34,17 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
+import org.elm.lang.core.stubs.ElmFileStub
 import java.util.Stack
 
 
 val PsiElement.ancestors: Sequence<PsiElement> get() = generateSequence(this) { it.parent }
 
 /**
- * Extracts node's element type
- *
- * NOTE: when we eventually add stub support, the Rust plugin advises
- * that you be careful here not to switch to AST from stubs.
+ * Extracts node's element type, being careful not to switch from stubs to AST inadvertently.
  */
 val PsiElement.elementType: IElementType
-    get() = PsiUtilCore.getElementType(this)
-
+    get() = if (this is ElmFile) ElmFileStub.Type else PsiUtilCore.getElementType(this)
 
 inline fun <reified T : PsiElement> PsiElement.parentOfType(strict: Boolean = true, minStartOffset: Int = -1): T? =
         PsiTreeUtil.getParentOfType(this, T::class.java, strict, minStartOffset)

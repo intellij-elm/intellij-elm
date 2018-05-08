@@ -46,6 +46,7 @@
         <annotator language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlightAnnotator"/>
         <annotator language="Elm" implementationClass="org.elm.ide.annotator.ElmUnresolvedReferenceAnnotator"/>
         <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage" />
+        <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterSmartIndentHandler"/>
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
         <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor" />
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher" />
