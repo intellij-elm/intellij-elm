@@ -20,6 +20,7 @@ import org.elm.lang.core.psi.elements.ElmExposedUnionConstructors
 import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
+import org.elm.lang.core.psi.elements.ElmInfixDeclaration
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmPortAnnotation
@@ -36,7 +37,7 @@ class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 0
+        override fun getStubVersion() = 1
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -66,6 +67,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "UNION_MEMBER" -> ElmUnionMemberStub.Type
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
     "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type
+    "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
     "EXPOSING_LIST" -> ElmExposingListStub.Type
     "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
     "EXPOSED_VALUE" -> ElmExposedValueStub.Type
@@ -227,6 +229,7 @@ class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
     }
 }
 
+// TODO [kl] remove once Elm 0.18 is droppped
 class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
                                      elementType: IStubElementType<*, *>,
                                      override val name: String
@@ -251,6 +254,35 @@ class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
 
         override fun indexStub(stub: ElmOperatorDeclarationLeftStub, sink: IndexSink) {
             sink.indexOperatorDecl(stub)
+        }
+    }
+}
+
+// This is the Elm 0.19 operator declaration
+class ElmInfixDeclarationStub(parent: StubElement<*>?,
+                              elementType: IStubElementType<*, *>,
+                              override val name: String
+): StubBase<ElmInfixDeclaration>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmInfixDeclarationStub, ElmInfixDeclaration>("INFIX_DECLARATION") {
+
+        override fun serialize(stub: ElmInfixDeclarationStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmInfixDeclarationStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmInfixDeclarationStub) =
+                ElmInfixDeclaration(stub, this)
+
+        override fun createStub(psi: ElmInfixDeclaration, parentStub: StubElement<*>?) =
+                ElmInfixDeclarationStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmInfixDeclarationStub, sink: IndexSink) {
+            sink.indexInfixDecl(stub)
         }
     }
 }

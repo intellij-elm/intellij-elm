@@ -22,6 +22,8 @@ import org.elm.lang.core.resolve.scope.ModuleScope
  *
  * For example, `infixl 0 ++` means that the operator `++` has left associativity
  * at precedence level of 0.
+ *
+ * TODO [kl] delete this class once we drop support for Elm 0.18
  */
 class ElmOperatorConfig(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 

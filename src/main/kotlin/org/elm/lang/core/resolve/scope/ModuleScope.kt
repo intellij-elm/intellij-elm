@@ -42,7 +42,8 @@ class ModuleScope(val elmFile: ElmFile) {
         val valueDecls = elmFile.getValueDeclarations().flatMap {
             it.declaredNames(includeParameters = false)
         }
-        return listOf(valueDecls, elmFile.getPortAnnotations()).flatten()
+        return listOf(valueDecls, elmFile.getPortAnnotations(), elmFile.getInfixDeclarations())
+                .flatten()
     }
 
 

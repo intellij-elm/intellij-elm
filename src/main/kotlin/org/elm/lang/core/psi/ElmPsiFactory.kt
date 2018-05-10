@@ -24,6 +24,7 @@ import org.elm.lang.core.psi.ElmTypes.FUNCTION_DECLARATION_LEFT
 import org.elm.lang.core.psi.ElmTypes.GLSL_CODE
 import org.elm.lang.core.psi.ElmTypes.IF_ELSE
 import org.elm.lang.core.psi.ElmTypes.IMPORT_CLAUSE
+import org.elm.lang.core.psi.ElmTypes.INFIX_DECLARATION
 import org.elm.lang.core.psi.ElmTypes.INNER_TYPE_ANNOTATION
 import org.elm.lang.core.psi.ElmTypes.INNER_VALUE_DECLARATION
 import org.elm.lang.core.psi.ElmTypes.LET_IN
@@ -78,6 +79,7 @@ import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmGlslCode
 import org.elm.lang.core.psi.elements.ElmIfElse
 import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmInfixDeclaration
 import org.elm.lang.core.psi.elements.ElmInnerTypeAnnotation
 import org.elm.lang.core.psi.elements.ElmInnerValueDeclaration
 import org.elm.lang.core.psi.elements.ElmLetIn
@@ -150,6 +152,7 @@ class ElmPsiFactory(private val project: Project)
                 GLSL_CODE -> return ElmGlslCode(node)
                 IF_ELSE -> return ElmIfElse(node)
                 IMPORT_CLAUSE -> return ElmImportClause(node)
+                INFIX_DECLARATION -> return ElmInfixDeclaration(node)
                 INNER_TYPE_ANNOTATION -> return ElmInnerTypeAnnotation(node)
                 INNER_VALUE_DECLARATION -> return ElmInnerValueDeclaration(node)
                 LET_IN -> return ElmLetIn(node)

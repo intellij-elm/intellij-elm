@@ -13,6 +13,7 @@
     elementTypeFactory("UnionMember")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("InfixDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -157,6 +158,7 @@ private Declaration ::=
     | TypeAnnotation
     | PortAnnotation
     | OperatorConfig
+    | InfixDeclaration
 
 ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
     { pin = 'EQ' }
@@ -169,6 +171,7 @@ private InternalValueDeclarationLeft ::=
 FunctionDeclarationLeft ::=
     LOWER_CASE_IDENTIFIER Pattern*
 
+// TODO [kl] delete once we drop Elm 0.18
 OperatorDeclarationLeft ::=
     OperatorAsFunction_inner Pattern*
 
@@ -299,6 +302,7 @@ NonEmptyTuple ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
     {pin(".*")=2}
 
+// TODO [kl] these are being removed in Elm 0.19
 TupleConstructor ::=
     LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
@@ -429,7 +433,7 @@ private ParenthesedPattern ::=
 
 // MISC
 
-
+// TODO [kl] remove the old infix operator parse code once we drop Elm 0.18
 OperatorConfig ::=
     OperatorConfigKeyword NUMBER_LITERAL OPERATOR_IDENTIFIER
 
@@ -437,6 +441,12 @@ private OperatorConfigKeyword ::=
     INFIXL
     | INFIX
     | INFIXR
+
+
+InfixDeclaration ::=
+    INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ ValueExpr
+    { pin = EQ }
+
 
 GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 

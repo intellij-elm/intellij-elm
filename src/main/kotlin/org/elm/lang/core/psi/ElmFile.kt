@@ -11,6 +11,7 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.stubs.ElmFileStub
+import org.elm.lang.core.stubs.ElmInfixDeclarationStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
 import org.elm.lang.core.stubs.ElmPortAnnotationStub
 import org.elm.lang.core.stubs.ElmTypeAliasDeclarationStub
@@ -59,6 +60,9 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 
     fun getPortAnnotations() =
             getStubOrPsiChildren(ElmPortAnnotationStub.Type, emptyArray())
+
+    fun getInfixDeclarations() =
+            getStubOrPsiChildren(ElmInfixDeclarationStub.Type, emptyArray())
 
 
     // TODO [kl] I had to copy a bunch of stuff from StubBasedPsiElementBase to work with

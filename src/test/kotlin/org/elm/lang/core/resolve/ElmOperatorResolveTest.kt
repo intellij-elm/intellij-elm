@@ -2,45 +2,37 @@ package org.elm.lang.core.resolve
 
 /**
  * Tests related to resolving binary operator references
+ *
  */
 class ElmOperatorResolveTest : ElmResolveTestBase() {
 
     fun `test basic usage`() = checkByCode(
 """
-(**) a b = a ^ b
---X
+power a b = 42
+infix right 5 (**) = power
+              --X
 
 f = 2 ** 3
     --^
 """)
 
 
+    fun `test ref from operator to implementation`() = checkByCode(
+"""
+infix right 5 (**) = power
+                     --^
+
+power a b = 42
+--X
+""")
+
+
     fun `test operator as function`() = checkByCode(
 """
-(**) a b = a ^ b
---X
-
+infix right 5 (**) = power
+              --X
 f = (**) 2 3
     --^
-""")
-
-
-    fun `test type annotation`() = checkByCode(
-"""
-(**) : number -> number -> number
---^
-(**) a b = a ^ b
---X
-""")
-
-
-    fun `test operator config`() = checkByCode(
-"""
-(**) a b = a ^ b
---X
-
-infixl 0 **
-        --^
 """)
 
 
@@ -48,8 +40,10 @@ infixl 0 **
 """
 module Foo exposing ((**))
                      --^
-(**) a b = a ^ b
---X
+infix right 5 (**) = power
+              --X
+
+power a b = 42
 """)
 
 }
