@@ -39,7 +39,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
         if (GlobalScope.allBuiltInSymbols.contains(ref.canonicalText))
             return true
 
-        // Ignore refs to Native (JavaScript) modules
+        // Ignore refs to Kernal (JavaScript) modules
         if (element is ElmValueExpr && element.upperCaseQID?.isQualifiedNativeRef()
                 ?: element.valueQID?.isQualifiedNativeRef() ?: false) {
             return true
@@ -52,7 +52,14 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
 }
 
 private fun ElmUpperCaseQID.isQualifiedNativeRef() =
-        isQualified && upperCaseIdentifierList.first().text == "Native"
+        isQualified && isKernelModule(upperCaseIdentifierList)
 
 private fun ElmValueQID.isQualifiedNativeRef() =
-        isQualified && upperCaseIdentifierList.first().text == "Native"
+        isQualified && isKernelModule(upperCaseIdentifierList)
+
+private fun isKernelModule(identifiers: List<PsiElement>): Boolean {
+    // In Elm 0.19, Native was renamed to Kernel
+    // TODO [kl] After Elm 0.18 support is dropped, delete "Native"
+    val moduleName = identifiers.joinToString(".") { it.text }
+    return moduleName.startsWith("Native") || moduleName.startsWith("Elm.Kernel")
+}
