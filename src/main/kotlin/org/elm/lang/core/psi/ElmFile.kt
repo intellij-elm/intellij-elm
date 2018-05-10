@@ -32,11 +32,13 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     override fun getStub() =
             super.getStub() as ElmFileStub?
 
-    // TODO [kl] revisit how we determine this. make it more restrictive
     fun isCore(): Boolean {
         val path = virtualFile?.path
-        val isCore = path?.contains("/packages/elm-lang/core/") ?: false
-//        println("Checking path: $path, isCore=$isCore")
+            ?: return false
+
+        // TODO [kl] Elm 0.18 uses plural `packages`, whereas Elm 0.19 uses singular form.
+        val isCore = path.contains("/packages/elm-lang/core/")
+                  || path.contains("/package/elm-lang/core/")
         return isCore
     }
 
