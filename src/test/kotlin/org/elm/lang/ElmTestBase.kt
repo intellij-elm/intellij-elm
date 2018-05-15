@@ -36,7 +36,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.testFramework.UsefulTestCase
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase
 import junit.framework.AssertionFailedError
 import org.elm.FileTree
@@ -47,7 +46,8 @@ import org.intellij.lang.annotations.Language
 
 
 /**
- * Base class for basically all Elm tests *except* lexing and parsing.
+ * Base class for basically all Elm tests *except* lexing, parsing and stuff that depends
+ * on the Elm toolchain.
  *
  * Features:
  * - defines a project descriptor suitable for IntelliJ's integration test system
@@ -57,16 +57,29 @@ import org.intellij.lang.annotations.Language
  *
  * We don't use this base class for lexing and parsing because IntelliJ already
  * provides [LexerTestCase] and [ParsingTestCase] for that purpose.
+ *
+ * For "heavier" integration tests, see [org.elm.workspace.ElmWorkspaceTestBase]
  */
 abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestCase {
 
-    override fun getProjectDescriptor(): LightProjectDescriptor = ElmProjectDescriptor()
+    override fun getProjectDescriptor(): LightProjectDescriptor = DefaultDescriptor
 
     override fun isWriteActionRequired(): Boolean = false
 
     open val dataPath: String = ""
 
     override fun getTestDataPath(): String = "${ElmTestCase.testResourcesPath}/$dataPath"
+
+    override fun runTest() {
+        val projectDescriptor = projectDescriptor
+        val reason = (projectDescriptor as? ElmProjectDescriptorBase)?.skipTestReason
+        if (reason != null) {
+            System.err.println("SKIP $name: $reason")
+            return
+        }
+
+        super.runTest()
+    }
 
     protected val fileName: String
         get() = "$testName.elm"
@@ -182,11 +195,15 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         myFixture.launchAction(action)
     }
 
+    protected open class ElmProjectDescriptorBase : LightProjectDescriptor() {
+        open val skipTestReason: String? = null
+    }
+
+    protected object DefaultDescriptor : ElmProjectDescriptorBase()
+
     protected fun checkAstNotLoaded(fileFilter: VirtualFileFilter) {
         PsiManagerEx.getInstanceEx(project).setAssertOnFileLoadingFilter(fileFilter, testRootDisposable)
     }
-
-    class ElmProjectDescriptor : LightProjectDescriptor()
 
     companion object {
         // XXX: hides `Assert.fail`

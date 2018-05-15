@@ -61,6 +61,14 @@
         <lang.refactoringSupport language="Elm" implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider" />
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
         <spellchecker.support language="Elm" implementationClass="org.elm.ide.spelling.ElmSpellCheckingStrategy" />
+
+        <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
+        <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />
+        <additionalLibraryRootsProvider implementation="org.elm.workspace.ElmAdditionalLibraryRootsProvider" />
+        <projectConfigurable instance="org.elm.workspace.ui.ElmWorkspaceConfigurable" displayName="Elm" groupId="language"/>
+        <editorNotificationProvider implementation="org.elm.ide.notifications.ElmNeedsConfigNotificationProvider" />
+
+        <!-- STUBS -->
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" />
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex" />
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex" />
@@ -70,8 +78,35 @@
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider" />
     </extensions>
 
+
     <actions>
-        <!-- Add your actions here -->
+
+        <action id="Elm.AttachElmProject"
+                class="org.elm.workspace.ElmAttachProjectAction"
+                text="Attach Elm project"
+                icon="AllIcons.ToolbarDecorator.Add">
+        </action>
+
+        <action id="Elm.DetachElmProject"
+                class="org.elm.workspace.ElmDetachProjectAction"
+                text="Detach Elm project"
+                icon="AllIcons.ToolbarDecorator.Remove"/>
+
+        <action id="Elm.RefreshElmProjects"
+                class="org.elm.workspace.ElmRefreshProjectsAction"
+                text="Refresh Elm projects"
+                icon="AllIcons.Actions.Refresh"/>
+
+        <group id="Elm.ToolsGroup" text="Elm" popup="true">
+            <reference id="Elm.RefreshElmProjects"/>
+            <separator/>
+            <reference id="Elm.AttachElmProject"/>
+            <reference id="Elm.DetachElmProject"/>
+
+            <add-to-group group-id="ToolsMenu"/>
+        </group>
+
     </actions>
+
 
 </idea-plugin>

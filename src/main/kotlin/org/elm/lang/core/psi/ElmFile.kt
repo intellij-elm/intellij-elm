@@ -1,6 +1,7 @@
 package org.elm.lang.core.psi
 
 import com.intellij.extapi.psi.PsiFileBase
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -119,3 +120,6 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     }
 
 }
+
+val VirtualFile.isElmFile
+    get() = fileType == ElmFileType

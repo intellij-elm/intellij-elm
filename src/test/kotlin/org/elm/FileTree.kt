@@ -73,9 +73,17 @@ fun fileTreeFromText(@Language("Elm") text: String): FileTree {
 }
 
 interface FileTreeBuilder {
+    /* Creates a directory */
     fun dir(name: String, builder: FileTreeBuilder.() -> Unit)
+
+    /* Creates a plain files */
     fun file(name: String, code: String)
+
+    /* Creates an Elm source file */
     fun elm(name: String, @Language("Elm") code: String) = file(name, code)
+
+    /* Creates an `elm.json` project file */
+    fun project(name: String, @Language("JSON") code: String) = file(name, code)
 }
 
 class FileTree(private val rootDirectory: Entry.Directory) {

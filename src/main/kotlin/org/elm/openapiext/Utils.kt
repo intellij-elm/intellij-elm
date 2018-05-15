@@ -11,10 +11,12 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
+import com.intellij.openapi.util.JDOMUtil
 import com.intellij.openapi.util.RecursionManager
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
@@ -28,6 +30,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.psi.stubs.StubIndexKey
 import com.intellij.util.io.systemIndependentPath
+import org.jdom.Element
+import org.jdom.input.SAXBuilder
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
@@ -97,10 +101,18 @@ inline fun <Key, reified Psi : PsiElement> getElements(
         StubIndex.getElements(indexKey, key, project, scope, Psi::class.java)
 
 
-class CachedVirtualFile(private val url: String) {
+fun Element.toXmlString() =
+        JDOMUtil.writeElement(this)
+
+fun elementFromXmlString(xml: String): org.jdom.Element =
+        SAXBuilder().build(xml.byteInputStream()).rootElement
+
+
+class CachedVirtualFile(private val url: String?) {
     private val cache = AtomicReference<VirtualFile>()
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): VirtualFile? {
+        if (url == null) return null
         val cached = cache.get()
         if (cached != null && cached.isValid) return cached
         val file = VirtualFileManager.getInstance().findFileByUrl(url)
@@ -108,3 +120,7 @@ class CachedVirtualFile(private val url: String) {
         return file
     }
 }
+
+val isUnitTestMode: Boolean get() = ApplicationManager.getApplication().isUnitTestMode
+
+fun saveAllDocuments() = FileDocumentManager.getInstance().saveAllDocuments()
