@@ -36,6 +36,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
 import org.elm.lang.core.stubs.ElmFileStub
 import java.util.Stack
+import kotlin.reflect.KClass
 
 
 val PsiElement.ancestors: Sequence<PsiElement> get() = generateSequence(this) { it.parent }
@@ -51,6 +52,17 @@ inline fun <reified T : PsiElement> PsiElement.parentOfType(strict: Boolean = tr
 
 inline fun <reified T : PsiElement> PsiElement.parentOfType(strict: Boolean = true, stopAt: Class<out PsiElement>): T? =
         PsiTreeUtil.getParentOfType(this, T::class.java, strict, stopAt)
+
+fun <T : PsiElement> PsiElement.parentOfType(vararg classes: KClass<out T>): T? {
+    return PsiTreeUtil.getParentOfType(this, *classes.map { it.java }.toTypedArray())
+}
+
+inline fun <reified T : PsiElement> PsiElement.parentsOfType(): Sequence<T> = parentsOfType(T::class.java)
+
+fun <T : PsiElement> PsiElement.parentsOfType(clazz: Class<out T>): Sequence<T> = parents().filterIsInstance(clazz)
+
+fun PsiElement.parents(): Sequence<PsiElement> = generateSequence(this) { it.parent }
+
 
 inline fun <reified T : PsiElement> PsiElement.contextOfType(strict: Boolean = true): T? =
         PsiTreeUtil.getContextOfType(this, T::class.java, strict)

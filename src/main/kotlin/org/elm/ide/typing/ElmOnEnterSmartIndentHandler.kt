@@ -19,7 +19,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.parentOfType
 import com.intellij.util.text.CharArrayUtil
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmTypes
@@ -27,6 +26,7 @@ import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmRecord
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.parentOfType
 
 /**
  * Poor-man's formatter for Elm code. In the long-term it would be nice

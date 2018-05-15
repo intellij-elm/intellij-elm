@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.elm.klazuka</id>
     <name>Elm</name>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <vendor url="https://github.com/klazuka">
         Keith Lazuka
     </vendor>
@@ -27,6 +27,7 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>1.1.1</b> <em>(2018-05-15)</em> - fix crash on PyCharm and WebStorm</li>
             <li><b>1.1.0</b> <em>(2018-05-10)</em> - smart indent, performance improvements, better parse error recovery</li>
             <li><b>1.0.0</b> <em>(2018-04-11)</em> - improved parse error recovery and added keyword completion</li>
             <li><b>0.9.1</b> <em>(2017-12-28)</em> - added 'Import' quick fix for unresolved references</li>
