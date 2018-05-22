@@ -38,10 +38,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         val path = virtualFile?.path
             ?: return false
 
-        // TODO [kl] Elm 0.18 uses plural `packages`, whereas Elm 0.19 uses singular form.
-        val isCore = path.contains("/packages/elm-lang/core/")
-                  || path.contains("/package/elm-lang/core/")
-        return isCore
+        return path.contains("/package/elm-lang/core/")
     }
 
     fun getModuleName() =

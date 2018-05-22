@@ -35,13 +35,14 @@ main = Foo.bar
 """)
 
 
-    fun `test binary operator`() = check(
+    fun `test binary infix operator`() = check(
 """
 --@ main.elm
 main = 2 **{-caret-} 3
 --@ Foo.elm
 module Foo exposing ((**))
-(**) a b = a ^ b
+infix right 5 (**) = power
+power a b = List.product (List.repeat b a)
 """,
 """
 import Foo exposing ((**))

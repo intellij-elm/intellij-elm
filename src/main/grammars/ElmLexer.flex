@@ -97,9 +97,7 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     "type"                      { return TYPE; }
     "alias"                     { return ALIAS; }
     "port"                      { return PORT; }
-    "infixl"                    { return INFIXL; }
     "infix"                     { return INFIX; }
-    "infixr"                    { return INFIXR; }
     {ReservedKeyword}           { return RESERVED; }
     "("                         { return LEFT_PARENTHESIS; }
     ")"                         { return RIGHT_PARENTHESIS; }

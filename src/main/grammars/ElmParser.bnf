@@ -12,7 +12,6 @@
     elementTypeFactory("TypeAliasDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("UnionMember")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("InfixDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -165,15 +164,10 @@ ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
 
 private InternalValueDeclarationLeft ::=
     FunctionDeclarationLeft
-    | OperatorDeclarationLeft
     | Pattern
 
 FunctionDeclarationLeft ::=
     LOWER_CASE_IDENTIFIER Pattern*
-
-// TODO [kl] delete once we drop Elm 0.18
-OperatorDeclarationLeft ::=
-    OperatorAsFunction_inner Pattern*
 
 
 
@@ -432,15 +426,6 @@ private ParenthesedPattern ::=
 
 
 // MISC
-
-// TODO [kl] remove the old infix operator parse code once we drop Elm 0.18
-OperatorConfig ::=
-    OperatorConfigKeyword NUMBER_LITERAL OPERATOR_IDENTIFIER
-
-private OperatorConfigKeyword ::=
-    INFIXL
-    | INFIX
-    | INFIXR
 
 
 InfixDeclaration ::=

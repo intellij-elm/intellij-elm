@@ -15,7 +15,7 @@ import org.elm.lang.core.stubs.ElmInfixDeclarationStub
  * For example, `infix right 5 (++) = append` means that the operator `++` has right associativity
  * at precedence level of 5.
  *
- * As of Elm 0.19, these are now restricted to packages owned by elm-lang.
+ * As of Elm 0.19, these are now restricted to packages owned by elm-lang (and elm-explorations?)
  */
 class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub> {
 

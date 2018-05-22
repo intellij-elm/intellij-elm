@@ -13,9 +13,9 @@ import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.STRING_LITERAL
 import org.elm.lang.core.psi.elements.ElmAsClause
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
+import org.elm.lang.core.psi.elements.ElmInfixDeclaration
 import org.elm.lang.core.psi.elements.ElmLowerPattern
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmPatternAs
 import org.elm.lang.core.psi.elements.ElmPortAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
@@ -48,7 +48,7 @@ class ElmFindUsagesProvider: FindUsagesProvider {
             is ElmModuleDeclaration -> "Module"
             is ElmAsClause -> "Aliased Module Import"
             is ElmFunctionDeclarationLeft -> "Value/Function Declaration"
-            is ElmOperatorDeclarationLeft -> "Operator Declaration"
+            is ElmInfixDeclaration -> "Infix Operator Declaration"
             is ElmTypeAliasDeclaration -> "Type Alias"
             is ElmTypeDeclaration -> "Union Type"
             is ElmUnionMember -> "Union Member"

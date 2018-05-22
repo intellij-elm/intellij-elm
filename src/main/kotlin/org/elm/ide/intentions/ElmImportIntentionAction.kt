@@ -20,7 +20,7 @@ import org.elm.lang.core.psi.ElmTypes.VALUE_DECLARATION
 import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
+import org.elm.lang.core.psi.elements.ElmInfixDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionMember
 import org.elm.lang.core.psi.parentOfType
@@ -244,7 +244,7 @@ data class Candidate(
                     Pair("$typeName($name)", exposingList.exposesConstructor(name, typeName))
                 }
 
-                is ElmOperatorDeclarationLeft ->
+                is ElmInfixDeclaration ->
                     Pair("($name)", exposingList.exposesName(name))
 
                 else ->

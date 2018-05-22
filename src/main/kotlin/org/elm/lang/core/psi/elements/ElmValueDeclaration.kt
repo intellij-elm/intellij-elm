@@ -10,6 +10,17 @@ import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.stubs.ElmValueDeclarationStub
 
 
+/**
+ * A top-level value/function declaration.
+ *
+ * Most of the time this is a simple value or function declaration
+ * e.g. `x = 42` or `f x = 2 * x`
+ * That case is covered by [ElmFunctionDeclarationLeft].
+ *
+ * The other case, and it's quite rare, is when you are binding a value
+ * to a pattern, possibly introducing multiple top-level names.
+ * e.g. `(x,y) = (0,0)`
+ */
 class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
 
     constructor(node: ASTNode) :
@@ -23,9 +34,6 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
 
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
-
-    val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
-        get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
 
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
@@ -59,12 +67,6 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
             if (includeParameters)
                 namedElements.addAll(functionDeclarationLeft!!.namedParameters)
 
-        } else if (operatorDeclarationLeft != null) {
-            // an operator declaration
-            namedElements.add(operatorDeclarationLeft!!)
-            if (includeParameters)
-                namedElements.addAll(operatorDeclarationLeft!!.namedParameters)
-
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
             namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))
@@ -74,15 +76,10 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
     }
 
     /**
-     * Names that are declared as parameters to a function or operator decl.
+     * Names that are declared as parameters to a function
      */
     fun declaredParameters(): List<ElmNamedElement> {
-        if (functionDeclarationLeft != null) {
-            return functionDeclarationLeft!!.namedParameters
-        } else if (operatorDeclarationLeft != null) {
-            return operatorDeclarationLeft!!.namedParameters
-        } else {
-            return emptyList()
-        }
+        return functionDeclarationLeft?.namedParameters
+                ?: emptyList()
     }
 }

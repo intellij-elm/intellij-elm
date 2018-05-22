@@ -48,8 +48,10 @@ foo x =
 
     fun `test binary operator usage`() = doTestByText(
 """
-(**) a b = a ^ b
---^
+power a b = List.product (List.repeat b a)
+infix right 5 (**) = power
+              --^
+
 foo = 2 ** 3 -- : foobar
 bar = (**) 2 -- : foobar
 """)

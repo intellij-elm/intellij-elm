@@ -38,19 +38,6 @@ y = False
 """)
 
 
-    // TODO [kl] delete Native tests after we drop support for Elm 0.18
-    fun `test qualified Native refs have no errors`() = checkErrors("""
-import Native.Scheduler
-f = Native.Scheduler.succeed
-""")
-
-
-    fun `test Native is treated normally when not first part`() = checkErrors("""
-<error descr="Unresolved reference 'Foo.Native'">import Foo.Native</error>
-f = <error descr="Unresolved reference 'Foo.Native'"><error descr="Unresolved reference 'foobar'">Foo.Native.foobar</error></error>
-""")
-
-
     fun `test qualified Kernel refs have no errors`() = checkErrors("""
 import Elm.Kernel.Scheduler
 f = Elm.Kernel.Scheduler.succeed

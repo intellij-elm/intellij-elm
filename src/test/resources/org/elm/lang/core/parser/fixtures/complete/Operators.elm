@@ -1,7 +1,6 @@
-(**) : number -> number -> number
-(**) = (^)
+infix right 5 (**) = power
 
-infixl 0 **
+power a b = List.product (List.repeat b a)
 
 f1 = 2 ** 3
 f2 = (**) 2 3

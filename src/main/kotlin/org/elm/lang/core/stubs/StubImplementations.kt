@@ -22,7 +22,6 @@ import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmInfixDeclaration
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmPortAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
@@ -66,7 +65,6 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "TYPE_ALIAS_DECLARATION" -> ElmTypeAliasDeclarationStub.Type
     "UNION_MEMBER" -> ElmUnionMemberStub.Type
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
-    "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type
     "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
     "EXPOSING_LIST" -> ElmExposingListStub.Type
     "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
@@ -229,36 +227,7 @@ class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
     }
 }
 
-// TODO [kl] remove once Elm 0.18 is droppped
-class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
-                                     elementType: IStubElementType<*, *>,
-                                     override val name: String
-): StubBase<ElmOperatorDeclarationLeft>(parent, elementType), ElmNamedStub {
 
-    object Type : ElmStubElementType<ElmOperatorDeclarationLeftStub, ElmOperatorDeclarationLeft>("OPERATOR_DECLARATION_LEFT") {
-
-        override fun serialize(stub: ElmOperatorDeclarationLeftStub, dataStream: StubOutputStream) =
-                with(dataStream) {
-                    writeName(stub.name)
-                }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmOperatorDeclarationLeftStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
-
-        override fun createPsi(stub: ElmOperatorDeclarationLeftStub) =
-                ElmOperatorDeclarationLeft(stub, this)
-
-        override fun createStub(psi: ElmOperatorDeclarationLeft, parentStub: StubElement<*>?) =
-                ElmOperatorDeclarationLeftStub(parentStub, this, psi.name)
-
-        override fun indexStub(stub: ElmOperatorDeclarationLeftStub, sink: IndexSink) {
-            sink.indexOperatorDecl(stub)
-        }
-    }
-}
-
-// This is the Elm 0.19 operator declaration
 class ElmInfixDeclarationStub(parent: StubElement<*>?,
                               elementType: IStubElementType<*, *>,
                               override val name: String

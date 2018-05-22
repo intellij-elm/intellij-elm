@@ -393,49 +393,12 @@ import Math exposing ((**))
 
 --@ Math.elm
 module Math exposing ((**))
-(**) a b = a ^ b
+infix left 5 (**) = power
+power a b = 42
 """)
 
 
-    fun `test binary operator`() = stubOnlyResolve(
-"""
---@ main.elm
-import Math exposing ((**))
-f = 2 ** 3
-     --^Math.elm
-
---@ Math.elm
-module Math exposing ((**))
-(**) a b = a ^ b
-""")
-
-
-    fun `test binary operator via import exposing all`() = stubOnlyResolve(
-"""
---@ main.elm
-import Math exposing (..)
-f = 2 ** 3
-     --^Math.elm
-
---@ Math.elm
-module Math exposing ((**))
-(**) a b = a ^ b
-""")
-
-
-    fun `test binary operator as a function`() = stubOnlyResolve(
-"""
---@ main.elm
-import Math exposing ((**))
-f = (**) 2 3
-    --^Math.elm
-
---@ Math.elm
-module Math exposing ((**))
-(**) a b = a ^ b
-""")
-
-    fun `test binary operator Elm 19`() = stubOnlyResolve(
+    fun `test binary operator usage in value expression`() = stubOnlyResolve(
 """
 --@ main.elm
 import Math exposing ((**))
@@ -448,6 +411,33 @@ infix left 5 (**) = power
 power a b = 42
 """)
 
+
+    fun `test binary operator via import exposing all`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Math exposing (..)
+f = 2 ** 3
+     --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+infix left 5 (**) = power
+power a b = 42
+""")
+
+
+    fun `test binary operator as a function`() = stubOnlyResolve(
+"""
+--@ main.elm
+import Math exposing ((**))
+f = (**) 2 3
+    --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+infix left 5 (**) = power
+power a b = 42
+""")
 
 
 }

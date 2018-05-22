@@ -37,8 +37,6 @@ import org.elm.lang.core.psi.ElmTypes.MODULE_DECLARATION
 import org.elm.lang.core.psi.ElmTypes.NON_EMPTY_TUPLE
 import org.elm.lang.core.psi.ElmTypes.OPERATOR
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_AS_FUNCTION
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_CONFIG
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_DECLARATION_LEFT
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.PARAMETRIC_TYPE_REF
 import org.elm.lang.core.psi.ElmTypes.PARENTHESED_EXPRESSION
@@ -91,8 +89,6 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmNonEmptyTuple
 import org.elm.lang.core.psi.elements.ElmOperator
 import org.elm.lang.core.psi.elements.ElmOperatorAsFunction
-import org.elm.lang.core.psi.elements.ElmOperatorConfig
-import org.elm.lang.core.psi.elements.ElmOperatorDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmParametricTypeRef
 import org.elm.lang.core.psi.elements.ElmParenthesedExpression
 import org.elm.lang.core.psi.elements.ElmPattern
@@ -164,8 +160,6 @@ class ElmPsiFactory(private val project: Project)
                 NON_EMPTY_TUPLE -> return ElmNonEmptyTuple(node)
                 OPERATOR -> return ElmOperator(node)
                 OPERATOR_AS_FUNCTION -> return ElmOperatorAsFunction(node)
-                OPERATOR_CONFIG -> return ElmOperatorConfig(node)
-                OPERATOR_DECLARATION_LEFT -> return ElmOperatorDeclarationLeft(node)
                 PARAMETRIC_TYPE_REF -> return ElmParametricTypeRef(node)
                 PARENTHESED_EXPRESSION -> return ElmParenthesedExpression(node)
                 PATTERN -> return ElmPattern(node)

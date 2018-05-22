@@ -15,9 +15,6 @@ class ElmInnerValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = findChildByClass(ElmFunctionDeclarationLeft::class.java)
 
-    val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
-        get() = findChildByClass(ElmOperatorDeclarationLeft::class.java)
-
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
 
@@ -53,8 +50,6 @@ class ElmInnerValueDeclaration(node: ASTNode) : ElmPsiElementImpl(node) {
                 namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft, ElmLowerPattern::class.java))
                 namedElements.addAll(PsiTreeUtil.collectElementsOfType(functionDeclarationLeft, ElmPatternAs::class.java))
             }
-        } else if (operatorDeclarationLeft != null) {
-            // TODO [kl] handle operator decls
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
             namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))

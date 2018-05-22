@@ -8,7 +8,7 @@ class ElmOperatorResolveTest : ElmResolveTestBase() {
 
     fun `test basic usage`() = checkByCode(
 """
-power a b = 42
+power a b = List.product (List.repeat b a)
 infix right 5 (**) = power
               --X
 

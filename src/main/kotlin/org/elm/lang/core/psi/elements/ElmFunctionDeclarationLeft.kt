@@ -22,8 +22,6 @@ import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
  *
  * A function that takes 2 arguments:
  * `update msg model = model`
- *
- * @see [ElmOperatorDeclarationLeft]
  */
 class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub> {
 

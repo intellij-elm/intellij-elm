@@ -14,8 +14,6 @@ import org.elm.lang.core.psi.ElmTypes.IF
 import org.elm.lang.core.psi.ElmTypes.IMPORT
 import org.elm.lang.core.psi.ElmTypes.IN
 import org.elm.lang.core.psi.ElmTypes.INFIX
-import org.elm.lang.core.psi.ElmTypes.INFIXL
-import org.elm.lang.core.psi.ElmTypes.INFIXR
 import org.elm.lang.core.psi.ElmTypes.LET
 import org.elm.lang.core.psi.ElmTypes.LINE_COMMENT
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
@@ -62,9 +60,7 @@ val ELM_KEYWORDS = tokenSetOf(
         TYPE,
         ALIAS,
         PORT,
-        INFIXL,
         INFIX,
-        INFIXR,
         RESERVED
 )
 

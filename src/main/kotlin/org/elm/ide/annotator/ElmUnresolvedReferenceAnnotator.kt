@@ -58,8 +58,6 @@ private fun ElmValueQID.isQualifiedNativeRef() =
         isQualified && isKernelModule(upperCaseIdentifierList)
 
 private fun isKernelModule(identifiers: List<PsiElement>): Boolean {
-    // In Elm 0.19, Native was renamed to Kernel
-    // TODO [kl] After Elm 0.18 support is dropped, delete "Native"
     val moduleName = identifiers.joinToString(".") { it.text }
-    return moduleName.startsWith("Native") || moduleName.startsWith("Elm.Kernel")
+    return moduleName.startsWith("Elm.Kernel")
 }
