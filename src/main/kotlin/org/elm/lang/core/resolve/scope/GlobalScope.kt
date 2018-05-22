@@ -17,6 +17,7 @@ class GlobalScope(val project: Project) {
          */
         val defaultImports = listOf(
                 "Basics",
+                "Char",
                 "List",
                 "Maybe",
                 "Result",
@@ -32,8 +33,8 @@ class GlobalScope(val project: Project) {
          * Values and Types that are built-in to the Elm compiler. Any occurrences of
          * these symbols should be treated as always resolved.
          */
-        val builtInValues = setOf("True", "False")
-        val builtInTypes = setOf("Bool", "String", "Char", "Int", "Float", "List")
+        val builtInValues = emptySet<String>()
+        val builtInTypes = setOf("List")
         val allBuiltInSymbols = builtInValues.union(builtInTypes)
     }
 
@@ -49,7 +50,6 @@ class GlobalScope(val project: Project) {
         val rest = mutableListOf<ElmNamedElement>()
         rest.addAll(helper("Basics"))
         rest.addAll(helper("List").filter { it.name == "::" })
-        rest.addAll(helper("Platform.Cmd").filter { it.name == "!" })
         return rest
     }
 
@@ -62,8 +62,10 @@ class GlobalScope(val project: Project) {
 
         val rest = mutableListOf<ElmNamedElement>()
         rest.addAll(helper("Basics"))
+        rest.addAll(helper("Char").filter { it.name == "Char" })
         rest.addAll(helper("Maybe").filter { it.name == "Maybe" })
         rest.addAll(helper("Result").filter { it.name == "Result" })
+        rest.addAll(helper("String").filter { it.name == "String" })
         rest.addAll(helper("Platform").filter { it.name == "Program" })
         rest.addAll(helper("Platform.Cmd").filter { it.name == "Cmd" })
         rest.addAll(helper("Platform.Sub").filter { it.name == "Sub" })

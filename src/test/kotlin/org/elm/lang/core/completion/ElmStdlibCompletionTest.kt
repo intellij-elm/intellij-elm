@@ -5,18 +5,11 @@ class ElmStdlibCompletionTest: ElmCompletionTestBase() {
 
     fun `test built-in type completion in a type annotation`() = doSingleCompletion(
 """
-name : Stri{-caret-}
+name : Lis{-caret-}
 """, """
-name : String{-caret-}
+name : List{-caret-}
 """)
 
-
-    fun `test built-in value completion`() = doSingleCompletion(
-"""
-x = Fal{-caret-}
-""", """
-x = False{-caret-}
-""")
 
 
     // TODO [kl] re-enable these tests once we can arrange to download Elm Core package
