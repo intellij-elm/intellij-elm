@@ -259,7 +259,6 @@ private Operand ::=
     | FieldAccessorFunction
     | OperatorAsFunction
     | ParenthesedExpression
-    | TupleConstructor
     | Tuple
     | List
     | Record
@@ -295,10 +294,6 @@ private Tuple ::=
 NonEmptyTuple ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
     {pin(".*")=2}
-
-// TODO [kl] these are being removed in Elm 0.19
-TupleConstructor ::=
-    LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
 Unit ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS

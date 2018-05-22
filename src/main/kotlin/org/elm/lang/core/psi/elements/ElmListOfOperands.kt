@@ -2,7 +2,6 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
@@ -50,10 +49,6 @@ class ElmListOfOperands(node: ASTNode) : ElmPsiElementImpl(node) {
 
     fun getRecordList(): List<ElmRecord> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmRecord::class.java)
-    }
-
-    fun getTupleConstructorList(): List<ElmTupleConstructor> {
-        return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTupleConstructor::class.java)
     }
 
     fun getUnitList(): List<ElmUnit> {

@@ -46,7 +46,6 @@ import org.elm.lang.core.psi.ElmTypes.PORT_ANNOTATION
 import org.elm.lang.core.psi.ElmTypes.RECORD
 import org.elm.lang.core.psi.ElmTypes.RECORD_PATTERN
 import org.elm.lang.core.psi.ElmTypes.RECORD_TYPE
-import org.elm.lang.core.psi.ElmTypes.TUPLE_CONSTRUCTOR
 import org.elm.lang.core.psi.ElmTypes.TUPLE_PATTERN
 import org.elm.lang.core.psi.ElmTypes.TUPLE_TYPE
 import org.elm.lang.core.psi.ElmTypes.TYPE_ALIAS_DECLARATION
@@ -97,7 +96,6 @@ import org.elm.lang.core.psi.elements.ElmPortAnnotation
 import org.elm.lang.core.psi.elements.ElmRecord
 import org.elm.lang.core.psi.elements.ElmRecordPattern
 import org.elm.lang.core.psi.elements.ElmRecordType
-import org.elm.lang.core.psi.elements.ElmTupleConstructor
 import org.elm.lang.core.psi.elements.ElmTuplePattern
 import org.elm.lang.core.psi.elements.ElmTupleType
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
@@ -168,7 +166,6 @@ class ElmPsiFactory(private val project: Project)
                 RECORD -> return ElmRecord(node)
                 RECORD_PATTERN -> return ElmRecordPattern(node)
                 RECORD_TYPE -> return ElmRecordType(node)
-                TUPLE_CONSTRUCTOR -> return ElmTupleConstructor(node)
                 TUPLE_PATTERN -> return ElmTuplePattern(node)
                 TUPLE_TYPE -> return ElmTupleType(node)
                 TYPE_ALIAS_DECLARATION -> return ElmTypeAliasDeclaration(node)
