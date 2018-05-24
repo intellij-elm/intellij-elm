@@ -99,6 +99,22 @@ main = bar
 """)
 
 
+    fun `test expose an infix operator with existing import`() = check(
+"""
+--@ main.elm
+import Foo
+main = 2 **{-caret-} 3
+--@ Foo.elm
+module Foo exposing ((**))
+infix right 5 (**) = power
+power a b = List.product (List.repeat b a)
+""",
+"""
+import Foo exposing ((**))
+main = 2 ** 3
+""")
+
+
     fun `test merge with existing exposed values`() = check(
 """
 --@ main.elm
@@ -171,6 +187,21 @@ main = bar{-caret-}
 --@ Foo.elm
 module Foo exposing ()
 bar = 42
+""")
+
+
+    fun `test binary infix operator containing dot is never qualified`() = check(
+"""
+--@ main.elm
+main = 2 |.{-caret-} 3
+--@ Foo.elm
+module Foo exposing (..)
+infix right 5 (|.) = power
+power a b = List.product (List.repeat b a)
+""",
+"""
+import Foo exposing ((|.))
+main = 2 |. 3
 """)
 
 

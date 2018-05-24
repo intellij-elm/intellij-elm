@@ -21,6 +21,7 @@ import org.elm.lang.core.psi.elements.ElmExposedType
 import org.elm.lang.core.psi.elements.ElmExposingList
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmInfixDeclaration
+import org.elm.lang.core.psi.elements.ElmOperator
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionMember
 import org.elm.lang.core.psi.parentOfType
@@ -56,7 +57,7 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<ElmImportIntention
                 .toMutableList()
 
         val isQualified: Boolean
-        if (fullName.contains(".")) {
+        if (fullName.contains(".") && refElement !is ElmOperator) {
             isQualified = true
             // exclude any modules that don't match the qualifier prefix
             val qualifierPrefix = fullName.split(".").dropLast(1).joinToString(".")

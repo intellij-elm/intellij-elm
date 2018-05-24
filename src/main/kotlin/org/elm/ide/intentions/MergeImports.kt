@@ -17,6 +17,7 @@ fun mergeImports(sourceFile: ElmFile, import1: ElmImportClause, import2: ElmImpo
     // merge and sort each import's exposing clauses
     val exposedNames = sequenceOf(
             mergeExposedValues(exposing1, exposing2),
+            mergeExposedOperators(exposing1, exposing2),
             mergeExposedTypes(exposing1, exposing2)
     ).flatten().toList().sorted()
 
@@ -34,19 +35,23 @@ private fun mergeAliasClause(import1: ElmImportClause, import2: ElmImportClause)
 }
 
 
-private fun mergeExposedValues(exposing1: ElmExposingList?, exposing2: ElmExposingList?): List<String> {
+private fun mergeExposedValues(exposing1: ElmExposingList?, exposing2: ElmExposingList?): Sequence<String> {
     return sequenceOf(
             exposing1?.exposedValueList ?: emptyList(),
             exposing2?.exposedValueList ?: emptyList()
-    )
-            .flatten()
-            .map { it.lowerCaseIdentifier.text }
-            .toList()
-            .sorted()
+    ).flatten().map { it.lowerCaseIdentifier.text }
 }
 
 
-private fun mergeExposedTypes(exposing1: ElmExposingList?, exposing2: ElmExposingList?): List<String> {
+private fun mergeExposedOperators(exposing1: ElmExposingList?, exposing2: ElmExposingList?): Sequence<String> {
+    return sequenceOf(
+            exposing1?.exposedOperatorList ?: emptyList(),
+            exposing2?.exposedOperatorList ?: emptyList()
+    ).flatten().map { "(${it.operatorIdentifier.text})" }
+}
+
+
+private fun mergeExposedTypes(exposing1: ElmExposingList?, exposing2: ElmExposingList?): Sequence<String> {
     val exposedUnionsByName: Map<String, List<ElmExposedType>> =
             sequenceOf(
                     exposing1?.exposedTypeList ?: emptyList(),
@@ -55,6 +60,7 @@ private fun mergeExposedTypes(exposing1: ElmExposingList?, exposing2: ElmExposin
 
     return exposedUnionsByName
             .map { (typeName, types) -> mergeExposedUnionConstructors(typeName, types) }
+            .asSequence()
 }
 
 
