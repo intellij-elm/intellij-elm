@@ -44,7 +44,7 @@ StringLiteral = \"(\\.|[^\\\"])*\"
 StringWithQuotesLiteral = \"\"\"(\\.|[^\\\"]|\"{1,2}([^\"\\]|\\\"))*\"\"\"
 NumberLiteral = ("-")?[:digit:]+(\.[:digit:]+)?
 HexLiteral = 0x{HexChar}+
-CharLiteral = '(\\.|\\x{HexChar}+|[^\\'])'
+CharLiteral = '(\\.|\\u\{{HexChar}+\}|[^\\'])'
 Operator = ("!"|"$"|"^"|"|"|"*"|"/"|"?"|"+"|"~"|"."|-|=|@|#|%|&|<|>|:|€|¥|¢|£|¤)+
 ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
 

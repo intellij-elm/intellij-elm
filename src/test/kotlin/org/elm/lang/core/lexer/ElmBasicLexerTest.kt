@@ -17,7 +17,9 @@ class ElmBasicLexerTest: ElmLexerTestCaseBase() {
     }
 
     // TODO [kl] add more tests
+    fun testChars() = doTest()
     fun testLineComments() = doTest()
     fun testBlockComments() = doTest()
     fun testDocComments() = doTest()
+    fun testStrings() = doTest()
 }

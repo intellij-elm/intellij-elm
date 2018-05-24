@@ -1,0 +1,5 @@
+CHAR_LITERAL (''a'')
+NEWLINE ('\n')
+CHAR_LITERAL (''\\'')
+NEWLINE ('\n')
+CHAR_LITERAL (''\u{1F648}'')
