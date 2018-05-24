@@ -26,6 +26,11 @@ Prior to creating this plugin, I used to contribute to a very good [Elm plugin](
 * hand-written Psi classes
 
 
+# Integrating with elm-format
+
+See the elm-format [integration instructions](https://github.com/klazuka/intellij-elm/blob/master/docs/elm-format/setup.md).
+
+
 # Development
 
 There is still a lot of work left to do, but PRs are welcome. To build the plugin you will need to do the following:
@@ -39,15 +44,15 @@ There is still a lot of work left to do, but PRs are welcome. To build the plugi
 
 This project heavily leverages the open-source work of other IntelliJ plugin developers:
 
-* Lexer and Parser from Kamil Durkiewicz's [elm-intellij-plugin](https://github.com/durkiewicz/elm-plugin).
-* Offside-rule Lexer from Alexander Kiel's [idea-haskell](https://github.com/alexanderkiel/idea-haskell) plugin.
 * Code organization and testing utils based on the [Rust plugin](https://github.com/intellij-rust/intellij-rust) for IntelliJ. 
+* Lexer and Parser originally from Kamil Durkiewicz's [elm-intellij-plugin](https://github.com/durkiewicz/elm-plugin).
+* Offside-rule Lexer originally based on code from Alexander Kiel's [idea-haskell](https://github.com/alexanderkiel/idea-haskell) plugin.
 
 Thank you Kamil, Alexander, and the Rust plugin developers.
 
 
 # Donation
 
-If this plugin improves your Elm development experience, and you want to give back, please consider making a [donation](http://www.brahmrishiyoga.org/donate) (tax-deductible in the US) to the [Narmada Vidya Peeth school](http://www.brahmrishiyoga.org/jabalpur_school/photo_gallery) in Jabalpur, India. This school provides a completely free education to 550 boys and girls, from ages 5 to 17. I have visited the school twice in the past 6 years, and I can vouch for the worthiness of the cause.
+If this plugin improves your Elm development experience, and you want to give back, please consider making a [donation](http://www.brahmrishiyoga.org/donate) (tax-deductible in the US) to the [Narmada Vidya Peeth school](http://www.brahmrishiyoga.org/jabalpur_school/photo_gallery) in Jabalpur, India. This school provides a completely free education to 550 boys and girls, from ages 5 to 17. I have visited the school three times since 2012, and I can vouch for the worthiness of the cause.
 
 Alternatively consider making donations to your favorite open-source developers and projects.

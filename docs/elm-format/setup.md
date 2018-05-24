@@ -8,6 +8,8 @@ Integrating it with IntelliJ is pretty easy.
 - [macOS/Linux](#mac-linux) instructions
 - [Windows](#windows) instructions
 
+Want `elm-format` to run automatically whenever you save an Elm file? Setup a [file watcher](#file-watcher).
+
 
 <a name="mac-linux"></a>
 ## Mac/Linux Setup
@@ -58,3 +60,17 @@ Finally, assign it to a key-binding so that it's easy to reformat your file.
 ![](setup-key-binding-win.png)
 
 Now anywhere in an Elm file you can invoke `elm-format` on that file by pressing ctrl-I (as I configured it).
+
+
+
+<a name="file-watcher"></a>
+# Optional File Watcher Integration
+
+The instructions above configure `elm-format` to be run only when explicitly invoked by
+a keyboard shortcut. If you want to make elm-format totally automatic--so that it runs
+whenever an Elm file is saved--follow these instructions: 
+
+1. Install the "File Watchers" plugin (installed by default in WebStorm, PhpStorm and PyCharm; available in the IntelliJ plugin repository for IntelliJ IDEA Ultimate; **not available** for Community Edition)
+2. Add a file watcher for `.elm` files with the settings as shown here.
+
+![](setup-file-watcher.png)
