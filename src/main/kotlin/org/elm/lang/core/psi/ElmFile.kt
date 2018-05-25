@@ -38,7 +38,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         val path = virtualFile?.path
             ?: return false
 
-        return path.contains("/package/elm-lang/core/")
+        return path.contains("/package/elm/core/")
     }
 
     fun getModuleName() =
