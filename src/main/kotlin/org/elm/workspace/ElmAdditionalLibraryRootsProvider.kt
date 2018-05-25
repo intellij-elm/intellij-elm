@@ -51,6 +51,7 @@ class ElmLibrary(
     companion object {
         fun fromPackage(pkg: ElmPackageRef): ElmLibrary? {
             val root = pkg.root ?: return null
+            if (!root.exists()) return null
             return ElmLibrary(root = root,
                               name = pkg.name)
         }
