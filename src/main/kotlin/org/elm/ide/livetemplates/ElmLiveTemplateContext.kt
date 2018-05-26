@@ -1,4 +1,4 @@
-package org.elm.ide
+package org.elm.ide.livetemplates
 
 import com.intellij.codeInsight.template.TemplateContextType
 import com.intellij.psi.PsiFile

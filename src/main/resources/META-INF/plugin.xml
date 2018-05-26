@@ -60,11 +60,14 @@
         <lang.psiStructureViewFactory language="Elm" implementationClass="org.elm.ide.structure.ElmStructureViewFactory" />
         <lang.refactoringSupport language="Elm" implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider" />
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
-        <liveTemplateContext implementation="org.elm.ide.ElmLiveTemplateContext" />
         <spellchecker.support language="Elm" implementationClass="org.elm.ide.spelling.ElmSpellCheckingStrategy" />
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" />
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex" />
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex" />
+
+
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext" />
+        <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider" />
     </extensions>
 
     <actions>
