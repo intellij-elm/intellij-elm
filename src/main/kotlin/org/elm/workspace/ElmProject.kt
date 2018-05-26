@@ -6,8 +6,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.openapiext.CachedVirtualFile
 import java.io.InputStream
@@ -15,7 +13,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-private val objectMapper = ObjectMapper().registerKotlinModule()
+private val objectMapper = ObjectMapper()
 
 /**
  * The logical representation of an Elm project. An Elm project can be an application
@@ -75,7 +73,7 @@ sealed class ElmProject(
             val type = node.get("type")?.textValue()
             return when (type) {
                 "application" -> {
-                    val dto = objectMapper.treeToValue<ElmApplicationProjectDTO>(node)
+                    val dto = objectMapper.treeToValue(node, ElmApplicationProjectDTO::class.java)
                     ElmApplicationProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
@@ -89,7 +87,7 @@ sealed class ElmProject(
                 "package" -> {
                     throw ProjectLoadException("Elm 'package' projects are not currently supported. "
                             + "As a workaround, please add your example app project instead.")
-                    val dto = objectMapper.treeToValue<ElmPackageProjectDTO>(node)
+                    val dto = objectMapper.treeToValue(node, ElmPackageProjectDTO::class.java)
                     // TODO [kl] fix the resolving of dependencies:
                     //           - resolve version constraint to a specific version
                     //           - do not use the empty list for transitiveDependencies
