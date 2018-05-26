@@ -105,7 +105,8 @@ sealed class ElmProject(
                             license = dto.license,
                             exposedModules = dto.exposedModulesNode.toExposedModuleMap())
                 }
-                else -> throw ProjectLoadException("unknown 'type': $type")
+                else -> throw ProjectLoadException("The 'type' field is '$type', "
+                        + "but expected either 'application' or 'package'")
             }
         }
     }

@@ -7,7 +7,7 @@ import org.elm.openapiext.toXmlString
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
 
-class ElmWorkspaceServiceTest: ElmWorkspaceTestBase() {
+class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
 
     fun `test finds Elm project for source file`() {
@@ -49,6 +49,42 @@ class ElmWorkspaceServiceTest: ElmWorkspaceTestBase() {
         checkFile("a/src/Utils.elm", "a")
     }
 
+    fun `test auto discover Elm project at root level`() {
+        val testProject = fileTree {
+            project("elm.json", """
+                {
+                  "type": "application",
+                  "source-directories": [ "src" ],
+                  "elm-version": "0.19.0",
+                  "dependencies": { },
+                  "test-dependencies": {},
+                  "do-not-edit-this-by-hand": {
+                    "transitive-dependencies": { }
+                  }
+                }
+                """)
+            dir("src") {
+                elm("Main.elm", "")
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val elmProjects = project.elmWorkspace.discoverAndRefresh()
+        check(elmProjects.size == 1) { "Should have found one Elm project but found ${elmProjects.size}" }
+        val elmProject = elmProjects.first()
+        check(elmProject.manifestPath == testProject.root.pathAsPath.resolve("elm.json"))
+    }
+
+    fun `test auto discover Elm project skips bad project files`() {
+        fileTree {
+            project("elm.json", """ { "BOGUS": "INVALID ELM.JSON" } """)
+            dir("src") {
+                elm("Main.elm", "")
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val elmProjects = project.elmWorkspace.discoverAndRefresh()
+        check(elmProjects.isEmpty()) { "Should have found zero Elm projects but found ${elmProjects.size}" }
+    }
 
     fun `test persistence`() {
         // setup real files on disk

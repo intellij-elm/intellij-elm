@@ -190,8 +190,12 @@ class ElmWorkspaceService(
                 .firstOrNull()
                 ?: return allProjects
 
-        val newProject = loadProject(guessManifest.pathAsPath)
-        return modifyProjects { doRefresh(it + newProject) }
+        return try {
+            val newProject = loadProject(guessManifest.pathAsPath)
+            modifyProjects { doRefresh(it + newProject) }
+        } catch (e: ProjectLoadException) {
+            allProjects
+        }
     }
 
 
@@ -199,6 +203,9 @@ class ElmWorkspaceService(
             allProjects.any { it.manifestPath.exists() }
 
 
+    // It's very important that this function has no side-effects, as it may be
+    // invoked multiple times when attempting to update the [AtomicReference]
+    // holding the list of projects.
     private fun doRefresh(projects: List<ElmProject>) =
             projects.mapNotNull { loadProjectSafely(it.manifestPath) }
 
