@@ -6,6 +6,7 @@ import com.intellij.psi.tree.IElementType
 import org.elm.lang.core.lexer.ElmIncrementalLexer
 import org.elm.lang.core.psi.ELM_IDENTIFIERS
 import org.elm.lang.core.psi.ELM_KEYWORDS
+import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 
 
@@ -25,6 +26,14 @@ class ElmNamesValidator : NamesValidator {
         }
     }
 }
+
+
+fun isValidLowerIdentifier(text: String) =
+        getLexerType(text) == ElmTypes.LOWER_CASE_IDENTIFIER
+
+
+fun isValidUpperIdentifier(text: String) =
+        getLexerType(text) == ElmTypes.UPPER_CASE_IDENTIFIER
 
 
 private fun getLexerType(text: String): IElementType? {

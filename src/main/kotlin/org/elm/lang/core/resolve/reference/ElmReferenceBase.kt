@@ -14,10 +14,6 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
     : ElmReference, PsiReferenceBase<T>(element) {
 
     override fun calculateDefaultRangeInElement(): TextRange {
-        // TODO [kl] eventually introduce the reference anchor concept from the
-        // Rust plugin, which, will give us more flexibility in how reference
-        // ranges are defined. For now, we will just assume that the identifier
-        // associated with the named element comprises the reference.
         val nameElement = element.referenceNameElement
         val startOffset = nameElement.offsetIn(element)
         return TextRange(startOffset, startOffset + nameElement.textLength)

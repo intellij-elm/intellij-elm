@@ -4,7 +4,6 @@ import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.impl.DebugUtil
 import com.intellij.psi.impl.source.tree.SharedImplUtil
 import com.intellij.psi.stubs.IStubElementType
@@ -20,7 +19,7 @@ import org.elm.lang.core.stubs.ElmTypeDeclarationStub
 import org.elm.lang.core.stubs.ElmValueDeclarationStub
 
 
-class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), PsiFile {
+class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage) {
 
     override fun getFileType()=
             ElmFileType
@@ -41,8 +40,10 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         return path.contains("/package/elm/core/")
     }
 
-    fun getModuleName() =
-            getModuleDecl()?.name
+    override fun setName(name: String): PsiElement {
+        val nameWithExtension = if (name.endsWith(".elm")) name else "$name.elm"
+        return super.setName(nameWithExtension)
+    }
 
     fun getModuleDecl() =
             getStubOrPsiChild(ElmModuleDeclarationStub.Type)

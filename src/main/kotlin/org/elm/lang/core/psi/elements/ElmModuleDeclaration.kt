@@ -31,6 +31,7 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
     constructor(stub: ElmModuleDeclarationStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
+
     /**
      * The fully-qualified name of the module
      */

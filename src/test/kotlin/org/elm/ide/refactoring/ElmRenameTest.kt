@@ -95,62 +95,51 @@ foo quux = quux.b
 """)}
 
 
-/*
-    This test has been disabled because there's a bug in our test configuration (or IntelliJ)
-    where the rename doesn't work. The root cause is that rename depends on Find Usages,
-    which in turn depends on a `FileBasedIndex` which IntelliJ manages that stores a mapping
-    from identifiers to files. For this to work correctly for the identifiers that Elm's
-    binary operators use (e.g. `++`) you must configure a WordsScanner to do the tokenization
-    correctly. I have done that configuration, and it works when you run the plugin for real,
-    but it appears that it is NOT working in the rename test (I have confirmed that the
-    Find Usages test DOES work correctly).
-
-    The root cause is that the rename test fails to find any matching files when it
-    calls PsiSearchHelperImpl.processElementsWithTextInGlobalScope(). Rather than
-    debugging this any further, I'm just going to disable the test.
-
-    fun `test operator decl rename`() {
-        doTest("##",
-"""
-(**) : number -> number -> number
-(**) = (^)
-infixl 0 **
-x = 2 {-caret-}** 3
-""", """
-(##) : number -> number -> number
-(##) = (^)
-infixl 0 ##
-x = 2 ## 3
-""")}
-*/
-
-
-    // TODO [kl] improve this test by also verifying that the FILE is renamed (currently not implemented in the plugin)
-    fun `test module rename from Data_User to Quux`() {
+    fun `test file rename from Data_User to Data_Quux`() {
         checkByDirectory(
 """
 --@ Data/User.elm
 module Data.User exposing (..)
 type alias User = { x : String }
-name = identity
 
 --@ main.elm
 import Data.User
-f : Data.User.User -> String
-f user = Data.User.name user
-g = f (Data.User.User "joe")
+g = Data.User.User "joe"
 """,
 """
---@ Data/User.elm
-module Quux exposing (..)
+--@ Data/Quux.elm
+module Data.Quux exposing (..)
 type alias User = { x : String }
-name = identity
 
 --@ main.elm
-import Quux
-f : Quux.User -> String
-f user = Quux.name user
-g = f (Quux.User "joe")
+import Data.Quux
+g = Data.Quux.User "joe"
+""") {
+            val file = myFixture.configureFromTempProjectFile("Data/User.elm")
+            myFixture.renameElement(file, "Quux")
+        }
+    }
+
+
+    fun `test module decl rename from Data_User to Data_Quux`() {
+        checkByDirectory(
+"""
+--@ Data/User.elm
+module Data.User exposing (..)
+type alias User = { x : String }
+
+--@ main.elm
+import Data.User
+g = Data.User.User "joe"
+""",
+"""
+--@ Data/Quux.elm
+module Data.Quux exposing (..)
+type alias User = { x : String }
+
+--@ main.elm
+import Data.Quux
+g = Data.Quux.User "joe"
 """) {
             val mod = myFixture.configureFromTempProjectFile("Data/User.elm")
                     .descendantsOfType<ElmModuleDeclaration>().single()
@@ -158,6 +147,7 @@ g = f (Quux.User "joe")
             myFixture.renameElement(mod, "Quux")
         }
     }
+
 
     fun `test import alias rename`() {
         checkByDirectory(
