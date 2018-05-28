@@ -2,8 +2,7 @@
 
 These instructions apply to IntelliJ IDEA, WebStorm, PhpStorm and PyCharm. Hereafter I will just use "IntelliJ" to refer to the product generically.
 
-[elm-format](https://github.com/avh4/elm-format) is the standard way to format Elm source code.
-Integrating it with IntelliJ is pretty easy.
+[elm-format](https://github.com/avh4/elm-format) is the standard way to format Elm source code. If you haven't already installed it, do it now. Then follow the instructions below for your platform:
 
 - [macOS/Linux](#mac-linux) instructions
 - [Windows](#windows) instructions
