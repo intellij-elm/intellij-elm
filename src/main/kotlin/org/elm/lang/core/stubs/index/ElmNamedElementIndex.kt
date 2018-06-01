@@ -8,7 +8,7 @@ import com.intellij.psi.stubs.StubIndexKey
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.stubs.ElmFileStub
 
-class ElmNamedElementIndex: StringStubIndexExtension<ElmNamedElement>() {
+class ElmNamedElementIndex : StringStubIndexExtension<ElmNamedElement>() {
 
     override fun getVersion() =
             ElmFileStub.Type.stubVersion

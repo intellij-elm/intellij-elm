@@ -15,7 +15,7 @@ import org.elm.lang.core.stubs.ElmModuleDeclarationStub
 private val logger = Logger.getInstance(ElmModulesIndex::class.java)
 
 
-class ElmModulesIndex: StringStubIndexExtension<ElmModuleDeclaration>() {
+class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
 
     override fun getVersion() =
             ElmFileStub.Type.stubVersion

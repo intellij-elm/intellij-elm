@@ -5,14 +5,7 @@ import com.intellij.lang.PairedBraceMatcher
 import com.intellij.psi.PsiFile
 import com.intellij.psi.TokenType.WHITE_SPACE
 import com.intellij.psi.tree.IElementType
-import org.elm.lang.core.psi.ElmTypes.LEFT_BRACE
-import org.elm.lang.core.psi.ElmTypes.LEFT_PARENTHESIS
-import org.elm.lang.core.psi.ElmTypes.LEFT_SQUARE_BRACKET
-import org.elm.lang.core.psi.ElmTypes.NEWLINE
-import org.elm.lang.core.psi.ElmTypes.RIGHT_BRACE
-import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
-import org.elm.lang.core.psi.ElmTypes.RIGHT_SQUARE_BRACKET
-import org.elm.lang.core.psi.ElmTypes.TAB
+import org.elm.lang.core.psi.ElmTypes.*
 
 
 private val bracePairs = arrayOf(
@@ -21,10 +14,10 @@ private val bracePairs = arrayOf(
         BracePair(LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET, true))
 
 
-class ElmPairedBraceMatcher: PairedBraceMatcher {
+class ElmPairedBraceMatcher : PairedBraceMatcher {
 
     override fun getCodeConstructStart(file: PsiFile?, openingBraceOffset: Int) =
-            // TODO [kl] re-visit this later. the default is adequate for now.
+    // TODO [kl] re-visit this later. the default is adequate for now.
             openingBraceOffset
 
 
@@ -34,10 +27,10 @@ class ElmPairedBraceMatcher: PairedBraceMatcher {
 
     override fun isPairedBracesAllowedBeforeType(lbraceType: IElementType, contextType: IElementType?) =
             when (contextType) {
-                null ->         true
-                TAB ->          true
-                NEWLINE ->      true
-                WHITE_SPACE ->  true
-                else ->         false
+                null -> true
+                TAB -> true
+                NEWLINE -> true
+                WHITE_SPACE -> true
+                else -> false
             }
 }

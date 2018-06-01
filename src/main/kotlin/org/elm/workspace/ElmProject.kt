@@ -32,8 +32,9 @@ sealed class ElmProject(
      */
     val manifestFile: VirtualFile? by CachedVirtualFile(manifestPath.toUri().toString())
 
-    private val projectDirPath get() =
-        manifestPath.parent
+    private val projectDirPath
+        get() =
+            manifestPath.parent
 
     /**
      * A name which can be shown in the UI. Note that while Elm packages have user-assigned
@@ -121,7 +122,7 @@ class ElmApplicationProject(
         testDependencies: List<ElmPackageRef>,
         transitiveDependencies: List<ElmPackageRef>,
         val sourceDirectories: List<String>
-): ElmProject(manifestPath, elmVersion, dependencies, testDependencies, transitiveDependencies)
+) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies, transitiveDependencies)
 
 
 /**
@@ -139,7 +140,7 @@ class ElmPackageProject(
         val version: String,
         /** Map from label to one-or-more module names. The label can be the empty string. */
         val exposedModules: Map<String, List<String>>
-): ElmProject(manifestPath, elmVersion, dependencies, testDependencies, transitiveDependencies)
+) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies, transitiveDependencies)
 
 
 /**
@@ -155,9 +156,10 @@ class ElmPackageRef(
 private fun Map<String, String>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
             ElmPackageRef(
-                root = toolchain.packageRootDir(name, version),
-                name = name,
-                version = version) }
+                    root = toolchain.packageRootDir(name, version),
+                    name = name,
+                    version = version)
+        }
 
 
 private fun JsonNode.toExposedModuleMap(): Map<String, List<String>> {
@@ -179,7 +181,6 @@ private fun JsonNode.toExposedModuleMap(): Map<String, List<String>> {
 }
 
 
-
 /**
  * A dummy sentinel value because [LightDirectoryIndex] needs it.
  */
@@ -193,7 +194,6 @@ val noProjectSentinel = ElmApplicationProject(
 )
 
 
-
 // JSON Decoding
 
 
@@ -202,12 +202,12 @@ private interface ElmProjectDTO
 
 
 private class ElmApplicationProjectDTO(
-        @JsonProperty("elm-version")                val elmVersion: String,
-        @JsonProperty("dependencies")               val dependencies: Map<String, String>,
-        @JsonProperty("test-dependencies")          val testDependencies: Map<String, String>,
-        @JsonProperty("source-directories")         val sourceDirectories: List<String>,
-        @JsonProperty("do-not-edit-this-by-hand")   val doNotEditThisByHand: DoNotEditThisByHandDTO
-): ElmProjectDTO
+        @JsonProperty("elm-version") val elmVersion: String,
+        @JsonProperty("dependencies") val dependencies: Map<String, String>,
+        @JsonProperty("test-dependencies") val testDependencies: Map<String, String>,
+        @JsonProperty("source-directories") val sourceDirectories: List<String>,
+        @JsonProperty("do-not-edit-this-by-hand") val doNotEditThisByHand: DoNotEditThisByHandDTO
+) : ElmProjectDTO
 
 
 private class DoNotEditThisByHandDTO(
@@ -216,14 +216,14 @@ private class DoNotEditThisByHandDTO(
 
 
 private class ElmPackageProjectDTO(
-        @JsonProperty("elm-version")        val elmVersion: String,
-        @JsonProperty("dependencies")       val dependencies: Map<String, String>,
-        @JsonProperty("test-dependencies")  val testDependencies: Map<String, String>,
-        @JsonProperty("name")               val name: String,
-        @JsonProperty("summary")            val summary: String,
-        @JsonProperty("license")            val license: String,
-        @JsonProperty("version")            val version: String,
-        @JsonProperty("exposed-modules")    val exposedModulesNode: JsonNode // either List<String>
-                                                                             // or Map<String, List<String>>
-                                                                             // where the map's keys are labels
-): ElmProjectDTO
+        @JsonProperty("elm-version") val elmVersion: String,
+        @JsonProperty("dependencies") val dependencies: Map<String, String>,
+        @JsonProperty("test-dependencies") val testDependencies: Map<String, String>,
+        @JsonProperty("name") val name: String,
+        @JsonProperty("summary") val summary: String,
+        @JsonProperty("license") val license: String,
+        @JsonProperty("version") val version: String,
+        @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode // either List<String>
+        // or Map<String, List<String>>
+        // where the map's keys are labels
+) : ElmProjectDTO

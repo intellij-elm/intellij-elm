@@ -28,7 +28,7 @@ class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEleme
         get() = referenceNameElement.text
 
     override fun getReference() =
-        BaseRecordReference(this)
+            BaseRecordReference(this)
 }
 
 

@@ -2,7 +2,7 @@ package org.elm.ide.commenter
 
 import com.intellij.lang.Commenter
 
-class ElmCommenter: Commenter {
+class ElmCommenter : Commenter {
     override fun getLineCommentPrefix() =
             "--"
 

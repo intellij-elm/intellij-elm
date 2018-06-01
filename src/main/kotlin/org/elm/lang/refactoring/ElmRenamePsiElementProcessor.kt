@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
  * See https://intellij-support.jetbrains.com/hc/en-us/community/posts/206760415-Renaming-files-in-IDE
  * and [ElmRenamePsiFileProcessor].
  */
-class ElmRenamePsiElementProcessor: RenamePsiFileProcessor() {
+class ElmRenamePsiElementProcessor : RenamePsiFileProcessor() {
 
 
     override fun canProcessElement(element: PsiElement) =

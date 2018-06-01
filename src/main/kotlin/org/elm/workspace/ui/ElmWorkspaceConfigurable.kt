@@ -17,7 +17,7 @@ import javax.swing.JLabel
 
 class ElmWorkspaceConfigurable(
         private val project: Project
-): Configurable, Configurable.NoScroll, Disposable {
+) : Configurable, Configurable.NoScroll, Disposable {
 
     private val versionUpdateDebouncer = UiDebouncer(this)
 

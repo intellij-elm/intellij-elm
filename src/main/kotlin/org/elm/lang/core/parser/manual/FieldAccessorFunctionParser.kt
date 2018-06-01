@@ -2,12 +2,8 @@ package org.elm.lang.core.parser.manual
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase
-
 import com.intellij.lang.parser.GeneratedParserUtilBase.*
-import com.intellij.lang.parser.GeneratedParserUtilBase.exit_section_
-import org.elm.lang.core.psi.ElmTypes.DOT
-import org.elm.lang.core.psi.ElmTypes.FIELD_ACCESSOR_FUNCTION
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmTypes.*
 
 /**
  * Parses a special function, synthesized by the Elm compiler, that reads

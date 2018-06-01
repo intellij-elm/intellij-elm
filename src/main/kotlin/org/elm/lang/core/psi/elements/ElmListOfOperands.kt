@@ -1,4 +1,3 @@
-
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode

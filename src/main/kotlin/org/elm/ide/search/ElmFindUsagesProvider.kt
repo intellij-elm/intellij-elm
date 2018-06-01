@@ -11,20 +11,11 @@ import org.elm.lang.core.psi.ELM_IDENTIFIERS
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.STRING_LITERAL
-import org.elm.lang.core.psi.elements.ElmAsClause
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmInfixDeclaration
-import org.elm.lang.core.psi.elements.ElmLowerPattern
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.psi.elements.ElmPatternAs
-import org.elm.lang.core.psi.elements.ElmPortAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmUnionMember
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.tokenSetOf
 
 
-class ElmFindUsagesProvider: FindUsagesProvider {
+class ElmFindUsagesProvider : FindUsagesProvider {
 
 
     override fun getWordsScanner(): WordsScanner? {

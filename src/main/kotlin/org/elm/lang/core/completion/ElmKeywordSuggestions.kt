@@ -7,22 +7,14 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.editor.EditorModificationUtil
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmTypes.IMPORT_CLAUSE
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.MODULE_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.TYPE
-import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmCaseOf
-import org.elm.lang.core.psi.elements.ElmExpression
-import org.elm.lang.core.psi.elements.ElmIfElse
-import org.elm.lang.core.psi.elements.ElmLetIn
-import org.elm.lang.core.psi.elements.ElmListOfOperands
+import org.elm.lang.core.psi.elements.*
 
 /**
  * Provide code completion for Elm's keywords
  */
-object ElmKeywordSuggestor: Suggestor {
+object ElmKeywordSuggestor : Suggestor {
 
     override fun addCompletions(parameters: CompletionParameters, result: CompletionResultSet) {
         val pos = parameters.position

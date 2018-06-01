@@ -15,16 +15,20 @@ import com.intellij.lang.parser.GeneratedParserUtilBase
 class ElmParserUtil : GeneratedParserUtilBase() {
     companion object {
 
-        @JvmStatic fun parseUpperCaseQID(builder: PsiBuilder, level: Int) =
+        @JvmStatic
+        fun parseUpperCaseQID(builder: PsiBuilder, level: Int) =
                 UpperCaseQIDParser().parse(builder, level)
 
-        @JvmStatic fun parseValueQID(builder: PsiBuilder, level: Int) =
+        @JvmStatic
+        fun parseValueQID(builder: PsiBuilder, level: Int) =
                 ValueQIDParser().parse(builder, level)
 
-        @JvmStatic fun parseFieldAccess(builder: PsiBuilder, level: Int) =
+        @JvmStatic
+        fun parseFieldAccess(builder: PsiBuilder, level: Int) =
                 FieldAccessParser().parse(builder, level)
 
-        @JvmStatic fun parseFieldAccessorFunction(builder: PsiBuilder, level: Int) =
+        @JvmStatic
+        fun parseFieldAccessorFunction(builder: PsiBuilder, level: Int) =
                 FieldAccessorFunctionParser().parse(builder, level)
     }
 }

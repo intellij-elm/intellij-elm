@@ -8,12 +8,12 @@ import com.intellij.openapi.ui.Messages
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
 
-class ElmAttachProjectAction: AnAction() {
+class ElmAttachProjectAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project
                 ?: return
         saveAllDocuments()
-        val filename= ElmToolchain.ELM_JSON
+        val filename = ElmToolchain.ELM_JSON
         val descriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
                 .withFileFilter { it.name == filename }
                 .withTitle("Select $filename")

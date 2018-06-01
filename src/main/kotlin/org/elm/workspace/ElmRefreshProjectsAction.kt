@@ -4,7 +4,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import org.elm.openapiext.saveAllDocuments
 
-class ElmRefreshProjectsAction: AnAction() {
+class ElmRefreshProjectsAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project

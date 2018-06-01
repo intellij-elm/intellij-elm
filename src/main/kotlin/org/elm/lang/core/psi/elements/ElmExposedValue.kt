@@ -27,7 +27,6 @@ class ElmExposedValue : ElmStubbedElement<ElmExposedValueStub>, ElmReferenceElem
             super(stub, stubType)
 
 
-
     val lowerCaseIdentifier: PsiElement
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 

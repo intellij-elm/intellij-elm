@@ -1,12 +1,9 @@
-
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmTypes.LEFT_PARENTHESIS
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.SimpleOperatorReference
 

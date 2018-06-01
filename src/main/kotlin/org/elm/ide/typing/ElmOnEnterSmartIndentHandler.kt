@@ -38,7 +38,7 @@ import org.elm.lang.core.psi.parentOfType
  * "smart" indentation to make it easy to write Elm code, especially
  * since Elm's parser depends on indentation as an implicit delimiter.
  */
-class ElmOnEnterSmartIndentHandler: EnterHandlerDelegateAdapter() {
+class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
 
     override fun preprocessEnter(
             file: PsiFile,

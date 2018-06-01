@@ -10,7 +10,7 @@ import org.elm.lang.core.psi.ElmPsiElement
 
 class ElmPresentableTreeElement(val element: ElmPsiElement)
     : StructureViewTreeElement,
-      Navigatable by (element as NavigatablePsiElement) {
+        Navigatable by (element as NavigatablePsiElement) {
 
 
     override fun getChildren(): Array<TreeElement> =

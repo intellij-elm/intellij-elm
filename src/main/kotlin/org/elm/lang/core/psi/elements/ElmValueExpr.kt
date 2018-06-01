@@ -3,17 +3,9 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.elements.Flavor.BareConstructor
-import org.elm.lang.core.psi.elements.Flavor.BareValue
-import org.elm.lang.core.psi.elements.Flavor.QualifiedConstructor
-import org.elm.lang.core.psi.elements.Flavor.QualifiedValue
+import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.ElmReference
-import org.elm.lang.core.resolve.reference.LexicalValueReference
-import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
-import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
-import org.elm.lang.core.resolve.reference.QualifiedValueReference
-import org.elm.lang.core.resolve.reference.SimpleUnionOrRecordConstructorReference
+import org.elm.lang.core.resolve.reference.*
 
 
 enum class Flavor {
@@ -52,10 +44,10 @@ class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement
      */
     override val referenceNameElement: PsiElement
         get() = when (flavor) {
-            QualifiedValue ->           valueQID!!.lowerCaseIdentifier
-            QualifiedConstructor ->     upperCaseQID!!.upperCaseIdentifierList.last()
-            BareValue ->                valueQID!!.lowerCaseIdentifier
-            BareConstructor ->          upperCaseQID!!.upperCaseIdentifierList.last()
+            QualifiedValue -> valueQID!!.lowerCaseIdentifier
+            QualifiedConstructor -> upperCaseQID!!.upperCaseIdentifierList.last()
+            BareValue -> valueQID!!.lowerCaseIdentifier
+            BareConstructor -> upperCaseQID!!.upperCaseIdentifierList.last()
         }
 
     /**
@@ -70,11 +62,15 @@ class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement
 
     override fun getReferences(): Array<ElmReference> =
             when (flavor) {
-                QualifiedValue ->           arrayOf(QualifiedValueReference(this, valueQID!!),
-                                                    QualifiedModuleNameReference(this, valueQID!!))
-                QualifiedConstructor ->     arrayOf(QualifiedConstructorReference(this, upperCaseQID!!),
-                                                    QualifiedModuleNameReference(this, upperCaseQID!!))
-                BareValue ->                arrayOf(LexicalValueReference(this))
-                BareConstructor ->          arrayOf(SimpleUnionOrRecordConstructorReference(this))
+                QualifiedValue -> arrayOf(
+                        QualifiedValueReference(this, valueQID!!),
+                        QualifiedModuleNameReference(this, valueQID!!)
+                )
+                QualifiedConstructor -> arrayOf(
+                        QualifiedConstructorReference(this, upperCaseQID!!),
+                        QualifiedModuleNameReference(this, upperCaseQID!!)
+                )
+                BareValue -> arrayOf(LexicalValueReference(this))
+                BareConstructor -> arrayOf(SimpleUnionOrRecordConstructorReference(this))
             }
 }

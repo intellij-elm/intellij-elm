@@ -43,9 +43,9 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleValues(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-            ElmModulesIndex.get(moduleName, project)
-                    ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
-                    ?: emptyList()
+                ElmModulesIndex.get(moduleName, project)
+                        ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
+                        ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
         rest.addAll(helper("Basics"))

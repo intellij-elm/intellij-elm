@@ -24,16 +24,16 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
         val identifier = element.referenceNameElement
         val newId = when (identifier.elementType) {
             ElmTypes.LOWER_CASE_IDENTIFIER ->
-                    factory.createLowerCaseIdentifier(newElementName)
+                factory.createLowerCaseIdentifier(newElementName)
 
             ElmTypes.UPPER_CASE_IDENTIFIER ->
-                    factory.createUpperCaseIdentifier(newElementName)
+                factory.createUpperCaseIdentifier(newElementName)
 
             ElmTypes.UPPER_CASE_QID ->
-                    factory.createUpperCaseQID(newElementName)
+                factory.createUpperCaseQID(newElementName)
 
             ElmTypes.OPERATOR_IDENTIFIER ->
-                    factory.createOperatorIdentifier(newElementName)
+                factory.createOperatorIdentifier(newElementName)
 
             else -> error("Unsupported identifier type for `$newElementName` (${identifier.elementType}")
         }

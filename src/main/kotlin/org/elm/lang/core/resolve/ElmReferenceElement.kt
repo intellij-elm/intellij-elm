@@ -5,7 +5,7 @@ import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.resolve.reference.ElmReference
 
 
-interface ElmReferenceElement: ElmPsiElement {
+interface ElmReferenceElement : ElmPsiElement {
     val referenceNameElement: PsiElement
 
     val referenceName: String

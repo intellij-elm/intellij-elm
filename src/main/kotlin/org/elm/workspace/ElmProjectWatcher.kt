@@ -9,7 +9,7 @@ import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 /**
  * Watches for changes to any `elm.json` files
  */
-class ElmProjectWatcher(val onChange: () -> Unit): BulkFileListener {
+class ElmProjectWatcher(val onChange: () -> Unit) : BulkFileListener {
 
 
     override fun after(events: List<VFileEvent>) {

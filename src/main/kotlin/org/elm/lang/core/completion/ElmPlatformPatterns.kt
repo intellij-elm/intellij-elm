@@ -1,11 +1,6 @@
 package org.elm.lang.core.completion
 
-import com.intellij.patterns.ElementPattern
-import com.intellij.patterns.ObjectPattern
-import com.intellij.patterns.PatternCondition
-import com.intellij.patterns.PlatformPatterns
-import com.intellij.patterns.PsiElementPattern
-import com.intellij.patterns.TreeElementPattern
+import com.intellij.patterns.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext

@@ -8,13 +8,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
-import org.elm.workspace.ElmProject
-import org.elm.workspace.ElmToolchain
-import org.elm.workspace.ElmWorkspaceService
-import org.elm.workspace.elmToolchain
-import org.elm.workspace.elmWorkspace
-import org.elm.workspace.guessAndSetupElmProject
-import org.elm.workspace.isOlderThan
+import org.elm.workspace.*
 
 
 /**

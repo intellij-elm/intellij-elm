@@ -21,10 +21,10 @@ import org.elm.lang.core.stubs.index.ElmModulesIndex
  * @param elem the Psi element which owns the reference
  * @param elementQID the QID (qualified ID) element within `elem`
  */
-class QualifiedModuleNameReference<T: ElmReferenceElement>(
+class QualifiedModuleNameReference<T : ElmReferenceElement>(
         elem: T,
         val elementQID: ElmQID
-): ElmReferenceCached<T>(elem), ElmReference {
+) : ElmReferenceCached<T>(elem), ElmReference {
 
     override fun resolveInner(): ElmNamedElement? {
         return getVariants().find { it.name == refText }

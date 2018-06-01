@@ -22,7 +22,6 @@ class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReference
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
 
-
     override val referenceNameElement: PsiElement
         get() = upperCaseQID.upperCaseIdentifierList.last()
 

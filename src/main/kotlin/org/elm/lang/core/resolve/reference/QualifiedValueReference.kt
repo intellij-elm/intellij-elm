@@ -10,7 +10,7 @@ import org.elm.lang.core.resolve.scope.ImportScope
  * Qualified reference to a value in an expression scope
  */
 class QualifiedValueReference(element: ElmReferenceElement, val valueQID: ElmValueQID
-): ElmReferenceCached<ElmReferenceElement>(element) {
+) : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()

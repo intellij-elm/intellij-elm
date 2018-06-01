@@ -2,11 +2,8 @@ package org.elm.lang.core.parser.manual
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase
-
 import com.intellij.lang.parser.GeneratedParserUtilBase.*
-import org.elm.lang.core.psi.ElmTypes.DOT
-import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_QID
+import org.elm.lang.core.psi.ElmTypes.*
 
 /**
  * Parses the following grammar rule, with NO whitespace in between:

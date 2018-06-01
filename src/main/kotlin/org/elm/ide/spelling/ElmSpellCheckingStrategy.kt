@@ -9,7 +9,7 @@ import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.elementType
 
 
-class ElmSpellCheckingStrategy: SpellcheckingStrategy() {
+class ElmSpellCheckingStrategy : SpellcheckingStrategy() {
 
     override fun isMyContext(element: PsiElement) =
             element.language.`is`(ElmLanguage)

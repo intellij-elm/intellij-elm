@@ -21,22 +21,22 @@ class ElmSyntaxHighlighter : SyntaxHighlighterBase() {
 
     companion object {
         fun map(tokenType: IElementType?): ElmColor? =
-            when(tokenType) {
-                STRING_LITERAL, CHAR_LITERAL -> ElmColor.STRING
-                LEFT_PARENTHESIS, RIGHT_PARENTHESIS -> ElmColor.PARENTHESIS
-                LEFT_BRACE, RIGHT_BRACE -> ElmColor.BRACES
-                LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET -> ElmColor.BRACKETS
-                ARROW -> ElmColor.ARROW
-                EQ -> ElmColor.EQ
-                COMMA -> ElmColor.COMMA
-                DOT -> ElmColor.DOT
-                NUMBER_LITERAL -> ElmColor.NUMBER
-                PIPE -> ElmColor.PIPE
-                in ELM_COMMENTS -> ElmColor.COMMENT
-                in ELM_KEYWORDS -> ElmColor.KEYWORD
-                in ELM_OPERATORS -> ElmColor.OPERATOR
-                TokenType.BAD_CHARACTER -> ElmColor.BAD_CHAR
-                else -> null
-            }
+                when (tokenType) {
+                    STRING_LITERAL, CHAR_LITERAL -> ElmColor.STRING
+                    LEFT_PARENTHESIS, RIGHT_PARENTHESIS -> ElmColor.PARENTHESIS
+                    LEFT_BRACE, RIGHT_BRACE -> ElmColor.BRACES
+                    LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET -> ElmColor.BRACKETS
+                    ARROW -> ElmColor.ARROW
+                    EQ -> ElmColor.EQ
+                    COMMA -> ElmColor.COMMA
+                    DOT -> ElmColor.DOT
+                    NUMBER_LITERAL -> ElmColor.NUMBER
+                    PIPE -> ElmColor.PIPE
+                    in ELM_COMMENTS -> ElmColor.COMMENT
+                    in ELM_KEYWORDS -> ElmColor.KEYWORD
+                    in ELM_OPERATORS -> ElmColor.OPERATOR
+                    TokenType.BAD_CHARACTER -> ElmColor.BAD_CHAR
+                    else -> null
+                }
     }
 }

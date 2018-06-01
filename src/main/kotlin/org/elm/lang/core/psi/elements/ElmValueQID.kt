@@ -4,9 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmQID
-import org.elm.lang.core.psi.ElmTypes.DOT
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmTypes.*
 
 /**
  * A value identifier, possibly qualified by the module/alias that contains the value.

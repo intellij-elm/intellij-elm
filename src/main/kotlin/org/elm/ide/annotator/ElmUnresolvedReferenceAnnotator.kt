@@ -6,11 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import org.elm.ide.intentions.ElmImportIntentionAction
 import org.elm.ide.intentions.ElmMakeDeclarationIntentionAction
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmTypeAnnotation
-import org.elm.lang.core.psi.elements.ElmUpperCaseQID
-import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.psi.elements.ElmValueQID
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.GlobalScope
 
 class ElmUnresolvedReferenceAnnotator : Annotator {
@@ -22,8 +18,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
                 if (element is ElmTypeAnnotation) {
                     holder.createWeakWarningAnnotation(element, "'${ref.canonicalText}' does not exist")
                             .also { it.registerFix(ElmMakeDeclarationIntentionAction()) }
-                }
-                else if (!safeToIgnore(ref, element)) {
+                } else if (!safeToIgnore(ref, element)) {
                     // TODO [kl] make this smarter in the case of qualified references
                     // so that we don't report a double error when really the problem
                     // is with the qualified module name reference.

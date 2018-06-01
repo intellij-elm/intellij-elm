@@ -35,7 +35,7 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
 import org.elm.lang.core.stubs.ElmFileStub
-import java.util.Stack
+import java.util.*
 import kotlin.reflect.KClass
 
 
@@ -94,7 +94,7 @@ fun PsiFile.descendantOfType(elementType: IElementType): PsiElement? {
  * The receiver must be a descendant of [owner]
  */
 fun PsiElement.offsetIn(owner: PsiElement): Int =
-    ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
+        ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
 
 /**
  * Finds first sibling that is neither comment, nor whitespace before given element.

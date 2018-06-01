@@ -23,9 +23,9 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     private fun highlightUpperCaseQID(holder: AnnotationHolder, element: ElmUpperCaseQID) {
         // we only want to highlight upper-case QIDs when they are union or record constructors
         val isModuleName = PsiTreeUtil.getParentOfType(element,
-                                                       ElmTypeAnnotation::class.java,
-                                                       ElmModuleDeclaration::class.java,
-                                                       ElmImportClause::class.java) != null
+                ElmTypeAnnotation::class.java,
+                ElmModuleDeclaration::class.java,
+                ElmImportClause::class.java) != null
         if (!isModuleName)
             highlightElement(holder, element, ElmColor.TYPE)
     }

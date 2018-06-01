@@ -2,34 +2,14 @@ package org.elm.lang.core.stubs
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiFile
-import com.intellij.psi.stubs.DefaultStubBuilder
-import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.stubs.IndexSink
-import com.intellij.psi.stubs.PsiFileStubImpl
-import com.intellij.psi.stubs.StubBase
-import com.intellij.psi.stubs.StubElement
-import com.intellij.psi.stubs.StubInputStream
-import com.intellij.psi.stubs.StubOutputStream
+import com.intellij.psi.stubs.*
 import com.intellij.psi.tree.IStubFileElementType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.elements.ElmExposedOperator
-import org.elm.lang.core.psi.elements.ElmExposedType
-import org.elm.lang.core.psi.elements.ElmExposedUnionConstructor
-import org.elm.lang.core.psi.elements.ElmExposedUnionConstructors
-import org.elm.lang.core.psi.elements.ElmExposedValue
-import org.elm.lang.core.psi.elements.ElmExposingList
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmInfixDeclaration
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.psi.elements.ElmPortAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmUnionMember
-import org.elm.lang.core.psi.elements.ElmValueDeclaration
+import org.elm.lang.core.psi.elements.*
 
 
-class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
+class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     override fun getType() = Type
 
@@ -41,7 +21,7 @@ class ElmFileStub(file: ElmFile?): PsiFileStubImpl<ElmFile>(file) {
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
                     override fun createStubForFile(file: PsiFile) =
-                        ElmFileStub(file as ElmFile)
+                            ElmFileStub(file as ElmFile)
                 }
 
         override fun serialize(stub: ElmFileStub, dataStream: StubOutputStream) {
@@ -82,15 +62,15 @@ class ElmModuleDeclarationStub(parent: StubElement<*>?,
                                elementType: IStubElementType<*, *>,
                                override val name: String,
                                val exposesAll: Boolean
-): StubBase<ElmModuleDeclaration>(parent, elementType), ElmNamedStub {
+) : StubBase<ElmModuleDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmModuleDeclarationStub, ElmModuleDeclaration>("MODULE_DECLARATION") {
 
         override fun serialize(stub: ElmModuleDeclarationStub, dataStream: StubOutputStream) =
-            with(dataStream) {
-                writeName(stub.name)
-                writeBoolean(stub.exposesAll)
-            }
+                with(dataStream) {
+                    writeName(stub.name)
+                    writeBoolean(stub.exposesAll)
+                }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmModuleDeclarationStub(parentStub, this,
@@ -111,9 +91,9 @@ class ElmModuleDeclarationStub(parent: StubElement<*>?,
 
 
 class ElmTypeDeclarationStub(parent: StubElement<*>?,
-                               elementType: IStubElementType<*, *>,
-                               override val name: String
-): StubBase<ElmTypeDeclaration>(parent, elementType), ElmNamedStub {
+                             elementType: IStubElementType<*, *>,
+                             override val name: String
+) : StubBase<ElmTypeDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmTypeDeclarationStub, ElmTypeDeclaration>("TYPE_DECLARATION") {
 
@@ -143,7 +123,7 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
                                   elementType: IStubElementType<*, *>,
                                   override val name: String,
                                   val isRecordAlias: Boolean
-): StubBase<ElmTypeAliasDeclaration>(parent, elementType), ElmNamedStub {
+) : StubBase<ElmTypeAliasDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmTypeAliasDeclarationStub, ElmTypeAliasDeclaration>("TYPE_ALIAS_DECLARATION") {
 
@@ -174,7 +154,7 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
 class ElmUnionMemberStub(parent: StubElement<*>?,
                          elementType: IStubElementType<*, *>,
                          override val name: String
-): StubBase<ElmUnionMember>(parent, elementType), ElmNamedStub {
+) : StubBase<ElmUnionMember>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmUnionMemberStub, ElmUnionMember>("UNION_MEMBER") {
 
@@ -202,7 +182,7 @@ class ElmUnionMemberStub(parent: StubElement<*>?,
 class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
                                      elementType: IStubElementType<*, *>,
                                      override val name: String
-): StubBase<ElmFunctionDeclarationLeft>(parent, elementType), ElmNamedStub {
+) : StubBase<ElmFunctionDeclarationLeft>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmFunctionDeclarationLeftStub, ElmFunctionDeclarationLeft>("FUNCTION_DECLARATION_LEFT") {
 
@@ -231,7 +211,7 @@ class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
 class ElmInfixDeclarationStub(parent: StubElement<*>?,
                               elementType: IStubElementType<*, *>,
                               override val name: String
-): StubBase<ElmInfixDeclaration>(parent, elementType), ElmNamedStub {
+) : StubBase<ElmInfixDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmInfixDeclarationStub, ElmInfixDeclaration>("INFIX_DECLARATION") {
 
@@ -258,8 +238,8 @@ class ElmInfixDeclarationStub(parent: StubElement<*>?,
 
 
 class ElmExposingListStub(parent: StubElement<*>?,
-                                     elementType: IStubElementType<*, *>
-): StubBase<ElmExposingList>(parent, elementType) {
+                          elementType: IStubElementType<*, *>
+) : StubBase<ElmExposingList>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposingListStub, ElmExposingList>("EXPOSING_LIST") {
 
@@ -288,7 +268,7 @@ class ElmExposingListStub(parent: StubElement<*>?,
 class ElmExposedValueStub(parent: StubElement<*>?,
                           elementType: IStubElementType<*, *>,
                           val refName: String
-): StubBase<ElmExposedValue>(parent, elementType) {
+) : StubBase<ElmExposedValue>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedValueStub, ElmExposedValue>("EXPOSED_VALUE") {
 
@@ -320,7 +300,7 @@ class ElmExposedValueStub(parent: StubElement<*>?,
 class ElmExposedOperatorStub(parent: StubElement<*>?,
                              elementType: IStubElementType<*, *>,
                              val refName: String
-): StubBase<ElmExposedOperator>(parent, elementType) {
+) : StubBase<ElmExposedOperator>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedOperatorStub, ElmExposedOperator>("EXPOSED_OPERATOR") {
 
@@ -353,7 +333,7 @@ class ElmExposedTypeStub(parent: StubElement<*>?,
                          elementType: IStubElementType<*, *>,
                          val refName: String,
                          val exposesAll: Boolean
-): StubBase<ElmExposedType>(parent, elementType) {
+) : StubBase<ElmExposedType>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedTypeStub, ElmExposedType>("EXPOSED_TYPE") {
 
@@ -387,7 +367,7 @@ class ElmExposedTypeStub(parent: StubElement<*>?,
 class ElmExposedUnionConstructorStub(parent: StubElement<*>?,
                                      elementType: IStubElementType<*, *>,
                                      val refName: String
-): StubBase<ElmExposedUnionConstructor>(parent, elementType) {
+) : StubBase<ElmExposedUnionConstructor>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedUnionConstructorStub, ElmExposedUnionConstructor>("EXPOSED_UNION_CONSTRUCTOR") {
 
@@ -418,7 +398,7 @@ class ElmExposedUnionConstructorStub(parent: StubElement<*>?,
 
 class ElmExposedUnionConstructorsStub(parent: StubElement<*>?,
                                       elementType: IStubElementType<*, *>
-): StubBase<ElmExposedUnionConstructors>(parent, elementType) {
+) : StubBase<ElmExposedUnionConstructors>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedUnionConstructorsStub, ElmExposedUnionConstructors>("EXPOSED_UNION_CONSTRUCTORS") {
 
@@ -446,7 +426,7 @@ class ElmExposedUnionConstructorsStub(parent: StubElement<*>?,
 
 class ElmValueDeclarationStub(parent: StubElement<*>?,
                               elementType: IStubElementType<*, *>
-): StubBase<ElmValueDeclaration>(parent, elementType) {
+) : StubBase<ElmValueDeclaration>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmValueDeclarationStub, ElmValueDeclaration>("VALUE_DECLARATION") {
 
@@ -475,7 +455,7 @@ class ElmValueDeclarationStub(parent: StubElement<*>?,
 class ElmPortAnnotationStub(parent: StubElement<*>?,
                             elementType: IStubElementType<*, *>,
                             override val name: String
-): StubBase<ElmPortAnnotation>(parent, elementType), ElmNamedStub {
+) : StubBase<ElmPortAnnotation>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmPortAnnotationStub, ElmPortAnnotation>("PORT_ANNOTATION") {
 
@@ -499,7 +479,6 @@ class ElmPortAnnotationStub(parent: StubElement<*>?,
         }
     }
 }
-
 
 
 private fun StubInputStream.readNameAsString(): String? = readName()?.string

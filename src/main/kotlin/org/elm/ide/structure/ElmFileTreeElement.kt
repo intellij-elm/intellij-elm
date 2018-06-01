@@ -5,7 +5,7 @@ import com.intellij.ide.structureView.impl.common.PsiTreeElementBase
 import org.elm.lang.core.psi.ElmFile
 
 
-class ElmFileTreeElement(element: ElmFile): PsiTreeElementBase<ElmFile>(element) {
+class ElmFileTreeElement(element: ElmFile) : PsiTreeElementBase<ElmFile>(element) {
 
     override fun getPresentableText(): String? {
         return element?.name

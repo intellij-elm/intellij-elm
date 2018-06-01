@@ -9,7 +9,7 @@ import org.elm.ide.icons.ElmIcons
 import javax.swing.Icon
 
 
-class ElmAdditionalLibraryRootsProvider: AdditionalLibraryRootsProvider() {
+class ElmAdditionalLibraryRootsProvider : AdditionalLibraryRootsProvider() {
 
     override fun getAdditionalProjectLibraries(project: Project): Collection<ElmLibrary> {
         return project.elmWorkspace.allProjects.asSequence()
@@ -24,17 +24,15 @@ class ElmAdditionalLibraryRootsProvider: AdditionalLibraryRootsProvider() {
 }
 
 
-
 class ElmLibrary(
         val root: VirtualFile,
         private val name: String
-): SyntheticLibrary(), ItemPresentation {
+) : SyntheticLibrary(), ItemPresentation {
 
     override fun equals(other: Any?): Boolean =
             other is ElmLibrary && other.root == root
 
-    override fun hashCode(): Int
-            = root.hashCode()
+    override fun hashCode(): Int = root.hashCode()
 
     override fun getSourceRoots(): Collection<VirtualFile> =
             listOf(root)
@@ -52,8 +50,7 @@ class ElmLibrary(
         fun fromPackage(pkg: ElmPackageRef): ElmLibrary? {
             val root = pkg.root ?: return null
             if (!root.exists()) return null
-            return ElmLibrary(root = root,
-                              name = pkg.name)
+            return ElmLibrary(root = root, name = pkg.name)
         }
     }
 }

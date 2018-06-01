@@ -10,15 +10,15 @@ import org.elm.lang.core.psi.elements.ElmUpperCaseQID
  *
  * e.g. `List.length [1,2,3]` refers to the `length` value in the `List` module.
  */
-interface ElmQID: ElmPsiElement {
+interface ElmQID : ElmPsiElement {
     val upperCaseIdentifierList: List<PsiElement>
 
     val qualifierPrefix: String
         get() {
             val frontParts = if (this is ElmUpperCaseQID)
-                                upperCaseIdentifierList.dropLast(1)
-                             else
-                                upperCaseIdentifierList
+                upperCaseIdentifierList.dropLast(1)
+            else
+                upperCaseIdentifierList
             return frontParts.joinToString(".") { it.text }
         }
 }

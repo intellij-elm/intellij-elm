@@ -7,114 +7,11 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.TokenType.WHITE_SPACE
 import com.intellij.psi.tree.IElementType
 import org.elm.lang.core.ElmFileType
-import org.elm.lang.core.psi.ElmTypes.ANONYMOUS_FUNCTION
-import org.elm.lang.core.psi.ElmTypes.AS_CLAUSE
-import org.elm.lang.core.psi.ElmTypes.CASE_OF
-import org.elm.lang.core.psi.ElmTypes.CASE_OF_BRANCH
-import org.elm.lang.core.psi.ElmTypes.EXPOSED_OPERATOR
-import org.elm.lang.core.psi.ElmTypes.EXPOSED_TYPE
-import org.elm.lang.core.psi.ElmTypes.EXPOSED_UNION_CONSTRUCTOR
-import org.elm.lang.core.psi.ElmTypes.EXPOSED_UNION_CONSTRUCTORS
-import org.elm.lang.core.psi.ElmTypes.EXPOSED_VALUE
-import org.elm.lang.core.psi.ElmTypes.EXPOSING_LIST
-import org.elm.lang.core.psi.ElmTypes.EXPRESSION
-import org.elm.lang.core.psi.ElmTypes.FIELD
-import org.elm.lang.core.psi.ElmTypes.FIELD_TYPE
-import org.elm.lang.core.psi.ElmTypes.FUNCTION_DECLARATION_LEFT
-import org.elm.lang.core.psi.ElmTypes.GLSL_CODE
-import org.elm.lang.core.psi.ElmTypes.IF_ELSE
-import org.elm.lang.core.psi.ElmTypes.IMPORT_CLAUSE
-import org.elm.lang.core.psi.ElmTypes.INFIX_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.INNER_TYPE_ANNOTATION
-import org.elm.lang.core.psi.ElmTypes.INNER_VALUE_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.LET_IN
-import org.elm.lang.core.psi.ElmTypes.LIST
-import org.elm.lang.core.psi.ElmTypes.LIST_OF_OPERANDS
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.LOWER_PATTERN
-import org.elm.lang.core.psi.ElmTypes.LOWER_TYPE_NAME
-import org.elm.lang.core.psi.ElmTypes.MODULE_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.NON_EMPTY_TUPLE
-import org.elm.lang.core.psi.ElmTypes.OPERATOR
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_AS_FUNCTION
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.PARAMETRIC_TYPE_REF
-import org.elm.lang.core.psi.ElmTypes.PARENTHESED_EXPRESSION
-import org.elm.lang.core.psi.ElmTypes.PATTERN
-import org.elm.lang.core.psi.ElmTypes.PATTERN_AS
-import org.elm.lang.core.psi.ElmTypes.PORT_ANNOTATION
-import org.elm.lang.core.psi.ElmTypes.RECORD
-import org.elm.lang.core.psi.ElmTypes.RECORD_PATTERN
-import org.elm.lang.core.psi.ElmTypes.RECORD_TYPE
-import org.elm.lang.core.psi.ElmTypes.TUPLE_PATTERN
-import org.elm.lang.core.psi.ElmTypes.TUPLE_TYPE
-import org.elm.lang.core.psi.ElmTypes.TYPE_ALIAS_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.TYPE_ANNOTATION
-import org.elm.lang.core.psi.ElmTypes.TYPE_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.TYPE_REF
-import org.elm.lang.core.psi.ElmTypes.TYPE_VARIABLE_REF
-import org.elm.lang.core.psi.ElmTypes.UNION_MEMBER
-import org.elm.lang.core.psi.ElmTypes.UNION_PATTERN
-import org.elm.lang.core.psi.ElmTypes.UNIT
-import org.elm.lang.core.psi.ElmTypes.UPPER_PATH_TYPE_REF
-import org.elm.lang.core.psi.ElmTypes.VALUE_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.VALUE_EXPR
-import org.elm.lang.core.psi.elements.ElmAnonymousFunction
-import org.elm.lang.core.psi.elements.ElmAsClause
-import org.elm.lang.core.psi.elements.ElmCaseOf
-import org.elm.lang.core.psi.elements.ElmCaseOfBranch
-import org.elm.lang.core.psi.elements.ElmExposedOperator
-import org.elm.lang.core.psi.elements.ElmExposedType
-import org.elm.lang.core.psi.elements.ElmExposedUnionConstructor
-import org.elm.lang.core.psi.elements.ElmExposedUnionConstructors
-import org.elm.lang.core.psi.elements.ElmExposedValue
-import org.elm.lang.core.psi.elements.ElmExposingList
-import org.elm.lang.core.psi.elements.ElmExpression
-import org.elm.lang.core.psi.elements.ElmField
-import org.elm.lang.core.psi.elements.ElmFieldType
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmGlslCode
-import org.elm.lang.core.psi.elements.ElmIfElse
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmInfixDeclaration
-import org.elm.lang.core.psi.elements.ElmInnerTypeAnnotation
-import org.elm.lang.core.psi.elements.ElmInnerValueDeclaration
-import org.elm.lang.core.psi.elements.ElmLetIn
-import org.elm.lang.core.psi.elements.ElmList
-import org.elm.lang.core.psi.elements.ElmListOfOperands
-import org.elm.lang.core.psi.elements.ElmLowerPattern
-import org.elm.lang.core.psi.elements.ElmLowerTypeName
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.psi.elements.ElmNonEmptyTuple
-import org.elm.lang.core.psi.elements.ElmOperator
-import org.elm.lang.core.psi.elements.ElmOperatorAsFunction
-import org.elm.lang.core.psi.elements.ElmParametricTypeRef
-import org.elm.lang.core.psi.elements.ElmParenthesedExpression
-import org.elm.lang.core.psi.elements.ElmPattern
-import org.elm.lang.core.psi.elements.ElmPatternAs
-import org.elm.lang.core.psi.elements.ElmPortAnnotation
-import org.elm.lang.core.psi.elements.ElmRecord
-import org.elm.lang.core.psi.elements.ElmRecordPattern
-import org.elm.lang.core.psi.elements.ElmRecordType
-import org.elm.lang.core.psi.elements.ElmTuplePattern
-import org.elm.lang.core.psi.elements.ElmTupleType
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeRef
-import org.elm.lang.core.psi.elements.ElmTypeVariableRef
-import org.elm.lang.core.psi.elements.ElmUnionMember
-import org.elm.lang.core.psi.elements.ElmUnionPattern
-import org.elm.lang.core.psi.elements.ElmUnit
-import org.elm.lang.core.psi.elements.ElmUpperCaseQID
-import org.elm.lang.core.psi.elements.ElmUpperPathTypeRef
-import org.elm.lang.core.psi.elements.ElmValueDeclaration
-import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.psi.elements.ElmValueQID
+import org.elm.lang.core.psi.ElmTypes.*
+import org.elm.lang.core.psi.elements.*
 
 
-class ElmPsiFactory(private val project: Project)
-{
+class ElmPsiFactory(private val project: Project) {
     companion object {
         /**
          * WARNING: this should only be called from the [ParserDefinition] hook
@@ -228,8 +125,8 @@ class ElmPsiFactory(private val project: Project)
     }
 
     fun createFreshLine() =
-            // TODO [kl] make this more specific by actually find a token which contains
-            // newline, not just any whitespace
+    // TODO [kl] make this more specific by actually find a token which contains
+    // newline, not just any whitespace
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, "\n")
                     .descendantOfType(WHITE_SPACE)

@@ -34,7 +34,6 @@ class ModuleScope(val elmFile: ElmFile) {
             }
 
 
-
     // VALUES
 
 
@@ -49,14 +48,14 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleValues(): List<ElmNamedElement> {
         val globallyExposedValues =
-                // TODO [kl] re-think this lame hack to avoid an infinite loop
+        // TODO [kl] re-think this lame hack to avoid an infinite loop
                 if (elmFile.isCore())
                     emptyList()
                 else
                     GlobalScope(elmFile.project).getVisibleValues()
         val topLevelValues = getDeclaredValues()
         val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                                    .flatMap { getVisibleImportNames(it) }
+                .flatMap { getVisibleImportNames(it) }
         return listOf(globallyExposedValues, topLevelValues, importedValues).flatten()
     }
 
@@ -87,7 +86,6 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-
     // TYPES
 
 
@@ -101,14 +99,14 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         val globallyExposedTypes =
-                // TODO [kl] re-think this lame hack to avoid an infinite loop
+        // TODO [kl] re-think this lame hack to avoid an infinite loop
                 if (elmFile.isCore())
                     emptyList()
                 else
                     GlobalScope(elmFile.project).getVisibleTypes()
         val topLevelTypes = getDeclaredTypes()
         val importedTypes = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                                   .flatMap { getVisibleImportTypes(it) }
+                .flatMap { getVisibleImportTypes(it) }
         return listOf(globallyExposedTypes, topLevelTypes, importedTypes).flatten()
     }
 
@@ -130,7 +128,6 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-
     // UNION CONSTRUCTORS AND RECORD CONSTRUCTORS
 
 
@@ -144,7 +141,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
         val globallyExposedConstructors =
-                // TODO [kl] re-think this lame hack to avoid an infinite loop
+        // TODO [kl] re-think this lame hack to avoid an infinite loop
                 if (elmFile.isCore())
                     emptyList()
                 else

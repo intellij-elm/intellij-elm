@@ -44,9 +44,9 @@ class ElmExposedOperator : ElmStubbedElement<ElmExposedOperatorStub>, ElmReferen
         get() = getStub()?.refName ?: referenceNameElement.text
 
     override fun getReference() =
-        if (parentOfType<ElmModuleDeclaration>() != null) ExposedOperatorModuleReference(this)
-        else if (parentOfType<ElmImportClause>() != null) ExposedOperatorImportReference(this)
-        else error("unexpected exposed operator context: reference cannot be determined")
+            if (parentOfType<ElmModuleDeclaration>() != null) ExposedOperatorModuleReference(this)
+            else if (parentOfType<ElmImportClause>() != null) ExposedOperatorImportReference(this)
+            else error("unexpected exposed operator context: reference cannot be determined")
 }
 
 

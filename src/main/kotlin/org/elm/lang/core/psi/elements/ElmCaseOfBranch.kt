@@ -32,7 +32,8 @@ class ElmCaseOfBranch(node: ASTNode) : ElmPsiElementImpl(node) {
      * Named elements introduced by pattern destructuring on the left-hand side of the branch.
      */
     val destructuredNames: List<ElmNamedElement>
-        get() = listOf(PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java),
-                       PsiTreeUtil.collectElementsOfType(this, ElmPatternAs::class.java)
-                      ).flatten()
+        get() = listOf(
+                PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java),
+                PsiTreeUtil.collectElementsOfType(this, ElmPatternAs::class.java)
+        ).flatten()
 }

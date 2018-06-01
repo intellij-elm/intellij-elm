@@ -3,7 +3,7 @@ package org.elm.workspace
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
-class ElmDetachProjectAction: AnAction() {
+class ElmDetachProjectAction : AnAction() {
 
     // TODO [kl] let the user choose the project to detach in the Elm project tool window
 

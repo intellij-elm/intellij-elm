@@ -11,4 +11,4 @@ import com.intellij.lexer.FlexAdapter
  *
  * @see ElmLayoutLexer
  */
-class ElmIncrementalLexer: FlexAdapter(_ElmLexer())
+class ElmIncrementalLexer : FlexAdapter(_ElmLexer())

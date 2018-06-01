@@ -48,7 +48,6 @@ class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenc
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeRef::class.java)
 
 
-
     override val referenceNameElement: PsiElement
         get() = upperCaseQID.upperCaseIdentifierList.last()
 

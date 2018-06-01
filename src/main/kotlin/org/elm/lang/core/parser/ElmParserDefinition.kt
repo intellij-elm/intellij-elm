@@ -35,8 +35,8 @@ class ElmParserDefinition : ParserDefinition {
             TokenSet.create(ElmTypes.STRING_LITERAL)
 
     override fun createParser(project: Project?) =
-            // TODO [kl] factor this out
-            object: PsiParser {
+    // TODO [kl] factor this out
+            object : PsiParser {
                 override fun parse(root: IElementType, builder: PsiBuilder): ASTNode {
                     builder.setTokenTypeRemapper { source, _, _, _ ->
                         if (source == ElmTypes.NEWLINE || source == ElmTypes.TAB)

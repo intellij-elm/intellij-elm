@@ -6,19 +6,12 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.text.CharArrayCharSequence
-import org.elm.lang.core.lexer.State.NORMAL
-import org.elm.lang.core.lexer.State.START
-import org.elm.lang.core.lexer.State.WAITING_FOR_SECTION_START
+import org.elm.lang.core.lexer.State.*
 import org.elm.lang.core.psi.ELM_COMMENTS
 import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.ElmTypes.LET
-import org.elm.lang.core.psi.ElmTypes.NEWLINE
-import org.elm.lang.core.psi.ElmTypes.OF
-import org.elm.lang.core.psi.ElmTypes.TAB
-import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
-import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_SECTION
-import org.elm.lang.core.psi.ElmTypes.VIRTUAL_OPEN_SECTION
+import org.elm.lang.core.psi.ElmTypes.*
 import java.util.LinkedList
+import kotlin.collections.ArrayList
 
 
 /**
@@ -42,8 +35,8 @@ class ElmLayoutLexer(private val lexer: Lexer) : LexerBase() {
     }
 
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
-        require (startOffset == 0) { "does not support incremental lexing: startOffset must be 0" }
-        require (initialState == 0) { "does not support incremental lexing: initialState must be 0" }
+        require(startOffset == 0) { "does not support incremental lexing: startOffset must be 0" }
+        require(initialState == 0) { "does not support incremental lexing: initialState must be 0" }
 
         // Start the incremental lexer
         lexer.start(buffer, startOffset, endOffset, initialState)
@@ -84,8 +77,7 @@ private fun slurpTokens(lexer: Lexer): MutableList<Token> {
 
         if (token.isEOF) {
             break
-        }
-        else if (token.elementType == NEWLINE) {
+        } else if (token.elementType == NEWLINE) {
             line = Line()
             currentColumn = 0
         }
@@ -131,12 +123,11 @@ private fun doLayout(lexer: Lexer): ArrayList<Token> {
             }
             WAITING_FOR_SECTION_START -> {
                 if (token.isCode && token.column > indentStack.peek()) {
-                    tokens.add(i, virtualToken(VIRTUAL_OPEN_SECTION, tokens[i-1]))
+                    tokens.add(i, virtualToken(VIRTUAL_OPEN_SECTION, tokens[i - 1]))
                     i++
                     state = NORMAL
                     indentStack.push(token.column)
-                }
-                else if (token.isFirstSignificantTokenOnLine() && token.column <= indentStack.peek()) {
+                } else if (token.isFirstSignificantTokenOnLine() && token.column <= indentStack.peek()) {
                     // The Elm program is malformed: most likely because the new section is empty
                     // (the user is still editing the text) or they did not indent the section.
                     // The empty section case is a common workflow, so we must handle it by bailing
@@ -154,17 +145,17 @@ private fun doLayout(lexer: Lexer): ArrayList<Token> {
                     val j = i
                     while (token.column <= indentStack.peek()) {
                         if (token.column == indentStack.peek()) {
-                            tokens.add(i, virtualToken(VIRTUAL_END_DECL, tokens[j-1]))
+                            tokens.add(i, virtualToken(VIRTUAL_END_DECL, tokens[j - 1]))
                             i++
                             break
                         } else if (token.column < indentStack.peek()) {
-                            tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[j-1]))
+                            tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[j - 1]))
                             i++
                             indentStack.pop()
                         }
                     }
                 } else if (isSingleLineLetIn(i, tokens)) {
-                    tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[i-1]))
+                    tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[i - 1]))
                     i++
                     indentStack.pop()
                 }
@@ -210,7 +201,7 @@ private fun isSingleLineLetIn(index: Int, tokens: List<Token>): Boolean {
  * but this lexer will be asked to lex malformed/partial Elm programs, so we need
  * to guard against trying to use the stack when it's empty.
  */
-private class IndentStack: LinkedList<Int>() {
+private class IndentStack : LinkedList<Int>() {
     override fun peek(): Int {
         return if (super.isEmpty()) -1 else super.peek()
     }
@@ -221,11 +212,12 @@ private class IndentStack: LinkedList<Int>() {
 }
 
 private fun virtualToken(elementType: IElementType, precedesToken: Token): Token {
-    return Token(elementType = elementType,
-                 start       = precedesToken.start,
-                 end         = precedesToken.start, // yes, this is intentional
-                 column      = precedesToken.column,
-                 line        = precedesToken.line)
+    return Token(
+            elementType = elementType,
+            start = precedesToken.start,
+            end = precedesToken.start, // yes, this is intentional
+            column = precedesToken.column,
+            line = precedesToken.line)
 }
 
 private val NON_CODE_TOKENS = TokenSet.orSet(TokenSet.create(TokenType.WHITE_SPACE, TAB, NEWLINE), ELM_COMMENTS)

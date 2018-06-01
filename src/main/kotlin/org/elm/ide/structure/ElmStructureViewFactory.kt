@@ -8,7 +8,7 @@ import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.ElmFile
 
 
-class ElmStructureViewFactory: PsiStructureViewFactory {
+class ElmStructureViewFactory : PsiStructureViewFactory {
 
     override fun getStructureViewBuilder(psiFile: PsiFile): StructureViewBuilder? {
         val elmFile = psiFile as ElmFile

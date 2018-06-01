@@ -19,7 +19,6 @@ class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node) {
         get() = findNotNullChildByClass(ElmExpression::class.java)
 
 
-
     /**
      * Named elements introduced by pattern destructuring in the parameter list
      */

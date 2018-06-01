@@ -9,16 +9,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.elements.ElmParametricTypeRef
-import org.elm.lang.core.psi.elements.ElmRecordType
-import org.elm.lang.core.psi.elements.ElmTupleType
-import org.elm.lang.core.psi.elements.ElmTypeAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeRef
-import org.elm.lang.core.psi.elements.ElmTypeVariableRef
-import org.elm.lang.core.psi.elements.ElmUpperPathTypeRef
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
 
-class ElmMakeDeclarationIntentionAction: ElmAtCaretIntentionActionBase<ElmMakeDeclarationIntentionAction.Context>() {
+class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeDeclarationIntentionAction.Context>() {
 
     data class Context(val typeAnnotation: ElmTypeAnnotation)
 
@@ -27,7 +21,7 @@ class ElmMakeDeclarationIntentionAction: ElmAtCaretIntentionActionBase<ElmMakeDe
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         val typeAnnotation = element.parentOfType<ElmTypeAnnotation>()
-            ?: return null
+                ?: return null
 
         if (typeAnnotation.reference.resolve() != null) {
             // the target declaration already exists; nothing needs to be done
@@ -71,7 +65,7 @@ class ElmMakeDeclarationIntentionAction: ElmAtCaretIntentionActionBase<ElmMakeDe
             emptyList()
         } else {
             typeRef.children.dropLast(1).map {
-                when(it) {
+                when (it) {
                     is ElmUpperPathTypeRef -> it.upperCaseQID.text
                     is ElmTypeVariableRef -> it.text
                     is ElmParametricTypeRef -> it.upperCaseQID.text

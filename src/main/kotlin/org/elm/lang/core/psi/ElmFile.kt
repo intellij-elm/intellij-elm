@@ -10,18 +10,12 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
-import org.elm.lang.core.stubs.ElmFileStub
-import org.elm.lang.core.stubs.ElmInfixDeclarationStub
-import org.elm.lang.core.stubs.ElmModuleDeclarationStub
-import org.elm.lang.core.stubs.ElmPortAnnotationStub
-import org.elm.lang.core.stubs.ElmTypeAliasDeclarationStub
-import org.elm.lang.core.stubs.ElmTypeDeclarationStub
-import org.elm.lang.core.stubs.ElmValueDeclarationStub
+import org.elm.lang.core.stubs.*
 
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage) {
 
-    override fun getFileType()=
+    override fun getFileType() =
             ElmFileType
 
     override fun toString() =
@@ -35,7 +29,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 
     fun isCore(): Boolean {
         val path = virtualFile?.path
-            ?: return false
+                ?: return false
 
         return path.contains("/package/elm/core/")
     }

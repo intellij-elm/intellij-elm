@@ -3,9 +3,7 @@ package org.elm.lang.core.parser.manual
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase
 import com.intellij.lang.parser.GeneratedParserUtilBase.*
-import org.elm.lang.core.psi.ElmTypes.DOT
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.FIELD_ACCESS
+import org.elm.lang.core.psi.ElmTypes.*
 
 /**
  * Parses a chain of one or more record fields being de-referenced from a base record value.
@@ -21,8 +19,8 @@ class FieldAccessParser : GeneratedParserUtilBase.Parser {
             return false
 
         if (builder.rawLookup(0) !== LOWER_CASE_IDENTIFIER
-            || builder.rawLookup(1) !== DOT
-            || builder.rawLookup(2) !== LOWER_CASE_IDENTIFIER)
+                || builder.rawLookup(1) !== DOT
+                || builder.rawLookup(2) !== LOWER_CASE_IDENTIFIER)
             return false
 
         val marker = enter_section_(builder)

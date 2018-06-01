@@ -1,4 +1,3 @@
-
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
@@ -32,7 +31,6 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
             super(stub, stubType, IdentifierCase.LOWER)
 
 
-
     /**
      * The name given to the function/value
      */
@@ -44,7 +42,6 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
      */
     val patternList: List<ElmPattern>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
-
 
 
     val namedParameters: List<ElmNamedElement>

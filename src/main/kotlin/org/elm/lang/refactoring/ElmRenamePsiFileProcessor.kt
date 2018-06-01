@@ -14,7 +14,7 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
  * See https://intellij-support.jetbrains.com/hc/en-us/community/posts/206760415-Renaming-files-in-IDE
  * and [ElmRenamePsiElementProcessor]
  */
-class ElmRenamePsiFileProcessor: RenamePsiFileProcessor() {
+class ElmRenamePsiFileProcessor : RenamePsiFileProcessor() {
 
     override fun canProcessElement(element: PsiElement) =
             element is ElmFile
@@ -25,7 +25,7 @@ class ElmRenamePsiFileProcessor: RenamePsiFileProcessor() {
                 ?: return
 
         val moduleDecl = file.getModuleDecl()
-            ?: return
+                ?: return
 
         val newModuleName = FileUtil.getNameWithoutExtension(newName)
         if (!isValidUpperIdentifier(newModuleName))
@@ -36,7 +36,7 @@ class ElmRenamePsiFileProcessor: RenamePsiFileProcessor() {
         // rename `Bar.elm` to `Quux.elm`, the new module name will be `Foo.Quux`.
 
         val moduleParts = moduleDecl.upperCaseQID.upperCaseIdentifierList.map { it.text }.toMutableList()
-        moduleParts[moduleParts.size-1] = newModuleName
+        moduleParts[moduleParts.size - 1] = newModuleName
 
         allRenames[moduleDecl] = moduleParts.joinToString(".")
     }

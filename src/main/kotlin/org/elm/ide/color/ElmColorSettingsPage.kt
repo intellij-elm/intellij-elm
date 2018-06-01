@@ -25,7 +25,7 @@ class ElmColorSettingsPage : ColorSettingsPage {
             ElmSyntaxHighlighter()
 
     override fun getAdditionalHighlightingTagToDescriptorMap() =
-            // special tags in [demoText] for semantic highlighting
+    // special tags in [demoText] for semantic highlighting
             mapOf(
                     "sig_left" to ElmColor.TYPE_ANNOTATION_NAME,
                     "sig_right" to ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES,

@@ -9,23 +9,9 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBList
-import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ElmTypes.PORT_ANNOTATION
-import org.elm.lang.core.psi.ElmTypes.TYPE_ALIAS_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.TYPE_ANNOTATION
-import org.elm.lang.core.psi.ElmTypes.TYPE_DECLARATION
-import org.elm.lang.core.psi.ElmTypes.VALUE_DECLARATION
-import org.elm.lang.core.psi.elements.ElmExposedType
-import org.elm.lang.core.psi.elements.ElmExposingList
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmInfixDeclaration
-import org.elm.lang.core.psi.elements.ElmOperator
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.elements.ElmUnionMember
-import org.elm.lang.core.psi.parentOfType
-import org.elm.lang.core.psi.tokenSetOf
+import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmTypes.*
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
@@ -34,7 +20,7 @@ import java.awt.Component
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JList
 
-class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<ElmImportIntentionAction.Context>() {
+class ElmImportIntentionAction : ElmAtCaretIntentionActionBase<ElmImportIntentionAction.Context>() {
 
     data class Context(
             val refName: String,
@@ -169,8 +155,10 @@ class ElmImportIntentionAction: ElmAtCaretIntentionActionBase<ElmImportIntention
                 // TODO [kl] simplify this ordering logic (code was ported from Java 8)
                 existingImportClauses
                         .zip(existingImportClauses.subList(1, existingImportClauses.size))
-                        .filter({ pair -> compareImportAndModule(pair.first, moduleName) < 0
-                                       && compareImportAndModule(pair.second, moduleName) >= 0 })
+                        .filter({ pair ->
+                            compareImportAndModule(pair.first, moduleName) < 0
+                                    && compareImportAndModule(pair.second, moduleName) >= 0
+                        })
                         .map({ pair -> pair.second.node })
                         .firstOrNull()
                         ?: error("should not happen: import not found in the middle")
@@ -287,7 +275,7 @@ private fun ElmExposingList.exposesName(name: String): Boolean =
 private fun ElmExposingList.exposesConstructor(constructorName: String, typeName: String): Boolean =
         exposedTypeList.any {
             (it.referenceName == typeName && it.exposesAll)
-            || it.exposesConstructorExplicitly(constructorName)
+                    || it.exposesConstructorExplicitly(constructorName)
         }
 
 private fun ElmExposedType.exposesConstructorExplicitly(name: String): Boolean =

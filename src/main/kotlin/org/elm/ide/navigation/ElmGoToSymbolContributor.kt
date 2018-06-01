@@ -7,7 +7,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 
 
-class ElmGoToSymbolContributor: ChooseByNameContributor {
+class ElmGoToSymbolContributor : ChooseByNameContributor {
 
 
     override fun getNames(project: Project?, includeNonProjectItems: Boolean): Array<out String> {

@@ -1,4 +1,3 @@
-
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
@@ -46,11 +45,10 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
         get() = findChildByClass(ElmTypeRef::class.java)
 
 
-
     override val referenceNameElement: PsiElement
         get() = lowerCaseIdentifier
-                    ?: operatorIdentifier
-                    ?: throw RuntimeException("cannot determine type annotations's ref name element")
+                ?: operatorIdentifier
+                ?: throw RuntimeException("cannot determine type annotations's ref name element")
 
     override val referenceName: String
         get() = referenceNameElement.text
