@@ -101,6 +101,14 @@
                 text="Refresh Elm projects"
                 icon="AllIcons.Actions.Refresh"/>
 
+        <!-- re-enable when this feature is ready
+        <action id="Elm.Build"
+                class="org.elm.workspace.ElmBuildAction"
+                text="Build Elm Project"
+                icon="AllIcons.Toolwindows.ToolWindowBuild"/>
+        -->
+
+
         <group id="Elm.ToolsGroup" text="Elm" popup="true">
             <reference id="Elm.RefreshElmProjects"/>
             <separator/>

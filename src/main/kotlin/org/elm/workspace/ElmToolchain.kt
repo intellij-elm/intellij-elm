@@ -74,7 +74,7 @@ data class ElmToolchain(val binDirPath: Path) {
         return Files.isExecutable(pathToExecutable(ELM_BINARY))
     }
 
-    private fun pathToExecutable(toolName: String): Path {
+    fun pathToExecutable(toolName: String): Path {
         val executableName = if (SystemInfo.isWindows) "$toolName.exe" else toolName
         return binDirPath.resolve(executableName).toAbsolutePath()
     }
