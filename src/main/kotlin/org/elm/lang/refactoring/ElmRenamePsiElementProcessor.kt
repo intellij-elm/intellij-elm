@@ -1,6 +1,7 @@
 package org.elm.lang.refactoring
 
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.util.Pass
 import com.intellij.psi.PsiElement
 import com.intellij.refactoring.rename.RenamePsiFileProcessor
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
@@ -19,7 +20,7 @@ class ElmRenamePsiElementProcessor : RenamePsiFileProcessor() {
             element is ElmModuleDeclaration
 
 
-    override fun substituteElementToRename(element: PsiElement?, editor: Editor?): PsiElement? {
+    override fun substituteElementToRename(element: PsiElement, editor: Editor?): PsiElement? {
         return when (element) {
             is ElmModuleDeclaration -> element.elmFile
             else -> element

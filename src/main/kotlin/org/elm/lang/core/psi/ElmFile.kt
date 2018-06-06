@@ -70,7 +70,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     fun <Psi : PsiElement> getStubOrPsiChild(elementType: IStubElementType<out StubElement<*>, Psi>): Psi? {
         val stub = getGreenStub()
         if (stub != null) {
-            val element = stub.findChildStubByType<Psi>(elementType)
+            val element = stub.findChildStubByType<Psi, StubElement<*>>(elementType)
             if (element != null) {
                 return element.getPsi() as Psi?
             }
