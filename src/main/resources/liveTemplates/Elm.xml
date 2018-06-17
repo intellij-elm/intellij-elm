@@ -52,7 +52,7 @@
       <option name="ELM" value="true" />
     </context>
   </template>
-  <template name="tya" value="type alias $NAME$&#10;    = $END$" description="Typealias Declaration on a single line" toReformat="false" toShortenFQNames="true">
+  <template name="tya" value="type alias $NAME$ =&#10;   $END$" description="Typealias Declaration" toReformat="false" toShortenFQNames="true">
     <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
       <option name="ELM" value="true" />
