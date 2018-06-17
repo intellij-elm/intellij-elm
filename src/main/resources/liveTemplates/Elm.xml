@@ -1,7 +1,7 @@
 <templateSet group="Elm">
   <template name="mod" value="module $NAME$ exposing ($EXPOSED$)&#10;&#10;$END$" description="Module Declaration" toReformat="false" toShortenFQNames="true">
-    <variable name="NAME" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="false" />
-    <variable name="EXPOSED" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="NAME" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="true" />
+    <variable name="EXPOSED" expression="&quot;..&quot;" defaultValue="" alwaysStopAt="true" />
     <context>
       <option name="ELM" value="true" />
     </context>
