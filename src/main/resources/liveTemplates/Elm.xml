@@ -1,7 +1,7 @@
 <templateSet group="Elm">
   <template name="mod" value="module $NAME$ exposing ($EXPOSED$)&#10;&#10;$END$" description="Module Declaration" toReformat="false" toShortenFQNames="true">
-    <variable name="NAME" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="false" />
-    <variable name="EXPOSED" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="NAME" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="true" />
+    <variable name="EXPOSED" expression="&quot;..&quot;" defaultValue="" alwaysStopAt="true" />
     <context>
       <option name="ELM" value="true" />
     </context>
@@ -52,20 +52,20 @@
       <option name="ELM" value="true" />
     </context>
   </template>
-  <template name="tya" value="type alias $NAME$&#10;    = $END$" description="Typealias Declaration on a single line" toReformat="false" toShortenFQNames="true">
+  <template name="tya" value="type alias $NAME$ =&#10;   $END$" description="Typealias Declaration" toReformat="false" toShortenFQNames="true">
     <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
       <option name="ELM" value="true" />
     </context>
   </template>
-  <template name="let1" value="let&#10;    $FIRSTNAME$ = $FIRSTEXP$&#10;in&#10;    $END$" description="Let expression with a single binding" toReformat="false" toShortenFQNames="true">
+  <template name="let1" value="let&#10;    $FIRSTNAME$ =&#10;        $FIRSTEXP$&#10;in&#10;    $END$" description="Let expression with a single binding" toReformat="false" toShortenFQNames="true">
     <variable name="FIRSTNAME" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="FIRSTEXP" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
       <option name="ELM" value="true" />
     </context>
   </template>
-  <template name="let2" value="let&#10;    $FIRSTNAME$ = $FIRSTEXP$&#10;    $SECONDNAME$ = $SECONDEXP$&#10;in&#10;    $END$" description="Let expression with two bindings" toReformat="false" toShortenFQNames="true">
+  <template name="let2" value="let&#10;    $FIRSTNAME$ =&#10;        $FIRSTEXP$&#10;    $SECONDNAME$ =&#10;        $SECONDEXP$&#10;in&#10;    $END$" description="Let expression with two bindings" toReformat="false" toShortenFQNames="true">
     <variable name="FIRSTNAME" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="FIRSTEXP" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="SECONDNAME" expression="" defaultValue="" alwaysStopAt="true" />
@@ -74,7 +74,7 @@
       <option name="ELM" value="true" />
     </context>
   </template>
-  <template name="let3" value="let&#10;    $FIRSTNAME$ = $FIRSTEXP$&#10;    $SECONDNAME$ = $SECONDEXP$&#10;    $THIRDNAME$ = $THIRDEXP$&#10;in&#10;    $END$" description="Let expression with three bindings" toReformat="false" toShortenFQNames="true">
+  <template name="let3" value="let&#10;    $FIRSTNAME$ =&#10;        $FIRSTEXP$&#10;    $SECONDNAME$ =&#10;        $SECONDEXP$&#10;    $THIRDNAME$ =&#10;        $THIRDEXP$&#10;in&#10;    $END$" description="Let expression with three bindings" toReformat="false" toShortenFQNames="true">
     <variable name="FIRSTNAME" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="FIRSTEXP" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="SECONDNAME" expression="" defaultValue="" alwaysStopAt="true" />
