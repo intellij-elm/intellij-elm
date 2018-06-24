@@ -88,13 +88,13 @@
 
         <action id="Elm.AttachElmProject"
                 class="org.elm.workspace.ElmAttachProjectAction"
-                text="Attach Elm project"
+                text="Attach elm.json project file"
                 icon="AllIcons.ToolbarDecorator.Add">
         </action>
 
         <action id="Elm.DetachElmProject"
                 class="org.elm.workspace.ElmDetachProjectAction"
-                text="Detach Elm project"
+                text="Detach elm.json project file"
                 icon="AllIcons.ToolbarDecorator.Remove"/>
 
         <action id="Elm.RefreshElmProjects"

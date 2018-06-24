@@ -87,7 +87,7 @@ class ElmNeedsConfigNotificationProvider(
     private fun createNoElmProjectsPanel() =
             EditorNotificationPanel().apply {
                 setText("No Elm projects found")
-                createActionLabel("Attach", "Elm.AttachElmProject")
+                createActionLabel("Attach elm.json", "Elm.AttachElmProject")
                 createActionLabel("Do not show again") {
                     disableNotification()
                     notifications.updateAllNotifications()

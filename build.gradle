@@ -81,6 +81,10 @@ intellij {
     pluginName 'intellij-elm'
 }
 
+patchPluginXml {
+    sinceBuild = 162 // IntelliJ 2016.2
+}
+
 // ------------------------------------------------
 // IDEA (GRADLE STUFF FOR NORMAL INTELLIJ PROJECTS)
 
