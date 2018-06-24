@@ -23,8 +23,7 @@ sealed class ElmProject(
         val manifestPath: Path,
         val elmVersion: String,
         val dependencies: List<ElmPackageRef>,
-        val testDependencies: List<ElmPackageRef>,
-        val transitiveDependencies: List<ElmPackageRef>
+        val testDependencies: List<ElmPackageRef>
 ) {
 
     /**
@@ -32,9 +31,11 @@ sealed class ElmProject(
      */
     val manifestFile: VirtualFile? by CachedVirtualFile(manifestPath.toUri().toString())
 
+
     private val projectDirPath
         get() =
             manifestPath.parent
+
 
     /**
      * A name which can be shown in the UI. Note that while Elm packages have user-assigned
@@ -43,6 +44,7 @@ sealed class ElmProject(
      */
     val presentableName: String
         get() = projectDirPath.fileName.toString()
+
 
     /**
      * The directory containing the project.
@@ -55,7 +57,7 @@ sealed class ElmProject(
      * production code or for tests.
      */
     val allResolvedDependencies: Sequence<ElmPackageRef>
-        get() = sequenceOf(dependencies, testDependencies, transitiveDependencies).flatten()
+        get() = sequenceOf(dependencies, testDependencies).flatten()
 
 
     companion object {
@@ -78,11 +80,9 @@ sealed class ElmProject(
                     ElmApplicationProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.depsToPackages(toolchain),
-                            testDependencies = dto.testDependencies.depsToPackages(toolchain),
-                            sourceDirectories = dto.sourceDirectories,
-                            transitiveDependencies = dto.doNotEditThisByHand.transitiveDependencies
-                                    .depsToPackages(toolchain)
+                            dependencies = dto.dependencies.toPackageRefs(toolchain),
+                            testDependencies = dto.testDependencies.toPackageRefs(toolchain),
+                            sourceDirectories = dto.sourceDirectories
                     )
                 }
                 "package" -> {
@@ -97,7 +97,6 @@ sealed class ElmProject(
                             elmVersion = dto.elmVersion,
                             dependencies = dto.dependencies.depsToPackages(toolchain),
                             testDependencies = dto.testDependencies.depsToPackages(toolchain),
-                            transitiveDependencies = emptyList(),
                             name = dto.name,
                             summary = dto.summary,
                             version = dto.version,
@@ -120,9 +119,8 @@ class ElmApplicationProject(
         elmVersion: String,
         dependencies: List<ElmPackageRef>,
         testDependencies: List<ElmPackageRef>,
-        transitiveDependencies: List<ElmPackageRef>,
         val sourceDirectories: List<String>
-) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies, transitiveDependencies)
+) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies)
 
 
 /**
@@ -133,14 +131,13 @@ class ElmPackageProject(
         elmVersion: String,
         dependencies: List<ElmPackageRef>,
         testDependencies: List<ElmPackageRef>,
-        transitiveDependencies: List<ElmPackageRef>,
         val name: String,
         val summary: String,
         val license: String,
         val version: String,
         /** Map from label to one-or-more module names. The label can be the empty string. */
         val exposedModules: Map<String, List<String>>
-) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies, transitiveDependencies)
+) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies)
 
 
 /**
@@ -151,6 +148,10 @@ class ElmPackageRef(
         val name: String,
         val version: String
 )
+
+
+private fun ExactDependencies.toPackageRefs(toolchain: ElmToolchain) =
+        direct.depsToPackages(toolchain) + indirect.depsToPackages(toolchain)
 
 
 private fun Map<String, String>.depsToPackages(toolchain: ElmToolchain) =
@@ -189,8 +190,7 @@ val noProjectSentinel = ElmApplicationProject(
         elmVersion = "",
         dependencies = emptyList(),
         testDependencies = emptyList(),
-        sourceDirectories = emptyList(),
-        transitiveDependencies = emptyList()
+        sourceDirectories = emptyList()
 )
 
 
@@ -203,15 +203,15 @@ private interface ElmProjectDTO
 
 private class ElmApplicationProjectDTO(
         @JsonProperty("elm-version") val elmVersion: String,
-        @JsonProperty("dependencies") val dependencies: Map<String, String>,
-        @JsonProperty("test-dependencies") val testDependencies: Map<String, String>,
         @JsonProperty("source-directories") val sourceDirectories: List<String>,
-        @JsonProperty("do-not-edit-this-by-hand") val doNotEditThisByHand: DoNotEditThisByHandDTO
+        @JsonProperty("dependencies") val dependencies: ExactDependencies,
+        @JsonProperty("test-dependencies") val testDependencies: ExactDependencies
 ) : ElmProjectDTO
 
 
-private class DoNotEditThisByHandDTO(
-        @JsonProperty("transitive-dependencies") val transitiveDependencies: Map<String, String>
+private class ExactDependencies(
+        @JsonProperty("direct") val direct: Map<String, String>,
+        @JsonProperty("indirect") val indirect: Map<String, String>
 )
 
 

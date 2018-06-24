@@ -8,14 +8,14 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.41"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.50"
         classpath "com.github.JetBrains:gradle-grammar-kit-plugin:2018.1.2"
     }
 }
 
 plugins {
     id "org.jetbrains.intellij" version "0.3.0"
-    id "org.jetbrains.kotlin.jvm" version "1.2.41"
+    id "org.jetbrains.kotlin.jvm" version "1.2.50"
 }
 
 task wrapper(type: Wrapper) {
@@ -33,7 +33,7 @@ repositories {
     }
 }
 
-ext.kotlinVersion = '1.2.41'
+ext.kotlinVersion = '1.2.50'
 ext.junitVersion = '4.1.1'
 
 // ---------------

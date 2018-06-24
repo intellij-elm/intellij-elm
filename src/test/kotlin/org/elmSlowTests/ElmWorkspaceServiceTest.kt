@@ -18,10 +18,13 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                       "type": "application",
                       "source-directories": [ "src" ],
                       "elm-version": "0.19.0",
-                      "dependencies": { },
-                      "test-dependencies": {},
-                      "do-not-edit-this-by-hand": {
-                        "transitive-dependencies": { }
+                      "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      },
+                      "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
                       }
                     }
                     """)
@@ -49,6 +52,64 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         checkFile("a/src/Utils.elm", "a")
     }
 
+
+    fun `test can deserialize application json files`() {
+        val testProject = fileTree {
+            dir("a") {
+                project("elm.json", """
+                    {
+                        "type": "application",
+                        "source-directories": [ "src" ],
+                        "elm-version": "0.19.0",
+                        "dependencies": {
+                            "direct": {
+                                "elm/core": "1.0.0",
+                                "elm/html": "1.0.0"
+                            },
+                            "indirect": {
+                                "elm/virtual-dom": "1.0.0"
+                            }
+                         },
+                        "test-dependencies": {
+                            "direct": {
+                                "elm-explorations/test": "1.0.0"
+                            },
+                            "indirect": {
+                                "eeue56/elm-lazy": "1.0.1",
+                                "eeue56/elm-shrink": "2.0.0"
+                            }
+                        }
+                    }
+                    """)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            attachElmProject(rootPath.resolve("a/elm.json"))
+        }
+
+        val dto = workspace.allProjects.first()
+
+        checkEquals("0.19.0", dto.elmVersion)
+
+        checkEquals(setOf(
+                "elm/core" to "1.0.0",
+                "elm/html" to "1.0.0",
+                "elm/virtual-dom" to "1.0.0"
+        ), dto.dependencies.map { Pair(it.name, it.version) }.toSet())
+
+        checkEquals(setOf(
+                "elm-explorations/test" to "1.0.0",
+                "eeue56/elm-lazy" to "1.0.1",
+                "eeue56/elm-shrink" to "2.0.0"
+        ), dto.testDependencies.map { Pair(it.name, it.version) }.toSet())
+    }
+
+
     fun `test auto discover Elm project at root level`() {
         val testProject = fileTree {
             project("elm.json", """
@@ -56,10 +117,13 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                   "type": "application",
                   "source-directories": [ "src" ],
                   "elm-version": "0.19.0",
-                  "dependencies": { },
-                  "test-dependencies": {},
-                  "do-not-edit-this-by-hand": {
-                    "transitive-dependencies": { }
+                  "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                  },
+                  "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
                   }
                 }
                 """)
@@ -95,10 +159,13 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                       "type": "application",
                       "source-directories": [ "src" ],
                       "elm-version": "0.19.0",
-                      "dependencies": { },
-                      "test-dependencies": {},
-                      "do-not-edit-this-by-hand": {
-                        "transitive-dependencies": { }
+                      "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      },
+                      "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
                       }
                     }
                     """)

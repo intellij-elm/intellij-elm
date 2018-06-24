@@ -27,6 +27,7 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>1.2.0</b> <em>(2018-06-23)</em> - update for Elm 0.19 rc1 (elm.json schema changes)</li>
             <li><b>1.2.0</b> <em>(2018-05-25)</em> - update for Elm 0.19 beta (`elm-lang` renamed to `elm`)</li>
             <li><b>1.2.0</b> <em>(2018-05-24)</em> - first beta release for Elm 0.19 support</li>
             <li><b>1.1.1</b> <em>(2018-05-15)</em> - fix crash on PyCharm and WebStorm</li>
