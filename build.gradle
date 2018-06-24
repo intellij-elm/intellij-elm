@@ -35,6 +35,7 @@ repositories {
 
 ext.kotlinVersion = '1.2.50'
 ext.junitVersion = '4.1.1'
+ext.jacksonVersion = '2.9.5'
 
 // ---------------
 // JAVA AND KOTLIN
@@ -140,8 +141,9 @@ group 'org.elm'
 version myPluginVersion
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
     testCompile "junit:junit:$junitVersion"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
 }
