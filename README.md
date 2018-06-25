@@ -2,6 +2,7 @@
 Provides support for the [Elm](http://elm-lang.org) programming language in IntelliJ and WebStorm.
 
 
+
 # Features 
 
 * Code completion
@@ -16,14 +17,13 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * and more...
 
 
-# Why Another Elm Plugin for IntelliJ
+# Support for Elm 0.19
 
-Prior to creating this plugin, I used to contribute to a very good [Elm plugin](https://github.com/durkiewicz/elm-plugin) for IntelliJ. But development of the plugin has stagnated, and it has some architectural problems. So I decided to create a new plugin based on the existing lexer and parser. My goals were the following:
+When Elm 0.19 is released, this plugin will drop support for 0.18 and switch entirely over to 0.19. If you need Elm 0.19
+support in the meantime, get it from [this gist](https://gist.github.com/klazuka/82b0f5288fa9944dba8fa027c476dfb1).
 
-* written in Kotlin instead of Java 8
-* implement references the right way so that Find Usages can be enabled
-* test-driven development of most plugin features
-* hand-written Psi classes
+One major difference versus Elm 0.18 is that you now need to tell the Elm IntelliJ plugin the location of your `elm.json`
+file. The plugin will try to find it on its own, but you may need to manually attach it if the magic fails.
 
 
 # Integrating with elm-format
