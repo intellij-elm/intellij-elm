@@ -53,22 +53,17 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
 <IN_COMMENT> {
     "{-" {
         commentLevel++;
-        return COMMENT_CONTENT;
     }
     "-}" {
-        commentLevel--;
-        if (commentLevel == 0) {
-            yybegin(YYINITIAL);
-            return END_COMMENT;
+            if (--commentLevel == 0) {
+                yybegin(YYINITIAL);
+                return BLOCK_COMMENT;
+            }
         }
-        return COMMENT_CONTENT;
-    }
-    [^-{}]+ {
-        return COMMENT_CONTENT;
-    }
-    [^] {
-        return COMMENT_CONTENT;
-    }
+
+    <<EOF>> { commentLevel = 0; yybegin(YYINITIAL); return BLOCK_COMMENT; }
+
+    [^] { }
 }
 
 <IN_GLSL_CODE> {
@@ -120,11 +115,9 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     }
     "{-" {
         startComment();
-        return START_COMMENT;
     }
     "{-|" {
         startComment();
-        return START_DOC_COMMENT;
     }
     {LineComment}               { return LINE_COMMENT; }
     {LowerCaseIdentifier}       { return LOWER_CASE_IDENTIFIER; }
