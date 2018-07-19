@@ -66,6 +66,7 @@
         <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiElementProcessor" />
         <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
         <spellchecker.support language="Elm" implementationClass="org.elm.ide.spelling.ElmSpellCheckingStrategy" />
+        <lang.documentationProvider language="Elm" implementationClass="org.elm.ide.docs.ElmDocumentationProvider"/>
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
         <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />
