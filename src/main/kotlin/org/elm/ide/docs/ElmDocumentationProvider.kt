@@ -8,6 +8,7 @@ import com.intellij.psi.PsiWhiteSpace
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.prevSiblings
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
@@ -21,15 +22,14 @@ import org.intellij.markdown.parser.MarkdownParser
 import java.net.URI
 
 class ElmDocumentationProvider : AbstractDocumentationProvider() {
-    override fun generateDoc(element: PsiElement?, originalElement: PsiElement?): String? = buildString {
-        when (element) {
-            is ElmFunctionDeclarationLeft -> documentationFor(element)
-            else -> return null
-        }
+    override fun generateDoc(element: PsiElement?, originalElement: PsiElement?) = when (element) {
+        is ElmFunctionDeclarationLeft -> documentationFor(element)
+        is ElmTypeDeclaration -> documentationFor(element)
+        else -> null
     }
 }
 
-private fun StringBuilder.documentationFor(decl: ElmFunctionDeclarationLeft) {
+private fun documentationFor(decl: ElmFunctionDeclarationLeft) = buildString {
     val prev = decl.parent.skipWsAndVirtDeclsBackwards()
     when (prev?.elementType) {
         TYPE_ANNOTATION -> {
@@ -46,7 +46,7 @@ private fun StringBuilder.documentationFor(decl: ElmFunctionDeclarationLeft) {
             definition {
                 append(decl.text.escaped)
             }
-            renderDocContent(prev!!)
+            renderDocContent(prev)
         }
         else -> {
             definition {
@@ -54,6 +54,21 @@ private fun StringBuilder.documentationFor(decl: ElmFunctionDeclarationLeft) {
             }
         }
     }
+}
+
+private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
+    val name = decl.nameIdentifier
+    val types = decl.lowerTypeNameList
+
+    definition {
+        b { append("type") }
+        append(" ").append(name.text)
+        for (type in types) {
+            append(" ").append(type.name)
+        }
+    }
+
+    renderDocContent(decl.skipWsAndVirtDeclsBackwards())
 }
 
 private fun PsiElement.skipWsAndVirtDeclsBackwards(): PsiElement? = prevSiblings.firstOrNull {
@@ -73,7 +88,7 @@ private fun StringBuilder.renderDocContent(element: PsiElement?) {
     val flavor = ElmDocMarkdownFlavourDescriptor()
     val root = MarkdownParser(flavor).buildMarkdownTreeFromString(content)
     content {
-      append(HtmlGenerator(content, root, flavor).generateHtml())
+        append(HtmlGenerator(content, root, flavor).generateHtml())
     }
 }
 
@@ -103,6 +118,12 @@ private inline fun StringBuilder.content(block: () -> Unit) {
     append(DocumentationMarkup.CONTENT_START)
     block()
     append(DocumentationMarkup.CONTENT_END)
+}
+
+private inline fun StringBuilder.b(block: () -> Unit) {
+    append("<b>")
+    block()
+    append("</b>")
 }
 
 private val String.escaped: String get() = StringUtil.escapeXml(this)

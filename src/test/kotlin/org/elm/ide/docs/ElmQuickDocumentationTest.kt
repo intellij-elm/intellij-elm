@@ -98,6 +98,26 @@ foo bar baz
 deciding if this is what you want.</p></div>
 """)
 
+
+    fun `test type declaration`() = doTest(
+            """
+type Foo = Bar
+     --^
+""",
+            """
+<div class='definition'><pre><b>type</b> Foo</pre></div>
+""")
+
+    fun `test type declaration with docs`() = doTest(
+            """
+{-| included *docs* -}
+type Foo = Bar
+     --^
+""",
+            """
+<div class='definition'><pre><b>type</b> Foo</pre></div>
+<div class='content'><p>included <em>docs</em></p></div>
+""")
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }
