@@ -31,6 +31,7 @@ repositories {
     maven {
         url "https://dl.bintray.com/kotlin/kotlin-dev"
     }
+    maven { url 'http://dl.bintray.com/jetbrains/markdown' }
 }
 
 ext.kotlinVersion = '1.2.50'
@@ -144,6 +145,10 @@ dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
     compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    compile("org.jetbrains:markdown:0.1.28") {
+        exclude module: "kotlin-runtime"
+        exclude module: "kotlin-stdlib"
+    }
     testCompile "junit:junit:$junitVersion"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
 }

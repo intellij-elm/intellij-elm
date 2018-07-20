@@ -31,13 +31,9 @@
         DOT='DOT'
 
         // tokens used by the lexer but not visible to PsiBuilder parser
-        // TODO [kl] cleanup the mess of 'comment' tokens
         RESERVED='RESERVED'
         LINE_COMMENT='LINE_COMMENT'
-        START_COMMENT='START_COMMENT'
-        START_DOC_COMMENT='START_DOC_COMMENT'
-        COMMENT_CONTENT='COMMENT_CONTENT'
-        END_COMMENT='END_COMMENT'
+        BLOCK_COMMENT='BLOCK_COMMENT'
         NEWLINE='NEWLINE'
         TAB='TAB'
     ]

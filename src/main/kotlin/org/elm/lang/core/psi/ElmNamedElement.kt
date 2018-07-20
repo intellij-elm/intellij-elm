@@ -78,10 +78,8 @@ open class ElmStubbedNamedElementImpl<StubT> : ElmStubbedElement<StubT>, ElmName
                 OPERATOR -> findNotNullChildByType(OPERATOR_IDENTIFIER)
             }
 
-    override fun getName(): String {
-        val stub = stub
-        return if (stub != null) stub.name else nameIdentifier.text
-    }
+    override fun getName(): String =
+            stub?.name ?: nameIdentifier.text
 
     override fun setName(name: String): PsiElement {
         val newIdentifier = when (nameIdentifier.elementType) {
