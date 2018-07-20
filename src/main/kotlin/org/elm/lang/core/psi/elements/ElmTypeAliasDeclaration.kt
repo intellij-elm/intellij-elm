@@ -47,12 +47,7 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
         get() = findChildByClass(ElmTypeRef::class.java)
 
 
-    // TODO [kl] this will be wrong in the case of a function type ref
-    // such as `Int -> { foo: String }`. We want to know that it is exclusively a record.
-    // We should see if we can get GrammarKit to parse [ElmTypeRef] into a better data structure
-    // than what Kamil had.
+    /** `true` if the alias is exclusively a record */
     val isRecordAlias: Boolean
-        get() = getStub()?.isRecordAlias
-                ?: typeRef?.recordTypeList?.isNotEmpty()
-                ?: false
+        get() = stub?.isRecordAlias ?: (typeRef?.firstChild is ElmRecordType)
 }
