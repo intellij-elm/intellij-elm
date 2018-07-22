@@ -65,13 +65,13 @@ f =
     fun `test after equals in let declaration partial`() = doTest("""
 f =
     let
-        x ={-caret-}
+        x = {-caret-}
     in
         x
 """, """
 f =
     let
-        x =
+        x = 
             {-caret-}
     in
         x
