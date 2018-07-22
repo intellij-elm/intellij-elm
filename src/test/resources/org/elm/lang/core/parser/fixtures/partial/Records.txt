@@ -87,8 +87,8 @@ Elm File
         PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got '
 '
           <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('p')
@@ -189,8 +189,8 @@ Elm File
           PsiErrorElement:EQ expected, got '
 '
             <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('sentinel')
