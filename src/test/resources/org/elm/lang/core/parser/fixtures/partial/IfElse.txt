@@ -12,8 +12,8 @@ Elm File
           PsiErrorElement:<list of operands> expected, got '
 '
             <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f2')
@@ -33,8 +33,8 @@ Elm File
           PsiErrorElement:<value expr>, BACKSLASH, CASE, CHAR_LITERAL, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, NUMBER_LITERAL, OPERATOR_IDENTIFIER, START_GLSL_CODE, STRING_LITERAL or THEN expected, got '
 '
             <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f3')
@@ -68,8 +68,8 @@ Elm File
   PsiWhiteSpace('\n')
   PsiWhiteSpace('        ')
   PsiElement(NUMBER_LITERAL)('42')
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f4')

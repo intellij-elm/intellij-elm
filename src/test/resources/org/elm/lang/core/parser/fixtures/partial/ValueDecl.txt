@@ -7,8 +7,8 @@ Elm File
     PsiErrorElement:<list of operands> expected, got '
 '
       <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f2')
@@ -20,8 +20,8 @@ Elm File
   PsiElement(TYPE)('type')
   PsiWhiteSpace(' ')
   PsiElement(UPPER_CASE_IDENTIFIER)('Blah')
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f3')

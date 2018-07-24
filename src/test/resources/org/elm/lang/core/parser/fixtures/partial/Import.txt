@@ -86,8 +86,8 @@ Elm File
       PsiErrorElement:COMMA or RIGHT_PARENTHESIS expected, got '
 '
         <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmImportClause(IMPORT_CLAUSE)
     PsiElement(IMPORT)('import')
     PsiWhiteSpace(' ')

@@ -12,8 +12,8 @@ Elm File
           PsiErrorElement:VIRTUAL_OPEN_SECTION expected, got '
 '
             <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f2')
@@ -29,11 +29,11 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiErrorElement:<pattern>, COLON or EQ expected, got ''
             <empty list>
-          PsiWhiteSpace('\n')
           PsiErrorElement:IN expected, got '
 '
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f3')
@@ -53,11 +53,11 @@ Elm File
             PsiElement(EQ)('=')
             PsiErrorElement:<list of operands> expected, got ''
               <empty list>
-          PsiWhiteSpace('\n')
           PsiErrorElement:IN expected, got '
 '
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f4')
@@ -79,12 +79,12 @@ Elm File
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
                 PsiElement(NUMBER_LITERAL)('0')
-          PsiWhiteSpace('\n')
-          PsiWhiteSpace('\n')
           PsiErrorElement:IN expected, got '
 '
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f5')
@@ -106,15 +106,15 @@ Elm File
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
                 PsiElement(NUMBER_LITERAL)('0')
-          PsiWhiteSpace('\n')
-          PsiElement(VIRTUAL_END_DECL)('        ')
+          PsiElement(VIRTUAL_END_DECL)('\n')
+          PsiWhiteSpace('        ')
           PsiErrorElement:<inner value declaration> or LOWER_CASE_IDENTIFIER expected, got 'in'
             PsiElement(IN)('in')
-          PsiWhiteSpace('\n')
           PsiErrorElement:IN expected, got '
 '
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f6')
@@ -136,14 +136,14 @@ Elm File
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
                 PsiElement(NUMBER_LITERAL)('0')
-          PsiWhiteSpace('\n')
-          PsiElement(VIRTUAL_END_SECTION)('     ')
+          PsiElement(VIRTUAL_END_SECTION)('\n')
+          PsiWhiteSpace('     ')
           PsiElement(IN)('in')
           PsiErrorElement:<list of operands> expected, got '
 '
             <empty list>
-  PsiWhiteSpace('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f7')
@@ -167,8 +167,8 @@ Elm File
           PsiElement(IMPORT)('import')
           PsiWhiteSpace(' ')
           PsiElement(UPPER_CASE_IDENTIFIER)('Garbage')
-          PsiWhiteSpace('\n')
-          PsiElement(VIRTUAL_END_DECL)('        ')
+          PsiElement(VIRTUAL_END_DECL)('\n')
+          PsiWhiteSpace('        ')
           ElmInnerValueDeclaration(INNER_VALUE_DECLARATION)
             ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
               PsiElement(LOWER_CASE_IDENTIFIER)('y')
@@ -178,8 +178,8 @@ Elm File
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
                 PsiElement(NUMBER_LITERAL)('1')
-          PsiWhiteSpace('\n')
-          PsiElement(VIRTUAL_END_SECTION)('     ')
+          PsiElement(VIRTUAL_END_SECTION)('\n')
+          PsiWhiteSpace('     ')
           PsiElement(IN)('in')
           PsiWhiteSpace('\n')
           PsiWhiteSpace('        ')

@@ -142,15 +142,28 @@ private fun doLayout(lexer: Lexer): ArrayList<Token> {
                 if (SECTION_CREATING_KEYWORDS.contains(token.elementType)) {
                     state = WAITING_FOR_SECTION_START
                 } else if (token.isFirstSignificantTokenOnLine()) {
-                    val j = i
+                    var insertAt = i
+
+                    // We want to insert virtual tokens after the last code token so that following comments
+                    // don't get included in this expression. However, a virtual token has to appear after a
+                    // whitespace token, since the real token is combined with the virtual token during
+                    // parsing.
+                    for (k in (i - 1) downTo 1) {
+                        if (tokens[k].isCode) break
+                        insertAt = k + 1
+                    }
+
+                    val precedingToken = tokens[insertAt - 1]
+
                     while (token.column <= indentStack.peek()) {
                         if (token.column == indentStack.peek()) {
-                            tokens.add(i, virtualToken(VIRTUAL_END_DECL, tokens[j - 1]))
+                            tokens.add(insertAt, virtualToken(VIRTUAL_END_DECL, precedingToken))
                             i++
                             break
                         } else if (token.column < indentStack.peek()) {
-                            tokens.add(i, virtualToken(VIRTUAL_END_SECTION, tokens[j - 1]))
+                            tokens.add(insertAt, virtualToken(VIRTUAL_END_SECTION, precedingToken))
                             i++
+                            insertAt++
                             indentStack.pop()
                         }
                     }
