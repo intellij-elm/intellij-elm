@@ -45,3 +45,10 @@ val ELM_IDENTIFIERS = tokenSetOf(
         UPPER_CASE_IDENTIFIER,
         LOWER_CASE_IDENTIFIER
 )
+
+/** the virtual tokens which can be synthesized by [ElmLayoutLexer] */
+val ELM_VIRTUAL_TOKENS = tokenSetOf(
+        VIRTUAL_OPEN_SECTION,
+        VIRTUAL_END_SECTION,
+        VIRTUAL_END_DECL
+)

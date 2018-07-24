@@ -20,13 +20,10 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.text.CharArrayUtil
-import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.elementType
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmRecord
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.parentOfType
 
 /**
  * Poor-man's formatter for Elm code. In the long-term it would be nice
@@ -77,7 +74,7 @@ class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
         // find the non-whitespace PsiElement at the caret
         var elementAtCaret = file.findElementAt(offset)
                 ?: return Result.Continue
-        if (elementAtCaret.isEolWhitespace(offset)) {
+        if (elementAtCaret.isEolWhitespace(offset) || elementAtCaret.isVirtualLayoutToken()) {
             elementAtCaret = PsiTreeUtil.prevVisibleLeaf(elementAtCaret)
                     ?: return Result.Continue
         }

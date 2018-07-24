@@ -23,6 +23,14 @@ f =
 
 """)
 
+    fun `test after function equals before another function`() = doTest("""
+f ={-caret-}
+g = 0
+""", """
+f =
+    {-caret-}
+g = 0
+""")
 
     fun `test after let beginning`() = doTest("""
 f =
@@ -65,13 +73,13 @@ f =
     fun `test after equals in let declaration partial`() = doTest("""
 f =
     let
-        x = {-caret-}
+        x ={-caret-}
     in
         x
 """, """
 f =
     let
-        x = 
+        x =
             {-caret-}
     in
         x

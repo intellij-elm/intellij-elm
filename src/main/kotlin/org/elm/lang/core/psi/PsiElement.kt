@@ -27,10 +27,8 @@ SOFTWARE.
 package org.elm.lang.core.psi
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
@@ -99,14 +97,11 @@ fun PsiFile.descendantOfType(elementType: IElementType): PsiElement? {
 fun PsiElement.offsetIn(owner: PsiElement): Int =
         ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
 
-/**
- * Finds first sibling that is neither comment, nor whitespace before given element.
- */
-fun PsiElement?.getPrevNonCommentSibling(): PsiElement? =
-        PsiTreeUtil.skipSiblingsBackward(this, PsiWhiteSpace::class.java, PsiComment::class.java)
+
+// Elm-specific helpers
 
 /**
- * Finds first sibling that is neither comment, nor whitespace after given element.
+ * Returns true if this element is a virtual token synthesized by [ElmLayoutLexer]
  */
-fun PsiElement?.getNextNonCommentSibling(): PsiElement? =
-        PsiTreeUtil.skipSiblingsForward(this, PsiWhiteSpace::class.java, PsiComment::class.java)
+fun PsiElement.isVirtualLayoutToken(): Boolean =
+        elementType in ELM_VIRTUAL_TOKENS
