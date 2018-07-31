@@ -9,7 +9,11 @@ import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.*
 
-
+/**
+ * The name of an existing record which is to being updated.
+ *
+ * e.g. the first instance of person in `{ person | age = person.age + 1 }`
+ */
 class ElmRecordBaseIdentifier(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
     override val referenceNameElement: PsiElement
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
