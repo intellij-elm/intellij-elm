@@ -302,8 +302,11 @@ Record ::=
     LEFT_BRACE RecordInner? RIGHT_BRACE
     { pin = 1 }
 
+RecordBaseIdentifier ::=
+    LOWER_CASE_IDENTIFIER
+
 private RecordBase ::=
-    LOWER_CASE_IDENTIFIER PIPE
+    RecordBaseIdentifier PIPE
 
 private RecordInner ::=
     RecordBase? RecordInnerFields

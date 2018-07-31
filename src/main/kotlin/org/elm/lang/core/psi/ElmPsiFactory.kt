@@ -1,6 +1,8 @@
 package org.elm.lang.core.psi
 
 import com.intellij.lang.ASTNode
+import com.intellij.lang.ParserDefinition
+import com.intellij.lang.PsiBuilder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
@@ -24,60 +26,59 @@ class ElmPsiFactory(private val project: Project) {
          * `FOO_BAR -> return ElmFooBar(node)`. Don't forget to create the `ElmFooBar`
          * class.
          */
-        fun createElement(node: ASTNode): PsiElement {
-            when (node.elementType) {
-                ANONYMOUS_FUNCTION -> return ElmAnonymousFunction(node)
-                AS_CLAUSE -> return ElmAsClause(node)
-                CASE_OF -> return ElmCaseOf(node)
-                CASE_OF_BRANCH -> return ElmCaseOfBranch(node)
-                EXPOSED_OPERATOR -> return ElmExposedOperator(node)
-                EXPOSED_TYPE -> return ElmExposedType(node)
-                EXPOSED_VALUE -> return ElmExposedValue(node)
-                EXPOSED_UNION_CONSTRUCTORS -> return ElmExposedUnionConstructors(node)
-                EXPOSED_UNION_CONSTRUCTOR -> return ElmExposedUnionConstructor(node)
-                EXPOSING_LIST -> return ElmExposingList(node)
-                EXPRESSION -> return ElmExpression(node)
-                FIELD -> return ElmField(node)
-                FIELD_TYPE -> return ElmFieldType(node)
-                FUNCTION_DECLARATION_LEFT -> return ElmFunctionDeclarationLeft(node)
-                GLSL_CODE -> return ElmGlslCode(node)
-                IF_ELSE -> return ElmIfElse(node)
-                IMPORT_CLAUSE -> return ElmImportClause(node)
-                INFIX_DECLARATION -> return ElmInfixDeclaration(node)
-                INNER_TYPE_ANNOTATION -> return ElmInnerTypeAnnotation(node)
-                INNER_VALUE_DECLARATION -> return ElmInnerValueDeclaration(node)
-                LET_IN -> return ElmLetIn(node)
-                LIST -> return ElmList(node)
-                LIST_OF_OPERANDS -> return ElmListOfOperands(node)
-                LOWER_PATTERN -> return ElmLowerPattern(node)
-                LOWER_TYPE_NAME -> return ElmLowerTypeName(node)
-                MODULE_DECLARATION -> return ElmModuleDeclaration(node)
-                NON_EMPTY_TUPLE -> return ElmNonEmptyTuple(node)
-                OPERATOR -> return ElmOperator(node)
-                OPERATOR_AS_FUNCTION -> return ElmOperatorAsFunction(node)
-                PARAMETRIC_TYPE_REF -> return ElmParametricTypeRef(node)
-                PARENTHESED_EXPRESSION -> return ElmParenthesedExpression(node)
-                PATTERN -> return ElmPattern(node)
-                PATTERN_AS -> return ElmPatternAs(node)
-                PORT_ANNOTATION -> return ElmPortAnnotation(node)
-                RECORD -> return ElmRecord(node)
-                RECORD_PATTERN -> return ElmRecordPattern(node)
-                RECORD_TYPE -> return ElmRecordType(node)
-                TUPLE_PATTERN -> return ElmTuplePattern(node)
-                TUPLE_TYPE -> return ElmTupleType(node)
-                TYPE_ALIAS_DECLARATION -> return ElmTypeAliasDeclaration(node)
-                TYPE_ANNOTATION -> return ElmTypeAnnotation(node)
-                TYPE_DECLARATION -> return ElmTypeDeclaration(node)
-                TYPE_REF -> return ElmTypeRef(node)
-                TYPE_VARIABLE_REF -> return ElmTypeVariableRef(node)
-                UNION_MEMBER -> return ElmUnionMember(node)
-                UNION_PATTERN -> return ElmUnionPattern(node)
-                UNIT -> return ElmUnit(node)
-                UPPER_PATH_TYPE_REF -> return ElmUpperPathTypeRef(node)
-                VALUE_DECLARATION -> return ElmValueDeclaration(node)
-                VALUE_EXPR -> return ElmValueExpr(node)
-                else -> throw AssertionError("Unknown element type: " + node.elementType)
-            }
+        fun createElement(node: ASTNode): PsiElement = when (node.elementType) {
+            ANONYMOUS_FUNCTION ->  ElmAnonymousFunction(node)
+            AS_CLAUSE ->  ElmAsClause(node)
+            CASE_OF ->  ElmCaseOf(node)
+            CASE_OF_BRANCH ->  ElmCaseOfBranch(node)
+            EXPOSED_OPERATOR ->  ElmExposedOperator(node)
+            EXPOSED_TYPE ->  ElmExposedType(node)
+            EXPOSED_VALUE ->  ElmExposedValue(node)
+            EXPOSED_UNION_CONSTRUCTORS ->  ElmExposedUnionConstructors(node)
+            EXPOSED_UNION_CONSTRUCTOR ->  ElmExposedUnionConstructor(node)
+            EXPOSING_LIST ->  ElmExposingList(node)
+            EXPRESSION ->  ElmExpression(node)
+            FIELD ->  ElmField(node)
+            FIELD_TYPE ->  ElmFieldType(node)
+            FUNCTION_DECLARATION_LEFT ->  ElmFunctionDeclarationLeft(node)
+            GLSL_CODE ->  ElmGlslCode(node)
+            IF_ELSE ->  ElmIfElse(node)
+            IMPORT_CLAUSE ->  ElmImportClause(node)
+            INFIX_DECLARATION ->  ElmInfixDeclaration(node)
+            INNER_TYPE_ANNOTATION ->  ElmInnerTypeAnnotation(node)
+            INNER_VALUE_DECLARATION ->  ElmInnerValueDeclaration(node)
+            LET_IN ->  ElmLetIn(node)
+            LIST ->  ElmList(node)
+            LIST_OF_OPERANDS ->  ElmListOfOperands(node)
+            LOWER_PATTERN ->  ElmLowerPattern(node)
+            LOWER_TYPE_NAME ->  ElmLowerTypeName(node)
+            MODULE_DECLARATION ->  ElmModuleDeclaration(node)
+            NON_EMPTY_TUPLE ->  ElmNonEmptyTuple(node)
+            OPERATOR ->  ElmOperator(node)
+            OPERATOR_AS_FUNCTION ->  ElmOperatorAsFunction(node)
+            PARAMETRIC_TYPE_REF ->  ElmParametricTypeRef(node)
+            PARENTHESED_EXPRESSION ->  ElmParenthesedExpression(node)
+            PATTERN ->  ElmPattern(node)
+            PATTERN_AS ->  ElmPatternAs(node)
+            PORT_ANNOTATION ->  ElmPortAnnotation(node)
+            RECORD ->  ElmRecord(node)
+            RECORD_BASE_IDENTIFIER ->  ElmRecordBaseIdentifier(node)
+            RECORD_PATTERN ->  ElmRecordPattern(node)
+            RECORD_TYPE ->  ElmRecordType(node)
+            TUPLE_PATTERN ->  ElmTuplePattern(node)
+            TUPLE_TYPE ->  ElmTupleType(node)
+            TYPE_ALIAS_DECLARATION ->  ElmTypeAliasDeclaration(node)
+            TYPE_ANNOTATION ->  ElmTypeAnnotation(node)
+            TYPE_DECLARATION ->  ElmTypeDeclaration(node)
+            TYPE_REF ->  ElmTypeRef(node)
+            TYPE_VARIABLE_REF ->  ElmTypeVariableRef(node)
+            UNION_MEMBER ->  ElmUnionMember(node)
+            UNION_PATTERN ->  ElmUnionPattern(node)
+            UNIT ->  ElmUnit(node)
+            UPPER_PATH_TYPE_REF ->  ElmUpperPathTypeRef(node)
+            VALUE_DECLARATION ->  ElmValueDeclaration(node)
+            VALUE_EXPR ->  ElmValueExpr(node)
+            else -> throw AssertionError("Unknown element type: " + node.elementType)
         }
     }
 
@@ -98,7 +99,7 @@ class ElmPsiFactory(private val project: Project) {
     fun createValueQID(text: String): ElmValueQID =
             createFromText<ElmValueDeclaration>("f = $text")
                     ?.expression
-                    ?.childOfType<ElmValueQID>()
+                    ?.childOfType()
                     ?: error("Failed to create value QID: `$text`")
 
     fun createOperatorIdentifier(text: String): PsiElement =
@@ -135,7 +136,7 @@ class ElmPsiFactory(private val project: Project) {
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)
-                    .childOfType<T>()
+                    .childOfType()
 
     private fun createFromText(code: String, elementType: IElementType): PsiElement? =
             PsiFileFactory.getInstance(project)
