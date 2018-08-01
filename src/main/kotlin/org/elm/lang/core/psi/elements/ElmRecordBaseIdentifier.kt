@@ -10,7 +10,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.*
 
 /**
- * The name of an existing record which is to being updated.
+ * In a record literal update expression, the name of an existing record which is to be updated.
  *
  * e.g. the first instance of person in `{ person | age = person.age + 1 }`
  */
