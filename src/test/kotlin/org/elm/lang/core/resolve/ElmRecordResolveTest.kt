@@ -8,7 +8,6 @@ package org.elm.lang.core.resolve
  */
 class ElmRecordResolveTest : ElmResolveTestBase() {
 
-
     fun `test field access ref`() = checkByCode(
 """
 foo : { b : String }
@@ -16,5 +15,10 @@ foo a = a.b
   --X --^
 """)
 
+    fun `test record name base ref`() = checkByCode(
+            """
+foo a = { a | bar = a.bar }
+  --X   --^
+""")
 
 }

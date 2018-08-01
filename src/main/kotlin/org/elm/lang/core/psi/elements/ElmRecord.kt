@@ -20,8 +20,8 @@ class ElmRecord(node: ASTNode) : ElmPsiElementImpl(node) {
      *
      * e.g. person in `{ person | age = person.age + 1 }`
      */
-    val baseRecordIdentifier: PsiElement?
-        get() = findChildByType(LOWER_CASE_IDENTIFIER)
+    val baseRecordIdentifier: ElmRecordBaseIdentifier?
+        get() = findChildByClass(ElmRecordBaseIdentifier::class.java)
 
     /**
      * The fields to set in the new record.
