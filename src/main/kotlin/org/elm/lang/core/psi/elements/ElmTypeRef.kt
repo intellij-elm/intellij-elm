@@ -1,27 +1,40 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.directChildren
 
 
+/**
+ * A type reference.
+ *
+ * e.g.
+ *
+ *  - `Float`
+ *  - `Maybe a`
+ *  - `Int -> String`
+ *  - `a -> (a -> {a: String})`
+ */
 class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node) {
 
-    val upperPathTypeRefList: List<ElmUpperPathTypeRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmUpperPathTypeRef::class.java)
-
-    val typeVariableRefList: List<ElmTypeVariableRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeVariableRef::class.java)
-
-    val recordTypeList: List<ElmRecordType>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmRecordType::class.java)
-
-    val tupleTypeList: List<ElmTupleType>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTupleType::class.java)
-
-    val parametricTypeRefList: List<ElmParametricTypeRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmParametricTypeRef::class.java)
-
-    val typeRefList: List<ElmTypeRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeRef::class.java)
+    /**
+     * All parameters of the type annotation.
+     *
+     * The elements will be in source order, and will be any of the following types:
+     *
+     * [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmParametricTypeRef], [ElmTypeRef]
+     *
+     * If the reference is not a function, there will be one parameter in well-formed programs. For functions, there
+     * will be one parameter per function argument, plus the return type.
+     */
+    val allParameters: Sequence<ElmPsiElement>
+        get() = directChildren.filterIsInstance<ElmPsiElement>().filter {
+            it is ElmUpperPathTypeRef
+                    || it is ElmTypeVariableRef
+                    || it is ElmRecordType
+                    || it is ElmTupleType
+                    || it is ElmParametricTypeRef
+                    || it is ElmTypeRef
+        }
 }

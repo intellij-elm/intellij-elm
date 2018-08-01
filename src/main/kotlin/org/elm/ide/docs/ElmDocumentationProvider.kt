@@ -1,15 +1,19 @@
 package org.elm.ide.docs
 
+import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.prevSiblings
+import org.elm.lang.core.resolve.scope.ImportScope
+import org.elm.lang.core.resolve.scope.ModuleScope
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -27,31 +31,46 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmTypeDeclaration -> documentationFor(element)
         else -> null
     }
+
+    override fun getDocumentationElementForLink(psiManager: PsiManager, link: String, context: PsiElement): PsiElement? {
+        if (context !is ElmPsiElement) return null
+        val lastDot = link.indexOfLast { it == '.' }
+        return if (lastDot <= 0) {
+            ModuleScope(context.elmFile).getVisibleTypes().find { it.name == link }
+        } else {
+            val qualifierPrefix = link.substring(0, lastDot)
+            val name = link.substring(lastDot + 1)
+            val imports = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, context.elmFile)
+            imports?.getExposedTypes()?.find { it.name == name }
+        }
+    }
 }
 
-private fun documentationFor(decl: ElmFunctionDeclarationLeft) = buildString {
+private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildString {
     val prev = decl.parent.skipWsAndVirtDeclsBackwards()
-    when (prev?.elementType) {
-        TYPE_ANNOTATION -> {
+    when (prev) {
+        is ElmTypeAnnotation -> {
+            val id = (prev.lowerCaseIdentifier ?: prev.operatorIdentifier) ?: return null
+            val typeRef = prev.typeRef ?: return null
             definition {
-                append(prev!!.text.escaped)
+                b { append(id.text) }
+                append(" : ")
+                appendDefinition(typeRef)
                 append("\n")
-                append(decl.text.escaped)
+                b { append(decl.lowerCaseIdentifier.text) }
+                for (pat in decl.patternList) {
+                    append(" ").append(pat.text)
+                }
             }
-            prev!!.skipWsAndVirtDeclsBackwards()?.let {
+            prev.skipWsAndVirtDeclsBackwards()?.let {
                 renderDocContent(it)
             }
-        }
-        BLOCK_COMMENT -> {
-            definition {
-                append(decl.text.escaped)
-            }
-            renderDocContent(prev)
         }
         else -> {
             definition {
                 append(decl.text.escaped)
             }
+            renderDocContent(prev)
         }
     }
 }
@@ -69,6 +88,96 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
     }
 
     renderDocContent(decl.skipWsAndVirtDeclsBackwards())
+}
+
+private fun StringBuilder.appendDefinition(ref: ElmUpperPathTypeRef) {
+    val refText = ref.upperCaseQID.upperCaseIdentifierList.joinToString(".") { it.text }
+    createLink(this, refText, ref.text)
+}
+
+private fun StringBuilder.appendDefinition(ref: ElmTypeVariableRef) {
+    append(ref.identifier.text)
+}
+
+private fun StringBuilder.appendDefinition(record: ElmRecordType) {
+    append("{ ")
+    for ((i, field) in record.fieldTypeList.withIndex()) {
+        if (i > 0) append(", ")
+        append(field.lowerCaseIdentifier.text).append(" : ")
+        appendDefinition(field.typeRef)
+    }
+    append(" }")
+}
+
+private fun StringBuilder.appendDefinition(tuple: ElmTupleType) {
+    val unit = tuple.unit
+    if (unit == null) {
+        append("( ")
+        for ((i, ref) in tuple.typeRefList.withIndex()) {
+            if (i > 0) append(", ")
+            appendDefinition(ref)
+        }
+        append(" )")
+    } else {
+        append("()")
+    }
+}
+
+private fun StringBuilder.appendDefinition(ref: ElmParametricTypeRef) {
+    val qid = ref.upperCaseQID
+    createLink(this, qid.text, qid.text)
+    for (param in ref.allParameters) {
+        append(" ")
+        when (param) {
+            is ElmUpperPathTypeRef -> {
+                appendDefinition(param)
+            }
+            is ElmRecordType -> {
+                appendDefinition(param)
+            }
+            is ElmTupleType -> {
+                appendDefinition(param)
+            }
+            is ElmTypeVariableRef -> {
+                appendDefinition(param)
+            }
+            is ElmTypeRef -> {
+                appendDefinition(param)
+            }
+        }
+    }
+}
+
+private fun StringBuilder.appendDefinition(ref: ElmTypeRef) {
+    for ((i, param) in ref.allParameters.withIndex()) {
+        if (i > 0) append(" -> ".escaped)
+        when (param) {
+            is ElmUpperPathTypeRef -> {
+                appendDefinition(param)
+            }
+            is ElmRecordType -> {
+                appendDefinition(param)
+            }
+            is ElmTupleType -> {
+                appendDefinition(param)
+            }
+            is ElmParametricTypeRef -> {
+                appendDefinition(param)
+            }
+            is ElmTypeVariableRef -> {
+                appendDefinition(param)
+            }
+            is ElmTypeRef -> {
+                append("(")
+                appendDefinition(param)
+                append(")")
+            }
+        }
+    }
+}
+
+private fun createLink(buffer: StringBuilder, refText: String, text: String) {
+    DocumentationManagerUtil.createHyperlink(buffer, refText, text, true)
 }
 
 private fun PsiElement.skipWsAndVirtDeclsBackwards(): PsiElement? = prevSiblings.firstOrNull {
