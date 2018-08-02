@@ -1,10 +1,7 @@
 package org.elm.lang.core.psi
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.NavigatablePsiElement
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNameIdentifierOwner
-import com.intellij.psi.PsiNamedElement
+import com.intellij.psi.*
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import org.elm.ide.presentation.getPresentation
@@ -23,6 +20,13 @@ interface ElmNamedElement : ElmPsiElement, PsiNamedElement, NavigatablePsiElemen
 interface ElmNameIdentifierOwner : ElmNamedElement, PsiNameIdentifierOwner {
     override fun getNameIdentifier(): PsiElement
     override fun getName(): String
+}
+
+/** An element that can have an attached documentation comment */
+interface ElmDocTarget: ElmPsiElement {
+    /** The doc comment for this element, or `null` if there isn't one. */
+    val docComment: PsiComment?
+        get() = (prevSiblings.withoutWs.firstOrNull() as? PsiComment)?.takeIf { it.text.startsWith("{-|") }
 }
 
 

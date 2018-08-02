@@ -1,11 +1,11 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiComment
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmStubbedElement
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmValueDeclarationStub
 
 
@@ -20,7 +20,7 @@ import org.elm.lang.core.stubs.ElmValueDeclarationStub
  * to a pattern, possibly introducing multiple top-level names.
  * e.g. `(x,y) = (0,0)`
  */
-class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
+class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTarget {
 
     constructor(node: ASTNode) :
             super(node)
@@ -81,4 +81,12 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub> {
         return functionDeclarationLeft?.namedParameters
                 ?: emptyList()
     }
+
+    /** The type annotation for this function, or `null` if there isn't one. */
+    val typeAnnotation: ElmTypeAnnotation?
+        get() = prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+
+    override val docComment: PsiComment?
+        get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
+                ?.takeIf { it.text.startsWith("{-|") }
 }

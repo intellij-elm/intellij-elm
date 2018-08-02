@@ -9,7 +9,7 @@ foo = 0
 --^
 """,
             """
-<div class='definition'><pre>foo</pre></div>
+<div class='definition'><pre><b>foo</b></pre></div>
 """)
 
     fun `test unary function`() = doTest(
@@ -18,7 +18,7 @@ foo bar = bar
 --^
 """,
             """
-<div class='definition'><pre>foo bar</pre></div>
+<div class='definition'><pre><b>foo</b> bar</pre></div>
 """)
 
     fun `test binary function with line comment`() = doTest(
@@ -28,7 +28,7 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> bar baz</pre></div>
 """)
 
     fun `test function with doc comment`() = doTest(
@@ -38,7 +38,7 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> bar baz</pre></div>
 <div class='content'><p>this should be included.</p></div>
 """)
 

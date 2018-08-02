@@ -6,13 +6,9 @@ import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiWhiteSpace
-import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
-import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
-import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.prevSiblings
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.intellij.markdown.IElementType
@@ -31,6 +27,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmFunctionDeclarationLeft -> documentationFor(element)
         is ElmTypeDeclaration -> documentationFor(element)
         is ElmTypeAliasDeclaration -> documentationFor(element)
+        is ElmLowerPattern -> documentationFor(element)
         else -> null
     }
 
@@ -38,7 +35,9 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         if (context !is ElmPsiElement) return null
         val lastDot = link.indexOfLast { it == '.' }
         return if (lastDot <= 0) {
-            ModuleScope(context.elmFile).getVisibleTypes().find { it.name == link }
+            with(ModuleScope(context.elmFile)) {
+                getVisibleTypes().find { it.name == link } ?: getDeclaredValues().find { it.name == link }
+            }
         } else {
             val qualifierPrefix = link.substring(0, lastDot)
             val name = link.substring(lastDot + 1)
@@ -49,32 +48,25 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
 }
 
 private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildString {
-    val prev = decl.parent.skipWsAndVirtDeclsBackwards()
-    when (prev) {
-        is ElmTypeAnnotation -> {
-            val id = (prev.lowerCaseIdentifier ?: prev.operatorIdentifier) ?: return null
-            val typeRef = prev.typeRef ?: return null
-            definition {
-                b { append(id.text) }
-                append(" : ")
-                appendDefinition(typeRef)
-                append("\n")
-                b { append(decl.lowerCaseIdentifier.text) }
-                for (pat in decl.patternList) {
-                    append(" ", pat.text)
-                }
-            }
-            prev.skipWsAndVirtDeclsBackwards()?.let {
-                renderDocContent(it)
-            }
+    val parent = decl.parent as? ElmValueDeclaration ?: return null
+    val typeAnnotation = parent.typeAnnotation
+
+    definition {
+        if (typeAnnotation != null) {
+            val id = (typeAnnotation.lowerCaseIdentifier ?: typeAnnotation.operatorIdentifier) ?: return null
+            val typeRef = typeAnnotation.typeRef ?: return null
+            b { append(id.text) }
+            append(" : ")
+            renderDefinition(typeRef)
+            append("\n")
         }
-        else -> {
-            definition {
-                append(decl.text.escaped)
-            }
-            renderDocContent(prev)
+
+        b { append(decl.lowerCaseIdentifier.text) }
+        for (pat in decl.patternList) {
+            append(" ", pat.text)
         }
     }
+    renderDocContent(parent)
 }
 
 private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
@@ -89,7 +81,7 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
         }
     }
 
-    renderDocContent(decl.skipWsAndVirtDeclsBackwards())
+    renderDocContent(decl)
 
     sections {
         section("Members") {
@@ -113,7 +105,7 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
         }
     }
 
-    renderDocContent(decl.skipWsAndVirtDeclsBackwards())
+    renderDocContent(decl)
 
     val record = decl.aliasedRecord
     if (record != null) {
@@ -123,7 +115,7 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
                 section("Fields") {
                     for (type in recordTypes) {
                         append("\n<p><code>${type.lowerCaseIdentifier.text}</code> : ")
-                        appendDefinition(type.typeRef)
+                        renderDefinition(type.typeRef)
                     }
                 }
             }
@@ -131,32 +123,43 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
     }
 }
 
-private fun StringBuilder.appendDefinition(ref: ElmUpperPathTypeRef) {
-    val refText = ref.upperCaseQID.upperCaseIdentifierList.joinToString(".") { it.text }
-    createLink(this, refText, ref.text)
+private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
+    val decl = pattern.ancestors.filterIsInstance<ElmFunctionDeclarationLeft>()
+            .firstOrNull() ?: return null
+
+    i { append("parameter") }
+    append(" ", pattern.identifier.text, " ")
+
+    i { append("of function ") }
+    renderLink(decl.name, decl.name)
 }
 
-private fun StringBuilder.appendDefinition(ref: ElmTypeVariableRef) {
+private fun StringBuilder.renderDefinition(ref: ElmUpperPathTypeRef) {
+    val refText = ref.upperCaseQID.upperCaseIdentifierList.joinToString(".") { it.text }
+    renderLink(refText, ref.text)
+}
+
+private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
     append(ref.identifier.text)
 }
 
-private fun StringBuilder.appendDefinition(record: ElmRecordType) {
+private fun StringBuilder.renderDefinition(record: ElmRecordType) {
     append("{ ")
     for ((i, field) in record.fieldTypeList.withIndex()) {
         if (i > 0) append(", ")
         append(field.lowerCaseIdentifier.text).append(" : ")
-        appendDefinition(field.typeRef)
+        renderDefinition(field.typeRef)
     }
     append(" }")
 }
 
-private fun StringBuilder.appendDefinition(tuple: ElmTupleType) {
+private fun StringBuilder.renderDefinition(tuple: ElmTupleType) {
     val unit = tuple.unit
     if (unit == null) {
         append("( ")
         for ((i, ref) in tuple.typeRefList.withIndex()) {
             if (i > 0) append(", ")
-            appendDefinition(ref)
+            renderDefinition(ref)
         }
         append(" )")
     } else {
@@ -164,13 +167,13 @@ private fun StringBuilder.appendDefinition(tuple: ElmTupleType) {
     }
 }
 
-private fun StringBuilder.appendDefinition(ref: ElmParametricTypeRef) {
+private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
     val qid = ref.upperCaseQID
-    createLink(this, qid.text, qid.text)
+    renderLink(qid.text, qid.text)
     renderParameters(ref.allParameters, " ", false, false)
 }
 
-private fun StringBuilder.appendDefinition(ref: ElmTypeRef) {
+private fun StringBuilder.renderDefinition(ref: ElmTypeRef) {
     renderParameters(ref.allParameters, " -> ".escaped, true, true)
 }
 
@@ -180,34 +183,37 @@ private fun StringBuilder.renderParameters(params: Sequence<ElmPsiElement>,
                                            parenthesizeTypeRefs: Boolean) {
     for ((i, param) in params.withIndex()) {
         if (i > 0 || !skipFirstSep) append(sep)
-        when (param) {
-            is ElmUpperPathTypeRef -> appendDefinition(param)
-            is ElmRecordType -> appendDefinition(param)
-            is ElmTupleType -> appendDefinition(param)
-            is ElmParametricTypeRef -> appendDefinition(param)
-            is ElmTypeVariableRef -> appendDefinition(param)
-            is ElmTypeRef -> {
-                if (parenthesizeTypeRefs) append("(")
-                appendDefinition(param)
-                if (parenthesizeTypeRefs) append(")")
-            }
+        renderParameter(param, parenthesizeTypeRefs)
+    }
+}
+
+private fun StringBuilder.renderParameter(param: ElmPsiElement,
+                                          parenthesizeTypeRefs: Boolean) {
+    when (param) {
+        is ElmUpperPathTypeRef -> renderDefinition(param)
+        is ElmRecordType -> renderDefinition(param)
+        is ElmTupleType -> renderDefinition(param)
+        is ElmParametricTypeRef -> renderDefinition(param)
+        is ElmTypeVariableRef -> renderDefinition(param)
+        is ElmTypeRef -> {
+            if (parenthesizeTypeRefs) append("(")
+            renderDefinition(param)
+            if (parenthesizeTypeRefs) append(")")
         }
     }
 }
 
-private fun createLink(buffer: StringBuilder, refText: String, text: String) {
-    DocumentationManagerUtil.createHyperlink(buffer, refText, text, true)
+private fun StringBuilder.renderLink(refText: String, text: String) {
+    DocumentationManagerUtil.createHyperlink(this, refText, text, true)
 }
 
-private fun PsiElement.skipWsAndVirtDeclsBackwards(): PsiElement? = prevSiblings.firstOrNull {
-    it !is PsiWhiteSpace && it.elementType != VIRTUAL_END_DECL
-}
+private fun StringBuilder.renderDocContent(element: ElmDocTarget?) {
+    val doc = element?.docComment
 
-private fun StringBuilder.renderDocContent(element: PsiElement?) {
-    if (element == null || element.elementType != BLOCK_COMMENT || !element.text.startsWith("{-|")) return
+    if (doc == null || doc.elementType != BLOCK_COMMENT) return
 
     // strip the comment markers
-    val content = element.text?.let { text ->
+    val content = doc.text?.let { text ->
         val i = text.indexOf("{-|")
         val j = text.lastIndexOf("-}")
         text.substring(i + 3, j)
@@ -251,6 +257,12 @@ private inline fun StringBuilder.b(block: () -> Unit) {
     append("<b>")
     block()
     append("</b>")
+}
+
+private inline fun StringBuilder.i(block: () -> Unit) {
+    append("<i>")
+    block()
+    append("</i>")
 }
 
 private inline fun StringBuilder.sections(block: StringBuilder.() -> Unit) {

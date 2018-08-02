@@ -27,8 +27,10 @@ SOFTWARE.
 package org.elm.lang.core.psi
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
@@ -41,6 +43,10 @@ val PsiElement.ancestors: Sequence<PsiElement> get() = generateSequence(this) { 
 val PsiElement.prevSiblings: Sequence<PsiElement> get() = generateSequence(prevSibling) { it.prevSibling }
 val PsiElement.nextSiblings: Sequence<PsiElement> get() = generateSequence(nextSibling) { it.nextSibling }
 val PsiElement.directChildren: Sequence<PsiElement> get() = generateSequence(firstChild) { it.nextSibling }
+val Sequence<PsiElement>.withoutWs
+    get() =
+        filter { it !is PsiWhiteSpace && it.elementType != ElmTypes.VIRTUAL_END_DECL }
+val Sequence<PsiElement>.withoutWsOrComments get() = withoutWs.filter { it !is PsiComment }
 
 
 /**
