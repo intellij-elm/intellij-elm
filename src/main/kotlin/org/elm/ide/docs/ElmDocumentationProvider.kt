@@ -28,6 +28,8 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmTypeDeclaration -> documentationFor(element)
         is ElmTypeAliasDeclaration -> documentationFor(element)
         is ElmLowerPattern -> documentationFor(element)
+        is ElmModuleDeclaration -> documentationFor(element)
+        is ElmAsClause -> documentationFor(element)
         else -> null
     }
 
@@ -127,11 +129,32 @@ private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
     val decl = pattern.ancestors.filterIsInstance<ElmFunctionDeclarationLeft>()
             .firstOrNull() ?: return null
 
-    i { append("parameter") }
-    append(" ", pattern.identifier.text, " ")
+    definition {
+        i { append("parameter") }
+        append(" ", pattern.identifier.text, " ")
 
-    i { append("of function ") }
-    renderLink(decl.name, decl.name)
+        i { append("of function ") }
+        renderLink(decl.name, decl.name)
+    }
+}
+
+private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString {
+    val ids = decl.upperCaseQID.upperCaseIdentifierList
+
+    definition {
+        i { append("module") }
+        append(" ", ids.last().text)
+
+        if (ids.size > 1) {
+            i { append(" declared in ") }
+            ids.dropLast(1).joinTo(this, ".") { it.text }
+        }
+    }
+}
+
+private fun documentationFor(clause: ElmAsClause): String? = buildString {
+    val decl = clause.parent?.reference?.resolve() as? ElmModuleDeclaration ?: return null
+    return documentationFor(decl)
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmUpperPathTypeRef) {

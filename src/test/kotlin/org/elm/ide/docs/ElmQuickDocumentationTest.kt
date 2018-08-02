@@ -195,6 +195,26 @@ type alias Foo = { a: Int, b: String }
 <p><code>b</code> : <a href="psi_element://String">String</a></td></table>
 """)
 
+    fun `test module`() = doTest(
+            """
+module Main exposing (main)
+      --^
+main = ()
+""",
+            """
+<div class='definition'><pre><i>module</i> Main</pre></div>
+""")
+
+    fun `test function parameter`() = doTest(
+            """
+foo bar = ()
+  --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }
