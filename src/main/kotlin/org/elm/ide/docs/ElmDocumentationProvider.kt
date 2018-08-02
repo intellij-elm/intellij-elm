@@ -7,9 +7,9 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
-import org.bouncycastle.asn1.x500.style.RFC4519Style.title
 import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmTypes.*
+import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
+import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.prevSiblings
@@ -90,6 +90,16 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
     }
 
     renderDocContent(decl.skipWsAndVirtDeclsBackwards())
+
+    sections {
+        section("Members") {
+            append("<p>")
+            for (member in decl.unionMemberList) {
+                append("<p><code>${member.upperCaseIdentifier.text}</code>")
+                renderParameters(member.allParameters, " ", false, true)
+            }
+        }
+    }
 }
 
 private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildString {
@@ -159,51 +169,29 @@ private fun StringBuilder.appendDefinition(tuple: ElmTupleType) {
 private fun StringBuilder.appendDefinition(ref: ElmParametricTypeRef) {
     val qid = ref.upperCaseQID
     createLink(this, qid.text, qid.text)
-    for (param in ref.allParameters) {
-        append(" ")
-        when (param) {
-            is ElmUpperPathTypeRef -> {
-                appendDefinition(param)
-            }
-            is ElmRecordType -> {
-                appendDefinition(param)
-            }
-            is ElmTupleType -> {
-                appendDefinition(param)
-            }
-            is ElmTypeVariableRef -> {
-                appendDefinition(param)
-            }
-            is ElmTypeRef -> {
-                appendDefinition(param)
-            }
-        }
-    }
+    renderParameters(ref.allParameters, " ", false, false)
 }
 
 private fun StringBuilder.appendDefinition(ref: ElmTypeRef) {
-    for ((i, param) in ref.allParameters.withIndex()) {
-        if (i > 0) append(" -> ".escaped)
+    renderParameters(ref.allParameters, " -> ".escaped, true, true)
+}
+
+private fun StringBuilder.renderParameters(params: Sequence<ElmPsiElement>,
+                                           sep: String,
+                                           skipFirstSep: Boolean,
+                                           parenthesizeTypeRefs: Boolean) {
+    for ((i, param) in params.withIndex()) {
+        if (i > 0 || !skipFirstSep) append(sep)
         when (param) {
-            is ElmUpperPathTypeRef -> {
-                appendDefinition(param)
-            }
-            is ElmRecordType -> {
-                appendDefinition(param)
-            }
-            is ElmTupleType -> {
-                appendDefinition(param)
-            }
-            is ElmParametricTypeRef -> {
-                appendDefinition(param)
-            }
-            is ElmTypeVariableRef -> {
-                appendDefinition(param)
-            }
+            is ElmUpperPathTypeRef -> appendDefinition(param)
+            is ElmRecordType -> appendDefinition(param)
+            is ElmTupleType -> appendDefinition(param)
+            is ElmParametricTypeRef -> appendDefinition(param)
+            is ElmTypeVariableRef -> appendDefinition(param)
             is ElmTypeRef -> {
-                append("(")
+                if (parenthesizeTypeRefs) append("(")
                 appendDefinition(param)
-                append(")")
+                if (parenthesizeTypeRefs) append(")")
             }
         }
     }
