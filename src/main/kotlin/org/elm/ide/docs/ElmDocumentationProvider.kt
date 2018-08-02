@@ -7,6 +7,7 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
+import org.bouncycastle.asn1.x500.style.RFC4519Style.title
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
@@ -29,6 +30,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
     override fun generateDoc(element: PsiElement?, originalElement: PsiElement?) = when (element) {
         is ElmFunctionDeclarationLeft -> documentationFor(element)
         is ElmTypeDeclaration -> documentationFor(element)
+        is ElmTypeAliasDeclaration -> documentationFor(element)
         else -> null
     }
 
@@ -88,6 +90,37 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
     }
 
     renderDocContent(decl.skipWsAndVirtDeclsBackwards())
+}
+
+private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildString {
+    val name = decl.nameIdentifier
+    val types = decl.lowerTypeNameList
+
+    definition {
+        b { append("type alias") }
+        append(" ").append(name.text)
+        for (type in types) {
+            append(" ").append(type.name)
+        }
+    }
+
+    renderDocContent(decl.skipWsAndVirtDeclsBackwards())
+
+    val record = decl.aliasedRecord
+    if (record != null) {
+        val recordTypes = record.fieldTypeList
+        if (recordTypes.isNotEmpty()) {
+            sections {
+                section("Fields") {
+                    append("<p>")
+                    for (type in recordTypes) {
+                        append("<p><code>${type.lowerCaseIdentifier.text}</code> : ")
+                        appendDefinition(type.typeRef)
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun StringBuilder.appendDefinition(ref: ElmUpperPathTypeRef) {
@@ -233,6 +266,18 @@ private inline fun StringBuilder.b(block: () -> Unit) {
     append("<b>")
     block()
     append("</b>")
+}
+
+private inline fun StringBuilder.sections(block: StringBuilder.() -> Unit) {
+    append(DocumentationMarkup.SECTIONS_START)
+    block()
+    append(DocumentationMarkup.SECTIONS_END)
+}
+
+private inline fun StringBuilder.section(title: String, block: StringBuilder.() -> Unit) {
+    append(DocumentationMarkup.SECTION_HEADER_START, title, ":", DocumentationMarkup.SECTION_SEPARATOR)
+    block()
+    append(DocumentationMarkup.SECTION_END)
 }
 
 private val String.escaped: String get() = StringUtil.escapeXml(this)
