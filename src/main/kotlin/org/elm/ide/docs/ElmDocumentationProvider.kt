@@ -61,7 +61,7 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
                 append("\n")
                 b { append(decl.lowerCaseIdentifier.text) }
                 for (pat in decl.patternList) {
-                    append(" ").append(pat.text)
+                    append(" ", pat.text)
                 }
             }
             prev.skipWsAndVirtDeclsBackwards()?.let {
@@ -83,9 +83,9 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
 
     definition {
         b { append("type") }
-        append(" ").append(name.text)
+        append(" ", name.text)
         for (type in types) {
-            append(" ").append(type.name)
+            append(" ", type.name)
         }
     }
 
@@ -93,9 +93,8 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
 
     sections {
         section("Members") {
-            append("<p>")
             for (member in decl.unionMemberList) {
-                append("<p><code>${member.upperCaseIdentifier.text}</code>")
+                append("\n<p><code>${member.upperCaseIdentifier.text}</code>")
                 renderParameters(member.allParameters, " ", false, true)
             }
         }
@@ -122,9 +121,8 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
         if (recordTypes.isNotEmpty()) {
             sections {
                 section("Fields") {
-                    append("<p>")
                     for (type in recordTypes) {
-                        append("<p><code>${type.lowerCaseIdentifier.text}</code> : ")
+                        append("\n<p><code>${type.lowerCaseIdentifier.text}</code> : ")
                         appendDefinition(type.typeRef)
                     }
                 }
@@ -244,8 +242,7 @@ private inline fun StringBuilder.definition(block: () -> Unit) {
 }
 
 private inline fun StringBuilder.content(block: () -> Unit) {
-    append("\n") // just for html readability
-    append(DocumentationMarkup.CONTENT_START)
+    append("\n", DocumentationMarkup.CONTENT_START)
     block()
     append(DocumentationMarkup.CONTENT_END)
 }
@@ -257,13 +254,13 @@ private inline fun StringBuilder.b(block: () -> Unit) {
 }
 
 private inline fun StringBuilder.sections(block: StringBuilder.() -> Unit) {
-    append(DocumentationMarkup.SECTIONS_START)
+    append("\n", DocumentationMarkup.SECTIONS_START)
     block()
     append(DocumentationMarkup.SECTIONS_END)
 }
 
 private inline fun StringBuilder.section(title: String, block: StringBuilder.() -> Unit) {
-    append(DocumentationMarkup.SECTION_HEADER_START, title, ":", DocumentationMarkup.SECTION_SEPARATOR)
+    append(DocumentationMarkup.SECTION_HEADER_START, title, ":", DocumentationMarkup.SECTION_SEPARATOR, "<p>")
     block()
     append(DocumentationMarkup.SECTION_END)
 }

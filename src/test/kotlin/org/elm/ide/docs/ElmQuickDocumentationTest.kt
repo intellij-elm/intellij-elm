@@ -117,6 +117,8 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code></td></table>
 """)
 
     fun `test type declaration with docs`() = doTest(
@@ -128,7 +130,71 @@ type Foo = Bar
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
 <div class='content'><p>included <em>docs</em></p></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code></td></table>
 """)
+
+    fun `test type declaration with multiple members`() = doTest(
+            """
+{-| included *docs* -}
+type Foo
+     --^
+     = Bar
+     | Baz a
+     | Qux (Maybe a) a
+     | Lorem { ipsum: Dolor }
+""",
+            """
+<div class='definition'><pre><b>type</b> Foo</pre></div>
+<div class='content'><p>included <em>docs</em></p></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code>
+<p><code>Baz</code> a
+<p><code>Qux</code> (<a href="psi_element://Maybe">Maybe</a> a) a
+<p><code>Lorem</code> { ipsum : <a href="psi_element://Dolor">Dolor</a> }</td></table>
+""")
+
+    fun `test type alias`() = doTest(
+            """
+type alias Foo = Int
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+""")
+
+    fun `test type alias with docs`() = doTest(
+            """
+{-| included *docs* -}
+type alias Foo = Int
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+<div class='content'><p>included <em>docs</em></p></div>
+""")
+
+    fun `test type alias empty record`() = doTest(
+            """
+type alias Foo = { }
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+""")
+
+    fun `test type alias record with fields`() = doTest(
+            """
+type alias Foo = { a: Int, b: String }
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Fields:</td><td><p>
+<p><code>a</code> : <a href="psi_element://Int">Int</a>
+<p><code>b</code> : <a href="psi_element://String">String</a></td></table>
+""")
+
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }

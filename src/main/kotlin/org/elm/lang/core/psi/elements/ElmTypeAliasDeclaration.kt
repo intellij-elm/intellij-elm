@@ -49,7 +49,7 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
 
     /** `true` if the alias is exclusively a record */
     val isRecordAlias: Boolean
-        get() = aliasedRecord != null
+        get() = stub?.isRecordAlias ?: (aliasedRecord != null)
 
     /** The aliased record type if this alias is exclusively a record, or `null` otherwise. */
     val aliasedRecord: ElmRecordType?
