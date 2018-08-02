@@ -49,8 +49,19 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo : Int -&gt; Int -&gt; Int
-foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
+""")
+
+    fun `test function with qualified type annotation`() = doTest(
+            """
+foo : Int -> Http.Error
+foo bar = bar
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Http.Error">Http.Error</a>
+<b>foo</b> bar</pre></div>
 """)
 
     fun `test function with type and docs`() = doTest(
@@ -61,8 +72,8 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo : Int -&gt; Int -&gt; Int
-foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
 <div class='content'><p>foo some ints together</p></div>
 """)
 
@@ -88,8 +99,8 @@ foo bar baz =
   bar baz
 """,
             """
-<div class='definition'><pre>foo : Int -&gt; Int -&gt; Int
-foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
 <div class='content'><p>Map some <code>Int</code>s together,
 producing another <code>Int</code></p><h2>Example</h2><pre><code>bar = 1
 baz = 2
