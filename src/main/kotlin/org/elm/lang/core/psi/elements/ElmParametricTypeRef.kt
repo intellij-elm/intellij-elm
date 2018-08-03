@@ -3,7 +3,9 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -30,23 +32,21 @@ class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenc
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
-
-    // TODO [kl] cleanup the Psi tree so that this isn't such a mess
-    val upperPathTypeRefList: List<ElmUpperPathTypeRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmUpperPathTypeRef::class.java)
-
-    val typeVariableRefList: List<ElmTypeVariableRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeVariableRef::class.java)
-
-    val recordTypeList: List<ElmRecordType>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmRecordType::class.java)
-
-    val tupleTypeList: List<ElmTupleType>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTupleType::class.java)
-
-    val typeRefList: List<ElmTypeRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeRef::class.java)
-
+    /**
+     * All parameters of the type.
+     *
+     * The elements will be in source order, and will be any of the following types:
+     *
+     * [ElmUpperPathTypeRef], [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmTypeRef]
+     */
+    val allParameters: Sequence<ElmPsiElement>
+        get() = directChildren.filterIsInstance<ElmPsiElement>().filter {
+            it is ElmUpperPathTypeRef
+                    || it is ElmTypeVariableRef
+                    || it is ElmRecordType
+                    || it is ElmTupleType
+                    || it is ElmTypeRef
+        }
 
     override val referenceNameElement: PsiElement
         get() = upperCaseQID.upperCaseIdentifierList.last()
@@ -55,13 +55,14 @@ class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenc
         get() = referenceNameElement.text
 
     override fun getReference(): ElmReference =
-            getReferences().first()
+            references.first()
 
     override fun getReferences(): Array<ElmReference> {
-        return if (upperCaseQID.upperCaseIdentifierList.size > 1)
+        return if (upperCaseQID.upperCaseIdentifierList.size > 1) {
             arrayOf(QualifiedTypeReference(this, upperCaseQID),
                     QualifiedModuleNameReference(this, upperCaseQID))
-        else
+        } else {
             arrayOf(SimpleTypeReference(this))
+        }
     }
 }

@@ -1,12 +1,11 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiComment
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmTypeDeclarationStub
 
 
@@ -20,7 +19,7 @@ import org.elm.lang.core.stubs.ElmTypeDeclarationStub
  * In which case, [lowerTypeNameList] would contain a single element representing the
  * type variable `a`.
  */
-class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub> {
+class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub>, ElmDocTarget {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.UPPER)
@@ -44,5 +43,4 @@ class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub> {
      */
     val unionMemberList: List<ElmUnionMember>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmUnionMember::class.java)
-
 }

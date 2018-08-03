@@ -9,7 +9,7 @@ foo = 0
 --^
 """,
             """
-<div class='definition'><pre>foo</pre></div>
+<div class='definition'><pre><b>foo</b></pre></div>
 """)
 
     fun `test unary function`() = doTest(
@@ -18,7 +18,7 @@ foo bar = bar
 --^
 """,
             """
-<div class='definition'><pre>foo bar</pre></div>
+<div class='definition'><pre><b>foo</b> bar</pre></div>
 """)
 
     fun `test binary function with line comment`() = doTest(
@@ -28,7 +28,7 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> bar baz</pre></div>
 """)
 
     fun `test function with doc comment`() = doTest(
@@ -38,7 +38,7 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> bar baz</pre></div>
 <div class='content'><p>this should be included.</p></div>
 """)
 
@@ -49,8 +49,19 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo : Int -&gt; Int -&gt; Int
-foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
+""")
+
+    fun `test function with qualified type annotation`() = doTest(
+            """
+foo : Int -> Http.Error
+foo bar = bar
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Http.Error">Http.Error</a>
+<b>foo</b> bar</pre></div>
 """)
 
     fun `test function with type and docs`() = doTest(
@@ -61,8 +72,8 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre>foo : Int -&gt; Int -&gt; Int
-foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
 <div class='content'><p>foo some ints together</p></div>
 """)
 
@@ -88,8 +99,8 @@ foo bar baz =
   bar baz
 """,
             """
-<div class='definition'><pre>foo : Int -&gt; Int -&gt; Int
-foo bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
 <div class='content'><p>Map some <code>Int</code>s together,
 producing another <code>Int</code></p><h2>Example</h2><pre><code>bar = 1
 baz = 2
@@ -106,6 +117,8 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code></td></table>
 """)
 
     fun `test type declaration with docs`() = doTest(
@@ -117,7 +130,91 @@ type Foo = Bar
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
 <div class='content'><p>included <em>docs</em></p></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code></td></table>
 """)
+
+    fun `test type declaration with multiple members`() = doTest(
+            """
+{-| included *docs* -}
+type Foo
+     --^
+     = Bar
+     | Baz a
+     | Qux (Maybe a) a
+     | Lorem { ipsum: Dolor }
+""",
+            """
+<div class='definition'><pre><b>type</b> Foo</pre></div>
+<div class='content'><p>included <em>docs</em></p></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code>
+<p><code>Baz</code> a
+<p><code>Qux</code> (<a href="psi_element://Maybe">Maybe</a> a) a
+<p><code>Lorem</code> { ipsum : <a href="psi_element://Dolor">Dolor</a> }</td></table>
+""")
+
+    fun `test type alias`() = doTest(
+            """
+type alias Foo = Int
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+""")
+
+    fun `test type alias with docs`() = doTest(
+            """
+{-| included *docs* -}
+type alias Foo = Int
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+<div class='content'><p>included <em>docs</em></p></div>
+""")
+
+    fun `test type alias empty record`() = doTest(
+            """
+type alias Foo = { }
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+""")
+
+    fun `test type alias record with fields`() = doTest(
+            """
+type alias Foo = { a: Int, b: String }
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo</pre></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Fields:</td><td><p>
+<p><code>a</code> : <a href="psi_element://Int">Int</a>
+<p><code>b</code> : <a href="psi_element://String">String</a></td></table>
+""")
+
+    fun `test module`() = doTest(
+            """
+module Main exposing (main)
+      --^
+main = ()
+""",
+            """
+<div class='definition'><pre><i>module</i> Main</pre></div>
+""")
+
+    fun `test function parameter`() = doTest(
+            """
+foo bar = ()
+  --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }
