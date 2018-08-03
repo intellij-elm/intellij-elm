@@ -26,26 +26,24 @@ SOFTWARE.
 
 package org.elm.lang.core.psi
 
-import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
+import org.elm.lang.core.lexer.ElmLayoutLexer
+import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.stubs.ElmFileStub
-import java.util.*
 import kotlin.reflect.KClass
 
 
+val PsiElement.descendants: Sequence<PsiElement> get() = directChildren.flatMap { sequenceOf(it) + it.descendants }
 val PsiElement.ancestors: Sequence<PsiElement> get() = generateSequence(this) { it.parent }
 val PsiElement.prevSiblings: Sequence<PsiElement> get() = generateSequence(prevSibling) { it.prevSibling }
 val PsiElement.nextSiblings: Sequence<PsiElement> get() = generateSequence(nextSibling) { it.nextSibling }
 val PsiElement.directChildren: Sequence<PsiElement> get() = generateSequence(firstChild) { it.nextSibling }
-val Sequence<PsiElement>.withoutWs
-    get() =
-        filter { it !is PsiWhiteSpace && it.elementType != ElmTypes.VIRTUAL_END_DECL }
+val Sequence<PsiElement>.withoutWs get() = filter { it !is PsiWhiteSpace && it.elementType != VIRTUAL_END_DECL }
 val Sequence<PsiElement>.withoutWsOrComments get() = withoutWs.filter { it !is PsiComment }
 
 
@@ -65,13 +63,6 @@ fun <T : PsiElement> PsiElement.parentOfType(vararg classes: KClass<out T>): T? 
     return PsiTreeUtil.getParentOfType(this, *classes.map { it.java }.toTypedArray())
 }
 
-inline fun <reified T : PsiElement> PsiElement.parentsOfType(): Sequence<T> = parentsOfType(T::class.java)
-
-fun <T : PsiElement> PsiElement.parentsOfType(clazz: Class<out T>): Sequence<T> = parents().filterIsInstance(clazz)
-
-fun PsiElement.parents(): Sequence<PsiElement> = generateSequence(this) { it.parent }
-
-
 inline fun <reified T : PsiElement> PsiElement.contextOfType(strict: Boolean = true): T? =
         PsiTreeUtil.getContextOfType(this, T::class.java, strict)
 
@@ -80,21 +71,6 @@ inline fun <reified T : PsiElement> PsiElement.childOfType(strict: Boolean = tru
 
 inline fun <reified T : PsiElement> PsiElement.descendantsOfType(): Collection<T> =
         PsiTreeUtil.findChildrenOfType(this, T::class.java)
-
-fun PsiFile.descendantOfType(elementType: IElementType): PsiElement? {
-    // TODO [kl] surely IntelliJ provides a util function for finding a Psi leaf of a specific type?
-    val stack = Stack<ASTNode>()
-    stack.addAll(node.getChildren(null))
-
-    while (stack.isNotEmpty()) {
-        val candidate = stack.pop()
-        if (candidate.elementType == elementType)
-            return candidate.psi
-        else
-            stack.addAll(candidate.getChildren(null))
-    }
-    return null
-}
 
 /**
  * Computes the start offset of the receiver relative to [owner].
