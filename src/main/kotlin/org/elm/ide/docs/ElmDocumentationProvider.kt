@@ -152,6 +152,19 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
         append(" ", ids.last().text)
         renderDefinedInQIDs(ids.dropLast(1))
     }
+
+    renderDocContent(decl) { html ->
+        val declarations = ModuleScope(decl.elmFile).getDeclaredValues()
+
+        // Render @docs commands
+        html.replace(Regex("<p>@docs (.+?)</p>")) { match ->
+            val names = match.groupValues[1].split(Regex(", +"))
+            names.joinToString(", ") { name ->
+                val target = declarations.find { it.name == name }
+                target?.let { buildString { renderLink(name, name) } } ?: name
+            }
+        }
+    }
 }
 
 private fun documentationFor(clause: ElmAsClause): String? = buildString {
@@ -244,7 +257,7 @@ private fun StringBuilder.renderLink(refText: String, text: String) {
     DocumentationManagerUtil.createHyperlink(this, refText, text, true)
 }
 
-private fun StringBuilder.renderDocContent(element: ElmDocTarget?) {
+private fun StringBuilder.renderDocContent(element: ElmDocTarget?, transform: (String) -> String = { it }) {
     val doc = element?.docComment
 
     if (doc == null || doc.elementType != BLOCK_COMMENT) return
@@ -259,7 +272,7 @@ private fun StringBuilder.renderDocContent(element: ElmDocTarget?) {
     val flavor = ElmDocMarkdownFlavourDescriptor()
     val root = MarkdownParser(flavor).buildMarkdownTreeFromString(content)
     content {
-        append(HtmlGenerator(content, root, flavor).generateHtml())
+        append(transform(HtmlGenerator(content, root, flavor).generateHtml()))
     }
 }
 

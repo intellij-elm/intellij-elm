@@ -1,14 +1,13 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.presentation.getPresentation
 import org.elm.lang.core.moduleLookupHack
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ElmStubbedElement
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
 import org.elm.lang.core.stubs.ElmNamedStub
 
@@ -22,7 +21,7 @@ import org.elm.lang.core.stubs.ElmNamedStub
  * - give the module a name
  * - expose values and types
  */
-class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNamedElement {
+class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNamedElement, ElmDocTarget {
 
     constructor(node: ASTNode) :
             super(node)
@@ -54,13 +53,13 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
 
     val exposesAll: Boolean
-        get() = getStub()?.exposesAll
+        get() = stub?.exposesAll
                 ?: (exposingList?.doubleDot != null)
 
 
     override fun getName(): String {
-        val stub = getStub() as? ElmNamedStub
-        val fullName = if (stub != null) stub.name else upperCaseQID.text
+        val stub = stub as? ElmNamedStub
+        val fullName = stub?.name ?: upperCaseQID.text
         return moduleLookupHack(fullName)
     }
 
@@ -75,4 +74,7 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
 
     override fun getPresentation() =
             getPresentation(this)
+
+    override val docComment: PsiComment?
+        get() = (nextSiblings.withoutWs.firstOrNull() as? PsiComment)?.takeIf { it.text.startsWith("{-|") }
 }

@@ -241,6 +241,29 @@ main = ()
 <div class='definition'><pre><i>module</i> Main</pre></div>
 """)
 
+    // This test is kludgy: since a line comment before a doc comment will cause the doc comment to fail to attach to
+    // the module element, we need to put the line comment inside the doc comment.
+    fun `test module with docstring`() = doTest(
+            """
+module Main exposing (main)
+{-|  --^
+
+Module docs
+
+# Header
+@docs main
+
+@docs foo, bar
+-}
+main = ()
+foo = ()
+bar = ()
+""",
+            """
+<div class='definition'><pre><i>module</i> Main</pre></div>
+<div class='content'><p>--^</p><p>Module docs</p><h2>Header</h2><a href="psi_element://main">main</a><a href="psi_element://foo">foo</a>, <a href="psi_element://bar">bar</a></div>
+""")
+
     fun `test function parameter`() = doTest(
             """
 foo bar = ()
