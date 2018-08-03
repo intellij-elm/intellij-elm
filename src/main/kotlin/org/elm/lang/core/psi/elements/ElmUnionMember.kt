@@ -34,8 +34,7 @@ class ElmUnionMember : ElmStubbedNamedElementImpl<ElmUnionMemberStub> {
      */
     val allParameters: Sequence<ElmPsiElement>
         get() = directChildren.filterIsInstance<ElmPsiElement>().filter {
-            it is ElmUpperPathTypeRef
-                    || it is ElmTypeVariableRef
+            it is ElmTypeVariableRef
                     || it is ElmRecordType
                     || it is ElmTupleType
                     || it is ElmTypeRef

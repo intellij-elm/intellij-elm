@@ -37,7 +37,7 @@ class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenc
      *
      * The elements will be in source order, and will be any of the following types:
      *
-     * [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmTypeRef]
+     * [ElmUpperPathTypeRef], [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmTypeRef]
      */
     val allParameters: Sequence<ElmPsiElement>
         get() = directChildren.filterIsInstance<ElmPsiElement>().filter {
