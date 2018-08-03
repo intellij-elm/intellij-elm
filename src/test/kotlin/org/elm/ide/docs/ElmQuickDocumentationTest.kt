@@ -77,6 +77,18 @@ foo bar baz = bar baz
 <div class='content'><p>foo some ints together</p></div>
 """)
 
+    fun `test function in module`() = doTest(
+            """
+module Foo.Bar exposing (foo)
+
+foo bar = bar
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> bar<i> defined in </i>Foo.Bar</pre></div>
+""")
+
+
     fun `test doc comments with markdown`() = doTest(
             """
 {-| Map some `Int`s together,
@@ -121,6 +133,19 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
+    fun `test type declaration in module`() = doTest(
+            """
+module Foo.Bar exposing (Foo)
+
+type Foo = Bar
+     --^
+""",
+            """
+<div class='definition'><pre><b>type</b> Foo<i> defined in </i>Foo.Bar</pre></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code></td></table>
+""")
+
     fun `test type declaration with docs`() = doTest(
             """
 {-| included *docs* -}
@@ -161,6 +186,17 @@ type alias Foo = Int
 """,
             """
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
+""")
+
+    fun `test type alias in module`() = doTest(
+            """
+module Foo.Bar exposing (Foo)
+
+type alias Foo = Int
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo<i> defined in </i>Foo.Bar</pre></div>
 """)
 
     fun `test type alias with docs`() = doTest(

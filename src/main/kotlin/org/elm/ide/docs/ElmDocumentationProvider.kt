@@ -67,6 +67,8 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
         for (pat in decl.patternList) {
             append(" ", pat.text)
         }
+
+        renderDefinitionLocation(decl)
     }
     renderDocContent(parent)
 }
@@ -81,6 +83,7 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
         for (type in types) {
             append(" ", type.name)
         }
+        renderDefinitionLocation(decl)
     }
 
     renderDocContent(decl)
@@ -103,8 +106,9 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
         b { append("type alias") }
         append(" ").append(name.text)
         for (type in types) {
-            append(" ").append(type.name)
+            append(" ", type.name)
         }
+        renderDefinitionLocation(decl)
     }
 
     renderDocContent(decl)
@@ -135,6 +139,8 @@ private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
 
         i { append("of function ") }
         renderLink(decl.name, decl.name)
+
+        renderDefinitionLocation(pattern)
     }
 }
 
@@ -144,17 +150,24 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
     definition {
         i { append("module") }
         append(" ", ids.last().text)
-
-        if (ids.size > 1) {
-            i { append(" declared in ") }
-            ids.dropLast(1).joinTo(this, ".") { it.text }
-        }
+        renderDefinedInQIDs(ids.dropLast(1))
     }
 }
 
 private fun documentationFor(clause: ElmAsClause): String? = buildString {
     val decl = clause.parent?.reference?.resolve() as? ElmModuleDeclaration ?: return null
     return documentationFor(decl)
+}
+
+private fun StringBuilder.renderDefinitionLocation(element: ElmPsiElement) {
+    val module = element.elmFile.getModuleDecl() ?: return
+    renderDefinedInQIDs(module.upperCaseQID.upperCaseIdentifierList)
+}
+
+private fun StringBuilder.renderDefinedInQIDs(ids: List<PsiElement>) {
+    if (ids.isEmpty()) return
+    i { append(" defined in ") }
+    ids.joinTo(this, ".") { it.text }
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmUpperPathTypeRef) {
@@ -168,6 +181,7 @@ private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
 
 private fun StringBuilder.renderDefinition(record: ElmRecordType) {
     append("{ ")
+
     for ((i, field) in record.fieldTypeList.withIndex()) {
         if (i > 0) append(", ")
         append(field.lowerCaseIdentifier.text).append(" : ")
