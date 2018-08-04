@@ -6,8 +6,11 @@ import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmDocTarget
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
+import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -157,7 +160,7 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
     }
 
     renderDocContent(decl) { html ->
-        val declarations = ModuleScope(decl.elmFile).getDeclaredValues()
+        val declarations = ModuleScope(decl.elmFile).run { getDeclaredValues() + getDeclaredTypes() }
 
         // Render @docs commands
         html.replace(Regex("<p>@docs (.+?)</p>", RegexOption.DOT_MATCHES_ALL)) { match ->
