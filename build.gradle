@@ -8,14 +8,14 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.51"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.60"
         classpath "com.github.JetBrains:gradle-grammar-kit-plugin:2018.1.2"
     }
 }
 
 plugins {
     id "org.jetbrains.intellij" version "0.3.0"
-    id "org.jetbrains.kotlin.jvm" version "1.2.51"
+    id "org.jetbrains.kotlin.jvm" version "1.2.60"
 }
 
 task wrapper(type: Wrapper) {
@@ -34,9 +34,10 @@ repositories {
     maven { url 'http://dl.bintray.com/jetbrains/markdown' }
 }
 
-ext.kotlinVersion = '1.2.51'
-ext.junitVersion = '4.1.1'
-ext.jacksonVersion = '2.9.5'
+ext.kotlinVersion = '1.2.60'
+ext.junitVersion = '4.12'
+ext.jacksonVersion = '2.9.6'
+ext.markdownVersion = '0.1.31'
 
 // ---------------
 // JAVA AND KOTLIN
@@ -145,7 +146,7 @@ dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
     compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
-    compile("org.jetbrains:markdown:0.1.28") {
+    compile("org.jetbrains:markdown:$markdownVersion") {
         exclude module: "kotlin-runtime"
         exclude module: "kotlin-stdlib"
     }
