@@ -150,15 +150,18 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
     definition {
         i { append("module") }
         append(" ", ids.last().text)
-        renderDefinedInQIDs(ids.dropLast(1))
+        if (ids.size > 1) {
+            i { append(" defined in ") }
+            ids.dropLast(1).joinTo(this, ".") { it.text }
+        }
     }
 
     renderDocContent(decl) { html ->
         val declarations = ModuleScope(decl.elmFile).getDeclaredValues()
 
         // Render @docs commands
-        html.replace(Regex("<p>@docs (.+?)</p>")) { match ->
-            val names = match.groupValues[1].split(Regex(", +"))
+        html.replace(Regex("<p>@docs (.+?)</p>", RegexOption.DOT_MATCHES_ALL)) { match ->
+            val names = match.groupValues[1].split(Regex(",\\s+"))
             names.joinToString(", ") { name ->
                 val target = declarations.find { it.name == name }
                 target?.let { buildString { renderLink(name, name) } } ?: name
@@ -174,18 +177,12 @@ private fun documentationFor(clause: ElmAsClause): String? = buildString {
 
 private fun StringBuilder.renderDefinitionLocation(element: ElmPsiElement) {
     val module = element.elmFile.getModuleDecl() ?: return
-    renderDefinedInQIDs(module.upperCaseQID.upperCaseIdentifierList)
-}
-
-private fun StringBuilder.renderDefinedInQIDs(ids: List<PsiElement>) {
-    if (ids.isEmpty()) return
     i { append(" defined in ") }
-    ids.joinTo(this, ".") { it.text }
+    append(module.upperCaseQID.text)
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmUpperPathTypeRef) {
-    val refText = ref.upperCaseQID.upperCaseIdentifierList.joinToString(".") { it.text }
-    renderLink(refText, ref.text)
+    renderLink(ref.upperCaseQID.text, ref.text)
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {

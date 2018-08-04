@@ -251,17 +251,20 @@ module Main exposing (main)
 Module docs
 
 # Header
-@docs main
+@docs main, foo, bar
 
-@docs foo, bar
+# Helpers
+@docs main, foo,
+      bar, baz
 -}
 main = ()
 foo = ()
 bar = ()
+baz = ()
 """,
             """
 <div class='definition'><pre><i>module</i> Main</pre></div>
-<div class='content'><p>--^</p><p>Module docs</p><h2>Header</h2><a href="psi_element://main">main</a><a href="psi_element://foo">foo</a>, <a href="psi_element://bar">bar</a></div>
+<div class='content'><p>--^</p><p>Module docs</p><h2>Header</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://bar">bar</a><h2>Helpers</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://bar">bar</a>, <a href="psi_element://baz">baz</a></div>
 """)
 
     fun `test function parameter`() = doTest(
