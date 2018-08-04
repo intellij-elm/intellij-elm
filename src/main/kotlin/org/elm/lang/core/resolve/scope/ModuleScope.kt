@@ -90,10 +90,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
 
     fun getDeclaredTypes(): List<ElmNamedElement> {
-        return listOf<List<ElmNamedElement>>(
-                elmFile.getTypeDeclarations(),
-                elmFile.getTypeAliasDeclarations()
-        ).flatten()
+        return elmFile.getTypeDeclarations() + elmFile.getTypeAliasDeclarations()
     }
 
 

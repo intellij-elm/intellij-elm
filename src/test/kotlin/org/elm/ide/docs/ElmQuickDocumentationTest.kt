@@ -77,6 +77,18 @@ foo bar baz = bar baz
 <div class='content'><p>foo some ints together</p></div>
 """)
 
+    fun `test function in module`() = doTest(
+            """
+module Foo.Bar exposing (foo)
+
+foo bar = bar
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> bar<i> defined in </i>Foo.Bar</pre></div>
+""")
+
+
     fun `test doc comments with markdown`() = doTest(
             """
 {-| Map some `Int`s together,
@@ -117,6 +129,19 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
+<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<p><code>Bar</code></td></table>
+""")
+
+    fun `test type declaration in module`() = doTest(
+            """
+module Foo.Bar exposing (Foo)
+
+type Foo = Bar
+     --^
+""",
+            """
+<div class='definition'><pre><b>type</b> Foo<i> defined in </i>Foo.Bar</pre></div>
 <table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
 <p><code>Bar</code></td></table>
 """)
@@ -163,6 +188,17 @@ type alias Foo = Int
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
 """)
 
+    fun `test type alias in module`() = doTest(
+            """
+module Foo.Bar exposing (Foo)
+
+type alias Foo = Int
+         --^
+""",
+            """
+<div class='definition'><pre><b>type alias</b> Foo<i> defined in </i>Foo.Bar</pre></div>
+""")
+
     fun `test type alias with docs`() = doTest(
             """
 {-| included *docs* -}
@@ -203,6 +239,32 @@ main = ()
 """,
             """
 <div class='definition'><pre><i>module</i> Main</pre></div>
+""")
+
+    // This test is kludgy: since a line comment before a doc comment will cause the doc comment to fail to attach to
+    // the module element, we need to put the line comment inside the doc comment.
+    fun `test module with docstring`() = doTest(
+            """
+module Main exposing (main)
+{-|  --^
+
+Module docs
+
+# Header
+@docs main, foo, Bar
+
+# Helpers
+@docs main, foo,
+      Bar, Baz
+-}
+main = ()
+foo = ()
+type alias Bar = ()
+type Baz = Baz
+""",
+            """
+<div class='definition'><pre><i>module</i> Main</pre></div>
+<div class='content'><p>--^</p><p>Module docs</p><h2>Header</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://Bar">Bar</a><h2>Helpers</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://Bar">Bar</a>, <a href="psi_element://Baz">Baz</a></div>
 """)
 
     fun `test function parameter`() = doTest(

@@ -6,8 +6,11 @@ import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmDocTarget
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
+import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -67,6 +70,8 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
         for (pat in decl.patternList) {
             append(" ", pat.text)
         }
+
+        renderDefinitionLocation(decl)
     }
     renderDocContent(parent)
 }
@@ -81,6 +86,7 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
         for (type in types) {
             append(" ", type.name)
         }
+        renderDefinitionLocation(decl)
     }
 
     renderDocContent(decl)
@@ -103,8 +109,9 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
         b { append("type alias") }
         append(" ").append(name.text)
         for (type in types) {
-            append(" ").append(type.name)
+            append(" ", type.name)
         }
+        renderDefinitionLocation(decl)
     }
 
     renderDocContent(decl)
@@ -135,6 +142,8 @@ private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
 
         i { append("of function ") }
         renderLink(decl.name, decl.name)
+
+        renderDefinitionLocation(pattern)
     }
 }
 
@@ -144,10 +153,22 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
     definition {
         i { append("module") }
         append(" ", ids.last().text)
-
         if (ids.size > 1) {
-            i { append(" declared in ") }
+            i { append(" defined in ") }
             ids.dropLast(1).joinTo(this, ".") { it.text }
+        }
+    }
+
+    renderDocContent(decl) { html ->
+        val declarations = ModuleScope(decl.elmFile).run { getDeclaredValues() + getDeclaredTypes() }
+
+        // Render @docs commands
+        html.replace(Regex("<p>@docs (.+?)</p>", RegexOption.DOT_MATCHES_ALL)) { match ->
+            val names = match.groupValues[1].split(Regex(",\\s+"))
+            names.joinToString(", ") { name ->
+                val target = declarations.find { it.name == name }
+                target?.let { buildString { renderLink(name, name) } } ?: name
+            }
         }
     }
 }
@@ -157,9 +178,14 @@ private fun documentationFor(clause: ElmAsClause): String? = buildString {
     return documentationFor(decl)
 }
 
+private fun StringBuilder.renderDefinitionLocation(element: ElmPsiElement) {
+    val module = element.elmFile.getModuleDecl() ?: return
+    i { append(" defined in ") }
+    append(module.upperCaseQID.text)
+}
+
 private fun StringBuilder.renderDefinition(ref: ElmUpperPathTypeRef) {
-    val refText = ref.upperCaseQID.upperCaseIdentifierList.joinToString(".") { it.text }
-    renderLink(refText, ref.text)
+    renderLink(ref.upperCaseQID.text, ref.text)
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
@@ -168,6 +194,7 @@ private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
 
 private fun StringBuilder.renderDefinition(record: ElmRecordType) {
     append("{ ")
+
     for ((i, field) in record.fieldTypeList.withIndex()) {
         if (i > 0) append(", ")
         append(field.lowerCaseIdentifier.text).append(" : ")
@@ -230,7 +257,7 @@ private fun StringBuilder.renderLink(refText: String, text: String) {
     DocumentationManagerUtil.createHyperlink(this, refText, text, true)
 }
 
-private fun StringBuilder.renderDocContent(element: ElmDocTarget?) {
+private fun StringBuilder.renderDocContent(element: ElmDocTarget?, transform: (String) -> String = { it }) {
     val doc = element?.docComment
 
     if (doc == null || doc.elementType != BLOCK_COMMENT) return
@@ -245,7 +272,7 @@ private fun StringBuilder.renderDocContent(element: ElmDocTarget?) {
     val flavor = ElmDocMarkdownFlavourDescriptor()
     val root = MarkdownParser(flavor).buildMarkdownTreeFromString(content)
     content {
-        append(HtmlGenerator(content, root, flavor).generateHtml())
+        append(transform(HtmlGenerator(content, root, flavor).generateHtml()))
     }
 }
 
