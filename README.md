@@ -1,6 +1,6 @@
+[![CircleCI](https://circleci.com/gh/klazuka/intellij-elm.svg?style=svg)](https://circleci.com/gh/klazuka/intellij-elm)
 
 Provides support for the [Elm](http://elm-lang.org) programming language in IntelliJ and WebStorm.
-
 
 
 # Features 
