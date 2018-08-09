@@ -32,6 +32,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
                 ?: return false
 
         return path.contains("/package/elm/core/")
+                || path.contains("/packages/elm-lang/core/") // TODO [drop 0.18] delete the "packages" clause
     }
 
     override fun setName(name: String): PsiElement {
