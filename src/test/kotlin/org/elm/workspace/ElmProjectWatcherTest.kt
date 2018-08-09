@@ -38,6 +38,16 @@ class ElmProjectWatcherTest: ElmTestBase() {
     }
 
 
+    // TODO [drop 0.18] remove this test
+    fun `test detects a change involving legacy elm json project manifest file`() {
+        val vFile = newVirtualFile(ElmToolchain.ELM_LEGACY_JSON)
+        watcher.checkTriggered(newCreateEvent(vFile))
+        watcher.checkTriggered(newChangeEvent(vFile))
+        watcher.checkTriggered(newDeleteEvent(vFile))
+        runWriteAction { vFile.delete(this) }
+    }
+
+
     fun `test ignores files other than elm json`() {
         val vFile = newVirtualFile("foo.json")
         watcher.checkNotTriggered(newCreateEvent(vFile))
