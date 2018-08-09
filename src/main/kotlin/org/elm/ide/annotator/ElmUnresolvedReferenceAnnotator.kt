@@ -6,7 +6,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import org.elm.ide.intentions.ElmImportIntentionAction
 import org.elm.ide.intentions.ElmMakeDeclarationIntentionAction
+import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.resolve.reference.TypeVariableReference
 import org.elm.lang.core.resolve.scope.GlobalScope
 
 class ElmUnresolvedReferenceAnnotator : Annotator {
@@ -30,15 +32,20 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     }
 
     private fun safeToIgnore(ref: PsiReference, element: PsiElement): Boolean {
-        // Ignore refs to to built-in types and values
+        // Ignore refs to built-in types and values
         if (GlobalScope.allBuiltInSymbols.contains(ref.canonicalText))
             return true
 
-        // Ignore refs to Kernal (JavaScript) modules
+        // Ignore refs to Kernel (JavaScript) modules
         if (element is ElmValueExpr && element.upperCaseQID?.isQualifiedNativeRef()
                 ?: element.valueQID?.isQualifiedNativeRef() ?: false) {
             return true
         } else if (element is ElmImportClause && element.moduleQID.isQualifiedNativeRef()) {
+            return true
+        }
+
+        // Ignore refs to type variables in a type annotation
+        if (ref is TypeVariableReference && element.ancestors.any { it is ElmTypeAnnotation }) {
             return true
         }
 

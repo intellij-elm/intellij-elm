@@ -28,6 +28,17 @@ type alias MyList = List
 """)
 
 
+    fun `test type annotation record extension base variables have no errors`() = checkErrors("""
+foo : { a | name : String } -> String
+""")
+
+
+    fun `test record extension base variables are checked for errors in type declarations`() = checkErrors("""
+type alias Foo a = { <error descr="Unresolved reference 'b'">b</error> | name : String }
+type Bar c = Bar { <error descr="Unresolved reference 'd'">d</error> | name : String }
+""")
+
+
     fun `test qualified Kernel refs have no errors`() = checkErrors("""
 import Elm.Kernel.Scheduler
 f = Elm.Kernel.Scheduler.succeed
