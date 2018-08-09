@@ -82,10 +82,7 @@ apply plugin: 'org.jetbrains.intellij'
 intellij {
     version intellijPlatformVersion
     pluginName 'intellij-elm'
-}
-
-patchPluginXml {
-    sinceBuild = 162 // IntelliJ 2016.2
+    updateSinceUntilBuild false
 }
 
 // ------------------------------------------------
