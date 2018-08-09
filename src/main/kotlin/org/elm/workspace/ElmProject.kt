@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.openapiext.CachedVirtualFile
+import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.InputStream
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -68,6 +69,20 @@ sealed class ElmProject(
          */
         @Throws(ProjectLoadException::class)
         fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+
+            if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
+                // Handle legacy Elm 0.18 package. We don't need to model the dependencies
+                // because Elm 0.18 stored everything in a local `elm-stuff` directory, and we assume
+                // that the user has not excluded that directory from the project.
+                return ElmApplicationProject(
+                        manifestPath = manifestPath,
+                        elmVersion = "0.18.0",
+                        dependencies = emptyList(),
+                        testDependencies = emptyList(),
+                        sourceDirectories = emptyList()
+                )
+            }
+
             val node = try {
                 objectMapper.readTree(inputStream)
             } catch (e: JsonProcessingException) {

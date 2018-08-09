@@ -61,11 +61,14 @@ data class ElmToolchain(val binDirPath: Path) {
         }
 
 
-    // TODO [kl] scrape from the Elm compiler
-    val compilerVersion = "0.19.0"
 
 
     fun packageRootDir(name: String, version: String): VirtualFile? {
+        // TODO [kl] scrape the version from the Elm compiler
+        // it's ok to assume 19 here because this will never be called from 0.18 code,
+        // but even this assumption will not be safe once future 19 releases are made.
+        val compilerVersion = "0.19.0"
+
         val path = "$elmHomePath/$compilerVersion/package/$name/$version/"
         return LocalFileSystem.getInstance().findFileByPath(path)
     }
@@ -92,8 +95,9 @@ data class ElmToolchain(val binDirPath: Path) {
     companion object {
         val ELM_BINARY = "elm"
         val ELM_JSON = "elm.json"
+        val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
 
-        val MIN_SUPPORTED_COMPILER_VERSION = SemVer("0.19.0", 0, 19, 0)
+        val MIN_SUPPORTED_COMPILER_VERSION = SemVer("0.18.0", 0, 18, 0)
 
         fun suggest(project: Project): ElmToolchain? {
             return binDirSuggestions(project).mapNotNull {

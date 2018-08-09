@@ -50,6 +50,11 @@ class ElmListOfOperands(node: ASTNode) : ElmPsiElementImpl(node) {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmRecord::class.java)
     }
 
+    // TODO [drop 0.18] remove this
+    fun getTupleConstructorList(): List<ElmTupleConstructor> {
+        return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTupleConstructor::class.java)
+    }
+
     fun getUnitList(): List<ElmUnit> {
         return PsiTreeUtil.getChildrenOfTypeAsList(this, ElmUnit::class.java)
     }

@@ -440,4 +440,59 @@ power a b = 42
 """)
 
 
+    // LEGACY Elm 0.18 BINARY OPERATORS
+
+
+    // TODO [drop 0.18] remove this test
+    fun `test legacy binary operator in import exposing list`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Math exposing ((**))
+                      --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+    // TODO [drop 0.18] remove this test
+    fun `test legacy binary operator usage in value expression`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Math exposing ((**))
+f = 2 ** 3
+     --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+    // TODO [drop 0.18] remove this test
+    fun `test legacy binary operator via import exposing all`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Math exposing (..)
+f = 2 ** 3
+     --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+    // TODO [drop 0.18] remove this test
+    fun `test legacy binary operator as a function`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Math exposing ((**))
+f = (**) 2 3
+    --^Math.elm
+
+--@ Math.elm
+module Math exposing ((**))
+(**) a b = a ^ b
+""")
+
+
 }

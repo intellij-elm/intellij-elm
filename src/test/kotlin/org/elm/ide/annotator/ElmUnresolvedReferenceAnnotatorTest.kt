@@ -34,11 +34,37 @@ f = Elm.Kernel.Scheduler.succeed
 """)
 
 
+    // TODO [drop 0.18] remove this test
+    fun `test qualified Native refs have no errors`() = checkErrors("""
+import Native.Scheduler
+f = Native.Scheduler.succeed
+""")
+
+
     fun `test type annotation refs have warning`() = checkWarnings("""
 type Int = Placeholder
 <weak_warning descr="'f' does not exist">f : Int -> Int</weak_warning>
 
 g : Int
 g = 0
+""")
+
+
+    // LEGACY Elm 0.18 TESTS
+
+    // TODO [drop 0.18] remove this test
+    fun `test legacy built-in type refs have no errors`() = checkErrors("""
+type alias MyStr = String
+type alias MyInt = Int
+type alias MyFloat = Float
+type alias MyBool = Bool
+type alias MyChar = Char
+type alias MyList = List
+""")
+
+    // TODO [drop 0.18] remove this test
+    fun `test legacy built-in value refs have no errors`() = checkErrors("""
+x = True
+y = False
 """)
 }

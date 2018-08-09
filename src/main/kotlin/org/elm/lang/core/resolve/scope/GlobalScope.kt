@@ -33,8 +33,12 @@ class GlobalScope(val project: Project) {
          * Values and Types that are built-in to the Elm compiler. Any occurrences of
          * these symbols should be treated as always resolved.
          */
-        val builtInValues = emptySet<String>()
-        val builtInTypes = setOf("List")
+        // TODO [drop 0.18] replace with `emptySet<String>()`
+        val builtInValues = setOf("True", "False")
+
+        // TODO [drop 0.18] replace with `setOf("List")`
+        val builtInTypes = setOf("Bool", "String", "Char", "Int", "Float", "List")
+
         val allBuiltInSymbols = builtInValues.union(builtInTypes)
     }
 
@@ -50,6 +54,10 @@ class GlobalScope(val project: Project) {
         val rest = mutableListOf<ElmNamedElement>()
         rest.addAll(helper("Basics"))
         rest.addAll(helper("List").filter { it.name == "::" })
+
+        // TODO [drop 0.18] remove this line (the `!` operator was removed in 0.19)
+        rest.addAll(helper("Platform.Cmd").filter { it.name == "!" })
+
         return rest
     }
 

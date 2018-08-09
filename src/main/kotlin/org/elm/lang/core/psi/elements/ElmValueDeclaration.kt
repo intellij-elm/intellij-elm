@@ -34,6 +34,11 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
 
+    /** Warning: Elm 0.18 only! will always be null in 0.19 */
+    // TODO [drop 0.18] remove this property
+    val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
+
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
 
@@ -66,6 +71,12 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
             if (includeParameters)
                 namedElements.addAll(functionDeclarationLeft!!.namedParameters)
 
+        } else if (operatorDeclarationLeft != null) {
+            // an operator declaration
+            namedElements.add(operatorDeclarationLeft!!)
+            if (includeParameters)
+                namedElements.addAll(operatorDeclarationLeft!!.namedParameters)
+
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
             namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))
@@ -78,8 +89,14 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
      * Names that are declared as parameters to a function
      */
     fun declaredParameters(): List<ElmNamedElement> {
-        return functionDeclarationLeft?.namedParameters
-                ?: emptyList()
+        return if (functionDeclarationLeft != null) {
+            functionDeclarationLeft!!.namedParameters
+        } else if (operatorDeclarationLeft != null) {
+            // TODO [drop 0.18] remove this case entirely
+            operatorDeclarationLeft!!.namedParameters
+        } else {
+            emptyList()
+        }
     }
 
     /** The type annotation for this function, or `null` if there isn't one. */

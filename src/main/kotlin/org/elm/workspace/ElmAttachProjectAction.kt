@@ -14,9 +14,10 @@ class ElmAttachProjectAction : AnAction() {
                 ?: return
         saveAllDocuments()
         val filename = ElmToolchain.ELM_JSON
+        val legacyFilename = ElmToolchain.ELM_LEGACY_JSON // TODO [drop 0.18] remove this legacy stuff
         val descriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
-                .withFileFilter { it.name == filename }
-                .withTitle("Select $filename")
+                .withFileFilter { it.name == filename || it.name == legacyFilename }
+                .withTitle("Select $filename (Elm 0.19) or $legacyFilename (Elm 0.18)")
         val chooser = FileChooserFactory.getInstance().createFileChooser(descriptor, project, null)
         val file = chooser.choose(project).singleOrNull()
                 ?: return

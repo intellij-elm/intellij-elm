@@ -22,6 +22,9 @@
     elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
+    // TODO [drop 0.18] remove this stub
+    elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+
     tokens = [
         // tokens used by manual/external parse rules
         UPPER_CASE_QID='UPPER_CASE_QID'
@@ -160,11 +163,15 @@ ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
 
 private InternalValueDeclarationLeft ::=
     FunctionDeclarationLeft
+    | OperatorDeclarationLeft
     | Pattern
 
 FunctionDeclarationLeft ::=
     LOWER_CASE_IDENTIFIER Pattern*
 
+ // TODO [drop 0.18] remove OperatorDeclarationLeft
+OperatorDeclarationLeft ::=
+    OperatorAsFunction_inner Pattern*
 
 
 // TYPE DECLARATIONS AND REFERENCES
@@ -223,8 +230,9 @@ TupleType ::=
     | LEFT_PARENTHESIS TypeRef (COMMA TypeRef)+ RIGHT_PARENTHESIS
 
 
+ // TODO [drop 0.18] remove the OperatorAsFunction_inner clause
 TypeAnnotation ::=
-    LOWER_CASE_IDENTIFIER COLON TypeRef
+    (LOWER_CASE_IDENTIFIER|OperatorAsFunction_inner) COLON TypeRef
     { pin = 'COLON' }
 
 PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
@@ -255,6 +263,7 @@ private Operand ::=
     | FieldAccessorFunction
     | OperatorAsFunction
     | ParenthesedExpression
+    | TupleConstructor
     | Tuple
     | List
     | Record
@@ -290,6 +299,10 @@ private Tuple ::=
 NonEmptyTuple ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
     {pin(".*")=2}
+
+// TODO [drop 0.18] remove this
+TupleConstructor ::=
+    LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
 Unit ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
@@ -428,6 +441,18 @@ InfixDeclaration ::=
 
 
 GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
+
+
+ // TODO [drop 0.18] remove OperatorConfig
+OperatorConfig ::=
+    OperatorConfigKeyword NUMBER_LITERAL OPERATOR_IDENTIFIER
+
+ // TODO [drop 0.18] remove OperatorConfigKeyword
+private OperatorConfigKeyword ::=
+    INFIXL
+    | INFIX
+    | INFIXR
+
 
 
 

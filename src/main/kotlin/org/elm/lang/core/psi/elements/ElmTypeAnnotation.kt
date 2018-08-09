@@ -31,6 +31,7 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
      *
      * e.g. `(++)` in `(++) : String -> String -> String`
      */
+    // TODO [drop 0.18] remove this property (and make lowerCaseIdentifier return non-null!)
     val operatorIdentifier: PsiElement?
         get() = findChildByType(OPERATOR_IDENTIFIER)
 
