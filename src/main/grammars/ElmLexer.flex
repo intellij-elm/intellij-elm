@@ -93,6 +93,8 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     "alias"                     { return ALIAS; }
     "port"                      { return PORT; }
     "infix"                     { return INFIX; }
+    "infixl"                    { return INFIXL; } // TODO [drop 0.18] remove infixl entirely
+    "infixr"                    { return INFIXR; } // TODO [drop 0.18] remove infixr entirely
     {ReservedKeyword}           { return RESERVED; }
     "("                         { return LEFT_PARENTHESIS; }
     ")"                         { return RIGHT_PARENTHESIS; }

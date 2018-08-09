@@ -42,6 +42,8 @@ class ElmPsiFactory(private val project: Project) {
                     FIELD -> ElmField(node)
                     FIELD_TYPE -> ElmFieldType(node)
                     FUNCTION_DECLARATION_LEFT -> ElmFunctionDeclarationLeft(node)
+                    OPERATOR_DECLARATION_LEFT -> ElmOperatorDeclarationLeft(node) // TODO [drop 0.18] remove this line
+                    OPERATOR_CONFIG -> ElmOperatorConfig(node) // TODO [drop 0.18] remove this line
                     GLSL_CODE -> ElmGlslCode(node)
                     IF_ELSE -> ElmIfElse(node)
                     IMPORT_CLAUSE -> ElmImportClause(node)

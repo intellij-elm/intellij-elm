@@ -236,6 +236,10 @@ data class Candidate(
                 is ElmInfixDeclaration ->
                     Pair("($name)", exposingList.exposesName(name))
 
+                // TODO [drop 0.18] remove this clause
+                is ElmOperatorDeclarationLeft ->
+                    Pair("($name)", exposingList.exposesName(name))
+
                 else ->
                     Pair(name, exposingList.exposesName(name))
             }
