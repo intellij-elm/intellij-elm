@@ -60,7 +60,7 @@ class ElmPsiFactory(private val project: Project) {
                     OPERATOR -> ElmOperator(node)
                     OPERATOR_AS_FUNCTION -> ElmOperatorAsFunction(node)
                     PARAMETRIC_TYPE_REF -> ElmParametricTypeRef(node)
-                    PARENTHESED_EXPRESSION -> ElmParenthesedExpression(node)
+                    PARENTHESED_EXPRESSION -> ElmParenthesisedExpression(node)
                     PATTERN -> ElmPattern(node)
                     PATTERN_AS -> ElmPatternAs(node)
                     PORT_ANNOTATION -> ElmPortAnnotation(node)

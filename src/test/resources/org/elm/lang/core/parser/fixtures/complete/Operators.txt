@@ -39,7 +39,7 @@ Elm File
             PsiElement(DOT)('.')
             PsiElement(LOWER_CASE_IDENTIFIER)('product')
         PsiWhiteSpace(' ')
-        ElmParenthesedExpression(PARENTHESED_EXPRESSION)
+        ElmParenthesisedExpression(PARENTHESED_EXPRESSION)
           PsiElement(LEFT_PARENTHESIS)('(')
           ElmExpression(EXPRESSION)
             ElmListOfOperands(LIST_OF_OPERANDS)

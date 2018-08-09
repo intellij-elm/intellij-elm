@@ -1,13 +1,13 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.psi.tags.ElmNameDeclarationPattern
 import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
@@ -44,11 +44,11 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
 
 
-    val namedParameters: List<ElmNamedElement>
-        get() {
-            val results = mutableListOf<ElmNamedElement>()
-            results.addAll(PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java))
-            results.addAll(PsiTreeUtil.collectElementsOfType(this, ElmPatternAs::class.java))
-            return results
-        }
+    /**
+     * All parameter names declared in this function.
+     *
+     * e.g. `a`, `b`, `c`, `d`, and `e` in `foo a (b, (c, d)) {e} = 42`
+     */
+    val namedParameters: List<ElmNameDeclarationPattern>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPattern::class.java).toList()
 }

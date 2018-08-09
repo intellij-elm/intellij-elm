@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.*
+import org.elm.lang.core.psi.tags.ElmOperand
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.SimpleOperatorReference
 
@@ -14,7 +15,7 @@ import org.elm.lang.core.resolve.reference.SimpleOperatorReference
  *
  * e.g. the `(+)` in the expression `foldl (+) 0`
  */
-class ElmOperatorAsFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
+class ElmOperatorAsFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperand {
 
     val operator: PsiElement
         get() = findNotNullChildByType(OPERATOR_IDENTIFIER)
