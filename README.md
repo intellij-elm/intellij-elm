@@ -17,13 +17,11 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * and more...
 
 
-# Support for Elm 0.19
+# Attaching Elm JSON files
 
-When Elm 0.19 is released, this plugin will drop support for 0.18 and switch entirely over to 0.19. If you need Elm 0.19
-support in the meantime, get it from [this gist](https://gist.github.com/klazuka/82b0f5288fa9944dba8fa027c476dfb1).
-
-One major difference versus Elm 0.18 is that you now need to tell the Elm IntelliJ plugin the location of your `elm.json`
-file. The plugin will try to find it on its own, but you may need to manually attach it if the magic fails.
+One major change since earlier versions of this plugin is that you must now attach your Elm project's JSON manifest
+file (either `elm-package.json` for Elm 0.18 or `elm.json` for 0.19). The plugin will try to find this JSON file 
+on its own, but you may need to manually attach it if the magic fails.
 
 
 # Integrating with elm-format
