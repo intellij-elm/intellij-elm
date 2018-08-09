@@ -68,6 +68,7 @@ class ElmPsiFactory(private val project: Project) {
                     RECORD_BASE_IDENTIFIER -> ElmRecordBaseIdentifier(node)
                     RECORD_PATTERN -> ElmRecordPattern(node)
                     RECORD_TYPE -> ElmRecordType(node)
+                    TUPLE_CONSTRUCTOR -> ElmTupleConstructor(node) // TODO [drop 0.18] remove this line
                     TUPLE_PATTERN -> ElmTuplePattern(node)
                     TUPLE_TYPE -> ElmTupleType(node)
                     TYPE_ALIAS_DECLARATION -> ElmTypeAliasDeclaration(node)

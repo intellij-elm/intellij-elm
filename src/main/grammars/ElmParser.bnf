@@ -263,6 +263,7 @@ private Operand ::=
     | FieldAccessorFunction
     | OperatorAsFunction
     | ParenthesedExpression
+    | TupleConstructor
     | Tuple
     | List
     | Record
@@ -298,6 +299,10 @@ private Tuple ::=
 NonEmptyTuple ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
     {pin(".*")=2}
+
+// TODO [drop 0.18] remove this
+TupleConstructor ::=
+    LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
 Unit ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
