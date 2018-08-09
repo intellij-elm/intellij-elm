@@ -34,6 +34,13 @@ f = Elm.Kernel.Scheduler.succeed
 """)
 
 
+    // TODO [drop 0.18] remove this test
+    fun `test qualified Native refs have no errors`() = checkErrors("""
+import Native.Scheduler
+f = Native.Scheduler.succeed
+""")
+
+
     fun `test type annotation refs have warning`() = checkWarnings("""
 type Int = Placeholder
 <weak_warning descr="'f' does not exist">f : Int -> Int</weak_warning>

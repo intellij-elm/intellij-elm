@@ -54,5 +54,6 @@ private fun ElmValueQID.isQualifiedNativeRef() =
 
 private fun isKernelModule(identifiers: List<PsiElement>): Boolean {
     val moduleName = identifiers.joinToString(".") { it.text }
-    return moduleName.startsWith("Elm.Kernel")
+    return moduleName.startsWith("Elm.Kernel.")
+            || moduleName.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
 }
