@@ -2,7 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.tags.ElmOperand
+import org.elm.lang.core.psi.tags.ElmOperandTag
 
 
-class ElmGlslCode(node: ASTNode) : ElmPsiElementImpl(node), ElmOperand
+class ElmGlslCode(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag

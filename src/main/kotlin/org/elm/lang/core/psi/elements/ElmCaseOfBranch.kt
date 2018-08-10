@@ -3,7 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.tags.ElmNameDeclarationPattern
+import org.elm.lang.core.psi.tags.ElmNameDeclarationPatternTag
 
 
 /**
@@ -31,6 +31,6 @@ class ElmCaseOfBranch(node: ASTNode) : ElmPsiElementImpl(node) {
     /**
      * Named elements introduced by pattern destructuring on the left-hand side of the branch.
      */
-    val destructuredNames: List<ElmNameDeclarationPattern>
-        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPattern::class.java).toList()
+    val destructuredNames: List<ElmNameDeclarationPatternTag>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
 }

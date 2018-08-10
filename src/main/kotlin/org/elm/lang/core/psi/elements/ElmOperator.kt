@@ -4,7 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.tags.ElmExpressionPart
+import org.elm.lang.core.psi.tags.ElmExpressionPartTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.SimpleOperatorReference
 
@@ -14,7 +14,7 @@ import org.elm.lang.core.resolve.reference.SimpleOperatorReference
  *
  * e.g. `x + y`
  */
-class ElmOperator(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmExpressionPart {
+class ElmOperator(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmExpressionPartTag {
 
     val operator: PsiElement
         get() = findNotNullChildByType(OPERATOR_IDENTIFIER)

@@ -3,13 +3,13 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.tags.ElmNameDeclarationPattern
-import org.elm.lang.core.psi.tags.ElmOperand
+import org.elm.lang.core.psi.tags.ElmNameDeclarationPatternTag
+import org.elm.lang.core.psi.tags.ElmOperandTag
 
 /**
  * A lambda expression
  */
-class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperand {
+class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
 
     /* Zero-or-more parameters to the lambda expression */
     val patternList: List<ElmPattern>
@@ -23,6 +23,6 @@ class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperand 
     /**
      * Named elements introduced by pattern destructuring in the parameter list
      */
-    val namedParameters: List<ElmNameDeclarationPattern>
-        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPattern::class.java).toList()
+    val namedParameters: List<ElmNameDeclarationPatternTag>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
 }

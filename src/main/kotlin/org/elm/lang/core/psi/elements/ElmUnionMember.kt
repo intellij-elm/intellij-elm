@@ -7,7 +7,7 @@ import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.tags.ElmUnionMemberParameter
+import org.elm.lang.core.psi.tags.ElmUnionMemberParameterTag
 import org.elm.lang.core.stubs.ElmUnionMemberStub
 
 
@@ -25,6 +25,6 @@ class ElmUnionMember : ElmStubbedNamedElementImpl<ElmUnionMemberStub> {
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
     /** All parameters of the member, if any. */
-    val allParameters: Sequence<ElmUnionMemberParameter>
-        get() = directChildren.filterIsInstance<ElmUnionMemberParameter>()
+    val allParameters: Sequence<ElmUnionMemberParameterTag>
+        get() = directChildren.filterIsInstance<ElmUnionMemberParameterTag>()
 }

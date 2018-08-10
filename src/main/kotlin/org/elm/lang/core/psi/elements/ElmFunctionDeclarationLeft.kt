@@ -7,7 +7,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
-import org.elm.lang.core.psi.tags.ElmNameDeclarationPattern
+import org.elm.lang.core.psi.tags.ElmNameDeclarationPatternTag
 import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
@@ -49,6 +49,6 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
      *
      * e.g. `a`, `b`, `c`, `d`, and `e` in `foo a (b, (c, d)) {e} = 42`
      */
-    val namedParameters: List<ElmNameDeclarationPattern>
-        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPattern::class.java).toList()
+    val namedParameters: List<ElmNameDeclarationPatternTag>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
 }

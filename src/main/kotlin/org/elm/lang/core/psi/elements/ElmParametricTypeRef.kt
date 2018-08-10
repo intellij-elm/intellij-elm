@@ -4,8 +4,8 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameter
-import org.elm.lang.core.psi.tags.ElmTypeRefParameter
+import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameterTag
+import org.elm.lang.core.psi.tags.ElmTypeRefParameterTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -27,7 +27,7 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  * - `List String`
  * - `Task Http.Error String`
  */
-class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeRefParameter {
+class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeRefParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
@@ -39,8 +39,8 @@ class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenc
      *
      * [ElmUpperPathTypeRef], [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmTypeRef]
      */
-    val allParameters: Sequence<ElmParametricTypeRefParameter>
-        get() = directChildren.filterIsInstance<ElmParametricTypeRefParameter>()
+    val allParameters: Sequence<ElmParametricTypeRefParameterTag>
+        get() = directChildren.filterIsInstance<ElmParametricTypeRefParameterTag>()
 
     override val referenceNameElement: PsiElement
         get() = upperCaseQID.upperCaseIdentifierList.last()

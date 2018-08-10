@@ -3,11 +3,11 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.tags.ElmExpressionPart
-import org.elm.lang.core.psi.tags.ElmOperand
+import org.elm.lang.core.psi.tags.ElmExpressionPartTag
+import org.elm.lang.core.psi.tags.ElmOperandTag
 
 
-class ElmListOfOperands(node: ASTNode) : ElmPsiElementImpl(node), ElmExpressionPart {
+class ElmListOfOperands(node: ASTNode) : ElmPsiElementImpl(node), ElmExpressionPartTag {
     /** The operands in this list */
-    val operands: Sequence<ElmOperand> get() = directChildren.filterIsInstance<ElmOperand>()
+    val operands: Sequence<ElmOperandTag> get() = directChildren.filterIsInstance<ElmOperandTag>()
 }

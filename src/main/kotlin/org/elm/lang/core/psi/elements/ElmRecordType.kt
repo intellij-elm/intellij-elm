@@ -5,8 +5,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameter
-import org.elm.lang.core.psi.tags.ElmUnionMemberParameter
+import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameterTag
+import org.elm.lang.core.psi.tags.ElmUnionMemberParameterTag
 
 
 /**
@@ -14,7 +14,7 @@ import org.elm.lang.core.psi.tags.ElmUnionMemberParameter
  *
  * e.g. { name : String, age : Int }
  */
-class ElmRecordType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameter, ElmParametricTypeRefParameter {
+class ElmRecordType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag {
 
     /**
      * The type variable representing a generic record which this

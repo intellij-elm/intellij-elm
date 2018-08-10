@@ -3,7 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameter
+import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameterTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -17,7 +17,7 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  *                           ^^^^^^^^^^
  *                           this
  */
-class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmParametricTypeRefParameter {
+class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmParametricTypeRefParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
