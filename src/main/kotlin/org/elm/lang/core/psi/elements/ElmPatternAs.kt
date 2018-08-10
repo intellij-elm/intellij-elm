@@ -14,7 +14,7 @@ import org.elm.lang.core.psi.tags.ElmPatternChildTag
  *
  * e.g. `person` in `viewPerson ({name, age} as person) = ...`
  */
-class ElmPatternAs(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER) {
+class ElmPatternAs(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER), ElmNameDeclarationPatternTag {
 
     val lowerCaseIdentifier: PsiElement
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
