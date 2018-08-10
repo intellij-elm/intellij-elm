@@ -28,7 +28,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
         val grandParent = pos.parent?.parent
         val file = pos.containingFile as ElmFile
 
-        if (grandParent is ElmValueExpr && grandParent.prevSibling?.elementType == NUMBER_LITERAL) {
+        if (grandParent is ElmValueExpr && (grandParent.prevSibling as? ElmLiteral)?.isNumber == true) {
             /*
             Ignore this case in order to prevent IntelliJ from suggesting completions
             when the caret is immediately after a number.

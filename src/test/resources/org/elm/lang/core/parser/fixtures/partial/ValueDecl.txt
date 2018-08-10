@@ -27,7 +27,8 @@ Elm File
       PsiElement(LOWER_CASE_IDENTIFIER)('f3')
       PsiWhiteSpace(' ')
       ElmPattern(PATTERN)
-        PsiElement(NUMBER_LITERAL)('42')
+        ElmLiteral(LITERAL)
+          PsiElement(NUMBER_LITERAL)('42')
     PsiWhiteSpace(' ')
     PsiElement(EQ)('=')
     PsiErrorElement:<list of operands> expected, got ','
