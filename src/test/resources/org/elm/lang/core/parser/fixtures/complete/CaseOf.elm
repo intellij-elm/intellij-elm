@@ -19,3 +19,14 @@ g x y =
 
         _ ->
             "somewhere else"
+
+h list =
+  case list of
+    [] -> 1
+    (single :: []) :: [] -> 2
+    [first, second] -> 3
+    _ :: b -> 4
+
+i record =
+  case record of
+    {x,y} -> ()

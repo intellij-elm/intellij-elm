@@ -78,7 +78,8 @@ Elm File
             PsiWhiteSpace(' ')
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
-                PsiElement(NUMBER_LITERAL)('0')
+                ElmLiteral(LITERAL)
+                  PsiElement(NUMBER_LITERAL)('0')
           PsiErrorElement:IN expected, got '
 '
             <empty list>
@@ -105,7 +106,8 @@ Elm File
             PsiWhiteSpace(' ')
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
-                PsiElement(NUMBER_LITERAL)('0')
+                ElmLiteral(LITERAL)
+                  PsiElement(NUMBER_LITERAL)('0')
           PsiElement(VIRTUAL_END_DECL)('\n')
           PsiWhiteSpace('        ')
           PsiErrorElement:<inner value declaration> or LOWER_CASE_IDENTIFIER expected, got 'in'
@@ -135,7 +137,8 @@ Elm File
             PsiWhiteSpace(' ')
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
-                PsiElement(NUMBER_LITERAL)('0')
+                ElmLiteral(LITERAL)
+                  PsiElement(NUMBER_LITERAL)('0')
           PsiElement(VIRTUAL_END_SECTION)('\n')
           PsiWhiteSpace('     ')
           PsiElement(IN)('in')
@@ -177,7 +180,8 @@ Elm File
             PsiWhiteSpace(' ')
             ElmExpression(EXPRESSION)
               ElmListOfOperands(LIST_OF_OPERANDS)
-                PsiElement(NUMBER_LITERAL)('1')
+                ElmLiteral(LITERAL)
+                  PsiElement(NUMBER_LITERAL)('1')
           PsiElement(VIRTUAL_END_SECTION)('\n')
           PsiWhiteSpace('     ')
           PsiElement(IN)('in')

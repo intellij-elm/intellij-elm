@@ -7,7 +7,8 @@ Elm File
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
       ElmListOfOperands(LIST_OF_OPERANDS)
-        PsiElement(NUMBER_LITERAL)('42')
+        ElmLiteral(LITERAL)
+          PsiElement(NUMBER_LITERAL)('42')
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
@@ -65,7 +66,7 @@ Elm File
               ElmValueExpr(VALUE_EXPR)
                 ElmValueQID(VALUE_QID)
                   PsiElement(LOWER_CASE_IDENTIFIER)('m')
-          PsiErrorElement:<value expr>, BACKSLASH, CASE, CHAR_LITERAL, COMMA, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, NUMBER_LITERAL, OPERATOR_IDENTIFIER, RIGHT_SQUARE_BRACKET, START_GLSL_CODE or STRING_LITERAL expected, got '
+          PsiErrorElement:<literal>, <value expr>, BACKSLASH, CASE, COMMA, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, OPERATOR_IDENTIFIER, RIGHT_SQUARE_BRACKET or START_GLSL_CODE expected, got '
 '
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
@@ -113,4 +114,5 @@ Elm File
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
       ElmListOfOperands(LIST_OF_OPERANDS)
-        PsiElement(STRING_LITERAL)('"please"')
+        ElmLiteral(LITERAL)
+          PsiElement(STRING_LITERAL)('"please"')

@@ -24,4 +24,5 @@ Elm File
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
       ElmListOfOperands(LIST_OF_OPERANDS)
-        PsiElement(NUMBER_LITERAL)('42')
+        ElmLiteral(LITERAL)
+          PsiElement(NUMBER_LITERAL)('42')

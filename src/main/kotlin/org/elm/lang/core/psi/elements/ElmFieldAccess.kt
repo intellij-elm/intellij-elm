@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.tags.ElmOperandTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ExpressionScope
@@ -15,7 +16,7 @@ import org.elm.lang.core.resolve.scope.ExpressionScope
  *
  * e.g. `model.currentUser.name`
  */
-class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
+class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag {
 
     val lowerCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(LOWER_CASE_IDENTIFIER)

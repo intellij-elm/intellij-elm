@@ -262,7 +262,7 @@ private Operand ::=
     | ValueExpr
     | FieldAccessorFunction
     | OperatorAsFunction
-    | ParenthesedExpression
+    | ParenthesizedExpression
     | TupleConstructor
     | Tuple
     | List
@@ -273,9 +273,9 @@ private Operand ::=
     | AnonymousFunction
     | GlslCode
 
-ParenthesedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
-private Literal ::=
+Literal ::=
     STRING_LITERAL
     | NUMBER_LITERAL
     | CHAR_LITERAL
@@ -398,12 +398,14 @@ private MoreInnerDeclarations ::= (VIRTUAL_END_DECL InnerDeclaration)+
 
 
 Pattern ::=
-    SinglePattern ('::' SinglePattern)* [PatternAs]
+    (ConsPattern | SinglePattern) [PatternAs]
 
 PatternAs ::= AS LOWER_CASE_IDENTIFIER
 
+ConsPattern ::= SinglePattern ('::' SinglePattern)+
+
 private SinglePattern ::=
-    UNDERSCORE
+    AnythingPattern
     | LowerPattern
     | UnionPattern
     | TuplePattern
@@ -415,10 +417,12 @@ private SinglePattern ::=
 
 LowerPattern ::= LOWER_CASE_IDENTIFIER
 
+AnythingPattern ::= UNDERSCORE
+
 RecordPattern ::=
     LEFT_BRACE <<non_empty_list LowerPattern>> RIGHT_BRACE
 
-private ListPattern ::=
+ListPattern ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
 
 UnionPattern ::=
@@ -437,7 +441,7 @@ private ParenthesedPattern ::=
 
 InfixDeclaration ::=
     INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ ValueExpr
-    { pin = EQ }
+    { pin = 'EQ' }
 
 
 GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;

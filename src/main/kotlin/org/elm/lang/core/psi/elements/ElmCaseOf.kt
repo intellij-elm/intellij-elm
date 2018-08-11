@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.tags.ElmOperandTag
 
 
 /**
@@ -12,7 +13,7 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
  *          Just y -> y
  *          Nothing -> 0`
  */
-class ElmCaseOf(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmCaseOf(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
 
     /**
      * The expression which the case-of performs pattern matching against.
