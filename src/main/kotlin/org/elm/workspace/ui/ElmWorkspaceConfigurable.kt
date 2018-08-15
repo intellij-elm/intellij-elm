@@ -10,7 +10,6 @@ import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.pathToDirectoryTextField
 import org.elm.workspace.ElmToolchain
 import org.elm.workspace.elmWorkspace
-import org.elm.workspace.isOlderThan
 import java.nio.file.Paths
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -22,7 +21,7 @@ class ElmWorkspaceConfigurable(
     private val versionUpdateDebouncer = UiDebouncer(this)
 
     private val pathToToolchainField = pathToDirectoryTextField(this,
-            "Select directory containing the 'elm' binary", { update() })
+            "Select directory containing the 'elm' binary") { update() }
 
     private val elmVersionLabel = JLabel()
 
@@ -36,7 +35,7 @@ class ElmWorkspaceConfigurable(
         val pathToToolchain = pathToToolchainField.text
         versionUpdateDebouncer.run(
                 onPooledThread = {
-                    ElmToolchain(Paths.get(pathToToolchain)).queryCompilerVersion()
+                    ElmToolchain(pathToToolchain).queryCompilerVersion()
                 },
                 onUiThread = { elmCompilerVersion ->
                     when {
@@ -44,7 +43,7 @@ class ElmWorkspaceConfigurable(
                             elmVersionLabel.text = "not available"
                             elmVersionLabel.foreground = JBColor.RED
                         }
-                        elmCompilerVersion.isOlderThan(ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) -> {
+                        elmCompilerVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION -> {
                             elmVersionLabel.text = "$elmCompilerVersion (not supported)"
                             elmVersionLabel.foreground = JBColor.RED
                         }

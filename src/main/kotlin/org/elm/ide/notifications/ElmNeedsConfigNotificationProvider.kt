@@ -58,7 +58,7 @@ class ElmNeedsConfigNotificationProvider(
 
         // TODO [kl] is it bad to issue a blocking call here? we're on a background thread, but still...
         val compilerVersion = toolchain.queryCompilerVersion()
-        if (compilerVersion != null && compilerVersion.isOlderThan(ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION)) {
+        if (compilerVersion != null && compilerVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
             return createBadToolchainPanel("Elm $compilerVersion is not supported")
         }
 
