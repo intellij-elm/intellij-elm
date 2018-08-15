@@ -11,6 +11,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.exists
+import com.intellij.util.io.isDirectory
 import com.intellij.util.text.SemVer
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.checkIsBackgroundThread
@@ -24,11 +25,10 @@ private val log = Logger.getInstance(ElmToolchain::class.java)
 
 
 data class ElmToolchain(val binDirPath: Path) {
+    constructor(binDirPath: String) : this(Paths.get(binDirPath))
 
-
-    val presentableLocation: String =
-            pathToExecutable(ELM_BINARY).toString()
-
+    val presentableLocation: String
+        get() = (elmCompilerPath ?: binDirPath.resolve("elm")).toString()
 
     val elmHomePath: String
         get() {
@@ -60,8 +60,13 @@ data class ElmToolchain(val binDirPath: Path) {
             }
         }
 
+    val elmCompilerPath: Path? get() {
+        return elmCompilerNameSuggestions()
+                .map { binDirPath.resolve(it) }
+                .firstOrNull { Files.isExecutable(it) }
+    }
 
-
+    fun looksLikeValidToolchain(): Boolean = elmCompilerPath != null
 
     fun packageRootDir(name: String, version: String): VirtualFile? {
         // TODO [kl] scrape the version from the Elm compiler
@@ -73,19 +78,11 @@ data class ElmToolchain(val binDirPath: Path) {
         return LocalFileSystem.getInstance().findFileByPath(path)
     }
 
-    fun looksLikeValidToolchain(): Boolean {
-        return Files.isExecutable(pathToExecutable(ELM_BINARY))
-    }
-
-    fun pathToExecutable(toolName: String): Path {
-        val executableName = if (SystemInfo.isWindows) "$toolName.exe" else toolName
-        return binDirPath.resolve(executableName).toAbsolutePath()
-    }
-
     fun queryCompilerVersion(): SemVer? {
         checkIsBackgroundThread()
+        val elm = elmCompilerPath ?: return null
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
-        return GeneralCommandLine(pathToExecutable(ELM_BINARY))
+        return GeneralCommandLine(elm)
                 .withParameters("--version")
                 .runExecutable()
                 ?.firstOrNull()
@@ -93,20 +90,24 @@ data class ElmToolchain(val binDirPath: Path) {
     }
 
     companion object {
-        val ELM_BINARY = "elm"
-        val ELM_JSON = "elm.json"
-        val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
+        const val ELM_JSON = "elm.json"
+        const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
 
         val MIN_SUPPORTED_COMPILER_VERSION = SemVer("0.18.0", 0, 18, 0)
 
+        /** Suggest a toolchain that exists in in any standard location */
         fun suggest(project: Project): ElmToolchain? {
-            return binDirSuggestions(project).mapNotNull {
-                val candidate = ElmToolchain(it.toPath().toAbsolutePath())
-                candidate.takeIf { it.looksLikeValidToolchain() }
-            }.firstOrNull()
+            return binDirSuggestions(project)
+                    .map { ElmToolchain(it.toAbsolutePath()) }
+                    .firstOrNull { it.looksLikeValidToolchain() }
         }
     }
 }
+
+// Look for both installed and npm versions of the binary
+private fun elmCompilerNameSuggestions() =
+        if (SystemInfo.isWindows) sequenceOf("elm.exe", "elm.cmd", "elm")
+        else sequenceOf("elm")
 
 private fun binDirSuggestions(project: Project) =
         sequenceOf(
@@ -118,7 +119,7 @@ private fun binDirSuggestions(project: Project) =
         ).flatten()
 
 
-private fun suggestionsFromNPM(project: Project): Sequence<File> {
+private fun suggestionsFromNPM(project: Project): Sequence<Path> {
     return project.modules
             .asSequence()
             .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
@@ -127,34 +128,34 @@ private fun suggestionsFromNPM(project: Project): Sequence<File> {
                         .filter { it.name == "node_modules" && it.isDirectory }
                         .bfsTraversal()
                         .asSequence()
-            }.map { Paths.get(it.absolutePath).resolve(".bin").toFile() }
+            }.map { Paths.get(it.absolutePath, ".bin") }
 }
 
-private fun suggestionsFromPath(): Sequence<File> {
+private fun suggestionsFromPath(): Sequence<Path> {
     return System.getenv("PATH").orEmpty()
-            .split(File.pathSeparator)
-            .asSequence()
+            .splitToSequence(File.pathSeparator)
             .filter { !it.isEmpty() }
-            .map(::File)
-            .filter { it.isDirectory }
-
+            .map { Paths.get(it) }
+            .filter { it.isDirectory() }
 }
 
-private fun suggestionsForMac(): Sequence<File> {
+private fun suggestionsForMac(): Sequence<Path> {
     if (!SystemInfo.isMac) return emptySequence()
-    return sequenceOf(File("/usr/local/bin"))
+    return sequenceOf(Paths.get("/usr/local/bin"))
 }
 
-private fun suggestionsForUnix(): Sequence<File> {
+private fun suggestionsForUnix(): Sequence<Path> {
     if (!SystemInfo.isUnix) return emptySequence()
-    return sequenceOf(File("/usr/local/bin"))
+    return sequenceOf(Paths.get("/usr/local/bin"))
 }
 
-private fun suggestionsForWindows(): Sequence<File> {
+private fun suggestionsForWindows(): Sequence<Path> {
     if (!SystemInfo.isWindows) return emptySequence()
-
-    // TODO [kl] find out where the Elm installer puts its binaries on Windows
-    return emptySequence()
+    return sequenceOf(
+            Paths.get("C:/Program Files (x86)/Elm Platform/0.19/bin"),
+            Paths.get("C:/Program Files/Elm Platform/0.19/bin"),
+            Paths.get("C:/Program Files (x86)/Elm Platform/0.18/bin"), // TODO [drop 0.18]
+            Paths.get("C:/Program Files/Elm Platform/0.18/bin"))
 }
 
 
@@ -172,7 +173,3 @@ private fun GeneralCommandLine.runExecutable(): List<String>? {
 
     return procOut.stdoutLines
 }
-
-
-fun SemVer.isOlderThan(other: SemVer) =
-        compareTo(other) == -1

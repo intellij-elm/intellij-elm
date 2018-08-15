@@ -1,11 +1,13 @@
 package org.elmSlowTests
 
+import com.intellij.history.core.Paths
 import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
+import java.io.File
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
@@ -179,10 +181,12 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         val rootPath = testProject.root.pathAsPath
 
         // The known-good, serialized state that we must be able to handle
+        val projectPath = rootPath.resolve("a").resolve("elm.json")
+        val projectPathString = projectPath.toString().replace("\\", "/") // normalize windows paths
         val xml = """
             <state>
               <elmProjects>
-                <project path="$rootPath/a/elm.json" />
+                <project path="$projectPathString" />
               </elmProjects>
               <settings binDirPath="/usr/local/bin" />
             </state>
@@ -190,8 +194,8 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         // ... must be able to load from serialized state ...
         workspace.loadState(elementFromXmlString(xml))
-        val actualProjects = workspace.allProjects.map { it.manifestPath.toString() }
-        val expectedProjects = listOf("$rootPath/a/elm.json")
+        val actualProjects = workspace.allProjects.map { it.manifestPath }
+        val expectedProjects = listOf(projectPath)
         checkEquals(expectedProjects, actualProjects)
 
         // ... and serialize the resulting state ...

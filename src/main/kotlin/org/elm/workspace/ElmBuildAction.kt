@@ -9,7 +9,6 @@ import com.intellij.openapi.wm.ToolWindowAnchor
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
 import org.elm.openapiext.saveAllDocuments
-import org.elm.workspace.ElmToolchain.Companion.ELM_BINARY
 
 class ElmBuildAction : AnAction() {
 
@@ -22,7 +21,7 @@ class ElmBuildAction : AnAction() {
             guessAndSetupElmProject(project, explicitRequest = true)
         }
 
-        val compilerPath = project.elmToolchain?.pathToExecutable(ELM_BINARY)
+        val compilerPath = project.elmToolchain?.elmCompilerPath
         if (compilerPath == null) {
             Messages.showErrorDialog("No path to the Elm compiler", "Build Error")
             return

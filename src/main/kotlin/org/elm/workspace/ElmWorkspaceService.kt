@@ -50,7 +50,7 @@ private val log = logger<ElmWorkspaceService>()
  * The state includes user-specific paths so it is persisted to IntelliJ's workspace file
  * (which is _not_ placed in version control).
  */
-@State(name = "ElmWorkspace", storages = arrayOf(Storage(StoragePathMacros.WORKSPACE_FILE)))
+@State(name = "ElmWorkspace", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 class ElmWorkspaceService(
         val intellijProject: Project
 ) : PersistentStateComponent<Element> {
@@ -58,9 +58,9 @@ class ElmWorkspaceService(
 
     init {
         with(intellijProject.messageBus.connect()) {
-            subscribe(VirtualFileManager.VFS_CHANGES, ElmProjectWatcher({
+            subscribe(VirtualFileManager.VFS_CHANGES, ElmProjectWatcher {
                 refreshAllProjects()
-            }))
+            })
         }
     }
 
@@ -77,7 +77,7 @@ class ElmWorkspaceService(
     val settings: Settings
         get() {
             val raw = rawSettingsRef.get()
-            return Settings(toolchain = raw.binDirPath?.let { ElmToolchain(Paths.get(it)) })
+            return Settings(toolchain = raw.binDirPath?.let { ElmToolchain(it) })
         }
 
 
@@ -208,7 +208,7 @@ class ElmWorkspaceService(
 
     private fun loadProject(manifestPath: Path): ElmProject {
         val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
-                ?: throw ProjectLoadException("Could not find file ${manifestPath}")
+                ?: throw ProjectLoadException("Could not find file $manifestPath")
 
         val toolchain = settings.toolchain
                 ?: throw ProjectLoadException("Elm toolchain not configured")
