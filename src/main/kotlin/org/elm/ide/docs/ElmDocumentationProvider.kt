@@ -149,7 +149,7 @@ private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
         append(" ", pattern.identifier.text, " ")
 
         if (ty != null && ty !is TyUnknown) {
-            append(": ", ty.renderedText, "\n")
+            append(": ", ty.renderedText(true), "\n")
         }
 
         i { append("of function ") }

@@ -276,6 +276,29 @@ foo bar = ()
 <div class='definition'><pre><i>parameter</i> bar <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    fun `test function parameter with primitive type annotation`() = doTest(
+            """
+foo : Int -> Int
+foo bar = bar
+        --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Int">Int</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with parametric type annotation`() = doTest(
+            """
+type Foo a = Bar
+foo : Foo Int -> Foo Int
+foo bar = bar
+        --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Int">Int</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }
