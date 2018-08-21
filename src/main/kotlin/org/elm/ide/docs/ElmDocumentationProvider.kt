@@ -205,28 +205,15 @@ private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
 }
 
 private fun StringBuilder.renderDefinition(record: ElmRecordType) {
-    append("{ ")
-
-    for ((i, field) in record.fieldTypeList.withIndex()) {
-        if (i > 0) append(", ")
-        append(field.lowerCaseIdentifier.text).append(" : ")
-        renderDefinition(field.typeRef)
+    record.fieldTypeList.renderTo(this, prefix = "{ ", postfix = " }") {
+        append(it.lowerCaseIdentifier.text, " : ")
+        renderDefinition(it.typeRef)
     }
-    append(" }")
 }
 
 private fun StringBuilder.renderDefinition(tuple: ElmTupleType) {
-    val unit = tuple.unit
-    if (unit == null) {
-        append("( ")
-        for ((i, ref) in tuple.typeRefList.withIndex()) {
-            if (i > 0) append(", ")
-            renderDefinition(ref)
-        }
-        append(" )")
-    } else {
-        append("()")
-    }
+    if (tuple.unit != null) append("()")
+    else tuple.typeRefList.renderTo(this, prefix = "( ", postfix = " )") { renderDefinition(it) }
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
@@ -340,3 +327,13 @@ private inline fun StringBuilder.section(title: String, block: StringBuilder.() 
 }
 
 private val String.escaped: String get() = StringUtil.escapeXml(this)
+
+private fun <T, A : Appendable> Iterable<T>.renderTo(buffer: A, separator: CharSequence = ", ", prefix: CharSequence = "", postfix: CharSequence = "", render: (A.(T) -> Unit)): A {
+    buffer.append(prefix)
+    for ((i, field) in withIndex()) {
+        if (i > 0) buffer.append(separator)
+        buffer.render(field)
+    }
+    buffer.append(postfix)
+    return buffer
+}
