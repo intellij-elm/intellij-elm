@@ -61,7 +61,7 @@ private val ElmTypeRefParameterTag.ty: Ty
         is ElmTupleType -> ty
         is ElmParametricTypeRef -> ty
         is ElmTypeRef -> ty
-        else -> error("unexpected type ${this}")
+        else -> error("unimplemented type $this")
     }
 
 private val ElmParametricTypeRefParameterTag.ty: Ty
@@ -71,15 +71,15 @@ private val ElmParametricTypeRefParameterTag.ty: Ty
         is ElmRecordType -> ty
         is ElmTupleType -> ty
         is ElmTypeRef -> ty
-        else -> error("unexpected type ${this}")
+        else -> error("unimplemented type $this")
     }
 
 
 private val ElmUpperPathTypeRef.ty: Ty get() = TyPrimitive(text)
-private val ElmTypeVariableRef.ty: Ty get() = TyVar(null) // TODO
+private val ElmTypeVariableRef.ty: Ty get() = TyVar(identifier.text, null) // TODO
 private val ElmRecordType.ty: Ty get() = TyRecord(fieldTypeList.map { it.lowerCaseIdentifier.text to it.typeRef.ty })
-private val ElmTupleType.ty: Ty get() = TyTuple(typeRefList.map { it.ty })
-private val ElmParametricTypeRef.ty: Ty get() = TyParametric(allParameters.map { it.ty }.toList())
+private val ElmTupleType.ty: Ty get() = if (unit != null) TyUnit else TyTuple(typeRefList.map { it.ty })
+private val ElmParametricTypeRef.ty: Ty get() = TyParametric(upperCaseQID.text, allParameters.map { it.ty }.toList())
 private val ElmTypeRef.ty: Ty
     get() {
         val params = allParameters.toList()

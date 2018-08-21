@@ -6,15 +6,14 @@ import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import org.elm.lang.core.psi.ElmDocTarget
-import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
-import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.bindParameterTypes
+import org.elm.lang.core.types.renderedText
+import org.elm.lang.core.types.ty.TyUnknown
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -138,15 +137,23 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
 }
 
 private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
-    val decl = pattern.ancestors.filterIsInstance<ElmFunctionDeclarationLeft>()
+    val function = pattern.ancestors.filterIsInstance<ElmFunctionDeclarationLeft>()
             .firstOrNull() ?: return null
+
+    val decl = function.parentOfType<ElmValueDeclaration>() ?: return null
+    val types = decl.bindParameterTypes()
+    val ty = types[pattern]
 
     definition {
         i { append("parameter") }
         append(" ", pattern.identifier.text, " ")
 
+        if (ty != null && ty !is TyUnknown) {
+            append(": ", ty.renderedText, "\n")
+        }
+
         i { append("of function ") }
-        renderLink(decl.name, decl.name)
+        renderLink(function.name, function.name)
 
         renderDefinitionLocation(pattern)
     }
