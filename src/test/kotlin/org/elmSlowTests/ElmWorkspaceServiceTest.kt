@@ -1,13 +1,11 @@
 package org.elmSlowTests
 
-import com.intellij.history.core.Paths
+import junit.framework.TestCase
 import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
-import org.elm.workspace.ElmWorkspaceTestBase
-import org.elm.workspace.elmWorkspace
-import java.io.File
+import org.elm.workspace.*
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
@@ -55,7 +53,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
 
-    fun `test can deserialize application json files`() {
+    fun `test can attach application json files`() {
         val testProject = fileTree {
             dir("a") {
                 project("elm.json", """
@@ -94,23 +92,81 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             attachElmProject(rootPath.resolve("a/elm.json"))
         }
 
-        val dto = workspace.allProjects.first()
+        val elmProject = workspace.allProjects.firstOrNull()
+        if (elmProject == null) {
+            TestCase.fail("failed to find an Elm project")
+            return
+        }
 
-        checkEquals("0.19.0", dto.elmVersion)
+        if (elmProject !is ElmApplicationProject) {
+            TestCase.fail("expected an Elm application project, got $elmProject")
+            return
+        }
+
+        checkEquals(Version(0, 19, 0), elmProject.elmVersion)
 
         checkEquals(setOf(
-                "elm/core" to "1.0.0",
-                "elm/html" to "1.0.0",
-                "elm/virtual-dom" to "1.0.0"
-        ), dto.dependencies.map { Pair(it.name, it.version) }.toSet())
+                "elm/core" to Version(1, 0, 0),
+                "elm/html" to Version(1, 0, 0),
+                "elm/virtual-dom" to Version(1, 0, 0)
+        ), elmProject.dependencies.map { it.name to it.version }.toSet())
 
         checkEquals(setOf(
-                "elm-explorations/test" to "1.0.0",
-                "eeue56/elm-lazy" to "1.0.1",
-                "eeue56/elm-shrink" to "2.0.0"
-        ), dto.testDependencies.map { Pair(it.name, it.version) }.toSet())
+                "elm-explorations/test" to Version(1, 0, 0),
+                "eeue56/elm-lazy" to Version(1, 0, 1),
+                "eeue56/elm-shrink" to Version(2, 0, 0)
+        ), elmProject.testDependencies.map { it.name to it.version }.toSet())
     }
 
+    fun `test can attach package json files`() {
+        val testProject = fileTree {
+            project("elm.json", """
+                    {
+                        "type": "package",
+                        "name": "elm/json",
+                        "summary": "Encode and decode JSON values",
+                        "license": "BSD-3-Clause",
+                        "version": "1.0.0",
+                        "exposed-modules": [
+                            "Json.Decode",
+                            "Json.Encode"
+                        ],
+                        "elm-version": "0.19.0 <= v < 0.20.0",
+                        "dependencies": {
+                            "elm/core": "1.0.0 <= v < 2.0.0"
+                        },
+                        "test-dependencies": {
+                            "elm-explorations/test": "1.0.0 <= v < 2.0.0"
+                        }
+                    }
+                    """)
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            attachElmProject(rootPath.resolve("elm.json"))
+        }
+
+        val elmProject = workspace.allProjects.firstOrNull()
+        if (elmProject == null) {
+            TestCase.fail("failed to find an Elm project")
+            return
+        }
+
+        if (elmProject !is ElmPackageProject) {
+            TestCase.fail("expected an Elm package project, got $elmProject")
+            return
+        }
+
+        checkEquals(makeConstraint(Version(0, 19, 0), Version(0, 20, 0))
+                , elmProject.elmVersion)
+
+        checkEquals(setOf("elm/core" to Version(1, 0, 0)),
+                elmProject.dependencies.map { it.name to it.version }.toSet())
+
+        checkEquals(setOf("elm-explorations/test" to Version(1, 0, 0)),
+                elmProject.testDependencies.map { it.name to it.version }.toSet())
+    }
 
     fun `test auto discover Elm project at root level`() {
         val testProject = fileTree {
@@ -223,3 +279,14 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         checkEquals(xml, actualXml)
     }
 }
+
+
+private fun makeConstraint(low: Version, high: Version): Constraint {
+    return Constraint(
+            low = low,
+            lowOp = Constraint.Op.LESS_THAN_OR_EQUAL,
+            highOp = Constraint.Op.LESS_THAN,
+            high = high
+    )
+}
+

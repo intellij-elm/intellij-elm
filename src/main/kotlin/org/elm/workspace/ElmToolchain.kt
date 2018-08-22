@@ -68,14 +68,29 @@ data class ElmToolchain(val binDirPath: Path) {
 
     fun looksLikeValidToolchain(): Boolean = elmCompilerPath != null
 
-    fun packageRootDir(name: String, version: String): VirtualFile? {
-        // TODO [kl] scrape the version from the Elm compiler
+    /**
+     * Path to directory for a package at a specific version, containing `elm.json`
+     */
+    fun packageVersionDir(name: String, version: Version): VirtualFile? {
+        // TODO [kl] stop hard-coding the compiler version
         // it's ok to assume 19 here because this will never be called from 0.18 code,
         // but even this assumption will not be safe once future 19 releases are made.
         val compilerVersion = "0.19.0"
 
         val path = "$elmHomePath/$compilerVersion/package/$name/$version/"
         return LocalFileSystem.getInstance().findFileByPath(path)
+    }
+
+    /**
+     * Path to directory for a package, containing one or more versions
+     */
+    fun availableVersionsForPackage(name: String): List<Version> {
+        // TODO [kl] stop hard-coding the compiler version
+        val compilerVersion = "0.19.0"
+
+        return File("$elmHomePath/$compilerVersion/package/$name/")
+                .walk().toList()
+                .mapNotNull { Version.parseOrNull(it.name) }
     }
 
     fun queryCompilerVersion(): SemVer? {
