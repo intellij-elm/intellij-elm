@@ -31,6 +31,15 @@ foo bar baz = bar baz
 <div class='definition'><pre><b>foo</b> bar baz</pre></div>
 """)
 
+    fun `test binary function with as`() = doTest(
+            """
+foo (bar as baz) qux = bar
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> (bar as baz) qux</pre></div>
+""")
+
     fun `test function with doc comment`() = doTest(
             """
 {-| this should be included. -}
@@ -329,6 +338,17 @@ foo {x, y} = y
 """,
             """
 <div class='definition'><pre><i>parameter</i> y : <a href="psi_element://Float">Float</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with record type and as annotation`() = doTest(
+            """
+foo : {x: Int, y: Float} -> {x: Int, y: Float}
+foo ({x, y} as z) = z
+                  --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> z : {x: <a href="psi_element://Int">Int</a>, y: <a href="psi_element://Float">Float</a>}
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 

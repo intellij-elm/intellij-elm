@@ -33,6 +33,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmLowerPattern -> documentationFor(element)
         is ElmModuleDeclaration -> documentationFor(element)
         is ElmAsClause -> documentationFor(element)
+        is ElmPatternAs -> documentationFor(element)
         else -> null
     }
 
@@ -136,17 +137,17 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
     }
 }
 
-private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
-    val function = pattern.ancestors.filterIsInstance<ElmFunctionDeclarationLeft>()
-            .firstOrNull() ?: return null
-
+private fun documentationFor(pattern: ElmLowerPattern): String? = documentationForParameter(pattern)
+private fun documentationFor(patternAs: ElmPatternAs): String? = documentationForParameter(patternAs)
+private fun documentationForParameter(element: ElmNamedElement): String? = buildString {
+    val function = element.parentOfType<ElmFunctionDeclarationLeft>() ?: return null
     val decl = function.parentOfType<ElmValueDeclaration>() ?: return null
     val types = decl.bindParameterTypes()
-    val ty = types[pattern]
+    val ty = types[element]
 
     definition {
         i { append("parameter") }
-        append(" ", pattern.identifier.text, " ")
+        append(" ", element.name, " ")
 
         if (ty != null && ty !is TyUnknown) {
             append(": ", ty.renderedText(true), "\n")
@@ -155,7 +156,7 @@ private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
         i { append("of function ") }
         renderLink(function.name, function.name)
 
-        renderDefinitionLocation(pattern)
+        renderDefinitionLocation(element)
     }
 }
 

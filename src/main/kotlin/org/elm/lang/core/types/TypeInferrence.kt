@@ -20,7 +20,7 @@ fun ElmValueDeclaration.bindParameterTypes(): Map<ElmNamedElement, Ty> {
             ?: return decl.namedParameters.associate { it to TyUnknown }
 
     return decl.patterns.zip(types).map { (pat, type) ->
-        bindPattern(pat, type) // TODO pat.patternAs
+        bindPattern(pat, type)
     }.reduce { acc, it -> acc + it }
 }
 
@@ -28,7 +28,7 @@ private fun bindPattern(pat: ElmFunctionParamTag, anno: ElmTypeRefParameterTag):
     return when (pat) {
         is ElmAnythingPattern -> bindPattern(pat, anno)
         is ElmListPattern -> bindPattern(pat, anno)
-        is ElmPattern -> bindPattern(pat.child, anno)
+        is ElmPattern -> bindPattern(pat, anno)
         is ElmLiteral -> bindPattern(pat, anno)
         is ElmLowerPattern -> bindPattern(pat, anno)
         is ElmRecordPattern -> bindPattern(pat, anno)
@@ -43,7 +43,7 @@ private fun bindPattern(pat: ElmPatternChildTag, anno: ElmTypeRefParameterTag): 
         is ElmAnythingPattern -> bindPattern(pat, anno)
         is ElmConsPattern -> bindPattern(pat, anno)
         is ElmListPattern -> bindPattern(pat, anno)
-        is ElmPattern -> bindPattern(pat.child, anno)
+        is ElmPattern -> bindPattern(pat, anno)
         is ElmLiteral -> bindPattern(pat, anno)
         is ElmLowerPattern -> bindPattern(pat, anno)
         is ElmRecordPattern -> bindPattern(pat, anno)
@@ -59,6 +59,17 @@ private fun bindPattern(pat: ElmListPattern, anno: ElmTypeRefParameterTag): Map<
 private fun bindPattern(pat: ElmLiteral, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> = emptyMap() // This is a partial pattern error in function parameters
 private fun bindPattern(pat: ElmLowerPattern, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> = mapOf(pat to anno.ty)
 private fun bindPattern(pat: ElmUnit, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> = emptyMap()
+
+private fun bindPattern(pat: ElmPattern, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
+    return bindPattern(pat.child, anno) + bindPattern(pat.patternAs, anno)
+}
+
+private fun bindPattern(pat: ElmPatternAs?, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
+    return when (pat) {
+        null -> emptyMap()
+        else -> mapOf(pat to anno.ty)
+    }
+}
 
 private fun bindPattern(pat: ElmTuplePattern, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
     val type: ElmTupleType = when (anno) {
