@@ -287,15 +287,48 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function parameter with parametric type annotation`() = doTest(
+    fun `test function parameter with nested parametric type annotation`() = doTest(
             """
 type Foo a = Bar
-foo : Foo Int -> Foo Int
+foo : Foo (Foo a) -> Foo (Foo a)
 foo bar = bar
         --^
 """,
             """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Foo">Foo</a> (<a href="psi_element://Foo">Foo</a> a)
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with parenthesized type annotation`() = doTest(
+            """
+foo : ((Int)) -> Int
+foo ((bar)) = bar
+            --^
+""",
+            """
 <div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Int">Int</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with nested tuple type annotation`() = doTest(
+            """
+foo : (Int, (String, Float)) -> String
+foo (_, (bar, _)) = bar
+                  --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://String">String</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with record type annotation`() = doTest(
+            """
+foo : {x: Int, y: Float} -> Float
+foo {x, y} = y
+           --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> y : <a href="psi_element://Float">Float</a>
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
