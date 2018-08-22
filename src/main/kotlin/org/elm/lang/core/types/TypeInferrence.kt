@@ -7,7 +7,6 @@ import org.elm.lang.core.psi.tags.ElmFunctionParamTag
 import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameterTag
 import org.elm.lang.core.psi.tags.ElmPatternChildTag
 import org.elm.lang.core.psi.tags.ElmTypeRefParameterTag
-import org.elm.lang.core.types.ty.*
 
 fun ElmValueDeclaration.bindParameterTypes(): Map<ElmNamedElement, Ty> {
     if (pattern != null) {

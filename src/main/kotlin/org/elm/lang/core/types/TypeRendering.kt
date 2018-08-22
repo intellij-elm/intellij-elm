@@ -1,7 +1,6 @@
 package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
-import org.elm.lang.core.types.ty.*
 
 fun Ty.renderedText(linkify: Boolean): String = when (this) {
     is TyFunction -> renderedText(linkify)

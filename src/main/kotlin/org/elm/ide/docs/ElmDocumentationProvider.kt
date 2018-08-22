@@ -13,7 +13,7 @@ import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.bindParameterTypes
 import org.elm.lang.core.types.renderedText
-import org.elm.lang.core.types.ty.TyUnknown
+import org.elm.lang.core.types.TyUnknown
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
