@@ -11,7 +11,6 @@ fun Ty.renderedText(linkify: Boolean): String = when (this) {
     is TyUnknown -> "_"
     is TyVar -> name
     is TyUnit -> "()"
-    else -> error("unimplemented type $this")
 }
 
 fun TyFunction.renderedText(linkify: Boolean): String {
