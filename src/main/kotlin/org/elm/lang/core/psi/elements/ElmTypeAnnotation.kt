@@ -2,10 +2,13 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
+import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.reference.LocalTopLevelValueReference
 
 
@@ -54,6 +57,7 @@ class ElmTypeAnnotation(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceEl
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference() =
-            LocalTopLevelValueReference(this)
+    override fun getReference(): ElmReference =
+            if (parent is PsiFile) LocalTopLevelValueReference(this)
+            else LexicalValueReference(this)
 }
