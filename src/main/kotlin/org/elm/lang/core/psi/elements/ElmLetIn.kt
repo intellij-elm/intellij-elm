@@ -26,15 +26,15 @@ class ElmLetIn(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
      *
      * In a well-formed program, there will be at least one element.
      */
-    val innerValueDeclarationList: List<ElmInnerValueDeclaration>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmInnerValueDeclaration::class.java)
+    val valueDeclarationList: List<ElmValueDeclaration>
+        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmValueDeclaration::class.java)
 
 
     /**
      * Optional type annotations on each local declaration
      */
-    val innerTypeAnnotationList: List<ElmInnerTypeAnnotation>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmInnerTypeAnnotation::class.java)
+    val typeAnnotationList: List<ElmTypeAnnotation>
+        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeAnnotation::class.java)
 
 
     /**

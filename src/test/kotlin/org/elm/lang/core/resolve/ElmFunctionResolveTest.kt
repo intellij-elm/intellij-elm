@@ -112,5 +112,29 @@ g y = x
     --^unresolved
 """)
 
+    fun `test type annotation name ref`() = checkByCode(
+            """
+foo : Int -> Int
+--^
+foo a = a
+--X
 
+outer =
+    let
+        foo a = a
+    in foo
+""")
+
+    fun `test nested type annotation name ref`() = checkByCode(
+            """
+foo a = a
+
+outer =
+    let
+        foo : Int -> Int
+        --^
+        foo a = a
+        --X
+    in foo
+""")
 }

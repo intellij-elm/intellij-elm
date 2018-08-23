@@ -32,7 +32,7 @@ class ExpressionScope(val element: PsiElement) {
             }
 
             if (it is ElmLetIn) {
-                for (innerDecl in it.innerValueDeclarationList) {
+                for (innerDecl in it.valueDeclarationList) {
                     val includeParameters = element.ancestors.any { it === innerDecl }
                     results.addAll(innerDecl.declaredNames(includeParameters))
                 }

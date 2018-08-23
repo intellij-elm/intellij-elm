@@ -50,8 +50,6 @@ class ElmPsiFactory(private val project: Project) {
                     IF_ELSE -> ElmIfElse(node)
                     IMPORT_CLAUSE -> ElmImportClause(node)
                     INFIX_DECLARATION -> ElmInfixDeclaration(node)
-                    INNER_TYPE_ANNOTATION -> ElmInnerTypeAnnotation(node)
-                    INNER_VALUE_DECLARATION -> ElmInnerValueDeclaration(node)
                     LET_IN -> ElmLetIn(node)
                     LIST -> ElmList(node)
                     LIST_OF_OPERANDS -> ElmListOfOperands(node)

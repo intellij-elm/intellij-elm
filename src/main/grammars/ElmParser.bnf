@@ -376,19 +376,11 @@ private LetInTail ::=
     { pin = 1 }
 
 private InnerDeclaration ::=
-    InnerValueDeclaration
-    | InnerTypeAnnotation
+    ValueDeclaration
+    | TypeAnnotation
     { recoverWhile=inner_decl_recover }
 
 private inner_decl_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
-
-InnerValueDeclaration ::=
-    InternalValueDeclarationLeft EQ Expression
-    { pin = 'EQ' }
-
-InnerTypeAnnotation ::=
-    LOWER_CASE_IDENTIFIER COLON TypeRef
-    { pin = 'COLON' }
 
 private MoreInnerDeclarations ::= (VIRTUAL_END_DECL InnerDeclaration)+
     { pin(".*")=1 }
