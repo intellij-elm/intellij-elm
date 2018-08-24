@@ -110,7 +110,7 @@ sealed class ElmProject(
                         throw ProjectLoadException("Invalid elm.json: ${e.message}")
                     }
                     // TODO [kl] resolve dependency constraints to determine package version numbers
-                    // [ ] use whichever version number is available in the Elm package cache (~/.elm)
+                    // [x] use whichever version number is available in the Elm package cache (~/.elm)
                     // [ ] include transitive dependencies
                     // [ ] resolve versions such that all constraints are satisfied
                     //     (necessary for correctness sake, but low priority)

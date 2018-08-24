@@ -12,7 +12,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
-import com.intellij.util.text.SemVer
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.checkIsBackgroundThread
 import org.elm.openapiext.modules
@@ -93,7 +92,7 @@ data class ElmToolchain(val binDirPath: Path) {
                 .mapNotNull { Version.parseOrNull(it.name) }
     }
 
-    fun queryCompilerVersion(): SemVer? {
+    fun queryCompilerVersion(): Version? {
         checkIsBackgroundThread()
         val elm = elmCompilerPath ?: return null
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
@@ -101,14 +100,14 @@ data class ElmToolchain(val binDirPath: Path) {
                 .withParameters("--version")
                 .runExecutable()
                 ?.firstOrNull()
-                ?.let { SemVer.parseFromText(it) }
+                ?.let { Version.parseOrNull(it) }
     }
 
     companion object {
         const val ELM_JSON = "elm.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
 
-        val MIN_SUPPORTED_COMPILER_VERSION = SemVer("0.18.0", 0, 18, 0)
+        val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 18, 0)
 
         /** Suggest a toolchain that exists in in any standard location */
         fun suggest(project: Project): ElmToolchain? {
