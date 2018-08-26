@@ -12,7 +12,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
-import com.intellij.util.text.SemVer
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.checkIsBackgroundThread
 import org.elm.openapiext.modules
@@ -68,8 +67,11 @@ data class ElmToolchain(val binDirPath: Path) {
 
     fun looksLikeValidToolchain(): Boolean = elmCompilerPath != null
 
-    fun packageRootDir(name: String, version: String): VirtualFile? {
-        // TODO [kl] scrape the version from the Elm compiler
+    /**
+     * Path to directory for a package at a specific version, containing `elm.json`
+     */
+    fun packageVersionDir(name: String, version: Version): VirtualFile? {
+        // TODO [kl] stop hard-coding the compiler version
         // it's ok to assume 19 here because this will never be called from 0.18 code,
         // but even this assumption will not be safe once future 19 releases are made.
         val compilerVersion = "0.19.0"
@@ -78,7 +80,19 @@ data class ElmToolchain(val binDirPath: Path) {
         return LocalFileSystem.getInstance().findFileByPath(path)
     }
 
-    fun queryCompilerVersion(): SemVer? {
+    /**
+     * Path to directory for a package, containing one or more versions
+     */
+    fun availableVersionsForPackage(name: String): List<Version> {
+        // TODO [kl] stop hard-coding the compiler version
+        val compilerVersion = "0.19.0"
+
+        return File("$elmHomePath/$compilerVersion/package/$name/")
+                .walk().toList()
+                .mapNotNull { Version.parseOrNull(it.name) }
+    }
+
+    fun queryCompilerVersion(): Version? {
         checkIsBackgroundThread()
         val elm = elmCompilerPath ?: return null
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
@@ -86,14 +100,14 @@ data class ElmToolchain(val binDirPath: Path) {
                 .withParameters("--version")
                 .runExecutable()
                 ?.firstOrNull()
-                ?.let { SemVer.parseFromText(it) }
+                ?.let { Version.parseOrNull(it) }
     }
 
     companion object {
         const val ELM_JSON = "elm.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
 
-        val MIN_SUPPORTED_COMPILER_VERSION = SemVer("0.18.0", 0, 18, 0)
+        val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 18, 0)
 
         /** Suggest a toolchain that exists in in any standard location */
         fun suggest(project: Project): ElmToolchain? {

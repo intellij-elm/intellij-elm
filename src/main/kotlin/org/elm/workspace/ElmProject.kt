@@ -22,7 +22,6 @@ private val objectMapper = ObjectMapper()
  */
 sealed class ElmProject(
         val manifestPath: Path,
-        val elmVersion: String,
         val dependencies: List<ElmPackageRef>,
         val testDependencies: List<ElmPackageRef>
 ) {
@@ -76,7 +75,7 @@ sealed class ElmProject(
                 // that the user has not excluded that directory from the project.
                 return ElmApplicationProject(
                         manifestPath = manifestPath,
-                        elmVersion = "0.18.0",
+                        elmVersion = Version(0, 18, 0),
                         dependencies = emptyList(),
                         testDependencies = emptyList(),
                         sourceDirectories = emptyList()
@@ -91,7 +90,11 @@ sealed class ElmProject(
             val type = node.get("type")?.textValue()
             return when (type) {
                 "application" -> {
-                    val dto = objectMapper.treeToValue(node, ElmApplicationProjectDTO::class.java)
+                    val dto = try {
+                        objectMapper.treeToValue(node, ElmApplicationProjectDTO::class.java)
+                    } catch (e: JsonProcessingException) {
+                        throw ProjectLoadException("Invalid elm.json: ${e.message}")
+                    }
                     ElmApplicationProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
@@ -101,21 +104,23 @@ sealed class ElmProject(
                     )
                 }
                 "package" -> {
-                    throw ProjectLoadException("Elm 'package' projects are not currently supported. "
-                            + "As a workaround, please add your example app project instead.")
-                    val dto = objectMapper.treeToValue(node, ElmPackageProjectDTO::class.java)
-                    // TODO [kl] fix the resolving of dependencies:
-                    //           - resolve version constraint to a specific version
-                    //           - do not use the empty list for transitiveDependencies
+                    val dto = try {
+                        objectMapper.treeToValue(node, ElmPackageProjectDTO::class.java)
+                    } catch (e: JsonProcessingException) {
+                        throw ProjectLoadException("Invalid elm.json: ${e.message}")
+                    }
+                    // TODO [kl] resolve dependency constraints to determine package version numbers
+                    // [x] use whichever version number is available in the Elm package cache (~/.elm)
+                    // [ ] include transitive dependencies
+                    // [ ] resolve versions such that all constraints are satisfied
+                    //     (necessary for correctness sake, but low priority)
                     ElmPackageProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.depsToPackages(toolchain),
-                            testDependencies = dto.testDependencies.depsToPackages(toolchain),
+                            dependencies = dto.dependencies.constraintDepsToPackages(toolchain),
+                            testDependencies = dto.testDependencies.constraintDepsToPackages(toolchain),
                             name = dto.name,
-                            summary = dto.summary,
                             version = dto.version,
-                            license = dto.license,
                             exposedModules = dto.exposedModulesNode.toExposedModuleMap())
                 }
                 else -> throw ProjectLoadException("The 'type' field is '$type', "
@@ -131,11 +136,11 @@ sealed class ElmProject(
  */
 class ElmApplicationProject(
         manifestPath: Path,
-        elmVersion: String,
+        val elmVersion: Version,
         dependencies: List<ElmPackageRef>,
         testDependencies: List<ElmPackageRef>,
         val sourceDirectories: List<String>
-) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies)
+) : ElmProject(manifestPath, dependencies, testDependencies)
 
 
 /**
@@ -143,16 +148,14 @@ class ElmApplicationProject(
  */
 class ElmPackageProject(
         manifestPath: Path,
-        elmVersion: String,
+        val elmVersion: Constraint,
         dependencies: List<ElmPackageRef>,
         testDependencies: List<ElmPackageRef>,
         val name: String,
-        val summary: String,
-        val license: String,
-        val version: String,
+        val version: Version,
         /** Map from label to one-or-more module names. The label can be the empty string. */
         val exposedModules: Map<String, List<String>>
-) : ElmProject(manifestPath, elmVersion, dependencies, testDependencies)
+) : ElmProject(manifestPath, dependencies, testDependencies)
 
 
 /**
@@ -161,20 +164,32 @@ class ElmPackageProject(
 class ElmPackageRef(
         val root: VirtualFile?,
         val name: String,
-        val version: String
+        val version: Version
 )
 
 
-private fun ExactDependencies.toPackageRefs(toolchain: ElmToolchain) =
+private fun ExactDependenciesDTO.toPackageRefs(toolchain: ElmToolchain) =
         direct.depsToPackages(toolchain) + indirect.depsToPackages(toolchain)
 
 
-private fun Map<String, String>.depsToPackages(toolchain: ElmToolchain) =
+private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
             ElmPackageRef(
-                    root = toolchain.packageRootDir(name, version),
+                    root = toolchain.packageVersionDir(name, version),
                     name = name,
                     version = version)
+        }
+
+private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolchain) =
+        map { (name, constraint) ->
+            val useVersion = toolchain.availableVersionsForPackage(name)
+                    .filter { constraint.contains(it) }
+                    .sorted()
+                    .first()
+            ElmPackageRef(
+                    root = toolchain.packageVersionDir(name, useVersion),
+                    name = name,
+                    version = useVersion)
         }
 
 
@@ -202,7 +217,7 @@ private fun JsonNode.toExposedModuleMap(): Map<String, List<String>> {
  */
 val noProjectSentinel = ElmApplicationProject(
         manifestPath = Paths.get("/elm.json"),
-        elmVersion = "",
+        elmVersion = Version(0, 0, 0),
         dependencies = emptyList(),
         testDependencies = emptyList(),
         sourceDirectories = emptyList()
@@ -217,28 +232,28 @@ private interface ElmProjectDTO
 
 
 private class ElmApplicationProjectDTO(
-        @JsonProperty("elm-version") val elmVersion: String,
+        @JsonProperty("elm-version") val elmVersion: Version,
         @JsonProperty("source-directories") val sourceDirectories: List<String>,
-        @JsonProperty("dependencies") val dependencies: ExactDependencies,
-        @JsonProperty("test-dependencies") val testDependencies: ExactDependencies
+        @JsonProperty("dependencies") val dependencies: ExactDependenciesDTO,
+        @JsonProperty("test-dependencies") val testDependencies: ExactDependenciesDTO
 ) : ElmProjectDTO
 
 
-private class ExactDependencies(
-        @JsonProperty("direct") val direct: Map<String, String>,
-        @JsonProperty("indirect") val indirect: Map<String, String>
+private class ExactDependenciesDTO(
+        @JsonProperty("direct") val direct: Map<String, Version>,
+        @JsonProperty("indirect") val indirect: Map<String, Version>
 )
 
 
 private class ElmPackageProjectDTO(
-        @JsonProperty("elm-version") val elmVersion: String,
-        @JsonProperty("dependencies") val dependencies: Map<String, String>,
-        @JsonProperty("test-dependencies") val testDependencies: Map<String, String>,
+        @JsonProperty("elm-version") val elmVersion: Constraint,
+        @JsonProperty("dependencies") val dependencies: Map<String, Constraint>,
+        @JsonProperty("test-dependencies") val testDependencies: Map<String, Constraint>,
         @JsonProperty("name") val name: String,
-        @JsonProperty("summary") val summary: String,
-        @JsonProperty("license") val license: String,
-        @JsonProperty("version") val version: String,
+        @JsonProperty("version") val version: Version,
         @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode // either List<String>
         // or Map<String, List<String>>
         // where the map's keys are labels
 ) : ElmProjectDTO
+
+
