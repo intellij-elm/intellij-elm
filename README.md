@@ -17,6 +17,13 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * and more...
 
 
+# Installation
+
+You can install the plugin from within the JetBrains IDE by going to `Settings -> Plugins` and then searching for "Elm". Then click the `Search in repositories` link.
+
+If, however, you need to install a specific version of the plugin, you can get it from [the releases page](https://github.com/klazuka/intellij-elm/releases).
+
+
 # Attaching Elm JSON files
 
 One major change since earlier versions of this plugin is that you must now attach your Elm project's JSON manifest
@@ -27,15 +34,6 @@ on its own, but you may need to manually attach it if the magic fails.
 # Integrating with elm-format
 
 See the elm-format [integration instructions](https://github.com/klazuka/intellij-elm/blob/master/docs/elm-format/setup.md).
-
-
-# Development
-
-There is still a lot of work left to do, but PRs are welcome. To build the plugin you will need to do the following:
-- setup the IntelliJ Plugin SDK toolchain [link](http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/setting_up_environment.html)
-- install the [GrammarKit plugin](https://github.com/JetBrains/Grammar-Kit)
-- generate the lexer by pressing cmd-shift-g on `ElmLexer.flex`
-- generate the parser by pressing cmd-shift-g on `ElmParser.bnf`
 
 
 # Attribution
