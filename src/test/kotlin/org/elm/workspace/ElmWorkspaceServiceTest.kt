@@ -128,7 +128,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                         "name": "elm/json",
                         "summary": "Encode and decode JSON values",
                         "license": "BSD-3-Clause",
-                        "version": "1.0.0",
+                        "version": "1.2.3",
                         "exposed-modules": [
                             "Json.Decode",
                             "Json.Encode"
@@ -162,6 +162,8 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         checkEquals(makeConstraint(Version(0, 19, 0), Version(0, 20, 0))
                 , elmProject.elmVersion)
+
+        checkEquals(Version(1, 2, 3), elmProject.version)
 
         // The source directory for Elm 0.19 packages is implicitly "src". It cannot be changed.
         checkEquals(setOf(Paths.get("src")), elmProject.sourceDirectories.toSet())
@@ -283,6 +285,216 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         checkFile("b/src/Main.elm", "b")
     }
 
+
+    // BEGIN ELM 0.18 LEGACY
+
+    // TODO [drop 0.18] remove this test
+    fun `test can attach legacy Elm 18 application json files`() {
+        // these Elm 0.18 tests are gross, but we will be deleting it "soon" so who cares
+        val testProject = fileTree {
+            project("elm-package.json", """
+                {
+                  "version": "1.0.0",
+                  "summary": "blah",
+                  "repository": "https://github.com/user/project.git",
+                  "license": "BSD3",
+                  "source-directories": [
+                    "./src"
+                  ],
+                  "exposed-modules": [],
+                  "dependencies": {
+                    "elm-lang/core": "5.0.0 <= v < 6.0.0"
+                  },
+                  "elm-version": "0.18.0 <= v < 0.19.0"
+                }
+                """)
+            dir("elm-stuff") {
+                file("exact-dependencies.json", """
+                    {
+                        "elm-lang/core": "5.1.1"
+                    }
+                """.trimIndent())
+                dir("packages") {
+                    dir("elm-lang") {
+                        dir("core") {
+                            dir("5.1.1") {
+                                project("elm-package.json", """
+                                    {
+                                        "version": "5.1.1",
+                                        "summary": "Elm's standard libraries",
+                                        "repository": "http://github.com/elm-lang/core.git",
+                                        "license": "BSD3",
+                                        "source-directories": [
+                                            "src"
+                                        ],
+                                        "exposed-modules": [
+                                            "Array",
+                                            "Basics",
+                                            "Bitwise",
+                                            "Char",
+                                            "Color",
+                                            "Date",
+                                            "Debug",
+                                            "Dict",
+                                            "Json.Decode",
+                                            "Json.Encode",
+                                            "List",
+                                            "Maybe",
+                                            "Platform",
+                                            "Platform.Cmd",
+                                            "Platform.Sub",
+                                            "Process",
+                                            "Random",
+                                            "Regex",
+                                            "Result",
+                                            "Set",
+                                            "String",
+                                            "Task",
+                                            "Time",
+                                            "Tuple"
+                                        ],
+                                        "native-modules": true,
+                                        "dependencies": {},
+                                        "elm-version": "0.18.0 <= v < 0.19.0"
+                                    }
+                                """.trimIndent())
+                                dir("src") {}
+                            }
+                        }
+                    }
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("elm-package.json")).get()
+        }
+
+        val elmProject = workspace.allProjects.firstOrNull()
+        if (elmProject == null) {
+            TestCase.fail("failed to find an Elm project")
+            return
+        }
+
+        if (elmProject !is ElmApplicationProject) {
+            TestCase.fail("expected an Elm application project, got $elmProject")
+            return
+        }
+
+        checkEquals(Version(0, 18, 0), elmProject.elmVersion)
+
+        checkEquals(setOf("elm-lang/core" to Version(5, 1, 1)),
+                elmProject.dependencies.map { it.name to it.version }.toSet())
+    }
+
+    // TODO [drop 0.18] remove this test
+    fun `test can attach legacy Elm 18 package json files`() {
+        val testProject = fileTree {
+            project("elm-package.json", """
+                {
+                  "version": "1.2.3",
+                  "summary": "blah",
+                  "repository": "https://github.com/user/project.git",
+                  "license": "BSD3",
+                  "source-directories": [
+                    "."
+                  ],
+                  "exposed-modules": ["Foo", "Bar"],
+                  "dependencies": {
+                    "elm-lang/core": "5.0.0 <= v < 6.0.0"
+                  },
+                  "elm-version": "0.18.0 <= v < 0.19.0"
+                }
+                """)
+            dir("elm-stuff") {
+                file("exact-dependencies.json", """
+                    {
+                        "elm-lang/core": "5.1.1"
+                    }
+                """.trimIndent())
+                dir("packages") {
+                    dir("elm-lang") {
+                        dir("core") {
+                            dir("5.1.1") {
+                                project("elm-package.json", """
+                                    {
+                                        "version": "5.1.1",
+                                        "summary": "Elm's standard libraries",
+                                        "repository": "http://github.com/elm-lang/core.git",
+                                        "license": "BSD3",
+                                        "source-directories": [
+                                            "src"
+                                        ],
+                                        "exposed-modules": [
+                                            "Array",
+                                            "Basics",
+                                            "Bitwise",
+                                            "Char",
+                                            "Color",
+                                            "Date",
+                                            "Debug",
+                                            "Dict",
+                                            "Json.Decode",
+                                            "Json.Encode",
+                                            "List",
+                                            "Maybe",
+                                            "Platform",
+                                            "Platform.Cmd",
+                                            "Platform.Sub",
+                                            "Process",
+                                            "Random",
+                                            "Regex",
+                                            "Result",
+                                            "Set",
+                                            "String",
+                                            "Task",
+                                            "Time",
+                                            "Tuple"
+                                        ],
+                                        "native-modules": true,
+                                        "dependencies": {},
+                                        "elm-version": "0.18.0 <= v < 0.19.0"
+                                    }
+                                """.trimIndent())
+                                dir("src") {}
+                            }
+                        }
+                    }
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("elm-package.json")).get()
+        }
+
+        val elmProject = workspace.allProjects.firstOrNull()
+        if (elmProject == null) {
+            TestCase.fail("failed to find an Elm project")
+            return
+        }
+
+        if (elmProject !is ElmPackageProject) {
+            TestCase.fail("expected an Elm application project, got $elmProject")
+            return
+        }
+
+        checkEquals(makeConstraint(Version(0, 18, 0), Version(0, 19, 0)), elmProject.elmVersion)
+
+        checkEquals(Version(1, 2, 3), elmProject.version)
+
+        // Elm 0.18 packages can specify a source directory (unlike Elm 0.19)
+        checkEquals(setOf(Paths.get(".")), elmProject.sourceDirectories.toSet())
+
+        checkEquals(setOf("elm-lang/core" to Version(5, 1, 1)),
+                elmProject.dependencies.map { it.name to it.version }.toSet())
+
+        checkEquals(listOf("Foo", "Bar"), elmProject.exposedModules)
+    }
+
+    // END ELM 0.18 LEGACY
 
 
     fun `test auto discover Elm project at root level`() {
