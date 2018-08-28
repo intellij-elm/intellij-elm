@@ -4,7 +4,6 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.ElmTypes.NUMBER_LITERAL
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.lang.core.resolve.scope.GlobalScope
@@ -44,9 +43,9 @@ object ElmQualifiableRefSuggestor : Suggestor {
                         ModuleScope(file).getVisibleConstructors().forEach { result.add(it) }
                         GlobalScope.builtInValues.forEach { result.add(it) }
                     } else {
-                        val importScope = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
-                        importScope?.getExposedValues()?.forEach { result.add(it) }
-                        importScope?.getExposedConstructors()?.forEach { result.add(it) }
+                        val importScopes = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
+                        importScopes.flatMap { it.getExposedValues() }.forEach { result.add(it) }
+                        importScopes.flatMap { it.getExposedConstructors() }.forEach { result.add(it) }
                     }
                 }
                 is ElmUnionPattern -> {
@@ -55,10 +54,10 @@ object ElmQualifiableRefSuggestor : Suggestor {
                                 .filter { it is ElmUnionMember }
                                 .forEach { result.add(it) }
                     } else {
-                        val importScope = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
-                        importScope?.getExposedConstructors()
-                                ?.filter { it is ElmUnionMember }
-                                ?.forEach { result.add(it) }
+                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
+                                .flatMap { it.getExposedConstructors() }
+                                .filter { it is ElmUnionMember }
+                                .forEach { result.add(it) }
                     }
                 }
                 is ElmUpperPathTypeRef, is ElmParametricTypeRef -> {
@@ -66,8 +65,9 @@ object ElmQualifiableRefSuggestor : Suggestor {
                         ModuleScope(file).getVisibleTypes().forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }
                     } else {
-                        val importScope = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
-                        importScope?.getExposedTypes()?.forEach { result.add(it) }
+                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
+                                .flatMap { it.getExposedTypes() }
+                                .forEach { result.add(it) }
                     }
                 }
             }

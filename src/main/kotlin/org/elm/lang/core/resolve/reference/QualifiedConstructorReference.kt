@@ -22,9 +22,8 @@ class QualifiedConstructorReference(referenceElement: ElmReferenceElement, val u
 
         // TODO [kl] depending on context, we may need to restrict the variants to just union constructors
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
-                ?.getExposedConstructors()
-                ?.toTypedArray()
-                ?: emptyArray()
+                .flatMap { it.getExposedConstructors() }
+                .toTypedArray()
     }
 
 }

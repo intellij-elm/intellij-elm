@@ -24,12 +24,23 @@ class ModuleScope(val elmFile: ElmFile) {
 
 
     /**
-     * Finds the import declaration (if any) named by [qualifierPrefix].
+     * Finds import declarations named by [qualifierPrefix].
      *
      * The [qualifierPrefix] may be either a module name or an import alias.
+     *
+     * In most cases, this should either one decl or zero. However, there is
+     * an obscure feature of Elm where a user can import multiple modules
+     * using the same alias. e.g.
+     *
+     * ```
+     * import List
+     * import List.Extra as List
+     *
+     * foo = List.<whatever> -- where <whatever> can come from either `List` or `List.Extra`
+     * ```
      */
-    fun importDeclForQualifierPrefix(qualifierPrefix: String) =
-            getImportDecls().find {
+    fun importDeclsForQualifierPrefix(qualifierPrefix: String) =
+            getImportDecls().filter {
                 it.moduleQID.text == qualifierPrefix || it.asClause?.name == qualifierPrefix
             }
 
