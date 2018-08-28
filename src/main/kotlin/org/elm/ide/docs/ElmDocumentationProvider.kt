@@ -46,8 +46,9 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         } else {
             val qualifierPrefix = link.substring(0, lastDot)
             val name = link.substring(lastDot + 1)
-            val imports = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, context.elmFile)
-            imports?.getExposedTypes()?.find { it.name == name }
+            ImportScope.fromQualifierPrefixInModule(qualifierPrefix, context.elmFile)
+                    .flatMap { it.getExposedTypes() }
+                    .find { it.name == name }
         }
     }
 }

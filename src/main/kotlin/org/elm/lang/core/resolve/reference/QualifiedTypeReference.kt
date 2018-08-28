@@ -22,8 +22,7 @@ class QualifiedTypeReference(
     private fun getCandidates(): Array<ElmNamedElement> {
         val qualifierPrefix = upperCaseQID.qualifierPrefix
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
-                ?.getExposedTypes()
-                ?.toTypedArray()
-                ?: emptyArray()
+                .flatMap { it.getExposedTypes() }
+                .toTypedArray()
     }
 }

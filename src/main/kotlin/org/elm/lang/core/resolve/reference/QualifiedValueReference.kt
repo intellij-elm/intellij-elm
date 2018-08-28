@@ -21,8 +21,7 @@ class QualifiedValueReference(element: ElmReferenceElement, val valueQID: ElmVal
     private fun getCandidates(): Array<ElmNamedElement> {
         val qualifierPrefix = valueQID.qualifierPrefix
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
-                ?.getExposedValues()
-                ?.toTypedArray()
-                ?: emptyArray()
+                .flatMap { it.getExposedValues() }
+                .toTypedArray()
     }
 }

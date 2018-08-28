@@ -32,15 +32,17 @@ class ImportScope(val elmFile: ElmFile) {
          * via [elmFile], either via import declarations or implicit imports from Elm's
          * Core standard library.
          */
-        fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): ImportScope? {
+        fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): List<ImportScope> {
             // handle implicit imports from Core
-            val targetFile = ElmModulesIndex.get(qualifierPrefix, elmFile.project)
-            if (targetFile?.elmFile?.isCore() == true && qualifierPrefix in GlobalScope.defaultImports)
-                return ImportScope(targetFile.elmFile)
+            val implicitScopes = ElmModulesIndex.getAll(listOf(qualifierPrefix), elmFile.project)
+                    .filter { it.elmFile.isCore() && qualifierPrefix in GlobalScope.defaultImports }
+                    .map { ImportScope(it.elmFile) }
 
             // handle explicit import from within this module
-            val importDecl = ModuleScope(elmFile).importDeclForQualifierPrefix(qualifierPrefix)
-            return importDecl?.let { ImportScope.fromImportDecl(it) }
+            val explicitScopes = ModuleScope(elmFile).importDeclsForQualifierPrefix(qualifierPrefix)
+                    .mapNotNull { ImportScope.fromImportDecl(it) }
+
+            return implicitScopes + explicitScopes
         }
     }
 
