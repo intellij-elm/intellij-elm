@@ -60,7 +60,7 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
                 val imports = element.directChildren.filterIsInstance<ElmImportClause>().toList()
                 if (imports.size < 2) return
                 val start = imports.first()
-                foldBetween(start, start, imports.last(), true, true)
+                foldBetween(start, start.moduleQID, imports.last(), true, true)
             }
             is ElmModuleDeclaration -> {
                 val imports = element.elmFile.directChildren.filterIsInstance<ElmImportClause>().toList()
@@ -86,7 +86,7 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
                 val letKw = element.directChildren.find { it.elementType == LET } ?: return
                 val inKw = element.directChildren.find { it.elementType == IN } ?: return
                 foldBetween(letKw, letKw, inKw, false, false)
-                fold(element.expression)
+                foldBetween(inKw, inKw, element.lastChild, false, true)
             }
             is ElmCaseOf -> {
                 foldToEnd(element) { directChildren.find { it.elementType == OF } }
