@@ -112,6 +112,7 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
         if (left == null || right == null) return
         val start = if (includeStart) left.textRange.startOffset else left.textRange.endOffset
         val end = if (includeEnd) right.textRange.endOffset else right.textRange.startOffset
+        if (end <= start) return
         descriptors += FoldingDescriptor(element, TextRange(start, end))
     }
 }

@@ -16,4 +16,8 @@ class ElmFoldingBuilderTest: ElmTestBase() {
     fun `test type alias`() = doTest()
     fun `test let in`() = doTest()
     fun `test case of`() = doTest()
+
+    // Partial input test. It's ok if this doesn't produce any folds. We just want to
+    // make sure that it doesn't throw any exceptions.
+    fun `test incomplete module decl`() = doTest()
 }
