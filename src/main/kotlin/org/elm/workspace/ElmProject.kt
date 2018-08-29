@@ -185,11 +185,12 @@ private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolc
             val useVersion = toolchain.availableVersionsForPackage(name)
                     .filter { constraint.contains(it) }
                     .sorted()
-                    .first()
+                    .firstOrNull()
+
             ElmPackageRef(
-                    root = toolchain.packageVersionDir(name, useVersion),
+                    root = useVersion?.let { toolchain.packageVersionDir(name, it) },
                     name = name,
-                    version = useVersion)
+                    version = useVersion ?: Version.UNKNOWN)
         }
 
 

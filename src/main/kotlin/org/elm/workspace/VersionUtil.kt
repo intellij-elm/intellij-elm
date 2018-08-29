@@ -23,6 +23,8 @@ data class Version(val x: Int, val y: Int, val z: Int) : Comparable<Version> {
             }
 
     companion object {
+        val UNKNOWN: Version = Version(0, 0, 0)
+
         fun parse(text: String): Version {
             val parts = text.split(".")
             if (parts.size != 3) throw ParseException("expected a version number like '1.0.0', got '$text'")
