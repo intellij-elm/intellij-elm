@@ -1,13 +1,13 @@
 package org.elm.ide.hints
 
 import com.intellij.lang.ExpressionTypeProvider
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.psi.parentOfType
-import org.elm.lang.core.types.bindParameterTypes
 import org.elm.lang.core.types.renderedText
 
 /**
@@ -20,8 +20,8 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
 
     override fun getInformationHint(element: PsiElement): String {
         val ref = element.parentOfType<ElmValueExpr>()?.reference?.resolve() ?: return errorHint
-        val decl = element.parentOfType<ElmValueDeclaration>() ?: return errorHint
-        return decl.bindParameterTypes()[ref]?.renderedText(false) ?: errorHint
+        val inference = element.parentOfType<ElmValueDeclaration>()?.inferrence ?: return errorHint
+        return StringUtil.escapeXml(inference.bindingType(ref).renderedText(false))
     }
 
     override fun getExpressionsAt(elementAt: PsiElement): List<PsiElement> {

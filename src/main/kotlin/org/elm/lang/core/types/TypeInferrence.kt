@@ -4,6 +4,10 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 
+data class InferrenceResult(private val bindings: Map<ElmNamedElement, Ty>) {
+    fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown
+}
+
 fun ElmValueDeclaration.bindParameterTypes(): Map<ElmNamedElement, Ty> {
     if (pattern != null) {
         return PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)

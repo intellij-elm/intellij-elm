@@ -8,7 +8,7 @@ fun Ty.renderedText(linkify: Boolean): String = when (this) {
     is TyPrimitive -> buildString { renderLink(name, name, linkify) }
     is TyRecord -> renderedText(linkify)
     is TyTuple -> renderedText(linkify)
-    is TyUnknown -> "_"
+    is TyUnknown -> "unknown"
     is TyVar -> name
     is TyUnit -> "()"
 }

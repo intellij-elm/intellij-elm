@@ -7,6 +7,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmValueDeclarationStub
+import org.elm.lang.core.types.InferrenceResult
+import org.elm.lang.core.types.bindParameterTypes
 
 
 /**
@@ -106,4 +108,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     override val docComment: PsiComment?
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
                 ?.takeIf { it.text.startsWith("{-|") }
+
+    val inferrence: InferrenceResult by lazy {
+        InferrenceResult(bindParameterTypes())
+    }
 }
