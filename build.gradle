@@ -8,18 +8,14 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.60"
-        classpath "com.github.JetBrains:gradle-grammar-kit-plugin:2018.1.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.61"
+        classpath "com.github.JetBrains:gradle-grammar-kit-plugin:2018.1.7"
     }
 }
 
 plugins {
-    id "org.jetbrains.intellij" version "0.3.0"
-    id "org.jetbrains.kotlin.jvm" version "1.2.60"
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.7'
+    id "org.jetbrains.intellij" version "0.3.7"
+    id "org.jetbrains.kotlin.jvm" version "1.2.61"
 }
 
 repositories {
@@ -34,7 +30,7 @@ repositories {
     maven { url 'http://dl.bintray.com/jetbrains/markdown' }
 }
 
-ext.kotlinVersion = '1.2.60'
+ext.kotlinVersion = '1.2.61'
 ext.junitVersion = '4.12'
 ext.jacksonVersion = '2.9.6'
 ext.markdownVersion = '0.1.31'
@@ -106,11 +102,6 @@ idea {
 apply plugin: 'org.jetbrains.grammarkit'
 import org.jetbrains.grammarkit.tasks.GenerateLexer
 import org.jetbrains.grammarkit.tasks.GenerateParser
-
-grammarKit {
-    jflexRelease = '1.7.0'
-    grammarKitRelease = '1.5.2'
-}
 
 task generateElmLexer(type: GenerateLexer) {
     source = "src/main/grammars/ElmLexer.flex"
