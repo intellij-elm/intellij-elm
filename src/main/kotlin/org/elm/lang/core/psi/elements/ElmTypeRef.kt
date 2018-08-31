@@ -3,9 +3,9 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameterTag
-import org.elm.lang.core.psi.tags.ElmTypeRefParameterTag
-import org.elm.lang.core.psi.tags.ElmUnionMemberParameterTag
+import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
+import org.elm.lang.core.psi.ElmTypeRefParameterTag
+import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 
 
 /**
@@ -18,7 +18,7 @@ import org.elm.lang.core.psi.tags.ElmUnionMemberParameterTag
  *  - `Int -> String`
  *  - `a -> (a -> {a: String})`
  */
-class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag {
+class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag {
 
     /**
      * All parameters of the type annotation.

@@ -5,8 +5,10 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.tags.ElmConsPatternChildTag
-import org.elm.lang.core.psi.tags.ElmOperandTag
+import org.elm.lang.core.psi.ElmConsPatternChildTag
+import org.elm.lang.core.psi.ElmFunctionParamTag
+import org.elm.lang.core.psi.ElmOperandTag
+import org.elm.lang.core.psi.ElmPatternChildTag
 
 
 /**
@@ -14,7 +16,8 @@ import org.elm.lang.core.psi.tags.ElmOperandTag
  *
  * e.g. `1`, `'c'`, or `"string"`
  */
-class ElmLiteral(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmConsPatternChildTag {
+class ElmLiteral(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmConsPatternChildTag,
+        ElmFunctionParamTag, ElmPatternChildTag {
     /**
      * The literal element. It will have type [STRING_LITERAL], [CHAR_LITERAL], or [NUMBER_LITERAL].
      */

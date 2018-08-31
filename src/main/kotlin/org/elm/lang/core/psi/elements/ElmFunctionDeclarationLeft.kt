@@ -7,7 +7,9 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
-import org.elm.lang.core.psi.tags.ElmNameDeclarationPatternTag
+import org.elm.lang.core.psi.directChildren
+import org.elm.lang.core.psi.ElmFunctionParamTag
+import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
 import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
@@ -40,8 +42,8 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
     /**
      * Zero or more parameters to the function
      */
-    val patternList: List<ElmPattern>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
+    val patterns: Sequence<ElmFunctionParamTag>
+        get() = directChildren.filterIsInstance<ElmFunctionParamTag>()
 
 
     /**

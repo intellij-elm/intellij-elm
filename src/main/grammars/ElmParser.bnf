@@ -167,12 +167,21 @@ private InternalValueDeclarationLeft ::=
     | Pattern
 
 FunctionDeclarationLeft ::=
-    LOWER_CASE_IDENTIFIER Pattern*
+    LOWER_CASE_IDENTIFIER FunctionDeclarationPattern*
 
  // TODO [drop 0.18] remove OperatorDeclarationLeft
 OperatorDeclarationLeft ::=
-    OperatorAsFunction_inner Pattern*
+    OperatorAsFunction_inner FunctionDeclarationPattern*
 
+private FunctionDeclarationPattern ::=
+        AnythingPattern
+        | LowerPattern
+        | TuplePattern
+        | Unit
+        | ListPattern // Always a partial pattern, but not a syntax error
+        | RecordPattern
+        | Literal // Always a partial pattern, but not a syntax error
+        | ParenthesizedPattern
 
 // TYPE DECLARATIONS AND REFERENCES
 
@@ -243,9 +252,7 @@ PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
 // EXPRESSIONS
 
 
-Expression ::= ListOfOperands (Operator ListOfOperands)*
-
-ListOfOperands ::= ['-']Operand+
+Expression ::= CallOrOperand (Operator CallOrOperand)*
 
 Operator ::=
     OPERATOR_IDENTIFIER
@@ -256,8 +263,15 @@ OperatorAsFunction ::=
 private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
+// Although FieldAccess is an Operand, it starts with the same token as FunctionCall, and it needs to be higher precedence
+private CallOrOperand ::=
+    FieldAccess
+    | FunctionCall
+    | Operand
+
 private Operand ::=
     Literal
+    | NegateExpression
     | FieldAccess
     | ValueExpr
     | FieldAccessorFunction
@@ -273,7 +287,18 @@ private Operand ::=
     | AnonymousFunction
     | GlslCode
 
-ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+NegateExpression ::= '-' Expression
+    { pin = 1 }
+
+FunctionCall ::=
+    FunctionCallTarget Operand+
+    { pin = 2 }
+
+private FunctionCallTarget ::=
+    OperatorAsFunction
+    | ValueExpr
+
+private ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
 Literal ::=
     STRING_LITERAL
@@ -405,7 +430,7 @@ private SinglePattern ::=
     | ListPattern
     | RecordPattern
     | Literal
-    | ParenthesedPattern
+    | ParenthesizedPattern
 
 LowerPattern ::= LOWER_CASE_IDENTIFIER
 
@@ -423,7 +448,7 @@ UnionPattern ::=
 TuplePattern ::=
     LEFT_PARENTHESIS Pattern (COMMA Pattern)+ RIGHT_PARENTHESIS
 
-private ParenthesedPattern ::=
+private ParenthesizedPattern ::=
     LEFT_PARENTHESIS Pattern RIGHT_PARENTHESIS
 
 

@@ -68,8 +68,11 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
         }
 
         b { append(decl.lowerCaseIdentifier.text) }
-        for (pat in decl.patternList) {
-            append(" ", pat.text)
+        for (pat in decl.patterns) {
+            append(" ")
+            // As clauses can't appear at the top level, but can appear inside parentheses
+            if (pat is ElmPattern && pat.patternAs != null) append("(", pat.text, ")")
+            else append(pat.text)
         }
 
         renderDefinitionLocation(decl)
