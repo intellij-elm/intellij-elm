@@ -4,39 +4,68 @@ import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
 import org.intellij.lang.annotations.Language
 
-class ElmImportIntentionTest: ElmIntentionTestBase(ElmImportIntentionAction()) {
+class ElmImportIntentionTest : ElmIntentionTestBase(ElmImportIntentionAction()) {
 
 
     fun `test un-qualified value`() = check(
-"""
+            """
 --@ main.elm
 main = bar{-caret-}
 --@ Foo.elm
 module Foo exposing (bar)
 bar = 42
 """,
-"""
+            """
 import Foo exposing (bar)
 main = bar
 """)
 
+    fun `test annotation`() = check(
+            """
+--@ main.elm
+bar{-caret-} : Int -> Int
+bar = ()
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""",
+            """
+bar : Int -> Int
+bar = ()
+""")
+
+    fun `test annotation value`() = check(
+            """
+--@ main.elm
+bar : Bar{-caret-} -> Bar
+bar = ()
+--@ Foo.elm
+module Foo exposing (Bar)
+type Bar = Bar
+""",
+            """
+import Foo exposing (Bar)
+bar : Bar -> Bar
+bar = ()
+""")
+
 
     fun `test qualified value`() = check(
-"""
+            """
 --@ main.elm
 main = Foo.bar{-caret-}
 --@ Foo.elm
 module Foo exposing (bar)
 bar = 42
 """,
-"""
+            """
 import Foo
 main = Foo.bar
 """)
 
 
     fun `test binary infix operator`() = check(
-"""
+            """
 --@ main.elm
 main = 2 **{-caret-} 3
 --@ Foo.elm
@@ -44,14 +73,14 @@ module Foo exposing ((**))
 infix right 5 (**) = power
 power a b = List.product (List.repeat b a)
 """,
-"""
+            """
 import Foo exposing ((**))
 main = 2 ** 3
 """)
 
 
     fun `test import between module decl and value-decl`() = check(
-"""
+            """
 --@ main.elm
 module Main exposing (..)
 main = Foo.bar{-caret-}
@@ -59,7 +88,7 @@ main = Foo.bar{-caret-}
 module Foo exposing (bar)
 bar = 42
 """,
-"""
+            """
 module Main exposing (..)
 import Foo
 main = Foo.bar{-caret-}
@@ -67,7 +96,7 @@ main = Foo.bar{-caret-}
 
 
     fun `test import between module decl and doc-comment`() = check(
-"""
+            """
 --@ main.elm
 module Main exposing (..)
 {-| this is a doc comment. it must be above imports -}
@@ -76,7 +105,7 @@ main = Foo.bar{-caret-}
 module Foo exposing (bar)
 bar = 42
 """,
-"""
+            """
 module Main exposing (..)
 {-| this is a doc comment. it must be above imports -}
 import Foo
@@ -85,7 +114,7 @@ main = Foo.bar{-caret-}
 
 
     fun `test expose a value with existing import`() = check(
-"""
+            """
 --@ main.elm
 import Foo
 main = bar{-caret-}
@@ -93,14 +122,14 @@ main = bar{-caret-}
 module Foo exposing (bar)
 bar = 42
 """,
-"""
+            """
 import Foo exposing (bar)
 main = bar
 """)
 
 
     fun `test expose an infix operator with existing import`() = check(
-"""
+            """
 --@ main.elm
 import Foo
 main = 2 **{-caret-} 3
@@ -109,14 +138,14 @@ module Foo exposing ((**))
 infix right 5 (**) = power
 power a b = List.product (List.repeat b a)
 """,
-"""
+            """
 import Foo exposing ((**))
 main = 2 ** 3
 """)
 
 
     fun `test merge with existing exposed values`() = check(
-"""
+            """
 --@ main.elm
 import Foo exposing (quux)
 main = quux + bar{-caret-}
@@ -125,14 +154,14 @@ module Foo exposing (bar, quux)
 bar = 42
 quux = 99
 """,
-"""
+            """
 import Foo exposing (bar, quux)
 main = quux + bar
 """)
 
 
     fun `test merge with existing exposed union constructors`() = check(
-"""
+            """
 --@ main.elm
 import App exposing (Page(Home))
 main = Settings{-caret-}
@@ -140,14 +169,14 @@ main = Settings{-caret-}
 module App exposing (Page(..))
 type Page = Home | Settings
 """,
-"""
+            """
 import App exposing (Page(Home, Settings))
 main = Settings
 """)
 
 
     fun `test merge with existing exposed union type`() = check(
-"""
+            """
 --@ main.elm
 import App exposing (Page)
 main = Settings{-caret-}
@@ -155,14 +184,14 @@ main = Settings{-caret-}
 module App exposing (Page(..))
 type Page = Home | Settings
 """,
-"""
+            """
 import App exposing (Page(Settings))
 main = Settings
 """)
 
 
     fun `test insert import after import`() = check(
-"""
+            """
 --@ main.elm
 import Foo exposing (bar)
 main = bar + quux{-caret-}
@@ -173,7 +202,7 @@ bar = 42
 module Quux exposing (quux)
 quux = 99
 """,
-"""
+            """
 import Foo exposing (bar)
 import Quux exposing (quux)
 main = bar + quux
@@ -181,7 +210,7 @@ main = bar + quux
 
 
     fun `test verify unavailable when value not exposed`() = verifyUnavailable(
-"""
+            """
 --@ main.elm
 main = bar{-caret-}
 --@ Foo.elm
@@ -191,7 +220,7 @@ bar = 42
 
 
     fun `test binary infix operator containing dot is never qualified`() = check(
-"""
+            """
 --@ main.elm
 main = 2 |.{-caret-} 3
 --@ Foo.elm
@@ -199,7 +228,7 @@ module Foo exposing (..)
 infix right 5 (|.) = power
 power a b = List.product (List.repeat b a)
 """,
-"""
+            """
 import Foo exposing ((|.))
 main = 2 |. 3
 """)
