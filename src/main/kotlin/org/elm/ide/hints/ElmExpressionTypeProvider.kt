@@ -8,6 +8,7 @@ import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.types.inference
 import org.elm.lang.core.types.renderedText
 
 /**
@@ -20,7 +21,7 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
 
     override fun getInformationHint(element: PsiElement): String {
         val ref = element.parentOfType<ElmValueExpr>()?.reference?.resolve() ?: return errorHint
-        val inference = element.parentOfType<ElmValueDeclaration>()?.inferrence ?: return errorHint
+        val inference = element.parentOfType<ElmValueDeclaration>()?.inference ?: return errorHint
         return StringUtil.escapeXml(inference.bindingType(ref).renderedText(false))
     }
 

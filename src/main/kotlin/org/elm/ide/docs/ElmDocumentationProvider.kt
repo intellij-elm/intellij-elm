@@ -11,9 +11,9 @@ import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.types.bindParameterTypes
-import org.elm.lang.core.types.renderedText
 import org.elm.lang.core.types.TyUnknown
+import org.elm.lang.core.types.inference
+import org.elm.lang.core.types.renderedText
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -142,14 +142,14 @@ private fun documentationFor(patternAs: ElmPatternAs): String? = documentationFo
 private fun documentationForParameter(element: ElmNamedElement): String? = buildString {
     val function = element.parentOfType<ElmFunctionDeclarationLeft>() ?: return null
     val decl = function.parentOfType<ElmValueDeclaration>() ?: return null
-    val types = decl.bindParameterTypes()
-    val ty = types[element]
+    val inference = decl.inference
+    val ty = inference.bindingType(element)
 
     definition {
         i { append("parameter") }
         append(" ", element.name, " ")
 
-        if (ty != null && ty !is TyUnknown) {
+        if (ty !is TyUnknown) {
             append(": ", ty.renderedText(true), "\n")
         }
 

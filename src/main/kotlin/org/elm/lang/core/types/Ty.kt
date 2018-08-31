@@ -1,5 +1,10 @@
 package org.elm.lang.core.types
 
+/**
+ * A type in the inference system.
+ *
+ * The name "Ty" is used to differentiate it from the PsiElements with "Type" in their name.
+ */
 sealed class Ty
 
 data class TyVar(val name: String, val origin: Ty?) : Ty()
@@ -10,7 +15,7 @@ object TyUnit : Ty() {
 
 data class TyTuple(val types: List<Ty>) : Ty()
 
-data class TyRecord(val fields: List<Pair<String, Ty>>) : Ty()
+data class TyRecord(val fields: Map<String, Ty>) : Ty()
 
 /** A type like `String` or `Nothing` that has no type parameters */
 data class TyPrimitive(val name: String) : Ty()

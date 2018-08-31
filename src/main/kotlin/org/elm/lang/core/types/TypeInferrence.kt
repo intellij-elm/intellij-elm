@@ -1,66 +1,89 @@
 package org.elm.lang.core.types
 
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmFunctionParamOrPatternChildTag
+import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.ElmTypeRefOrParametricTypeRefParameterTag
 import org.elm.lang.core.psi.elements.*
 
-data class InferrenceResult(private val bindings: Map<ElmNamedElement, Ty>) {
+val ElmValueDeclaration.inference: InferenceResult
+    get () { // TODO cache
+        val ctx = ValueDeclarationInferenceContext()
+        ctx.bindParameters(this)
+        return InferenceResult(ctx.bindings)
+    }
+
+private class ValueDeclarationInferenceContext {
+    val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
+    var ty: Ty = TyUnknown
+        private set
+
+    fun bindParameters(valueDeclaration: ElmValueDeclaration) {
+        if (valueDeclaration.pattern != null) {
+            bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
+                    .associate { it to TyUnknown } // TODO
+            return
+        }
+
+        val decl = valueDeclaration.functionDeclarationLeft!!
+        val typeRef = valueDeclaration.typeAnnotation?.typeRef
+        val types = typeRef?.allParameters
+
+        if (typeRef == null || types == null) {
+            bindings += decl.namedParameters.associate { it to TyUnknown }
+            return
+        }
+
+        ty = typeRef.ty
+        decl.patterns.zip(types).forEach { (pat, type) -> bindPattern(this, pat, type.ty) }
+    }
+}
+
+
+data class InferenceResult(private val bindings: Map<ElmNamedElement, Ty>) {
     fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown
 }
 
-fun ElmValueDeclaration.bindParameterTypes(): Map<ElmNamedElement, Ty> {
-    if (pattern != null) {
-        return PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)
-                .associate { it to TyUnknown } // TODO
-    }
-
-    val decl = functionDeclarationLeft!!
-    val types = typeAnnotation?.typeRef?.allParameters
-            ?: return decl.namedParameters.associate { it to TyUnknown }
-
-    return decl.patterns.zip(types).map { (pat, type) ->
-        bindPattern(pat, type)
-    }.reduce { acc, it -> acc + it }
-}
-
-private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
+private fun bindPattern(ctx: ValueDeclarationInferenceContext, pat: ElmFunctionParamOrPatternChildTag, ty: Ty) {
     return when (pat) {
-        is ElmAnythingPattern -> emptyMap()
-        is ElmConsPattern -> emptyMap() // This is a partial pattern error in function parameters
-        is ElmListPattern -> emptyMap() // This is a partial pattern error in function parameters
-        is ElmLiteral -> emptyMap() // This is a partial pattern error in function parameters
-        is ElmPattern -> bindPattern(pat.child, anno) + bindPattern(pat.patternAs, anno)
-        is ElmLowerPattern -> mapOf(pat to anno.ty)
-        is ElmRecordPattern -> bindPattern(pat, anno)
-        is ElmTuplePattern -> bindPattern(pat, anno)
-        is ElmUnit -> emptyMap()
+        is ElmAnythingPattern -> {
+        }
+        is ElmConsPattern -> {
+        } // TODO This is a partial pattern error in function parameters
+        is ElmListPattern -> {
+        } // This is a partial pattern error in function parameters
+        is ElmLiteral -> {
+        } // This is a partial pattern error in function parameters
+        is ElmPattern -> {
+            bindPattern(ctx, pat.child, ty)
+            bindPattern(ctx, pat.patternAs, ty)
+        }
+        is ElmLowerPattern -> ctx.bindings[pat] = ty
+        is ElmRecordPattern -> bindPattern(ctx, pat, ty)
+        is ElmTuplePattern -> bindPattern(ctx, pat, ty)
+        is ElmUnit -> {
+        }
         else -> error("unexpected type $pat")
     }
 }
 
-private fun bindPattern(pat: ElmPatternAs?, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
-    return when (pat) {
-        null -> emptyMap()
-        else -> mapOf(pat to anno.ty)
-    }
+private fun bindPattern(ctx: ValueDeclarationInferenceContext, pat: ElmPatternAs?, ty: Ty) {
+    if (pat != null) ctx.bindings[pat] = ty
 }
 
-private fun bindPattern(pat: ElmTuplePattern, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
-    val type: ElmTupleType = when (anno) {
-        is ElmTupleType -> anno
-        is ElmTypeRef -> anno.allParameters.singleOrNull() as? ElmTupleType ?: return emptyMap()
-        else -> return emptyMap() // TODO: report error
-    }
-    return pat.patternList.zip(type.typeRefList)
-            .map { (pat, type) -> bindPattern(pat.child, type) }
-            .reduce { acc, it -> acc + it }
+private fun bindPattern(ctx: ValueDeclarationInferenceContext, pat: ElmTuplePattern, ty: Ty) {
+    if (ty !is TyTuple) return // TODO: report error
+    pat.patternList
+            .zip(ty.types)
+            .forEach { (pat, type) -> bindPattern(ctx, pat.child, type) }
 }
 
-private fun bindPattern(pat: ElmRecordPattern, anno: ElmTypeRefParameterTag): Map<ElmNamedElement, Ty> {
-    if (anno !is ElmRecordType) return emptyMap() // TODO: report error
-    val names = pat.lowerPatternList.map { it.name to it }
-    val fields = anno.fieldTypeList.associate { it.lowerCaseIdentifier.text to it.typeRef.ty }
-    return names.associate { (name, e) -> e to fields[name]!! } // TODO: report error on name mismatch
+private fun bindPattern(ctx: ValueDeclarationInferenceContext, pat: ElmRecordPattern, ty: Ty) {
+    if (ty !is TyRecord) return // TODO: report error
+    for (id in pat.lowerPatternList) {
+        val fieldTy = ty.fields[id.name] ?: continue // TODO: report error
+        bindPattern(ctx, id, fieldTy)
+    }
 }
 
 /** Get the type for one part of a type ref */
@@ -68,7 +91,7 @@ private val ElmTypeRefOrParametricTypeRefParameterTag.ty: Ty
     get() = when (this) {
         is ElmUpperPathTypeRef -> TyPrimitive(text)
         is ElmTypeVariableRef -> TyVar(identifier.text, null) // TODO
-        is ElmRecordType -> TyRecord(fieldTypeList.map { it.lowerCaseIdentifier.text to it.typeRef.ty })
+        is ElmRecordType -> TyRecord(fieldTypeList.associate { it.lowerCaseIdentifier.text to it.typeRef.ty })
         is ElmTupleType -> if (unit != null) TyUnit else TyTuple(typeRefList.map { it.ty })
         is ElmParametricTypeRef -> TyParametric(upperCaseQID.text, allParameters.map { it.ty }.toList())
         is ElmTypeRef -> ty

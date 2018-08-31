@@ -27,7 +27,7 @@ fun TyParametric.renderedText(linkify: Boolean): String {
 }
 
 fun TyRecord.renderedText(linkify: Boolean): String {
-    return fields.joinToString(", ", prefix = "{", postfix = "}") { (name, ty) ->
+    return fields.entries.joinToString(", ", prefix = "{", postfix = "}") { (name, ty) ->
         "$name: ${ty.renderedText(linkify)}"
     } // TODO we probably don't want to render all fields
 }
