@@ -6,7 +6,7 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
+      ElmFunctionCall(FUNCTION_CALL)
         ElmValueExpr(VALUE_EXPR)
           ElmValueQID(VALUE_QID)
             PsiElement(UPPER_CASE_IDENTIFIER)('List')

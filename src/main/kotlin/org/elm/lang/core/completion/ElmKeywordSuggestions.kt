@@ -6,7 +6,6 @@ import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.editor.EditorModificationUtil
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
@@ -20,7 +19,6 @@ object ElmKeywordSuggestor : Suggestor {
         val pos = parameters.position
         val parent = pos.parent
         val grandParent = pos.parent?.parent
-        val file = pos.containingFile as ElmFile
 
         if (pos.elementType == LOWER_CASE_IDENTIFIER) {
             // NOTE TO SELF:
@@ -72,8 +70,8 @@ object ElmKeywordSuggestor : Suggestor {
             val caseOfExpr = PsiTreeUtil.getParentOfType(pos, ElmCaseOf::class.java)
             if (caseOfExpr != null) {
                 // boy this is ugly. I either need to level-up my PsiTreeUtil-fu or learn how to use PsiPattern.
-                val listOfOperands = PsiTreeUtil.getParentOfType(pos, ElmListOfOperands::class.java)
-                if (listOfOperands?.parent?.parent == caseOfExpr && grandParent?.parent == listOfOperands) {
+                val functionCall = PsiTreeUtil.getParentOfType(pos, ElmFunctionCall::class.java)
+                if (functionCall?.parent?.parent == caseOfExpr && grandParent?.parent == functionCall) {
                     result.add("of")
                 }
             }

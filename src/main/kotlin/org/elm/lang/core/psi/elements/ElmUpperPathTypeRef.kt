@@ -3,7 +3,8 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.tags.ElmParametricTypeRefParameterTag
+import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
+import org.elm.lang.core.psi.ElmTypeRefParameterTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -17,7 +18,7 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  *                           ^^^^^^^^^^
  *                           this
  */
-class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmParametricTypeRefParameterTag {
+class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
@@ -28,8 +29,7 @@ class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReference
     override val referenceName: String
         get() = referenceNameElement.text
 
-    override fun getReference(): ElmReference =
-            getReferences().first()
+    override fun getReference(): ElmReference = references.first()
 
     override fun getReferences(): Array<ElmReference> {
         return if (upperCaseQID.upperCaseIdentifierList.size > 1)

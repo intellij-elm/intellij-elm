@@ -96,12 +96,11 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
-        ElmRecord(RECORD)
-          PsiElement(LEFT_BRACE)('{')
-          PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got '
+      ElmRecord(RECORD)
+        PsiElement(LEFT_BRACE)('{')
+        PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got '
 '
-            <empty list>
+          <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
@@ -110,14 +109,13 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
-        ElmRecord(RECORD)
-          PsiElement(LEFT_BRACE)('{')
-          PsiWhiteSpace(' ')
-          PsiElement(LOWER_CASE_IDENTIFIER)('x')
-          PsiErrorElement:EQ or PIPE expected, got '
+      ElmRecord(RECORD)
+        PsiElement(LEFT_BRACE)('{')
+        PsiWhiteSpace(' ')
+        PsiElement(LOWER_CASE_IDENTIFIER)('x')
+        PsiErrorElement:EQ or PIPE expected, got '
 '
-            <empty list>
+          <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
@@ -126,17 +124,16 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
-        ElmRecord(RECORD)
-          PsiElement(LEFT_BRACE)('{')
+      ElmRecord(RECORD)
+        PsiElement(LEFT_BRACE)('{')
+        PsiWhiteSpace(' ')
+        ElmField(FIELD)
+          PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiWhiteSpace(' ')
-          ElmField(FIELD)
-            PsiElement(LOWER_CASE_IDENTIFIER)('x')
-            PsiWhiteSpace(' ')
-            PsiElement(EQ)('=')
-            PsiErrorElement:<list of operands> expected, got '
+          PsiElement(EQ)('=')
+          PsiErrorElement:<expression> expected, got '
 '
-              <empty list>
+            <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
@@ -145,24 +142,22 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
-        ElmRecord(RECORD)
-          PsiElement(LEFT_BRACE)('{')
+      ElmRecord(RECORD)
+        PsiElement(LEFT_BRACE)('{')
+        PsiWhiteSpace(' ')
+        ElmField(FIELD)
+          PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiWhiteSpace(' ')
-          ElmField(FIELD)
-            PsiElement(LOWER_CASE_IDENTIFIER)('x')
-            PsiWhiteSpace(' ')
-            PsiElement(EQ)('=')
-            PsiWhiteSpace(' ')
-            ElmExpression(EXPRESSION)
-              ElmListOfOperands(LIST_OF_OPERANDS)
-                ElmLiteral(LITERAL)
-                  PsiElement(NUMBER_LITERAL)('0')
+          PsiElement(EQ)('=')
           PsiWhiteSpace(' ')
-          PsiElement(COMMA)(',')
-          PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got '
+          ElmExpression(EXPRESSION)
+            ElmLiteral(LITERAL)
+              PsiElement(NUMBER_LITERAL)('0')
+        PsiWhiteSpace(' ')
+        PsiElement(COMMA)(',')
+        PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got '
 '
-            <empty list>
+          <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
@@ -171,26 +166,24 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
-        ElmRecord(RECORD)
-          PsiElement(LEFT_BRACE)('{')
+      ElmRecord(RECORD)
+        PsiElement(LEFT_BRACE)('{')
+        PsiWhiteSpace(' ')
+        ElmField(FIELD)
+          PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiWhiteSpace(' ')
-          ElmField(FIELD)
-            PsiElement(LOWER_CASE_IDENTIFIER)('x')
-            PsiWhiteSpace(' ')
-            PsiElement(EQ)('=')
-            PsiWhiteSpace(' ')
-            ElmExpression(EXPRESSION)
-              ElmListOfOperands(LIST_OF_OPERANDS)
-                ElmLiteral(LITERAL)
-                  PsiElement(NUMBER_LITERAL)('0')
+          PsiElement(EQ)('=')
           PsiWhiteSpace(' ')
-          PsiElement(COMMA)(',')
-          PsiWhiteSpace(' ')
-          PsiElement(LOWER_CASE_IDENTIFIER)('y')
-          PsiErrorElement:EQ expected, got '
+          ElmExpression(EXPRESSION)
+            ElmLiteral(LITERAL)
+              PsiElement(NUMBER_LITERAL)('0')
+        PsiWhiteSpace(' ')
+        PsiElement(COMMA)(',')
+        PsiWhiteSpace(' ')
+        PsiElement(LOWER_CASE_IDENTIFIER)('y')
+        PsiErrorElement:EQ expected, got '
 '
-            <empty list>
+          <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -200,6 +193,5 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmListOfOperands(LIST_OF_OPERANDS)
-        ElmLiteral(LITERAL)
-          PsiElement(NUMBER_LITERAL)('42')
+      ElmLiteral(LITERAL)
+        PsiElement(NUMBER_LITERAL)('42')

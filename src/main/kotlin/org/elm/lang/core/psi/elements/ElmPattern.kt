@@ -2,11 +2,12 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.tags.ElmConsPatternChildTag
-import org.elm.lang.core.psi.tags.ElmPatternChildTag
+import org.elm.lang.core.psi.ElmConsPatternChildTag
+import org.elm.lang.core.psi.ElmFunctionParamTag
+import org.elm.lang.core.psi.ElmPatternChildTag
 
 
-class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag {
+class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag, ElmFunctionParamTag, ElmPatternChildTag {
 
     /**
      * The actual type of this pattern.
