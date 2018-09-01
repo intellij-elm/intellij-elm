@@ -7,6 +7,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBList
 import org.elm.lang.core.psi.*
@@ -34,6 +35,9 @@ class ElmImportIntentionAction : ElmAtCaretIntentionActionBase<ElmImportIntentio
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         if (element.parentOfType<ElmImportClause>() != null) return null
         val refElement = element.parentOfType<ElmReferenceElement>() ?: return null
+
+        // we can't import the function we're annotating
+        if (refElement is ElmTypeAnnotation) return null
 
         val fullName = refElement.text      // e.g. `Html.div`
         val name = refElement.referenceName // e.g. `div`
