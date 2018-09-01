@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.ElmOperandTag
  *
  * e.g. `-3`
  */
-class ElmNegateExpresssion(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
-    /** The negated expression */
-    val expression: ElmExpression = findNotNullChildByClass(ElmExpression::class.java)
+class ElmNegateExpression(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
+    /** The negated expression. In a well-formed program, this will never be null. */
+    val expression: ElmExpression? get() = findChildByClass(ElmExpression::class.java)
 }

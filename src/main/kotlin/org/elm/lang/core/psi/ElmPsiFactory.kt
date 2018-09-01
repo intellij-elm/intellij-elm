@@ -58,7 +58,7 @@ class ElmPsiFactory(private val project: Project) {
                     LOWER_PATTERN -> ElmLowerPattern(node)
                     LOWER_TYPE_NAME -> ElmLowerTypeName(node)
                     MODULE_DECLARATION -> ElmModuleDeclaration(node)
-                    NEGATE_EXPRESSION -> ElmNegateExpresssion(node)
+                    NEGATE_EXPRESSION -> ElmNegateExpression(node)
                     NON_EMPTY_TUPLE -> ElmNonEmptyTuple(node)
                     OPERATOR -> ElmOperator(node)
                     OPERATOR_AS_FUNCTION -> ElmOperatorAsFunction(node)
