@@ -99,7 +99,7 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmNegateExpresssion(NEGATE_EXPRESSION)
+      ElmNegateExpression(NEGATE_EXPRESSION)
         PsiElement(OPERATOR_IDENTIFIER)('-')
         ElmExpression(EXPRESSION)
           ElmValueExpr(VALUE_EXPR)
