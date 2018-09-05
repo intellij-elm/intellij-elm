@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.*

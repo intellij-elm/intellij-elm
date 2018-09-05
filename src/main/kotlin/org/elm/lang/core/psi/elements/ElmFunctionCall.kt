@@ -17,8 +17,8 @@ class ElmFunctionCall(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
     val function: ElmValueExpr? get() = findChildByClass(ElmValueExpr::class.java)
 
     /** The function being called, if it is an operator */
-    val operator: ElmOperatorAsFunction? get() = findChildByClass(ElmOperatorAsFunction::class.java)
+    val operator: ElmOperatorAsFunction? get() = firstChild as? ElmOperatorAsFunction
 
     /** The arguments to the function. This will always have at least one element */
-    val operands: Sequence<ElmOperandTag> get() = directChildren.filterIsInstance<ElmOperandTag>()
+    val arguments: Sequence<ElmOperandTag> get() = directChildren.drop(1).filterIsInstance<ElmOperandTag>()
 }

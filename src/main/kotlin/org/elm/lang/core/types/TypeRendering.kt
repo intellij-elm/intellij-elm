@@ -8,9 +8,10 @@ fun Ty.renderedText(linkify: Boolean): String = when (this) {
     is TyPrimitive -> buildString { renderLink(name, name, linkify) }
     is TyRecord -> renderedText(linkify)
     is TyTuple -> renderedText(linkify)
-    is TyUnknown -> "unknown"
     is TyVar -> name
-    is TyUnit -> "()"
+    TyUnknown -> "unknown"
+    TyUnit -> "()"
+    TyShader -> "shader"
 }
 
 fun TyFunction.renderedText(linkify: Boolean): String {
@@ -27,7 +28,7 @@ fun TyParametric.renderedText(linkify: Boolean): String {
 }
 
 fun TyRecord.renderedText(linkify: Boolean): String {
-    return fields.entries.joinToString(", ", prefix = "{", postfix = "}") { (name, ty) ->
+    return fields.entries.joinToString(",<br>", prefix = "{", postfix = "}") { (name, ty) ->
         "$name: ${ty.renderedText(linkify)}"
     } // TODO we probably don't want to render all fields
 }

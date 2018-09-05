@@ -81,6 +81,9 @@
         <backspaceHandlerDelegate implementation="org.elm.ide.typing.ElmBackspaceHandler"/>
         <codeInsight.typeInfo language="Elm" implementationClass="org.elm.ide.hints.ElmExpressionTypeProvider"/>
 
+        <localInspection language="Elm" groupName="Elm" displayName="Type checker" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.TypeInferenceInspection"/>
+
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
         <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />
         <additionalLibraryRootsProvider implementation="org.elm.workspace.ElmAdditionalLibraryRootsProvider" />

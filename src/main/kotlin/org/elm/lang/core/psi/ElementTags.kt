@@ -1,9 +1,16 @@
 package org.elm.lang.core.psi
 
 import org.elm.lang.core.psi.elements.*
+/**
+ * An element that is at least one of [ElmUnionMemberParameterTag], [ElmTypeRefParameterTag],
+ * or [ElmParametricTypeRefParameterTag].
+ *
+ * No elements implement this directly.
+ */
+interface ElmTypeSignatureDeclarationTag: ElmPsiElement
 
 /** An element that can appear in the parameter list of an [ElmUnionMember] */
-interface ElmUnionMemberParameterTag : ElmPsiElement
+interface ElmUnionMemberParameterTag : ElmTypeSignatureDeclarationTag
 
 /** An element that can occur in an [ElmExpression]; either an operator or operand */
 interface ElmExpressionPartTag : ElmPsiElement
@@ -27,14 +34,11 @@ interface ElmPatternChildTag : ElmFunctionParamOrPatternChildTag
 /** An element that can be the direct child of an [ElmConsPattern] */
 interface ElmConsPatternChildTag : ElmPsiElement
 
-/** An element that is either an [ElmTypeRefParameterTag], a [ElmParametricTypeRefParameterTag], or both. No elements implement this directly. */
-interface ElmTypeRefOrParametricTypeRefParameterTag: ElmPsiElement
-
 /** An element that can be a parameter of an [ElmTypeRef], but not necessarily an [ElmParametricTypeRef] */
-interface ElmTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
+interface ElmTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** An element that can be a parameter of an [ElmTypeRef] or an [ElmParametricTypeRef] */
-interface ElmParametricTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
+interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
 interface ElmConstantTag : ElmPsiElement

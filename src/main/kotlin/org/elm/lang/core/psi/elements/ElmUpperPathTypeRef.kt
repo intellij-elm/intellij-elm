@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
 import org.elm.lang.core.psi.ElmTypeRefParameterTag
+import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -18,7 +19,8 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  *                           ^^^^^^^^^^
  *                           this
  */
-class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag {
+class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement,
+        ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag, ElmUnionMemberParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
