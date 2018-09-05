@@ -175,9 +175,12 @@ private class InferenceContext {
     }
 
     private fun getDeclTy(name: ElmValueExpr): Ty? {
-        val ref = name.reference.resolve()
-        val decl = ref?.parentOfType<ElmValueDeclaration>()
-                ?: return null
+        val ref = name.reference.resolve() ?: return null
+        // If the function is a parameter, it's type has already been added to bindings
+        if (ref in bindings) return bindings[ref]
+
+        // If the function is top-level, we need to infer its type
+        val decl = ref.parentOfType<ElmValueDeclaration>() ?: return null
         return getDeclTy(decl)
     }
 
@@ -274,7 +277,7 @@ private fun bindPattern(ctx: InferenceContext, pat: ElmRecordPattern, ty: Ty) {
 private val ElmTypeSignatureDeclarationTag.ty: Ty
     get() = when (this) {
         is ElmUpperPathTypeRef -> {
-            // If this is referencing an aliases, use aliased type
+            // If this is referencing an alias, use aliased type
             (reference.resolve() as? ElmTypeAliasDeclaration)?.typeRef?.ty ?: TyPrimitive(text)
         }
         is ElmTypeVariableRef -> TyVar(identifier.text, null) // TODO

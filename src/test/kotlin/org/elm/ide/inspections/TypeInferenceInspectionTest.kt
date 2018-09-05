@@ -121,4 +121,14 @@ foo _ = ""
 main : Int
 main = <error descr="Type mismatch.Required: IntFound: String">foo 1</error>
 """)
+
+    fun `test matched function call from parameter`() = checkByText("""
+main : (Float -> String) -> String
+main fn = fn 1.0
+""")
+
+    fun `test mismatched function call from parameter`() = checkByText("""
+main : (Float -> String) -> Int
+main fn = <error descr="Type mismatch.Required: IntFound: String">fn 1.0</error>
+""")
 }
