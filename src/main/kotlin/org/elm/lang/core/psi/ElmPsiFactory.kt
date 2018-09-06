@@ -41,6 +41,7 @@ class ElmPsiFactory(private val project: Project) {
                     EXPOSED_UNION_CONSTRUCTOR -> ElmExposedUnionConstructor(node)
                     EXPOSING_LIST -> ElmExposingList(node)
                     EXPRESSION -> ElmExpression(node)
+                    EXPRESSION_WITH_ACCESSOR -> ElmExpressionWithAccessor(node)
                     FIELD -> ElmField(node)
                     FIELD_TYPE -> ElmFieldType(node)
                     FUNCTION_CALL -> ElmFunctionCall(node)
@@ -70,6 +71,7 @@ class ElmPsiFactory(private val project: Project) {
                     RECORD_BASE_IDENTIFIER -> ElmRecordBaseIdentifier(node)
                     RECORD_PATTERN -> ElmRecordPattern(node)
                     RECORD_TYPE -> ElmRecordType(node)
+                    RECORD_WITH_ACCESSOR -> ElmRecordWithAccessor(node)
                     TUPLE_CONSTRUCTOR -> ElmTupleConstructor(node) // TODO [drop 0.18] remove this line
                     TUPLE_PATTERN -> ElmTuplePattern(node)
                     TUPLE_TYPE -> ElmTupleType(node)

@@ -12,23 +12,24 @@ import com.intellij.lang.parser.GeneratedParserUtilBase
  * where Elm requires that there be no whitespace between certain tokens
  * (e.g. a "dotted" module name such as `Json.Encode`)
  */
-class ElmParserUtil : GeneratedParserUtilBase() {
-    companion object {
+object ElmParserUtil : GeneratedParserUtilBase() {
+    @JvmStatic
+    fun parseUpperCaseQID(builder: PsiBuilder, level: Int) =
+            UpperCaseQIDParser().parse(builder, level)
 
-        @JvmStatic
-        fun parseUpperCaseQID(builder: PsiBuilder, level: Int) =
-                UpperCaseQIDParser().parse(builder, level)
+    @JvmStatic
+    fun parseValueQID(builder: PsiBuilder, level: Int) =
+            ValueQIDParser().parse(builder, level)
 
-        @JvmStatic
-        fun parseValueQID(builder: PsiBuilder, level: Int) =
-                ValueQIDParser().parse(builder, level)
+    @JvmStatic
+    fun parseFieldAccess(builder: PsiBuilder, level: Int) =
+            FieldAccessParser().parse(builder, level)
 
-        @JvmStatic
-        fun parseFieldAccess(builder: PsiBuilder, level: Int) =
-                FieldAccessParser().parse(builder, level)
+    @JvmStatic
+    fun parseFieldAccessorFunction(builder: PsiBuilder, level: Int) =
+            FieldAccessorFunctionParser().parse(builder, level)
 
-        @JvmStatic
-        fun parseFieldAccessorFunction(builder: PsiBuilder, level: Int) =
-                FieldAccessorFunctionParser().parse(builder, level)
-    }
+    @JvmStatic
+    fun parseExpressionAccessor(builder: PsiBuilder, level: Int) =
+            ExpressionAccessorParser().parse(builder, level)
 }

@@ -31,6 +31,7 @@
         VALUE_QID='VALUE_QID'
         FIELD_ACCESS='FIELD_ACCESS'
         FIELD_ACCESSOR_FUNCTION='FIELD_ACCESSOR_FUNCTION'
+        EXPRESSION_ACCESSOR='EXPRESSION_ACCESSOR'
         DOT='DOT'
 
         // tokens used by the lexer but not visible to PsiBuilder parser
@@ -271,6 +272,8 @@ private CallOrOperand ::=
 
 private Operand ::=
     Literal
+    | RecordWithAccessor
+    | ExpressionWithAccessor
     | NegateExpression
     | FieldAccess
     | ValueExpr
@@ -286,6 +289,12 @@ private Operand ::=
     | LetIn
     | AnonymousFunction
     | GlslCode
+
+ExpressionWithAccessor ::=
+    ParenthesizedExpression ExpressionAccessor
+
+RecordWithAccessor ::=
+    Record ExpressionAccessor
 
 NegateExpression ::= '-' Expression
     { pin = 1 }
@@ -308,10 +317,10 @@ Literal ::=
 AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
 
 external FieldAccessorFunction ::= parseFieldAccessorFunction
-
 external FieldAccess ::= parseFieldAccess
 external ValueQID ::= parseValueQID
 external UpperCaseQID ::= parseUpperCaseQID
+external ExpressionAccessor ::= parseExpressionAccessor
 
 ValueExpr ::=
     ValueQID
