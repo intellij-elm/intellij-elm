@@ -10,7 +10,7 @@ import org.elm.lang.core.psi.ELM_COMMENTS
 import org.elm.lang.core.psi.ELM_IDENTIFIERS
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.STRING_LITERAL
+import org.elm.lang.core.psi.ElmTypes.REGULAR_STRING_PART
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.tokenSetOf
 
@@ -23,7 +23,7 @@ class ElmFindUsagesProvider : FindUsagesProvider {
                 ElmIncrementalLexer(),
                 ELM_IDENTIFIERS,
                 ELM_COMMENTS,
-                tokenSetOf(STRING_LITERAL),
+                tokenSetOf(REGULAR_STRING_PART),
                 TokenSet.EMPTY,
                 tokenSetOf(OPERATOR_IDENTIFIER))
     }

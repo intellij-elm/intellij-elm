@@ -9,7 +9,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 
 %{
   public _ElmLexer() {
-    this((java.io.Reader)null);
+    this(null);
   }
 %}
 
@@ -25,11 +25,11 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 
     private void startComment() {
         commentLevel = 1;
-        yybegin(IN_COMMENT);
+        yybegin(COMMENT);
     }
 %}
 
-%state IN_COMMENT,IN_GLSL_CODE
+%xstate COMMENT GLSL_CODE STRING RAW_STRING
 
 Newline = (\n|\r|\r\n)
 Space = " "
@@ -40,18 +40,43 @@ IdentifierChar = [[:letter:][:digit:]_]
 HexChar = [[:digit:]A-Fa-f]
 LowerCaseIdentifier = [:lowercase:]{IdentifierChar}*
 UpperCaseIdentifier = [:uppercase:]{IdentifierChar}*
-StringLiteral = \"(\\.|[^\\\"])*\"
-StringWithQuotesLiteral = \"\"\"(\\.|[^\\\"]|\"{1,2}([^\"\\]|\\\"))*\"\"\"
 NumberLiteral = ("-")?[:digit:]+(\.[:digit:]+)?
 HexLiteral = 0x{HexChar}+
-CharLiteral = '(\\.|\\u\{{HexChar}+\}|[^\\'])'
-LegacyCharLiteral = '(\\.|\\x{HexChar}+|[^\\'])' // TODO [drop 0.18] remove this
+LegacyCharLiteral = '(\\.|\\x{HexChar}+|[^\\'])'? // TODO [drop 0.18] remove this
 Operator = ("!"|"$"|"^"|"|"|"*"|"/"|"?"|"+"|"~"|"."|-|=|@|#|%|&|<|>|:|€|¥|¢|£|¤)+
 ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
 
+ValidEscapeSequence = \\(u\{{HexChar}{4,6}\}|[nrt\"'\\])
+InvalidEscapeSequence = \\(u\{[^}]*\}|[^nrt\"'\\])
+CharLiteral = '({ValidEscapeSequence}|{InvalidEscapeSequence}|[^\\'])'?
+ThreeQuotes = \"\"\"
+RegularStringPart = [^\\\"]+
+
 %%
 
-<IN_COMMENT> {
+<RAW_STRING> {
+    {ThreeQuotes}\"* {
+        int length = yytext().length();
+        if (length <= 3) { // closing """
+            yybegin(YYINITIAL);
+            return CLOSE_QUOTE;
+        } else { // some quotes at the end of a string, e.g. """ "foo""""
+            yypushback(3); // return the closing quotes (""") to the stream
+            return REGULAR_STRING_PART;
+        }
+    }
+    \"\"?            { return REGULAR_STRING_PART; }
+}
+
+<STRING> \"  { yybegin(YYINITIAL); return CLOSE_QUOTE; }
+
+<STRING, RAW_STRING> {
+    {ValidEscapeSequence}   { return STRING_ESCAPE; }
+    {InvalidEscapeSequence} { return INVALID_STRING_ESCAPE; }
+    {RegularStringPart}     { return REGULAR_STRING_PART; }
+}
+
+<COMMENT> {
     "{-" {
         commentLevel++;
     }
@@ -67,7 +92,7 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     [^] { }
 }
 
-<IN_GLSL_CODE> {
+<GLSL_CODE> {
     "|]" {
         yybegin(YYINITIAL);
         return END_GLSL_CODE;
@@ -113,20 +138,21 @@ ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
     "_"                         { return UNDERSCORE; }
     "."                         { return DOT; }
     "[glsl|" {
-        yybegin(IN_GLSL_CODE);
-        return START_GLSL_CODE;
-    }
+            yybegin(GLSL_CODE);
+            return START_GLSL_CODE;
+        }
     "{-" {
         startComment();
     }
     "{-|" {
         startComment();
     }
+
+    \"                          { yybegin(STRING); return OPEN_QUOTE; }
+    {ThreeQuotes}               { yybegin(RAW_STRING); return OPEN_QUOTE; }
     {LineComment}               { return LINE_COMMENT; }
     {LowerCaseIdentifier}       { return LOWER_CASE_IDENTIFIER; }
     {UpperCaseIdentifier}       { return UPPER_CASE_IDENTIFIER; }
-    {StringWithQuotesLiteral}   { return STRING_LITERAL; }
-    {StringLiteral}             { return STRING_LITERAL; }
     {CharLiteral}               { return CHAR_LITERAL; }
     {LegacyCharLiteral}         { return CHAR_LITERAL; } // TODO [drop 0.18] remove this line
     {NumberLiteral}             { return NUMBER_LITERAL; }

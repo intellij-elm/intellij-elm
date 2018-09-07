@@ -31,7 +31,7 @@ class ElmParserDefinition : ParserDefinition {
             ELM_COMMENTS
 
     override fun getStringLiteralElements() =
-            TokenSet.create(ElmTypes.STRING_LITERAL)
+            TokenSet.create(ElmTypes.REGULAR_STRING_PART)
 
     override fun createParser(project: Project?) =
     // TODO [kl] factor this out

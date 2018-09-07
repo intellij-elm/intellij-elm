@@ -313,10 +313,15 @@ private FunctionCallTarget ::=
 
 private ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
-Literal ::=
-    STRING_LITERAL
-    | NUMBER_LITERAL
-    | CHAR_LITERAL
+private Literal ::=
+    CharConstant
+    | NumberConstant
+    | StringConstant
+
+CharConstant ::= CHAR_LITERAL
+NumberConstant ::= NUMBER_LITERAL
+StringConstant ::= OPEN_QUOTE (REGULAR_STRING_PART | STRING_ESCAPE | INVALID_STRING_ESCAPE)* CLOSE_QUOTE
+
 
 AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
 

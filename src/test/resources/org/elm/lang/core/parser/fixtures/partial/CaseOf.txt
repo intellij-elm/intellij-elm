@@ -27,7 +27,7 @@ Elm File
           ElmValueExpr(VALUE_EXPR)
             ElmValueQID(VALUE_QID)
               PsiElement(LOWER_CASE_IDENTIFIER)('x')
-        PsiErrorElement:'-', <literal>, <value expr>, BACKSLASH, CASE, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, LOWER_CASE_IDENTIFIER, OF, OPERATOR_IDENTIFIER or START_GLSL_CODE expected, got '
+        PsiErrorElement:'-', <value expr>, BACKSLASH, CASE, CHAR_LITERAL, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OF, OPEN_QUOTE, OPERATOR_IDENTIFIER or START_GLSL_CODE expected, got '
 '
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
@@ -161,5 +161,5 @@ Elm File
           PsiElement(ARROW)('->')
           PsiWhiteSpace(' ')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('42')

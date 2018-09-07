@@ -35,3 +35,6 @@ interface ElmTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
 
 /** An element that can be a parameter of an [ElmTypeRef] or an [ElmParametricTypeRef] */
 interface ElmParametricTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
+
+/** A value literal. Either a number, string, or char. */
+interface ElmConstantTag : ElmPsiElement

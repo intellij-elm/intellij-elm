@@ -16,13 +16,15 @@ class ElmSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getHighlightingLexer() =
             ElmIncrementalLexer()
 
-    override fun getTokenHighlights(tokenType: IElementType) =
+    override fun getTokenHighlights(tokenType: IElementType?) =
             pack(map(tokenType)?.textAttributesKey)
 
     companion object {
         fun map(tokenType: IElementType?): ElmColor? =
                 when (tokenType) {
-                    STRING_LITERAL, CHAR_LITERAL -> ElmColor.STRING
+                    REGULAR_STRING_PART, OPEN_QUOTE, CLOSE_QUOTE, CHAR_LITERAL -> ElmColor.STRING
+                    STRING_ESCAPE -> ElmColor.VALID_STRING_ESCAPE
+                    INVALID_STRING_ESCAPE -> ElmColor.INVALID_STRING_ESCAPE
                     LEFT_PARENTHESIS, RIGHT_PARENTHESIS -> ElmColor.PARENTHESIS
                     LEFT_BRACE, RIGHT_BRACE -> ElmColor.BRACES
                     LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET -> ElmColor.BRACKETS
