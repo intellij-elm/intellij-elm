@@ -12,7 +12,6 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import org.elm.lang.core.lexer.ElmIncrementalLexer
 import org.elm.lang.core.lexer.ElmLayoutLexer
-import org.elm.lang.core.parser.manual.ElmManualPsiElementFactory
 import org.elm.lang.core.psi.ELM_COMMENTS
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiFactory
@@ -57,7 +56,5 @@ class ElmParserDefinition : ParserDefinition {
     override fun spaceExistanceTypeBetweenTokens(left: ASTNode?, right: ASTNode?) =
             MAY
 
-    override fun createElement(node: ASTNode) =
-            ElmManualPsiElementFactory.createElement(node)
-                    ?: ElmPsiFactory.createElement(node)
+    override fun createElement(node: ASTNode) = ElmPsiFactory.createElement(node)
 }

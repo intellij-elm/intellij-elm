@@ -15,6 +15,7 @@ by constructing PSI trees from syntactically invalid files.
 */
 class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
 
+    fun testExpressionAccessors() = doTest(true)
     fun testIfElse() = doTest(true)
     fun testModuleDecl0() = doTest(true)
     fun testModuleDecl1() = doTest(true)
