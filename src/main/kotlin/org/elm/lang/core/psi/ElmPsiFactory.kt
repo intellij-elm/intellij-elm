@@ -41,7 +41,11 @@ class ElmPsiFactory(private val project: Project) {
                     EXPOSED_UNION_CONSTRUCTOR -> ElmExposedUnionConstructor(node)
                     EXPOSING_LIST -> ElmExposingList(node)
                     EXPRESSION -> ElmExpression(node)
+                    EXPRESSION_ACCESSOR -> ElmExpressionAccessor(node)
+                    EXPRESSION_WITH_ACCESSOR -> ElmExpressionWithAccessor(node)
                     FIELD -> ElmField(node)
+                    FIELD_ACCESS -> ElmFieldAccess(node)
+                    FIELD_ACCESSOR_FUNCTION -> ElmFieldAccessorFunction(node)
                     FIELD_TYPE -> ElmFieldType(node)
                     FUNCTION_CALL -> ElmFunctionCall(node)
                     FUNCTION_DECLARATION_LEFT -> ElmFunctionDeclarationLeft(node)
@@ -70,6 +74,7 @@ class ElmPsiFactory(private val project: Project) {
                     RECORD_BASE_IDENTIFIER -> ElmRecordBaseIdentifier(node)
                     RECORD_PATTERN -> ElmRecordPattern(node)
                     RECORD_TYPE -> ElmRecordType(node)
+                    RECORD_WITH_ACCESSOR -> ElmRecordWithAccessor(node)
                     TUPLE_CONSTRUCTOR -> ElmTupleConstructor(node) // TODO [drop 0.18] remove this line
                     TUPLE_PATTERN -> ElmTuplePattern(node)
                     TUPLE_TYPE -> ElmTupleType(node)
@@ -81,9 +86,11 @@ class ElmPsiFactory(private val project: Project) {
                     UNION_MEMBER -> ElmUnionMember(node)
                     UNION_PATTERN -> ElmUnionPattern(node)
                     UNIT -> ElmUnit(node)
+                    UPPER_CASE_QID -> ElmUpperCaseQID(node)
                     UPPER_PATH_TYPE_REF -> ElmUpperPathTypeRef(node)
                     VALUE_DECLARATION -> ElmValueDeclaration(node)
                     VALUE_EXPR -> ElmValueExpr(node)
+                    VALUE_QID -> ElmValueQID(node)
                     else -> throw AssertionError("Unknown element type: " + node.elementType)
                 }
     }

@@ -113,7 +113,7 @@ Elm File
         PsiElement(LEFT_BRACE)('{')
         PsiWhiteSpace(' ')
         PsiElement(LOWER_CASE_IDENTIFIER)('x')
-        PsiErrorElement:EQ or PIPE expected, got '
+        PsiErrorElement:EQ, PIPE or RIGHT_BRACE expected, got '
 '
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
@@ -131,7 +131,7 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiWhiteSpace(' ')
           PsiElement(EQ)('=')
-          PsiErrorElement:<expression> expected, got '
+          PsiErrorElement:<expression> or RIGHT_BRACE expected, got '
 '
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
@@ -155,7 +155,7 @@ Elm File
               PsiElement(NUMBER_LITERAL)('0')
         PsiWhiteSpace(' ')
         PsiElement(COMMA)(',')
-        PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got '
+        PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got '
 '
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
@@ -181,7 +181,7 @@ Elm File
         PsiElement(COMMA)(',')
         PsiWhiteSpace(' ')
         PsiElement(LOWER_CASE_IDENTIFIER)('y')
-        PsiErrorElement:EQ expected, got '
+        PsiErrorElement:EQ or RIGHT_BRACE expected, got '
 '
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')

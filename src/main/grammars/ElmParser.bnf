@@ -3,7 +3,7 @@
     psiClassPrefix="Elm"
     parserClass="org.elm.lang.core.parser.ElmParser"
     elementTypeHolderClass="org.elm.lang.core.psi.ElmTypes"
-    parserUtilClass="org.elm.lang.core.parser.manual.ElmParserUtil"
+    parserUtilClass="org.elm.lang.core.parser.manual.ElmManualParseRules"
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
 
@@ -27,10 +27,6 @@
 
     tokens = [
         // tokens used by manual/external parse rules
-        UPPER_CASE_QID='UPPER_CASE_QID'
-        VALUE_QID='VALUE_QID'
-        FIELD_ACCESS='FIELD_ACCESS'
-        FIELD_ACCESSOR_FUNCTION='FIELD_ACCESSOR_FUNCTION'
         DOT='DOT'
 
         // tokens used by the lexer but not visible to PsiBuilder parser
@@ -70,7 +66,6 @@ CODE FORMATTING
 - meta rules and recoverWhile predicates should be in snake_case
  */
 
-
 ElmFile ::= !<<eof>> Module
     {pin=1}
 
@@ -103,8 +98,6 @@ private TopDecl ::= !<<eof>> Declaration
     {pin=1 recoverWhile=generic_recover}
 
 
-
-
 // MODULE DECLARATION
 
 
@@ -134,6 +127,18 @@ ExposedUnionConstructor ::=
 
 ExposedOperator ::=
     OperatorAsFunction_inner
+
+// WHITESPACE-SENSITIVE RULES
+
+
+external DotWithoutWhitespace ::= parseDotWithoutWhitespace
+external DotWithoutTrailingWhitespace ::= parseDotWithoutTrailingWhitespace
+
+UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)*
+ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
+FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+
+ExpressionAccessor ::= DotWithoutWhitespace (LOWER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
+FieldAccessorFunction ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER
 
 
 // IMPORT DECLARATION
@@ -271,6 +276,8 @@ private CallOrOperand ::=
 
 private Operand ::=
     Literal
+    | RecordWithAccessor
+    | ExpressionWithAccessor
     | NegateExpression
     | FieldAccess
     | ValueExpr
@@ -286,6 +293,12 @@ private Operand ::=
     | LetIn
     | AnonymousFunction
     | GlslCode
+
+ExpressionWithAccessor ::=
+    ParenthesizedExpression ExpressionAccessor
+
+RecordWithAccessor ::=
+    Record ExpressionAccessor
 
 NegateExpression ::= '-' Expression
     { pin = 1 }
@@ -306,12 +319,6 @@ Literal ::=
     | CHAR_LITERAL
 
 AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
-
-external FieldAccessorFunction ::= parseFieldAccessorFunction
-
-external FieldAccess ::= parseFieldAccess
-external ValueQID ::= parseValueQID
-external UpperCaseQID ::= parseUpperCaseQID
 
 ValueExpr ::=
     ValueQID
