@@ -32,6 +32,7 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testDottedExpressions() = doTest(true)
     fun testValueQID() = doTest(true)
 
+
     override fun checkResult(targetDataName: String?, file: PsiFile?) {
         super.checkResult(targetDataName, file)
         check(!hasError(file!!)){

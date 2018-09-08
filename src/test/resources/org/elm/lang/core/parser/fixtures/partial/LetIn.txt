@@ -25,7 +25,7 @@ Elm File
         PsiWhiteSpace('\n')
         PsiElement(VIRTUAL_OPEN_SECTION)('        ')
         PsiElement(LOWER_CASE_IDENTIFIER)('x')
-        PsiErrorElement:<literal>, COLON, EQ, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER or UNDERSCORE expected, got ''
+        PsiErrorElement:CHAR_LITERAL, COLON, EQ, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_QUOTE or UNDERSCORE expected, got ''
           <empty list>
         PsiErrorElement:IN expected, got '
 '
@@ -73,7 +73,7 @@ Elm File
           PsiElement(EQ)('=')
           PsiWhiteSpace(' ')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('0')
         PsiErrorElement:IN expected, got '
 '
@@ -99,7 +99,7 @@ Elm File
           PsiElement(EQ)('=')
           PsiWhiteSpace(' ')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('0')
         PsiElement(VIRTUAL_END_DECL)('\n')
         PsiWhiteSpace('        ')
@@ -128,7 +128,7 @@ Elm File
           PsiElement(EQ)('=')
           PsiWhiteSpace(' ')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('0')
         PsiElement(VIRTUAL_END_SECTION)('\n')
         PsiWhiteSpace('     ')
@@ -169,7 +169,7 @@ Elm File
           PsiElement(EQ)('=')
           PsiWhiteSpace(' ')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('1')
         PsiElement(VIRTUAL_END_SECTION)('\n')
         PsiWhiteSpace('     ')

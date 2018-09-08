@@ -294,6 +294,9 @@ private Operand ::=
     | AnonymousFunction
     | GlslCode
 
+// Various tokens that can begin a new operand. Useful for parse error recovery.
+private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
+
 ExpressionWithAccessor ::=
     ParenthesizedExpression ExpressionAccessor
 
@@ -313,10 +316,20 @@ private FunctionCallTarget ::=
 
 private ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
-Literal ::=
-    STRING_LITERAL
-    | NUMBER_LITERAL
-    | CHAR_LITERAL
+private Literal ::=
+    CharConstant
+    | NumberConstant
+    | StringConstant
+
+CharConstant ::= CHAR_LITERAL
+NumberConstant ::= NUMBER_LITERAL
+StringConstant ::= OPEN_QUOTE StringParts CLOSE_QUOTE
+    { pin = 1 }
+
+private StringParts ::= (REGULAR_STRING_PART | STRING_ESCAPE | INVALID_STRING_ESCAPE)*
+    { recoverWhile = string_recover }
+
+private string_recover ::= !(CLOSE_QUOTE|VIRTUAL_END_DECL|expr_delimiters)
 
 AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
 

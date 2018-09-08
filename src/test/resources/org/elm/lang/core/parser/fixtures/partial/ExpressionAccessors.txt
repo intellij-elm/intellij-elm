@@ -8,7 +8,7 @@ Elm File
     ElmExpression(EXPRESSION)
       PsiElement(LEFT_PARENTHESIS)('(')
       ElmExpression(EXPRESSION)
-        ElmLiteral(LITERAL)
+        ElmNumberConstant(NUMBER_CONSTANT)
           PsiElement(NUMBER_LITERAL)('1')
       PsiElement(RIGHT_PARENTHESIS)(')')
   PsiErrorElement:OPERATOR_IDENTIFIER expected, got '.'
@@ -24,7 +24,7 @@ Elm File
     ElmExpression(EXPRESSION)
       PsiElement(LEFT_PARENTHESIS)('(')
       ElmExpression(EXPRESSION)
-        ElmLiteral(LITERAL)
+        ElmNumberConstant(NUMBER_CONSTANT)
           PsiElement(NUMBER_LITERAL)('1')
       PsiElement(RIGHT_PARENTHESIS)(')')
   PsiElement(DOT)('.')
@@ -48,7 +48,7 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiElement(EQ)('=')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('1')
         PsiElement(RIGHT_BRACE)('}')
   PsiErrorElement:OPERATOR_IDENTIFIER expected, got '.'
@@ -68,7 +68,7 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
           PsiElement(EQ)('=')
           ElmExpression(EXPRESSION)
-            ElmLiteral(LITERAL)
+            ElmNumberConstant(NUMBER_CONSTANT)
               PsiElement(NUMBER_LITERAL)('1')
         PsiElement(RIGHT_BRACE)('}')
   PsiErrorElement:OPERATOR_IDENTIFIER expected, got '.'

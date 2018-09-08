@@ -66,7 +66,7 @@ Elm File
                   PsiElement(LOWER_CASE_IDENTIFIER)('y')
                   PsiElement(EQ)('=')
                   ElmExpression(EXPRESSION)
-                    ElmLiteral(LITERAL)
+                    ElmNumberConstant(NUMBER_CONSTANT)
                       PsiElement(NUMBER_LITERAL)('2')
                 PsiElement(RIGHT_BRACE)('}')
           PsiElement(RIGHT_BRACE)('}')

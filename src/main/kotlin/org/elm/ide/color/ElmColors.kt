@@ -5,12 +5,14 @@ import com.intellij.openapi.editor.HighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.options.colors.AttributesDescriptor
 
-enum class ElmColor(humanName: String, val default: TextAttributesKey) {
+enum class ElmColor(humanName: String, default: TextAttributesKey) {
 
     KEYWORD("Keyword", DefaultLanguageHighlighterColors.KEYWORD),
     BAD_CHAR("Bad Character", HighlighterColors.BAD_CHARACTER),
     COMMENT("Comment", DefaultLanguageHighlighterColors.LINE_COMMENT),
-    STRING("String", DefaultLanguageHighlighterColors.STRING),
+    STRING("String//String text", DefaultLanguageHighlighterColors.STRING),
+    VALID_STRING_ESCAPE("String//Valid escape sequence", DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE),
+    INVALID_STRING_ESCAPE("String//Invalid escape sequence", DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE),
     NUMBER("Number", DefaultLanguageHighlighterColors.NUMBER),
     DOT("Punctuation//Dot", DefaultLanguageHighlighterColors.DOT),
     ARROW("Punctuation//Arrows", DefaultLanguageHighlighterColors.OPERATION_SIGN),
