@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 1
+        override fun getStubVersion() = 2
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
