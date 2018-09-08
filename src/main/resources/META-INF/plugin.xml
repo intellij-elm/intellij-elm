@@ -16,6 +16,7 @@
           <li>Go to symbol</li>
           <li>Find usages</li>
           <li>Rename refactoring</li>
+          <li>Code folding</li>
           <li>Syntax highlighting</li>
           <li>Mark unresolvable references as errors</li>
           <li>'Import' quick fix for unresolved references</li>
@@ -29,11 +30,12 @@
 
         <p>
         One major change since earlier versions of this plugin is that you must now attach your Elm project's JSON manifest
-        file (either `elm-package.json` for Elm 0.18 or `elm.json` for 0.19). The plugin will try to find this JSON file
+        file (either `elm.json` for Elm 0.19 or `elm-package.json` for 0.18). The plugin will try to find this JSON file
         on its own, but you may need to manually attach it if the magic fails.
         </p>
 
         <ul>
+            <li><b>1.3.2</b> <em>(2018-09-08)</em> - add code folding; various bug fixes</li>
             <li><b>1.3.1</b> <em>(2018-08-26)</em> - add support for Elm 0.19 package projects</li>
             <li><b>1.3.0</b> <em>(2018-08-09)</em> - add quick docs; add rename file/module refactoring; add support for Elm 0.19 beta</li>
             <li><b>1.1.1</b> <em>(2018-05-15)</em> - fix crash on PyCharm and WebStorm</li>

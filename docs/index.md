@@ -7,6 +7,7 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 * Go to symbol
 * Find usages
 * Rename refactoring
+* Code folding
 * Syntax highlighting
 * Mark unresolvable references as errors
 * 'Import' quick fix for unresolved references

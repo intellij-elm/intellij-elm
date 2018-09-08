@@ -10,6 +10,7 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * Go to symbol
 * Find usages
 * Rename refactoring
+* Code folding
 * Syntax highlighting
 * Mark unresolvable references as errors
 * 'Import' quick fix for unresolved references
@@ -27,7 +28,7 @@ If, however, you need to install a specific version of the plugin, you can get i
 # Attaching Elm JSON files
 
 One major change since earlier versions of this plugin is that you must now attach your Elm project's JSON manifest
-file (either `elm-package.json` for Elm 0.18 or `elm.json` for 0.19). The plugin will try to find this JSON file 
+file (either `elm.json` for Elm 0.19 or `elm-package.json` for 0.18). The plugin will try to find this JSON file 
 on its own, but you may need to manually attach it if the magic fails.
 
 
