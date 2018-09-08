@@ -11,10 +11,10 @@ s = ""
 s = "test"
 
 -- a string containing newlines
-s = "
+s = """
 2nd line
 3rd line
-"
+"""
 
 -- a docstring
 s = """

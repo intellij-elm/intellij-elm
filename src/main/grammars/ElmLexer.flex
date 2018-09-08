@@ -50,7 +50,6 @@ ValidEscapeSequence = \\(u\{{HexChar}{4,6}\}|[nrt\"'\\])
 InvalidEscapeSequence = \\(u\{[^}]*\}|[^nrt\"'\\])
 CharLiteral = '({ValidEscapeSequence}|{InvalidEscapeSequence}|[^\\'])'?
 ThreeQuotes = \"\"\"
-RegularStringPart = [^\\\"]+
 
 %%
 
@@ -65,15 +64,19 @@ RegularStringPart = [^\\\"]+
             return REGULAR_STRING_PART;
         }
     }
-    \"\"?            { return REGULAR_STRING_PART; }
+    [^\\\"]+    { return REGULAR_STRING_PART; }
+    \"\"?       { return REGULAR_STRING_PART; }
 }
 
-<STRING> \"  { yybegin(YYINITIAL); return CLOSE_QUOTE; }
+<STRING> {
+    [^\\\"\n]+  { return REGULAR_STRING_PART; }
+    \"          { yybegin(YYINITIAL); return CLOSE_QUOTE; }
+    \n          { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
+}
 
 <STRING, RAW_STRING> {
     {ValidEscapeSequence}   { return STRING_ESCAPE; }
     {InvalidEscapeSequence} { return INVALID_STRING_ESCAPE; }
-    {RegularStringPart}     { return REGULAR_STRING_PART; }
 }
 
 <COMMENT> {

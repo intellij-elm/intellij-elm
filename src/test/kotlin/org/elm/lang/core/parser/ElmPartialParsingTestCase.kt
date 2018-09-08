@@ -31,6 +31,7 @@ class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
     fun testRecords() = doTest(true)
     fun testTuples() = doTest(true)
     fun testNegateExpression() = doTest(true)
+    fun testStrings() = doTest(true)
 
     // The parse error recovery for case/of and let/in expressions is hard to get right
     // due to the parse rules depending on indentation. In a partial program that the
