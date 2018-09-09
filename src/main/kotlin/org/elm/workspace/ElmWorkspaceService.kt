@@ -21,13 +21,13 @@ import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.VirtualFileWithId
 import com.intellij.util.Consumer
 import com.intellij.util.indexing.LightDirectoryIndex
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
+import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.modules
 import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
@@ -242,13 +242,11 @@ class ElmWorkspaceService(
                 fun put(file: VirtualFile?, elmProject: ElmProject) {
                     if (file == null || file in visited) return
                     visited += file
-                    val theId = (file as VirtualFileWithId).id
-                    println("storing $theId for $file")
                     index.putInfo(file, elmProject)
                 }
 
                 for (project in allProjects) {
-                    put(project.projectDir, project)
+                    put(LocalFileSystem.getInstance().findFileByPath(project.projectDirPath), project)
                     // TODO [kl] re-visit this when we allow projects within projects
                     // We probably will need to register additional directories based
                     // on how [LightDirectoryIndex] walks up the directory tree.

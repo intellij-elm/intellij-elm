@@ -19,6 +19,7 @@ import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.JDOMUtil
 import com.intellij.openapi.util.RecursionManager
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -119,6 +120,10 @@ class CachedVirtualFile(private val url: String?) {
         cache.set(file)
         return file
     }
+}
+
+fun LocalFileSystem.findFileByPath(path: Path): VirtualFile? {
+    return findFileByPath(path.toString())
 }
 
 val isUnitTestMode: Boolean get() = ApplicationManager.getApplication().isUnitTestMode

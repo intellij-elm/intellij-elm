@@ -4,8 +4,10 @@ import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.AdditionalLibraryRootsProvider
 import com.intellij.openapi.roots.SyntheticLibrary
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.ide.icons.ElmIcons
+import org.elm.openapiext.findFileByPath
 import javax.swing.Icon
 
 
@@ -48,7 +50,7 @@ class ElmLibrary(
 
     companion object {
         fun fromPackage(pkg: ElmPackageRef): ElmLibrary? {
-            val root = pkg.root ?: return null
+            val root = pkg.rootPath?.let { LocalFileSystem.getInstance().findFileByPath(it) } ?: return null
             if (!root.exists()) return null
             return ElmLibrary(root = root, name = pkg.name)
         }

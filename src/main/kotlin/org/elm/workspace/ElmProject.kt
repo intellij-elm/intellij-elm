@@ -6,8 +6,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
-import com.intellij.openapi.vfs.VirtualFile
-import org.elm.openapiext.CachedVirtualFile
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.InputStream
 import java.nio.file.Path
@@ -27,12 +25,9 @@ sealed class ElmProject(
 ) {
 
     /**
-     * Returns the `elm.json` file which defines this project.
+     * The path to the directory containing the Elm project JSON file.
      */
-    val manifestFile: VirtualFile? by CachedVirtualFile(manifestPath.toUri().toString())
-
-
-    private val projectDirPath
+    val projectDirPath: Path
         get() =
             manifestPath.parent
 
@@ -44,12 +39,6 @@ sealed class ElmProject(
      */
     val presentableName: String
         get() = projectDirPath.fileName.toString()
-
-
-    /**
-     * The directory containing the project.
-     */
-    val projectDir: VirtualFile? by CachedVirtualFile(projectDirPath.toUri()?.toString())
 
 
     /**
@@ -162,7 +151,7 @@ class ElmPackageProject(
  * A dependency reference to an Elm package
  */
 class ElmPackageRef(
-        val root: VirtualFile?,
+        val rootPath: Path?,
         val name: String,
         val version: Version
 )
@@ -175,7 +164,7 @@ private fun ExactDependenciesDTO.toPackageRefs(toolchain: ElmToolchain) =
 private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
             ElmPackageRef(
-                    root = toolchain.packageVersionDir(name, version),
+                    rootPath = toolchain.packageVersionDir(name, version),
                     name = name,
                     version = version)
         }
@@ -188,7 +177,7 @@ private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolc
                     .firstOrNull()
 
             ElmPackageRef(
-                    root = useVersion?.let { toolchain.packageVersionDir(name, it) },
+                    rootPath = useVersion?.let { toolchain.packageVersionDir(name, it) },
                     name = name,
                     version = useVersion ?: Version.UNKNOWN)
         }
