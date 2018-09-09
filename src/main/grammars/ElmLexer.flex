@@ -22,6 +22,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 
 %{
     private int commentLevel = 0;
+    private int charLength = 0;
 
     private void startComment() {
         commentLevel = 1;
@@ -29,7 +30,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
     }
 %}
 
-%xstate COMMENT GLSL_CODE STRING RAW_STRING
+%xstate COMMENT GLSL_CODE STRING RAW_STRING CHAR
 
 Newline = (\n|\r|\r\n)
 Space = " "
@@ -42,13 +43,12 @@ LowerCaseIdentifier = [:lowercase:]{IdentifierChar}*
 UpperCaseIdentifier = [:uppercase:]{IdentifierChar}*
 NumberLiteral = ("-")?[:digit:]+(\.[:digit:]+)?
 HexLiteral = 0x{HexChar}+
-LegacyCharLiteral = '(\\.|\\x{HexChar}+|[^\\'])'? // TODO [drop 0.18] remove this
 Operator = ("!"|"$"|"^"|"|"|"*"|"/"|"?"|"+"|"~"|"."|-|=|@|#|%|&|<|>|:|€|¥|¢|£|¤)+
 ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
 
 ValidEscapeSequence = \\(u\{{HexChar}{4,6}\}|[nrt\"'\\])
 InvalidEscapeSequence = \\(u\{[^}]*\}|[^nrt\"'\\])
-CharLiteral = '({ValidEscapeSequence}|{InvalidEscapeSequence}|[^\\'])'?
+LegacyEscapeSequence = \\x{HexChar}+ // TODO [drop 0.18] remove this
 ThreeQuotes = \"\"\"
 
 %%
@@ -71,12 +71,26 @@ ThreeQuotes = \"\"\"
 <STRING> {
     [^\\\"\n]+  { return REGULAR_STRING_PART; }
     \"          { yybegin(YYINITIAL); return CLOSE_QUOTE; }
-    \n          { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
 }
 
-<STRING, RAW_STRING> {
+<CHAR> {
+    "'"         { yybegin(YYINITIAL); charLength = 0; return CLOSE_CHAR; }
+    [^\\\n']    {
+          if (charLength++ == 0) return REGULAR_STRING_PART;
+          // Rather than returing a bad character, push the text back onto the stack so that other rules can
+          // parse normally.
+          yypushback(1); yybegin(YYINITIAL); charLength = 0;
+      }
+}
+
+<STRING, RAW_STRING, CHAR> {
     {ValidEscapeSequence}   { return STRING_ESCAPE; }
+    {LegacyEscapeSequence}  { return STRING_ESCAPE; }
     {InvalidEscapeSequence} { return INVALID_STRING_ESCAPE; }
+}
+
+<STRING, CHAR> {
+    \n          { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
 }
 
 <COMMENT> {
@@ -152,12 +166,11 @@ ThreeQuotes = \"\"\"
     }
 
     \"                          { yybegin(STRING); return OPEN_QUOTE; }
+    "'"                         { yybegin(CHAR); charLength = 0; return OPEN_CHAR; }
     {ThreeQuotes}               { yybegin(RAW_STRING); return OPEN_QUOTE; }
     {LineComment}               { return LINE_COMMENT; }
     {LowerCaseIdentifier}       { return LOWER_CASE_IDENTIFIER; }
     {UpperCaseIdentifier}       { return UPPER_CASE_IDENTIFIER; }
-    {CharLiteral}               { return CHAR_LITERAL; }
-    {LegacyCharLiteral}         { return CHAR_LITERAL; } // TODO [drop 0.18] remove this line
     {NumberLiteral}             { return NUMBER_LITERAL; }
     {HexLiteral}                { return NUMBER_LITERAL; }
     {Operator}                  { return OPERATOR_IDENTIFIER; }
