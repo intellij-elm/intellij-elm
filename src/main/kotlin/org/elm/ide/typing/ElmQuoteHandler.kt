@@ -6,16 +6,14 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.highlighter.HighlighterIterator
 import org.elm.lang.core.psi.ElmTypes.*
 
+// A QuoteHandler is called while the user is typing to control quote matching functionality
+// A MultiCharQuoteHandler adds the ability to match quotes that are more than one character long.
 class ElmQuoteHandler : QuoteHandler, MultiCharQuoteHandler {
-    // If this returns true, the editor will move the carat one character right instead of inserting the typed character
+    // If this returns true, the editor will move the carat one character right instead of inserting the typed
+    // character
     override fun isClosingQuote(iterator: HighlighterIterator, offset: Int): Boolean {
         return when (iterator.tokenType) {
-            CHAR_LITERAL -> {
-                val start = iterator.start
-                val end = iterator.end
-                end - start >= 1 && offset == end - 1
-            }
-            CLOSE_QUOTE -> true
+            CLOSE_QUOTE, CLOSE_CHAR -> true
             else -> false
         }
     }
@@ -23,7 +21,7 @@ class ElmQuoteHandler : QuoteHandler, MultiCharQuoteHandler {
     // If this returns true, the editor will insert a copy of the typed character after the carat
     override fun isOpeningQuote(iterator: HighlighterIterator, offset: Int): Boolean {
         return when (iterator.tokenType) {
-            OPEN_QUOTE, CHAR_LITERAL -> offset == iterator.start
+            OPEN_QUOTE, OPEN_CHAR -> offset == iterator.start
             else -> false
         }
     }
@@ -52,12 +50,12 @@ class ElmQuoteHandler : QuoteHandler, MultiCharQuoteHandler {
 
     private fun isOpeningTripleQuote(iterator: HighlighterIterator, offset: Int): Boolean {
         val text = iterator.document.text
-
-        return iterator.tokenType == REGULAR_STRING_PART
-                && offset >= 3
+        val tokenType = iterator.tokenType
+        return offset >= 3
                 && text[offset - 1] == '"'
                 && text[offset - 2] == '"'
                 && text[offset - 3] == '"'
-                && offset == iterator.start
+                && (tokenType == REGULAR_STRING_PART && offset == iterator.start // middle of file
+                || tokenType == OPEN_QUOTE && offset == iterator.start + 3) // end of file
     }
 }

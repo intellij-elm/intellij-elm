@@ -76,6 +76,7 @@
         <lang.foldingBuilder language="Elm" implementationClass="org.elm.ide.folding.ElmFoldingBuilder"/>
         <importFilteringRule implementation="org.elm.ide.usages.ElmImportFilteringRule"/>
         <lang.quoteHandler language="Elm" implementationClass="org.elm.ide.typing.ElmQuoteHandler"/>
+        <backspaceHandlerDelegate implementation="org.elm.ide.typing.ElmBackspaceHandler"/>
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
         <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />

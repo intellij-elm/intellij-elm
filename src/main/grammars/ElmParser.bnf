@@ -321,12 +321,14 @@ private Literal ::=
     | NumberConstant
     | StringConstant
 
-CharConstant ::= CHAR_LITERAL
+CharConstant ::= OPEN_CHAR StringPart CLOSE_CHAR
+    { pin = 1 }
 NumberConstant ::= NUMBER_LITERAL
 StringConstant ::= OPEN_QUOTE StringParts CLOSE_QUOTE
     { pin = 1 }
 
-private StringParts ::= (REGULAR_STRING_PART | STRING_ESCAPE | INVALID_STRING_ESCAPE)*
+private StringPart ::= REGULAR_STRING_PART | STRING_ESCAPE | INVALID_STRING_ESCAPE
+private StringParts ::= StringPart*
     { recoverWhile = string_recover }
 
 private string_recover ::= !(CLOSE_QUOTE|VIRTUAL_END_DECL|expr_delimiters)

@@ -1,18 +1,11 @@
+a="bar
 
-a='c
+b="baz"
 
-b='d
-
-c="foo
-
-d="bar
-
-e="baz"
-
-f="""
+c="""
 qux
 """
 
-g=["one
+d=["one
   ,"two"
   ]

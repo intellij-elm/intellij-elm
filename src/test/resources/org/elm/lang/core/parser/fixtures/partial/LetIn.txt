@@ -25,7 +25,7 @@ Elm File
         PsiWhiteSpace('\n')
         PsiElement(VIRTUAL_OPEN_SECTION)('        ')
         PsiElement(LOWER_CASE_IDENTIFIER)('x')
-        PsiErrorElement:CHAR_LITERAL, COLON, EQ, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_QUOTE or UNDERSCORE expected, got ''
+        PsiErrorElement:COLON, EQ, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE or UNDERSCORE expected, got ''
           <empty list>
         PsiErrorElement:IN expected, got '
 '

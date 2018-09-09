@@ -22,7 +22,7 @@ class ElmSyntaxHighlighter : SyntaxHighlighterBase() {
     companion object {
         fun map(tokenType: IElementType?): ElmColor? =
                 when (tokenType) {
-                    REGULAR_STRING_PART, OPEN_QUOTE, CLOSE_QUOTE, CHAR_LITERAL -> ElmColor.STRING
+                    REGULAR_STRING_PART, OPEN_QUOTE, CLOSE_QUOTE, OPEN_CHAR, CLOSE_CHAR -> ElmColor.STRING
                     STRING_ESCAPE -> ElmColor.VALID_STRING_ESCAPE
                     INVALID_STRING_ESCAPE -> ElmColor.INVALID_STRING_ESCAPE
                     LEFT_PARENTHESIS, RIGHT_PARENTHESIS -> ElmColor.PARENTHESIS
