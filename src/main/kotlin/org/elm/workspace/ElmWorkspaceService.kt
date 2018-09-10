@@ -7,6 +7,7 @@
 
 package org.elm.workspace
 
+import com.google.common.annotations.VisibleForTesting
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
@@ -30,10 +31,13 @@ import org.elm.ide.notifications.showBalloon
 import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.modules
 import org.elm.openapiext.pathAsPath
+import org.elm.utils.joinAll
+import org.elm.utils.runAsyncTask
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 
 
@@ -59,7 +63,7 @@ class ElmWorkspaceService(
     init {
         with(intellijProject.messageBus.connect()) {
             subscribe(VirtualFileManager.VFS_CHANGES, ElmProjectWatcher {
-                refreshAllProjects()
+                asyncRefreshAllProjects()
             })
         }
     }
@@ -89,15 +93,7 @@ class ElmWorkspaceService(
 
     fun modifySettings(notify: Boolean = true, f: (RawSettings) -> RawSettings): RawSettings {
         return rawSettingsRef.getAndUpdate(f)
-                .also { if (notify) notifyDidChangeToolchain() }
-    }
-
-
-    private fun notifyDidChangeToolchain() {
-        if (intellijProject.isDisposed) return
-        intellijProject.messageBus.syncPublisher(TOOLCHAIN_TOPIC).toolchainChanged()
-        // TODO [kl] should we also refresh the projects?
-        // or combine this with projects-changed notification? It would be silly to refresh twice.
+                .also { if (notify) notifyDidChangeWorkspace() }
     }
 
 
@@ -115,7 +111,7 @@ class ElmWorkspaceService(
     // Elm Projects
 
 
-    // IMPORTANT: must ensure thread-safe access
+    // IMPORTANT: must ensure thread-safe access and that the ElmProject objects themselves are immutable values
     private val projectsRef = AtomicReference(emptyList<ElmProject>())
 
 
@@ -123,17 +119,15 @@ class ElmWorkspaceService(
         get() = projectsRef.get()
 
 
-    private fun modifyProjects(notify: Boolean = true,
-                               f: (List<ElmProject>) -> List<ElmProject>): List<ElmProject> {
+    private fun modifyProjects(f: (List<ElmProject>) -> List<ElmProject>): List<ElmProject> {
         projectsRef.getAndUpdate(f)
         directoryIndex.resetIndex()
-        if (notify)
-            notifyDidChangeProjects()
+        notifyDidChangeWorkspace()
         return allProjects
     }
 
 
-    private fun notifyDidChangeProjects() {
+    private fun notifyDidChangeWorkspace() {
         if (intellijProject.isDisposed) return
         ApplicationManager.getApplication().invokeAndWait {
             runWriteAction {
@@ -142,19 +136,19 @@ class ElmWorkspaceService(
             }
         }
         intellijProject.messageBus.syncPublisher(WORKSPACE_TOPIC)
-                .projectsUpdated(allProjects)
+                .didUpdate()
     }
 
 
-    @Throws(ProjectLoadException::class)
-    fun attachElmProject(manifestPath: Path) {
+    fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> {
         if (allProjects.count() != 0) {
             throw ProjectLoadException("Multiple Elm projects are not yet supported. "
                     + "You must remove the existing project before adding this one.")
         }
 
-        modifyProjects {
-            doRefresh(it + loadProject(manifestPath))
+        return runAsyncTask(intellijProject, "Loading Elm project") {
+            val elmProject = loadProject(manifestPath)
+            modifyProjects { it + elmProject } // do not inline into the closure: must be side-effect free
         }
     }
 
@@ -170,40 +164,48 @@ class ElmWorkspaceService(
     }
 
 
-    fun refreshAllProjects(): List<ElmProject> =
-            modifyProjects { doRefresh(it) }
+    fun asyncRefreshAllProjects(): CompletableFuture<List<ElmProject>> {
+        val manifestPaths = allProjects.map { it.manifestPath }
+        val tasks = manifestPaths.map {
+            runAsyncTask(intellijProject, "Loading Elm project '$it'") {
+                loadProject(it)
+            }.exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
+        }
+
+        // once they have all loaded, merge them with the current list of projects
+        return tasks.joinAll()
+                .thenApply { rawProjects ->
+                    val freshProjects = rawProjects.filterNotNull().associateBy { it.manifestPath }
+                    modifyProjects { currentProjects ->
+                        // replace existing projects with the fresh ones, if possible
+                        currentProjects.map { proj ->
+                            freshProjects[proj.manifestPath] ?: proj
+                        }
+                    }
+                }
+    }
 
 
-    @Throws(ProjectLoadException::class)
-    fun discoverAndRefresh(): List<ElmProject> {
+    fun asyncDiscoverAndRefresh(): CompletableFuture<List<ElmProject>> {
         if (hasAtLeastOneValidProject())
-            return allProjects
+            return CompletableFuture.completedFuture(allProjects)
 
         val guessManifest = intellijProject.modules
                 .asSequence()
                 .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
                 .mapNotNull { it.findChild(ElmToolchain.ELM_JSON) }
                 .firstOrNull()
-                ?: return allProjects
+                ?: return CompletableFuture.completedFuture(allProjects)
 
-        return try {
-            val newProject = loadProject(guessManifest.pathAsPath)
-            modifyProjects { doRefresh(it + newProject) }
-        } catch (e: ProjectLoadException) {
-            allProjects
-        }
+        return runAsyncTask(intellijProject, "Loading Elm project") {
+            val elmProject = loadProject(guessManifest.pathAsPath)
+            modifyProjects { it + elmProject } // do not inline into the closure: must be side-effect free
+        }.exceptionally { emptyList() }
     }
 
 
     fun hasAtLeastOneValidProject() =
             allProjects.any { it.manifestPath.exists() }
-
-
-    // It's very important that this function has no side-effects, as it may be
-    // invoked multiple times when attempting to update the [AtomicReference]
-    // holding the list of projects.
-    private fun doRefresh(projects: List<ElmProject>) =
-            projects.mapNotNull { loadProjectSafely(it.manifestPath) }
 
 
     private fun loadProject(manifestPath: Path): ElmProject {
@@ -214,18 +216,6 @@ class ElmWorkspaceService(
                 ?: throw ProjectLoadException("Elm toolchain not configured")
 
         return ElmProject.parse(file.inputStream, manifestPath, toolchain)
-    }
-
-
-    private fun loadProjectSafely(manifestPath: Path): ElmProject? {
-        return try {
-            loadProject(manifestPath)
-        } catch (e: ProjectLoadException) {
-            log.warn("Failed to load Elm project at $manifestPath")
-            val errorHTML = "Failed to load Elm project at $manifestPath:<br>${e.message}"
-            intellijProject.showBalloon(errorHTML, NotificationType.ERROR)
-            null
-        }
     }
 
 
@@ -275,44 +265,46 @@ class ElmWorkspaceService(
         return state
     }
 
-
     override fun loadState(state: Element) {
+        asyncLoadState(state)
+    }
+
+    @VisibleForTesting
+    internal fun asyncLoadState(state: Element): CompletableFuture<Unit> {
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")
         val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
         modifySettings(notify = false) { RawSettings(binDirPath = binDirPath) }
 
-        val loadedProjects = state.getChild("elmProjects").getChildren("project")
+        val manifestPaths = state.getChild("elmProjects").getChildren("project")
                 .mapNotNull { it.getAttributeValue("path") }
-                .mapNotNull { loadProjectSafely(Paths.get(it)) }
-        modifyProjects(notify = false) { loadedProjects }
+                .mapNotNull { Paths.get(it) }
 
-        // At this point the IntelliJ Project is still being opened, and we don't want
-        // to notify any listeners too early. So we will do it in a subsequent run of
-        // the event loop.
-        ApplicationManager.getApplication().invokeLater {
-            notifyDidChangeProjects()
-            notifyDidChangeToolchain()
+
+        val tasks = manifestPaths.map {
+            runAsyncTask(intellijProject, "Loading Elm project '$it'") {
+                loadProject(it)
+            }.exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
         }
+
+        return tasks.joinAll()
+                .thenApply { rawProjects ->
+                    modifyProjects { _ -> rawProjects.filterNotNull() }
+                    Unit
+                }
     }
 
 
-    // Misc
+    // Notifications
 
 
     interface ElmWorkspaceListener {
-        fun projectsUpdated(projects: Collection<ElmProject>)
-    }
-
-
-    interface ElmToolchainListener {
-        fun toolchainChanged()
+        fun didUpdate()
     }
 
 
     companion object {
         val WORKSPACE_TOPIC = Topic("Elm workspace changes", ElmWorkspaceListener::class.java)
-        val TOOLCHAIN_TOPIC = Topic("Elm toolchain changes", ElmToolchainListener::class.java)
     }
 }
 
@@ -320,7 +312,10 @@ class ElmWorkspaceService(
 class ProjectLoadException(msg: String, cause: Exception? = null) : RuntimeException(msg, cause)
 
 
-fun guessAndSetupElmProject(project: Project, explicitRequest: Boolean = false): Boolean {
+// Auto-discovery
+
+
+fun asyncAutoDiscoverWorkspace(project: Project, explicitRequest: Boolean = false): CompletableFuture<Unit> {
     if (!explicitRequest) {
         val alreadyTried = run {
             val key = "org.elm.workspace.PROJECT_DISCOVERY"
@@ -328,42 +323,23 @@ fun guessAndSetupElmProject(project: Project, explicitRequest: Boolean = false):
                 getBoolean(key).also { setValue(key, true) }
             }
         }
-        if (alreadyTried) return false
+        if (alreadyTried) return CompletableFuture.completedFuture(Unit)
     }
 
-    val toolchain = project.elmToolchain
-    if (toolchain == null || !toolchain.looksLikeValidToolchain()) {
-        discoverToolchain(project)
-        // return now because `discoverToolchain` will, at some later time, try to discover any Elm projects
-        return true
-    }
-    if (!project.elmWorkspace.hasAtLeastOneValidProject()) {
-        project.elmWorkspace.discoverAndRefresh()
-        return true
-    }
-    return false
-}
-
-
-private fun discoverToolchain(project: Project) {
-    val toolchain = ElmToolchain.suggest(project)
-            ?: return
-
-    ApplicationManager.getApplication().invokeLater {
-        if (project.isDisposed)
-            return@invokeLater
-
-        if (project.elmToolchain?.looksLikeValidToolchain() == true)
-            return@invokeLater
-
-        runWriteAction {
-            project.elmWorkspace.useToolchain(toolchain)
-        }
-
-        project.showBalloon("Using Elm at ${toolchain.presentableLocation}", NotificationType.INFORMATION)
-        project.elmWorkspace.discoverAndRefresh()
+    val toolchain = project.elmToolchain?.takeIf { it.looksLikeValidToolchain() }
+    if (toolchain == null) {
+        ElmToolchain.suggest(project)
+                ?.let {
+                    project.elmWorkspace.useToolchain(it)
+                    project.showBalloon("Using Elm at ${it.presentableLocation}", NotificationType.INFORMATION)
+                }
     }
 
+    return if (!project.elmWorkspace.hasAtLeastOneValidProject()) {
+        project.elmWorkspace.asyncDiscoverAndRefresh().thenApply { Unit }
+    } else {
+        CompletableFuture.completedFuture(Unit)
+    }
 }
 
 
@@ -380,7 +356,3 @@ val Project.elmSettings
 
 val Project.elmToolchain: ElmToolchain?
     get() = elmSettings.toolchain
-
-
-val Project.hasAnElmProject: Boolean
-    get() = elmWorkspace.allProjects.isNotEmpty()

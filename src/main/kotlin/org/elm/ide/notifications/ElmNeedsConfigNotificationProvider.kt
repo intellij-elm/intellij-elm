@@ -9,6 +9,8 @@ import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
 import org.elm.workspace.*
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 
 /**
@@ -23,16 +25,9 @@ class ElmNeedsConfigNotificationProvider(
 
     init {
         project.messageBus.connect(project).apply {
-            subscribe(ElmWorkspaceService.TOOLCHAIN_TOPIC,
-                    object : ElmWorkspaceService.ElmToolchainListener {
-                        override fun toolchainChanged() {
-                            notifications.updateAllNotifications()
-                        }
-                    })
-
             subscribe(ElmWorkspaceService.WORKSPACE_TOPIC,
                     object : ElmWorkspaceService.ElmWorkspaceListener {
-                        override fun projectsUpdated(projects: Collection<ElmProject>) {
+                        override fun didUpdate() {
                             notifications.updateAllNotifications()
                         }
                     })
@@ -48,15 +43,19 @@ class ElmNeedsConfigNotificationProvider(
         if (!file.isElmFile || isNotificationDisabled())
             return null
 
-        if (guessAndSetupElmProject(project))
+        try {
+            asyncAutoDiscoverWorkspace(project).get(1, TimeUnit.SECONDS)
+        } catch (e: TimeoutException) {
+            // Auto-discover took too long. Do not show any errors: it may finish later with a good setup,
+            // and if it doesn't we'll get another chance the next time a `.elm` file is opened.
             return null
+        }
 
         val toolchain = project.elmToolchain
         if (toolchain == null || !toolchain.looksLikeValidToolchain()) {
             return createBadToolchainPanel("No Elm toolchain configured")
         }
 
-        // TODO [kl] is it bad to issue a blocking call here? we're on a background thread, but still...
         val compilerVersion = toolchain.queryCompilerVersion()
         if (compilerVersion != null && compilerVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
             return createBadToolchainPanel("Elm $compilerVersion is not supported")

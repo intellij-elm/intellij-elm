@@ -23,7 +23,7 @@ class ElmAttachProjectAction : AnAction() {
                 ?: return
 
         try {
-            project.elmWorkspace.attachElmProject(file.pathAsPath)
+            project.elmWorkspace.asyncAttachElmProject(file.pathAsPath)
         } catch (e: ProjectLoadException) {
             Messages.showErrorDialog(e.message, "Failed to attach Elm project")
         }

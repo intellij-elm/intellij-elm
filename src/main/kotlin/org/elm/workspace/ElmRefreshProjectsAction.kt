@@ -11,10 +11,10 @@ class ElmRefreshProjectsAction : AnAction() {
                 ?: return
         saveAllDocuments()
 
-        if (project.elmToolchain == null || !project.hasAnElmProject) {
-            guessAndSetupElmProject(project, explicitRequest = true)
+        if (project.elmToolchain == null || !project.elmWorkspace.hasAtLeastOneValidProject()) {
+            asyncAutoDiscoverWorkspace(project, explicitRequest = true)
         } else {
-            project.elmWorkspace.refreshAllProjects()
+            project.elmWorkspace.asyncRefreshAllProjects()
         }
     }
 }

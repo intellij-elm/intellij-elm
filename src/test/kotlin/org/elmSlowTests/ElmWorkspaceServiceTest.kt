@@ -37,7 +37,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         val rootPath = testProject.root.pathAsPath
         val workspace = project.elmWorkspace.apply {
-            attachElmProject(rootPath.resolve("a/elm.json"))
+            asyncAttachElmProject(rootPath.resolve("a/elm.json"))
         }
 
         fun checkFile(relativePath: String, projectName: String?) {
@@ -89,7 +89,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         val rootPath = testProject.root.pathAsPath
         val workspace = project.elmWorkspace.apply {
-            attachElmProject(rootPath.resolve("a/elm.json"))
+            asyncAttachElmProject(rootPath.resolve("a/elm.json"))
         }
 
         val elmProject = workspace.allProjects.firstOrNull()
@@ -144,7 +144,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         val rootPath = testProject.root.pathAsPath
         val workspace = project.elmWorkspace.apply {
-            attachElmProject(rootPath.resolve("elm.json"))
+            asyncAttachElmProject(rootPath.resolve("elm.json"))
         }
 
         val elmProject = workspace.allProjects.firstOrNull()
@@ -190,7 +190,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             }
         }.create(project, elmWorkspaceDirectory)
 
-        val elmProjects = project.elmWorkspace.discoverAndRefresh()
+        val elmProjects = project.elmWorkspace.asyncDiscoverAndRefresh().get()
         check(elmProjects.size == 1) { "Should have found one Elm project but found ${elmProjects.size}" }
         val elmProject = elmProjects.first()
         check(elmProject.manifestPath == testProject.root.pathAsPath.resolve("elm.json"))
@@ -204,7 +204,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             }
         }.create(project, elmWorkspaceDirectory)
 
-        val elmProjects = project.elmWorkspace.discoverAndRefresh()
+        val elmProjects = project.elmWorkspace.asyncDiscoverAndRefresh().get()
         check(elmProjects.isEmpty()) { "Should have found zero Elm projects but found ${elmProjects.size}" }
     }
 
@@ -249,7 +249,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             """.trimIndent()
 
         // ... must be able to load from serialized state ...
-        workspace.loadState(elementFromXmlString(xml))
+        workspace.asyncLoadState(elementFromXmlString(xml)).get()
         val actualProjects = workspace.allProjects.map { it.manifestPath }
         val expectedProjects = listOf(projectPath)
         checkEquals(expectedProjects, actualProjects)
