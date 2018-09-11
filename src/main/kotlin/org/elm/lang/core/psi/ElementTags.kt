@@ -41,4 +41,4 @@ interface ElmTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
-interface ElmConstantTag : ElmPsiElement
+interface ElmConstantTag : ElmOperandTag, ElmConsPatternChildTag, ElmFunctionParamTag, ElmPatternChildTag

@@ -92,11 +92,11 @@ private class InferenceContext {
             is ElmIfElse -> TyUnknown // TODO
             is ElmLetIn -> TyUnknown // TODO
             is ElmList -> TyList(operand.expressionList.map { inferType(it) })
-            is ElmLiteral -> when {
-                operand.isChar -> TyChar
-                operand.isString -> TyString
-                operand.textContains('.') -> TyFloat
-                else -> TyUnknown // TODO int literals have type `number`, and we need to infer them
+            is ElmCharConstant -> TyChar
+            is ElmStringConstant -> TyString
+            is ElmNumberConstant -> {
+                if (operand.isFloat) TyFloat
+                else TyUnknown  // TODO int literals have type `number`, and we need to infer them
             }
             is ElmNegateExpression -> operand.expression?.let { inferType(it) } ?: TyUnknown
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferType(it) })
@@ -236,7 +236,7 @@ private fun bindPattern(ctx: InferenceContext, pat: ElmFunctionParamOrPatternChi
         } // TODO This is a partial pattern error in function parameters
         is ElmListPattern -> {
         } // This is a partial pattern error in function parameters
-        is ElmLiteral -> {
+        is ElmConstantTag -> {
         } // This is a partial pattern error in function parameters
         is ElmPattern -> {
             bindPattern(ctx, pat.child, ty)
