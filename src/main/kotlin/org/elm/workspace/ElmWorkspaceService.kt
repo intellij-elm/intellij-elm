@@ -166,6 +166,16 @@ class ElmWorkspaceService(
                         ?: throw ProjectLoadException("Elm toolchain not configured")
 
                 ElmProject.parse(file.inputStream, manifestPath, toolchain)
+            }.whenComplete { _, error ->
+                // log the result
+                if (error == null) {
+                    log.info("Successfully loaded Elm project $manifestPath")
+                } else {
+                    when (error) {
+                        is ProjectLoadException -> log.warn("Failed to load $manifestPath: ${error.message}")
+                        else -> log.error("Unexpected error when loading $manifestPath", error)
+                    }
+                }
             }
 
 

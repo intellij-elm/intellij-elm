@@ -53,3 +53,10 @@ fun <T> runAsyncTask(project: Project, progressTitle: String, fn: () -> T): Comp
  */
 fun <T> List<CompletableFuture<T>>.joinAll(): CompletableFuture<List<T>> =
         CompletableFuture.allOf(*this.toTypedArray()).thenApply { map { it.join() } }
+
+
+/**
+ * Handle an error, ignoring successful result.
+ */
+fun <T> CompletableFuture<T>.handleError(fn: (error: Throwable) -> Unit): CompletableFuture<Unit> =
+        handle { _, error -> fn(error) }

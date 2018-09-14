@@ -36,7 +36,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         val rootPath = testProject.root.pathAsPath
         val workspace = project.elmWorkspace.apply {
-            asyncAttachElmProject(rootPath.resolve("a/elm.json"))
+            asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
         }
 
         fun checkFile(relativePath: String, projectName: String?) {
@@ -88,7 +88,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         val rootPath = testProject.root.pathAsPath
         val workspace = project.elmWorkspace.apply {
-            asyncAttachElmProject(rootPath.resolve("a/elm.json"))
+            asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
         }
 
         val elmProject = workspace.allProjects.firstOrNull()
@@ -143,7 +143,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         val rootPath = testProject.root.pathAsPath
         val workspace = project.elmWorkspace.apply {
-            asyncAttachElmProject(rootPath.resolve("elm.json"))
+            asyncAttachElmProject(rootPath.resolve("elm.json")).get()
         }
 
         val elmProject = workspace.allProjects.firstOrNull()
