@@ -270,7 +270,11 @@ class ElmWorkspaceService(
     }
 
     @VisibleForTesting
-    internal fun asyncLoadState(state: Element): CompletableFuture<Unit> {
+    // TODO [kl] make this `internal` visibility...
+    // I can't do it right now because there's something wrong with Gradle where it treats the test source set
+    // as not belonging to the same Kotlin module as the code-under-test. But according to
+    // https://kotlinlang.org/docs/reference/visibility-modifiers.html#modules it *should* work!
+    fun asyncLoadState(state: Element): CompletableFuture<Unit> {
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")
         val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
