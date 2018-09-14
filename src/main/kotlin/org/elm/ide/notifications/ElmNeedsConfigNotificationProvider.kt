@@ -8,9 +8,10 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
-import org.elm.workspace.*
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import org.elm.workspace.ElmToolchain
+import org.elm.workspace.ElmWorkspaceService
+import org.elm.workspace.elmToolchain
+import org.elm.workspace.elmWorkspace
 
 
 /**
@@ -38,18 +39,9 @@ class ElmNeedsConfigNotificationProvider(
     override fun getKey(): Key<EditorNotificationPanel> = PROVIDER_KEY
 
 
-    override fun createNotificationPanel(file: VirtualFile, fileEditor: FileEditor)
-            : EditorNotificationPanel? {
+    override fun createNotificationPanel(file: VirtualFile, fileEditor: FileEditor): EditorNotificationPanel? {
         if (!file.isElmFile || isNotificationDisabled())
             return null
-
-        try {
-            asyncAutoDiscoverWorkspace(project).get(1, TimeUnit.SECONDS)
-        } catch (e: TimeoutException) {
-            // Auto-discover took too long. Do not show any errors: it may finish later with a good setup,
-            // and if it doesn't we'll get another chance the next time a `.elm` file is opened.
-            return null
-        }
 
         val toolchain = project.elmToolchain
         if (toolchain == null || !toolchain.looksLikeValidToolchain()) {
