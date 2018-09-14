@@ -142,14 +142,17 @@ class ElmWorkspaceService(
 
     fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> {
         if (allProjects.count() != 0) {
-            throw ProjectLoadException("Multiple Elm projects are not yet supported. "
-                    + "You must remove the existing project before adding this one.")
+            return CompletableFuture.supplyAsync {
+                throw ProjectLoadException("Multiple Elm projects are not yet supported. "
+                        + "You must remove the existing project before adding this one.")
+            }
         }
 
-        return runAsyncTask(intellijProject, "Loading Elm project") {
-            val elmProject = loadProject(manifestPath)
-            modifyProjects { it + elmProject } // do not inline into the closure: must be side-effect free
-        }
+        return asyncLoadProject(manifestPath)
+                .thenApply { elmProject ->
+                    modifyProjects { it + elmProject }
+                }
+
     }
 
 
@@ -164,26 +167,20 @@ class ElmWorkspaceService(
     }
 
 
-    fun asyncRefreshAllProjects(): CompletableFuture<List<ElmProject>> {
-        val manifestPaths = allProjects.map { it.manifestPath }
-        val tasks = manifestPaths.map {
-            runAsyncTask(intellijProject, "Loading Elm project '$it'") {
-                loadProject(it)
-            }.exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
-        }
-
-        // once they have all loaded, merge them with the current list of projects
-        return tasks.joinAll()
-                .thenApply { rawProjects ->
-                    val freshProjects = rawProjects.filterNotNull().associateBy { it.manifestPath }
-                    modifyProjects { currentProjects ->
-                        // replace existing projects with the fresh ones, if possible
-                        currentProjects.map { proj ->
-                            freshProjects[proj.manifestPath] ?: proj
+    fun asyncRefreshAllProjects(): CompletableFuture<List<ElmProject>> =
+            allProjects.map { elmProject ->
+                asyncLoadProject(elmProject.manifestPath)
+                        .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
+            }.joinAll()
+                    .thenApply { rawProjects ->
+                        val freshProjects = rawProjects.filterNotNull().associateBy { it.manifestPath }
+                        modifyProjects { currentProjects ->
+                            // replace existing projects with the fresh ones, if possible
+                            currentProjects.map {
+                                freshProjects[it.manifestPath] ?: it
+                            }
                         }
                     }
-                }
-    }
 
 
     fun asyncDiscoverAndRefresh(): CompletableFuture<List<ElmProject>> {
@@ -197,10 +194,10 @@ class ElmWorkspaceService(
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 
-        return runAsyncTask(intellijProject, "Loading Elm project") {
-            val elmProject = loadProject(guessManifest.pathAsPath)
-            modifyProjects { it + elmProject } // do not inline into the closure: must be side-effect free
-        }.exceptionally { emptyList() }
+        return asyncLoadProject(guessManifest.pathAsPath)
+                .thenApply { elmProject ->
+                    modifyProjects { it + elmProject }
+                }.exceptionally { emptyList() }
     }
 
 
@@ -208,15 +205,16 @@ class ElmWorkspaceService(
             allProjects.any { it.manifestPath.exists() }
 
 
-    private fun loadProject(manifestPath: Path): ElmProject {
-        val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
-                ?: throw ProjectLoadException("Could not find file $manifestPath")
+    private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
+            runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
+                val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
+                        ?: throw ProjectLoadException("Could not find file $manifestPath")
 
-        val toolchain = settings.toolchain
-                ?: throw ProjectLoadException("Elm toolchain not configured")
+                val toolchain = settings.toolchain
+                        ?: throw ProjectLoadException("Elm toolchain not configured")
 
-        return ElmProject.parse(file.inputStream, manifestPath, toolchain)
-    }
+                ElmProject.parse(file.inputStream, manifestPath, toolchain)
+            }
 
 
     // Lookup
@@ -280,18 +278,14 @@ class ElmWorkspaceService(
         val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
         modifySettings(notify = false) { RawSettings(binDirPath = binDirPath) }
 
-        val manifestPaths = state.getChild("elmProjects").getChildren("project")
+        return state.getChild("elmProjects")
+                .getChildren("project")
                 .mapNotNull { it.getAttributeValue("path") }
                 .mapNotNull { Paths.get(it) }
-
-
-        val tasks = manifestPaths.map {
-            runAsyncTask(intellijProject, "Loading Elm project '$it'") {
-                loadProject(it)
-            }.exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
-        }
-
-        return tasks.joinAll()
+                .map { path ->
+                    asyncLoadProject(path)
+                            .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
+                }.joinAll()
                 .thenApply { rawProjects ->
                     modifyProjects { _ -> rawProjects.filterNotNull() }
                     Unit
