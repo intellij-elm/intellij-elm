@@ -8,7 +8,10 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
-import org.elm.workspace.*
+import org.elm.workspace.ElmToolchain
+import org.elm.workspace.ElmWorkspaceService
+import org.elm.workspace.elmToolchain
+import org.elm.workspace.elmWorkspace
 
 
 /**
@@ -23,16 +26,9 @@ class ElmNeedsConfigNotificationProvider(
 
     init {
         project.messageBus.connect(project).apply {
-            subscribe(ElmWorkspaceService.TOOLCHAIN_TOPIC,
-                    object : ElmWorkspaceService.ElmToolchainListener {
-                        override fun toolchainChanged() {
-                            notifications.updateAllNotifications()
-                        }
-                    })
-
             subscribe(ElmWorkspaceService.WORKSPACE_TOPIC,
                     object : ElmWorkspaceService.ElmWorkspaceListener {
-                        override fun projectsUpdated(projects: Collection<ElmProject>) {
+                        override fun didUpdate() {
                             notifications.updateAllNotifications()
                         }
                     })
@@ -43,12 +39,8 @@ class ElmNeedsConfigNotificationProvider(
     override fun getKey(): Key<EditorNotificationPanel> = PROVIDER_KEY
 
 
-    override fun createNotificationPanel(file: VirtualFile, fileEditor: FileEditor)
-            : EditorNotificationPanel? {
+    override fun createNotificationPanel(file: VirtualFile, fileEditor: FileEditor): EditorNotificationPanel? {
         if (!file.isElmFile || isNotificationDisabled())
-            return null
-
-        if (guessAndSetupElmProject(project))
             return null
 
         val toolchain = project.elmToolchain
@@ -56,7 +48,6 @@ class ElmNeedsConfigNotificationProvider(
             return createBadToolchainPanel("No Elm toolchain configured")
         }
 
-        // TODO [kl] is it bad to issue a blocking call here? we're on a background thread, but still...
         val compilerVersion = toolchain.queryCompilerVersion()
         if (compilerVersion != null && compilerVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
             return createBadToolchainPanel("Elm $compilerVersion is not supported")

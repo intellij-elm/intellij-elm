@@ -12,6 +12,7 @@ import com.intellij.testFramework.builders.ModuleFixtureBuilder
 import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase
 import org.elm.FileTree
 import org.elm.TestProject
+import java.util.concurrent.CompletableFuture
 
 /**
  * Base class for "heavy" integration tests such as those that depend on the Elm toolchain
@@ -30,14 +31,9 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
         get() = myFixture.findFileInTempDir(".")
 
 
-    protected fun FileTree.createWithAutoDiscover(): TestProject =
-            create(project, elmWorkspaceDirectory).apply {
-                refreshWorkspace()
-            }
-
-
-    protected fun refreshWorkspace() {
-        project.elmWorkspace.discoverAndRefresh()
+    protected fun FileTree.asyncCreateWithAutoDiscover(): CompletableFuture<TestProject> {
+        val testProject = create(project, elmWorkspaceDirectory)
+        return project.elmWorkspace.asyncDiscoverAndRefresh().thenApply { testProject }
     }
 
 

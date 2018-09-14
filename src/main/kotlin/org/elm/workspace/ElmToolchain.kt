@@ -8,8 +8,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
 import org.elm.openapiext.GeneralCommandLine
@@ -70,14 +68,13 @@ data class ElmToolchain(val binDirPath: Path) {
     /**
      * Path to directory for a package at a specific version, containing `elm.json`
      */
-    fun packageVersionDir(name: String, version: Version): VirtualFile? {
+    fun packageVersionDir(name: String, version: Version): Path? {
         // TODO [kl] stop hard-coding the compiler version
         // it's ok to assume 19 here because this will never be called from 0.18 code,
         // but even this assumption will not be safe once future 19 releases are made.
         val compilerVersion = "0.19.0"
 
-        val path = "$elmHomePath/$compilerVersion/package/$name/$version/"
-        return LocalFileSystem.getInstance().findFileByPath(path)
+        return Paths.get("$elmHomePath/$compilerVersion/package/$name/$version/")
     }
 
     /**

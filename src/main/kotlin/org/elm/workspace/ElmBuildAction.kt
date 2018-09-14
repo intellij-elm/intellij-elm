@@ -17,10 +17,6 @@ class ElmBuildAction : AnAction() {
                 ?: return
         saveAllDocuments()
 
-        if (project.elmToolchain == null || !project.hasAnElmProject) {
-            guessAndSetupElmProject(project, explicitRequest = true)
-        }
-
         val compilerPath = project.elmToolchain?.elmCompilerPath
         if (compilerPath == null) {
             Messages.showErrorDialog("No path to the Elm compiler", "Build Error")

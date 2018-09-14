@@ -6,8 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
-import com.intellij.openapi.vfs.VirtualFile
-import org.elm.openapiext.CachedVirtualFile
+import org.elm.openapiext.checkIsBackgroundThread
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.InputStream
 import java.nio.file.Path
@@ -19,6 +18,10 @@ private val objectMapper = ObjectMapper()
 /**
  * The logical representation of an Elm project. An Elm project can be an application
  * or a package, and it specifies its dependencies.
+ *
+ * @param manifestPath The location of the manifest file (e.g. `elm.json`). Uniquely identifies a project.
+ * @param dependencies Additional Elm packages that this project depends on
+ * @param testDependencies Additional Elm packages that this project's **tests** depends on
  */
 sealed class ElmProject(
         val manifestPath: Path,
@@ -27,12 +30,9 @@ sealed class ElmProject(
 ) {
 
     /**
-     * Returns the `elm.json` file which defines this project.
+     * The path to the directory containing the Elm project JSON file.
      */
-    val manifestFile: VirtualFile? by CachedVirtualFile(manifestPath.toUri().toString())
-
-
-    private val projectDirPath
+    val projectDirPath: Path
         get() =
             manifestPath.parent
 
@@ -47,12 +47,6 @@ sealed class ElmProject(
 
 
     /**
-     * The directory containing the project.
-     */
-    val projectDir: VirtualFile? by CachedVirtualFile(projectDirPath.toUri()?.toString())
-
-
-    /**
      * Returns all packages which this project depends on, whether it be for normal,
      * production code or for tests.
      */
@@ -62,12 +56,13 @@ sealed class ElmProject(
 
     companion object {
         /**
-         * Attempts to parse an `elm.json` file
+         * Attempts to parse an `elm.json` file.
          *
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
         @Throws(ProjectLoadException::class)
         fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+            checkIsBackgroundThread()
 
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
                 // Handle legacy Elm 0.18 package. We don't need to model the dependencies
@@ -162,7 +157,7 @@ class ElmPackageProject(
  * A dependency reference to an Elm package
  */
 class ElmPackageRef(
-        val root: VirtualFile?,
+        val rootPath: Path?,
         val name: String,
         val version: Version
 )
@@ -175,7 +170,7 @@ private fun ExactDependenciesDTO.toPackageRefs(toolchain: ElmToolchain) =
 private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
             ElmPackageRef(
-                    root = toolchain.packageVersionDir(name, version),
+                    rootPath = toolchain.packageVersionDir(name, version),
                     name = name,
                     version = version)
         }
@@ -188,7 +183,7 @@ private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolc
                     .firstOrNull()
 
             ElmPackageRef(
-                    root = useVersion?.let { toolchain.packageVersionDir(name, it) },
+                    rootPath = useVersion?.let { toolchain.packageVersionDir(name, it) },
                     name = name,
                     version = useVersion ?: Version.UNKNOWN)
         }
