@@ -69,7 +69,7 @@ class ElmWorkspaceService(
     }
 
 
-    // Settings and Toolchain
+    // SETTINGS AND TOOLCHAIN
 
     /* A nice view of the settings to the outside world */
     data class Settings(val toolchain: ElmToolchain?)
@@ -91,6 +91,10 @@ class ElmWorkspaceService(
     private val rawSettingsRef = AtomicReference(RawSettings())
 
 
+    /**
+     * The core, internal function updating the workspace settings. All updates must ultimately
+     * go through here to make sure that the appropriate notifications are triggered.
+     */
     fun modifySettings(notify: Boolean = true, f: (RawSettings) -> RawSettings): RawSettings {
         return rawSettingsRef.getAndUpdate(f)
                 .also { if (notify) notifyDidChangeWorkspace() }
@@ -108,17 +112,29 @@ class ElmWorkspaceService(
     }
 
 
-    // Elm Projects
+    // ELM PROJECTS
 
 
-    // IMPORTANT: must ensure thread-safe access and that the ElmProject objects themselves are immutable values
+    /**
+     * The INTERNAL list of Elm projects in the workspace. Project truth lives here.
+     *
+     * IMPORTANT: must ensure thread-safe access and that the ElmProject objects themselves are immutable values.
+     */
     private val projectsRef = AtomicReference(emptyList<ElmProject>())
 
 
+    /**
+     * The list of Elm projects in the workspace, suitable for use by the rest of the plugin.
+     */
     val allProjects: List<ElmProject>
         get() = projectsRef.get()
 
 
+    /**
+     * The core, internal function for updating the list of Elm projects in the workspace.
+     * All updates must ultimately go through here to make sure that dependent data-structures
+     * are updated and notifications are triggered.
+     */
     private fun modifyProjects(f: (List<ElmProject>) -> List<ElmProject>): List<ElmProject> {
         projectsRef.getAndUpdate(f)
         directoryIndex.resetIndex()
@@ -127,17 +143,33 @@ class ElmWorkspaceService(
     }
 
 
-    private fun notifyDidChangeWorkspace() {
-        if (intellijProject.isDisposed) return
-        ApplicationManager.getApplication().invokeAndWait {
-            runWriteAction {
-                ProjectRootManagerEx.getInstanceEx(intellijProject)
-                        .makeRootsChange(EmptyRunnable.getInstance(), false, true)
+    /**
+     * Add [elmProject] to the workspace. If the project has already been registered, it will be replaced
+     * with the newer one.
+     */
+    private fun upsertProject(elmProject: ElmProject): List<ElmProject> =
+            modifyProjects { projects ->
+                val otherProjects = projects.filter { it.manifestPath == elmProject.manifestPath }
+                otherProjects + elmProject
             }
-        }
-        intellijProject.messageBus.syncPublisher(WORKSPACE_TOPIC)
-                .didUpdate()
-    }
+
+
+    /**
+     * Asynchronously load an Elm project described by a manifest file (e.g. `elm.json`).
+     */
+    private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
+            runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
+                val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
+                        ?: throw ProjectLoadException("Could not find file $manifestPath")
+
+                val toolchain = settings.toolchain
+                        ?: throw ProjectLoadException("Elm toolchain not configured")
+
+                ElmProject.parse(file.inputStream, manifestPath, toolchain)
+            }
+
+
+    // WORKSPACE ACTIONS
 
 
     fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> {
@@ -149,10 +181,9 @@ class ElmWorkspaceService(
         }
 
         return asyncLoadProject(manifestPath)
-                .thenApply { elmProject ->
-                    modifyProjects { it + elmProject }
+                .thenApply {
+                    upsertProject(it)
                 }
-
     }
 
 
@@ -195,8 +226,8 @@ class ElmWorkspaceService(
                 ?: return CompletableFuture.completedFuture(allProjects)
 
         return asyncLoadProject(guessManifest.pathAsPath)
-                .thenApply { elmProject ->
-                    modifyProjects { it + elmProject }
+                .thenApply {
+                    upsertProject(it)
                 }.exceptionally { emptyList() }
     }
 
@@ -205,19 +236,7 @@ class ElmWorkspaceService(
             allProjects.any { it.manifestPath.exists() }
 
 
-    private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
-            runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
-                        ?: throw ProjectLoadException("Could not find file $manifestPath")
-
-                val toolchain = settings.toolchain
-                        ?: throw ProjectLoadException("Elm toolchain not configured")
-
-                ElmProject.parse(file.inputStream, manifestPath, toolchain)
-            }
-
-
-    // Lookup
+    // PROJECT LOOKUP
 
 
     fun findProjectForFile(file: VirtualFile): ElmProject? =
@@ -242,7 +261,7 @@ class ElmWorkspaceService(
             })
 
 
-    // Persistent State
+    // PERSISTENT STATE
 
 
     override fun getState(): Element {
@@ -293,7 +312,20 @@ class ElmWorkspaceService(
     }
 
 
-    // Notifications
+    // NOTIFICATIONS
+
+
+    private fun notifyDidChangeWorkspace() {
+        if (intellijProject.isDisposed) return
+        ApplicationManager.getApplication().invokeAndWait {
+            runWriteAction {
+                ProjectRootManagerEx.getInstanceEx(intellijProject)
+                        .makeRootsChange(EmptyRunnable.getInstance(), false, true)
+            }
+        }
+        intellijProject.messageBus.syncPublisher(WORKSPACE_TOPIC)
+                .didUpdate()
+    }
 
 
     interface ElmWorkspaceListener {
@@ -310,7 +342,7 @@ class ElmWorkspaceService(
 class ProjectLoadException(msg: String, cause: Exception? = null) : RuntimeException(msg, cause)
 
 
-// Auto-discovery
+// AUTO-DISCOVER
 
 
 fun asyncAutoDiscoverWorkspace(project: Project, explicitRequest: Boolean = false): CompletableFuture<Unit> {
@@ -341,7 +373,7 @@ fun asyncAutoDiscoverWorkspace(project: Project, explicitRequest: Boolean = fals
 }
 
 
-// Convenience Extensions
+// CONVENIENCE EXTENSIONS
 
 
 val Project.elmWorkspace
