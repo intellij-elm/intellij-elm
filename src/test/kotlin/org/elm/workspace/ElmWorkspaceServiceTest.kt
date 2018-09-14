@@ -1,11 +1,10 @@
-package org.elmSlowTests
+package org.elm.workspace
 
 import junit.framework.TestCase
 import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
-import org.elm.workspace.*
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
