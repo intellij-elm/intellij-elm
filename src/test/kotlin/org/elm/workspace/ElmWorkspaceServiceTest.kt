@@ -66,7 +66,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                                 "elm/html": "1.0.0"
                             },
                             "indirect": {
-                                "elm/virtual-dom": "1.0.0"
+                                "elm/virtual-dom": "1.0.2"
                             }
                          },
                         "test-dependencies": {
@@ -74,8 +74,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                                 "elm-explorations/test": "1.0.0"
                             },
                             "indirect": {
-                                "eeue56/elm-lazy": "1.0.1",
-                                "eeue56/elm-shrink": "2.0.0"
+                                "elm/random": "1.0.0"
                             }
                         }
                     }
@@ -107,13 +106,12 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         checkEquals(setOf(
                 "elm/core" to Version(1, 0, 0),
                 "elm/html" to Version(1, 0, 0),
-                "elm/virtual-dom" to Version(1, 0, 0)
+                "elm/virtual-dom" to Version(1, 0, 2)
         ), elmProject.dependencies.map { it.name to it.version }.toSet())
 
         checkEquals(setOf(
                 "elm-explorations/test" to Version(1, 0, 0),
-                "eeue56/elm-lazy" to Version(1, 0, 1),
-                "eeue56/elm-shrink" to Version(2, 0, 0)
+                "elm/random" to Version(1, 0, 0)
         ), elmProject.testDependencies.map { it.name to it.version }.toSet())
     }
 
