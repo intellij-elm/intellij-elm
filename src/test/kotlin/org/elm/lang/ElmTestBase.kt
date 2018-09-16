@@ -28,6 +28,9 @@ package org.elm.lang
 
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.module.Module
+import com.intellij.openapi.roots.ContentEntry
+import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -42,6 +45,7 @@ import org.elm.FileTree
 import org.elm.TestProject
 import org.elm.fileTreeFromText
 import org.elm.lang.core.psi.parentOfType
+import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 
 
@@ -62,7 +66,7 @@ import org.intellij.lang.annotations.Language
  */
 abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestCase {
 
-    override fun getProjectDescriptor(): LightProjectDescriptor = DefaultDescriptor
+    override fun getProjectDescriptor(): LightProjectDescriptor = ElmDefaultDescriptor
 
     override fun isWriteActionRequired(): Boolean = false
 
@@ -195,11 +199,20 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         myFixture.launchAction(action)
     }
 
-    protected open class ElmProjectDescriptorBase : LightProjectDescriptor() {
+    protected open class ElmProjectDescriptorBase(val enableStdlib: Boolean) : LightProjectDescriptor() {
         open val skipTestReason: String? = null
+
+        override fun configureModule(module: Module, model: ModifiableRootModel, contentEntry: ContentEntry) {
+            super.configureModule(module, model, contentEntry)
+            if (skipTestReason != null)
+                return
+            if (enableStdlib)
+                module.project.elmWorkspace.setupForTests()
+        }
     }
 
-    protected object DefaultDescriptor : ElmProjectDescriptorBase()
+    protected object ElmWithStdlibDescriptor : ElmProjectDescriptorBase(enableStdlib = true)
+    protected object ElmDefaultDescriptor : ElmProjectDescriptorBase(enableStdlib = false)
 
     protected fun checkAstNotLoaded(fileFilter: VirtualFileFilter) {
         PsiManagerEx.getInstanceEx(project).setAssertOnFileLoadingFilter(fileFilter, testRootDisposable)

@@ -79,12 +79,7 @@ abstract class ElmResolveTestBase : ElmTestBase() {
         if (resolveFile.isEmpty()) {
             error("the marker in the test code must include a target file path")
         } else if (resolveFile.startsWith("...")) {
-            // TODO [kl] re-visit this
-            // I think the Rust plugin was using this to have a relative reference
-            // to a file bundled in the Rust stdlib. This would be like Core for Elm,
-            // but I guess it will depend on how we handle project libraries when
-            // we get to that point. I think the key thing here is that these stdlib
-            // references will not be present as files in the test fixture temp dir.
+            // verify that it can be found in the workspace
             check(actualResolveFile.path.endsWith(resolveFile.drop(3))) {
                 "Should resolve to $resolveFile, was ${actualResolveFile.path} instead"
             }

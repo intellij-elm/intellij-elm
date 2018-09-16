@@ -271,6 +271,51 @@ class ElmWorkspaceService(
             })
 
 
+    // INTEGRATION TEST SUPPORT
+
+
+    fun setupForTests() {
+        val toolchain = ElmToolchain.suggest(intellijProject)
+        require(toolchain != null) { "failed to find Elm toolchain: cannot setup the workspace for tests" }
+        useToolchain(toolchain)
+
+        // NOTE: this must be kept in sync with the packages installed during the CircleCI build.
+        val fakeManifestPath = Paths.get("/in-memory/tests/elm.json")
+        val jsonStream = """
+            {
+                "type": "application",
+                "source-directories": [
+                    "."
+                ],
+                "elm-version": "0.19.0",
+                "dependencies": {
+                    "direct": {
+                        "NoRedInk/elm-json-decode-pipeline": "1.0.0",
+                        "elm/core": "1.0.0",
+                        "elm/html": "1.0.0",
+                        "elm/json": "1.0.0",
+                        "elm/time": "1.0.0",
+                        "elm-explorations/markdown": "1.0.0"
+                    },
+                    "indirect": {
+                        "elm/virtual-dom": "1.0.2"
+                    }
+                },
+                "test-dependencies": {
+                    "direct": {
+                        "elm-explorations/test": "1.0.0"
+                    },
+                    "indirect": {
+                        "elm/random": "1.0.0"
+                    }
+                }
+            }
+        """.trimIndent().byteInputStream()
+        val elmProject = ElmProject.parse(jsonStream, fakeManifestPath, toolchain!!)
+        upsertProject(elmProject)
+    }
+
+
     // PERSISTENT STATE
 
 

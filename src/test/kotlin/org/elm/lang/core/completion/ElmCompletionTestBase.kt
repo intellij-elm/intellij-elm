@@ -51,11 +51,23 @@ abstract class ElmCompletionTestBase: ElmTestBase() {
     protected fun checkContainsCompletion(text: String, @Language("Elm") code: String) {
         InlineFile(code).withCaret()
         val variants = myFixture.completeBasic()
-        checkNotNull(variants) {
-            "Expected completions that contain $text, but no completions found"
+        when {
+            variants == null -> {
+                // IntelliJ returns null if there was only one completion possible. In which case, all we need
+                // to do is verify that the completion that it performed was the one that was expected.
+                // Unfortunately that's a bit hard to express, so we will just do something sloppy and make sure
+                // that the expected text got inserted somewhere. What could possibly go wrong? ;-)
+                val fullText = myFixture.editor.document.text
+                check(fullText.contains(text)) {
+                    "Expected completions that contain $text, but it actually completed as something else:\n$fullText"
+                }
+            }
+            variants.isEmpty() ->
+                error("Expected completions that contain $text, but got no completions at all")
+
+            variants.none { it.lookupString == text } ->
+                error("Expected completions that contain $text, but got ${variants.toList()}")
         }
-        variants.filter { it.lookupString == text }.forEach { return }
-        error("Expected completions that contain $text, but got ${variants.toList()}")
     }
 
     protected fun checkNoCompletion(@Language("Elm") code: String) {

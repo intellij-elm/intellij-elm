@@ -11,7 +11,6 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
 import org.elm.openapiext.GeneralCommandLine
-import org.elm.openapiext.checkIsBackgroundThread
 import org.elm.openapiext.modules
 import java.io.File
 import java.nio.file.Files
@@ -90,7 +89,6 @@ data class ElmToolchain(val binDirPath: Path) {
     }
 
     fun queryCompilerVersion(): Version? {
-        checkIsBackgroundThread()
         val elm = elmCompilerPath ?: return null
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
         return GeneralCommandLine(elm)

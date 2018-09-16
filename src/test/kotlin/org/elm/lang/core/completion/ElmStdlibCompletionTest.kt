@@ -1,61 +1,31 @@
 package org.elm.lang.core.completion
 
-class ElmStdlibCompletionTest: ElmCompletionTestBase() {
+/**
+ * Test completion for values and types built-in to the language,
+ * such as List, as well as implicit imports from `elm/core` provided
+ * by the compiler.
+ */
+class ElmStdlibCompletionTest : ElmCompletionTestBase() {
 
+    override fun getProjectDescriptor() =
+            ElmWithStdlibDescriptor
 
-    fun `test built-in type completion in a type annotation`() = doSingleCompletion(
-"""
-name : Lis{-caret-}
-""", """
-name : List{-caret-}
-""")
+    fun `test built-in type completion in a type annotation`() =
+            checkContainsCompletion("List", "name : Lis{-caret-}")
 
+    fun `test implicitly imported type completion in a type annotation`() =
+            checkContainsCompletion("Maybe", "x : May{-caret-}")
 
+    fun `test implicitly imported union constructor completion`() =
+            checkContainsCompletion("Nothing", "x = Noth{-caret-}")
 
-    // TODO [kl] re-enable these tests once we can arrange to download Elm Core package
-    // and configure a custom [LightProjectDescriptor] that includes Core as standard library.
+    fun `test implicitly exposed type from Basics module completion`() =
+            checkContainsCompletion("Order", "f : Ord{-caret-}")
 
-    // TODO [kl] expand the tests to include additional modules that the Elm compiler
-    // includes implicitly.
+    fun `test implicitly exposed union constructor from Basics module completion`() =
+            checkContainsCompletion("EQ", "f = compare E{-caret-}")
 
-/*
-    fun `test implicitly imported type completion in a type annotation`() = doSingleCompletion(
-"""
-x : May{-caret-}
-""", """
-x : Maybe{-caret-}
-""")
-
-
-    fun `test implicitly imported union constructor completion`() = doSingleCompletion(
-"""
-x = Noth{-caret-}
-""", """
-x = Nothing{-caret-}
-""")
-
-
-    fun `test implicitly exposed type from Basics module completion`() = doSingleCompletion(
-"""
-f : Ord{-caret-}
-""", """
-f : Order{-caret-}
-""")
-
-    fun `test implicitly exposed union constructor from Basics module completion`() = doSingleCompletion(
-"""
-f = compare E{-caret-}
-""", """
-f = compare EQ{-caret-}
-""")
-
-
-    fun `test implicitly exposed value from Basics module completion`() = doSingleCompletion(
-"""
-x = comp{-caret-}
-""", """
-x = compare{-caret-}
-""")
-*/
+    fun `test implicitly exposed value from Basics module completion`() =
+            checkContainsCompletion("compare", "x = comp{-caret-}")
 
 }
