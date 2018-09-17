@@ -85,6 +85,8 @@
         <additionalLibraryRootsProvider implementation="org.elm.workspace.ElmAdditionalLibraryRootsProvider" />
         <projectConfigurable instance="org.elm.workspace.ui.ElmWorkspaceConfigurable" displayName="Elm" groupId="language"/>
         <editorNotificationProvider implementation="org.elm.ide.notifications.ElmNeedsConfigNotificationProvider" />
+        <toolWindow id="Elm" anchor="right" icon="/icons/elm-toolwindow.png"
+                    factoryClass="org.elm.ide.toolwindow.ElmToolWindowFactory"/>
 
         <!-- STUBS -->
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" />
@@ -124,7 +126,7 @@
         -->
 
 
-        <group id="Elm.ToolsGroup" text="Elm" popup="true">
+        <group id="Elm.WorkspaceToolsGroup" text="Elm" popup="true">
             <reference id="Elm.RefreshElmProjects"/>
             <separator/>
             <reference id="Elm.AttachElmProject"/>
