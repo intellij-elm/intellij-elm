@@ -18,6 +18,10 @@ object ElmManualParseRules : GeneratedParserUtilBase() {
             DotWithoutTrailingWhitespaceParser.parse(builder, level)
 
     @JvmStatic
+    fun parseDotWithoutLeadingWhitespace(builder: PsiBuilder, level: Int) =
+            DotWithoutLeadingWhitespaceParser.parse(builder, level)
+
+    @JvmStatic
     fun parseDotWithoutWhitespace(builder: PsiBuilder, level: Int) =
             DotWithoutWhitespaceParser.parse(builder, level)
 }

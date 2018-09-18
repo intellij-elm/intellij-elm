@@ -133,11 +133,12 @@ ExposedOperator ::=
 
 external DotWithoutWhitespace ::= parseDotWithoutWhitespace
 external DotWithoutTrailingWhitespace ::= parseDotWithoutTrailingWhitespace
+external DotWithoutLeadingWhitespace ::= parseDotWithoutLeadingWhitespace
 
-UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)*
-ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
-FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+
-ExpressionAccessor ::= DotWithoutWhitespace (LOWER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
+UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)* !DotWithoutLeadingWhitespace
+ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
+FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
+ExpressionAccessor ::= DotWithoutWhitespace (LOWER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
 FieldAccessorFunction ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER
 
 
@@ -268,10 +269,8 @@ OperatorAsFunction ::=
 private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
-// Although FieldAccess is an Operand, it starts with the same token as FunctionCall, and it needs to be higher precedence
 private CallOrOperand ::=
-    FieldAccess
-    | FunctionCall
+    FunctionCall
     | Operand
 
 private Operand ::=
@@ -313,6 +312,7 @@ FunctionCall ::=
 private FunctionCallTarget ::=
     OperatorAsFunction
     | ValueExpr
+    | FieldAccess
 
 private ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
