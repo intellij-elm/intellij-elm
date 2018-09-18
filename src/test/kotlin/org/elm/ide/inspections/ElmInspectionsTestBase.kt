@@ -15,13 +15,36 @@ abstract class ElmAnnotationTestBase : ElmTestBase() {
             checkWarn: Boolean = true,
             checkInfo: Boolean = false,
             checkWeakWarn: Boolean = false
-    ) {
-        configureByText(text)
-        myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn)
-    }
+    ) = check(text,
+            checkWarn = checkWarn,
+            checkInfo = checkInfo,
+            checkWeakWarn = checkWeakWarn,
+            configure = this::configureByText)
+
+    protected fun checkByFileTree(
+            @Language("Elm") text: String,
+            checkWarn: Boolean = true,
+            checkInfo: Boolean = false,
+            checkWeakWarn: Boolean = false
+    ) = check(text,
+            checkWarn = checkWarn,
+            checkInfo = checkInfo,
+            checkWeakWarn = checkWeakWarn,
+            configure = this::configureByFileTree)
 
     private fun checkByText(text: String) {
         myFixture.checkResult(replaceCaretMarker(text.trimIndent()))
+    }
+
+    private fun check(
+            @Language("Elm") text: String,
+            checkWarn: Boolean,
+            checkInfo: Boolean,
+            checkWeakWarn: Boolean,
+            configure: (String) -> Unit
+    ) {
+        configure(text)
+        myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn)
     }
 }
 

@@ -38,7 +38,18 @@ class TypeMismatchError(
         private val expected: Ty
 ) : ElmDiagnostic(element) {
     override val message: String
-        get() = "Type mismatch.<br>Required: ${expected.renderedText(false)}<br>Found: ${actual.renderedText(false)}"
+        get() {
+            var expectedRendered = expected.renderedText(false, false)
+            var foundRendered = actual.renderedText(false, false)
+
+            if (expectedRendered == foundRendered) {
+                expectedRendered = expected.renderedText(false, true)
+                foundRendered = actual.renderedText(false, true)
+            }
+            return "Type mismatch." +
+                    "<br>Required: $expectedRendered" +
+                    "<br>Found: $foundRendered"
+        }
 }
 
 private fun pl(n: Int, singular: String, plural: String = singular + "s") = if (n == 1) singular else plural

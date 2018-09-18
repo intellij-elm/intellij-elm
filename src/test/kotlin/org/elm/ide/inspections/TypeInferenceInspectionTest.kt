@@ -90,6 +90,12 @@ main : Maybe a
 main = <error descr="Type mismatch.Required: Maybe aFound: Foo">Bar</error>
 """)
 
+    fun `test invalid constructor as type annotation`() = checkByText("""
+type Maybe a = Just a | Nothing
+main : <error descr="Unresolved reference 'Just'">Just a</error> -> ()
+main a = ()
+""")
+
     fun `test matched value from union constructor`() = checkByText("""
 type Maybe = Just Int | Nothing
 foo : (Int -> Maybe) -> () -> ()
@@ -130,5 +136,51 @@ main fn = fn 1.0
     fun `test mismatched function call from parameter`() = checkByText("""
 main : (Float -> String) -> Int
 main fn = <error descr="Type mismatch.Required: IntFound: String">fn 1.0</error>
+""")
+
+    //  This tests that the type refs in function calls are resolved to the correct module
+    fun `test mismatched function call with conflicting type name`() = checkByFileTree("""
+--@ main.elm
+import People.Washington exposing (person)
+import People.Costanza exposing (People(..))
+main = person <error descr="Type mismatch.Required: People.Washington.PeopleFound: People.Costanza.People">George</error>
+--^
+
+--@ People/Washington.elm
+module People.Washington exposing (People(..), person)
+type People = George
+
+person : People -> ()
+person _ = ()
+
+--@ People/Costanza.elm
+module People.Costanza exposing (People(..))
+type People = George
+""")
+
+    //  This tests that the type refs in annotations are resolved to the correct module
+    fun `test matched value annotation with concrete union type from other module`() = checkByFileTree("""
+--@ main.elm
+import People.Washington exposing (People(..), person)
+
+main : Maybe People
+main = person George
+--^
+
+--@ Foo.elm
+module People.Washington exposing (People(..), person)
+import Maybe exposing (Maybe(..))
+
+type People = George
+
+person : People -> Maybe People
+person a = Just a
+
+--@ Maybe.elm
+module Maybe exposing (Maybe(..))
+
+type Maybe a
+    = Just a
+    | Nothing
 """)
 }

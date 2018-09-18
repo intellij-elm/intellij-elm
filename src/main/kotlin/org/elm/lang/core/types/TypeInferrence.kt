@@ -85,13 +85,14 @@ private class InferenceContext {
                 // TODO infer params types
                 TyFunction(operand.patternList.map { TyUnknown }, inferType(operand.expression))
             }
-            is ElmCaseOf -> TyUnknown // TODO
+            is ElmCaseOf -> TyUnknown // TODO implement
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFunctionCall -> inferType(operand)
             is ElmGlslCode -> TyShader
-            is ElmIfElse -> TyUnknown // TODO
-            is ElmLetIn -> TyUnknown // TODO
-            is ElmList -> TyList(operand.expressionList.map { inferType(it) })
+            is ElmIfElse -> TyUnknown // TODO implement
+            is ElmLetIn -> TyUnknown // TODO implement
+            is ElmList -> TyList(operand.expressionList.map { inferType(it) }.firstOrNull()
+                    ?: TyUnknown)  // TODO check and unify elements
             is ElmCharConstant -> TyChar
             is ElmStringConstant -> TyString
             is ElmNumberConstant -> {
@@ -188,29 +189,38 @@ private class InferenceContext {
         val existing = resolvedDecls[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one, otherwise just count the parameters
-        // TODO use the inference
-        val ty = decl.typeAnnotation?.typeRef?.ty
-                ?: decl.functionDeclarationLeft?.patterns
-                        ?.map { TyUnknown }?.toList()
-                        ?.let { TyFunction(it, TyUnknown) }
-                ?: return null
+        var ty = decl.typeAnnotation?.typeRef?.ty
+        if (ty == null) {
+            // If there's no annotation, just set all the parameters to unknown for now
+            // TODO use the inference
+            ty = decl.functionDeclarationLeft?.patterns
+                    ?.map { TyUnknown }?.toList()
+                    ?.let { TyFunction(it, TyUnknown) }
+        }
+        if (ty == null) {
+            return null
+        }
         resolvedDecls[decl] = ty
         return ty
     }
 
-    /** Return false if [ty1] definitely cannot be assigned to [ty2] */
+    /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
     private fun assignable(ty1: Ty, ty2: Ty): Boolean {
         // TODO inference for vars
         return ty1 === ty2 || ty2 is TyVar || ty2 is TyUnknown || when (ty1) {
             is TyVar -> true
-            is TyTuple -> ty2 is TyTuple && ty1.types.size == ty2.types.size
+            is TyTuple -> ty2 is TyTuple
+                    && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
-            is TyRecord -> ty2 is TyRecord && ty1.fields.size == ty2.fields.size
+            is TyRecord -> ty2 is TyRecord
+                    && ty1.fields.size == ty2.fields.size
                     && ty1.fields.all { (k, v) -> ty2.fields[k]?.let { assignable(v, it) } ?: false }
-            is TyPrimitive -> ty2 is TyPrimitive && ty1.name == ty2.name
-            is TyParametric -> ty2 is TyParametric && ty1.name == ty2.name
+            is TyUnion -> ty2 is TyUnion
+                    && ty1.name == ty2.name
+                    && ty1.module == ty2.module
                     && allAssignable(ty1.parameters, ty2.parameters)
-            is TyFunction -> ty2 is TyFunction && allAssignable(ty1.allTys, ty2.allTys)
+            is TyFunction -> ty2 is TyFunction
+                    && allAssignable(ty1.allTys, ty2.allTys)
             // object tys are covered by the identity check above
             TyShader, TyUnit -> false
             TyUnknown -> true
@@ -276,32 +286,62 @@ private fun bindPattern(ctx: InferenceContext, pat: ElmRecordPattern, ty: Ty) {
 /** Get the type for one part of a type ref */
 private val ElmTypeSignatureDeclarationTag.ty: Ty
     get() = when (this) {
-        is ElmUpperPathTypeRef -> {
-            // If this is referencing an alias, use aliased type
-            (reference.resolve() as? ElmTypeAliasDeclaration)?.typeRef?.ty ?: TyPrimitive(text)
-        }
-        is ElmTypeVariableRef -> TyVar(identifier.text, null) // TODO
+        is ElmUpperPathTypeRef -> ty
+        is ElmTypeVariableRef -> TyVar(identifier.text) // TODO
         is ElmRecordType -> TyRecord(fieldTypeList.associate { it.lowerCaseIdentifier.text to it.typeRef.ty })
         is ElmTupleType -> if (unit != null) TyUnit else TyTuple(typeRefList.map { it.ty })
-        is ElmParametricTypeRef -> TyParametric(upperCaseQID.text, allParameters.map { it.ty }.toList())
+        is ElmParametricTypeRef -> ty
         is ElmTypeRef -> ty
         else -> error("unimplemented type $this")
+    }
+
+private val ElmParametricTypeRef.ty: TyUnion
+    get() {
+        val ref = reference.resolve()
+        val parameters = allParameters.map { it.ty }.toList()
+        val name = ref?.name ?: upperCaseQID.text
+        val module = ref?.moduleName ?: builtInModule(name) ?: moduleName
+        return TyUnion(module, name, parameters)
+    }
+
+private val ElmPsiElement.moduleName: String
+    get() = elmFile.getModuleDecl()?.name ?: ""
+
+private val ElmUpperPathTypeRef.ty: Ty
+    get() {
+        val ref = reference.resolve()
+
+        return when (ref) {
+            // If this is referencing an alias, use aliased type
+            is ElmTypeAliasDeclaration -> ref.typeRef?.ty ?: TyUnknown
+            is ElmTypeDeclaration -> ref.ty
+            else -> {
+                val name = ref?.name ?: text
+                val module = ref?.moduleName ?: builtInModule(name) ?: moduleName
+                TyUnion(module, name, emptyList())
+            }
+        }
     }
 
 private val ElmTypeRef.ty: Ty
     get() {
         val params = allParameters.toList()
         return when {
-            params.size == 1 -> allParameters.first().ty
+            params.size == 1 -> params[0].ty
             else -> TyFunction(params.dropLast(1).map { it.ty }, params.last().ty)
         }
     }
 
 private val ElmTypeDeclaration.ty: Ty
-    get() {
-        val params = lowerTypeNameList
-        return when {
-            params.isEmpty() -> TyPrimitive(name)
-            else -> TyParametric(name, params.map { TyVar(it.name, null) })
-        }
+    get() = TyUnion(moduleName, name, lowerTypeNameList.map { TyVar(it.name) })
+
+/** Return the module name for built-in types, or null */
+private fun builtInModule(name: String): String? {
+    return when (name) {
+        "Int", "Float" -> "Basics"
+        "String" -> "String"
+        "Char" -> "Char"
+        "List" -> "List"
+        else -> null
     }
+}

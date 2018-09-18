@@ -7,23 +7,21 @@ package org.elm.lang.core.types
  */
 sealed class Ty
 
-data class TyVar(val name: String, val origin: Ty?) : Ty()
+data class TyVar(val name: String) : Ty()
 
 data class TyTuple(val types: List<Ty>) : Ty()
 
 data class TyRecord(val fields: Map<String, Ty>) : Ty()
 
-/** A type like `String` or `Nothing` that has no type parameters */
-data class TyPrimitive(val name: String) : Ty()
+/** A type like `String` or `Maybe a` */
+data class TyUnion(val module: String, val name: String, val parameters: List<Ty>) : Ty()
 
-val TyInt = TyPrimitive("Int")
-val TyFloat = TyPrimitive("Float")
-val TyString = TyPrimitive("String")
-val TyChar = TyPrimitive("Char")
+val TyInt = TyUnion("Basics", "Int", emptyList())
+val TyFloat = TyUnion("Basics", "Float", emptyList())
+val TyString = TyUnion("String", "String", emptyList())
+val TyChar = TyUnion("Char", "Char", emptyList())
 
-data class TyParametric(val name: String, val parameters: List<Ty>) : Ty()
-
-fun TyList(parameters: List<Ty>) = TyParametric("List", parameters)
+fun TyList(parameters: Ty) = TyUnion("List", "List", listOf(parameters))
 
 data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
     val allTys get() = parameters + ret

@@ -150,7 +150,7 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
         append(" ", element.name, " ")
 
         if (ty !is TyUnknown) {
-            append(": ", ty.renderedText(true), "\n")
+            append(": ", ty.renderedText(true, false), "\n")
         }
 
         i { append("of function ") }
