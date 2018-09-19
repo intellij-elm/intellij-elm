@@ -1,6 +1,7 @@
 package org.elm.lang.core.psi
 
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.resolve.ElmReferenceElement
 
 /** An element that can appear in the parameter list of an [ElmUnionMember] */
 interface ElmUnionMemberParameterTag : ElmPsiElement
@@ -11,9 +12,11 @@ interface ElmExpressionPartTag : ElmPsiElement
 /** An element that can occur in an [ElmExpression] as the argument to a function or operator */
 interface ElmOperandTag : ElmExpressionPartTag
 
-/** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunction],
- * or [ElmCaseOfBranch] */
+/** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunction], or [ElmCaseOfBranch] */
 interface ElmNameDeclarationPatternTag : ElmNamedElement
+
+/** A function being called as the child of a [ElmFunctionCall] */
+interface ElmFunctionCallTarget : ElmReferenceElement
 
 /** An element that is either an [ElmFunctionParamTag], a [ElmPatternChildTag], or both. No elements implement this directly. */
 interface ElmFunctionParamOrPatternChildTag : ElmPsiElement

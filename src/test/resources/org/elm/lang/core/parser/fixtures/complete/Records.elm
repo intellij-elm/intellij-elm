@@ -17,3 +17,6 @@ emptyRecord =
 makePair : { a | x : Int, y : Int } -> (Int, Int)
 makePair { x, y } =
     ( x, y )
+
+input =  { x = \() -> () }
+valueRef = { foo = input.x (), bar = () }
