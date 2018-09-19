@@ -2,6 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmFunctionCallTarget
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.elements.Flavor.*
@@ -16,7 +17,7 @@ enum class Flavor {
     BareConstructor
 }
 
-class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag {
+class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTarget {
 
     val valueQID: ElmValueQID?
         get() = findChildByClass(ElmValueQID::class.java)
