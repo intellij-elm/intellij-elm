@@ -16,7 +16,7 @@ interface ElmOperandTag : ElmExpressionPartTag
 interface ElmNameDeclarationPatternTag : ElmNamedElement
 
 /** A function being called as the child of a [ElmFunctionCall] */
-interface ElmFunctionCallTarget : ElmReferenceElement
+interface ElmFunctionCallTarget : ElmOperandTag
 
 /** An element that is either an [ElmFunctionParamTag], a [ElmPatternChildTag], or both. No elements implement this directly. */
 interface ElmFunctionParamOrPatternChildTag : ElmPsiElement
@@ -31,7 +31,7 @@ interface ElmPatternChildTag : ElmFunctionParamOrPatternChildTag
 interface ElmConsPatternChildTag : ElmPsiElement
 
 /** An element that is either an [ElmTypeRefParameterTag], a [ElmParametricTypeRefParameterTag], or both. No elements implement this directly. */
-interface ElmTypeRefOrParametricTypeRefParameterTag: ElmPsiElement
+interface ElmTypeRefOrParametricTypeRefParameterTag : ElmPsiElement
 
 /** An element that can be a parameter of an [ElmTypeRef], but not necessarily an [ElmParametricTypeRef] */
 interface ElmTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
