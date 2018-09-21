@@ -17,6 +17,7 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testExpressionAccessors() = doTest(true)
     fun testImports() = doTest(true)
     fun testFieldAccessorFunction() = doTest(true)
+    fun testFunctionCall() = doTest(true)
     fun testLetIn() = doTest(true)
     fun testLiterals() = doTest(true)
     fun testModulesEffect() = doTest(true)
@@ -39,5 +40,4 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
             "Error in well formed file ${file.name}"
         }
     }
-
 }

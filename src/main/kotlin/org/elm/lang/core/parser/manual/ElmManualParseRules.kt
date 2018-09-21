@@ -14,10 +14,18 @@ import com.intellij.lang.parser.GeneratedParserUtilBase
  */
 object ElmManualParseRules : GeneratedParserUtilBase() {
     @JvmStatic
+    fun parseMinusWithoutTrailingWhitespace(builder: PsiBuilder, level: Int) =
+            MinusWithoutTrailingWhitespaceParser.parse(builder, level)
+
+    @JvmStatic
     fun parseDotWithoutTrailingWhitespace(builder: PsiBuilder, level: Int) =
-            DotWithoutTrailingWhitespaceParser.parse(builder, level)
+            DotWithoutWhitespaceParser(true, false).parse(builder, level)
+
+    @JvmStatic
+    fun parseDotWithoutLeadingWhitespace(builder: PsiBuilder, level: Int) =
+            DotWithoutWhitespaceParser(false, true).parse(builder, level)
 
     @JvmStatic
     fun parseDotWithoutWhitespace(builder: PsiBuilder, level: Int) =
-            DotWithoutWhitespaceParser.parse(builder, level)
+            DotWithoutWhitespaceParser(false, false).parse(builder, level)
 }

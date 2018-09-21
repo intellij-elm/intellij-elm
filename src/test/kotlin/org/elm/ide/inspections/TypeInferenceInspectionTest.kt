@@ -4,19 +4,19 @@ class TypeInferenceInspectionTest : ElmInspectionsTestBase(TypeInferenceInspecti
     fun `test too many arguments to value`() = checkByText("""
 foo = ()
 
-main = <error descr="The `foo` value is not a function, but it was given 1 argument.">foo 1</error>
+main = <error descr="This value is not a function, but it was given 1 argument.">foo 1</error>
 """)
 
     fun `test too many arguments to function`() = checkByText("""
 foo a b = a
 
-main = <error descr="The `foo` function expects 2 arguments, but it got 3 instead.">foo 1 2 3</error>
+main = <error descr="The function expects 2 arguments, but it got 3 instead.">foo 1 2 3</error>
 """)
 
     fun `test too many arguments to operator`() = checkByText("""
 add a b = a
 infix left 6 (+) = add
-main = <error descr="The (+) operator expects 2 arguments, but it got 3 instead.">(+) 1 2 3</error>
+main = <error descr="The function expects 2 arguments, but it got 3 instead.">(+) 1 2 3</error>
 """)
 
     fun `test mismatched int value type`() = checkByText("""

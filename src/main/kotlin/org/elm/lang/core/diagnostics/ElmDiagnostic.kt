@@ -1,7 +1,6 @@
 package org.elm.lang.core.diagnostics
 
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.elements.ElmFunctionCall
 import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.renderedText
 
@@ -15,21 +14,9 @@ class TooManyArgumentsError(
         private val expected: Int
 ) : ElmDiagnostic(element) {
     override val message: String
-        get() {
-            if (expected == 0) {
-                val name = (element as? ElmFunctionCall)?.function?.text ?: ""
-                return "The `$name` value is not a function, but it was given $actual ${pl(actual, "argument")}."
-            }
-
-
-            val desc = if (element is ElmFunctionCall) {
-                element.function?.let { "`${it.text}` function" }
-                        ?: element.operator?.let { "${it.text} operator" }
-                        ?: "function"
-            } else "function"
-
-            return "The $desc expects $expected ${pl(expected, "argument")}, but it got $actual instead."
-        }
+        get() =
+            if (expected == 0) "This value is not a function, but it was given $actual ${pl(actual, "argument")}."
+            else "The function expects $expected ${pl(expected, "argument")}, but it got $actual instead."
 }
 
 class TypeMismatchError(

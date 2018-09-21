@@ -3,8 +3,8 @@ package org.elm.workspace
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
-import com.intellij.openapi.fileChooser.FileChooserFactory
 import com.intellij.openapi.ui.Messages
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
@@ -18,11 +18,13 @@ class ElmAttachProjectAction : AnAction() {
         val project = e.project
                 ?: return
         saveAllDocuments()
+
         val descriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
                 .withFileFilter { it.name in ACCEPTABLE_FILE_NAMES }
                 .withTitle("Select elm.json (Elm 0.19) or elm-package.json (Elm 0.18)") // TODO [drop 0.18]
-        val chooser = FileChooserFactory.getInstance().createFileChooser(descriptor, project, null)
-        val file = chooser.choose(project).singleOrNull()
+        descriptor.isForcedToUseIdeaFileChooser = true
+
+        val file = FileChooser.chooseFile(descriptor, project, null)
                 ?: return
 
         if (file.name !in ACCEPTABLE_FILE_NAMES) {

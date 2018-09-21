@@ -197,13 +197,9 @@ class ElmWorkspaceService(
     }
 
 
-    fun detachElmProject(manifestPath: Path? = null) {
-        if (manifestPath == null) {
-            modifyProjects { emptyList() }
-        } else {
-            modifyProjects { oldProjects ->
-                oldProjects.filter { it.manifestPath != manifestPath }
-            }
+    fun detachElmProject(manifestPath: Path) {
+        modifyProjects { oldProjects ->
+            oldProjects.filter { it.manifestPath != manifestPath }
         }
     }
 

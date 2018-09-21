@@ -31,14 +31,10 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiFileSystemItem
-import com.intellij.psi.PsiManager
+import com.intellij.psi.*
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.utils.fullyRefreshDirectory
+import org.elm.openapiext.fullyRefreshDirectory
 import org.intellij.lang.annotations.Language
 
 

@@ -133,12 +133,14 @@ ExposedOperator ::=
 
 external DotWithoutWhitespace ::= parseDotWithoutWhitespace
 external DotWithoutTrailingWhitespace ::= parseDotWithoutTrailingWhitespace
+external DotWithoutLeadingWhitespace ::= parseDotWithoutLeadingWhitespace
+external MinusWithoutTrailingWhitespace ::= parseMinusWithoutTrailingWhitespace
 
-UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)*
-ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
-FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+
-ExpressionAccessor ::= DotWithoutWhitespace (LOWER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
-FieldAccessorFunction ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER
+UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)* !DotWithoutLeadingWhitespace
+ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
+FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
+ExpressionAccessor ::= (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
+FieldAccessorFunction ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
 
 
 // IMPORT DECLARATION
@@ -268,10 +270,8 @@ OperatorAsFunction ::=
 private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
-// Although FieldAccess is an Operand, it starts with the same token as FunctionCall, and it needs to be higher precedence
 private CallOrOperand ::=
-    FieldAccess
-    | FunctionCall
+    FunctionCall
     | Operand
 
 private Operand ::=
@@ -303,7 +303,7 @@ ExpressionWithAccessor ::=
 RecordWithAccessor ::=
     Record ExpressionAccessor
 
-NegateExpression ::= '-' Expression
+NegateExpression ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
 
 FunctionCall ::=
@@ -311,8 +311,15 @@ FunctionCall ::=
     { pin = 2 }
 
 private FunctionCallTarget ::=
-    OperatorAsFunction
+    RecordWithAccessor
+    | ExpressionWithAccessor
+    | FieldAccess
     | ValueExpr
+    | FieldAccessorFunction
+    | OperatorAsFunction
+    | ParenthesizedExpression
+    | TupleConstructor
+    | AnonymousFunction
 
 private ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 

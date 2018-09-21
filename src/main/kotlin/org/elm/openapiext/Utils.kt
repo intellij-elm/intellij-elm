@@ -63,9 +63,15 @@ fun checkReadAccessAllowed() {
     }
 }
 
+fun checkIsEventDispatchThread() {
+    check(ApplicationManager.getApplication().isDispatchThread) {
+        "Needs to be on the Event Dispatch Thread (EDT)"
+    }
+}
+
 fun checkIsBackgroundThread() {
     check(!ApplicationManager.getApplication().isDispatchThread) {
-        "Long running operation invoked on UI thread"
+        "Needs to be on a background thread"
     }
 }
 

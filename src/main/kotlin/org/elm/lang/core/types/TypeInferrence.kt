@@ -101,7 +101,7 @@ private class InferenceContext {
             }
             is ElmNegateExpression -> operand.expression?.let { inferType(it) } ?: TyUnknown
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferType(it) })
-            is ElmOperatorAsFunction -> getDeclTy(operand) ?: TyUnknown
+            is ElmOperatorAsFunction -> inferType(operand)
             is ElmRecord -> {
                 if (operand.baseRecordIdentifier != null) TyUnknown // TODO the type is the type of the base record
                 else TyRecord(operand.fieldList.associate { f ->
@@ -118,33 +118,39 @@ private class InferenceContext {
 
     fun inferType(expr: ElmValueExpr): Ty {
         val ref = expr.reference.resolve() ?: return TyUnknown
-        if (ref in bindings) return bindings[ref]!!
-        val member = ref as? ElmUnionMember ?: return TyUnknown
-        val decl = member.parentOfType<ElmTypeDeclaration>()?.ty ?: return TyUnknown
-        val params = member.allParameters.map { it.ty }.toList()
 
-        return if (params.isNotEmpty()) {
-            // Constructors with parameters are functions returning the type.
-            TyFunction(params, decl)
+        // If the value is a parameter, its type has already been added to bindings
+        bindings[ref]?.let { return it }
+
+        if (ref is ElmUnionMember) {
+            val decl = ref.parentOfType<ElmTypeDeclaration>()?.ty ?: return TyUnknown
+            val params = ref.allParameters.map { it.ty }.toList()
+
+            return if (params.isNotEmpty()) {
+                // Constructors with parameters are functions returning the type.
+                TyFunction(params, decl)
+            } else {
+                // Constructors without parameters are just instances of the type, since there are no nullary functions.
+                decl
+            }
         } else {
-            // Constructors without parameters are just instances of the type, since there are no nullary functions.
-            decl
+            val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
+            return inferType(decl)
         }
+
     }
 
     fun inferType(call: ElmFunctionCall): Ty {
-        val declTy = when {
-            call.function != null -> getDeclTy(call.function!!)
-            call.operator != null -> getDeclTy(call.operator!!)
-            else -> null
-        } ?: return TyUnknown // TODO use inference
+        val targetTy = inferType(call.target) // uses the operand tag overload
 
         val arguments = call.arguments.toList()
-        val paramTys = if (declTy is TyFunction) declTy.parameters else listOf(declTy)
+        val paramTys = if (targetTy is TyFunction) targetTy.parameters else listOf()
 
         if (arguments.size > paramTys.size) {
             diagnostics.add(TooManyArgumentsError(call, arguments.size, paramTys.size))
         }
+
+        if (targetTy !is TyFunction) return TyUnknown
 
         for ((arg, paramTy) in arguments.zip(paramTys)) {
             val argTy = inferType(arg)
@@ -153,39 +159,24 @@ private class InferenceContext {
             }
         }
 
-        return when (declTy) {
-            is TyFunction ->
-                when {
-                    // partial application, return a function
-                    arguments.size < paramTys.size -> TyFunction(paramTys.drop(arguments.size), declTy.ret)
-                    else -> declTy.ret
-                }
-            else -> declTy
+        return when {
+            // partial application, return a function
+            arguments.size < paramTys.size -> TyFunction(paramTys.drop(arguments.size), targetTy.ret)
+            else -> targetTy.ret
         }
     }
 
-    private fun getDeclTy(op: ElmOperatorAsFunction): Ty? {
+    private fun inferType(op: ElmOperatorAsFunction): Ty {
         var ref = op.reference.resolve()
         // For operators, we need to resolve the infix declaration to the actual function
         if (ref is ElmInfixDeclaration) {
             ref = ref.valueExpr?.reference?.resolve()
         }
-        val decl = ref?.parentOfType<ElmValueDeclaration>()
-                ?: return null
-        return getDeclTy(decl)
+        val decl = ref?.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
+        return inferType(decl)
     }
 
-    private fun getDeclTy(name: ElmValueExpr): Ty? {
-        val ref = name.reference.resolve() ?: return null
-        // If the function is a parameter, it's type has already been added to bindings
-        if (ref in bindings) return bindings[ref]
-
-        // If the function is top-level, we need to infer its type
-        val decl = ref.parentOfType<ElmValueDeclaration>() ?: return null
-        return getDeclTy(decl)
-    }
-
-    private fun getDeclTy(decl: ElmValueDeclaration): Ty? {
+    private fun inferType(decl: ElmValueDeclaration): Ty {
         val existing = resolvedDecls[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one, otherwise just count the parameters
@@ -198,7 +189,7 @@ private class InferenceContext {
                     ?.let { TyFunction(it, TyUnknown) }
         }
         if (ty == null) {
-            return null
+            return TyUnknown
         }
         resolvedDecls[decl] = ty
         return ty

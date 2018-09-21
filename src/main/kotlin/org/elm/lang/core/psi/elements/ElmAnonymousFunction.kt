@@ -2,14 +2,15 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmFunctionCallTarget
 import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
 import org.elm.lang.core.psi.ElmOperandTag
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 /**
  * A lambda expression
  */
-class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
+class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionCallTarget {
 
     /* Zero-or-more parameters to the lambda expression */
     val patternList: List<ElmPattern>
