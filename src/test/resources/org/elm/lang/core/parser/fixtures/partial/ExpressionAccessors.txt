@@ -11,7 +11,7 @@ Elm File
         ElmNumberConstant(NUMBER_CONSTANT)
           PsiElement(NUMBER_LITERAL)('1')
       PsiElement(RIGHT_PARENTHESIS)(')')
-  PsiErrorElement:OPERATOR_IDENTIFIER expected, got '.'
+  PsiErrorElement:<value expr>, BACKSLASH, CASE, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE, OPERATOR_IDENTIFIER or START_GLSL_CODE expected, got '.'
     PsiElement(DOT)('.')
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
