@@ -17,6 +17,8 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * Structure view
 * and more...
 
+Watch the [feature demo videos](https://klazuka.github.io/intellij-elm/) to learn more.
+
 
 # Installation
 
