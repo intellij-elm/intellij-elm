@@ -186,6 +186,7 @@ private class InferenceContext {
             // TODO use the inference
             ty = decl.functionDeclarationLeft?.patterns
                     ?.map { TyUnknown }?.toList()
+                    ?.takeIf { it.isNotEmpty() }
                     ?.let { TyFunction(it, TyUnknown) }
         }
         if (ty == null) {

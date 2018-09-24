@@ -9,7 +9,11 @@ sealed class Ty
 
 data class TyVar(val name: String) : Ty()
 
-data class TyTuple(val types: List<Ty>) : Ty()
+data class TyTuple(val types: List<Ty>) : Ty() {
+    init {
+        require(types.isNotEmpty()) { "can't create a tuple with no types. Use TyUnit." }
+    }
+}
 
 data class TyRecord(val fields: Map<String, Ty>) : Ty()
 
@@ -24,6 +28,10 @@ val TyChar = TyUnion("Char", "Char", emptyList())
 fun TyList(parameters: Ty) = TyUnion("List", "List", listOf(parameters))
 
 data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
+    init {
+        require(parameters.isNotEmpty()) { "can't create a function with no parameters" }
+    }
+
     val allTys get() = parameters + ret
 }
 
