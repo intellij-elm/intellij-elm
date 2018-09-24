@@ -88,7 +88,6 @@ private class InferenceContext {
             is ElmCaseOf -> TyUnknown // TODO implement
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFunctionCall -> inferType(operand)
-            is ElmGlslCode -> TyShader
             is ElmIfElse -> TyUnknown // TODO implement
             is ElmLetIn -> TyUnknown // TODO implement
             is ElmList -> TyList(operand.expressionList.map { inferType(it) }.firstOrNull()
@@ -97,7 +96,7 @@ private class InferenceContext {
             is ElmStringConstant -> TyString
             is ElmNumberConstant -> {
                 if (operand.isFloat) TyFloat
-                else TyUnknown  // TODO int literals have type `number`, and we need to infer them
+                else TyUnknown  // TODO int literals have type `numberN`, and we need to infer them
             }
             is ElmNegateExpression -> operand.expression?.let { inferType(it) } ?: TyUnknown
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferType(it) })
@@ -112,6 +111,7 @@ private class InferenceContext {
             is ElmTupleConstructor -> TyUnknown // TODO [drop 0.18] remove this case
             is ElmUnit -> TyUnit
             is ElmExpression -> inferType(operand) // parenthesized expression
+            is ElmGlslCode -> TyShader
             else -> error("unexpected operand type $operand")
         }
     }

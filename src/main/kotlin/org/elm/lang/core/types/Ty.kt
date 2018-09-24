@@ -25,6 +25,11 @@ val TyFloat = TyUnion("Basics", "Float", emptyList())
 val TyString = TyUnion("String", "String", emptyList())
 val TyChar = TyUnion("Char", "Char", emptyList())
 
+/** WebGL GLSL shader */
+// The actual type is `Shader attributes uniforms varyings`, but we would have to parse the
+// GLSL code to infer this.
+val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown, TyUnknown, TyUnknown))
+
 fun TyList(parameters: Ty) = TyUnion("List", "List", listOf(parameters))
 
 data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
@@ -33,11 +38,6 @@ data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
     }
 
     val allTys get() = parameters + ret
-}
-
-/** WebGL GLSL shader */
-object TyShader : Ty() {
-    override fun toString(): String = javaClass.simpleName
 }
 
 object TyUnit : Ty() {
