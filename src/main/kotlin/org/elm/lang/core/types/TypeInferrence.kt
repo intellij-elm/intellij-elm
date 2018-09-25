@@ -2,6 +2,7 @@ package org.elm.lang.core.types
 
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.ElmDiagnostic
+import org.elm.lang.core.diagnostics.RedefinitionError
 import org.elm.lang.core.diagnostics.TooManyArgumentsError
 import org.elm.lang.core.diagnostics.TypeMismatchError
 import org.elm.lang.core.psi.*
@@ -13,9 +14,8 @@ val ElmValueDeclaration.inference: InferenceResult
     }
 
 private class InferenceContext {
-    val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
-    val operandTypes: MutableMap<ElmOperandTag, Ty> = mutableMapOf()
-    val resolvedDecls: MutableMap<ElmValueDeclaration, Ty> = mutableMapOf()
+    private val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
+    val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = mutableMapOf()
     val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
 
     /**
@@ -37,7 +37,7 @@ private class InferenceContext {
                 diagnostics.add(TypeMismatchError(expr, ret, expected))
             }
         }
-        return InferenceResult(bindings, operandTypes, resolvedDecls, diagnostics)
+        return InferenceResult(bindings, resolvedDeclarations, diagnostics)
     }
 
     fun bindParameters(valueDeclaration: ElmValueDeclaration) {
@@ -54,7 +54,7 @@ private class InferenceContext {
         val types = typeRef?.allParameters
 
         if (typeRef == null || types == null) {
-            bindings += decl.namedParameters.associate { it to TyUnknown }
+            decl.namedParameters.forEach { setBinding(it, TyUnknown) }
             return
         }
 
@@ -177,7 +177,7 @@ private class InferenceContext {
     }
 
     private fun inferType(decl: ElmValueDeclaration): Ty {
-        val existing = resolvedDecls[decl]
+        val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one, otherwise just count the parameters
         var ty = decl.typeAnnotation?.typeRef?.ty
@@ -192,7 +192,7 @@ private class InferenceContext {
         if (ty == null) {
             return TyUnknown
         }
-        resolvedDecls[decl] = ty
+        resolvedDeclarations[decl] = ty
         return ty
     }
 
@@ -220,11 +220,18 @@ private class InferenceContext {
     }
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) = ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+
+    fun setBinding(element: ElmNamedElement, ty: Ty) {
+        if (bindings.keys.any { it.name == element.name }) {
+            diagnostics += RedefinitionError(element)
+        } else {
+            bindings[element] = ty
+        }
+    }
 }
 
 
 data class InferenceResult(private val bindings: Map<ElmNamedElement, Ty>,
-                           private val operandTypes: MutableMap<ElmOperandTag, Ty>,
                            private val resolvedDecls: MutableMap<ElmValueDeclaration, Ty>,
                            val diagnostics: List<ElmDiagnostic>) {
     fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown
@@ -244,7 +251,7 @@ private fun bindPattern(ctx: InferenceContext, pat: ElmFunctionParamOrPatternChi
             bindPattern(ctx, pat.child, ty)
             bindPattern(ctx, pat.patternAs, ty)
         }
-        is ElmLowerPattern -> ctx.bindings[pat] = ty
+        is ElmLowerPattern -> ctx.setBinding(pat, ty)
         is ElmRecordPattern -> bindPattern(ctx, pat, ty)
         is ElmTuplePattern -> bindPattern(ctx, pat, ty)
         is ElmUnionPattern -> {
@@ -257,7 +264,7 @@ private fun bindPattern(ctx: InferenceContext, pat: ElmFunctionParamOrPatternChi
 }
 
 private fun bindPattern(ctx: InferenceContext, pat: ElmPatternAs?, ty: Ty) {
-    if (pat != null) ctx.bindings[pat] = ty
+    if (pat != null) ctx.setBinding(pat, ty)
 }
 
 private fun bindPattern(ctx: InferenceContext, pat: ElmTuplePattern, ty: Ty) {

@@ -19,6 +19,13 @@ class TooManyArgumentsError(
             else "The function expects $expected ${pl(expected, "argument")}, but it got $actual instead."
 }
 
+class RedefinitionError(
+        element: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Conflicting name declaration"
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,

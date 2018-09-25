@@ -183,4 +183,19 @@ type Maybe a
     = Just a
     | Nothing
 """)
+
+    fun `test duplicate function parameter`() = checkByText("""
+main a <error descr="Conflicting name declaration">a</error> = ()
+""")
+// TODO
+//    fun `test parameter name duplicating top level`() = checkByText("""
+//foo = ()
+//main <error descr="Conflicting name declaration">foo</error> = ()
+//""")
+//    fun `test duplicate name in anonymous function`() = checkByText("""
+//main a = (\<error descr="Conflicting name declaration">a</error> -> a)
+//""")
 }
+
+
+
