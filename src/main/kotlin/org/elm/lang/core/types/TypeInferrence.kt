@@ -7,62 +7,85 @@ import org.elm.lang.core.diagnostics.TooManyArgumentsError
 import org.elm.lang.core.diagnostics.TypeMismatchError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.resolve.scope.ExpressionScope
 
-val ElmValueDeclaration.inference: InferenceResult
-    get () { // TODO cache
-        return InferenceContext().infer(this)
-    }
+fun ElmValueDeclaration.inference(): InferenceResult { // TODO cache
+    val visibleNames = ExpressionScope(parent).getVisibleValues().mapNotNullTo(HashSet()) { it.name }
+    declaredNames(false).mapNotNullTo(visibleNames) { it.name }
+    return InferenceScope(visibleNames, null).infer(this)
+}
 
-private class InferenceContext {
-    private val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
-    val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = mutableMapOf()
-    val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
-
-    /**
-     * The type of this declaration.
-     *
-     * Usually a [TyFunction], but could be any type for plain value assignments like `x = 1`.
-     */
-    var ty: Ty = TyUnknown
-        private set
+/**
+ * @property visibleNames names of declared elements visible to elements declared in this scope
+ */
+private class InferenceScope(
+        private val visibleNames: MutableSet<String>,
+        parent: InferenceScope?
+) {
+    // cache for declared tys referenced in this scope; shared with parent
+    private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations
+            ?: mutableMapOf()
+    // names declared in patterns; copied from parent since we can see parent's bindings, but ours
+    // shouldn't be shared with other scopes that share a parent.
+    private val bindings: MutableMap<ElmNamedElement, Ty> = parent?.bindings?.toMutableMap() ?: mutableMapOf()
+    // errors encountered during inference
+    private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
 
     fun infer(valueDeclaration: ElmValueDeclaration): InferenceResult {
-        bindParameters(valueDeclaration)
+        val declaredTy = bindParameters(valueDeclaration)
 
         val expr = valueDeclaration.expression
         if (expr != null) {
-            val ret = inferType(expr)
-            val expected = (ty as? TyFunction)?.ret ?: ty
-            if (!assignable(ret, expected)) {
-                diagnostics.add(TypeMismatchError(expr, ret, expected))
+            val bodyTy = inferType(expr)
+            val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
+            if (!assignable(bodyTy, expected)) {
+                diagnostics.add(TypeMismatchError(expr, bodyTy, expected))
             }
         }
-        return InferenceResult(bindings, resolvedDeclarations, diagnostics)
+        return InferenceResult(bindings, diagnostics, declaredTy)
     }
 
-    fun bindParameters(valueDeclaration: ElmValueDeclaration) {
+    private fun infer(lambda: ElmAnonymousFunction): InferenceResult {
+        // TODO [unification] infer param types
+        lambda.namedParameters.forEach { setBinding(it, TyUnknown) }
+        val bodyTy = inferType(lambda.expression)
+        return InferenceResult(bindings, diagnostics, bodyTy)
+    }
+
+    fun setBinding(element: ElmNamedElement, ty: Ty) {
+        val elementName = element.name
+        if (elementName in visibleNames) {
+            diagnostics += RedefinitionError(element)
+        } else {
+            bindings[element] = ty
+            if (elementName != null) visibleNames += elementName
+        }
+    }
+
+    /** @return the entire declared type, or [TyUnknown] if no annotation exists */
+    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Ty {
         // TODO [drop 0.18] remove this if
         if (valueDeclaration.pattern != null || valueDeclaration.operatorDeclarationLeft != null) {
             // this is 0.18 only, so we aren't going to bother implementing it
             bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
                     .associate { it to TyUnknown }
-            return
+            return TyUnknown
         }
 
         val decl = valueDeclaration.functionDeclarationLeft!!
         val typeRef = valueDeclaration.typeAnnotation?.typeRef
-        val types = typeRef?.allParameters
 
-        if (typeRef == null || types == null) {
+        if (typeRef == null) {
             decl.namedParameters.forEach { setBinding(it, TyUnknown) }
-            return
+            return TyUnknown
         }
 
-        ty = typeRef.ty
+        val types = typeRef.allParameters
         decl.patterns.zip(types).forEach { (pat, type) -> bindPattern(this, pat, type.ty) }
+        return typeRef.ty
     }
 
-    fun inferType(expr: ElmExpression): Ty {
+    private fun inferType(expr: ElmExpression): Ty {
         val parts = expr.parts.map { part ->
             when (part) {
                 is ElmOperator -> {
@@ -79,11 +102,12 @@ private class InferenceContext {
         return parts.singleOrNull() ?: TyUnknown
     }
 
-    fun inferType(operand: ElmOperandTag): Ty {
+    private fun inferType(operand: ElmOperandTag): Ty {
         return when (operand) {
             is ElmAnonymousFunction -> {
-                // TODO infer params types
-                TyFunction(operand.patternList.map { TyUnknown }, inferType(operand.expression))
+                val inferenceResult = InferenceScope(visibleNames.toMutableSet(), this).infer(operand)
+                diagnostics += inferenceResult.diagnostics
+                inferenceResult.ty
             }
             is ElmCaseOf -> TyUnknown // TODO implement
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
@@ -116,7 +140,7 @@ private class InferenceContext {
         }
     }
 
-    fun inferType(expr: ElmValueExpr): Ty {
+    private fun inferType(expr: ElmValueExpr): Ty {
         val ref = expr.reference.resolve() ?: return TyUnknown
 
         // If the value is a parameter, its type has already been added to bindings
@@ -140,7 +164,7 @@ private class InferenceContext {
 
     }
 
-    fun inferType(call: ElmFunctionCall): Ty {
+    private fun inferType(call: ElmFunctionCall): Ty {
         val targetTy = inferType(call.target) // uses the operand tag overload
 
         val arguments = call.arguments.toList()
@@ -220,24 +244,19 @@ private class InferenceContext {
     }
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) = ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
-
-    fun setBinding(element: ElmNamedElement, ty: Ty) {
-        if (bindings.keys.any { it.name == element.name }) {
-            diagnostics += RedefinitionError(element)
-        } else {
-            bindings[element] = ty
-        }
-    }
 }
 
 
+/**
+ * @property ty the return type of the function or expression being inferred
+ */
 data class InferenceResult(private val bindings: Map<ElmNamedElement, Ty>,
-                           private val resolvedDecls: MutableMap<ElmValueDeclaration, Ty>,
-                           val diagnostics: List<ElmDiagnostic>) {
+                           val diagnostics: List<ElmDiagnostic>,
+                           val ty: Ty) {
     fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown
 }
 
-private fun bindPattern(ctx: InferenceContext, pat: ElmFunctionParamOrPatternChildTag, ty: Ty) {
+private fun bindPattern(ctx: InferenceScope, pat: ElmFunctionParamOrPatternChildTag, ty: Ty) {
     return when (pat) {
         is ElmAnythingPattern -> {
         }
@@ -263,18 +282,18 @@ private fun bindPattern(ctx: InferenceContext, pat: ElmFunctionParamOrPatternChi
     }
 }
 
-private fun bindPattern(ctx: InferenceContext, pat: ElmPatternAs?, ty: Ty) {
+private fun bindPattern(ctx: InferenceScope, pat: ElmPatternAs?, ty: Ty) {
     if (pat != null) ctx.setBinding(pat, ty)
 }
 
-private fun bindPattern(ctx: InferenceContext, pat: ElmTuplePattern, ty: Ty) {
+private fun bindPattern(ctx: InferenceScope, pat: ElmTuplePattern, ty: Ty) {
     if (ty !is TyTuple) return // TODO: report error
     pat.patternList
             .zip(ty.types)
             .forEach { (pat, type) -> bindPattern(ctx, pat.child, type) }
 }
 
-private fun bindPattern(ctx: InferenceContext, pat: ElmRecordPattern, ty: Ty) {
+private fun bindPattern(ctx: InferenceScope, pat: ElmRecordPattern, ty: Ty) {
     if (ty !is TyRecord) return // TODO: report error
     for (id in pat.lowerPatternList) {
         val fieldTy = ty.fields[id.name] ?: continue // TODO: report error

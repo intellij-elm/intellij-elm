@@ -21,7 +21,7 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
 
     override fun getInformationHint(element: PsiElement): String {
         val ref = element.parentOfType<ElmValueExpr>()?.reference?.resolve() ?: return errorHint
-        val inference = element.parentOfType<ElmValueDeclaration>()?.inference ?: return errorHint
+        val inference = element.parentOfType<ElmValueDeclaration>()?.inference() ?: return errorHint
         return StringUtil.escapeXml(inference.bindingType(ref).renderedText(false, false))
     }
 

@@ -17,7 +17,7 @@ class TypeInferenceInspection : LocalInspectionTool() {
                 // nested declarations are taken care of in the parent inference
                 if (element.parent is ElmLetIn) return
 
-                val inference = element.inference
+                val inference = element.inference()
                 for (diagnostic in inference.diagnostics) {
                     // TODO This seems to cause the InspectionDescriptionLinkHandler to add the text
                     // "Under construction" to the description.
