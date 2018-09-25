@@ -214,6 +214,10 @@ main = if True then 1.0 else <error descr="Type mismatch.Required: FloatFound: S
 main : String
 main = <error descr="Type mismatch.Required: StringFound: Float">if True then 1.0 else 2.0</error>
 """)
+
+    fun `test if-else with mismatched branches`() = checkByText("""
+main = if True then 1.0 else if True then <error descr="Type mismatch.Required: FloatFound: String">"foo"</error> else ()
+""")
 }
 
 

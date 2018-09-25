@@ -88,7 +88,7 @@ Elm File
         PsiWhiteSpace('\n')
         PsiWhiteSpace('     ')
         PsiElement(ELSE)('else')
-        PsiErrorElement:<expression> expected, got 'type'
+        PsiErrorElement:<expression> or IF expected, got 'type'
           <empty list>
   PsiWhiteSpace(' ')
   PsiElement(TYPE)('type')

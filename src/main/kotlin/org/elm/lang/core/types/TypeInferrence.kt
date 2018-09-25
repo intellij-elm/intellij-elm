@@ -140,17 +140,27 @@ private class InferenceScope(
     }
 
     private fun inferType(expr: ElmIfElse): Ty {
-        // There are a couple of things we could do to make errors here nicer:
-        // 1. change the grammar to bundle `else if`s into one element so that if one branch is wrong,
-        // we only highlight that branch rather than the whole if-else
-        // 2. pass in the expected return type so that we can highlight the sub-expression rather than the entire block
         val expressionList = expr.expressionList
-        if (expressionList.size != 3) return TyUnknown // incomplete program
-        val (conditionExpr, _, elseExpr) = expressionList
-        val (conditionTy, ifTy, elseTy) = expressionList.map { inferType(it) }
-        requireAssignable(conditionExpr, conditionTy, TyBool)
-        requireAssignable(elseExpr, elseTy, ifTy)
-        return ifTy
+        if (expressionList.size < 3 || expressionList.size % 2 == 0) return TyUnknown // incomplete program
+        val expressionTys = expressionList.map { inferType(it) }
+
+        // check all the conditions
+        for (i in 0 until expressionList.lastIndex step 2) {
+            requireAssignable(expressionList[i], expressionTys[i], TyBool)
+        }
+
+        // check that all branches match the first
+        for (i in expressionList.indices) {
+            if (i != expressionList.lastIndex && (i < 3 || i % 2 == 0)) continue
+
+            if (!requireAssignable(expressionList[i], expressionTys[i], expressionTys[1])) {
+                // Only issue an error on the first mismatched branch to avoid spam in the case the
+                // only the first branch is different
+                break
+            }
+        }
+
+        return expressionTys[1]
     }
 
     private fun inferType(expr: ElmValueExpr): Ty {
@@ -231,10 +241,12 @@ private class InferenceScope(
         return ty
     }
 
-    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty) {
-        if (!assignable(ty1, ty2)) {
+    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
+        val assignable = assignable(ty1, ty2)
+        if (!assignable) {
             diagnostics.add(TypeMismatchError(element, ty1, ty2))
         }
+        return assignable
     }
 
     /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */

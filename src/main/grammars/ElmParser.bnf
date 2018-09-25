@@ -392,7 +392,7 @@ Field ::=
 
 
 IfElse ::=
-    IF Expression THEN Expression ELSE Expression
+    IF Expression THEN Expression (ELSE IF Expression THEN Expression)* ELSE Expression
     { pin = 'IF' }
 
 
