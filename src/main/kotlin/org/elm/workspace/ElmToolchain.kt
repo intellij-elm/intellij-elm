@@ -77,6 +77,14 @@ data class ElmToolchain(val binDirPath: Path) {
     }
 
     /**
+     * Path to the manifest file for the Elm package [name] at version [version]
+     */
+    fun findPackageManifest(name: String, version: Version): Path? {
+        // TODO [kl] use compiler version to determine whether to use elm.json vs elm-package.json
+        return packageVersionDir(name, version)?.resolve(ELM_JSON)
+    }
+
+    /**
      * Path to directory for a package, containing one or more versions
      */
     fun availableVersionsForPackage(name: String): List<Version> {

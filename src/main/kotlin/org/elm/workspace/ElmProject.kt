@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
+import com.intellij.openapi.vfs.LocalFileSystem
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.InputStream
 import java.nio.file.Path
@@ -25,8 +26,8 @@ private val objectMapper = ObjectMapper()
  */
 sealed class ElmProject(
         val manifestPath: Path,
-        val dependencies: List<ElmPackageRef>,
-        val testDependencies: List<ElmPackageRef>,
+        val dependencies: List<ElmPackageProject>,
+        val testDependencies: List<ElmPackageProject>,
         val sourceDirectories: List<Path>
 ) {
 
@@ -51,17 +52,23 @@ sealed class ElmProject(
      * Returns all packages which this project depends on, whether it be for normal,
      * production code or for tests.
      */
-    val allResolvedDependencies: Sequence<ElmPackageRef>
+    val allResolvedDependencies: Sequence<ElmPackageProject>
         get() = sequenceOf(dependencies, testDependencies).flatten()
 
 
     companion object {
+
+        fun parse(manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+            val inputStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
+                    ?: throw ProjectLoadException("Could not find file $manifestPath")
+            return parse(inputStream, manifestPath, toolchain)
+        }
+
         /**
          * Attempts to parse an `elm.json` file.
          *
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
-        @Throws(ProjectLoadException::class)
         fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain): ElmProject {
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
                 // Handle legacy Elm 0.18 package. We don't need to model the dependencies
@@ -92,8 +99,8 @@ sealed class ElmProject(
                     ElmApplicationProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.toPackageRefs(toolchain),
-                            testDependencies = dto.testDependencies.toPackageRefs(toolchain),
+                            dependencies = dto.dependencies.depsToPackages(toolchain),
+                            testDependencies = dto.testDependencies.depsToPackages(toolchain),
                             sourceDirectories = dto.sourceDirectories
                     )
                 }
@@ -132,8 +139,8 @@ sealed class ElmProject(
 class ElmApplicationProject(
         manifestPath: Path,
         val elmVersion: Version,
-        dependencies: List<ElmPackageRef>,
-        testDependencies: List<ElmPackageRef>,
+        dependencies: List<ElmPackageProject>,
+        testDependencies: List<ElmPackageProject>,
         sourceDirectories: List<Path>
 ) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
@@ -144,8 +151,8 @@ class ElmApplicationProject(
 class ElmPackageProject(
         manifestPath: Path,
         val elmVersion: Constraint,
-        dependencies: List<ElmPackageRef>,
-        testDependencies: List<ElmPackageRef>,
+        dependencies: List<ElmPackageProject>,
+        testDependencies: List<ElmPackageProject>,
         sourceDirectories: List<Path>,
         val name: String,
         val version: Version,
@@ -153,40 +160,35 @@ class ElmPackageProject(
 ) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
-/**
- * A dependency reference to an Elm package
- */
-class ElmPackageRef(
-        val rootPath: Path?,
-        val name: String,
-        val version: Version
-)
-
-
-private fun ExactDependenciesDTO.toPackageRefs(toolchain: ElmToolchain) =
+private fun ExactDependenciesDTO.depsToPackages(toolchain: ElmToolchain) =
         direct.depsToPackages(toolchain) + indirect.depsToPackages(toolchain)
 
 
 private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
-            ElmPackageRef(
-                    rootPath = toolchain.packageVersionDir(name, version),
-                    name = name,
-                    version = version)
+            loadPackage(toolchain, name, version)
         }
 
 private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolchain) =
         map { (name, constraint) ->
-            val useVersion = toolchain.availableVersionsForPackage(name)
+            val version = toolchain.availableVersionsForPackage(name)
                     .filter { constraint.contains(it) }
                     .sorted()
                     .firstOrNull()
+                    ?: throw ProjectLoadException("Could not load $name ($constraint)")
 
-            ElmPackageRef(
-                    rootPath = useVersion?.let { toolchain.packageVersionDir(name, it) },
-                    name = name,
-                    version = useVersion ?: Version.UNKNOWN)
+            loadPackage(toolchain, name, version)
         }
+
+fun loadPackage(toolchain: ElmToolchain, name: String, version: Version): ElmPackageProject {
+    val manifestPath = toolchain.findPackageManifest(name, version)
+            ?: throw ProjectLoadException("Could not load $name ($version): manifest not found")
+    // TODO [kl] guard against circular dependencies
+    val elmProject = ElmProject.parse(manifestPath, toolchain) as? ElmPackageProject
+            ?: throw ProjectLoadException("Could not load $name ($version): expected a package!")
+
+    return elmProject
+}
 
 
 /**

@@ -159,13 +159,10 @@ class ElmWorkspaceService(
      */
     private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
-                        ?: throw ProjectLoadException("Could not find file $manifestPath")
-
                 val toolchain = settings.toolchain
                         ?: throw ProjectLoadException("Elm toolchain not configured")
 
-                ElmProject.parse(file.inputStream, manifestPath, toolchain)
+                ElmProject.parse(manifestPath, toolchain)
             }.whenComplete { _, error ->
                 // log the result
                 if (error == null) {
