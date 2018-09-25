@@ -24,6 +24,7 @@ val TyInt = TyUnion("Basics", "Int", emptyList())
 val TyFloat = TyUnion("Basics", "Float", emptyList())
 val TyString = TyUnion("String", "String", emptyList())
 val TyChar = TyUnion("Char", "Char", emptyList())
+val TyBool = TyUnion("Main", "Bool", emptyList())
 
 /** WebGL GLSL shader */
 // The actual type is `Shader attributes uniforms varyings`, but we would have to parse the

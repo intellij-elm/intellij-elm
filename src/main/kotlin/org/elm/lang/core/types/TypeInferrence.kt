@@ -1,5 +1,6 @@
 package org.elm.lang.core.types
 
+import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.RedefinitionError
@@ -38,9 +39,7 @@ private class InferenceScope(
         if (expr != null) {
             val bodyTy = inferType(expr)
             val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
-            if (!assignable(bodyTy, expected)) {
-                diagnostics.add(TypeMismatchError(expr, bodyTy, expected))
-            }
+            requireAssignable(expr, bodyTy, expected)
         }
         return InferenceResult(bindings, diagnostics, declaredTy)
     }
@@ -112,7 +111,7 @@ private class InferenceScope(
             is ElmCaseOf -> TyUnknown // TODO implement
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFunctionCall -> inferType(operand)
-            is ElmIfElse -> TyUnknown // TODO implement
+            is ElmIfElse -> inferType(operand)
             is ElmLetIn -> TyUnknown // TODO implement
             is ElmList -> TyList(operand.expressionList.map { inferType(it) }.firstOrNull()
                     ?: TyUnknown)  // TODO check and unify elements
@@ -138,6 +137,20 @@ private class InferenceScope(
             is ElmGlslCode -> TyShader
             else -> error("unexpected operand type $operand")
         }
+    }
+
+    private fun inferType(expr: ElmIfElse): Ty {
+        // There are a couple of things we could do to make errors here nicer:
+        // 1. change the grammar to bundle `else if`s into one element so that if one branch is wrong,
+        // we only highlight that branch rather than the whole if-else
+        // 2. pass in the expected return type so that we can highlight the sub-expression rather than the entire block
+        val expressionList = expr.expressionList
+        if (expressionList.size != 3) return TyUnknown // incomplete program
+        val (conditionExpr, _, elseExpr) = expressionList
+        val (conditionTy, ifTy, elseTy) = expressionList.map { inferType(it) }
+        requireAssignable(conditionExpr, conditionTy, TyBool)
+        requireAssignable(elseExpr, elseTy, ifTy)
+        return ifTy
     }
 
     private fun inferType(expr: ElmValueExpr): Ty {
@@ -178,9 +191,7 @@ private class InferenceScope(
 
         for ((arg, paramTy) in arguments.zip(paramTys)) {
             val argTy = inferType(arg)
-            if (!assignable(argTy, paramTy)) {
-                diagnostics.add(TypeMismatchError(arg, argTy, paramTy))
-            }
+            requireAssignable(arg, argTy, paramTy)
         }
 
         return when {
@@ -218,6 +229,12 @@ private class InferenceScope(
         }
         resolvedDeclarations[decl] = ty
         return ty
+    }
+
+    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty) {
+        if (!assignable(ty1, ty2)) {
+            diagnostics.add(TypeMismatchError(element, ty1, ty2))
+        }
     }
 
     /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */

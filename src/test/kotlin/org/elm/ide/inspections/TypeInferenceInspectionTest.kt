@@ -201,6 +201,19 @@ main <error descr="Conflicting name declaration">foo</error> = ()
     fun `test duplicate name in anonymous function`() = checkByText("""
 main a = (\<error descr="Conflicting name declaration">a</error> -> a)
 """)
+
+    fun `test if-else with mismatched condition`() = checkByText("""
+main = if <error descr="Type mismatch.Required: BoolFound: Float">1.0</error> then 1 else 2
+""")
+
+    fun `test if-else with mismatched else`() = checkByText("""
+main = if True then 1.0 else <error descr="Type mismatch.Required: FloatFound: String">"foo"</error>
+""")
+
+    fun `test value with mismatched if-else `() = checkByText("""
+main : String
+main = <error descr="Type mismatch.Required: StringFound: Float">if True then 1.0 else 2.0</error>
+""")
 }
 
 
