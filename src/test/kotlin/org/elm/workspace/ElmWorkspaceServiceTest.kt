@@ -163,6 +163,53 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         checkEquals(setOf("elm-explorations/test" to Version(1, 0, 0)),
                 elmProject.testDependencies.map { it.name to it.version }.toSet())
+
+        checkEquals(setOf("Json.Decode", "Json.Encode"),
+                elmProject.exposedModules.toSet())
+    }
+
+    fun `test can attach package json file with annotated exposed modules`() {
+        val testProject = fileTree {
+            project("elm.json", """
+                    {
+                        "type": "package",
+                        "name": "elm/json",
+                        "summary": "Encode and decode JSON values",
+                        "license": "BSD-3-Clause",
+                        "version": "1.0.0",
+                        "exposed-modules": {
+                            "Decoding": [ "Json.Decode"],
+                            "Encoding": [ "Json.Encode"]
+                        },
+                        "elm-version": "0.19.0 <= v < 0.20.0",
+                        "dependencies": {
+                            "elm/core": "1.0.0 <= v < 2.0.0"
+                        },
+                        "test-dependencies": {
+                            "elm-explorations/test": "1.0.0 <= v < 2.0.0"
+                        }
+                    }
+                    """)
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("elm.json")).get()
+        }
+
+        val elmProject = workspace.allProjects.firstOrNull()
+        if (elmProject == null) {
+            TestCase.fail("failed to find an Elm project")
+            return
+        }
+
+        if (elmProject !is ElmPackageProject) {
+            TestCase.fail("expected an Elm package project, got $elmProject")
+            return
+        }
+
+        checkEquals(setOf("Json.Decode", "Json.Encode"),
+                elmProject.exposedModules.toSet())
     }
 
     fun `test auto discover Elm project at root level`() {

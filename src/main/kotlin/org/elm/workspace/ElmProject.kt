@@ -145,8 +145,7 @@ class ElmPackageProject(
         testDependencies: List<ElmPackageRef>,
         val name: String,
         val version: Version,
-        /** Map from label to one-or-more module names. The label can be the empty string. */
-        val exposedModules: Map<String, List<String>>
+        val exposedModules: List<String>
 ) : ElmProject(manifestPath, dependencies, testDependencies)
 
 
@@ -184,25 +183,6 @@ private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolc
                     name = name,
                     version = useVersion ?: Version.UNKNOWN)
         }
-
-
-private fun JsonNode.toExposedModuleMap(): Map<String, List<String>> {
-    // normalize the 2 exposed-modules formats into a single format
-    return when (this.nodeType) {
-        JsonNodeType.ARRAY -> {
-            val moduleNames = this.elements().asSequence().map { it.textValue() }.toList()
-            mapOf("" to moduleNames)
-        }
-        JsonNodeType.OBJECT -> {
-            this.fields().asSequence().map { (label, nameNodes) ->
-                label to nameNodes.asSequence().map { it.textValue() }.toList()
-            }.toMap()
-        }
-        else -> {
-            throw RuntimeException("exposed-modules JSON must be either an array or an object")
-        }
-    }
-}
 
 
 /**
@@ -244,9 +224,26 @@ private class ElmPackageProjectDTO(
         @JsonProperty("test-dependencies") val testDependencies: Map<String, Constraint>,
         @JsonProperty("name") val name: String,
         @JsonProperty("version") val version: Version,
-        @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode // either List<String>
-        // or Map<String, List<String>>
-        // where the map's keys are labels
+        @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode
 ) : ElmProjectDTO
 
 
+private fun JsonNode.toExposedModuleMap(): List<String> {
+    // Normalize the 2 exposed-modules formats into a single format.
+    // format 1: a list of strings, where each string is the name of an exposed module
+    // format 2: a map where the keys are categories and the values are the names of the modules
+    //           exposed in that category. We discard the categories because they are not useful.
+    return when (this.nodeType) {
+        JsonNodeType.ARRAY -> {
+            this.elements().asSequence().map { it.textValue() }.toList()
+        }
+        JsonNodeType.OBJECT -> {
+            this.fields().asSequence().flatMap { (_, nameNodes) ->
+                nameNodes.asSequence().map { it.textValue() }
+            }.toList()
+        }
+        else -> {
+            throw RuntimeException("exposed-modules JSON must be either an array or an object")
+        }
+    }
+}
