@@ -5,6 +5,7 @@ import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
+import java.nio.file.Paths
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
@@ -58,7 +59,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 project("elm.json", """
                     {
                         "type": "application",
-                        "source-directories": [ "src" ],
+                        "source-directories": [ "src", "vendor" ],
                         "elm-version": "0.19.0",
                         "dependencies": {
                             "direct": {
@@ -82,6 +83,9 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 dir("src") {
                     elm("Main.elm", "")
                 }
+                dir("vendor") {
+                    elm("VendoredPackage.elm", "")
+                }
             }
         }.create(project, elmWorkspaceDirectory)
 
@@ -102,6 +106,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         }
 
         checkEquals(Version(0, 19, 0), elmProject.elmVersion)
+        checkEquals(setOf(Paths.get("src"), Paths.get("vendor")), elmProject.sourceDirectories.toSet())
 
         checkEquals(setOf(
                 "elm/core" to Version(1, 0, 0),
@@ -157,6 +162,9 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         checkEquals(makeConstraint(Version(0, 19, 0), Version(0, 20, 0))
                 , elmProject.elmVersion)
+
+        // The source directory for Elm 0.19 packages is implicitly "src". It cannot be changed.
+        checkEquals(setOf(Paths.get("src")), elmProject.sourceDirectories.toSet())
 
         checkEquals(setOf("elm/core" to Version(1, 0, 0)),
                 elmProject.dependencies.map { it.name to it.version }.toSet())

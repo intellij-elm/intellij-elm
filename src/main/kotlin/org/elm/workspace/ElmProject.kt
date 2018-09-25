@@ -21,11 +21,13 @@ private val objectMapper = ObjectMapper()
  * @param manifestPath The location of the manifest file (e.g. `elm.json`). Uniquely identifies a project.
  * @param dependencies Additional Elm packages that this project depends on
  * @param testDependencies Additional Elm packages that this project's **tests** depends on
+ * @param sourceDirectories The paths to one-or-more directories containing Elm source files belonging to this project.
  */
 sealed class ElmProject(
         val manifestPath: Path,
         val dependencies: List<ElmPackageRef>,
-        val testDependencies: List<ElmPackageRef>
+        val testDependencies: List<ElmPackageRef>,
+        val sourceDirectories: List<Path>
 ) {
 
     /**
@@ -111,6 +113,7 @@ sealed class ElmProject(
                             elmVersion = dto.elmVersion,
                             dependencies = dto.dependencies.constraintDepsToPackages(toolchain),
                             testDependencies = dto.testDependencies.constraintDepsToPackages(toolchain),
+                            sourceDirectories = listOf(Paths.get("src")),
                             name = dto.name,
                             version = dto.version,
                             exposedModules = dto.exposedModulesNode.toExposedModuleMap())
@@ -131,8 +134,8 @@ class ElmApplicationProject(
         val elmVersion: Version,
         dependencies: List<ElmPackageRef>,
         testDependencies: List<ElmPackageRef>,
-        val sourceDirectories: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies)
+        sourceDirectories: List<Path>
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
 /**
@@ -143,10 +146,11 @@ class ElmPackageProject(
         val elmVersion: Constraint,
         dependencies: List<ElmPackageRef>,
         testDependencies: List<ElmPackageRef>,
+        sourceDirectories: List<Path>,
         val name: String,
         val version: Version,
         val exposedModules: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies)
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
 /**
@@ -206,7 +210,7 @@ private interface ElmProjectDTO
 
 private class ElmApplicationProjectDTO(
         @JsonProperty("elm-version") val elmVersion: Version,
-        @JsonProperty("source-directories") val sourceDirectories: List<String>,
+        @JsonProperty("source-directories") val sourceDirectories: List<Path>,
         @JsonProperty("dependencies") val dependencies: ExactDependenciesDTO,
         @JsonProperty("test-dependencies") val testDependencies: ExactDependenciesDTO
 ) : ElmProjectDTO
