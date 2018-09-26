@@ -24,7 +24,11 @@ fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
     val type = when {
         parameters.isEmpty() -> name
         else -> parameters.joinToString(" ", prefix = "$name ") {
-            if (it is TyUnion) "(${it.renderedText(linkify, withModule)})" else it.renderedText(linkify, withModule)
+            if (it is TyUnion && it.parameters.isNotEmpty()) {
+                "(${it.renderedText(linkify, withModule)})"
+            } else {
+                it.renderedText(linkify, withModule)
+            }
         }
     }
     return if (withModule && module.isNotBlank()) "$module.$type" else type

@@ -218,6 +218,15 @@ main = <error descr="Type mismatch.Required: StringFound: Float">if True then 1.
     fun `test if-else with mismatched branches`() = checkByText("""
 main = if True then 1.0 else if True then <error descr="Type mismatch.Required: FloatFound: String">"foo"</error> else ()
 """)
+
+    fun `test mismatched list value type`() = checkByText("""
+main : List String
+main = <error descr="Type mismatch.Required: List StringFound: List Float">[1.0]</error>
+""")
+
+    fun `test mismatched elements`() = checkByText("""
+main = ["", <error descr="Type mismatch.Required: StringFound: Float">1.0</error>, ()]
+""")
 }
 
 

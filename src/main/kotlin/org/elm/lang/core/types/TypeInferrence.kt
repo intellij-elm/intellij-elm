@@ -113,8 +113,7 @@ private class InferenceScope(
             is ElmFunctionCall -> inferType(operand)
             is ElmIfElse -> inferType(operand)
             is ElmLetIn -> TyUnknown // TODO implement
-            is ElmList -> TyList(operand.expressionList.map { inferType(it) }.firstOrNull()
-                    ?: TyUnknown)  // TODO check and unify elements
+            is ElmList -> inferType(operand)
             is ElmCharConstant -> TyChar
             is ElmStringConstant -> TyString
             is ElmNumberConstant -> {
@@ -124,19 +123,37 @@ private class InferenceScope(
             is ElmNegateExpression -> operand.expression?.let { inferType(it) } ?: TyUnknown
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferType(it) })
             is ElmOperatorAsFunction -> inferType(operand)
-            is ElmRecord -> {
-                if (operand.baseRecordIdentifier != null) TyUnknown // TODO the type is the type of the base record
-                else TyRecord(operand.fieldList.associate { f ->
-                    f.lowerCaseIdentifier.text to (f.expression?.let { inferType(it) } ?: TyUnknown)
-                })
-            }
+            is ElmRecord -> inferType(operand)
             is ElmValueExpr -> inferType(operand)
-            is ElmTupleConstructor -> TyUnknown // TODO [drop 0.18] remove this case
             is ElmUnit -> TyUnit
             is ElmExpression -> inferType(operand) // parenthesized expression
             is ElmGlslCode -> TyShader
+            is ElmTupleConstructor -> TyUnknown // TODO [drop 0.18] remove this case
             else -> error("unexpected operand type $operand")
         }
+    }
+
+    private fun inferType(record: ElmRecord): Ty {
+        return when {
+            record.baseRecordIdentifier != null -> TyUnknown // TODO the type is the type of the base record
+            else -> TyRecord(record.fieldList.associate { f ->
+                f.lowerCaseIdentifier.text to (f.expression?.let { inferType(it) } ?: TyUnknown)
+            })
+        }
+    }
+
+    private fun inferType(expr: ElmList): Ty {
+        val expressionList = expr.expressionList
+        val expressionTys = expressionList.map { inferType(it) }
+
+        for (i in 1..expressionList.lastIndex) {
+            // Only issue an error on the first mismatched expression
+            if (!requireAssignable(expressionList[i], expressionTys[i], expressionTys[0])) {
+                break
+            }
+        }
+
+        return TyList(expressionTys.firstOrNull() ?: TyUnknown)
     }
 
     private fun inferType(expr: ElmIfElse): Ty {
