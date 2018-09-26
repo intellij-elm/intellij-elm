@@ -2,25 +2,36 @@ package org.elm.lang.core.types
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.parentsOfType
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.RedefinitionError
 import org.elm.lang.core.diagnostics.TooManyArgumentsError
 import org.elm.lang.core.diagnostics.TypeMismatchError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.scope.ExpressionScope
+import org.elm.lang.core.resolve.scope.ModuleScope
 
 fun ElmValueDeclaration.inference(): InferenceResult { // TODO cache
-    val visibleNames = ExpressionScope(parent).getVisibleValues().mapNotNullTo(HashSet()) { it.name }
+    val visibleNames = HashSet<String>()
+
+    // Add any visible names except imports.
+    // For some reason, Elm lets you shadow imported names.
+    parentsOfType<ElmFile>()
+            .map { ModuleScope(it).getVisibleValues(includeImports = false) }
+            .firstOrNull()
+            ?.run { mapNotNullTo(visibleNames) { it.name } }
+
+    // Add the function name itself name itself
     declaredNames(false).mapNotNullTo(visibleNames) { it.name }
+
     return InferenceScope(visibleNames, null).infer(this)
 }
 
 /**
- * @property visibleNames names of declared elements visible to elements declared in this scope
+ * @property shadowableNames names of declared elements that will cause a shadowing error if redeclared
  */
 private class InferenceScope(
-        private val visibleNames: MutableSet<String>,
+        private val shadowableNames: MutableSet<String>,
         parent: InferenceScope?
 ) {
     // cache for declared tys referenced in this scope; shared with parent
@@ -48,16 +59,17 @@ private class InferenceScope(
         // TODO [unification] infer param types
         lambda.namedParameters.forEach { setBinding(it, TyUnknown) }
         val bodyTy = inferType(lambda.expression)
-        return InferenceResult(bindings, diagnostics, bodyTy)
+        val ty = TyFunction(lambda.patternList.map { TyUnknown }, bodyTy)
+        return InferenceResult(bindings, diagnostics, ty)
     }
 
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        if (elementName in visibleNames) {
+        if (elementName in shadowableNames) {
             diagnostics += RedefinitionError(element)
         } else {
             bindings[element] = ty
-            if (elementName != null) visibleNames += elementName
+            if (elementName != null) shadowableNames += elementName
         }
     }
 
@@ -104,7 +116,7 @@ private class InferenceScope(
     private fun inferType(operand: ElmOperandTag): Ty {
         return when (operand) {
             is ElmAnonymousFunction -> {
-                val inferenceResult = InferenceScope(visibleNames.toMutableSet(), this).infer(operand)
+                val inferenceResult = InferenceScope(shadowableNames.toMutableSet(), this).infer(operand)
                 diagnostics += inferenceResult.diagnostics
                 inferenceResult.ty
             }

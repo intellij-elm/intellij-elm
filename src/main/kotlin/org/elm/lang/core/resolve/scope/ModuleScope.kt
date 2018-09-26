@@ -57,7 +57,7 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-    fun getVisibleValues(): List<ElmNamedElement> {
+    fun getVisibleValues(includeImports: Boolean = true): List<ElmNamedElement> {
         val globallyExposedValues =
         // TODO [kl] re-think this lame hack to avoid an infinite loop
                 if (elmFile.isCore())
@@ -65,9 +65,13 @@ class ModuleScope(val elmFile: ElmFile) {
                 else
                     GlobalScope(elmFile.project).getVisibleValues()
         val topLevelValues = getDeclaredValues()
-        val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                .flatMap { getVisibleImportNames(it) }
-        return listOf(globallyExposedValues, topLevelValues, importedValues).flatten()
+        return if (includeImports) {
+            val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
+                    .flatMap { getVisibleImportNames(it) }
+            listOf(globallyExposedValues, topLevelValues, importedValues).flatten()
+        } else {
+            globallyExposedValues + topLevelValues
+        }
     }
 
 

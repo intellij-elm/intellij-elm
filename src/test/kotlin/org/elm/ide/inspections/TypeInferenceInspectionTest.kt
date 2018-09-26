@@ -227,6 +227,16 @@ main = <error descr="Type mismatch.Required: List StringFound: List Float">[1.0]
     fun `test mismatched elements`() = checkByText("""
 main = ["", <error descr="Type mismatch.Required: StringFound: Float">1.0</error>, ()]
 """)
+
+    fun `test matched lambda type with closure`() = checkByText("""
+main : String -> (String -> String)
+main a = (\_ -> a)
+""")
+
+    fun `test mismatched lambda type with closure`() = checkByText("""
+main : Bool -> (String -> String)
+main a = <error descr="Type mismatch.Required: String -> StringFound: unknown -> Bool">(\_ -> a)</error>
+""")
 }
 
 
