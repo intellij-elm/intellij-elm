@@ -3,9 +3,9 @@ package org.elm.lang.core.types
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentsOfType
+import org.elm.lang.core.diagnostics.ArgumentCountError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.RedefinitionError
-import org.elm.lang.core.diagnostics.TooManyArgumentsError
 import org.elm.lang.core.diagnostics.TypeMismatchError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
@@ -92,9 +92,11 @@ private class InferenceScope(
         }
 
         val types = typeRef.allParameters
-        decl.patterns.zip(types).forEach { (pat, type) -> bindPattern(this, pat, type.ty) }
+        decl.patterns.zip(types).forEach { (pat, type) -> bindPattern(pat, type.ty) }
         return typeRef.ty
     }
+
+    //<editor-fold desc="inference">
 
     private fun inferType(expr: ElmExpression): Ty {
         val parts = expr.parts.map { part ->
@@ -198,22 +200,12 @@ private class InferenceScope(
         // If the value is a parameter, its type has already been added to bindings
         bindings[ref]?.let { return it }
 
-        if (ref is ElmUnionMember) {
-            val decl = ref.parentOfType<ElmTypeDeclaration>()?.ty ?: return TyUnknown
-            val params = ref.allParameters.map { it.ty }.toList()
-
-            return if (params.isNotEmpty()) {
-                // Constructors with parameters are functions returning the type.
-                TyFunction(params, decl)
-            } else {
-                // Constructors without parameters are just instances of the type, since there are no nullary functions.
-                decl
-            }
+        return if (ref is ElmUnionMember) {
+            ref.ty
         } else {
             val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
-            return inferType(decl)
+            inferType(decl)
         }
-
     }
 
     private fun inferType(call: ElmFunctionCall): Ty {
@@ -223,7 +215,7 @@ private class InferenceScope(
         val paramTys = if (targetTy is TyFunction) targetTy.parameters else listOf()
 
         if (arguments.size > paramTys.size) {
-            diagnostics.add(TooManyArgumentsError(call, arguments.size, paramTys.size))
+            diagnostics.add(ArgumentCountError(call, arguments.size, paramTys.size))
         }
 
         if (targetTy !is TyFunction) return TyUnknown
@@ -270,6 +262,78 @@ private class InferenceScope(
         return ty
     }
 
+    //</editor-fold>
+    //<editor-fold desc="binding">
+
+    private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty) {
+        return when (pat) {
+            is ElmAnythingPattern -> {
+            }
+            is ElmConsPattern -> {
+            } // TODO This is a partial pattern error in function parameters
+            is ElmListPattern -> {
+            } // This is a partial pattern error in function parameters
+            is ElmConstantTag -> {
+            } // This is a partial pattern error in function parameters
+            is ElmPattern -> {
+                bindPattern(pat.child, ty)
+                bindPattern(pat.patternAs, ty)
+            }
+            is ElmLowerPattern -> setBinding(pat, ty)
+            is ElmRecordPattern -> bindPattern(pat, ty)
+            is ElmTuplePattern -> bindPattern(pat, ty)
+            is ElmUnionPattern -> bindPattern(pat)
+            is ElmUnit -> {
+            }
+            else -> error("unexpected type $pat")
+        }
+    }
+
+    private fun bindPattern(pat: ElmPatternAs?, ty: Ty) {
+        if (pat != null) setBinding(pat, ty)
+    }
+
+    private fun bindPattern(pat: ElmUnionPattern) {
+        // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing to bind
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.ty ?: return
+        val patternList = pat.patternList
+
+        fun issueError(actual: Int, expected: Int) {
+            diagnostics += ArgumentCountError(pat, actual, expected)
+            pat.namedParameters.forEach { setBinding(it, TyUnknown) }
+        }
+
+        if (memberTy is TyFunction) {
+            if (patternList.size != memberTy.parameters.size) {
+                issueError(patternList.size, memberTy.parameters.size)
+            } else {
+                for ((p, t) in patternList.zip(memberTy.parameters)) {
+                    bindPattern(p, t)
+                }
+            }
+        } else if (patternList.isNotEmpty()) {
+            issueError(patternList.size, 0)
+        }
+    }
+
+    private fun bindPattern(pat: ElmTuplePattern, ty: Ty) {
+        if (ty !is TyTuple) return // TODO: report error
+        pat.patternList
+                .zip(ty.types)
+                .forEach { (pat, type) -> bindPattern(pat.child, type) }
+    }
+
+    private fun bindPattern(pat: ElmRecordPattern, ty: Ty) {
+        if (ty !is TyRecord) return // TODO: report error
+        for (id in pat.lowerPatternList) {
+            val fieldTy = ty.fields[id.name] ?: continue // TODO: report error
+            bindPattern(id, fieldTy)
+        }
+    }
+
+    //</editor-fold>
+    //<editor-fold desc="coercion">
+
     private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
@@ -302,6 +366,8 @@ private class InferenceScope(
     }
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) = ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+
+    //</editor-fold>
 }
 
 
@@ -312,51 +378,6 @@ data class InferenceResult(private val bindings: Map<ElmNamedElement, Ty>,
                            val diagnostics: List<ElmDiagnostic>,
                            val ty: Ty) {
     fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown
-}
-
-private fun bindPattern(ctx: InferenceScope, pat: ElmFunctionParamOrPatternChildTag, ty: Ty) {
-    return when (pat) {
-        is ElmAnythingPattern -> {
-        }
-        is ElmConsPattern -> {
-        } // TODO This is a partial pattern error in function parameters
-        is ElmListPattern -> {
-        } // This is a partial pattern error in function parameters
-        is ElmConstantTag -> {
-        } // This is a partial pattern error in function parameters
-        is ElmPattern -> {
-            bindPattern(ctx, pat.child, ty)
-            bindPattern(ctx, pat.patternAs, ty)
-        }
-        is ElmLowerPattern -> ctx.setBinding(pat, ty)
-        is ElmRecordPattern -> bindPattern(ctx, pat, ty)
-        is ElmTuplePattern -> bindPattern(ctx, pat, ty)
-        is ElmUnionPattern -> {
-            // TODO this can appear in function params if there is only one union case (i.e. a wrapper)
-        }
-        is ElmUnit -> {
-        }
-        else -> error("unexpected type $pat")
-    }
-}
-
-private fun bindPattern(ctx: InferenceScope, pat: ElmPatternAs?, ty: Ty) {
-    if (pat != null) ctx.setBinding(pat, ty)
-}
-
-private fun bindPattern(ctx: InferenceScope, pat: ElmTuplePattern, ty: Ty) {
-    if (ty !is TyTuple) return // TODO: report error
-    pat.patternList
-            .zip(ty.types)
-            .forEach { (pat, type) -> bindPattern(ctx, pat.child, type) }
-}
-
-private fun bindPattern(ctx: InferenceScope, pat: ElmRecordPattern, ty: Ty) {
-    if (ty !is TyRecord) return // TODO: report error
-    for (id in pat.lowerPatternList) {
-        val fieldTy = ty.fields[id.name] ?: continue // TODO: report error
-        bindPattern(ctx, id, fieldTy)
-    }
 }
 
 /** Get the type for one part of a type ref */
@@ -411,10 +432,24 @@ private val ElmTypeRef.ty: Ty
 private val ElmTypeDeclaration.ty: Ty
     get() = TyUnion(moduleName, name, lowerTypeNameList.map { TyVar(it.name) })
 
+private val ElmUnionMember.ty: Ty
+    get() {
+        val decl = parentOfType<ElmTypeDeclaration>()?.ty ?: return TyUnknown
+        val params = allParameters.map { it.ty }.toList()
+
+        return if (params.isNotEmpty()) {
+            // Constructors with parameters are functions returning the type.
+            TyFunction(params, decl)
+        } else {
+            // Constructors without parameters are just instances of the type, since there are no nullary functions.
+            decl
+        }
+    }
+
 /** Return the module name for built-in types, or null */
 private fun builtInModule(name: String): String? {
     return when (name) {
-        "Int", "Float" -> "Basics"
+        "Int", "Float", "Bool" -> "Basics"
         "String" -> "String"
         "Char" -> "Char"
         "List" -> "List"

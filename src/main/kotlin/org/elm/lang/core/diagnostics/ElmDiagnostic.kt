@@ -8,7 +8,7 @@ sealed class ElmDiagnostic(val element: PsiElement, val endElement: PsiElement? 
     abstract val message: String
 }
 
-class TooManyArgumentsError(
+class ArgumentCountError(
         element: PsiElement,
         private val actual: Int,
         private val expected: Int

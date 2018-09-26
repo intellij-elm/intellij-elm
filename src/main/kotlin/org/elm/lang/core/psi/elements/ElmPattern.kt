@@ -1,10 +1,8 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmConsPatternChildTag
-import org.elm.lang.core.psi.ElmFunctionParamTag
-import org.elm.lang.core.psi.ElmPatternChildTag
+import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.*
 
 
 class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag, ElmFunctionParamTag, ElmPatternChildTag {

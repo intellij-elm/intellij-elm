@@ -237,6 +237,34 @@ main a = (\_ -> a)
 main : Bool -> (String -> String)
 main a = <error descr="Type mismatch.Required: String -> StringFound: unknown -> Bool">(\_ -> a)</error>
 """)
+
+    fun `test matched union pattern in parameter`() = checkByText("""
+type Foo = Foo String
+
+main : Foo -> String
+main (Foo foo) = foo
+""")
+
+    fun `test union pattern in parameter with too many args`() = checkByText("""
+type Foo = Foo String
+
+main : Foo -> String
+main (<error descr="The function expects 1 argument, but it got 2 instead.">Foo foo bar</error>) = foo
+""")
+
+    fun `test union pattern in parameter with too few args`() = checkByText("""
+type Foo = Foo String String
+
+main : Foo -> String
+main (<error descr="The function expects 2 arguments, but it got 1 instead.">Foo foo</error>) = foo
+""")
+
+    fun `test test union pattern in parameter with too many args for non-constructor`() = checkByText("""
+type Foo = Foo
+
+main : Foo -> String
+main (<error descr="This value is not a function, but it was given 1 argument.">Foo foo</error>) = foo
+""")
 }
 
 
