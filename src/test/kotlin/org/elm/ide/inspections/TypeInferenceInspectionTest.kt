@@ -259,11 +259,31 @@ main : Foo -> String
 main (<error descr="The function expects 2 arguments, but it got 1 instead.">Foo foo</error>) = foo
 """)
 
-    fun `test test union pattern in parameter with too many args for non-constructor`() = checkByText("""
+    fun `test union pattern in parameter with too many args for non-constructor`() = checkByText("""
 type Foo = Foo
 
 main : Foo -> String
 main (<error descr="This value is not a function, but it was given 1 argument.">Foo foo</error>) = foo
+""")
+
+    fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
+main : Bool
+main =
+    let
+        foo : Bool
+        foo = <error descr="Type mismatch.Required: BoolFound: String">""</error>
+    in
+        foo
+""")
+
+    fun `test let-in with mismatched type from annotated inner func`() = checkByText("""
+main : String
+main =
+    <error descr="Type mismatch.Required: StringFound: Bool">let
+        foo : Bool
+        foo = True
+    in
+        foo</error>
 """)
 }
 

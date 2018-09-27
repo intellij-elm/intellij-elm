@@ -63,6 +63,23 @@ private class InferenceScope(
         return InferenceResult(bindings, diagnostics, ty)
     }
 
+    private fun infer(letIn: ElmLetIn): InferenceResult {
+        for (decl in letIn.valueDeclarationList) {
+            val result = inferChild { infer(decl) }
+            resolvedDeclarations[decl] = result.ty
+            shadowableNames += decl.declaredParameters().mapNotNull { it.name }
+        }
+
+        val exprTy = letIn.expression?.let { inferType(it) } ?: TyUnknown
+        return InferenceResult(emptyMap(), diagnostics, exprTy)
+    }
+
+    private inline fun inferChild(block: InferenceScope.() -> InferenceResult): InferenceResult {
+        val result = InferenceScope(shadowableNames.toMutableSet(), this).block()
+        diagnostics += result.diagnostics
+        return result
+    }
+
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
         if (elementName in shadowableNames) {
@@ -117,16 +134,12 @@ private class InferenceScope(
 
     private fun inferType(operand: ElmOperandTag): Ty {
         return when (operand) {
-            is ElmAnonymousFunction -> {
-                val inferenceResult = InferenceScope(shadowableNames.toMutableSet(), this).infer(operand)
-                diagnostics += inferenceResult.diagnostics
-                inferenceResult.ty
-            }
+            is ElmAnonymousFunction -> inferChild { infer(operand) }.ty
             is ElmCaseOf -> TyUnknown // TODO implement
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFunctionCall -> inferType(operand)
             is ElmIfElse -> inferType(operand)
-            is ElmLetIn -> TyUnknown // TODO implement
+            is ElmLetIn -> inferChild { infer(operand) }.ty
             is ElmList -> inferType(operand)
             is ElmCharConstant -> TyChar
             is ElmStringConstant -> TyString
@@ -242,22 +255,22 @@ private class InferenceScope(
         return inferType(decl)
     }
 
+    // Currently, we don't use the inference if there's no annotation. It would be nice to do so,
+    // but we would need to deal with mutual recursion.
     private fun inferType(decl: ElmValueDeclaration): Ty {
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one, otherwise just count the parameters
         var ty = decl.typeAnnotation?.typeRef?.ty
         if (ty == null) {
-            // If there's no annotation, just set all the parameters to unknown for now
-            // TODO use the inference
+            // If there's no annotation, we can at least tell if the type is a function and how many
+            // parameters it has
             ty = decl.functionDeclarationLeft?.patterns
                     ?.map { TyUnknown }?.toList()
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { TyFunction(it, TyUnknown) }
         }
-        if (ty == null) {
-            return TyUnknown
-        }
+        if (ty == null) ty = TyUnknown
         resolvedDeclarations[decl] = ty
         return ty
     }
