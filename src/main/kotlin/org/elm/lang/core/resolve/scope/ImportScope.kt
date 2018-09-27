@@ -5,7 +5,7 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.stubs.index.ElmModulesIndex
+import org.elm.lang.core.stubs.index.ElmModules
 
 
 /**
@@ -23,7 +23,7 @@ class ImportScope(val elmFile: ElmFile) {
          */
         fun fromImportDecl(importDecl: ElmImportClause): ImportScope? {
             val moduleName = importDecl.moduleQID.text
-            return ElmModulesIndex.get(moduleName, importDecl.project)
+            return ElmModules.get(moduleName, importDecl.project, importDecl.elmProject)
                     ?.let { ImportScope(it.elmFile) }
         }
 
@@ -34,7 +34,7 @@ class ImportScope(val elmFile: ElmFile) {
          */
         fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): List<ImportScope> {
             // handle implicit imports from Core
-            val implicitScopes = ElmModulesIndex.getAll(listOf(qualifierPrefix), elmFile.project)
+            val implicitScopes = ElmModules.getAll(listOf(qualifierPrefix), elmFile.project, elmFile.elmProject)
                     .filter { it.elmFile.isCore() && qualifierPrefix in GlobalScope.defaultImports }
                     .map { ImportScope(it.elmFile) }
 

@@ -11,6 +11,8 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.stubs.*
+import org.elm.workspace.ElmProject
+import org.elm.workspace.elmWorkspace
 
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage) {
@@ -39,6 +41,10 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         val nameWithExtension = if (name.endsWith(".elm")) name else "$name.elm"
         return super.setName(nameWithExtension)
     }
+
+    val elmProject: ElmProject?
+        // TODO [kl] why would virtualFile be null? I'm guessing it has to do with how the light integration tests work?
+        get() = virtualFile?.let { project.elmWorkspace.findProjectForFile(it) }
 
     fun getModuleDecl() =
             getStubOrPsiChild(ElmModuleDeclarationStub.Type)

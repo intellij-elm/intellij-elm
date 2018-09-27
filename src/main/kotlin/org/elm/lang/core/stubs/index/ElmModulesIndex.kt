@@ -14,7 +14,15 @@ import org.elm.lang.core.stubs.ElmModuleDeclarationStub
 
 private val logger = Logger.getInstance(ElmModulesIndex::class.java)
 
-
+/**
+ * Low-level index of all known Elm modules in an IntelliJ project.
+ *
+ * **IMPORTANT:** For most application code, this is far too general. Typically you would
+ * want to restrict the module name space by an Elm project, as defined by an `elm.json` file.
+ * In which case you should instead use [ElmModules].
+ *
+ * @see ElmModules
+ */
 class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
 
     override fun getVersion() =

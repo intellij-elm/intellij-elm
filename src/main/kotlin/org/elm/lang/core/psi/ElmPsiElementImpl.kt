@@ -39,7 +39,7 @@ abstract class ElmPsiElementImpl(node: ASTNode) : ASTWrapperPsiElement(node), El
         get() = containingFile as ElmFile
 
     override val elmProject: ElmProject?
-        get() = project.elmWorkspace.findProjectForFile(elmFile.virtualFile)
+        get() = elmFile.elmProject
 
     // Make the type-system happy by using our reference interface instead of PsiReference
     override fun getReferences(): Array<ElmReference> {
