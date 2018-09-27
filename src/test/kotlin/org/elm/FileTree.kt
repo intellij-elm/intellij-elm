@@ -35,6 +35,7 @@ import com.intellij.psi.*
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.openapiext.fullyRefreshDirectory
+import org.elm.workspace.ElmPackageProject
 import org.intellij.lang.annotations.Language
 
 
@@ -156,7 +157,8 @@ class TestProject(
 
     inline fun <reified T : ElmReferenceElement> checkReferenceIsResolved(
             path: String,
-            shouldNotResolve: Boolean = false
+            shouldNotResolve: Boolean = false,
+            toPackage: String? = null
     ) {
         val ref = findElementInFile<T>(path)
         val res = ref.reference.resolve()
@@ -167,6 +169,13 @@ class TestProject(
         } else {
             check(res != null) {
                 "Failed to resolve the reference `${ref.text}` in `$path`."
+            }
+            if (toPackage != null && res != null) {
+                val pkgProject = res.elmProject as? ElmPackageProject
+                val pkg = pkgProject?.let { "${it.name} ${it.version}" } ?: "<package not found>"
+                check(pkg == toPackage) {
+                    "Expected to be resolved to $toPackage but actually resolved to $pkg"
+                }
             }
         }
     }

@@ -250,17 +250,21 @@ class ElmWorkspaceService(
     private val directoryIndex: LightDirectoryIndex<ElmProject> =
             LightDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
                 val visited = mutableSetOf<VirtualFile>()
-                fun put(file: VirtualFile?, elmProject: ElmProject) {
+                fun put(path: Path?, elmProject: ElmProject) {
+                    if (path == null) return
+                    val file = LocalFileSystem.getInstance().findFileByPath(path)
                     if (file == null || file in visited) return
                     visited += file
                     index.putInfo(file, elmProject)
                 }
 
                 for (project in allProjects) {
-                    put(LocalFileSystem.getInstance().findFileByPath(project.projectDirPath), project)
-                    // TODO [kl] re-visit this when we allow projects within projects
-                    // We probably will need to register additional directories based
-                    // on how [LightDirectoryIndex] walks up the directory tree.
+                    for (sourceDir in project.sourceDirectories) {
+                        put(project.projectDirPath.resolve(sourceDir), project)
+                    }
+                    for (pkg in project.allResolvedDependencies) {
+                        put(pkg.projectDirPath, pkg)
+                    }
                 }
             })
 

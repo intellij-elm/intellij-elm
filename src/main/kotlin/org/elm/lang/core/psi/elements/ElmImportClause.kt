@@ -11,7 +11,10 @@ import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.findFileByPath
-import org.elm.workspace.*
+import org.elm.workspace.ElmApplicationProject
+import org.elm.workspace.ElmPackageProject
+import org.elm.workspace.ElmProject
+import org.elm.workspace.Version
 
 private val log = logger<ElmImportClause>()
 
@@ -55,13 +58,13 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
                 }
 
                 override fun getVariants(): Array<ElmNamedElement> {
-                    val virtualFile = element.elmFile.virtualFile
-                    val elmProject = element.project.elmWorkspace.findProjectForFile(virtualFile)
+                    val elmProject = element.elmProject
 
                     // The lightweight integration tests do not have an associated Elm Project,
-                    // so we will just treat it as if all Elm files were in scope.
+                    // so we will just treat them as if all Elm files were in scope.
+                    // TODO [kl] re-visit this as it could mask a real bug.
                     val allowAllProjects = if (elmProject == null) {
-                        log.warn("Could not find Elm project containing ${virtualFile.path}")
+                        log.warn("Could not find Elm project containing ${elmFile.virtualFile.path}")
                         true
                     } else {
                         false
@@ -95,11 +98,13 @@ private fun ElmProject.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean
     // check if the module is reachable from the top-level of the containing Elm project
     val virtualDirs = sourceDirectories.map { projectDirPath.resolve(it) }
             .mapNotNull { LocalFileSystem.getInstance().findFileByPath(it) }
-    if (virtualDirs.none { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null })
-        return false
+    if (virtualDirs.any { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null })
+        return true
 
-    // TODO [kl] check if the module is reachable from a DIRECT dependency
+    // check if the module is reachable from a direct dependency
+    if (dependencies.any { it.exposedModules.contains(moduleDeclaration.name) })
+        return true
 
 
-    return true
+    return false
 }

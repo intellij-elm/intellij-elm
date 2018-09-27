@@ -8,6 +8,8 @@ import com.intellij.psi.StubBasedPsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.resolve.reference.ElmReference
+import org.elm.workspace.ElmProject
+import org.elm.workspace.elmWorkspace
 
 
 /**
@@ -18,6 +20,14 @@ interface ElmPsiElement : PsiElement {
      * Get the file containing this element as an [ElmFile]
      */
     val elmFile: ElmFile
+
+    /**
+     * Get the Elm project which this element's file belongs to.
+     *
+     * Returns null if the containing Elm project's manifest (`elm.json`) has not
+     * yet been attached to the workspace.
+     */
+    val elmProject: ElmProject?
 }
 
 /**
@@ -27,6 +37,9 @@ abstract class ElmPsiElementImpl(node: ASTNode) : ASTWrapperPsiElement(node), El
 
     override val elmFile: ElmFile
         get() = containingFile as ElmFile
+
+    override val elmProject: ElmProject?
+        get() = project.elmWorkspace.findProjectForFile(elmFile.virtualFile)
 
     // Make the type-system happy by using our reference interface instead of PsiReference
     override fun getReferences(): Array<ElmReference> {
@@ -51,6 +64,8 @@ abstract class ElmStubbedElement<StubT : StubElement<*>>
     override val elmFile: ElmFile
         get() = containingFile as ElmFile
 
+    override val elmProject: ElmProject?
+        get() = project.elmWorkspace.findProjectForFile(elmFile.virtualFile)
 
     // Make the type-system happy by using our reference interface instead of PsiReference
     override fun getReferences(): Array<ElmReference> {

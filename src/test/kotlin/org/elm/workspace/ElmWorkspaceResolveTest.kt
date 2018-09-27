@@ -112,6 +112,67 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
     }
 
+    fun `test resolves modules provided by packages which are direct dependencies`() {
+        buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.19.0",
+                "dependencies": {
+                    "direct": {
+                        "elm/time": "1.0.0"
+                    },
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("src") {
+                elm("Main.elm", """
+                    import Time
+                           --^
+                """.trimIndent())
+            }
+        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", toPackage = "elm/time 1.0.0")
+    }
+
+    // TODO [kl] re-enable once a distinction is made between direct and indirect deps
+//    fun `test does not resolve modules which are not direct dependencies`() {
+//        buildProject {
+//            project("elm.json", """
+//            {
+//                "type": "application",
+//                "source-directories": [
+//                    "src"
+//                ],
+//                "elm-version": "0.19.0",
+//                "dependencies": {
+//                    "direct": {},
+//                    "indirect": {
+//                        "elm/time": "1.0.0"
+//                    }
+//                },
+//                "test-dependencies": {
+//                    "direct": {},
+//                    "indirect": {}
+//                }
+//            }
+//            """.trimIndent())
+//            dir("src") {
+//                elm("Main.elm", """
+//                    import Time
+//                           --^
+//                """.trimIndent())
+//            }
+//        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
+//    }
+
 
     fun buildProject(builder: FileTreeBuilder.() -> Unit) =
             fileTree(builder).asyncCreateWithAutoDiscover().get()
