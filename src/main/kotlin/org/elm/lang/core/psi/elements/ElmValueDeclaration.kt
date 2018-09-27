@@ -39,6 +39,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
 
+    /** The pattern if this declaration is binding multiple names. */
+    // In Elm 0.19, this is only valid inside a let block
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
 

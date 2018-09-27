@@ -301,6 +301,17 @@ main (<error descr="Pattern does not cover all possibilities">""</error>) = ()
     fun `test partial pattern in lambda parameter from constant`() = checkByText("""
 main = (\<error descr="Pattern does not cover all possibilities">""</error> -> "")
 """)
+
+    fun `test bad self-recursion`() = checkByText("""
+main : Bool
+<error descr="Infinite recursion">main = main</error>
+""")
+
+    fun `test bad mutual recursion`() = checkByText("""
+<error descr="Infinite recursion">foo = bar</error>
+
+<error descr="Infinite recursion">bar = foo</error>
+""")
 }
 
 

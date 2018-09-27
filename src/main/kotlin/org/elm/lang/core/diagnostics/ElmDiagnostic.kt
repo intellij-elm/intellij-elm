@@ -33,6 +33,13 @@ class PartialPatternError(
         get() = "Pattern does not cover all possibilities"
 }
 
+class BadRecursionError(
+        element: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Infinite recursion"
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,

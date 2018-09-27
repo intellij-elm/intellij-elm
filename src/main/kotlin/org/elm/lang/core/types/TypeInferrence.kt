@@ -8,7 +8,8 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ModuleScope
 
-fun ElmValueDeclaration.inference(): InferenceResult { // TODO cache
+fun ElmValueDeclaration.inference(): InferenceResult = inference(emptySet()) // TODO cache
+fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     val visibleNames = HashSet<String>()
 
     // Add any visible names except imports.
@@ -21,14 +22,16 @@ fun ElmValueDeclaration.inference(): InferenceResult { // TODO cache
     // Add the function name itself name itself
     declaredNames(false).mapNotNullTo(visibleNames) { it.name }
 
-    return InferenceScope(visibleNames, null).infer(this)
+    return InferenceScope(visibleNames, activeScopes.toMutableSet(), null).infer(this)
 }
 
 /**
  * @property shadowableNames names of declared elements that will cause a shadowing error if redeclared
+ * @property activeScopes scopes that are currently being inferred, to detect invalid recursion; copied from parent
  */
 private class InferenceScope(
         private val shadowableNames: MutableSet<String>,
+        private val activeScopes: MutableSet<ElmValueDeclaration>,
         parent: InferenceScope?
 ) {
     // cache for declared tys referenced in this scope; shared with parent
@@ -40,10 +43,18 @@ private class InferenceScope(
     // errors encountered during inference
     private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
 
-    fun infer(valueDeclaration: ElmValueDeclaration): InferenceResult {
-        val declaredTy = bindParameters(valueDeclaration)
+    //<editor-fold desc="entry points">
 
-        val expr = valueDeclaration.expression
+    fun infer(declaration: ElmValueDeclaration): InferenceResult {
+        if (checkBadRecursion(declaration)) {
+            return InferenceResult(emptyMap(), diagnostics, TyUnknown)
+        }
+
+        activeScopes += declaration
+
+        val declaredTy = bindParameters(declaration)
+
+        val expr = declaration.expression
         if (expr != null) {
             val bodyTy = inferType(expr)
             val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
@@ -72,43 +83,24 @@ private class InferenceScope(
     }
 
     private inline fun inferChild(block: InferenceScope.() -> InferenceResult): InferenceResult {
-        val result = InferenceScope(shadowableNames.toMutableSet(), this).block()
+        val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes.toMutableSet(), this).block()
         diagnostics += result.diagnostics
         return result
     }
 
-    fun setBinding(element: ElmNamedElement, ty: Ty) {
-        val elementName = element.name
-        if (elementName in shadowableNames) {
-            diagnostics += RedefinitionError(element)
-        } else {
-            bindings[element] = ty
-            if (elementName != null) shadowableNames += elementName
+    private fun checkBadRecursion(declaration: ElmValueDeclaration): Boolean {
+        val isRecursive = declaration in activeScopes
+        // Recursion is only allowed for functions with parameters
+        val isBad = isRecursive &&
+                declaration.functionDeclarationLeft.let { it == null || it.patterns.firstOrNull() == null }
+        if (isBad) {
+            diagnostics += BadRecursionError(declaration)
         }
+
+        return isBad
     }
 
-    /** @return the entire declared type, or [TyUnknown] if no annotation exists */
-    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Ty {
-        // TODO [drop 0.18] remove this if
-        if (valueDeclaration.pattern != null || valueDeclaration.operatorDeclarationLeft != null) {
-            // this is 0.18 only, so we aren't going to bother implementing it
-            bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
-                    .associate { it to TyUnknown }
-            return TyUnknown
-        }
-
-        val decl = valueDeclaration.functionDeclarationLeft!!
-        val typeRef = valueDeclaration.typeAnnotation?.typeRef
-
-        if (typeRef == null) {
-            decl.patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
-            return TyUnknown
-        }
-
-        decl.patterns.zip(typeRef.allParameters).forEach { (pat, type) -> bindPattern(pat, type.ty, true) }
-        return typeRef.ty
-    }
-
+    //</editor-fold>
     //<editor-fold desc="inference">
 
     private fun inferType(expr: ElmExpression): Ty {
@@ -256,23 +248,52 @@ private class InferenceScope(
     private fun inferType(decl: ElmValueDeclaration): Ty {
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
-        // Use the type annotation if there is one, otherwise just count the parameters
+        // For performance, use the type annotation if there is one
         var ty = decl.typeAnnotation?.typeRef?.ty
         if (ty == null) {
-            // If there's no annotation, we can at least tell if the type is a function and how many
-            // parameters it has
-            ty = decl.functionDeclarationLeft?.patterns
-                    ?.map { TyUnknown }?.toList()
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.let { TyFunction(it, TyUnknown) }
+            // Do a top level inference, since decl isn't a child of this scope
+            val result = decl.inference(activeScopes)
+            diagnostics += result.diagnostics
+            ty = result.ty
         }
-        if (ty == null) ty = TyUnknown
         resolvedDeclarations[decl] = ty
         return ty
     }
 
     //</editor-fold>
     //<editor-fold desc="binding">
+    /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
+    fun setBinding(element: ElmNamedElement, ty: Ty) {
+        val elementName = element.name
+        if (elementName in shadowableNames) {
+            diagnostics += RedefinitionError(element)
+        } else {
+            bindings[element] = ty
+            if (elementName != null) shadowableNames += elementName
+        }
+    }
+
+    /** @return the entire declared type, or [TyUnknown] if no annotation exists */
+    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Ty {
+        // TODO [drop 0.18] remove this if
+        if (valueDeclaration.pattern != null || valueDeclaration.operatorDeclarationLeft != null) {
+            // this is 0.18 only, so we aren't going to bother implementing it
+            bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
+                    .associate { it to TyUnknown }
+            return TyUnknown
+        }
+
+        val decl = valueDeclaration.functionDeclarationLeft!!
+        val typeRef = valueDeclaration.typeAnnotation?.typeRef
+
+        if (typeRef == null) {
+            decl.patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
+            return TyUnknown
+        }
+
+        decl.patterns.zip(typeRef.allParameters).forEach { (pat, type) -> bindPattern(pat, type.ty, true) }
+        return typeRef.ty
+    }
 
     private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {
         when (pat) {
