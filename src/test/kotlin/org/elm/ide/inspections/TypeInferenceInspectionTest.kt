@@ -285,6 +285,22 @@ main =
     in
         foo</error>
 """)
+
+    fun `test partial pattern in function parameter from cons`() = checkByText("""
+main (<error descr="Pattern does not cover all possibilities">x :: []</error>) = ()
+""")
+
+    fun `test partial pattern in function parameter from list`() = checkByText("""
+main (<error descr="Pattern does not cover all possibilities">[x]</error>) = ()
+""")
+
+    fun `test partial pattern in function parameter from constant`() = checkByText("""
+main (<error descr="Pattern does not cover all possibilities">""</error>) = ()
+""")
+
+    fun `test partial pattern in lambda parameter from constant`() = checkByText("""
+main = (\<error descr="Pattern does not cover all possibilities">""</error> -> "")
+""")
 }
 
 

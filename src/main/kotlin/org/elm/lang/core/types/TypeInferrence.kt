@@ -3,10 +3,7 @@ package org.elm.lang.core.types
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentsOfType
-import org.elm.lang.core.diagnostics.ArgumentCountError
-import org.elm.lang.core.diagnostics.ElmDiagnostic
-import org.elm.lang.core.diagnostics.RedefinitionError
-import org.elm.lang.core.diagnostics.TypeMismatchError
+import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -57,7 +54,7 @@ private class InferenceScope(
 
     private fun infer(lambda: ElmAnonymousFunction): InferenceResult {
         // TODO [unification] infer param types
-        lambda.namedParameters.forEach { setBinding(it, TyUnknown) }
+        lambda.patternList.forEach { bindPattern(it, TyUnknown, true) }
         val bodyTy = inferType(lambda.expression)
         val ty = TyFunction(lambda.patternList.map { TyUnknown }, bodyTy)
         return InferenceResult(bindings, diagnostics, ty)
@@ -104,12 +101,11 @@ private class InferenceScope(
         val typeRef = valueDeclaration.typeAnnotation?.typeRef
 
         if (typeRef == null) {
-            decl.namedParameters.forEach { setBinding(it, TyUnknown) }
+            decl.patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
             return TyUnknown
         }
 
-        val types = typeRef.allParameters
-        decl.patterns.zip(types).forEach { (pat, type) -> bindPattern(pat, type.ty) }
+        decl.patterns.zip(typeRef.allParameters).forEach { (pat, type) -> bindPattern(pat, type.ty, true) }
         return typeRef.ty
     }
 
@@ -278,24 +274,27 @@ private class InferenceScope(
     //</editor-fold>
     //<editor-fold desc="binding">
 
-    private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty) {
-        return when (pat) {
+    private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {
+        when (pat) {
             is ElmAnythingPattern -> {
             }
             is ElmConsPattern -> {
-            } // TODO This is a partial pattern error in function parameters
+                if (isParameter) diagnostics += PartialPatternError(pat)
+            }
             is ElmListPattern -> {
-            } // This is a partial pattern error in function parameters
+                if (isParameter) diagnostics += PartialPatternError(pat)
+            }
             is ElmConstantTag -> {
-            } // This is a partial pattern error in function parameters
+                if (isParameter) diagnostics += PartialPatternError(pat)
+            }
             is ElmPattern -> {
-                bindPattern(pat.child, ty)
+                bindPattern(pat.child, ty, isParameter)
                 bindPattern(pat.patternAs, ty)
             }
             is ElmLowerPattern -> setBinding(pat, ty)
-            is ElmRecordPattern -> bindPattern(pat, ty)
-            is ElmTuplePattern -> bindPattern(pat, ty)
-            is ElmUnionPattern -> bindPattern(pat)
+            is ElmRecordPattern -> bindPattern(pat, ty, isParameter)
+            is ElmTuplePattern -> bindPattern(pat, ty, isParameter)
+            is ElmUnionPattern -> bindPattern(pat, isParameter)
             is ElmUnit -> {
             }
             else -> error("unexpected type $pat")
@@ -306,7 +305,7 @@ private class InferenceScope(
         if (pat != null) setBinding(pat, ty)
     }
 
-    private fun bindPattern(pat: ElmUnionPattern) {
+    private fun bindPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing to bind
         val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.ty ?: return
         val patternList = pat.patternList
@@ -321,7 +320,7 @@ private class InferenceScope(
                 issueError(patternList.size, memberTy.parameters.size)
             } else {
                 for ((p, t) in patternList.zip(memberTy.parameters)) {
-                    bindPattern(p, t)
+                    bindPattern(p, t, isParameter)
                 }
             }
         } else if (patternList.isNotEmpty()) {
@@ -329,18 +328,18 @@ private class InferenceScope(
         }
     }
 
-    private fun bindPattern(pat: ElmTuplePattern, ty: Ty) {
+    private fun bindPattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
         if (ty !is TyTuple) return // TODO: report error
         pat.patternList
                 .zip(ty.types)
-                .forEach { (pat, type) -> bindPattern(pat.child, type) }
+                .forEach { (pat, type) -> bindPattern(pat.child, type, isParameter) }
     }
 
-    private fun bindPattern(pat: ElmRecordPattern, ty: Ty) {
+    private fun bindPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
         if (ty !is TyRecord) return // TODO: report error
         for (id in pat.lowerPatternList) {
             val fieldTy = ty.fields[id.name] ?: continue // TODO: report error
-            bindPattern(id, fieldTy)
+            bindPattern(id, fieldTy, isParameter)
         }
     }
 

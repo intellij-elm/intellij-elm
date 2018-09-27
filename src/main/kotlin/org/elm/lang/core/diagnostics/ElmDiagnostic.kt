@@ -26,6 +26,13 @@ class RedefinitionError(
         get() = "Conflicting name declaration"
 }
 
+class PartialPatternError(
+        element: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Pattern does not cover all possibilities"
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,
