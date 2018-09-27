@@ -30,7 +30,6 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
     protected val elmWorkspaceDirectory: VirtualFile
         get() = myFixture.findFileInTempDir(".")
 
-
     protected fun FileTree.asyncCreateWithAutoDiscover(): CompletableFuture<TestProject> {
         val testProject = create(project, elmWorkspaceDirectory)
         return project.elmWorkspace.asyncDiscoverAndRefresh().thenApply { testProject }

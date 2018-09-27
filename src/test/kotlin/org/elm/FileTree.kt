@@ -175,7 +175,7 @@ class TestProject(
         val vFile = root.findFileByRelativePath(path)
                 ?: error("No `$path` file in test project")
         val file = PsiManager.getInstance(project).findFile(vFile)!!
-        return findElementInFile(file, "^")
+        return findElementInFile(file, "--^")
     }
 
     fun psiFile(path: String): PsiFileSystemItem {
