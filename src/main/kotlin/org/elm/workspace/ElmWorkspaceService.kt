@@ -28,11 +28,13 @@ import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
+import org.elm.openapiext.findFileBreadthFirst
 import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.modules
 import org.elm.openapiext.pathAsPath
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
+import org.elm.workspace.ElmToolchain.Companion.ELM_MANIFEST_FILE_NAMES
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
@@ -220,11 +222,10 @@ class ElmWorkspaceService(
     fun asyncDiscoverAndRefresh(): CompletableFuture<List<ElmProject>> {
         if (hasAtLeastOneValidProject())
             return CompletableFuture.completedFuture(allProjects)
-
         val guessManifest = intellijProject.modules
                 .asSequence()
                 .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
-                .mapNotNull { it.findChild(ElmToolchain.ELM_JSON) }
+                .mapNotNull { dir -> dir.findFileBreadthFirst { it.name in ELM_MANIFEST_FILE_NAMES } }
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 

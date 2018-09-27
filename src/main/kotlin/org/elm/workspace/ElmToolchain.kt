@@ -110,6 +110,10 @@ data class ElmToolchain(val binDirPath: Path) {
         const val ELM_JSON = "elm.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
 
+        // TODO [drop 0.18] this list will no longer be necessary once the migration to 0.19 is complete
+        val ELM_MANIFEST_FILE_NAMES = listOf(ElmToolchain.ELM_JSON, ElmToolchain.ELM_LEGACY_JSON)
+
+        // TODO [drop 0.18] set the min compiler version to 0.19
         val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 18, 0)
 
         /** Suggest a toolchain that exists in in any standard location */

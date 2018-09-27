@@ -35,6 +35,7 @@ import org.jdom.Element
 import org.jdom.input.SAXBuilder
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KProperty
 
@@ -84,6 +85,21 @@ fun VirtualFile.findFileByMaybeRelativePath(path: String): VirtualFile? =
             fileSystem.findFileByPath(path)
         else
             findFileByRelativePath(path)
+
+fun VirtualFile.findFileBreadthFirst(predicate: (VirtualFile) -> Boolean): VirtualFile? {
+    val queue = LinkedList<VirtualFile>().also { it.push(this) }
+    while (queue.isNotEmpty()) {
+        val candidate = queue.pop()
+        if (predicate(candidate)) {
+            return candidate
+        } else {
+            for (child in candidate.children) {
+                queue.add(child)
+            }
+        }
+    }
+    return null
+}
 
 val VirtualFile.pathAsPath: Path get() = Paths.get(path)
 
