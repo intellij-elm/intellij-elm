@@ -43,8 +43,10 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     }
 
     val elmProject: ElmProject?
-        // TODO [kl] why would virtualFile be null? I'm guessing it has to do with how the light integration tests work?
-        get() = virtualFile?.let { project.elmWorkspace.findProjectForFile(it) }
+        // Must use [originalFile] because during code completion the direct [virtualFile] is an
+        // in-memory copy of the real file. See:
+        // https://intellij-support.jetbrains.com/hc/en-us/community/posts/115000108704/comments/115000123710
+        get() = project.elmWorkspace.findProjectForFile(originalFile.virtualFile)
 
     fun getModuleDecl() =
             getStubOrPsiChild(ElmModuleDeclarationStub.Type)
