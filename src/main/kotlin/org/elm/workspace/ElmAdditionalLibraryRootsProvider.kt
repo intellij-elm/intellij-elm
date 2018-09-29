@@ -49,8 +49,8 @@ class ElmLibrary(
             name
 
     companion object {
-        fun fromPackage(pkg: ElmPackageRef): ElmLibrary? {
-            val root = pkg.rootPath?.let { LocalFileSystem.getInstance().findFileByPath(it) } ?: return null
+        fun fromPackage(pkg: ElmPackageProject): ElmLibrary? {
+            val root = LocalFileSystem.getInstance().findFileByPath(pkg.projectDirPath) ?: return null
             if (!root.exists()) return null
             return ElmLibrary(root = root, name = pkg.name)
         }

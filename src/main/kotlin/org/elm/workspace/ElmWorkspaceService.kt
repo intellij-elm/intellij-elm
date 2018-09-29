@@ -28,11 +28,13 @@ import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
+import org.elm.openapiext.findFileBreadthFirst
 import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.modules
 import org.elm.openapiext.pathAsPath
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
+import org.elm.workspace.ElmToolchain.Companion.ELM_MANIFEST_FILE_NAMES
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
@@ -149,7 +151,7 @@ class ElmWorkspaceService(
      */
     private fun upsertProject(elmProject: ElmProject): List<ElmProject> =
             modifyProjects { projects ->
-                val otherProjects = projects.filter { it.manifestPath == elmProject.manifestPath }
+                val otherProjects = projects.filter { it.manifestPath != elmProject.manifestPath }
                 otherProjects + elmProject
             }
 
@@ -159,13 +161,10 @@ class ElmWorkspaceService(
      */
     private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())
-                        ?: throw ProjectLoadException("Could not find file $manifestPath")
-
                 val toolchain = settings.toolchain
                         ?: throw ProjectLoadException("Elm toolchain not configured")
 
-                ElmProject.parse(file.inputStream, manifestPath, toolchain)
+                ElmProject.parse(manifestPath, toolchain)
             }.whenComplete { _, error ->
                 // log the result
                 if (error == null) {
@@ -182,19 +181,11 @@ class ElmWorkspaceService(
     // WORKSPACE ACTIONS
 
 
-    fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> {
-        if (allProjects.count() != 0) {
-            return CompletableFuture.supplyAsync {
-                throw ProjectLoadException("Multiple Elm projects are not yet supported. "
-                        + "You must remove the existing project before adding this one.")
-            }
-        }
-
-        return asyncLoadProject(manifestPath)
-                .thenApply {
-                    upsertProject(it)
-                }
-    }
+    fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> =
+            asyncLoadProject(manifestPath)
+                    .thenApply {
+                        upsertProject(it)
+                    }
 
 
     fun detachElmProject(manifestPath: Path) {
@@ -223,11 +214,10 @@ class ElmWorkspaceService(
     fun asyncDiscoverAndRefresh(): CompletableFuture<List<ElmProject>> {
         if (hasAtLeastOneValidProject())
             return CompletableFuture.completedFuture(allProjects)
-
         val guessManifest = intellijProject.modules
                 .asSequence()
                 .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
-                .mapNotNull { it.findChild(ElmToolchain.ELM_JSON) }
+                .mapNotNull { dir -> dir.findFileBreadthFirst { it.name in ELM_MANIFEST_FILE_NAMES } }
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 
@@ -252,17 +242,21 @@ class ElmWorkspaceService(
     private val directoryIndex: LightDirectoryIndex<ElmProject> =
             LightDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
                 val visited = mutableSetOf<VirtualFile>()
-                fun put(file: VirtualFile?, elmProject: ElmProject) {
+                fun put(path: Path?, elmProject: ElmProject) {
+                    if (path == null) return
+                    val file = LocalFileSystem.getInstance().findFileByPath(path)
                     if (file == null || file in visited) return
                     visited += file
                     index.putInfo(file, elmProject)
                 }
 
                 for (project in allProjects) {
-                    put(LocalFileSystem.getInstance().findFileByPath(project.projectDirPath), project)
-                    // TODO [kl] re-visit this when we allow projects within projects
-                    // We probably will need to register additional directories based
-                    // on how [LightDirectoryIndex] walks up the directory tree.
+                    for (sourceDir in project.sourceDirectories) {
+                        put(project.projectDirPath.resolve(sourceDir), project)
+                    }
+                    for (pkg in project.allResolvedDependencies) {
+                        put(pkg.projectDirPath, pkg)
+                    }
                 }
             })
 

@@ -77,6 +77,14 @@ data class ElmToolchain(val binDirPath: Path) {
     }
 
     /**
+     * Path to the manifest file for the Elm package [name] at version [version]
+     */
+    fun findPackageManifest(name: String, version: Version): Path? {
+        // TODO [kl] use compiler version to determine whether to use elm.json vs elm-package.json
+        return packageVersionDir(name, version)?.resolve(ELM_JSON)
+    }
+
+    /**
      * Path to directory for a package, containing one or more versions
      */
     fun availableVersionsForPackage(name: String): List<Version> {
@@ -102,6 +110,10 @@ data class ElmToolchain(val binDirPath: Path) {
         const val ELM_JSON = "elm.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
 
+        // TODO [drop 0.18] this list will no longer be necessary once the migration to 0.19 is complete
+        val ELM_MANIFEST_FILE_NAMES = listOf(ElmToolchain.ELM_JSON, ElmToolchain.ELM_LEGACY_JSON)
+
+        // TODO [drop 0.18] set the min compiler version to 0.19
         val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 18, 0)
 
         /** Suggest a toolchain that exists in in any standard location */

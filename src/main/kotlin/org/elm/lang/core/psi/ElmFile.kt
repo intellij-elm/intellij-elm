@@ -11,6 +11,8 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.stubs.*
+import org.elm.workspace.ElmProject
+import org.elm.workspace.elmWorkspace
 
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage) {
@@ -39,6 +41,12 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         val nameWithExtension = if (name.endsWith(".elm")) name else "$name.elm"
         return super.setName(nameWithExtension)
     }
+
+    val elmProject: ElmProject?
+        // Must use [originalFile] because during code completion the direct [virtualFile] is an
+        // in-memory copy of the real file. See:
+        // https://intellij-support.jetbrains.com/hc/en-us/community/posts/115000108704/comments/115000123710
+        get() = project.elmWorkspace.findProjectForFile(originalFile.virtualFile)
 
     fun getModuleDecl() =
             getStubOrPsiChild(ElmModuleDeclarationStub.Type)

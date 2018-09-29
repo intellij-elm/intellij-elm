@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
+import com.intellij.openapi.vfs.LocalFileSystem
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.InputStream
 import java.nio.file.Path
@@ -21,11 +22,13 @@ private val objectMapper = ObjectMapper()
  * @param manifestPath The location of the manifest file (e.g. `elm.json`). Uniquely identifies a project.
  * @param dependencies Additional Elm packages that this project depends on
  * @param testDependencies Additional Elm packages that this project's **tests** depends on
+ * @param sourceDirectories The paths to one-or-more directories containing Elm source files belonging to this project.
  */
 sealed class ElmProject(
         val manifestPath: Path,
-        val dependencies: List<ElmPackageRef>,
-        val testDependencies: List<ElmPackageRef>
+        val dependencies: List<ElmPackageProject>,
+        val testDependencies: List<ElmPackageProject>,
+        val sourceDirectories: List<Path>
 ) {
 
     /**
@@ -49,17 +52,23 @@ sealed class ElmProject(
      * Returns all packages which this project depends on, whether it be for normal,
      * production code or for tests.
      */
-    val allResolvedDependencies: Sequence<ElmPackageRef>
+    val allResolvedDependencies: Sequence<ElmPackageProject>
         get() = sequenceOf(dependencies, testDependencies).flatten()
 
 
     companion object {
+
+        fun parse(manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+            val inputStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
+                    ?: throw ProjectLoadException("Could not find file $manifestPath")
+            return parse(inputStream, manifestPath, toolchain)
+        }
+
         /**
          * Attempts to parse an `elm.json` file.
          *
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
-        @Throws(ProjectLoadException::class)
         fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain): ElmProject {
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
                 // Handle legacy Elm 0.18 package. We don't need to model the dependencies
@@ -90,8 +99,8 @@ sealed class ElmProject(
                     ElmApplicationProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.toPackageRefs(toolchain),
-                            testDependencies = dto.testDependencies.toPackageRefs(toolchain),
+                            dependencies = dto.dependencies.depsToPackages(toolchain),
+                            testDependencies = dto.testDependencies.depsToPackages(toolchain),
                             sourceDirectories = dto.sourceDirectories
                     )
                 }
@@ -111,6 +120,7 @@ sealed class ElmProject(
                             elmVersion = dto.elmVersion,
                             dependencies = dto.dependencies.constraintDepsToPackages(toolchain),
                             testDependencies = dto.testDependencies.constraintDepsToPackages(toolchain),
+                            sourceDirectories = listOf(Paths.get("src")),
                             name = dto.name,
                             version = dto.version,
                             exposedModules = dto.exposedModulesNode.toExposedModuleMap())
@@ -129,10 +139,10 @@ sealed class ElmProject(
 class ElmApplicationProject(
         manifestPath: Path,
         val elmVersion: Version,
-        dependencies: List<ElmPackageRef>,
-        testDependencies: List<ElmPackageRef>,
-        val sourceDirectories: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies)
+        dependencies: List<ElmPackageProject>,
+        testDependencies: List<ElmPackageProject>,
+        sourceDirectories: List<Path>
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
 /**
@@ -141,67 +151,43 @@ class ElmApplicationProject(
 class ElmPackageProject(
         manifestPath: Path,
         val elmVersion: Constraint,
-        dependencies: List<ElmPackageRef>,
-        testDependencies: List<ElmPackageRef>,
+        dependencies: List<ElmPackageProject>,
+        testDependencies: List<ElmPackageProject>,
+        sourceDirectories: List<Path>,
         val name: String,
         val version: Version,
-        /** Map from label to one-or-more module names. The label can be the empty string. */
-        val exposedModules: Map<String, List<String>>
-) : ElmProject(manifestPath, dependencies, testDependencies)
+        val exposedModules: List<String>
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
-/**
- * A dependency reference to an Elm package
- */
-class ElmPackageRef(
-        val rootPath: Path?,
-        val name: String,
-        val version: Version
-)
-
-
-private fun ExactDependenciesDTO.toPackageRefs(toolchain: ElmToolchain) =
+private fun ExactDependenciesDTO.depsToPackages(toolchain: ElmToolchain) =
         direct.depsToPackages(toolchain) + indirect.depsToPackages(toolchain)
 
 
 private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
-            ElmPackageRef(
-                    rootPath = toolchain.packageVersionDir(name, version),
-                    name = name,
-                    version = version)
+            loadPackage(toolchain, name, version)
         }
 
 private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolchain) =
         map { (name, constraint) ->
-            val useVersion = toolchain.availableVersionsForPackage(name)
+            val version = toolchain.availableVersionsForPackage(name)
                     .filter { constraint.contains(it) }
                     .sorted()
                     .firstOrNull()
+                    ?: throw ProjectLoadException("Could not load $name ($constraint)")
 
-            ElmPackageRef(
-                    rootPath = useVersion?.let { toolchain.packageVersionDir(name, it) },
-                    name = name,
-                    version = useVersion ?: Version.UNKNOWN)
+            loadPackage(toolchain, name, version)
         }
 
+fun loadPackage(toolchain: ElmToolchain, name: String, version: Version): ElmPackageProject {
+    val manifestPath = toolchain.findPackageManifest(name, version)
+            ?: throw ProjectLoadException("Could not load $name ($version): manifest not found")
+    // TODO [kl] guard against circular dependencies
+    val elmProject = ElmProject.parse(manifestPath, toolchain) as? ElmPackageProject
+            ?: throw ProjectLoadException("Could not load $name ($version): expected a package!")
 
-private fun JsonNode.toExposedModuleMap(): Map<String, List<String>> {
-    // normalize the 2 exposed-modules formats into a single format
-    return when (this.nodeType) {
-        JsonNodeType.ARRAY -> {
-            val moduleNames = this.elements().asSequence().map { it.textValue() }.toList()
-            mapOf("" to moduleNames)
-        }
-        JsonNodeType.OBJECT -> {
-            this.fields().asSequence().map { (label, nameNodes) ->
-                label to nameNodes.asSequence().map { it.textValue() }.toList()
-            }.toMap()
-        }
-        else -> {
-            throw RuntimeException("exposed-modules JSON must be either an array or an object")
-        }
-    }
+    return elmProject
 }
 
 
@@ -226,7 +212,7 @@ private interface ElmProjectDTO
 
 private class ElmApplicationProjectDTO(
         @JsonProperty("elm-version") val elmVersion: Version,
-        @JsonProperty("source-directories") val sourceDirectories: List<String>,
+        @JsonProperty("source-directories") val sourceDirectories: List<Path>,
         @JsonProperty("dependencies") val dependencies: ExactDependenciesDTO,
         @JsonProperty("test-dependencies") val testDependencies: ExactDependenciesDTO
 ) : ElmProjectDTO
@@ -244,9 +230,26 @@ private class ElmPackageProjectDTO(
         @JsonProperty("test-dependencies") val testDependencies: Map<String, Constraint>,
         @JsonProperty("name") val name: String,
         @JsonProperty("version") val version: Version,
-        @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode // either List<String>
-        // or Map<String, List<String>>
-        // where the map's keys are labels
+        @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode
 ) : ElmProjectDTO
 
 
+private fun JsonNode.toExposedModuleMap(): List<String> {
+    // Normalize the 2 exposed-modules formats into a single format.
+    // format 1: a list of strings, where each string is the name of an exposed module
+    // format 2: a map where the keys are categories and the values are the names of the modules
+    //           exposed in that category. We discard the categories because they are not useful.
+    return when (this.nodeType) {
+        JsonNodeType.ARRAY -> {
+            this.elements().asSequence().map { it.textValue() }.toList()
+        }
+        JsonNodeType.OBJECT -> {
+            this.fields().asSequence().flatMap { (_, nameNodes) ->
+                nameNodes.asSequence().map { it.textValue() }
+            }.toList()
+        }
+        else -> {
+            throw RuntimeException("exposed-modules JSON must be either an array or an object")
+        }
+    }
+}

@@ -63,7 +63,7 @@ class ModuleScope(val elmFile: ElmFile) {
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleValues()
+                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleValues()
         val topLevelValues = getDeclaredValues()
         val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
                 .flatMap { getVisibleImportNames(it) }
@@ -111,7 +111,7 @@ class ModuleScope(val elmFile: ElmFile) {
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleTypes()
+                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleTypes()
         val topLevelTypes = getDeclaredTypes()
         val importedTypes = elmFile.findChildrenByClass(ElmImportClause::class.java)
                 .flatMap { getVisibleImportTypes(it) }
@@ -153,7 +153,7 @@ class ModuleScope(val elmFile: ElmFile) {
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleConstructors()
+                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleConstructors()
         val topLevelConstructors = getDeclaredConstructors()
         val importedConstructors = elmFile.findChildrenByClass(ElmImportClause::class.java)
                 .flatMap { getVisibleImportConstructors(it) }
