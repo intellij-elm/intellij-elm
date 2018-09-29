@@ -151,7 +151,7 @@ class ElmWorkspaceService(
      */
     private fun upsertProject(elmProject: ElmProject): List<ElmProject> =
             modifyProjects { projects ->
-                val otherProjects = projects.filter { it.manifestPath == elmProject.manifestPath }
+                val otherProjects = projects.filter { it.manifestPath != elmProject.manifestPath }
                 otherProjects + elmProject
             }
 
@@ -181,19 +181,11 @@ class ElmWorkspaceService(
     // WORKSPACE ACTIONS
 
 
-    fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> {
-        if (allProjects.count() != 0) {
-            return CompletableFuture.supplyAsync {
-                throw ProjectLoadException("Multiple Elm projects are not yet supported. "
-                        + "You must remove the existing project before adding this one.")
-            }
-        }
-
-        return asyncLoadProject(manifestPath)
-                .thenApply {
-                    upsertProject(it)
-                }
-    }
+    fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> =
+            asyncLoadProject(manifestPath)
+                    .thenApply {
+                        upsertProject(it)
+                    }
 
 
     fun detachElmProject(manifestPath: Path) {

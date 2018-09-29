@@ -220,6 +220,71 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 elmProject.exposedModules.toSet())
     }
 
+
+    fun `test can attach multiple Elm projects`() {
+        val testProject = fileTree {
+            dir("a") {
+                project("elm.json", """
+                    {
+                      "type": "application",
+                      "source-directories": [ "src" ],
+                      "elm-version": "0.19.0",
+                      "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      },
+                      "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      }
+                    }
+                    """)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+            dir("b") {
+                project("elm.json", """
+                    {
+                      "type": "application",
+                      "source-directories": [ "src" ],
+                      "elm-version": "0.19.0",
+                      "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      },
+                      "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      }
+                    }
+                    """)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
+            asyncAttachElmProject(rootPath.resolve("b/elm.json")).get()
+        }
+
+        fun checkFile(relativePath: String, projectName: String?) {
+            val vFile = testProject.root.findFileByRelativePath(relativePath)!!
+            val project = workspace.findProjectForFile(vFile)
+            if (project?.presentableName != projectName) {
+                error("Expected $projectName, found $project for $relativePath")
+            }
+        }
+
+        checkFile("a/src/Main.elm", "a")
+        checkFile("b/src/Main.elm", "b")
+    }
+
+
+
     fun `test auto discover Elm project at root level`() {
         val testProject = fileTree {
             project("elm.json", """
