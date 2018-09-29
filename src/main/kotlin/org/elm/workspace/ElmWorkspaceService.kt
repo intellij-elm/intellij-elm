@@ -342,6 +342,15 @@ class ElmWorkspaceService(
         val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
         modifySettings(notify = false) { RawSettings(binDirPath = binDirPath) }
 
+        // Ensure that `elm-stuff` directories are always excluded so that they don't pollute open-by-filename, etc.
+        intellijProject.modules
+                .asSequence()
+                .flatMap { ModuleRootManager.getInstance(it).contentEntries.asSequence() }
+                .forEach {
+                    if ("elm-stuff" !in it.excludePatterns)
+                        it.addExcludePattern("elm-stuff")
+                }
+
         return state.getChild("elmProjects")
                 .getChildren("project")
                 .mapNotNull { it.getAttributeValue("path") }
