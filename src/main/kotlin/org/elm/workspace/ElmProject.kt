@@ -141,7 +141,7 @@ sealed class ElmProject(
                         elmVersion = Version(0, 18, 0),
                         dependencies = dto.depsToPackages(elmStuffPath),
                         testDependencies = emptyList(),
-                        sourceDirectories = emptyList())
+                        sourceDirectories = dto.sourceDirectories)
             } else {
                 ElmPackageProject(
                         manifestPath = manifestPath,
