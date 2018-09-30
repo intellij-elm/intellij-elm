@@ -29,9 +29,7 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
 
     override fun resolveInner(): ElmNamedElement? {
         return getVariants().find {
-            it.name == refText
-                    || (refText == "Cmd" && it.name == "Platform.Cmd")
-                    || (refText == "Sub" && it.name == "Platform.Sub")
+            it.name == refText || it.name == GlobalScope.defaultAliases[refText]
         }
     }
 
@@ -59,10 +57,10 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
         return TextRange(startOffset, startOffset + refText.length)
     }
 
-    override fun handleElementRename(newModuleName: String): PsiElement {
+    override fun handleElementRename(newElementName: String): PsiElement {
         val factory = ElmPsiFactory(element.project)
         val nameParts = elementQID.text.split(".")
-        val newName = newModuleName + "." + nameParts.last()
+        val newName = newElementName + "." + nameParts.last()
         val newId = when (elementQID) {
             is ElmUpperCaseQID -> factory.createUpperCaseQID(newName)
             is ElmValueQID -> factory.createValueQID(newName)

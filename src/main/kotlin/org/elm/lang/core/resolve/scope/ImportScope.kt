@@ -33,22 +33,9 @@ class ImportScope(val elmFile: ElmFile) {
          * Core standard library.
          */
         fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): List<ImportScope> {
-            // handle implicit imports from Core
-            val implicitModuleName = when (qualifierPrefix) {
-                in GlobalScope.defaultImports -> qualifierPrefix
-                "Cmd" -> "Platform.Cmd"
-                "Sub" -> "Platform.Sub"
-                else -> null
-            }
-            val implicitScopes = if (implicitModuleName == null) {
-                emptyList()
-            } else {
-                ElmModules.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
-                        .filter { it.elmFile.isCore() }
-                        .map { ImportScope(it.elmFile) }
-            }
+            val implicitScopes = GlobalScope.implicitModulesMatching(qualifierPrefix, elmFile)
+                    .map { ImportScope(it.elmFile) }
 
-            // handle explicit import from within this module
             val explicitScopes = ModuleScope(elmFile).importDeclsForQualifierPrefix(qualifierPrefix)
                     .mapNotNull { ImportScope.fromImportDecl(it) }
 

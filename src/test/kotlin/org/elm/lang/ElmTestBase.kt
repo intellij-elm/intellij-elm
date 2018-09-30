@@ -36,6 +36,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileFilter
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PlatformTestUtil
@@ -171,9 +172,22 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
     }
 
     protected inline fun <reified T : PsiElement> findElementWithDataAndOffsetInEditor(marker: String = "^"): Triple<T, String, Int> {
+        val (data, offset) = findDataAndOffsetInEditor(marker)
+        val elementAtMarker = myFixture.file.findElementAt(offset)!!
+        val element = elementAtMarker.parentOfType<T>(strict = false)
+                ?: error("No ${T::class.java.simpleName} at ${elementAtMarker.text}")
+        return Triple(element, data, offset)
+    }
+
+    protected fun findReferenceWithDataInEditor(marker: String = "^"): Pair<PsiReference?, String> {
+        val (data, offset) = findDataAndOffsetInEditor(marker)
+        return Pair(myFixture.file.findReferenceAt(offset), data)
+    }
+
+    protected fun findDataAndOffsetInEditor(marker: String = "^"): Pair<String, Int> {
         val elmLineComment = "--"
         val caretMarker = "$elmLineComment$marker"
-        val (elementAtMarker, data, offset) = run {
+        return run {
             val text = myFixture.file.text
             val markerOffset = text.indexOf(caretMarker)
             check(markerOffset != -1) { "No `$marker` marker:\n$text" }
@@ -185,14 +199,12 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
             val markerPosition = myFixture.editor.offsetToLogicalPosition(markerOffset + caretMarker.length - 1)
             val previousLine = LogicalPosition(markerPosition.line - 1, markerPosition.column)
             val elementOffset = myFixture.editor.logicalPositionToOffset(previousLine)
-            Triple(myFixture.file.findElementAt(elementOffset)!!, data, elementOffset)
+            Pair(data, elementOffset)
         }
-        val element = elementAtMarker.parentOfType<T>(strict = false)
-                ?: error("No ${T::class.java.simpleName} at ${elementAtMarker.text}")
-        return Triple(element, data, offset)
     }
 
-    protected fun replaceCaretMarker(text: String) = text.replace("{-caret-}", "<caret>")
+    protected fun replaceCaretMarker(text: String) =
+            text.replace("{-caret-}", "<caret>")
 
     protected fun applyQuickFix(name: String) {
         val action = myFixture.findSingleIntention(name)

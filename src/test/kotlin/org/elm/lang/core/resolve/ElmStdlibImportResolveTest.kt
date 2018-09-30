@@ -292,11 +292,19 @@ f = worker
     // PLATFORM.CMD MODULE
 
 
-    fun `test Platform Cmd module imported using Cmd alias`() = stubOnlyResolve(
+    fun `test Platform Cmd module imported using Cmd alias (module ref)`() = stubOnlyResolve(
             """
 --@ main.elm
 f = Cmd.none
     --^...Platform/Cmd.elm
+""")
+
+
+    fun `test Platform Cmd module imported using Cmd alias (value ref)`() = stubOnlyResolve(
+            """
+--@ main.elm
+f = Cmd.none
+        --^...Platform/Cmd.elm
 """)
 
 
@@ -319,11 +327,19 @@ f = batch
     // PLATFORM.SUB MODULE
 
 
-    fun `test Platform Sub module imported using Sub alias`() = stubOnlyResolve(
+    fun `test Platform Sub module imported using Sub alias (module ref)`() = stubOnlyResolve(
             """
 --@ main.elm
 f = Sub.none
     --^...Platform/Sub.elm
+""")
+
+
+    fun `test Platform Sub module imported using Sub alias (value ref)`() = stubOnlyResolve(
+            """
+--@ main.elm
+f = Sub.none
+        --^...Platform/Sub.elm
 """)
 
 
