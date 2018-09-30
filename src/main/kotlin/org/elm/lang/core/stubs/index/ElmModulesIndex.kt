@@ -7,7 +7,6 @@ import com.intellij.psi.stubs.IndexSink
 import com.intellij.psi.stubs.StringStubIndexExtension
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.psi.stubs.StubIndexKey
-import org.elm.lang.core.moduleLookupHack
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
@@ -44,7 +43,7 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
                 makeKey(moduleDeclaration.name)
 
         private fun makeKey(moduleName: String) =
-                moduleLookupHack(moduleName)
+                moduleName
 
         /**
          * Return the module declaration for [moduleName], if any.

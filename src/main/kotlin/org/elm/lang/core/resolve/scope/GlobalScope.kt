@@ -29,8 +29,8 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
                 "Tuple",
                 "Debug",
                 "Platform",
-                "Cmd", // actually Platform.Cmd but aliased as `Cmd` by the Elm compiler
-                "Sub"  // actually Platform.Sub but aliased as `Sub` by the Elm compiler
+                "Platform.Cmd", // aliased as `Cmd`
+                "Platform.Sub"  // aliased as `Sub`
         )
 
         /**

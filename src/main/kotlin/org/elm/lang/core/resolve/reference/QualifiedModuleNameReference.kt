@@ -28,7 +28,11 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
 ) : ElmReferenceCached<T>(elem), ElmReference {
 
     override fun resolveInner(): ElmNamedElement? {
-        return getVariants().find { it.name == refText }
+        return getVariants().find {
+            it.name == refText
+                    || (refText == "Cmd" && it.name == "Platform.Cmd")
+                    || (refText == "Sub" && it.name == "Platform.Sub")
+        }
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
