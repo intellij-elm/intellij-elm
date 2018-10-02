@@ -19,23 +19,38 @@ class ElmModules {
         /**
          * Returns all Elm modules which are visible to [elmProject]
          */
-        fun getAll(intellijProject: Project, elmProject: ElmProject?) =
-                ElmModulesIndex.getAll(intellijProject)
-                        .filter { elmProject.exposes(it) }
+        fun getAll(intellijProject: Project, elmProject: ElmProject?): List<ElmModuleDeclaration> {
+            // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
+            val allModules = ElmModulesIndex.getAll(intellijProject)
+            return when (elmProject) {
+                null -> allModules
+                else -> allModules.filter { elmProject.exposes(it) }
+            }
+        }
 
         /**
          * Returns all Elm modules whose names match an element in [moduleNames] and which are visible to [elmProject]
          */
-        fun getAll(moduleNames: Collection<String>, intellijProject: Project, elmProject: ElmProject?) =
-                ElmModulesIndex.getAll(moduleNames, intellijProject)
-                        .filter { elmProject.exposes(it) }
+        fun getAll(moduleNames: Collection<String>, intellijProject: Project, elmProject: ElmProject?): List<ElmModuleDeclaration> {
+            // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
+            val allModules = ElmModulesIndex.getAll(moduleNames, intellijProject)
+            return when (elmProject) {
+                null -> allModules
+                else -> allModules.filter { elmProject.exposes(it) }
+            }
+        }
 
         /**
          * Returns an Elm module named [moduleName] which is visible to [elmProject], if any
          */
-        fun get(moduleName: String, intellijProject: Project, elmProject: ElmProject?) =
-                ElmModulesIndex.get(moduleName, intellijProject)
-                        ?.takeIf { elmProject.exposes(it) }
+        fun get(moduleName: String, intellijProject: Project, elmProject: ElmProject?): ElmModuleDeclaration? {
+            // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
+            val elmModule = ElmModulesIndex.get(moduleName, intellijProject)
+            return when (elmProject) {
+                null -> elmModule
+                else -> elmModule?.takeIf { elmProject.exposes(it) }
+            }
+        }
     }
 }
 
@@ -43,26 +58,34 @@ class ElmModules {
 /**
  * Returns true if [moduleDeclaration] is visible within the receiver [ElmProject].
  */
-private fun ElmProject?.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean {
-    if (this == null) {
-        // The lightweight integration tests do not have an associated Elm Project,
-        // so we will just treat them as if all Elm files were in scope.
-        //
-        // TODO [kl] re-visit this as it could mask a real bug.
-        return true
+private fun ElmProject.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean {
+    if (moduleDeclaration.elmProject?.manifestPath == manifestPath) {
+        // The module declaration belongs to *this* Elm project.
+        // Check if the module is reachable from this project's source directories.
+        return sourceDirectoryContains(moduleDeclaration)
+    } else {
+        // The module declaration belongs to a *different* Elm project.
+        // Check if the module is reachable from this project's dependencies
+        return dependencies.asSequence()
+                .filter { it.exposedModules.contains(moduleDeclaration.name) }
+                .any { it.sourceDirectoryContains(moduleDeclaration) }
+    }
+
+}
+
+
+/**
+ * Returns true if [moduleDeclaration] can be found in the receiver's source directories.
+ */
+private fun ElmProject.sourceDirectoryContains(moduleDeclaration: ElmModuleDeclaration): Boolean {
+    if (moduleDeclaration.elmProject?.manifestPath != manifestPath) {
+        // must belong to the same Elm project!
+        return false
     }
 
     val elmModuleRelativePath = moduleDeclaration.name.replace('.', '/') + ".elm"
-
-    // check if the module is reachable from the top-level of the containing Elm project
-    val virtualDirs = sourceDirectories.map { projectDirPath.resolve(it) }
+    return sourceDirectories.asSequence()
+            .map { projectDirPath.resolve(it) }
             .mapNotNull { LocalFileSystem.getInstance().findFileByPath(it) }
-    if (virtualDirs.any { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null })
-        return true
-
-    // check if the module is reachable from a direct dependency
-    if (dependencies.any { it.exposedModules.contains(moduleDeclaration.name) })
-        return true
-
-    return false
+            .any { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null }
 }
