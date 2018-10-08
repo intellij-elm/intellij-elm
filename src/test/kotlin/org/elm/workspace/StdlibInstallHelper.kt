@@ -1,16 +1,12 @@
 package org.elm.workspace
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.util.io.inputStream
 import org.elm.fileTree
 import org.elm.openapiext.pathAsPath
 import org.intellij.lang.annotations.Language
-import java.lang.RuntimeException
 import java.nio.file.Files
-import java.nio.file.Paths
 
 /*
 Some of the Elm tests depend on having certain Elm packages installed in the global location.
@@ -24,11 +20,6 @@ interface ElmStdlibVariant {
      * A description of the packages that we want to be installed
      */
     val jsonManifest: String
-
-    /**
-     * A dummy Elm Main module necessary to get Elm to install the packages we want.
-     */
-    val elmMainCode: String
 
     /**
      * Install Elm 0.19 stdlib in the default location ($HOME/.elm)
@@ -48,7 +39,7 @@ interface ElmStdlibVariant {
 
         fileTree {
             project("elm.json", jsonManifest)
-            file("Main.elm", elmMainCode)
+            file("Main.elm", elmHeadlessWorkerCode)
         }.create(project, tmpDir)
 
         val manifestPath = tmpDir.pathAsPath.resolve("elm.json")
@@ -64,6 +55,7 @@ interface ElmStdlibVariant {
         return ElmProject.parse(Files.newInputStream(manifestPath), manifestPath, toolchain)
     }
 }
+
 
 /**
  * Describes a "minimal" installation of the Elm stdlib. This is the bare minimum
@@ -92,19 +84,42 @@ object MinimalElmStdlibVariant : ElmStdlibVariant {
                 }
             }
             """.trimIndent()
+}
 
-    override val elmMainCode: String
-        get() = """
-            main =
-                Platform.worker { init = init , update = update , subscriptions = always Sub.none }
 
-            init : () -> ( Int, Cmd Msg )
-            init flags = ( 0, Cmd.none )
-
-            type Msg = Nop
-
-            update msg model = ( model, Cmd.none )
-            """.trimIndent()
+/**
+ * Allows for ad-hoc installation of Elm packages given by [extraDependencies]
+ */
+class CustomElmStdlibVariant(val extraDependencies: Map<String, Version>) : ElmStdlibVariant {
+    override val jsonManifest: String
+        @Language("JSON")
+        get() {
+            val moreDirectDeps = extraDependencies
+                    .map { (pkgName, version) ->
+                        "\"${pkgName}\": \"${version}\""
+                    }.joinToString(",\n")
+            return """
+                    {
+                        "type": "application",
+                        "source-directories": [
+                            "."
+                        ],
+                        "elm-version": "0.19.0",
+                        "dependencies": {
+                            "direct": {
+                                "elm/core": "1.0.0",
+                                "elm/json": "1.0.0",
+                                ${moreDirectDeps}
+                            },
+                            "indirect": {}
+                        },
+                        "test-dependencies": {
+                            "direct": {},
+                            "indirect": {}
+                        }
+                    }
+                    """.trimIndent()
+        }
 }
 
 
@@ -143,10 +158,20 @@ object FullElmStdlibVariant : ElmStdlibVariant {
                 }
             }
             """.trimIndent()
-
-    override val elmMainCode: String
-        get() = """
-            import Html
-            main = Html.text "hello world"
-            """.trimIndent()
 }
+
+
+/**
+ * A dummy Elm Main module necessary to get Elm to install the packages we want.
+ */
+private val elmHeadlessWorkerCode = """
+        main =
+            Platform.worker { init = init , update = update , subscriptions = always Sub.none }
+
+        init : () -> ( Int, Cmd Msg )
+        init flags = ( 0, Cmd.none )
+
+        type Msg = Nop
+
+        update msg model = ( model, Cmd.none )
+        """.trimIndent()
