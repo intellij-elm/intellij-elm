@@ -46,6 +46,8 @@ import org.elm.FileTree
 import org.elm.TestProject
 import org.elm.fileTreeFromText
 import org.elm.lang.core.psi.parentOfType
+import org.elm.workspace.ElmToolchain
+import org.elm.workspace.MinimalElmStdlibVariant
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 
@@ -216,10 +218,17 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
         override fun configureModule(module: Module, model: ModifiableRootModel, contentEntry: ContentEntry) {
             super.configureModule(module, model, contentEntry)
+
             if (skipTestReason != null)
                 return
-            if (enableStdlib)
-                module.project.elmWorkspace.setupForTests()
+
+            if (enableStdlib) {
+                val toolchain = ElmToolchain.suggest(module.project)
+                require(toolchain != null) { "failed to find Elm toolchain: cannot setup stdlib workspace for tests" }
+
+                val elmProject = MinimalElmStdlibVariant.ensureElmStdlibInstalled(module.project, toolchain!!)
+                module.project.elmWorkspace.setupForTests(toolchain, elmProject)
+            }
         }
     }
 

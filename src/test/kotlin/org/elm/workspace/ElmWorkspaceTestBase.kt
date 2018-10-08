@@ -35,6 +35,9 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
         return project.elmWorkspace.asyncDiscoverAndRefresh().thenApply { testProject }
     }
 
+    protected fun ensureElmStdlibInstalled(variant: ElmStdlibVariant) {
+        variant.ensureElmStdlibInstalled(project, toolchain!!)
+    }
 
     override fun setUp() {
         super.setUp()
