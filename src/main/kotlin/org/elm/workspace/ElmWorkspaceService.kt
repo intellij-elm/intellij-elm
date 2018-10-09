@@ -241,13 +241,31 @@ class ElmWorkspaceService(
 
     private val directoryIndex: LightDirectoryIndex<ElmProject> =
             LightDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
-                val visited = mutableSetOf<VirtualFile>()
                 fun put(path: Path?, elmProject: ElmProject) {
                     if (path == null) return
-                    val file = LocalFileSystem.getInstance().findFileByPath(path)
-                    if (file == null || file in visited) return
-                    visited += file
-                    index.putInfo(file, elmProject)
+                    val file = LocalFileSystem.getInstance().findFileByPath(path) ?: return
+                    val existingElmProject = findProjectForFile(file)
+                    if (existingElmProject != null) {
+                        println("CONFLICT: want to put ${elmProject.projectDirPath}" +
+                                "\n\t\tfor $path " +
+                                "\n\t\tbut already have ${existingElmProject.projectDirPath}")
+                        // resolve conflict
+                        val oldRelPath = existingElmProject.projectDirPath.relativize(path.normalize())
+                        val newRelPath = elmProject.projectDirPath.relativize(path.normalize())
+                        val oldDistance = oldRelPath.toList().size
+                        val newDistance = newRelPath.toList().size
+                        println("oldRelPath = $oldRelPath")
+                        println("newRelPath = $newRelPath")
+                        if (newDistance < oldDistance) {
+                            println("Resolved conflict by taking the new project")
+                            index.putInfo(file, elmProject)
+                        } else {
+                            println("Resolved conflict by keeping the old project")
+                            // ignore, the previously-registered project is "closer" to this source directory.
+                        }
+                    } else {
+                        index.putInfo(file, elmProject)
+                    }
                 }
 
                 for (project in allProjects) {

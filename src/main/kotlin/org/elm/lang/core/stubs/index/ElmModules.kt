@@ -6,6 +6,8 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.findFileByPath
 import org.elm.workspace.ElmProject
+import java.nio.file.Files
+import java.nio.file.Path
 
 
 // TODO [kl] figure out a better name for this. Maybe it should be part of the 'Scope' system?
@@ -59,18 +61,16 @@ class ElmModules {
  * Returns true if [moduleDeclaration] is visible within the receiver [ElmProject].
  */
 private fun ElmProject.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean {
-    if (moduleDeclaration.elmProject?.manifestPath == manifestPath) {
-        // The module declaration belongs to *this* Elm project.
-        // Check if the module is reachable from this project's source directories.
-        return sourceDirectoryContains(moduleDeclaration)
-    } else {
-        // The module declaration belongs to a *different* Elm project.
-        // Check if the module is reachable from this project's dependencies
-        return dependencies.asSequence()
-                .filter { it.exposedModules.contains(moduleDeclaration.name) }
-                .any { it.sourceDirectoryContains(moduleDeclaration) }
-    }
 
+    // Check if the module is reachable from this project's source directories.
+    if (sourceDirectoryContains(moduleDeclaration))
+        return true
+
+
+    // Check if the module is reachable from this project's dependencies
+    return dependencies.asSequence()
+            .filter { it.exposedModules.contains(moduleDeclaration.name) }
+            .any { it.sourceDirectoryContains(moduleDeclaration) }
 }
 
 
@@ -78,14 +78,39 @@ private fun ElmProject.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean
  * Returns true if [moduleDeclaration] can be found in the receiver's source directories.
  */
 private fun ElmProject.sourceDirectoryContains(moduleDeclaration: ElmModuleDeclaration): Boolean {
+
+    val mySrcDirs = sourceDirectories.map { projectDirPath.resolve(it) }
+
+    val candidateSrcDirs = mutableListOf<Path>()
+
     if (moduleDeclaration.elmProject?.manifestPath != manifestPath) {
-        // must belong to the same Elm project!
-        return false
+        // The module declaration does not belong to this Elm project.
+        // Normally this means that there's no match, but it is possible
+        // to have 2 Elm projects with the same src directory. Lame, but that's what people do
+        // to workaround Elm's simplistic package system.
+
+        val moduleProj = moduleDeclaration.elmProject ?: return false
+        val moduleSrcDirs = moduleProj.sourceDirectories.map { moduleProj.projectDirPath.resolve(it) }
+
+        var compatible = false
+        for (a in mySrcDirs) {
+            for (b in moduleSrcDirs) {
+                if (Files.exists(a) && Files.exists(b) && Files.isSameFile(a, b)) {
+                    compatible = true
+                    candidateSrcDirs.add(a)
+                }
+            }
+        }
+
+        if (!compatible) {
+            return false
+        }
+    } else {
+        candidateSrcDirs.addAll(mySrcDirs)
     }
 
     val elmModuleRelativePath = moduleDeclaration.name.replace('.', '/') + ".elm"
-    return sourceDirectories.asSequence()
-            .map { projectDirPath.resolve(it) }
+    return candidateSrcDirs
             .mapNotNull { LocalFileSystem.getInstance().findFileByPath(it) }
             .any { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null }
 }

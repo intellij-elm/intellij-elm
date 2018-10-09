@@ -42,16 +42,16 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm")
     }
 
-    fun `test resolves modules found within source-directories in parent`() {
-        // this test ensures that we properly handle source-dirs like "../vendor"
-        buildProject {
-            dir("app") {
+
+    fun `test resolves modules using double-dot src dir`() {
+        val testProject = fileTree {
+            dir("example") {
                 project("elm.json", """
                     {
                         "type": "application",
                         "source-directories": [
                             "src",
-                            "../vendor"
+                            "../src"
                         ],
                         "elm-version": "0.19.0",
                         "dependencies": {
@@ -66,17 +66,67 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     """.trimIndent())
                 dir("src") {
                     elm("Main.elm", """
-                    import Foo
+                    module Main exposing (..)
+                    import FooBar
                            --^
                     """.trimIndent())
                 }
             }
-            dir("vendor") {
-                elm("Foo.elm", """
-                    module Foo exposing (..)
+            project("elm.json", """
+                {
+                    "type": "application",
+                    "source-directories": [
+                        "src"
+                    ],
+                    "elm-version": "0.19.0",
+                    "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                    },
+                    "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                    }
+                }
+                """.trimIndent())
+            dir("src") {
+                elm("FooBar.elm", """
+                    module FooBar exposing (x)
+                    x = 42
                     """.trimIndent())
             }
-        }.checkReferenceIsResolved<ElmImportClause>("app/src/Main.elm")
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        project.elmWorkspace.apply {
+            // it's critical for the test that they are attached in this order, sequentially
+            asyncAttachElmProject(rootPath.resolve("example/elm.json")).get()
+            asyncAttachElmProject(rootPath.resolve("elm.json")).get()
+        }
+
+        val elmProjA = project.elmWorkspace.allProjects[0]
+        val elmProjB = project.elmWorkspace.allProjects[1]
+
+        val debug = true
+        if (debug) {
+            println("A is $elmProjA, ${elmProjA.manifestPath}")
+            println("B is $elmProjB, ${elmProjB.manifestPath}")
+
+            val moduleDeclsForA = ElmModules.getAll(project, elmProjA)
+            val moduleDeclsForB = ElmModules.getAll(project, elmProjB)
+
+            println("module decls for A")
+            moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
+
+            println("\n\n")
+
+            println("module decls for B")
+            moduleDeclsForB.forEach { println(it.elmFile.virtualFile.path) }
+        }
+
+        testProject.run {
+            checkReferenceIsResolved<ElmImportClause>("example/src/Main.elm")
+        }
     }
 
 
@@ -219,7 +269,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         val elmProjA = project.elmWorkspace.allProjects.find { it.presentableName == "a" }!!
         val elmProjB = project.elmWorkspace.allProjects.find { it.presentableName == "b" }!!
 
-        val debug = false
+        val debug = true
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
