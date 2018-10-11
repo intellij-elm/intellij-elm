@@ -78,7 +78,7 @@ private class InferenceScope(
             shadowableNames += decl.declaredParameters().mapNotNull { it.name }
         }
 
-        val exprTy = letIn.expression?.let { inferExpressionType(it) } ?: TyUnknown
+        val exprTy = inferExpressionType(letIn.expression)
         return InferenceResult(emptyMap(), diagnostics, exprTy)
     }
 
@@ -103,7 +103,9 @@ private class InferenceScope(
     //</editor-fold>
     //<editor-fold desc="inference">
 
-    private fun inferExpressionType(expr: ElmExpression): Ty {
+    private fun inferExpressionType(expr: ElmExpression?): Ty {
+        if (expr == null) return TyUnknown
+
         val parts = expr.parts.map { part ->
             when (part) {
                 is ElmOperator -> {
@@ -135,7 +137,7 @@ private class InferenceScope(
                 if (operand.isFloat) TyFloat
                 else TyUnknown  // TODO int literals have type `numberN`, and we need to infer them
             }
-            is ElmNegateExpression -> operand.expression?.let { inferExpressionType(it) } ?: TyUnknown
+            is ElmNegateExpression -> inferExpressionType(operand.expression)
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferExpressionType(it) })
             is ElmOperatorAsFunction -> inferOperatorAsFunctionType(operand)
             is ElmRecord -> inferRecordType(operand)
@@ -152,7 +154,7 @@ private class InferenceScope(
         return when {
             record.baseRecordIdentifier != null -> TyUnknown // TODO the type is the type of the base record
             else -> TyRecord(record.fieldList.associate { f ->
-                f.lowerCaseIdentifier.text to (f.expression?.let { inferExpressionType(it) } ?: TyUnknown)
+                f.lowerCaseIdentifier.text to inferExpressionType(f.expression)
             })
         }
     }
