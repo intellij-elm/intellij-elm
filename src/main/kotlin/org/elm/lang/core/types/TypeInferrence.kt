@@ -61,7 +61,7 @@ private class InferenceScope(
             val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
             requireAssignable(expr, bodyTy, expected)
         }
-        
+
         val ty = if (declaredTy == TyUnknown) bodyTy else declaredTy
         return InferenceResult(bindings, diagnostics, ty)
     }
@@ -115,7 +115,8 @@ private class InferenceScope(
     private fun inferExpressionType(expr: ElmExpression?): Ty {
         if (expr == null) return TyUnknown
 
-        val parts = expr.parts.map { part ->
+        val parts1 = expr.parts.toList()
+        val parts = parts1.map { part ->
             when (part) {
                 is ElmOperator -> {
                     TyUnknown
@@ -252,16 +253,19 @@ private class InferenceScope(
         // If the value is a parameter, its type has already been added to bindings
         bindings[ref]?.let { return it }
 
-        return if (ref is ElmUnionMember) {
-            ref.ty
-        } else {
-            val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
-            inferValueDeclType(decl)
+        return when (ref) {
+            is ElmUnionMember -> ref.ty
+            is ElmFunctionDeclarationLeft -> {
+                val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
+                inferValueDeclType(decl)
+            }
+            // This should never happen, but it's worth checking for in case we miss a parameter binding
+            else -> error("Unexpected reference type ${ref.elementType}")
         }
     }
 
     private fun inferFunctionCallType(call: ElmFunctionCall): Ty {
-        val targetTy = inferOperandType(call.target) // uses the operand tag overload
+        val targetTy = inferOperandType(call.target)
 
         val arguments = call.arguments.toList()
         val paramTys = if (targetTy is TyFunction) targetTy.parameters else listOf()
@@ -295,6 +299,8 @@ private class InferenceScope(
     }
 
     private fun inferValueDeclType(decl: ElmValueDeclaration): Ty {
+        if (checkBadRecursion(decl)) return TyUnknown
+
         // Currently, we don't use the inference if there's no annotation. It would be nice to do so,
         // but we would need to deal with mutual recursion.
         val existing = resolvedDeclarations[decl]
@@ -316,12 +322,12 @@ private class InferenceScope(
     /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        if (elementName in shadowableNames) {
+        if (elementName != null && !shadowableNames.add(elementName)) {
             diagnostics += RedefinitionError(element)
-        } else {
-            bindings[element] = ty
-            if (elementName != null) shadowableNames += elementName
         }
+
+        // Bind the element even if it's shadowing something so that later inference knows it's a parameter
+        bindings[element] = ty
     }
 
     /** @return the entire declared type, or [TyUnknown] if no annotation exists */
@@ -365,7 +371,7 @@ private class InferenceScope(
             }
             is ElmPattern -> {
                 bindPattern(pat.child, ty, isParameter)
-                bindAsPattern(pat.patternAs, ty)
+                bindPatternAs(pat.patternAs, ty)
             }
             is ElmLowerPattern -> setBinding(pat, ty)
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
@@ -377,7 +383,7 @@ private class InferenceScope(
         }
     }
 
-    private fun bindAsPattern(pat: ElmPatternAs?, ty: Ty) {
+    private fun bindPatternAs(pat: ElmPatternAs?, ty: Ty) {
         if (pat != null) setBinding(pat, ty)
     }
 
