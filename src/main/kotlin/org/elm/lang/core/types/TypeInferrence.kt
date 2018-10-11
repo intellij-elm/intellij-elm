@@ -55,12 +55,15 @@ private class InferenceScope(
         val declaredTy = bindParameters(declaration)
 
         val expr = declaration.expression
+        var bodyTy: Ty = TyUnknown
         if (expr != null) {
-            val bodyTy = inferExpressionType(expr)
+            bodyTy = inferExpressionType(expr)
             val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
             requireAssignable(expr, bodyTy, expected)
         }
-        return InferenceResult(bindings, diagnostics, declaredTy)
+        
+        val ty = if (declaredTy == TyUnknown) bodyTy else declaredTy
+        return InferenceResult(bindings, diagnostics, ty)
     }
 
     private fun inferLambda(lambda: ElmAnonymousFunction): InferenceResult {
@@ -335,7 +338,11 @@ private class InferenceScope(
         val typeRef = valueDeclaration.typeAnnotation?.typeRef
 
         if (typeRef == null) {
-            decl.patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
+            val patterns = decl.patterns.toList()
+            patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
+            if (patterns.size > 1) {
+                return TyFunction(patterns.map { TyUnknown }, TyUnknown)
+            }
             return TyUnknown
         }
 
