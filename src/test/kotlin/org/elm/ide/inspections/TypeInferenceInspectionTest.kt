@@ -286,6 +286,15 @@ main =
         foo</error>
 """)
 
+    fun `test let-in function without annotation`() = checkByText("""
+main : Bool
+main =
+    let
+        foo a b = True
+    in
+        foo 1 2
+""")
+
     fun `test partial pattern in function parameter from cons`() = checkByText("""
 main (<error descr="Pattern does not cover all possibilities">x :: []</error>) = ()
 """)

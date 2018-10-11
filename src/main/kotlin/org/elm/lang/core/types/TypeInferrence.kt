@@ -263,7 +263,7 @@ private class InferenceScope(
         val arguments = call.arguments.toList()
         val paramTys = if (targetTy is TyFunction) targetTy.parameters else listOf()
 
-        if (arguments.size > paramTys.size) {
+        if (targetTy != TyUnknown && arguments.size > paramTys.size) {
             diagnostics.add(ArgumentCountError(call, arguments.size, paramTys.size))
         }
 
