@@ -451,7 +451,8 @@ PatternAs ::= AS LOWER_CASE_IDENTIFIER
 ConsPattern ::= SinglePattern ('::' SinglePattern)+
 
 private SinglePattern ::=
-    AnythingPattern
+    ParenthesizedPattern
+    | AnythingPattern
     | LowerPattern
     | UnionPattern
     | TuplePattern
@@ -459,7 +460,6 @@ private SinglePattern ::=
     | ListPattern
     | RecordPattern
     | Literal
-    | ParenthesizedPattern
 
 LowerPattern ::= LOWER_CASE_IDENTIFIER
 
@@ -472,7 +472,18 @@ ListPattern ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
 
 UnionPattern ::=
-    UpperCaseQID Pattern*
+    UpperCaseQID UnionArgumentPattern*
+
+private UnionArgumentPattern ::=
+    AnythingPattern
+    | LowerPattern
+    | TuplePattern
+    | UpperCaseQID
+    | Unit
+    | ListPattern
+    | RecordPattern
+    | Literal
+    | ParenthesizedPattern
 
 TuplePattern ::=
     LEFT_PARENTHESIS Pattern (COMMA Pattern)+ RIGHT_PARENTHESIS

@@ -357,15 +357,21 @@ main =
 """)
 
     fun `test case branches using union patterns`() = checkByText("""
+type Maybe a
+    = Just a
+    | Nothing
+
 type Foo
     = Bar String
     | Baz ()
+    | Qux (Maybe String) ()
 
 main : Foo -> ()
 main arg =
     case arg of
         Bar x -> ()
         Baz x -> x
+        Qux Nothing x -> x
 """)
 }
 

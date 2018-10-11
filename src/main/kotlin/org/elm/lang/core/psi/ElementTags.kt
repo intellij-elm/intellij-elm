@@ -33,6 +33,9 @@ interface ElmFunctionParamTag : ElmFunctionParamOrPatternChildTag
 /** An element that can be the direct child of an [ElmPattern] */
 interface ElmPatternChildTag : ElmFunctionParamOrPatternChildTag
 
+/** A pattern that can appear as the argument list of a UnionPattern */
+interface ElmUnionPatternChildTag : ElmPsiElement
+
 /** An element that can be the direct child of an [ElmConsPattern] */
 interface ElmConsPatternChildTag : ElmPsiElement
 
@@ -43,4 +46,4 @@ interface ElmTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
-interface ElmConstantTag : ElmOperandTag, ElmConsPatternChildTag, ElmFunctionParamTag, ElmPatternChildTag
+interface ElmConstantTag : ElmOperandTag, ElmConsPatternChildTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag

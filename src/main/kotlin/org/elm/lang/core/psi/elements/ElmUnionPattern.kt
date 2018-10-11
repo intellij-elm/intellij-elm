@@ -3,10 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmConsPatternChildTag
-import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
-import org.elm.lang.core.psi.ElmPatternChildTag
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
@@ -26,17 +23,15 @@ class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
     /** pattern matching on the arguments (if any) to the union constructor */
-    val patternList: List<ElmPattern>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
+    val argumentPatterns: Sequence<ElmUnionPatternChildTag>
+        get() = directChildren.filterIsInstance<ElmUnionPatternChildTag>().drop(1) // drop the constructor qid
 
     /** All named elements introduced by this pattern */
     val namedParameters: List<ElmNameDeclarationPatternTag>
         get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
 
     override val referenceNameElement: PsiElement
-        get() {
-            return upperCaseQID.upperCaseIdentifierList.last()
-        }
+        get() = upperCaseQID.upperCaseIdentifierList.last()
 
     override val referenceName: String
         get() = referenceNameElement.text

@@ -107,10 +107,9 @@ Elm File
               ElmUpperCaseQID(UPPER_CASE_QID)
                 PsiElement(UPPER_CASE_IDENTIFIER)('Just')
               PsiWhiteSpace(' ')
-              ElmPattern(PATTERN)
-                ElmLowerPattern(LOWER_PATTERN)
-                  PsiElement(LOWER_CASE_IDENTIFIER)('y')
-          PsiErrorElement:'::', <pattern>, ARROW or AS expected, got ''
+              ElmLowerPattern(LOWER_PATTERN)
+                PsiElement(LOWER_CASE_IDENTIFIER)('y')
+          PsiErrorElement:'::', ARROW, AS, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE, UNDERSCORE or UPPER_CASE_IDENTIFIER expected, got ''
             <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -138,9 +137,8 @@ Elm File
               ElmUpperCaseQID(UPPER_CASE_QID)
                 PsiElement(UPPER_CASE_IDENTIFIER)('Just')
               PsiWhiteSpace(' ')
-              ElmPattern(PATTERN)
-                ElmLowerPattern(LOWER_PATTERN)
-                  PsiElement(LOWER_CASE_IDENTIFIER)('y')
+              ElmLowerPattern(LOWER_PATTERN)
+                PsiElement(LOWER_CASE_IDENTIFIER)('y')
           PsiWhiteSpace(' ')
           PsiElement(ARROW)('->')
           PsiWhiteSpace(' ')

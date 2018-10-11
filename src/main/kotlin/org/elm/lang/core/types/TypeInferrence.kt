@@ -390,7 +390,7 @@ private class InferenceScope(
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing to bind
         val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.ty ?: return
-        val patternList = pat.patternList
+        val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
             diagnostics += ArgumentCountError(pat, actual, expected)
@@ -398,15 +398,16 @@ private class InferenceScope(
         }
 
         if (memberTy is TyFunction) {
-            if (patternList.size != memberTy.parameters.size) {
-                issueError(patternList.size, memberTy.parameters.size)
+            if (argumentPatterns.size != memberTy.parameters.size) {
+                issueError(argumentPatterns.size, memberTy.parameters.size)
             } else {
-                for ((p, t) in patternList.zip(memberTy.parameters)) {
-                    bindPattern(p, t, isParameter)
+                for ((p, t) in argumentPatterns.zip(memberTy.parameters)) {
+                    // The other option is an UpperCaseQID, which doesn't bind anything
+                    if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
                 }
             }
-        } else if (patternList.isNotEmpty()) {
-            issueError(patternList.size, 0)
+        } else if (argumentPatterns.isNotEmpty()) {
+            issueError(argumentPatterns.size, 0)
         }
     }
 
