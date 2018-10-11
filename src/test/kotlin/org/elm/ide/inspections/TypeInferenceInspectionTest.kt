@@ -312,6 +312,52 @@ main : Bool
 
 <error descr="Infinite recursion">bar = foo</error>
 """)
+
+    fun `test function argument mismatch in case expression`() = checkByText("""
+foo : String -> String
+foo a = a
+
+main =
+    case foo <error descr="Type mismatch.Required: StringFound: ()">()</error> of
+        _ -> ()
+""")
+
+    fun `test function argument mismatch in case branch`() = checkByText("""
+foo : String -> String
+foo a = a
+
+main =
+    case () of
+        _ -> foo <error descr="Type mismatch.Required: StringFound: ()">()</error>
+""")
+
+    fun `test value mismatch from case`() = checkByText("""
+main : String
+main =
+    <error descr="Type mismatch.Required: StringFound: ()">case () of
+        _ -> ()</error>
+""")
+
+    fun `test case branches with mismatched types`() = checkByText("""
+main : String -> String
+main =
+    case () of
+        "" -> ""
+        "x" -> <error descr="Type mismatch.Required: StringFound: ()">()</error>
+        _ -> ""
+""")
+
+    fun `test case branches using union patterns`() = checkByText("""
+type Foo
+    = Bar String
+    | Baz ()
+
+main : Foo -> ()
+main arg =
+    case arg of
+        Bar x -> ()
+        Baz x -> x
+""")
 }
 
 

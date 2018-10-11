@@ -22,7 +22,7 @@ fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): Infer
     // Add the function name itself name itself
     declaredNames(false).mapNotNullTo(visibleNames) { it.name }
 
-    return InferenceScope(visibleNames, activeScopes.toMutableSet(), null).infer(this)
+    return InferenceScope(visibleNames, activeScopes.toMutableSet(), null).inferDeclaration(this)
 }
 
 /**
@@ -45,7 +45,7 @@ private class InferenceScope(
 
     //<editor-fold desc="entry points">
 
-    fun infer(declaration: ElmValueDeclaration): InferenceResult {
+    fun inferDeclaration(declaration: ElmValueDeclaration): InferenceResult {
         if (checkBadRecursion(declaration)) {
             return InferenceResult(emptyMap(), diagnostics, TyUnknown)
         }
@@ -63,7 +63,7 @@ private class InferenceScope(
         return InferenceResult(bindings, diagnostics, declaredTy)
     }
 
-    private fun infer(lambda: ElmAnonymousFunction): InferenceResult {
+    private fun inferLambda(lambda: ElmAnonymousFunction): InferenceResult {
         // TODO [unification] infer param types
         lambda.patternList.forEach { bindPattern(it, TyUnknown, true) }
         val bodyTy = inferExpressionType(lambda.expression)
@@ -71,15 +71,21 @@ private class InferenceScope(
         return InferenceResult(bindings, diagnostics, ty)
     }
 
-    private fun infer(letIn: ElmLetIn): InferenceResult {
+    private fun inferLetIn(letIn: ElmLetIn): InferenceResult {
         for (decl in letIn.valueDeclarationList) {
-            val result = inferChild { infer(decl) }
+            val result = inferChild { inferDeclaration(decl) }
             resolvedDeclarations[decl] = result.ty
             shadowableNames += decl.declaredParameters().mapNotNull { it.name }
         }
 
         val exprTy = inferExpressionType(letIn.expression)
         return InferenceResult(emptyMap(), diagnostics, exprTy)
+    }
+
+    private fun inferCaseOf(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
+        bindPattern(pattern, caseTy, false)
+        val ty = inferExpressionType(branchExpression)
+        return InferenceResult(bindings, diagnostics, ty)
     }
 
     private inline fun inferChild(block: InferenceScope.() -> InferenceResult): InferenceResult {
@@ -124,12 +130,12 @@ private class InferenceScope(
 
     private fun inferOperandType(operand: ElmOperandTag): Ty {
         return when (operand) {
-            is ElmAnonymousFunction -> inferChild { infer(operand) }.ty
-            is ElmCaseOf -> TyUnknown // TODO implement
+            is ElmAnonymousFunction -> inferChild { inferLambda(operand) }.ty
+            is ElmCaseOf -> inferCaseType(operand)
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFunctionCall -> inferFunctionCallType(operand)
             is ElmIfElse -> inferIfElseType(operand)
-            is ElmLetIn -> inferChild { infer(operand) }.ty
+            is ElmLetIn -> inferChild { inferLetIn(operand) }.ty
             is ElmList -> inferListType(operand)
             is ElmCharConstant -> TyChar
             is ElmStringConstant -> TyString
@@ -149,6 +155,46 @@ private class InferenceScope(
             else -> error("unexpected operand type $operand")
         }
     }
+
+    private fun inferCaseType(caseOf: ElmCaseOf): Ty {
+        // The the type of a case expression doesn't match the value it's assigned to, we issue a
+        // diagnostic on the entire case expression. The elm compiler only issues the diagnostic on
+        // the first branch expression.
+
+        val exprTy = inferExpressionType(caseOf.expression)
+        var ty: Ty = TyUnknown
+        var errorEncountered = false
+
+        // TODO: check patterns cover possibilities
+        for (branch in caseOf.branches) {
+            // The elm compiler stops issuing diagnostics for branches when it encounters most errors,
+            // but will still issue errors within expressions if an earlier type error was encountered
+            val pat = branch.pattern ?: break
+            val expr = branch.expression ?: break
+
+            if (errorEncountered) {
+                // just check for internal errors
+                inferExpressionType(expr)
+                continue
+            }
+
+            val result = inferChild { inferCaseOf(pat, exprTy, expr) }
+
+            if (result.diagnostics.isNotEmpty()) {
+                errorEncountered = true
+                continue
+            }
+
+            if (assignable(result.ty, ty)) {
+                ty = result.ty
+            } else {
+                diagnostics += TypeMismatchError(expr, result.ty, ty)
+                errorEncountered = true
+            }
+        }
+        return ty
+    }
+
 
     private fun inferRecordType(record: ElmRecord): Ty {
         return when {
@@ -245,9 +291,9 @@ private class InferenceScope(
         return inferValueDeclType(decl)
     }
 
-    // Currently, we don't use the inference if there's no annotation. It would be nice to do so,
-    // but we would need to deal with mutual recursion.
     private fun inferValueDeclType(decl: ElmValueDeclaration): Ty {
+        // Currently, we don't use the inference if there's no annotation. It would be nice to do so,
+        // but we would need to deal with mutual recursion.
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // For performance, use the type annotation if there is one
