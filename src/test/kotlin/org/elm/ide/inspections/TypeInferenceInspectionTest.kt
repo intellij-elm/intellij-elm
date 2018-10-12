@@ -435,7 +435,7 @@ main arg =
         Qux Nothing x -> x
 """)
 
-    fun `test case branches using union patterns with tuple destructuring`() = checkByText("""
+    fun `test case branches using union patterns with tuple destructuring of var`() = checkByText("""
 type Maybe a
     = Just a
     | Nothing
@@ -449,5 +449,23 @@ main arg =
     case arg of
         Bar (Just (x, y)) -> y
         Baz x -> x
+        _ -> ()
+""")
+
+    fun `test case branches using union patterns with tuple destructuring of record`() = checkByText("""
+type Maybe a
+    = Just a
+    | Nothing
+
+type Foo
+    = Bar (Maybe {x: ()})
+    | Baz ()
+
+main : Foo -> ()
+main arg =
+    case arg of
+        Bar (Just {x}) -> x
+        Baz x -> x
+        _ -> ()
 """)
 }

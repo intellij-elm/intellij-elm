@@ -488,12 +488,15 @@ private class InferenceScope(
     private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
         val lowerPatternList = pat.lowerPatternList
         if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
-            val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
-            val actualTy = TyRecord(actualTyParams.toMap())
+            // TODO[unification] bind to vars
+            if (ty !is TyVar) {
+                val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
+                val actualTy = TyRecord(actualTyParams.toMap())
 
-            // For pattern declarations, the elm compiler issues diagnostics on the expression
-            // rather than the pattern, but it's easier for us to issue them on the pattern instead.
-            diagnostics += TypeMismatchError(pat, actualTy, ty)
+                // For pattern declarations, the elm compiler issues diagnostics on the expression
+                // rather than the pattern, but it's easier for us to issue them on the pattern instead.
+                diagnostics += TypeMismatchError(pat, actualTy, ty)
+            }
 
             for (p in lowerPatternList) {
                 bindPattern(p, TyUnknown, isParameter)
