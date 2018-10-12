@@ -194,6 +194,7 @@ private class InferenceScope(
 
             if (errorEncountered) {
                 // just check for internal errors
+                bindPattern(pat, TyUnknown, false)
                 inferExpressionType(branchExpression)
                 continue
             }
@@ -471,9 +472,12 @@ private class InferenceScope(
 
     private fun bindTuplePattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
         if (ty !is TyTuple) {
-            val actualTy = TyTuple(uniqueVars(pat.patternList.size))
-            diagnostics += TypeMismatchError(pat, actualTy, ty)
             pat.patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
+            // TODO [unification] handle binding vars
+            if (ty !is TyVar) {
+                val actualTy = TyTuple(uniqueVars(pat.patternList.size))
+                diagnostics += TypeMismatchError(pat, actualTy, ty)
+            }
             return
         }
         pat.patternList

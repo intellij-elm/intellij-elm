@@ -409,7 +409,15 @@ main =
         _ -> ""
 """)
 
-    fun `test case branches using union patterns`() = checkByText("""
+    fun `test case branches with mismatched tuple type`() = checkByText("""
+type Foo = Bar (String, String)
+main : Foo -> ()
+main x =
+    <error descr="Type mismatch.Required: ()Found: String">case x of
+        Bar (y, z) -> z</error>
+""")
+
+    fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Maybe a
     = Just a
     | Nothing
@@ -426,7 +434,20 @@ main arg =
         Baz x -> x
         Qux Nothing x -> x
 """)
+
+    fun `test case branches using union patterns with tuple destructuring`() = checkByText("""
+type Maybe a
+    = Just a
+    | Nothing
+
+type Foo
+    = Bar (Maybe (String, ()))
+    | Baz ()
+
+main : Foo -> ()
+main arg =
+    case arg of
+        Bar (Just (x, y)) -> y
+        Baz x -> x
+""")
 }
-
-
-
