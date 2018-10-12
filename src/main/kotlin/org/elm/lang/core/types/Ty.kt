@@ -48,3 +48,8 @@ object TyUnit : Ty() {
 object TyUnknown : Ty() {
     override fun toString(): String = javaClass.simpleName
 }
+
+/** Not a real ty, but used to diagnose cyclic values in parameter bindings */
+object TyInProgressBinding : Ty() {
+    override fun toString(): String = javaClass.simpleName
+}

@@ -40,6 +40,13 @@ class BadRecursionError(
         get() = "Infinite recursion"
 }
 
+class CyclicDefinitionError(
+        element: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Value cannot be defined in terms of itself"
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,

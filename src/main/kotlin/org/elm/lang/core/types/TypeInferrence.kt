@@ -59,7 +59,10 @@ private class InferenceScope(
         if (expr != null) {
             bodyTy = inferExpressionType(expr)
             val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
-            requireAssignable(expr, bodyTy, expected)
+            val parts = expr.parts.toList()
+            // If the body is just a let expression, show the diagnostic on its expression rather than the whole body.
+            val errorExpr = (parts.singleOrNull() as? ElmLetIn)?.expression ?: expr
+            requireAssignable(errorExpr, bodyTy, expected)
         }
 
         val ty = if (declaredTy == TyUnknown) bodyTy else declaredTy
@@ -78,7 +81,20 @@ private class InferenceScope(
         for (decl in letIn.valueDeclarationList) {
             val result = inferChild { inferDeclaration(decl) }
             resolvedDeclarations[decl] = result.ty
-            shadowableNames += decl.declaredParameters().mapNotNull { it.name }
+
+            val fdl = decl.functionDeclarationLeft
+            if (fdl != null) {
+                shadowableNames += fdl.name
+            } else {
+                val pattern = decl.pattern
+                if (pattern != null) {
+                    val patterns = PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)
+                    for (p in patterns) {
+                        bindings[p] = result.bindingType(p)
+                        shadowableNames += p.name
+                    }
+                }
+            }
         }
 
         val exprTy = inferExpressionType(letIn.expression)
@@ -161,11 +177,11 @@ private class InferenceScope(
     }
 
     private fun inferCaseType(caseOf: ElmCaseOf): Ty {
-        // The the type of a case expression doesn't match the value it's assigned to, we issue a
+        // Currently, if the type of a case expression doesn't match the value it's assigned to, we issue a
         // diagnostic on the entire case expression. The elm compiler only issues the diagnostic on
         // the first branch expression.
 
-        val exprTy = inferExpressionType(caseOf.expression)
+        val caseOfExprTy = inferExpressionType(caseOf.expression)
         var ty: Ty = TyUnknown
         var errorEncountered = false
 
@@ -174,15 +190,15 @@ private class InferenceScope(
             // The elm compiler stops issuing diagnostics for branches when it encounters most errors,
             // but will still issue errors within expressions if an earlier type error was encountered
             val pat = branch.pattern ?: break
-            val expr = branch.expression ?: break
+            val branchExpression = branch.expression ?: break
 
             if (errorEncountered) {
                 // just check for internal errors
-                inferExpressionType(expr)
+                inferExpressionType(branchExpression)
                 continue
             }
 
-            val result = inferChild { inferCaseOf(pat, exprTy, expr) }
+            val result = inferChild { inferCaseOf(pat, caseOfExprTy, branchExpression) }
 
             if (result.diagnostics.isNotEmpty()) {
                 errorEncountered = true
@@ -192,7 +208,7 @@ private class InferenceScope(
             if (assignable(result.ty, ty)) {
                 ty = result.ty
             } else {
-                diagnostics += TypeMismatchError(expr, result.ty, ty)
+                diagnostics += TypeMismatchError(branchExpression, result.ty, ty)
                 errorEncountered = true
             }
         }
@@ -251,7 +267,13 @@ private class InferenceScope(
         val ref = expr.reference.resolve() ?: return TyUnknown
 
         // If the value is a parameter, its type has already been added to bindings
-        bindings[ref]?.let { return it }
+        bindings[ref]?.let {
+            if (it is TyInProgressBinding) {
+                diagnostics += CyclicDefinitionError(expr)
+                return TyUnknown
+            }
+            return it
+        }
 
         return when (ref) {
             is ElmUnionMember -> ref.ty
@@ -260,7 +282,9 @@ private class InferenceScope(
                 inferValueDeclType(decl)
             }
             // This should never happen, but it's worth checking for in case we miss a parameter binding
-            else -> error("Unexpected reference type ${ref.elementType}")
+            else -> {
+                error("Unexpected reference type ${ref.elementType}")
+            }
         }
     }
 
@@ -332,15 +356,28 @@ private class InferenceScope(
 
     /** @return the entire declared type, or [TyUnknown] if no annotation exists */
     private fun bindParameters(valueDeclaration: ElmValueDeclaration): Ty {
-        // TODO [drop 0.18] remove this if
-        if (valueDeclaration.pattern != null || valueDeclaration.operatorDeclarationLeft != null) {
-            // this is 0.18 only, so we aren't going to bother implementing it
-            bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
-                    .associate { it to TyUnknown }
-            return TyUnknown
+        return when {
+            valueDeclaration.functionDeclarationLeft != null -> {
+                bindFunctionDeclarationParameters(valueDeclaration, valueDeclaration.functionDeclarationLeft!!)
+            }
+            valueDeclaration.pattern != null -> {
+                bindPatternDeclarationParameters(valueDeclaration, valueDeclaration.pattern!!)
+            }
+            valueDeclaration.operatorDeclarationLeft != null -> {
+                // TODO [drop 0.18] remove this case
+                // this is 0.18 only, so we aren't going to bother implementing it
+                bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
+                        .associate { it to TyUnknown }
+                TyUnknown
+            }
+            else -> TyUnknown
         }
+    }
 
-        val decl = valueDeclaration.functionDeclarationLeft!!
+    private fun bindFunctionDeclarationParameters(
+            valueDeclaration: ElmValueDeclaration,
+            decl: ElmFunctionDeclarationLeft
+    ): Ty {
         val typeRef = valueDeclaration.typeAnnotation?.typeRef
 
         if (typeRef == null) {
@@ -354,6 +391,25 @@ private class InferenceScope(
 
         decl.patterns.zip(typeRef.allParameters).forEach { (pat, type) -> bindPattern(pat, type.ty, true) }
         return typeRef.ty
+    }
+
+    private fun bindPatternDeclarationParameters(valueDeclaration: ElmValueDeclaration, pattern: ElmPattern): Ty {
+        // We need to infer the branch expression before we can bind its parameters, but first we
+        // add sentinels to `bindings` in case the expression contains references to any names
+        // declared in the pattern, which is an error.
+        val declaredNames = pattern.descendantsOfType<ElmLowerPattern>()
+        declaredNames.associateTo(bindings) { it to TyInProgressBinding }
+        val bodyTy = inferExpressionType(valueDeclaration.expression)
+        // Now we can overwrite the sentinels we set earlier with the inferred type
+        bindPattern(pattern, bodyTy, false)
+        // If an error was encountered during binding, the sentinels might not have been
+        // overwritten, so we overwrite any remaining here.
+        for (name in declaredNames) {
+            if (bindings[name] == TyInProgressBinding) {
+                bindings[name] = TyUnknown
+            }
+        }
+        return bodyTy
     }
 
     private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {
@@ -457,6 +513,7 @@ private class InferenceScope(
             // object tys are covered by the identity check above
             TyShader, TyUnit -> false
             TyUnknown -> true
+            TyInProgressBinding -> error("should never try to assign TyInProgressBinding")
         }
     }
 
@@ -469,7 +526,7 @@ private class InferenceScope(
 /**
  * @property ty the return type of the function or expression being inferred
  */
-data class InferenceResult(private val bindings: Map<ElmNamedElement, Ty>,
+data class InferenceResult(val bindings: Map<ElmNamedElement, Ty>,
                            val diagnostics: List<ElmDiagnostic>,
                            val ty: Ty) {
     fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown

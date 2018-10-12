@@ -8,7 +8,7 @@ fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String = when (this)
     is TyRecord -> renderedText(linkify, withModule)
     is TyTuple -> renderedText(linkify, withModule)
     is TyVar -> name
-    TyUnknown -> "unknown"
+    TyUnknown, TyInProgressBinding -> "unknown"
     TyUnit -> "()"
     TyShader -> "shader"
 }

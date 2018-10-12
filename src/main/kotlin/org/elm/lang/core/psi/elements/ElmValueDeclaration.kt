@@ -81,7 +81,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
 
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))
+            namedElements.addAll(pattern!!.descendantsOfType<ElmLowerPattern>())
         }
 
         return namedElements

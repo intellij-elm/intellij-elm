@@ -279,11 +279,11 @@ main =
     fun `test let-in with mismatched type from annotated inner func`() = checkByText("""
 main : String
 main =
-    <error descr="Type mismatch.Required: StringFound: Bool">let
+    let
         foo : Bool
         foo = True
     in
-        foo</error>
+        <error descr="Type mismatch.Required: StringFound: Bool">foo</error>
 """)
 
     fun `test let-in function without annotation`() = checkByText("""
@@ -293,6 +293,43 @@ main =
         foo a b = True
     in
         foo 1 2
+""")
+
+    fun `test mismatched return value from let-in record binding`() = checkByText("""
+main : Bool
+main =
+    let
+        {x, y} = {x = 1, y = ""}
+    in
+        <error descr="Type mismatch.Required: BoolFound: String">y</error>
+""")
+
+    fun `test mismatched return value from let-in tuple binding`() = checkByText("""
+main : Bool
+main =
+    let
+        (x, y) = (1, "")
+    in
+        <error descr="Type mismatch.Required: BoolFound: String">y</error>
+""")
+
+    fun `test cyclic definition in let-in record binding`() = checkByText("""
+main : Bool
+main =
+    let
+        {x, y} = {x = 1, y = <error descr="Value cannot be defined in terms of itself">y</error>}
+    in
+        y
+""")
+
+    // TODO: implement an error message for this
+    fun `test invalid let-in record binding`() = checkByText("""
+main : Bool
+main =
+    let
+        {x, y} = ()
+    in
+        y
 """)
 
     fun `test partial pattern in function parameter from cons`() = checkByText("""
