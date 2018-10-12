@@ -277,6 +277,7 @@ private class InferenceScope(
 
         return when (ref) {
             is ElmUnionMember -> ref.ty
+            is ElmTypeAliasDeclaration -> ref.ty
             is ElmFunctionDeclarationLeft -> {
                 val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
                 inferValueDeclType(decl)
@@ -583,7 +584,7 @@ private val ElmUpperPathTypeRef.ty: Ty
 
         return when (ref) {
             // If this is referencing an alias, use aliased type
-            is ElmTypeAliasDeclaration -> ref.typeRef?.ty ?: TyUnknown
+            is ElmTypeAliasDeclaration -> ref.ty
             is ElmTypeDeclaration -> ref.ty
             else -> {
                 val name = ref?.name ?: text
@@ -592,6 +593,9 @@ private val ElmUpperPathTypeRef.ty: Ty
             }
         }
     }
+
+private val ElmTypeAliasDeclaration.ty
+    get() = typeRef?.ty ?: TyUnknown
 
 private val ElmTypeRef.ty: Ty
     get() {
