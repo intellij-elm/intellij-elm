@@ -128,6 +128,14 @@ main : Int
 main = <error descr="Type mismatch.Required: IntFound: String">foo 1</error>
 """)
 
+    fun `test mismatched value from port call`() = checkByText("""
+port module Main exposing (foo)
+port foo : a -> String
+
+main : Int
+main = <error descr="Type mismatch.Required: IntFound: String">foo 1</error>
+""")
+
     fun `test matched function call from parameter`() = checkByText("""
 main : (Float -> String) -> String
 main fn = fn 1.0

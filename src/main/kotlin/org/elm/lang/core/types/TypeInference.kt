@@ -281,6 +281,7 @@ private class InferenceScope(
                 val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
                 inferValueDeclType(decl)
             }
+            is ElmPortAnnotation -> ref.ty
             // This should never happen, but it's worth checking for in case we miss a parameter binding
             else -> {
                 error("Unexpected reference type ${ref.elementType}")
@@ -617,6 +618,9 @@ private val ElmUnionMember.ty: Ty
             decl
         }
     }
+
+private val ElmPortAnnotation.ty: Ty
+    get() = typeRef?.ty ?: TyUnknown
 
 /** Return the module name for built-in types, or null */
 private fun builtInModule(name: String): String? {
