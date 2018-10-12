@@ -322,12 +322,20 @@ main =
         y
 """)
 
-    // TODO: implement an error message for this
     fun `test invalid let-in record binding`() = checkByText("""
 main : Bool
 main =
     let
-        {x, y} = ()
+        <error descr="Type mismatch.Required: ()Found: {x: a,y: b}">{x, y}</error> = ()
+    in
+        y
+""")
+
+    fun `test invalid let-in tuple binding`() = checkByText("""
+main : Bool
+main =
+    let
+        <error descr="Type mismatch.Required: ()Found: (a, b)">(x, y)</error> = ()
     in
         y
 """)

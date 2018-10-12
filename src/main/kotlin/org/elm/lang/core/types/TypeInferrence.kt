@@ -403,10 +403,10 @@ private class InferenceScope(
         // Now we can overwrite the sentinels we set earlier with the inferred type
         bindPattern(pattern, bodyTy, false)
         // If an error was encountered during binding, the sentinels might not have been
-        // overwritten, so we overwrite any remaining here.
+        // overwritten, so do a sanity check here.
         for (name in declaredNames) {
             if (bindings[name] == TyInProgressBinding) {
-                bindings[name] = TyUnknown
+                error("failed to bind ${name.text}")
             }
         }
         return bodyTy
@@ -468,16 +468,36 @@ private class InferenceScope(
     }
 
     private fun bindTuplePattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
-        if (ty !is TyTuple) return // TODO: report error
+        if (ty !is TyTuple) {
+            val actualTy = TyTuple(uniqueVars(pat.patternList.size))
+            diagnostics += TypeMismatchError(pat, actualTy, ty)
+            pat.patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
+            return
+        }
         pat.patternList
                 .zip(ty.types)
                 .forEach { (pat, type) -> bindPattern(pat.child, type, isParameter) }
     }
 
     private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
-        if (ty !is TyRecord) return // TODO: report error
-        for (id in pat.lowerPatternList) {
-            val fieldTy = ty.fields[id.name] ?: continue // TODO: report error
+        val lowerPatternList = pat.lowerPatternList
+        if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
+            val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
+            val actualTy = TyRecord(actualTyParams.toMap())
+
+            // For pattern declarations, the elm compiler issues diagnostics on the expression
+            // rather than the pattern, but it's easier for us to issue them on the pattern instead.
+            diagnostics += TypeMismatchError(pat, actualTy, ty)
+
+            for (p in lowerPatternList) {
+                bindPattern(p, TyUnknown, isParameter)
+            }
+
+            return
+        }
+
+        for (id in lowerPatternList) {
+            val fieldTy = ty.fields[id.name]!!
             bindPattern(id, fieldTy, isParameter)
         }
     }
@@ -607,4 +627,13 @@ private fun builtInModule(name: String): String? {
         "List" -> "List"
         else -> null
     }
+}
+
+/** Return [count] [TyVar]s named a, b, ... z, a1, b1, ... */
+private fun uniqueVars(count: Int): List<TyVar> {
+    val s = "abcdefghijklmnopqrstuvwxyz"
+    return (0 until count).map {
+        TyVar(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
+    }
+
 }
