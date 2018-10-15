@@ -409,7 +409,7 @@ private class InferenceScope(
         // overwritten, so do a sanity check here.
         for (name in declaredNames) {
             if (bindings[name] == TyInProgressBinding) {
-                error("failed to bind ${name.text}")
+                error("failed to bind element of type ${name.elementType} with name '${name.text}'")
             }
         }
         return bodyTy
@@ -573,33 +573,31 @@ private val ElmTypeSignatureDeclarationTag.ty: Ty
         else -> error("unimplemented type $this")
     }
 
-private val ElmParametricTypeRef.ty: TyUnion
+private val ElmParametricTypeRef.ty: Ty
     get() {
-        val ref = reference.resolve()
         val parameters = allParameters.map { it.ty }.toList()
-        val name = ref?.name ?: upperCaseQID.text
-        val module = ref?.moduleName ?: builtInModule(name) ?: moduleName
-        return TyUnion(module, name, parameters)
+        return typeRefTy(this, reference.resolve(), parameters) { upperCaseQID.text }
     }
+
+private val ElmUpperPathTypeRef.ty: Ty
+    get() = typeRefTy(this, reference.resolve(), emptyList()) { text }
 
 private val ElmPsiElement.moduleName: String
     get() = elmFile.getModuleDecl()?.name ?: ""
 
-private val ElmUpperPathTypeRef.ty: Ty
-    get() {
-        val ref = reference.resolve()
-
-        return when (ref) {
-            // If this is referencing an alias, use aliased type
-            is ElmTypeAliasDeclaration -> ref.ty
-            is ElmTypeDeclaration -> ref.ty
-            else -> {
-                val name = ref?.name ?: text
-                val module = ref?.moduleName ?: builtInModule(name) ?: moduleName
-                TyUnion(module, name, emptyList())
-            }
+private inline fun typeRefTy(element: ElmPsiElement, ref: ElmNamedElement?, parameters: List<Ty>,
+                             fallbackName: () -> String): Ty {
+    return when (ref) {
+        // If this is referencing an alias, use aliased type
+        is ElmTypeAliasDeclaration -> ref.ty
+        is ElmTypeDeclaration -> ref.ty
+        else -> {
+            val name = ref?.name ?: fallbackName()
+            val module = ref?.moduleName ?: builtInModule(name) ?: element.moduleName
+            TyUnion(module, name, parameters)
         }
     }
+}
 
 private val ElmTypeAliasDeclaration.ty
     get() = typeRef?.ty ?: TyUnknown

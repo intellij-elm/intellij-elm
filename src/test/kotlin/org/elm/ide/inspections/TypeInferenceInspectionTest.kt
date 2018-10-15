@@ -65,6 +65,12 @@ main : A
 main = {x = 1.0, y = 2.0}
 """)
 
+    fun `test correct value type from parametric record alias`() = checkByText("""
+type alias A a = {x: a, y: Float}
+main : A Float
+main = {x = 1.0, y = 2.0}
+""")
+
     fun `test mismatched value type from record subset`() = checkByText("""
 type alias R = {x: Float, y: Float}
 main : R
