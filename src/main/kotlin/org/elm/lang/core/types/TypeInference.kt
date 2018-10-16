@@ -600,7 +600,7 @@ private class InferenceScope(
         if (ty !is TyTuple) {
             pat.patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
             // TODO [unification] handle binding vars
-            if (ty !is TyVar) {
+            if (ty !is TyVar && ty !is TyUnknown) {
                 val actualTy = TyTuple(uniqueVars(pat.patternList.size))
                 diagnostics += TypeMismatchError(pat, actualTy, ty)
             }

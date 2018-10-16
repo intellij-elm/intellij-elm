@@ -270,10 +270,22 @@ main : Foo -> (Foo -> Foo)
 main a = (\_ -> a)
 """)
 
+    fun `test matched lambda type with closure pattern matching` () = checkByText("""
+type Foo = Bar
+main : (Foo, Foo) -> ((Foo, Foo) -> Foo)
+main a = (\(_, b) -> b)
+""")
+
     fun `test mismatched lambda type with closure`() = checkByText("""
 type Foo = Bar
 main : () -> (Foo -> Foo)
 main a = <error descr="Type mismatch.Required: Foo -> FooFound: unknown -> ()">(\_ -> a)</error>
+""")
+
+    fun `test mismatched tuple pattern in parameter`() = checkByText("""
+type Foo = Foo () ()
+main : (Foo, Foo) -> ()
+main (a, b) = <error descr="Type mismatch.Required: ()Found: Foo">a</error>
 """)
 
     fun `test matched union pattern in parameter`() = checkByText("""
