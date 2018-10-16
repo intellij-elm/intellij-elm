@@ -107,8 +107,9 @@ private class InferenceScope(
         return InferenceResult(bindings, diagnostics, ty)
     }
 
-    private inline fun inferChild(block: InferenceScope.() -> InferenceResult): InferenceResult {
-        val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes.toMutableSet(), this).block()
+    private inline fun inferChild(activeScopes: MutableSet<ElmValueDeclaration> = this.activeScopes.toMutableSet(),
+                                  block: InferenceScope.() -> InferenceResult): InferenceResult {
+        val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, this).block()
         diagnostics += result.diagnostics
         return result
     }
@@ -150,7 +151,7 @@ private class InferenceScope(
 
     private fun inferOperandType(operand: ElmOperandTag): Ty {
         return when (operand) {
-            is ElmAnonymousFunction -> inferChild { beginLambdaInference(operand) }.ty
+            is ElmAnonymousFunction -> inferLambdaType(operand)
             is ElmCaseOf -> inferCaseType(operand)
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFieldAccessorFunction -> inferFieldAccessorFunction(operand)
@@ -175,6 +176,11 @@ private class InferenceScope(
             is ElmTupleConstructor -> TyUnknown // TODO [drop 0.18] remove this case
             else -> error("unexpected operand type $operand")
         }
+    }
+
+    private fun inferLambdaType(lambda: ElmAnonymousFunction): Ty {
+        // Self-recursion is allowed inside lambdas, so don't copy the active scopes when inferring them
+        return inferChild(activeScopes= mutableSetOf()) { beginLambdaInference(lambda) }.ty
     }
 
     private fun inferCaseType(caseOf: ElmCaseOf): Ty {

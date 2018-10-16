@@ -423,6 +423,11 @@ main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
+    fun `test allowed self-recursion in lambda`() = checkByText("""
+main : ()
+main = (\_ -> main) 1
+""")
+
 // TODO: detect this if we start inferring top-level references
 //    fun `test bad mutual recursion`() = checkByText("""
 //<error descr="Infinite recursion">foo = bar</error>
