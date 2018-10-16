@@ -10,7 +10,16 @@ import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 import org.elm.lang.core.stubs.ElmUnionMemberStub
 
-
+/**
+ * One of the cases in a union type declaration
+ *
+ * e.g. `Just a` and `Nothing` in:
+ * ```
+ * type Maybe a
+ *     = Just a
+ *     | Nothing
+ * ```
+ */
 class ElmUnionMember : ElmStubbedNamedElementImpl<ElmUnionMemberStub> {
 
     constructor(node: ASTNode) :
