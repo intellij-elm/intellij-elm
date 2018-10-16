@@ -691,6 +691,7 @@ private class InferenceScope(
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
         val correctSize = when {
+            ty1.isSubset -> ty1.fields.size <= ty2.fields.size
             ty2.isSubset -> ty1.fields.size >= ty2.fields.size
             else -> ty1.fields.size == ty2.fields.size
         }

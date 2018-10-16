@@ -89,6 +89,15 @@ main : ()
 main = .x {x=()}
 """)
 
+    fun `test field accessor as argument`() = checkByText("""
+type alias R = {x: (), y: ()}
+foo : (R -> ()) -> ()
+foo _ = ()
+
+main : ()
+main = foo .x
+""")
+
     fun `test correct value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
 main : A ()
