@@ -101,7 +101,7 @@ private class InferenceScope(
         return InferenceResult(emptyMap(), diagnostics, exprTy)
     }
 
-    private fun beginCaseOfInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
+    private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpressionType(branchExpression)
         return InferenceResult(bindings, diagnostics, ty)
@@ -200,7 +200,7 @@ private class InferenceScope(
                 continue
             }
 
-            val result = inferChild { beginCaseOfInference(pat, caseOfExprTy, branchExpression) }
+            val result = inferChild { beginCaseBranchInference(pat, caseOfExprTy, branchExpression) }
 
             if (result.diagnostics.isNotEmpty()) {
                 errorEncountered = true
@@ -287,10 +287,9 @@ private class InferenceScope(
                 inferValueDeclType(decl)
             }
             is ElmPortAnnotation -> inferPortAnnotationType(ref)
-            // This should never happen, but it's worth checking for in case we miss a parameter binding
-            else -> {
-                error("Unexpected reference type ${ref.elementType}")
-            }
+            // All patterns should be bound by the time this function is called
+            is ElmLowerPattern -> error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
+            else -> error("Unexpected reference type ${ref.elementType}")
         }
     }
 
@@ -505,10 +504,20 @@ private class InferenceScope(
             is ElmAnythingPattern -> {
             }
             is ElmConsPattern -> {
-                if (isParameter) diagnostics += PartialPatternError(pat)
+                if (isParameter) {
+                    diagnostics += PartialPatternError(pat)
+                    bindConsPattern(pat, TyUnknown)
+                } else {
+                    bindConsPattern(pat, ty)
+                }
             }
             is ElmListPattern -> {
-                if (isParameter) diagnostics += PartialPatternError(pat)
+                if (isParameter) {
+                    diagnostics += PartialPatternError(pat)
+                    bindListPattern(pat, TyUnknown)
+                } else {
+                    bindListPattern(pat, ty)
+                }
             }
             is ElmConstantTag -> {
                 if (isParameter) diagnostics += PartialPatternError(pat)
@@ -526,6 +535,38 @@ private class InferenceScope(
             else -> error("unexpected type $pat")
         }
     }
+
+    private fun bindConsPattern(pat: ElmConsPattern, ty: Ty) {
+        bindListPatternParts(pat, pat.parts.toList(), ty)
+    }
+
+    private fun bindListPattern(pat: ElmListPattern, ty: Ty) {
+        bindListPatternParts(pat, pat.parts.toList(), ty)
+    }
+
+    private fun bindListPatternParts(pat: ElmPatternChildTag, parts: List<ElmPatternChildTag>, ty: Ty) {
+        // Cons and list patterns both have the same semantics.
+        // `[a, b]` is equivalent to `a :: b :: []`, i.e. a list of length exactly two.
+        // The last part is bound to the tail of the list, and any leading parts are bound to
+        // individual elements.
+        if (ty !is TyUnknown && (ty !is TyUnion || !ty.isTyList)) {
+            diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
+            parts.forEach { bindPattern(it, TyUnknown, false) }
+            return
+        }
+
+        val elementTy = (ty as? TyUnion)?.parameters?.get(0) ?: TyUnknown
+
+        for (part in parts.dropLast(1)) {
+            val t = if (part is ElmListPattern) ty else elementTy
+            bindPattern(part, t, false)
+        }
+
+        if (parts.isNotEmpty()) {
+            bindPattern(parts.last(), ty, false)
+        }
+    }
+
 
     private fun bindPatternAs(pat: ElmPatternAs?, ty: Ty) {
         if (pat != null) setBinding(pat, ty)
@@ -662,5 +703,4 @@ private fun uniqueVars(count: Int): List<TyVar> {
     return (0 until count).map {
         TyVar(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
     }
-
 }

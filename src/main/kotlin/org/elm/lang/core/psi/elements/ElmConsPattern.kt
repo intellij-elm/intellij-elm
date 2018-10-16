@@ -1,10 +1,9 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import org.elm.lang.core.psi.ElmPatternChildTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.ElmConsPatternChildTag
-import org.elm.lang.core.psi.ElmPatternChildTag
 
 
 /**
@@ -21,5 +20,5 @@ class ElmConsPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmPatternChildTa
      * e.g. the pattern `(a :: [2]) :: [[3]]` will have parts `(a :: [2])` and `[[3]]`, with the first being an
      *   [ElmPattern].
      */
-    val parts: Sequence<ElmConsPatternChildTag> get() = directChildren.filterIsInstance<ElmConsPatternChildTag>()
+    val parts: Sequence<ElmPatternChildTag> get() = directChildren.filterIsInstance<ElmPatternChildTag>()
 }

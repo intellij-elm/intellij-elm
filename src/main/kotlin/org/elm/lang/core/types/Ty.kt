@@ -15,7 +15,7 @@ data class TyTuple(val types: List<Ty>) : Ty() {
     }
 }
 
-data class TyRecord(val fields: Map<String, Ty>, val isSubset: Boolean=false) : Ty()
+data class TyRecord(val fields: Map<String, Ty>, val isSubset: Boolean = false) : Ty()
 
 /** A type like `String` or `Maybe a` */
 data class TyUnion(val module: String, val name: String, val parameters: List<Ty>) : Ty()
@@ -31,7 +31,8 @@ val TyChar = TyUnion("Char", "Char", emptyList())
 // GLSL code to infer this.
 val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown, TyUnknown, TyUnknown))
 
-fun TyList(parameters: Ty) = TyUnion("List", "List", listOf(parameters))
+fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
+val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 
 data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
     init {

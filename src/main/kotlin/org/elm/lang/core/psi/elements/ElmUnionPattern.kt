@@ -16,7 +16,7 @@ import org.elm.lang.core.resolve.reference.SimpleUnionConstructorReference
  *
  * e.g. `Maybe a` or `Just` when used as a function parameter or case pattern
  */
-class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmConsPatternChildTag, ElmPatternChildTag {
+class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmPatternChildTag {
 
     /** The union constructor */
     val upperCaseQID: ElmUpperCaseQID

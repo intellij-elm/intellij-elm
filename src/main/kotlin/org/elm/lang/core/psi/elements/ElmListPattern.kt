@@ -9,8 +9,8 @@ import org.elm.lang.core.psi.*
  *
  * e.g. `[a, (b, c)]`
  */
-class ElmListPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag, ElmFunctionParamTag,
+class ElmListPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag,
         ElmPatternChildTag, ElmUnionPatternChildTag {
     /** The patterns that are part of the list. May be empty. */
-    val parts: Sequence<ElmConsPatternChildTag> get() = directChildren.filterIsInstance<ElmConsPatternChildTag>()
+    val parts: Sequence<ElmPatternChildTag> get() = directChildren.filterIsInstance<ElmPatternChildTag>()
 }

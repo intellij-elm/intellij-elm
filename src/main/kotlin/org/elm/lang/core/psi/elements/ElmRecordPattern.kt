@@ -8,8 +8,7 @@ import org.elm.lang.core.psi.*
  *
  * e.g. the 'name' and 'age' in `let {name, age} = person in ...`
  */
-class ElmRecordPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag, ElmFunctionParamTag,
-        ElmPatternChildTag, ElmUnionPatternChildTag {
+class ElmRecordPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag {
 
     val lowerPatternList: List<ElmLowerPattern>
         get() = findChildrenByClass(ElmLowerPattern::class.java).toList()

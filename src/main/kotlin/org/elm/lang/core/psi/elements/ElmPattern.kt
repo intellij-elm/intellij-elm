@@ -4,8 +4,7 @@ import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.*
 
 
-class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag, ElmFunctionParamTag,
-        ElmPatternChildTag, ElmUnionPatternChildTag {
+class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag {
 
     /**
      * The actual type of this pattern.

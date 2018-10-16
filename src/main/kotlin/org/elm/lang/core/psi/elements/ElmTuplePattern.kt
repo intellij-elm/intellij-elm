@@ -10,7 +10,7 @@ import org.elm.lang.core.psi.*
  *
  * e.g. `(x, y)` in the function `scalePoint (x, y) s = (x * s, y * s)`
  */
-class ElmTuplePattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag, ElmFunctionParamTag,
+class ElmTuplePattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag,
         ElmPatternChildTag, ElmUnionPatternChildTag {
 
     val patternList: List<ElmPattern>

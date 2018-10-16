@@ -512,4 +512,35 @@ main arg =
         Baz x -> x
         _ -> ()
 """)
+
+    fun `test valid case branch with cons pattern`() = checkByText("""
+main : ()
+main arg =
+    case [()] of
+        x :: xs -> x
+        _ -> ()
+""")
+
+    fun `test valid case branch with list pattern`() = checkByText("""
+main : ()
+main arg =
+    case [()] of
+        [x, y] -> x
+        _ -> ()
+""")
+
+    fun `test valid case branch with const and list pattern`() = checkByText("""
+main : ()
+main arg =
+    case [()] of
+        z :: [x, y] -> x
+        _ -> ()
+""")
+
+    fun `test invalid return value from cons pattern`() = checkByText("""
+main : ()
+main arg =
+    <error descr="Type mismatch.Required: ()Found: String">case [""] of
+        x :: xs -> x</error>
+""")
 }

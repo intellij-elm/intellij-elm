@@ -9,5 +9,4 @@ import org.elm.lang.core.psi.*
  *
  * e.g. the `_` in `(1, _, 3)`
  */
-class ElmAnythingPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmConsPatternChildTag,
-        ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag
+class ElmAnythingPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag
