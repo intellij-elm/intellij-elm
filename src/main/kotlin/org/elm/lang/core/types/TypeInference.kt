@@ -153,6 +153,7 @@ private class InferenceScope(
             is ElmAnonymousFunction -> inferChild { inferLambda(operand) }.ty
             is ElmCaseOf -> inferCaseType(operand)
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
+            is ElmFieldAccessorFunction -> inferFieldAccessorFunction(operand)
             is ElmFunctionCall -> inferFunctionCallType(operand)
             is ElmIfElse -> inferIfElseType(operand)
             is ElmLetIn -> inferChild { inferLetIn(operand) }.ty
@@ -291,6 +292,12 @@ private class InferenceScope(
         }
     }
 
+    private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunction): Ty {
+        val field = function.identifier.text
+        val tyVar = TyVar("a")
+        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), isSubset = true)), tyVar)
+    }
+
     private fun inferFunctionCallType(call: ElmFunctionCall): Ty {
         val targetTy = inferOperandType(call.target)
 
@@ -389,7 +396,7 @@ private class InferenceScope(
     }
 
     private fun inferTypeRefType(typeRef: ElmTypeRef): Ty {
-        return joinTypeRefPartsToType(typeRef.allParameters.map{inferTypeSignatureDeclType(it)}.toList())
+        return joinTypeRefPartsToType(typeRef.allParameters.map { inferTypeSignatureDeclType(it) }.toList())
     }
 
     private fun joinTypeRefPartsToType(params: List<Ty>): Ty {
@@ -607,9 +614,7 @@ private class InferenceScope(
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
-            is TyRecord -> ty2 is TyRecord
-                    && ty1.fields.size == ty2.fields.size
-                    && ty1.fields.all { (k, v) -> ty2.fields[k]?.let { assignable(v, it) } ?: false }
+            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
@@ -621,6 +626,14 @@ private class InferenceScope(
             TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign TyInProgressBinding")
         }
+    }
+
+    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
+        val correctSize = when {
+            ty2.isSubset -> ty1.fields.size >= ty2.fields.size
+            else -> ty1.fields.size == ty2.fields.size
+        }
+        return correctSize && ty1.fields.all { (k, v) -> ty2.fields[k]?.let { assignable(v, it) } ?: false }
     }
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) = ty1.zip(ty2).all { (l, r) -> assignable(l, r) }

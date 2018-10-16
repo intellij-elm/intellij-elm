@@ -15,7 +15,7 @@ data class TyTuple(val types: List<Ty>) : Ty() {
     }
 }
 
-data class TyRecord(val fields: Map<String, Ty>) : Ty()
+data class TyRecord(val fields: Map<String, Ty>, val isSubset: Boolean=false) : Ty()
 
 /** A type like `String` or `Maybe a` */
 data class TyUnion(val module: String, val name: String, val parameters: List<Ty>) : Ty()
