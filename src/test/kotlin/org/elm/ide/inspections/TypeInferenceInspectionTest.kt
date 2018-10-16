@@ -84,6 +84,18 @@ main : A
 main = {x = (), y = ()}
 """)
 
+    fun `test correct value type from called record constructor`() = checkByText("""
+type alias A = {x: (), y: ()}
+main : A
+main = A () ()
+""")
+
+    fun `test correct value type from record constructor as function`() = checkByText("""
+type alias A = {x: (), y: ()}
+main : () -> (() -> () -> A)
+main _ = A
+""")
+
     fun `test correct value from field accessor`() = checkByText("""
 main : ()
 main = .x {x=()}
@@ -107,13 +119,13 @@ main = {x = 1.0, y = ()}
     fun `test mismatched value type from record subset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: {x: (),y: ()}Found: {x: ()}">{x = ()}</error>
+main = <error descr="Type mismatch.Required: RFound: {x: ()}">{x = ()}</error>
 """)
 
     fun `test mismatched value type from record superset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: {x: (),y: ()}Found: {x: (),y: (),z: ()}">{x = (), y=(), z=()}</error>
+main = <error descr="Type mismatch.Required: RFound: {x: (),y: (),z: ()}">{x = (), y=(), z=()}</error>
 """)
 
     fun `test matched value type union case`() = checkByText("""

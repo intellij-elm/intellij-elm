@@ -35,9 +35,13 @@ fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
 }
 
 fun TyRecord.renderedText(linkify: Boolean, withModule: Boolean): String {
+    if (alias != null) {
+        return alias.renderedText(linkify, withModule)
+    }
+    // TODO we probably don't want to render all fields
     return fields.entries.joinToString(",<br>", prefix = "{", postfix = "}") { (name, ty) ->
         "$name: ${ty.renderedText(linkify, withModule)}"
-    } // TODO we probably don't want to render all fields
+    }
 }
 
 fun TyTuple.renderedText(linkify: Boolean, withModule: Boolean): String {

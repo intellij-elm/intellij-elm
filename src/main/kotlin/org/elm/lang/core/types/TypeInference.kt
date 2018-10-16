@@ -161,10 +161,7 @@ private class InferenceScope(
             is ElmList -> inferListType(operand)
             is ElmCharConstant -> TyChar
             is ElmStringConstant -> TyString
-            is ElmNumberConstant -> {
-                if (operand.isFloat) TyFloat
-                else TyVar("number")  // TODO handle `number1`,`number2`,...
-            }
+            is ElmNumberConstant -> if (operand.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
             is ElmNegateExpression -> inferNegateExpression(operand)
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferExpressionType(it) })
             is ElmOperatorAsFunction -> inferOperatorAsFunctionType(operand)
@@ -180,7 +177,7 @@ private class InferenceScope(
 
     private fun inferLambdaType(lambda: ElmAnonymousFunction): Ty {
         // Self-recursion is allowed inside lambdas, so don't copy the active scopes when inferring them
-        return inferChild(activeScopes= mutableSetOf()) { beginLambdaInference(lambda) }.ty
+        return inferChild(activeScopes = mutableSetOf()) { beginLambdaInference(lambda) }.ty
     }
 
     private fun inferCaseType(caseOf: ElmCaseOf): Ty {
@@ -227,9 +224,12 @@ private class InferenceScope(
     private fun inferRecordType(record: ElmRecord): Ty {
         return when {
             record.baseRecordIdentifier != null -> TyUnknown // TODO the type is the type of the base record
-            else -> TyRecord(record.fieldList.associate { f ->
-                f.lowerCaseIdentifier.text to inferExpressionType(f.expression)
-            })
+            else -> {
+                val fields = record.fieldList.associate { f ->
+                    f.lowerCaseIdentifier.text to inferExpressionType(f.expression)
+                }
+                TyRecord(fields)
+            }
         }
     }
 
@@ -309,7 +309,7 @@ private class InferenceScope(
         val subExpr = expr.expression
         val subTy = inferExpressionType(subExpr)
         // TODO [unification] restrict vars to only number
-        return when(subTy) {
+        return when (subTy) {
             TyInt, TyFloat, TyUnknown, is TyVar -> subTy
             else -> {
                 diagnostics += TypeMismatchError(subExpr!!, subTy, TyVar("number"))
@@ -322,7 +322,11 @@ private class InferenceScope(
         val targetTy = inferOperandType(call.target)
 
         val arguments = call.arguments.toList()
-        val paramTys = if (targetTy is TyFunction) targetTy.parameters else listOf()
+        val paramTys = when (targetTy) {
+            is TyFunction -> targetTy.parameters
+            is TyRecord -> if (targetTy.alias == null) emptyList() else targetTy.fields.values.toList() // Record constructor
+            else -> emptyList()
+        }
 
         if (targetTy != TyUnknown && arguments.size > paramTys.size) {
             diagnostics += ArgumentCountError(call, arguments.size, paramTys.size)
@@ -376,12 +380,17 @@ private class InferenceScope(
         return when (decl) {
             is ElmUpperPathTypeRef -> inferUpperPathTypeRefType(decl)
             is ElmTypeVariableRef -> TyVar(decl.identifier.text) // TODO
-            is ElmRecordType -> TyRecord(decl.fieldTypeList.associate { it.lowerCaseIdentifier.text to inferTypeRefType(it.typeRef) })
+            is ElmRecordType -> inferRecordTypeDeclType(decl, null)
             is ElmTupleType -> if (decl.unit != null) TyUnit else TyTuple(decl.typeRefList.map { inferTypeRefType(it) })
             is ElmParametricTypeRef -> inferParametricTypeRefType(decl)
             is ElmTypeRef -> inferTypeRefType(decl)
             else -> error("unimplemented type $decl")
         }
+    }
+
+    private fun inferRecordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
+        val fields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to inferTypeRefType(it.typeRef) }
+        return TyRecord(fields, alias = alias)
     }
 
     private fun inferParametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
@@ -411,6 +420,12 @@ private class InferenceScope(
     }
 
     private fun inferTypeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Ty {
+        val record = decl.aliasedRecord
+        if (record != null) {
+            val aliasParams = decl.lowerTypeNameList.map { TyVar(it.name) }
+            val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, aliasParams)
+            return inferRecordTypeDeclType(record, aliasTy)
+        }
         return decl.typeRef?.let { inferTypeRefType(it) } ?: return TyUnknown
     }
 
@@ -676,6 +691,7 @@ private class InferenceScope(
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
             is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
+                    || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
@@ -698,7 +714,15 @@ private class InferenceScope(
         return correctSize && ty1.fields.all { (k, v) -> ty2.fields[k]?.let { assignable(v, it) } ?: false }
     }
 
-    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) = ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+    private fun recordAssignableToFunction(record: TyRecord, function: TyFunction): Boolean {
+        return record.alias != null
+                && assignable(record, function.ret)
+                && allAssignable(record.fields.values.toList(), function.parameters)
+    }
+
+    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) =
+            ty1.size == ty2.size &&
+            ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
 
     //</editor-fold>
 }

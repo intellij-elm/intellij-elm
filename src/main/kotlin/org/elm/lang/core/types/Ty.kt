@@ -15,7 +15,16 @@ data class TyTuple(val types: List<Ty>) : Ty() {
     }
 }
 
-data class TyRecord(val fields: Map<String, Ty>, val isSubset: Boolean = false) : Ty()
+/**
+ * @property fields map of field name to ty
+ * @property isSubset true for field accessors etc. that match a subset of record fields
+ * @property alias The alias for this record, if there is one. Used for rendering and tracking record constructors
+ */
+data class TyRecord(
+        val fields: Map<String, Ty>,
+        val isSubset: Boolean = false, // true for field accessors etc that match a subset of record fields
+        val alias: TyUnion? = null // Used for rendering and to keep track of record constructors
+) : Ty()
 
 /** A type like `String` or `Maybe a` */
 data class TyUnion(val module: String, val name: String, val parameters: List<Ty>) : Ty()
