@@ -22,7 +22,7 @@ fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): Infer
     // Add the function name itself name itself
     declaredNames(false).mapNotNullTo(visibleNames) { it.name }
 
-    return InferenceScope(visibleNames, activeScopes.toMutableSet(), null).inferDeclaration(this)
+    return InferenceScope(visibleNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
 }
 
 /**
@@ -45,7 +45,7 @@ private class InferenceScope(
 
     //<editor-fold desc="entry points">
 
-    fun inferDeclaration(declaration: ElmValueDeclaration): InferenceResult {
+    fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
         if (checkBadRecursion(declaration)) {
             return InferenceResult(emptyMap(), diagnostics, TyUnknown)
         }
@@ -69,7 +69,7 @@ private class InferenceScope(
         return InferenceResult(bindings, diagnostics, ty)
     }
 
-    private fun inferLambda(lambda: ElmAnonymousFunction): InferenceResult {
+    private fun beginLambdaInference(lambda: ElmAnonymousFunction): InferenceResult {
         // TODO [unification] infer param types
         lambda.patternList.forEach { bindPattern(it, TyUnknown, true) }
         val bodyTy = inferExpressionType(lambda.expression)
@@ -77,9 +77,9 @@ private class InferenceScope(
         return InferenceResult(bindings, diagnostics, ty)
     }
 
-    private fun inferLetIn(letIn: ElmLetIn): InferenceResult {
+    private fun beginLetInInference(letIn: ElmLetIn): InferenceResult {
         for (decl in letIn.valueDeclarationList) {
-            val result = inferChild { inferDeclaration(decl) }
+            val result = inferChild { beginDeclarationInference(decl) }
             resolvedDeclarations[decl] = result.ty
 
             val fdl = decl.functionDeclarationLeft
@@ -101,7 +101,7 @@ private class InferenceScope(
         return InferenceResult(emptyMap(), diagnostics, exprTy)
     }
 
-    private fun inferCaseOf(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
+    private fun beginCaseOfInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpressionType(branchExpression)
         return InferenceResult(bindings, diagnostics, ty)
@@ -116,8 +116,8 @@ private class InferenceScope(
     private fun checkBadRecursion(declaration: ElmValueDeclaration): Boolean {
         val isRecursive = declaration in activeScopes
         // Recursion is only allowed for functions with parameters
-        val isBad = isRecursive &&
-                declaration.functionDeclarationLeft.let { it == null || it.patterns.firstOrNull() == null }
+        val fdl = declaration.functionDeclarationLeft
+        val isBad = isRecursive && (fdl == null || fdl.patterns.firstOrNull() == null)
         if (isBad) {
             diagnostics += BadRecursionError(declaration)
         }
@@ -150,13 +150,13 @@ private class InferenceScope(
 
     private fun inferOperandType(operand: ElmOperandTag): Ty {
         return when (operand) {
-            is ElmAnonymousFunction -> inferChild { inferLambda(operand) }.ty
+            is ElmAnonymousFunction -> inferChild { beginLambdaInference(operand) }.ty
             is ElmCaseOf -> inferCaseType(operand)
             is ElmFieldAccess -> TyUnknown // TODO we need to get the record type from somewhere
             is ElmFieldAccessorFunction -> inferFieldAccessorFunction(operand)
             is ElmFunctionCall -> inferFunctionCallType(operand)
             is ElmIfElse -> inferIfElseType(operand)
-            is ElmLetIn -> inferChild { inferLetIn(operand) }.ty
+            is ElmLetIn -> inferChild { beginLetInInference(operand) }.ty
             is ElmList -> inferListType(operand)
             is ElmCharConstant -> TyChar
             is ElmStringConstant -> TyString
@@ -200,7 +200,7 @@ private class InferenceScope(
                 continue
             }
 
-            val result = inferChild { inferCaseOf(pat, caseOfExprTy, branchExpression) }
+            val result = inferChild { beginCaseOfInference(pat, caseOfExprTy, branchExpression) }
 
             if (result.diagnostics.isNotEmpty()) {
                 errorEncountered = true
@@ -270,11 +270,13 @@ private class InferenceScope(
 
         // If the value is a parameter, its type has already been added to bindings
         bindings[ref]?.let {
-            if (it is TyInProgressBinding) {
-                diagnostics += CyclicDefinitionError(expr)
-                return TyUnknown
+            return when (it) {
+                is TyInProgressBinding -> {
+                    diagnostics += CyclicDefinitionError(expr)
+                    TyUnknown
+                }
+                else -> it
             }
-            return it
         }
 
         return when (ref) {
@@ -332,21 +334,20 @@ private class InferenceScope(
         return inferValueDeclType(decl)
     }
 
+    /**
+     * Infer a top-level declaration referenced from an element.
+     *
+     * For performance, we don't infer the bodies of top-level declarations until the file they're
+     * declared in is opened, so if the declaration isn't annotated, [TyUnknown] is returned.
+     */
     private fun inferValueDeclType(decl: ElmValueDeclaration): Ty {
         if (checkBadRecursion(decl)) return TyUnknown
 
-        // Currently, we don't use the inference if there's no annotation. It would be nice to do so,
-        // but we would need to deal with mutual recursion.
+        // If we decide to start using the inference for top-level functions here, we will need to
+        // guard against mutual recursion causing a stack overflow
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
-        // For performance, use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeRef?.let { inferTypeRefType(it) }
-        if (ty == null) {
-            // Do a top level inference, since decl isn't a child of this scope
-            val result = decl.inference(activeScopes)
-            diagnostics += result.diagnostics
-            ty = result.ty
-        }
+        val ty = decl.typeAnnotation?.typeRef?.let { inferTypeRefType(it) } ?: return TyUnknown
         resolvedDeclarations[decl] = ty
         return ty
     }

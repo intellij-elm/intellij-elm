@@ -4,21 +4,24 @@ package org.elm.ide.inspections
 // although literals still work.
 class TypeInferenceInspectionTest : ElmInspectionsTestBase(TypeInferenceInspection()) {
     fun `test too many arguments to value`() = checkByText("""
+foo : ()
 foo = ()
 
 main = <error descr="This value is not a function, but it was given 1 argument.">foo 1</error>
 """)
 
     fun `test too many arguments to function`() = checkByText("""
+foo : () -> () -> ()
 foo a b = a
 
-main = <error descr="The function expects 2 arguments, but it got 3 instead.">foo 1 2 3</error>
+main = <error descr="The function expects 2 arguments, but it got 3 instead.">foo () () ()</error>
 """)
 
     fun `test too many arguments to operator`() = checkByText("""
+add : () -> () -> ()
 add a b = a
 infix left 6 (+) = add
-main = <error descr="The function expects 2 arguments, but it got 3 instead.">(+) 1 2 3</error>
+main = <error descr="The function expects 2 arguments, but it got 3 instead.">(+) () () ()</error>
 """)
 
     fun `test mismatched int value type`() = checkByText("""
@@ -408,11 +411,11 @@ main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
-    fun `test bad mutual recursion`() = checkByText("""
-<error descr="Infinite recursion">foo = bar</error>
-
-<error descr="Infinite recursion">bar = foo</error>
-""")
+// TODO: detect this if we start inferring top-level references
+//    fun `test bad mutual recursion`() = checkByText("""
+//<error descr="Infinite recursion">foo = bar</error>
+//<error descr="Infinite recursion">bar = foo</error>
+//""")
 
     fun `test function argument mismatch in case expression`() = checkByText("""
 foo : () -> ()
