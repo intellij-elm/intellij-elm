@@ -29,6 +29,18 @@ main : ()
 main = <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
 """)
 
+    fun `test matched int negation`() = checkByText("""
+main = -1
+""")
+
+    fun `test matched float negation`() = checkByText("""
+main = -1.0
+""")
+
+    fun `test mismatched negation`() = checkByText("""
+main = -<error descr="Type mismatch.Required: numberFound: String">""</error>
+""")
+
     fun `test mismatched tuple value type from missing field`() = checkByText("""
 main : ((), (), ())
 main = <error descr="Type mismatch.Required: ((), (), ())Found: ((), ())">((), ())</error>

@@ -163,9 +163,9 @@ private class InferenceScope(
             is ElmStringConstant -> TyString
             is ElmNumberConstant -> {
                 if (operand.isFloat) TyFloat
-                else TyUnknown  // TODO int literals have type `numberN`, and we need to infer them
+                else TyVar("number")  // TODO handle `number1`,`number2`,...
             }
-            is ElmNegateExpression -> inferExpressionType(operand.expression)
+            is ElmNegateExpression -> inferNegateExpression(operand)
             is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferExpressionType(it) })
             is ElmOperatorAsFunction -> inferOperatorAsFunctionType(operand)
             is ElmRecord -> inferRecordType(operand)
@@ -303,6 +303,19 @@ private class InferenceScope(
         val field = function.identifier.text
         val tyVar = TyVar("a")
         return TyFunction(listOf(TyRecord(mapOf(field to tyVar), isSubset = true)), tyVar)
+    }
+
+    private fun inferNegateExpression(expr: ElmNegateExpression): Ty {
+        val subExpr = expr.expression
+        val subTy = inferExpressionType(subExpr)
+        // TODO [unification] restrict vars to only number
+        return when(subTy) {
+            TyInt, TyFloat, TyUnknown, is TyVar -> subTy
+            else -> {
+                diagnostics += TypeMismatchError(subExpr!!, subTy, TyVar("number"))
+                TyUnknown
+            }
+        }
     }
 
     private fun inferFunctionCallType(call: ElmFunctionCall): Ty {
