@@ -45,14 +45,16 @@ class GlobalScope(val project: Project) {
     // TODO [kl] this is crazy inefficient, and it should be easy to cache
     // well, at least this is now stub-based, but it's still a lot of busy work and allocations.
 
-    fun getVisibleValues(): List<ElmNamedElement> {
+    fun getVisibleValues(includeBasics: Boolean): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModulesIndex.get(moduleName, project)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
-        rest.addAll(helper("Basics"))
+        if (includeBasics) {
+            rest.addAll(helper("Basics"))
+        }
         rest.addAll(helper("List").filter { it.name == "::" })
 
         // TODO [drop 0.18] remove this line (the `!` operator was removed in 0.19)

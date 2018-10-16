@@ -13,9 +13,9 @@ fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): Infer
     val visibleNames = HashSet<String>()
 
     // Add any visible names except imports.
-    // For some reason, Elm lets you shadow imported names.
+    // For some reason, Elm lets you shadow imported names and anything defined in Basics.elm
     parentsOfType<ElmFile>()
-            .map { ModuleScope(it).getVisibleValues(includeImports = false) }
+            .map { ModuleScope(it).getVisibleValues(includeImports = false, includeBasics = false) }
             .firstOrNull()
             ?.run { mapNotNullTo(visibleNames) { it.name } }
 
@@ -466,6 +466,7 @@ private class InferenceScope(
     /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
+        val contains = shadowableNames.contains(elementName)
         if (elementName != null && !shadowableNames.add(elementName)) {
             diagnostics += RedefinitionError(element)
         }
@@ -722,7 +723,7 @@ private class InferenceScope(
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) =
             ty1.size == ty2.size &&
-            ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+                    ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
 
     //</editor-fold>
 }
