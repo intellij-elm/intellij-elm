@@ -469,10 +469,10 @@ private class InferenceScope(
         if (typeRef == null) {
             val patterns = decl.patterns.toList()
             patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
-            if (patterns.size > 1) {
-                return TyFunction(patterns.map { TyUnknown }, TyUnknown)
+            return when {
+                patterns.isEmpty() -> TyUnknown
+                else -> TyFunction(patterns.map { TyUnknown }, TyUnknown)
             }
-            return TyUnknown
         }
 
         val typeRefParamTys = typeRef.allParameters.map { inferTypeSignatureDeclType(it) }.toList()

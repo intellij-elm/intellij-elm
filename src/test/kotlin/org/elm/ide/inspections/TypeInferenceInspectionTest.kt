@@ -324,7 +324,16 @@ main =
         <error descr="Type mismatch.Required: FooFound: ()">foo</error>
 """)
 
-    fun `test let-in function without annotation`() = checkByText("""
+    fun `test let-in function without annotation and one parameter`() = checkByText("""
+main : ()
+main =
+    let
+        foo a = ()
+    in
+        foo 1
+""")
+
+    fun `test let-in function without annotation and two parameters`() = checkByText("""
 main : ()
 main =
     let
