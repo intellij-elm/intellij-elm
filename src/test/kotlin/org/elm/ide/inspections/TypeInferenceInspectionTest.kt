@@ -101,6 +101,18 @@ main : ()
 main = .x {x=()}
 """)
 
+    fun `test value from parameter with base record identifier`() = checkByText("""
+type alias R = {x: (), y: ()}
+main : R -> R
+main r = { r | x = () }
+""")
+
+    fun `test mismatched value from parameter with base record identifier`() = checkByText("""
+type alias R = {x: (), y: ()}
+main : R -> ()
+main r = <error descr="Type mismatch.Required: ()Found: R">{ r | x = () }</error>
+""")
+
     fun `test field accessor as argument`() = checkByText("""
 type alias R = {x: (), y: ()}
 foo : (R -> ()) -> ()

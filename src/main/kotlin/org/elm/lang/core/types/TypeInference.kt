@@ -34,7 +34,12 @@ private class InferenceScope(
         private val activeScopes: MutableSet<ElmValueDeclaration>,
         parent: InferenceScope?
 ) {
-    /** cache for declared tys referenced in this scope; shared with parent */
+    /**
+     * Cache for declared tys referenced in this scope; shared with parent
+     * This will cause some items to be cached that aren't visible to all ancestors, but that's fine
+     * since you can't read from the cache without a reference to the element anyway, and this way
+     * we can cache declarations for sibling elements and other relatives.
+     */
     private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations
             ?: mutableMapOf()
     /**
@@ -229,15 +234,16 @@ private class InferenceScope(
 
 
     private fun inferRecordType(record: ElmRecord): Ty {
-        return when {
-            record.baseRecordIdentifier != null -> TyUnknown // TODO the type is the type of the base record
-            else -> {
-                val fields = record.fieldList.associate { f ->
-                    f.lowerCaseIdentifier.text to inferExpressionType(f.expression)
-                }
-                TyRecord(fields)
+        val recordIdentifier = record.baseRecordIdentifier
+        if (recordIdentifier == null) {
+            val fields = record.fieldList.associate { f ->
+                f.lowerCaseIdentifier.text to inferExpressionType(f.expression)
             }
+            return TyRecord(fields)
         }
+
+        val ref = recordIdentifier.reference.resolve() ?: return TyUnknown
+        return bindings[ref] ?: getValueDeclType(ref.parentOfType())
     }
 
     private fun inferListType(expr: ElmList): Ty {
@@ -295,10 +301,7 @@ private class InferenceScope(
         return when (ref) {
             is ElmUnionMember -> getUnionMemberType(ref)
             is ElmTypeAliasDeclaration -> getTypeAliasDeclarationType(ref)
-            is ElmFunctionDeclarationLeft -> {
-                val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
-                getValueDeclType(decl)
-            }
+            is ElmFunctionDeclarationLeft -> getValueDeclType(ref.parentOfType())
             is ElmPortAnnotation -> getPortAnnotationType(ref)
             // All patterns should be bound by the time this function is called
             is ElmLowerPattern -> error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
@@ -359,8 +362,7 @@ private class InferenceScope(
         if (ref is ElmInfixDeclaration) {
             ref = ref.valueExpr?.reference?.resolve()
         }
-        val decl = ref?.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
-        return getValueDeclType(decl)
+        return getValueDeclType(ref?.parentOfType())
     }
 
     //</editor-fold>
@@ -369,13 +371,13 @@ private class InferenceScope(
     // diagnostics, but they won't otherwise access the scope.
 
     /**
-     * Infer a top-level declaration referenced from an element.
+     * Get a ty from a top-level declaration referenced from an element.
      *
      * For performance, we don't infer the bodies of top-level declarations until the file they're
      * declared in is opened, so if the declaration isn't annotated, [TyUnknown] is returned.
      */
-    private fun getValueDeclType(decl: ElmValueDeclaration): Ty {
-        if (checkBadRecursion(decl)) return TyUnknown
+    private fun getValueDeclType(decl: ElmValueDeclaration?): Ty {
+        if (decl == null || checkBadRecursion(decl)) return TyUnknown
 
         // If we decide to start using the inference for top-level functions here, we will need to
         // guard against mutual recursion causing a stack overflow
@@ -385,7 +387,6 @@ private class InferenceScope(
         resolvedDeclarations[decl] = ty
         return ty
     }
-
 
     /** Get the type for one part of a type ref */
     private fun getTypeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
@@ -425,8 +426,8 @@ private class InferenceScope(
             is ElmTypeAliasDeclaration -> verifyArgs(ref.lowerTypeNameList.size, getTypeAliasDeclarationType(ref))
             is ElmTypeDeclaration -> verifyArgs(ref.lowerTypeNameList.size, getTypeDeclarationType(ref))
             // We only get here if the reference doesn't resolve. We could create a TyUnion from the
-            // ref name, but that would lead to unhelpful error messages if the reference was
-            // supposed to be a type alias.
+            // ref name, but we don't know what module it's supposed to be defined in, so that would
+            // lead to false positives.
             else -> TyUnknown
         }
     }
