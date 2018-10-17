@@ -106,7 +106,7 @@ private class InferenceScope(
                 if (pattern != null) {
                     val patterns = PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)
                     for (p in patterns) {
-                        bindings[p] = result.bindingType(p)
+                        setBinding(p, result.bindingType(p))
                         shadowableNames += p.name
                     }
                 }
@@ -224,7 +224,7 @@ private class InferenceScope(
         var ty: Ty = baseTy
 
         for (field in fields) {
-            if (ty === TyUnknown) {
+            if (ty === TyUnknown || ty is TyVar) { // TODO[unification] infer vars
                 return TyUnknown
             }
 
@@ -403,7 +403,7 @@ private class InferenceScope(
                 inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
                 else -> return argCountError(0)
             }
-            TyUnknown -> return TyUnknown
+            TyUnknown, is TyVar -> return TyUnknown // TODO[unification] infer vars
             else -> return argCountError(0)
         }
 
@@ -508,13 +508,12 @@ private class InferenceScope(
     }
 
     private fun getTypeRefType(typeRef: ElmTypeRef): Ty {
-        return joinTypeRefPartsToType(typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList())
-    }
-
-    private fun joinTypeRefPartsToType(params: List<Ty>): Ty {
+        val params = typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList()
+        val last = params.last()
         return when {
             params.size == 1 -> params[0]
-            else -> TyFunction(params.dropLast(1), params.last())
+            last is TyFunction -> TyFunction(params.dropLast(1) + last.parameters, last.ret)
+            else -> TyFunction(params.dropLast(1), last)
         }
     }
 
@@ -595,9 +594,11 @@ private class InferenceScope(
             }
         }
 
-        val typeRefParamTys = typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList()
-        patterns.zip(typeRefParamTys).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
-        return joinTypeRefPartsToType(typeRefParamTys) to patterns.size
+        val typeRefTy = getTypeRefType(typeRef)
+        if (typeRefTy is TyFunction) {
+            patterns.zip(typeRefTy.parameters).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
+        }
+        return typeRefTy to patterns.size
     }
 
     private fun bindPatternDeclarationParameters(

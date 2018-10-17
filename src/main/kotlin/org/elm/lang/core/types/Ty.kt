@@ -35,7 +35,11 @@ data class TyRecord(
 }
 
 /** A type like `String` or `Maybe a` */
-data class TyUnion(val module: String, val name: String, val parameters: List<Ty>) : Ty()
+data class TyUnion(val module: String, val name: String, val parameters: List<Ty>) : Ty() {
+    override fun toString(): String {
+        return "<TyUnion ${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")}>"
+    }
+}
 
 val TyInt = TyUnion("Basics", "Int", emptyList())
 val TyFloat = TyUnion("Basics", "Float", emptyList())

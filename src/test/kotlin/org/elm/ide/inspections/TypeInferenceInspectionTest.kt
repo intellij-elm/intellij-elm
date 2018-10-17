@@ -571,6 +571,22 @@ main =
         foo ()
 """)
 
+    fun `test matched function type alias in annotation`() = checkByText("""
+type Foo = Bar
+type alias F = Foo -> ()
+
+foo : F -> F
+foo a b = a b
+""")
+
+    fun `test mismatched function type alias in annotation`() = checkByText("""
+type Foo = Bar
+type alias F = Foo -> ()
+
+foo : F -> F
+foo a b = <error descr="Type mismatch.Required: ()Found: Foo">b</error>
+""")
+
     fun `test partial pattern in function parameter from cons`() = checkByText("""
 main (<error descr="Pattern does not cover all possibilities">x :: []</error>) = ()
 """)
