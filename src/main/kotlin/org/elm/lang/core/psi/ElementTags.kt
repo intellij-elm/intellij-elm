@@ -22,7 +22,7 @@ interface ElmOperandTag : ElmExpressionPartTag
 interface ElmNameDeclarationPatternTag : ElmNamedElement
 
 /** A function being called as the child of a [ElmFunctionCall] */
-interface ElmFunctionCallTarget : ElmOperandTag
+interface ElmFunctionCallTargetTag : ElmOperandTag
 
 /** An element that is either an [ElmFunctionParamTag], a [ElmPatternChildTag], or both. No elements implement this directly. */
 interface ElmFunctionParamOrPatternChildTag : ElmPsiElement

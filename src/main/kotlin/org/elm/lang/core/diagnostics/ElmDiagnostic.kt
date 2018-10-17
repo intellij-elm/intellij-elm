@@ -48,6 +48,14 @@ class CyclicDefinitionError(
         get() = "Value cannot be defined in terms of itself"
 }
 
+class RecordFieldError(
+        element: PsiElement,
+        private val name: String
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Record does not have field '$name'"
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,

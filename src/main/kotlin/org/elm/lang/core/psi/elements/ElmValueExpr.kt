@@ -2,10 +2,9 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmFunctionCallTarget
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.*
@@ -19,14 +18,15 @@ enum class Flavor {
 }
 
 /**
- * An operand that is a reference to a function or constructor, optionally qualified with a module name.
+ * An operand that is a reference to a parameter, bound pattern, function or constructor, optionally
+ * qualified with a module name.
  *
  * e.g.
  *  - `Route.fromUrl`
  *  - `Json.Decode.Value`
  *  - `x`
  */
-class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTarget {
+class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
 
     val valueQID: ElmValueQID?
         get() = findChildByClass(ElmValueQID::class.java)

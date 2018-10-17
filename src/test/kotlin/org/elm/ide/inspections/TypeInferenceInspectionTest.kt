@@ -174,13 +174,71 @@ main : R
 main = <error descr="Type mismatch.Required: RFound: { x: (),y: (),z: () }">{x = (), y=(), z=()}</error>
 """)
 
-    fun `test matched value type union case`() = checkByText("""
+    fun `test matched field accessor chains`() = checkByText("""
+type alias A = {x: ()}
+type alias B = {a: A}
+type alias C = {b: B}
+fieldAccessor : C -> ()
+fieldAccessor c = c.b.a.x
+
+exprAccessor : ()
+exprAccessor = (C (B (A ()))).b.a.x
+
+recordAccessor : ()
+recordAccessor = {b = {a = { x = () } } }.b.a.x
+""")
+
+    fun `test mismatch in final part of field accessor chains`() = checkByText("""
+type Foo = Bar
+type alias A = {x: ()}
+type alias B = {a: A}
+type alias C = {b: B}
+fieldAccessor : C -> Foo
+fieldAccessor c = <error descr="Type mismatch.Required: FooFound: ()">c.b.a.x</error>
+
+exprAccessor : Foo
+exprAccessor = <error descr="Type mismatch.Required: FooFound: ()">(C (B (A ()))).b.a.x</error>
+
+recordAccessor : Foo
+recordAccessor = <error descr="Type mismatch.Required: FooFound: ()">{b = {a = { x = () } } }.b.a.x</error>
+""")
+
+    fun `test non-record in middle of accessor chain`() = checkByText("""
+type Foo = Bar
+type alias A = {x: ()}
+type alias B = {a: A}
+type alias C = {b: B}
+fieldAccessor : C -> Foo
+fieldAccessor c = c.b.a.<error descr="Type mismatch.Required: recordFound: ()">x</error>.z.z
+
+exprAccessor : ()
+exprAccessor = (C (B (A ()))).b.a.<error descr="Type mismatch.Required: recordFound: ()">x</error>.z.z
+
+recordAccessor : ()
+recordAccessor = {b = {a = { x = () } } }.b.a.<error descr="Type mismatch.Required: recordFound: ()">x</error>.z.z
+""")
+
+    fun `test missing field in accessor chains`() = checkByText("""
+type alias A = {x: ()}
+type alias B = {a: A}
+type alias C = {b: B}
+fieldAccessor : C -> ()
+fieldAccessor c = c.b.<error descr="Record does not have field 'z'">z</error>.x
+
+exprAccessor : ()
+exprAccessor = (C (B (A ()))).b.<error descr="Record does not have field 'z'">z</error>.x
+
+recordAccessor : ()
+recordAccessor = {b = {a = { x = () } } }.b.<error descr="Record does not have field 'z'">z</error>.x
+""")
+
+    fun `test matched value type from union case`() = checkByText("""
 type Maybe a = Just a | Nothing
 main : Maybe a
 main = Nothing
 """)
 
-    fun `test mismatched value type union case`() = checkByText("""
+    fun `test mismatched value type from union case`() = checkByText("""
 type Maybe a = Just a | Nothing
 type Foo = Bar
 main : Maybe a
