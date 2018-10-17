@@ -1,6 +1,7 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.PsiComment
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
@@ -27,6 +28,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
 
     constructor(stub: ElmValueDeclarationStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
+
+    val modificationTracker = SimpleModificationTracker()
 
     override fun getIcon(flags: Int) =
             ElmIcons.FUNCTION

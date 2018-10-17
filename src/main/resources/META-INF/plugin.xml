@@ -103,6 +103,11 @@
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider" />
     </extensions>
 
+    <project-components>
+        <component>
+            <implementation-class>org.elm.lang.core.psi.ElmPsiManager</implementation-class>
+        </component>
+    </project-components>
 
     <actions>
         <!-- TODO [drop 0.18] change "Attach Elm JSON..." to "Attach elm.json ..."-->

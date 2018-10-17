@@ -1,6 +1,9 @@
 package org.elm.lang.core.types
 
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentsOfType
 import org.elm.lang.core.diagnostics.*
@@ -8,9 +11,17 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
+import com.intellij.psi.util.CachedValueProvider.Result
 
-fun ElmValueDeclaration.inference(): InferenceResult = inference(emptySet()) // TODO cache
-fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
+private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
+
+fun ElmValueDeclaration.inference(): InferenceResult {
+    return CachedValuesManager.getCachedValue(this, TYPE_INFERENCE_KEY) {
+        Result.create(inference(emptySet()), project.modificationTracker, modificationTracker)
+    }
+}
+
+private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     val visibleNames = HashSet<String>()
 
     // Add any visible names except imports.
