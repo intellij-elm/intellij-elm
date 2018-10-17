@@ -19,7 +19,7 @@ fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): Infer
             .firstOrNull()
             ?.run { mapNotNullTo(visibleNames) { it.name } }
 
-    // Add the function name itself name itself
+    // Add the function name itself
     declaredNames(false).mapNotNullTo(visibleNames) { it.name }
 
     return InferenceScope(visibleNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
@@ -34,16 +34,20 @@ private class InferenceScope(
         private val activeScopes: MutableSet<ElmValueDeclaration>,
         parent: InferenceScope?
 ) {
-    // cache for declared tys referenced in this scope; shared with parent
+    /** cache for declared tys referenced in this scope; shared with parent */
     private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations
             ?: mutableMapOf()
-    // names declared in patterns; copied from parent since we can see parent's bindings, but ours
-    // shouldn't be shared with other scopes that share a parent.
+    /**
+     * names declared in patterns; copied from parent since we can see parent's bindings, but ours
+     * shouldn't be shared with other scopes that share a parent.
+     */
     private val bindings: MutableMap<ElmNamedElement, Ty> = parent?.bindings?.toMutableMap() ?: mutableMapOf()
-    // errors encountered during inference
+    /** errors encountered during inference */
     private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
 
     //<editor-fold desc="entry points">
+    // These functions begin inference for elements that contain lexical scopes. Only one
+    // `begin` function should be called on a scope instance.
 
     fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
         if (checkBadRecursion(declaration)) {
@@ -128,6 +132,9 @@ private class InferenceScope(
 
     //</editor-fold>
     //<editor-fold desc="inference">
+    // These functions take elements from expressions and return their Ty. If the Ty can't be
+    // inferred due to program error or unimplemented functionality, TyUnknown is returned.
+    // These functions recurse down into children elements, if any, and report diagnostics on them.
 
     private fun inferExpressionType(expr: ElmExpression?): Ty {
         if (expr == null) return TyUnknown
@@ -286,13 +293,13 @@ private class InferenceScope(
         }
 
         return when (ref) {
-            is ElmUnionMember -> inferUnionMemberType(ref)
-            is ElmTypeAliasDeclaration -> inferTypeAliasDeclarationType(ref)
+            is ElmUnionMember -> getUnionMemberType(ref)
+            is ElmTypeAliasDeclaration -> getTypeAliasDeclarationType(ref)
             is ElmFunctionDeclarationLeft -> {
                 val decl = ref.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
-                inferValueDeclType(decl)
+                getValueDeclType(decl)
             }
-            is ElmPortAnnotation -> inferPortAnnotationType(ref)
+            is ElmPortAnnotation -> getPortAnnotationType(ref)
             // All patterns should be bound by the time this function is called
             is ElmLowerPattern -> error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
             else -> error("Unexpected reference type ${ref.elementType}")
@@ -353,8 +360,13 @@ private class InferenceScope(
             ref = ref.valueExpr?.reference?.resolve()
         }
         val decl = ref?.parentOfType<ElmValueDeclaration>() ?: return TyUnknown
-        return inferValueDeclType(decl)
+        return getValueDeclType(decl)
     }
+
+    //</editor-fold>
+    //<editor-fold desc="types">
+    // These functions create a Ty from an element directly, without context. They might generate
+    // diagnostics, but they won't otherwise access the scope.
 
     /**
      * Infer a top-level declaration referenced from an element.
@@ -362,47 +374,47 @@ private class InferenceScope(
      * For performance, we don't infer the bodies of top-level declarations until the file they're
      * declared in is opened, so if the declaration isn't annotated, [TyUnknown] is returned.
      */
-    private fun inferValueDeclType(decl: ElmValueDeclaration): Ty {
+    private fun getValueDeclType(decl: ElmValueDeclaration): Ty {
         if (checkBadRecursion(decl)) return TyUnknown
 
         // If we decide to start using the inference for top-level functions here, we will need to
         // guard against mutual recursion causing a stack overflow
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
-        val ty = decl.typeAnnotation?.typeRef?.let { inferTypeRefType(it) } ?: return TyUnknown
+        val ty = decl.typeAnnotation?.typeRef?.let { getTypeRefType(it) } ?: return TyUnknown
         resolvedDeclarations[decl] = ty
         return ty
     }
 
 
     /** Get the type for one part of a type ref */
-    private fun inferTypeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
+    private fun getTypeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
         return when (decl) {
-            is ElmUpperPathTypeRef -> inferUpperPathTypeRefType(decl)
+            is ElmUpperPathTypeRef -> getUpperPathTypeRefType(decl)
             is ElmTypeVariableRef -> TyVar(decl.identifier.text) // TODO
-            is ElmRecordType -> inferRecordTypeDeclType(decl, null)
-            is ElmTupleType -> if (decl.unit != null) TyUnit else TyTuple(decl.typeRefList.map { inferTypeRefType(it) })
-            is ElmParametricTypeRef -> inferParametricTypeRefType(decl)
-            is ElmTypeRef -> inferTypeRefType(decl)
+            is ElmRecordType -> getRecordTypeDeclType(decl, null)
+            is ElmTupleType -> if (decl.unit != null) TyUnit else TyTuple(decl.typeRefList.map { getTypeRefType(it) })
+            is ElmParametricTypeRef -> getParametricTypeRefType(decl)
+            is ElmTypeRef -> getTypeRefType(decl)
             else -> error("unimplemented type $decl")
         }
     }
 
-    private fun inferRecordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
-        val fields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to inferTypeRefType(it.typeRef) }
+    private fun getRecordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
+        val fields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to getTypeRefType(it.typeRef) }
         return TyRecord(fields, alias = alias)
     }
 
-    private fun inferParametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
-        val parameters = typeRef.allParameters.map { inferTypeSignatureDeclType(it) }.toList()
-        return inferResolvedTypeRefType(typeRef, typeRef.reference.resolve(), parameters)
+    private fun getParametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
+        val parameters = typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList()
+        return getResolvedTypeRefType(typeRef, typeRef.reference.resolve(), parameters)
     }
 
-    private fun inferUpperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
-        return inferResolvedTypeRefType(typeRef, typeRef.reference.resolve(), emptyList())
+    private fun getUpperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
+        return getResolvedTypeRefType(typeRef, typeRef.reference.resolve(), emptyList())
     }
 
-    private fun inferResolvedTypeRefType(element: ElmPsiElement, ref: ElmNamedElement?, callArgs: List<Ty>): Ty {
+    private fun getResolvedTypeRefType(element: ElmPsiElement, ref: ElmNamedElement?, callArgs: List<Ty>): Ty {
         fun verifyArgs(paramCount: Int, declTy: Ty): Ty {
             if (paramCount != callArgs.size) {
                 diagnostics += ArgumentCountError(element, callArgs.size, paramCount, isType = true)
@@ -410,8 +422,8 @@ private class InferenceScope(
             return declTy
         }
         return when (ref) {
-            is ElmTypeAliasDeclaration -> verifyArgs(ref.lowerTypeNameList.size, inferTypeAliasDeclarationType(ref))
-            is ElmTypeDeclaration -> verifyArgs(ref.lowerTypeNameList.size, inferTypeDeclarationType(ref))
+            is ElmTypeAliasDeclaration -> verifyArgs(ref.lowerTypeNameList.size, getTypeAliasDeclarationType(ref))
+            is ElmTypeDeclaration -> verifyArgs(ref.lowerTypeNameList.size, getTypeDeclarationType(ref))
             // We only get here if the reference doesn't resolve. We could create a TyUnion from the
             // ref name, but that would lead to unhelpful error messages if the reference was
             // supposed to be a type alias.
@@ -419,18 +431,18 @@ private class InferenceScope(
         }
     }
 
-    private fun inferTypeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Ty {
+    private fun getTypeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Ty {
         val record = decl.aliasedRecord
         if (record != null) {
             val aliasParams = decl.lowerTypeNameList.map { TyVar(it.name) }
             val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, aliasParams)
-            return inferRecordTypeDeclType(record, aliasTy)
+            return getRecordTypeDeclType(record, aliasTy)
         }
-        return decl.typeRef?.let { inferTypeRefType(it) } ?: return TyUnknown
+        return decl.typeRef?.let { getTypeRefType(it) } ?: return TyUnknown
     }
 
-    private fun inferTypeRefType(typeRef: ElmTypeRef): Ty {
-        return joinTypeRefPartsToType(typeRef.allParameters.map { inferTypeSignatureDeclType(it) }.toList())
+    private fun getTypeRefType(typeRef: ElmTypeRef): Ty {
+        return joinTypeRefPartsToType(typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList())
     }
 
     private fun joinTypeRefPartsToType(params: List<Ty>): Ty {
@@ -440,13 +452,13 @@ private class InferenceScope(
         }
     }
 
-    private fun inferTypeDeclarationType(declaration: ElmTypeDeclaration): Ty {
+    private fun getTypeDeclarationType(declaration: ElmTypeDeclaration): Ty {
         return TyUnion(declaration.moduleName, declaration.name, declaration.lowerTypeNameList.map { TyVar(it.name) })
     }
 
-    private fun inferUnionMemberType(member: ElmUnionMember): Ty {
-        val decl = member.parentOfType<ElmTypeDeclaration>()?.let { inferTypeDeclarationType(it) } ?: return TyUnknown
-        val params = member.allParameters.map { inferTypeSignatureDeclType(it) }.toList()
+    private fun getUnionMemberType(member: ElmUnionMember): Ty {
+        val decl = member.parentOfType<ElmTypeDeclaration>()?.let { getTypeDeclarationType(it) } ?: return TyUnknown
+        val params = member.allParameters.map { getTypeSignatureDeclType(it) }.toList()
 
         return if (params.isNotEmpty()) {
             // Constructors with parameters are functions returning the type.
@@ -457,16 +469,21 @@ private class InferenceScope(
         }
     }
 
-    private fun inferPortAnnotationType(annotation: ElmPortAnnotation): Ty {
-        return annotation.typeRef?.let { inferTypeRefType(it) } ?: TyUnknown
+    private fun getPortAnnotationType(annotation: ElmPortAnnotation): Ty {
+        return annotation.typeRef?.let { getTypeRefType(it) } ?: TyUnknown
     }
 
     //</editor-fold>
     //<editor-fold desc="binding">
+    // These functions take an element in a pattern and the Ty that it's binding to, and store the
+    // bound names in `bindings`. We can then look up the bound Tys when we infer expressions later
+    // in the scope. Note that every name defined in a pattern _must_ be bound to a Ty, even if just
+    // to TyUnknown. This is still true in partial programs and other error states. Otherwise,
+    // lookups will fail later in the inference.
+
     /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        val contains = shadowableNames.contains(elementName)
         if (elementName != null && !shadowableNames.add(elementName)) {
             diagnostics += RedefinitionError(element)
         }
@@ -510,7 +527,7 @@ private class InferenceScope(
             }
         }
 
-        val typeRefParamTys = typeRef.allParameters.map { inferTypeSignatureDeclType(it) }.toList()
+        val typeRefParamTys = typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList()
         decl.patterns.zip(typeRefParamTys.asSequence()).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
         return joinTypeRefPartsToType(typeRefParamTys)
     }
@@ -609,7 +626,7 @@ private class InferenceScope(
 
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing to bind
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.let { inferUnionMemberType(it) } ?: return
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.let { getUnionMemberType(it) } ?: return
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
@@ -674,6 +691,9 @@ private class InferenceScope(
 
     //</editor-fold>
     //<editor-fold desc="coercion">
+    // These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
+    // diagnostic will be reported if either type is TyUnkown. Other than `requireAssignable`, none
+    // of the functions access the scope.
 
     private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
         val assignable = assignable(ty1, ty2)
