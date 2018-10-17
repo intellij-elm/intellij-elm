@@ -456,7 +456,7 @@ private class InferenceScope(
     private fun getTypeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
         return when (decl) {
             is ElmUpperPathTypeRef -> getUpperPathTypeRefType(decl)
-            is ElmTypeVariableRef -> TyVar(decl.identifier.text) // TODO
+            is ElmTypeVariableRef -> TyVar(decl.identifier.text)
             is ElmRecordType -> getRecordTypeDeclType(decl, null)
             is ElmTupleType -> if (decl.unit != null) TyUnit else TyTuple(decl.typeRefList.map { getTypeRefType(it) })
             is ElmParametricTypeRef -> getParametricTypeRefType(decl)
@@ -781,7 +781,7 @@ private class InferenceScope(
 
     /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
     private fun assignable(ty1: Ty, ty2: Ty): Boolean {
-        // TODO inference for vars
+        // TODO[unification] assignability for vars
         return ty1 === ty2 || ty2 is TyVar || ty2 is TyUnknown || when (ty1) {
             is TyVar -> true
             is TyTuple -> ty2 is TyTuple
