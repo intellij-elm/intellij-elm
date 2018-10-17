@@ -203,7 +203,7 @@ main a = ()
     fun `test matched value from union constructor`() = checkByText("""
 type Maybe = Just () | Nothing
 foo : (() -> Maybe) -> () -> ()
-foo _ = ()
+foo _ _ = ()
 
 main = foo Just ()
 """)
@@ -218,7 +218,7 @@ main = foo 1
 
     fun `test matched value from function call with parenthesized arguments`() = checkByText("""
 foo : a -> a -> ()
-foo _ = ()
+foo _ _ = ()
 
 main : Int
 main = foo (()) (())
@@ -344,6 +344,11 @@ main : Foo -> (Foo -> Foo)
 main a = (\_ -> a)
 """)
 
+    fun `test returning lambda`() = checkByText("""
+main : () -> ()
+main = (\a -> a)
+""")
+
     fun `test matched lambda type with closure pattern matching` () = checkByText("""
 type Foo = Bar
 main : (Foo, Foo) -> ((Foo, Foo) -> Foo)
@@ -353,7 +358,7 @@ main a = (\(_, b) -> b)
     fun `test mismatched lambda type with closure`() = checkByText("""
 type Foo = Bar
 main : () -> (Foo -> Foo)
-main a = <error descr="Type mismatch.Required: Foo -> FooFound: unknown -> ()">(\_ -> a)</error>
+main a = <error descr="Type mismatch.Required: Foo -> FooFound: a -> ()">(\_ -> a)</error>
 """)
 
     fun `test mismatched tuple pattern in parameter`() = checkByText("""
@@ -485,6 +490,24 @@ main =
         y
 """)
 
+    fun `test returning function`() = checkByText("""
+main : () -> ()
+main =
+    let
+        foo a = a
+    in
+        foo
+""")
+
+    fun `test returning partially applied function`() = checkByText("""
+main : () -> ()
+main =
+    let
+        foo a b = b
+    in
+        foo ()
+""")
+
     fun `test partial pattern in function parameter from cons`() = checkByText("""
 main (<error descr="Pattern does not cover all possibilities">x :: []</error>) = ()
 """)
@@ -543,7 +566,7 @@ main =
 """)
 
     fun `test case branches with mismatched types`() = checkByText("""
-main : () -> ()
+main : ()
 main =
     case () of
         "" -> ()

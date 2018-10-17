@@ -51,8 +51,10 @@ private class InferenceScope(
     private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
 
     //<editor-fold desc="entry points">
-    // These functions begin inference for elements that contain lexical scopes. Only one
-    // `begin` function should be called on a scope instance.
+    /*
+     * These functions begin inference for elements that contain lexical scopes. Only one
+     * `begin` function should be called on a scope instance.
+     */
 
     fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
         if (checkBadRecursion(declaration)) {
@@ -61,16 +63,18 @@ private class InferenceScope(
 
         activeScopes += declaration
 
-        val declaredTy = bindParameters(declaration)
+        val (declaredTy, paramCount) = bindParameters(declaration)
 
         val expr = declaration.expression
         var bodyTy: Ty = TyUnknown
         if (expr != null) {
             bodyTy = inferExpressionType(expr)
-            val expected = (declaredTy as? TyFunction)?.ret ?: declaredTy
-            val parts = expr.parts.toList()
+
             // If the body is just a let expression, show the diagnostic on its expression rather than the whole body.
+            val parts = expr.parts.toList()
             val errorExpr = (parts.singleOrNull() as? ElmLetIn)?.expression ?: expr
+
+            val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
             requireAssignable(errorExpr, bodyTy, expected)
         }
 
@@ -80,9 +84,11 @@ private class InferenceScope(
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunction): InferenceResult {
         // TODO [unification] infer param types
-        lambda.patternList.forEach { bindPattern(it, TyUnknown, true) }
+        val patternList = lambda.patternList
+        val paramVars = uniqueVars(patternList.size)
+        patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
         val bodyTy = inferExpressionType(lambda.expression)
-        val ty = TyFunction(lambda.patternList.map { TyUnknown }, bodyTy)
+        val ty = TyFunction(paramVars, bodyTy)
         return InferenceResult(bindings, diagnostics, ty)
     }
 
@@ -137,9 +143,11 @@ private class InferenceScope(
 
     //</editor-fold>
     //<editor-fold desc="inference">
-    // These functions take elements from expressions and return their Ty. If the Ty can't be
-    // inferred due to program error or unimplemented functionality, TyUnknown is returned.
-    // These functions recurse down into children elements, if any, and report diagnostics on them.
+    /*
+     * These functions take elements from expressions and return their Ty. If the Ty can't be
+     * inferred due to program error or unimplemented functionality, TyUnknown is returned.
+     * These functions recurse down into children elements, if any, and report diagnostics on them.
+     */
 
     private fun inferExpressionType(expr: ElmExpression?): Ty {
         if (expr == null) return TyUnknown
@@ -349,11 +357,7 @@ private class InferenceScope(
             requireAssignable(arg, argTy, paramTy)
         }
 
-        return when {
-            // partial application, return a function
-            arguments.size < paramTys.size -> TyFunction(paramTys.drop(arguments.size), targetTy.ret)
-            else -> targetTy.ret
-        }
+        return targetTy.partiallyApply(arguments.size)
     }
 
     private fun inferOperatorAsFunctionType(op: ElmOperatorAsFunction): Ty {
@@ -367,9 +371,10 @@ private class InferenceScope(
 
     //</editor-fold>
     //<editor-fold desc="types">
-    // These functions create a Ty from an element directly, without context. They might generate
-    // diagnostics, but they won't otherwise access the scope.
-
+    /*
+     * These functions create a Ty from an element directly, without context. They might generate
+     * diagnostics, but they won't otherwise access the scope.
+     */
     /**
      * Get a ty from a top-level declaration referenced from an element.
      *
@@ -477,12 +482,13 @@ private class InferenceScope(
 
     //</editor-fold>
     //<editor-fold desc="binding">
-    // These functions take an element in a pattern and the Ty that it's binding to, and store the
-    // bound names in `bindings`. We can then look up the bound Tys when we infer expressions later
-    // in the scope. Note that every name defined in a pattern _must_ be bound to a Ty, even if just
-    // to TyUnknown. This is still true in partial programs and other error states. Otherwise,
-    // lookups will fail later in the inference.
-
+    /*
+     * These functions take an element in a pattern and the Ty that it's binding to, and store the
+     * bound names in `bindings`. We can then look up the bound Tys when we infer expressions later
+     * in the scope. Note that every name defined in a pattern _must_ be bound to a Ty, even if just
+     * to TyUnknown. This is still true in partial programs and other error states. Otherwise,
+     * lookups will fail later in the inference.
+     */
     /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
@@ -494,8 +500,10 @@ private class InferenceScope(
         bindings[element] = ty
     }
 
-    /** @return the entire declared type, or [TyUnknown] if no annotation exists */
-    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Ty {
+    /** @return a pair of the entire declared type (or [TyUnknown] if no annotation exists), and the
+     *   number of parameters in the declaration
+     */
+    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Pair<Ty, Int> {
         return when {
             valueDeclaration.functionDeclarationLeft != null -> {
                 bindFunctionDeclarationParameters(valueDeclaration, valueDeclaration.functionDeclarationLeft!!)
@@ -506,51 +514,56 @@ private class InferenceScope(
             valueDeclaration.operatorDeclarationLeft != null -> {
                 // TODO [drop 0.18] remove this case
                 // this is 0.18 only, so we aren't going to bother implementing it
-                bindings += PsiTreeUtil.collectElementsOfType(valueDeclaration.pattern, ElmLowerPattern::class.java)
-                        .associate { it to TyUnknown }
-                TyUnknown
+                valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown }
+                TyUnknown to 2
             }
-            else -> TyUnknown
+            else -> TyUnknown to 0
         }
     }
 
     private fun bindFunctionDeclarationParameters(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
-    ): Ty {
+    ): Pair<Ty, Int> {
         val typeRef = valueDeclaration.typeAnnotation?.typeRef
+        val patterns = decl.patterns.toList()
 
         if (typeRef == null) {
-            val patterns = decl.patterns.toList()
             patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
             return when {
-                patterns.isEmpty() -> TyUnknown
-                else -> TyFunction(patterns.map { TyUnknown }, TyUnknown)
+                patterns.isEmpty() -> TyUnknown to 0
+                else -> TyFunction(patterns.map { TyUnknown }, TyUnknown) to patterns.size
             }
         }
 
         val typeRefParamTys = typeRef.allParameters.map { getTypeSignatureDeclType(it) }.toList()
-        decl.patterns.zip(typeRefParamTys.asSequence()).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
-        return joinTypeRefPartsToType(typeRefParamTys)
+        patterns.zip(typeRefParamTys).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
+        return joinTypeRefPartsToType(typeRefParamTys) to patterns.size
     }
 
-    private fun bindPatternDeclarationParameters(valueDeclaration: ElmValueDeclaration, pattern: ElmPattern): Ty {
-        // We need to infer the branch expression before we can bind its parameters, but first we
-        // add sentinels to `bindings` in case the expression contains references to any names
-        // declared in the pattern, which is an error.
+    private fun bindPatternDeclarationParameters(
+            valueDeclaration: ElmValueDeclaration,
+            pattern: ElmPattern
+    ): Pair<Ty, Int> {
+        // For case branches and pattern declarations like `(x,y) = (1,2)`, we need to finish
+        // inferring the expression before we can bind the parameters. In these cases, it's an error
+        // to use a name from the pattern in its expression (e.g. `{x} = {x=x}`). Since we don't
+        // have a Ty to bind to yet, we first bind all the names to sentinel values, then infer the
+        // expression and check for cyclic references, then finally overwrite the sentinels with the inferred
+        // type.
         val declaredNames = pattern.descendantsOfType<ElmLowerPattern>()
         declaredNames.associateTo(bindings) { it to TyInProgressBinding }
         val bodyTy = inferExpressionType(valueDeclaration.expression)
         // Now we can overwrite the sentinels we set earlier with the inferred type
         bindPattern(pattern, bodyTy, false)
-        // If an error was encountered during binding, the sentinels might not have been
+        // If we made a mistake during binding, the sentinels might not have been
         // overwritten, so do a sanity check here.
         for (name in declaredNames) {
             if (bindings[name] == TyInProgressBinding) {
                 error("failed to bind element of type ${name.elementType} with name '${name.text}'")
             }
         }
-        return bodyTy
+        return bodyTy to 1
     }
 
     private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {
@@ -693,10 +706,11 @@ private class InferenceScope(
 
     //</editor-fold>
     //<editor-fold desc="coercion">
-    // These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
-    // diagnostic will be reported if either type is TyUnkown. Other than `requireAssignable`, none
-    // of the functions access the scope.
-
+    /*
+     * These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
+     * diagnostic will be reported if either type is TyUnkown. Other than `requireAssignable`, none
+     * of the functions access the scope.
+     */
     private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
