@@ -337,22 +337,31 @@ private class InferenceScope(
     }
 
     private fun inferFunctionCallType(call: ElmFunctionCall): Ty {
-        val targetTy = inferOperandType(call.target)
+        val inferredTy = inferOperandType(call.target)
 
         val arguments = call.arguments.toList()
-        val paramTys = when (targetTy) {
-            is TyFunction -> targetTy.parameters
-            is TyRecord -> if (targetTy.alias == null) emptyList() else targetTy.fields.values.toList() // Record constructor
-            else -> emptyList()
+
+        fun argCountError(expected: Int): TyUnknown {
+            diagnostics += ArgumentCountError(call, arguments.size, expected)
+            return TyUnknown
         }
 
-        if (targetTy != TyUnknown && arguments.size > paramTys.size) {
-            diagnostics += ArgumentCountError(call, arguments.size, paramTys.size)
+        val targetTy = when (inferredTy) {
+            is TyFunction -> inferredTy
+            is TyRecord -> when {
+                // Record constructor
+                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
+                else -> return argCountError(0)
+            }
+            TyUnknown -> return TyUnknown
+            else -> return argCountError(0)
         }
 
-        if (targetTy !is TyFunction) return TyUnknown
+        if (arguments.size > targetTy.parameters.size) {
+            argCountError(targetTy.parameters.size)
+        }
 
-        for ((arg, paramTy) in arguments.zip(paramTys)) {
+        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
             val argTy = inferOperandType(arg)
             requireAssignable(arg, argTy, paramTy)
         }
@@ -743,7 +752,7 @@ private class InferenceScope(
     }
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
-        fun fieldsAssignable(t1: TyRecord, t2: TyRecord): Boolean  {
+        fun fieldsAssignable(t1: TyRecord, t2: TyRecord): Boolean {
             return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it) } ?: false }
         }
         if (ty2.isSubset) {

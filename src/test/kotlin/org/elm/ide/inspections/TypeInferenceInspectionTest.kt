@@ -90,6 +90,11 @@ main : A
 main = A () ()
 """)
 
+    fun `test calling record without constructor`() = checkByText("""
+main : {x: (), y: ()} -> {x: (), y: ()}
+main a = <error descr="This value is not a function, but it was given 2 arguments.">a () ()</error>
+""")
+
     fun `test correct value type from record constructor as function`() = checkByText("""
 type alias A = {x: (), y: ()}
 main : () -> (() -> () -> A)
