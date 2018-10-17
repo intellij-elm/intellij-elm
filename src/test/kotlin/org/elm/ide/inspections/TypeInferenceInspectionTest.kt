@@ -745,4 +745,15 @@ main arg =
     <error descr="Type mismatch.Required: ()Found: String">case [""] of
         x :: xs -> x</error>
 """)
+
+    // TODO [drop 0.18] remove this test
+    fun `test 0_18 top-level pattern declarations`() = checkByText("""
+(a, b) = (1, ())
+{x} = {x = ()}
+foo : ()
+foo = b
+
+bar : ()
+bar = x
+""")
 }

@@ -372,11 +372,18 @@ private class InferenceScope(
             is ElmTypeAliasDeclaration -> getTypeAliasDeclarationType(ref)
             is ElmFunctionDeclarationLeft -> getValueDeclType(ref.parentOfType())
             is ElmPortAnnotation -> getPortAnnotationType(ref)
-            // All patterns should be bound by the time this function is called
-            is ElmLowerPattern -> error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
+            is ElmLowerPattern -> {
+                // TODO [drop 0.18] remove this check
+                if (elementIsTopLevelPattern(ref)) return TyUnknown
+
+                // All patterns should be bound by the time this function is called
+                error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
+            }
             else -> error("Unexpected reference type ${ref.elementType}")
         }
     }
+
+
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunction): Ty {
         val field = function.identifier.text
@@ -561,7 +568,7 @@ private class InferenceScope(
     /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        if (elementName != null && !shadowableNames.add(elementName)) {
+        if (elementName != null && !shadowableNames.add(elementName) && !elementIsTopLevelPattern(element)) {
             diagnostics += RedefinitionError(element)
         }
 
@@ -860,4 +867,11 @@ private fun uniqueVars(count: Int): List<TyVar> {
     return (0 until count).map {
         TyVar(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
     }
+}
+
+// TODO [drop 0.18] remove this refDecl check
+private fun elementIsTopLevelPattern(element: ElmPsiElement): Boolean {
+    // top-level patterns are unsupported after 0.18
+    val decl = element.parentOfType<ElmValueDeclaration>()
+    return decl?.pattern != null && decl.parent is ElmFile
 }
