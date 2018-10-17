@@ -311,8 +311,8 @@ private class InferenceScope(
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunction): Ty {
         val field = function.identifier.text
-        val tyVar = TyVar("a")
-        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), isSubset = true)), tyVar)
+        val tyVar = TyVar("b")
+        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseName = "a")), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpression): Ty {
@@ -403,7 +403,8 @@ private class InferenceScope(
 
     private fun getRecordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
         val fields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to getTypeRefType(it.typeRef) }
-        return TyRecord(fields, alias = alias)
+        val baseName = record.baseTypeIdentifier?.referenceName
+        return TyRecord(fields, baseName, alias)
     }
 
     private fun getParametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
@@ -728,12 +729,17 @@ private class InferenceScope(
     }
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
+        fun fieldsAssignable(t1: TyRecord, t2: TyRecord): Boolean  {
+            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it) } ?: false }
+        }
+        if (ty2.isSubset) {
+            return fieldsAssignable(ty2, ty1)
+        }
         val correctSize = when {
             ty1.isSubset -> ty1.fields.size <= ty2.fields.size
-            ty2.isSubset -> ty1.fields.size >= ty2.fields.size
             else -> ty1.fields.size == ty2.fields.size
         }
-        return correctSize && ty1.fields.all { (k, v) -> ty2.fields[k]?.let { assignable(v, it) } ?: false }
+        return correctSize && fieldsAssignable(ty1, ty2)
     }
 
     private fun recordAssignableToFunction(record: TyRecord, function: TyFunction): Boolean {

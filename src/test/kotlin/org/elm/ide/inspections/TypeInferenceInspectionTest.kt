@@ -113,6 +113,35 @@ main : R -> ()
 main r = <error descr="Type mismatch.Required: ()Found: R">{ r | x = () }</error>
 """)
 
+    fun `test matched parameter with base record identifier`() = checkByText("""
+type alias R = {x: (), y: ()}
+foo : { r | x : () } -> ()
+foo r = r.x
+
+main : R -> ()
+main r = foo r
+""")
+
+    fun `test mismatched value from argument with base record identifier`() = checkByText("""
+type Foo = Bar
+type alias R = {x: (), y: ()}
+foo : { r | x : ()} -> ()
+foo r = r.x
+
+main : R -> Foo
+main r = <error descr="Type mismatch.Required: FooFound: ()">foo r</error>
+""")
+
+    fun `test mismatched parameter with base record identifier`() = checkByText("""
+type Foo = Bar
+type alias R = {x: (), y: ()}
+foo : { r | x : ()} -> { r | x : ()}
+foo r = r
+
+main : R
+main r = foo <error descr="Type mismatch.Required: { r | x: () }Found: { y: () }">{ y = () }</error>
+""")
+
     fun `test field accessor as argument`() = checkByText("""
 type alias R = {x: (), y: ()}
 foo : (R -> ()) -> ()
@@ -131,13 +160,13 @@ main = {x = 1.0, y = ()}
     fun `test mismatched value type from record subset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: {x: ()}">{x = ()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x: () }">{x = ()}</error>
 """)
 
     fun `test mismatched value type from record superset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: {x: (),y: (),z: ()}">{x = (), y=(), z=()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x: (),y: (),z: () }">{x = (), y=(), z=()}</error>
 """)
 
     fun `test matched value type union case`() = checkByText("""
@@ -433,7 +462,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Type mismatch.Required: ()Found: {x: a,y: b}">{x, y}</error> = ()
+        <error descr="Type mismatch.Required: ()Found: { x: a,y: b }">{x, y}</error> = ()
     in
         y
 """)

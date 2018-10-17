@@ -23,8 +23,8 @@ class ElmRecordType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberPara
      *
      * e.g. entity in `{ entity | vx : Float, vy: Float }`
      */
-    val baseTypeIdentifier: PsiElement?
-        get() = findChildByType(LOWER_CASE_IDENTIFIER)
+    val baseTypeIdentifier: ElmRecordBaseIdentifier?
+        get() = findChildByClass(ElmRecordBaseIdentifier::class.java)
 
     /**
      * The definition of the fields which comprise the record proper.
