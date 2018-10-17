@@ -669,7 +669,7 @@ private class InferenceScope(
         val lowerPatternList = pat.lowerPatternList
         if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
             // TODO[unification] bind to vars
-            if (ty !is TyVar) {
+            if (ty !is TyVar && ty !is TyUnknown) {
                 val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
                 val actualTy = TyRecord(actualTyParams.toMap())
 
@@ -700,7 +700,7 @@ private class InferenceScope(
     private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
-            diagnostics.add(TypeMismatchError(element, ty1, ty2))
+            diagnostics += TypeMismatchError(element, ty1, ty2)
         }
         return assignable
     }

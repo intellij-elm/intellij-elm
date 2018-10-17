@@ -449,6 +449,15 @@ main =
         <error descr="Type mismatch.Required: ()Found: String">y</error>
 """)
 
+    fun `test matched record argument to let-in function`() = checkByText("""
+main : ()
+main =
+    let
+        foo {x, y} = x
+    in
+        foo {x=(), y=()}
+""")
+
     fun `test cyclic definition in let-in record binding`() = checkByText("""
 main : ()
 main =
