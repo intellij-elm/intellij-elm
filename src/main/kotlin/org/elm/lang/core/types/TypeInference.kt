@@ -2,6 +2,7 @@ package org.elm.lang.core.types
 
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
@@ -325,6 +326,7 @@ private class InferenceScope(
 
 
     private fun inferRecord(record: ElmRecord): Ty {
+        if (elementContainsErrors(record)) return TyUnknown
         val recordIdentifier = record.baseRecordIdentifier
         if (recordIdentifier == null) {
             val fields = record.fieldList.associate { f ->
@@ -814,4 +816,8 @@ private fun parentPatternDecl(element: ElmPsiElement): ElmValueDeclaration? {
 private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
     // top-level patterns are unsupported after 0.18
     return parentPatternDecl(element)?.parent is ElmFile
+}
+
+private fun elementContainsErrors(element: ElmPsiElement): Boolean {
+    return element.childOfType<PsiErrorElement>() != null
 }
