@@ -6,7 +6,6 @@ import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentsOfType
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
@@ -24,9 +23,8 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
 
         // Add any visible names except imports.
         // For some reason, Elm lets you shadow imported names, including auto-imported names
-        parentsOfType<ElmFile>()
-                .map { ModuleScope(it).getVisibleValues().topLevel }
-                .firstOrNull()
+        parentOfType<ElmFile>()
+                ?.let { ModuleScope(it).getVisibleValues().topLevel }
                 ?.run { mapNotNullTo(visibleNames) { it.name } }
 
         // Add the function name itself
@@ -153,7 +151,7 @@ private class InferenceScope(
         } else {
             val pattern = decl.pattern
             if (pattern != null) {
-                val patterns = PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)
+                val patterns = pattern.descendantsOfType<ElmLowerPattern>()
                 for (p in patterns) {
                     setBinding(p, result.bindingType(p))
                     shadowableNames += p.name
