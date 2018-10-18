@@ -111,4 +111,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     override val docComment: PsiComment?
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
                 ?.takeIf { it.text.startsWith("{-|") }
+
+    /** Return true if this declaration is not nested in a let-in expression */
+    val isTopLevel: Boolean
+        get() = parent is ElmFile
 }

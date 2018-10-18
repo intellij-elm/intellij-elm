@@ -554,6 +554,17 @@ main =
         y
 """)
 
+    fun `test mismatch in chained let-in tuple binding`() = checkByText("""
+main : ()
+main =
+    let
+        (x, y) = ((), "")
+        (z, w) = (x, y)
+    in
+        <error descr="Type mismatch.Required: ()Found: String">w</error>
+""")
+
+
     fun `test returning function`() = checkByText("""
 main : () -> ()
 main =
@@ -755,5 +766,17 @@ foo = b
 
 bar : ()
 bar = x
+""")
+
+    fun `test nested forward references`() = checkByText("""
+main : () -> ()
+main m =
+  let
+    x a = y a
+    y a = z r m
+    z a b = a
+    (q, r) = (m, ())
+  in
+  x ()
 """)
 }

@@ -44,7 +44,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
 private class InferenceScope(
         private val shadowableNames: MutableSet<String>,
         private val activeScopes: MutableSet<ElmValueDeclaration>,
-        parent: InferenceScope?
+        private val parent: InferenceScope?
 ) {
     /**
      * Cache for declared tys referenced in this scope; shared with parent
@@ -52,15 +52,22 @@ private class InferenceScope(
      * since you can't read from the cache without a reference to the element anyway, and this way
      * we can cache declarations for sibling elements and other relatives.
      */
-    private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations
-            ?: mutableMapOf()
-    /**
-     * names declared in patterns; copied from parent since we can see parent's bindings, but ours
-     * shouldn't be shared with other scopes that share a parent.
-     */
-    private val bindings: MutableMap<ElmNamedElement, Ty> = parent?.bindings?.toMutableMap() ?: mutableMapOf()
+    private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations ?: mutableMapOf()
+    /** names declared in parameters and patterns */
+    private val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
     /** errors encountered during inference */
     private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
+    /**
+     * If this scope is a let-in, this set contains declarations that are direct children of this scope.
+     *
+     * This is used when inferring references to nested declarations that follow the current declaration lexically
+     * so that we can find which ancestor to start inference from.
+     */
+    private val childDeclarations: MutableSet<ElmValueDeclaration> = mutableSetOf()
+
+    private val ancestors: Sequence<InferenceScope> get() = generateSequence(this) { it.parent }
+
+    private fun getBinding(e: ElmNamedElement): Ty? = ancestors.mapNotNull { it.bindings[e] }.firstOrNull()
 
     //<editor-fold desc="entry points">
     /*
@@ -105,23 +112,15 @@ private class InferenceScope(
     }
 
     private fun beginLetInInference(letIn: ElmLetIn): InferenceResult {
-        for (decl in letIn.valueDeclarationList) {
-            val result = inferChild { beginDeclarationInference(decl) }
-            resolvedDeclarations[decl] = result.ty
+        val valueDeclarationList = letIn.valueDeclarationList
+        childDeclarations += valueDeclarationList
 
-            val fdl = decl.functionDeclarationLeft
-            if (fdl != null) {
-                shadowableNames += fdl.name
-            } else {
-                val pattern = decl.pattern
-                if (pattern != null) {
-                    val patterns = PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)
-                    for (p in patterns) {
-                        setBinding(p, result.bindingType(p))
-                        shadowableNames += p.name
-                    }
-                }
-            }
+        for (decl in valueDeclarationList) {
+           // If a declaration was referenced by a child defined earlier in this scope, it has
+           // already been inferred.
+           if (decl !in resolvedDeclarations) {
+               inferChildDeclaration(decl)
+           }
         }
 
         val exprTy = inferExpression(letIn.expression)
@@ -138,6 +137,28 @@ private class InferenceScope(
                                   block: InferenceScope.() -> InferenceResult): InferenceResult {
         val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, this).block()
         diagnostics += result.diagnostics
+        return result
+    }
+
+    private fun inferChildDeclaration(decl: ElmValueDeclaration): InferenceResult {
+        val result = inferChild { beginDeclarationInference(decl) }
+        resolvedDeclarations[decl] = result.ty
+
+        // We need to keep track of declared function names and bound patterns so that other
+        // children have access to them.
+        val functionName = decl.functionDeclarationLeft?.name ?: decl.operatorDeclarationLeft?.name
+        if (functionName != null) {
+            shadowableNames += functionName
+        } else {
+            val pattern = decl.pattern
+            if (pattern != null) {
+                val patterns = PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java)
+                for (p in patterns) {
+                    setBinding(p, result.bindingType(p))
+                    shadowableNames += p.name
+                }
+            }
+        }
         return result
     }
 
@@ -357,7 +378,7 @@ private class InferenceScope(
         val ref = expr.reference.resolve() ?: return TyUnknown
 
         // If the value is a parameter, its type has already been added to bindings
-        bindings[ref]?.let {
+        getBinding(ref)?.let {
             return when (it) {
                 is TyInProgressBinding -> {
                     diagnostics += CyclicDefinitionError(expr)
@@ -370,13 +391,19 @@ private class InferenceScope(
         return when (ref) {
             is ElmUnionMember -> unionMemberType(ref)
             is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref)
-            is ElmFunctionDeclarationLeft -> getValueDeclType(ref.parentOfType())
+            is ElmFunctionDeclarationLeft -> inferChildValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> portAnnotationType(ref)
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
-                if (elementIsTopLevelPattern(ref)) return TyUnknown
+                if (elementIsInTopLevelPattern(ref)) return TyUnknown
 
-                // All patterns should be bound by the time this function is called
+                // Pattern declarations might not have been inferred yet
+                val parentPatternDecl = parentPatternDecl(ref)
+                if (parentPatternDecl != null) {
+                    return inferChildValueDeclaration(parentPatternDecl)
+                }
+
+                // All patterns should now be bound
                 error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
             }
             else -> error("Unexpected reference type ${ref.elementType}")
@@ -441,26 +468,25 @@ private class InferenceScope(
         if (ref is ElmInfixDeclaration) {
             ref = ref.valueExpr?.reference?.resolve()
         }
-        return getValueDeclType(ref?.parentOfType())
+        return inferChildValueDeclaration(ref?.parentOfType())
     }
 
-    /**
-     * Get a ty from a top-level declaration referenced from an element.
-     *
-     * For performance, we don't infer the bodies of top-level declarations until the file they're
-     * declared in is opened, so if the declaration isn't annotated, [TyUnknown] is returned.
-     */
-    private fun getValueDeclType(decl: ElmValueDeclaration?): Ty {
+    private fun inferChildValueDeclaration(decl: ElmValueDeclaration?): Ty {
         if (decl == null || checkBadRecursion(decl)) return TyUnknown
 
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
         var ty = decl.typeAnnotation?.typeRef?.let { typeRefType(it) }
+        // If there's no annotation, do full inference on the function.
         if (ty == null) {
-            // If there's no annotation, do full inference on the function.
-            // Don't use inferChild, since it's a top-level declaration.
-            ty = decl.inference(activeScopes).ty
+            // First we have to find the parent of the declaration so that it has access to the
+            // correct binding/declaration visibility. If there's no parent, we do a cached top-level inference.
+            val declParentScope = ancestors.firstOrNull { decl in it.childDeclarations }
+            ty = when (declParentScope) {
+                null -> decl.inference(activeScopes).ty
+                else -> declParentScope.inferChildDeclaration(decl).ty
+            }
         }
         resolvedDeclarations[decl] = ty
         return ty
@@ -478,7 +504,7 @@ private class InferenceScope(
     /** Cache the type for a pattern binding, or report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        if (elementName != null && !shadowableNames.add(elementName) && !elementIsTopLevelPattern(element)) {
+        if (elementName != null && !shadowableNames.add(elementName) && !elementIsInTopLevelPattern(element)) {
             diagnostics += RedefinitionError(element)
         }
 
@@ -547,7 +573,7 @@ private class InferenceScope(
         // If we made a mistake during binding, the sentinels might not have been
         // overwritten, so do a sanity check here.
         for (name in declaredNames) {
-            if (bindings[name] == TyInProgressBinding) {
+            if (getBinding(name) == TyInProgressBinding) {
                 error("failed to bind element of type ${name.elementType} with name '${name.text}'")
             }
         }
@@ -779,9 +805,13 @@ private fun uniqueVars(count: Int): List<TyVar> {
     }
 }
 
-// TODO [drop 0.18] remove this refDecl check
-private fun elementIsTopLevelPattern(element: ElmPsiElement): Boolean {
-    // top-level patterns are unsupported after 0.18
+private fun parentPatternDecl(element: ElmPsiElement): ElmValueDeclaration? {
     val decl = element.parentOfType<ElmValueDeclaration>()
-    return decl?.pattern != null && decl.parent is ElmFile
+    return if (decl?.pattern == null) null else decl
+}
+
+// TODO [drop 0.18] remove this refDecl check
+private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
+    // top-level patterns are unsupported after 0.18
+    return parentPatternDecl(element)?.parent is ElmFile
 }
