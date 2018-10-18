@@ -57,21 +57,17 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-    fun getVisibleValues(includeImports: Boolean = true, includeBasics: Boolean = true): List<ElmNamedElement> {
+    fun getVisibleValues(): List<ElmNamedElement> {
         val globallyExposedValues =
         // TODO [kl] re-think this lame hack to avoid an infinite loop
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleValues(includeBasics)
+                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleValues()
         val topLevelValues = getDeclaredValues()
-        return if (includeImports) {
-            val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                    .flatMap { getVisibleImportNames(it) }
-            listOf(globallyExposedValues, topLevelValues, importedValues).flatten()
-        } else {
-            globallyExposedValues + topLevelValues
-        }
+        val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
+                .flatMap { getVisibleImportNames(it) }
+        return listOf(globallyExposedValues, topLevelValues, importedValues).flatten()
     }
 
 
@@ -115,7 +111,7 @@ class ModuleScope(val elmFile: ElmFile) {
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleTypes()
+                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleTypes()
         val topLevelTypes = getDeclaredTypes()
         val importedTypes = elmFile.findChildrenByClass(ElmImportClause::class.java)
                 .flatMap { getVisibleImportTypes(it) }
@@ -157,7 +153,7 @@ class ModuleScope(val elmFile: ElmFile) {
                 if (elmFile.isCore())
                     emptyList()
                 else
-                    GlobalScope(elmFile.project).getVisibleConstructors()
+                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleConstructors()
         val topLevelConstructors = getDeclaredConstructors()
         val importedConstructors = elmFile.findChildrenByClass(ElmImportClause::class.java)
                 .flatMap { getVisibleImportConstructors(it) }

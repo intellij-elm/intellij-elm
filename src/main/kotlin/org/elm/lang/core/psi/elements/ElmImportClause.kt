@@ -1,13 +1,15 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
-import org.elm.lang.core.stubs.index.ElmModulesIndex
+import org.elm.lang.core.stubs.index.ElmModules
 
+private val log = logger<ElmImportClause>()
 
 /**
  * An import declaration at the top of the module.
@@ -44,11 +46,10 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override fun getReference() =
             object : ElmReferenceCached<ElmImportClause>(this) {
 
-                override fun resolveInner(): ElmNamedElement? {
-                    return getVariants().find { it.name == element.referenceName }
-                }
+                override fun resolveInner(): ElmNamedElement? =
+                        getVariants().find { it.name == element.referenceName }
 
                 override fun getVariants(): Array<ElmNamedElement> =
-                        ElmModulesIndex.getAll(element.project).toTypedArray()
+                        ElmModules.getAll(project, element.elmProject).toTypedArray()
             }
 }

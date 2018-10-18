@@ -25,7 +25,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // For some reason, Elm lets you shadow imported names and anything defined in Basics.elm
         // TODO you can shadow all auto imported names
         parentsOfType<ElmFile>()
-                .map { ModuleScope(it).getVisibleValues(includeImports = false, includeBasics = false) }
+                .map { ModuleScope(it).getVisibleValues() }
                 .firstOrNull()
                 ?.run { mapNotNullTo(visibleNames) { it.name } }
 

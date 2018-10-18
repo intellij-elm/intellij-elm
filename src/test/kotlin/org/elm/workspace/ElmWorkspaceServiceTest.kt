@@ -5,6 +5,7 @@ import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
+import java.nio.file.Paths
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
@@ -58,7 +59,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 project("elm.json", """
                     {
                         "type": "application",
-                        "source-directories": [ "src" ],
+                        "source-directories": [ "src", "vendor" ],
                         "elm-version": "0.19.0",
                         "dependencies": {
                             "direct": {
@@ -82,6 +83,9 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 dir("src") {
                     elm("Main.elm", "")
                 }
+                dir("vendor") {
+                    elm("VendoredPackage.elm", "")
+                }
             }
         }.create(project, elmWorkspaceDirectory)
 
@@ -102,6 +106,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         }
 
         checkEquals(Version(0, 19, 0), elmProject.elmVersion)
+        checkEquals(setOf(Paths.get("src"), Paths.get("vendor")), elmProject.sourceDirectories.toSet())
 
         checkEquals(setOf(
                 "elm/core" to Version(1, 0, 0),
@@ -158,12 +163,127 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         checkEquals(makeConstraint(Version(0, 19, 0), Version(0, 20, 0))
                 , elmProject.elmVersion)
 
+        // The source directory for Elm 0.19 packages is implicitly "src". It cannot be changed.
+        checkEquals(setOf(Paths.get("src")), elmProject.sourceDirectories.toSet())
+
         checkEquals(setOf("elm/core" to Version(1, 0, 0)),
                 elmProject.dependencies.map { it.name to it.version }.toSet())
 
         checkEquals(setOf("elm-explorations/test" to Version(1, 0, 0)),
                 elmProject.testDependencies.map { it.name to it.version }.toSet())
+
+        checkEquals(setOf("Json.Decode", "Json.Encode"),
+                elmProject.exposedModules.toSet())
     }
+
+    fun `test can attach package json file with annotated exposed modules`() {
+        val testProject = fileTree {
+            project("elm.json", """
+                    {
+                        "type": "package",
+                        "name": "elm/json",
+                        "summary": "Encode and decode JSON values",
+                        "license": "BSD-3-Clause",
+                        "version": "1.0.0",
+                        "exposed-modules": {
+                            "Decoding": [ "Json.Decode"],
+                            "Encoding": [ "Json.Encode"]
+                        },
+                        "elm-version": "0.19.0 <= v < 0.20.0",
+                        "dependencies": {
+                            "elm/core": "1.0.0 <= v < 2.0.0"
+                        },
+                        "test-dependencies": {
+                            "elm-explorations/test": "1.0.0 <= v < 2.0.0"
+                        }
+                    }
+                    """)
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("elm.json")).get()
+        }
+
+        val elmProject = workspace.allProjects.firstOrNull()
+        if (elmProject == null) {
+            TestCase.fail("failed to find an Elm project")
+            return
+        }
+
+        if (elmProject !is ElmPackageProject) {
+            TestCase.fail("expected an Elm package project, got $elmProject")
+            return
+        }
+
+        checkEquals(setOf("Json.Decode", "Json.Encode"),
+                elmProject.exposedModules.toSet())
+    }
+
+
+    fun `test can attach multiple Elm projects`() {
+        val testProject = fileTree {
+            dir("a") {
+                project("elm.json", """
+                    {
+                      "type": "application",
+                      "source-directories": [ "src" ],
+                      "elm-version": "0.19.0",
+                      "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      },
+                      "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      }
+                    }
+                    """)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+            dir("b") {
+                project("elm.json", """
+                    {
+                      "type": "application",
+                      "source-directories": [ "src" ],
+                      "elm-version": "0.19.0",
+                      "dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      },
+                      "test-dependencies": {
+                        "direct": {},
+                        "indirect": {}
+                      }
+                    }
+                    """)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
+            asyncAttachElmProject(rootPath.resolve("b/elm.json")).get()
+        }
+
+        fun checkFile(relativePath: String, projectName: String?) {
+            val vFile = testProject.root.findFileByRelativePath(relativePath)!!
+            val project = workspace.findProjectForFile(vFile)
+            if (project?.presentableName != projectName) {
+                error("Expected $projectName, found $project for $relativePath")
+            }
+        }
+
+        checkFile("a/src/Main.elm", "a")
+        checkFile("b/src/Main.elm", "b")
+    }
+
+
 
     fun `test auto discover Elm project at root level`() {
         val testProject = fileTree {

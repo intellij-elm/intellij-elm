@@ -2,14 +2,18 @@ package org.elm.lang.core.resolve.scope
 
 import com.intellij.openapi.project.Project
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.stubs.index.ElmModulesIndex
+import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.workspace.ElmProject
 
 
 /**
  * The subset of implicitly exposed values, types and constructors provided by Elm's
  * standard library ("Core").
  */
-class GlobalScope(val project: Project) {
+// TODO [kl] eventually ElmProject should be non-null, but we need to straighten out
+//           some things with the integration tests and legacy Elm 0.18 projects before
+//           we can be more restrictive here.
+class GlobalScope(val project: Project, val elmProject: ElmProject?) {
 
     companion object {
         /**
@@ -47,7 +51,7 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleValues(includeBasics: Boolean): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, project)
+                ElmModules.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                         ?: emptyList()
 
@@ -66,7 +70,7 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, project)
+                ElmModules.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredTypes() }
                         ?: emptyList()
 
@@ -85,7 +89,7 @@ class GlobalScope(val project: Project) {
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, project)
+                ElmModules.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredConstructors() }
                         ?: emptyList()
 

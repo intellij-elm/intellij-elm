@@ -11,6 +11,7 @@ import org.elm.lang.core.psi.offsetIn
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.stubs.index.ElmModules
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
@@ -38,7 +39,7 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
                         .let { ElmModulesIndex.getAll(it, element.project) }
 
         val implicitDecls =
-                ElmModulesIndex.getAll(GlobalScope.defaultImports, element.project)
+                ElmModules.getAll(GlobalScope.defaultImports, element.project, element.elmProject)
                         .filter { it.elmFile.isCore() }
 
         val aliasDecls = ModuleScope(element.elmFile).getAliasDecls() as List<ElmNamedElement>
