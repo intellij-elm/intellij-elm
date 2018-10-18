@@ -245,17 +245,18 @@ main : Maybe a
 main = <error descr="Type mismatch.Required: Maybe aFound: Foo">Bar</error>
 """)
 
-    fun `test union type annotation with too few parameters`() = checkByText("""
-type Maybe a = Just a | Nothing
-main : <error descr="The type expects 1 argument, but it got 0 instead.">Maybe</error> -> ()
-main a = ()
-""")
-
-    fun `test union type annotation with too many parameters`() = checkByText("""
-type Maybe a = Just a | Nothing
-main : <error descr="The type expects 1 argument, but it got 2 instead.">Maybe () ()</error> -> ()
-main a = ()
-""")
+// TODO: add a new inspection for these
+//    fun `test union type annotation with too few parameters`() = checkByText("""
+//type Maybe a = Just a | Nothing
+//main : <error descr="The type expects 1 argument, but it got 0 instead.">Maybe</error> -> ()
+//main a = ()
+//""")
+//
+//    fun `test union type annotation with too many parameters`() = checkByText("""
+//type Maybe a = Just a | Nothing
+//main : <error descr="The type expects 1 argument, but it got 2 instead.">Maybe () ()</error> -> ()
+//main a = ()
+//""")
 
     fun `test invalid constructor as type annotation`() = checkByText("""
 type Maybe a = Just a | Nothing
@@ -613,11 +614,10 @@ main : ()
 main = (\_ -> main) 1
 """)
 
-// TODO: detect this if we start inferring top-level references
-//    fun `test bad mutual recursion`() = checkByText("""
-//<error descr="Infinite recursion">foo = bar</error>
-//<error descr="Infinite recursion">bar = foo</error>
-//""")
+    fun `test bad mutual recursion`() = checkByText("""
+<error descr="Infinite recursion">foo = bar</error>
+bar = foo
+""")
 
     fun `test function argument mismatch in case expression`() = checkByText("""
 foo : () -> ()
