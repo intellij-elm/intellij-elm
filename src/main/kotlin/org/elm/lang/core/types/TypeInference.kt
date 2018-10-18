@@ -22,10 +22,9 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         val visibleNames = HashSet<String>()
 
         // Add any visible names except imports.
-        // For some reason, Elm lets you shadow imported names and anything defined in Basics.elm
-        // TODO you can shadow all auto imported names
+        // For some reason, Elm lets you shadow imported names, including auto-imported names
         parentsOfType<ElmFile>()
-                .map { ModuleScope(it).getVisibleValues() }
+                .map { ModuleScope(it).getVisibleValues().topLevel }
                 .firstOrNull()
                 ?.run { mapNotNullTo(visibleNames) { it.name } }
 
@@ -52,7 +51,8 @@ private class InferenceScope(
      * since you can't read from the cache without a reference to the element anyway, and this way
      * we can cache declarations for sibling elements and other relatives.
      */
-    private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations ?: mutableMapOf()
+    private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations
+            ?: mutableMapOf()
     /** names declared in parameters and patterns */
     private val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
     /** errors encountered during inference */
@@ -116,11 +116,11 @@ private class InferenceScope(
         childDeclarations += valueDeclarationList
 
         for (decl in valueDeclarationList) {
-           // If a declaration was referenced by a child defined earlier in this scope, it has
-           // already been inferred.
-           if (decl !in resolvedDeclarations) {
-               inferChildDeclaration(decl)
-           }
+            // If a declaration was referenced by a child defined earlier in this scope, it has
+            // already been inferred.
+            if (decl !in resolvedDeclarations) {
+                inferChildDeclaration(decl)
+            }
         }
 
         val exprTy = inferExpression(letIn.expression)

@@ -46,19 +46,16 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
         val allBuiltInSymbols = builtInValues.union(builtInTypes)
     }
 
-    // TODO [kl] this is crazy inefficient, and it should be easy to cache
-    // well, at least this is now stub-based, but it's still a lot of busy work and allocations.
-
-    fun getVisibleValues(includeBasics: Boolean): List<ElmNamedElement> {
+    fun getVisibleValues(): List<ElmNamedElement> {
+        // ModuleScope.getDeclaredValues is cached, so there's no need to cache the results of this
+        // function.
         fun helper(moduleName: String) =
                 ElmModules.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
-        if (includeBasics) {
-            rest.addAll(helper("Basics"))
-        }
+        rest.addAll(helper("Basics"))
         rest.addAll(helper("List").filter { it.name == "::" })
 
         // TODO [drop 0.18] remove this line (the `!` operator was removed in 0.19)
