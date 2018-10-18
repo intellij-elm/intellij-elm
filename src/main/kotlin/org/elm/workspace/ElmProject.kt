@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.vfs.LocalFileSystem
+import org.elm.lang.core.moduleLookupHack
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.InputStream
 import java.nio.file.Path
@@ -241,11 +242,11 @@ private fun JsonNode.toExposedModuleMap(): List<String> {
     //           exposed in that category. We discard the categories because they are not useful.
     return when (this.nodeType) {
         JsonNodeType.ARRAY -> {
-            this.elements().asSequence().map { it.textValue() }.toList()
+            this.elements().asSequence().map { moduleLookupHack(it.textValue()) }.toList()
         }
         JsonNodeType.OBJECT -> {
             this.fields().asSequence().flatMap { (_, nameNodes) ->
-                nameNodes.asSequence().map { it.textValue() }
+                nameNodes.asSequence().map { moduleLookupHack(it.textValue()) }
             }.toList()
         }
         else -> {
