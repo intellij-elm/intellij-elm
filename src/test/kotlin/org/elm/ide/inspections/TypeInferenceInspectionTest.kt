@@ -833,6 +833,26 @@ infix non 4 (~~) = foo
 main a = <error descr="Operator (~~) is not associative, and so cannot be chained">() ~~ () ~~ ()</error>
 """)
 
+    fun `test matched left associative chain`() = checkByText("""
+type Foo = Bar
+foo : Foo -> () -> Foo
+foo a b = a
+infix left 4 (~~) = foo
+
+main : Foo
+main = Bar ~~ () ~~ ()
+""")
+
+    fun `test matched right associative chain`() = checkByText("""
+type Foo = Bar
+foo : () -> Foo -> Foo
+foo a b = b
+infix right 4 (~~) = foo
+
+main : Foo
+main = () ~~ () ~~ Bar
+""")
+
     fun `test mismatched left associative chain`() = checkByText("""
 type Foo = Bar
 foo : () -> () -> Foo
