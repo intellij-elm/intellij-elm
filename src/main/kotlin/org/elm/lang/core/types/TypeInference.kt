@@ -6,6 +6,7 @@ import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
@@ -66,8 +67,11 @@ private class InferenceScope(
      */
 
     fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
-        if (checkBadRecursion(declaration)) {
-            return InferenceResult(emptyMap(), diagnostics, TyUnknown)
+        // If the declaration has any syntax errors, we don't run inference on it. Trying to resolve
+        // references in expressions that contain syntax errors can result in infinite recursion and
+        // surprising bugs.
+        if (checkBadRecursion(declaration) || PsiTreeUtil.hasErrorElements(declaration)) {
+            return InferenceResult(bindings, diagnostics, TyUnknown)
         }
 
         activeScopes += declaration
@@ -173,10 +177,9 @@ private class InferenceScope(
      */
 
     private fun inferExpression(expr: ElmExpression?): Ty {
-        if (expr == null) return TyUnknown
+        if (expr == null || elementContainsErrors(expr)) return TyUnknown
 
-        val parts1 = expr.parts.toList()
-        val parts = parts1.map { part ->
+        val parts = expr.parts.map { part ->
             when (part) {
                 is ElmOperator -> {
                     TyUnknown
@@ -315,7 +318,6 @@ private class InferenceScope(
 
 
     private fun inferRecord(record: ElmRecord): Ty {
-        if (elementContainsErrors(record)) return TyUnknown
         val recordIdentifier = record.baseRecordIdentifier
         if (recordIdentifier == null) {
             val fields = record.fieldList.associate { f ->
@@ -464,7 +466,6 @@ private class InferenceScope(
 
     private fun inferChildValueDeclaration(decl: ElmValueDeclaration?): Ty {
         if (decl == null || checkBadRecursion(decl)) return TyUnknown
-
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
