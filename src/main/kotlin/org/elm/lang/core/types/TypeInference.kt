@@ -326,7 +326,25 @@ private class InferenceScope(
             return TyRecord(fields)
         }
 
-        return inferReferenceElement(recordIdentifier) // TODO check that ty is a record
+        val baseTy = inferReferenceElement(recordIdentifier)
+        if (baseTy !is TyRecord) {
+            diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
+            return TyUnknown
+        }
+
+        val fields = record.fieldList.associate { f ->
+            f.lowerCaseIdentifier to inferExpression(f.expression)
+        }
+        for ((name, ty) in fields) {
+            val expected = baseTy.fields[name.text]
+            if (expected == null) {
+                diagnostics += RecordFieldError(name, name.text)
+            } else {
+                requireAssignable(name, ty, expected)
+            }
+        }
+
+        return baseTy
     }
 
     private fun inferList(expr: ElmList): Ty {

@@ -118,6 +118,22 @@ main : R -> ()
 main r = <error descr="Type mismatch.Required: ()Found: R">{ r | x = () }</error>
 """)
 
+    fun `test mismatched base record identifier`() = checkByText("""
+main : () -> ()
+main r = { <error descr="Type must be a record.Found: ()">r</error> | x = () }
+""")
+
+    fun `test unknown field from parameter with base record identifier`() = checkByText("""
+type alias R = {x: (), y: ()}
+main : R -> R
+main r = { r | x = (), <error descr="Record does not have field 'z'">z</error> = () }
+""")
+
+    fun `test mismatched field from parameter with base record identifier`() = checkByText("""
+type alias R = {x: (), y: ()}
+main : R -> R
+main r = { r | <error descr="Type mismatch.Required: ()Found: String">x</error> = "" }
+""")
     fun `test matched parameter with base record identifier`() = checkByText("""
 type alias R = {x: (), y: ()}
 foo : { r | x : () } -> ()

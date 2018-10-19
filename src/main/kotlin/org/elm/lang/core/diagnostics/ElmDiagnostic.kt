@@ -56,6 +56,18 @@ class RecordFieldError(
         get() = "Record does not have field '$name'"
 }
 
+
+class RecordBaseIdError(
+        element: PsiElement,
+        private val expected: Ty
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() {
+            val expectedRendered = expected.renderedText(false, false)
+            return "Type must be a record.<br>Found: $expectedRendered"
+        }
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,
