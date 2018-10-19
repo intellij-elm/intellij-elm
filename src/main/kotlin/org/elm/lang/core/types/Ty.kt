@@ -8,7 +8,11 @@ package org.elm.lang.core.types
 sealed class Ty
 
 /** A declared ("rigid") type variable (e.g. `a` in `Maybe a`) */
-data class TyVar(val name: String) : Ty()
+data class TyVar(val name: String) : Ty() {
+    override fun toString(): String {
+        return "<TyVar $name>"
+    }
+}
 
 /** A tuple type like `(Int, String)` */
 data class TyTuple(val types: List<Ty>) : Ty() {
@@ -65,6 +69,10 @@ data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
     fun partiallyApply(count: Int): Ty = when {
         count < parameters.size -> TyFunction(parameters.drop(count), ret)
         else -> ret
+    }
+
+    override fun toString(): String {
+        return allTys.joinToString(" -> ", prefix = "<TyFunction ", postfix = ">")
     }
 }
 
