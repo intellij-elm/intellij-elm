@@ -9,9 +9,11 @@ import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.OperatorAssociativity.NON
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
+import java.util.*
 
 private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
 
@@ -179,20 +181,49 @@ private class InferenceScope(
     private fun inferExpression(expr: ElmExpression?): Ty {
         if (expr == null || elementContainsErrors(expr)) return TyUnknown
 
-        val parts = expr.parts.map { part ->
-            when (part) {
-                is ElmOperator -> {
-                    TyUnknown
-                } // TODO operators
-                is ElmOperandTag -> {
-                    inferOperand(part)
+        val parts: List<ElmExpressionPartTag> = expr.parts.toList()
+
+        // Get the operator types and precedences. We don't have to worry about invalid
+        // code like `1 + + 1`, since it won't parse as an expression.
+        val operatorPrecedences = HashMap<ElmOperator, OperatorPrecedence>(parts.size / 2)
+        val operatorTys = HashMap<ElmOperator, TyFunction>(parts.size / 2)
+        for (part in parts) {
+            if (part is ElmOperator) {
+                val (ty, precedence) = inferOperatorAndPrecedence(part)
+                when {
+                    precedence == null || ty !is TyFunction || ty.parameters.size != 2 -> return TyUnknown
+                    precedence.associativity == NON && parts.size > 3 -> {
+                        // Non-associative operators can't be chained with other operators.
+                        diagnostics += NonAssociativeOperatorError(expr, part)
+                        return TyUnknown
+                    }
+                    else -> {
+                        operatorPrecedences[part] = precedence
+                        operatorTys[part] = ty
+                    }
                 }
-                else -> TyUnknown
             }
         }
 
-        // TODO operators
-        return parts.singleOrNull() ?: TyUnknown
+        // Parse the tree and walk it, validating all the operator calls.
+        fun validateTree(tree: BinaryExprTree<ElmExpressionPartTag>): RangeTy {
+            return when (tree) {
+                is BinaryExprTree.Operand -> {
+                    RangeTy(tree.operand, inferOperand(tree.operand as ElmOperandTag))
+                }
+                is BinaryExprTree.Binary -> {
+                    val l = validateTree(tree.left)
+                    val r = validateTree(tree.right)
+                    val func = operatorTys[tree.operator]!!
+                    requireAssignable(l.start, l.ty, func.parameters[0], l.end)
+                    requireAssignable(r.start, r.ty, func.parameters[1], r.end)
+                    RangeTy(l.start, r.end, func.ret)
+                }
+            }
+        }
+
+        val result = validateTree(BinaryExprTree.parse(parts, operatorPrecedences))
+        return result.ty
     }
 
     private fun inferOperand(operand: ElmOperandTag): Ty {
@@ -221,6 +252,14 @@ private class InferenceScope(
             is ElmValueExpr -> inferReferenceElement(operand)
             else -> error("unexpected operand type $operand")
         }
+    }
+
+    private fun inferOperatorAndPrecedence(operator: ElmOperator): Pair<Ty, OperatorPrecedence?> {
+        val ref = operator.reference.resolve() as? ElmInfixDeclaration ?: return TyUnknown to null
+        val precedence = ref.precedence.text.toIntOrNull() ?: return TyUnknown to null
+        val decl = ref.valueExpr?.reference?.resolve() ?: return TyUnknown to null
+        val ty = inferChildValueDeclaration(decl.parentOfType())
+        return ty to OperatorPrecedence(precedence, ref.associativity)
     }
 
     private fun inferFieldAccess(fieldAccess: ElmFieldAccess): Ty {
@@ -462,7 +501,7 @@ private class InferenceScope(
         }
 
         if (arguments.size > targetTy.parameters.size) {
-            argCountError(targetTy.parameters.size)
+            return argCountError(targetTy.parameters.size)
         }
 
         for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
@@ -735,10 +774,10 @@ private class InferenceScope(
      * diagnostic will be reported if either type is TyUnkown. Other than `requireAssignable`, none
      * of the functions access the scope.
      */
-    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
+    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty, endElement: ElmPsiElement? = null): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
-            diagnostics += TypeMismatchError(element, ty1, ty2)
+            diagnostics += TypeMismatchError(element, ty1, ty2, endElement)
         }
         return assignable
     }
@@ -828,4 +867,8 @@ private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
 
 private fun elementContainsErrors(element: ElmPsiElement): Boolean {
     return element.childOfType<PsiErrorElement>() != null
+}
+
+private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
+    constructor(element: ElmPsiElement, ty: Ty) : this(element, element, ty)
 }

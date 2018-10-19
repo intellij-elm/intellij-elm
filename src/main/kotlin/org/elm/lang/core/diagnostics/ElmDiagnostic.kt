@@ -56,7 +56,6 @@ class RecordFieldError(
         get() = "Record does not have field '$name'"
 }
 
-
 class RecordBaseIdError(
         element: PsiElement,
         private val expected: Ty
@@ -68,11 +67,22 @@ class RecordBaseIdError(
         }
 }
 
+class NonAssociativeOperatorError(
+        element: PsiElement,
+        private val operator: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() {
+            return "Operator (${operator.text}) is not associative, and so cannot be chained"
+        }
+}
+
 class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,
-        private val expected: Ty
-) : ElmDiagnostic(element) {
+        private val expected: Ty,
+        endElement: PsiElement? = null
+) : ElmDiagnostic(element, endElement) {
     override val message: String
         get() {
             var expectedRendered = expected.renderedText(false, false)
@@ -87,5 +97,6 @@ class TypeMismatchError(
                     "<br>Found: $foundRendered"
         }
 }
+
 
 private fun pl(n: Int, singular: String, plural: String = singular + "s") = if (n == 1) singular else plural

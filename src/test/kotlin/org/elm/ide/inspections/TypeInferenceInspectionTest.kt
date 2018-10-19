@@ -631,7 +631,7 @@ main (<error descr="Pattern does not cover all possibilities">""</error>) = ()
 main = (\<error descr="Pattern does not cover all possibilities">""</error> -> "")
 """)
 
-    fun `test bad self-recursion`() = checkByText("""
+    fun `test bad self-recursion in annotated function`() = checkByText("""
 main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
@@ -794,5 +794,47 @@ main m =
     (q, r) = (m, ())
   in
   x ()
+""")
+
+    fun `test mismatched left operand to non-associative operator`() = checkByText("""
+foo : () -> () -> ()
+foo a b = a
+infix non 4 (~~) = foo
+
+main a = <error descr="Type mismatch.Required: ()Found: String">""</error> ~~ ()
+""")
+
+    fun `test mismatched right operand to non-associative operator`() = checkByText("""
+foo : () -> () -> ()
+foo a b = a
+infix non 4 (~~) = foo
+
+main a = () ~~ <error descr="Type mismatch.Required: ()Found: String">""</error>
+""")
+
+    fun `test chain non-associative operator`() = checkByText("""
+foo : () -> () -> ()
+foo a b = a
+infix non 4 (~~) = foo
+
+main a = <error descr="Operator (~~) is not associative, and so cannot be chained">() ~~ () ~~ ()</error>
+""")
+
+    fun `test mismatched left associative chain`() = checkByText("""
+type Foo = Bar
+foo : () -> () -> Foo
+foo a b = Bar
+infix left 4 (~~) = foo
+
+main a = <error descr="Type mismatch.Required: ()Found: Foo">() ~~ ()</error> ~~ ()
+""")
+
+    fun `test mismatched right associative chain`() = checkByText("""
+type Foo = Bar
+foo : () -> () -> Foo
+foo a b = Bar
+infix right 4 (~~) = foo
+
+main a = () ~~ <error descr="Type mismatch.Required: ()Found: Foo">() ~~ ()</error>
 """)
 }
