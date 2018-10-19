@@ -6,7 +6,6 @@ import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.parentsOfType
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
@@ -19,18 +18,10 @@ fun ElmValueDeclaration.inference(): InferenceResult = inference(emptySet())
 
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     return CachedValuesManager.getCachedValue(this, TYPE_INFERENCE_KEY) {
-        val visibleNames = HashSet<String>()
-
-        // Add any visible names except imports.
-        // For some reason, Elm lets you shadow imported names, including auto-imported names
-        parentOfType<ElmFile>()
-                ?.let { ModuleScope(it).getVisibleValues().topLevel }
-                ?.run { mapNotNullTo(visibleNames) { it.name } }
-
-        // Add the function name itself
-        declaredNames(false).mapNotNullTo(visibleNames) { it.name }
-
-        val result = InferenceScope(visibleNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
+        // Elm lets you shadow imported names, including auto-imported names, so only count names
+        // declared in this file as shadowable.
+        val shadowableNames = ModuleScope(elmFile).getVisibleValues().topLevel.mapNotNullTo(mutableSetOf()) { it.name }
+        val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
         Result.create(result, project.modificationTracker, modificationTracker)
     }
 }
