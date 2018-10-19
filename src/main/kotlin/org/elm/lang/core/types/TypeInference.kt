@@ -160,14 +160,11 @@ private class InferenceScope(
 
     private fun checkBadRecursion(declaration: ElmValueDeclaration): Boolean {
         val isRecursive = declaration in activeScopes
-        // Recursion is only allowed for functions with parameters
-        val fdl = declaration.functionDeclarationLeft
-        val isBad = isRecursive && (fdl == null || fdl.patterns.firstOrNull() == null)
-        if (isBad) {
+        if (isRecursive) {
             diagnostics += BadRecursionError(declaration)
         }
 
-        return isBad
+        return isRecursive
     }
 
     //</editor-fold>

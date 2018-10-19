@@ -631,9 +631,22 @@ main (<error descr="Pattern does not cover all possibilities">""</error>) = ()
 main = (\<error descr="Pattern does not cover all possibilities">""</error> -> "")
 """)
 
-    fun `test bad self-recursion in annotated function`() = checkByText("""
+    fun `test bad self-recursion in annotated value`() = checkByText("""
 main : ()
 <error descr="Infinite recursion">main = main</error>
+""")
+
+    fun `test bad self-recursion in unannotated value`() = checkByText("""
+<error descr="Infinite recursion">main = main</error>
+""")
+
+    fun `test bad self-recursion in annotated function`() = checkByText("""
+main : () -> ()
+<error descr="Infinite recursion">main a = main a</error>
+""")
+
+    fun `test bad self-recursion in unannotated function`() = checkByText("""
+<error descr="Infinite recursion">main a = main a</error>
 """)
 
     fun `test allowed self-recursion in lambda`() = checkByText("""
