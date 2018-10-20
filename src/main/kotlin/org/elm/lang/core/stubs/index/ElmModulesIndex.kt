@@ -46,19 +46,14 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
                 moduleName
 
         /**
-         * Return the module declaration for [moduleName], if any.
+         * Returns all module declarations with name [moduleName]
          */
-        fun get(moduleName: String, project: Project): ElmModuleDeclaration? {
+        fun get(moduleName: String, project: Project): List<ElmModuleDeclaration> {
             val key = makeKey(moduleName)
-            val matches = StubIndex.getElements(KEY, key, project,
+            return StubIndex.getElements(KEY, key, project,
                     GlobalSearchScope.allScope(project),
                     ElmModuleDeclaration::class.java)
                     .sortedWith(elmAppVsLibraryComparator)
-
-            if (logger.isDebugEnabled && matches.size > 1)
-                logger.warn("multiple modules found for $moduleName")
-
-            return matches.firstOrNull()
         }
 
         /**

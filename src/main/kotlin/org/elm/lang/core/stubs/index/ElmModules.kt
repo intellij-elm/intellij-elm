@@ -45,11 +45,11 @@ class ElmModules {
          */
         fun get(moduleName: String, intellijProject: Project, elmProject: ElmProject?): ElmModuleDeclaration? {
             // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
-            val elmModule = ElmModulesIndex.get(moduleName, intellijProject)
-            return when (elmProject) {
-                null -> elmModule
-                else -> elmModule?.takeIf { elmProject.exposes(it) }
+            val elmModules = ElmModulesIndex.get(moduleName, intellijProject)
+            if (elmProject == null) {
+                return elmModules.firstOrNull()
             }
+            return elmModules.firstOrNull { elmProject.exposes(it) }
         }
     }
 }
