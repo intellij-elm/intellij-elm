@@ -2,7 +2,7 @@ package org.elm.ide.inspections
 
 // These tests don't have access to the standard imports, so you can't use them in type signatures,
 // although literals still work.
-class TypeInferenceInspectionTest : ElmInspectionsTestBase(TypeInferenceInspection()) {
+class TypeInferenceInspectionTest : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
     fun `test too many arguments to value`() = checkByText("""
 foo : ()
 foo = ()
