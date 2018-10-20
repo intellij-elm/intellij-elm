@@ -46,15 +46,6 @@ jobs:
                   sudo mv elm /usr/local/bin/
                   elm --version
 
-    # this is just a hack until we can setup the Elm stdlib directly in the plugin tests themselves.
-    # elm binary cannot just install missing packages: you have to trick it by compiling an app.
-      -   run:
-              name: Installing Elm standard library
-              command: |
-                  pushd ci
-                  elm make Main.elm --output /dev/null
-                  popd
-
       -   run:
               name: Build the plugin and run tests
               command: ./gradlew check --info --stacktrace --console=plain --max-workers=1 --no-daemon -Dkotlin.compiler.execution.strategy="in-process" -Dkotlin.colors.enabled=false

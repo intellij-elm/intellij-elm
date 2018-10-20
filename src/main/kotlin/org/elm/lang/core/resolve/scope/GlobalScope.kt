@@ -1,7 +1,9 @@
 package org.elm.lang.core.resolve.scope
 
 import com.intellij.openapi.project.Project
+import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.index.ElmModules
 import org.elm.workspace.ElmProject
 
@@ -29,8 +31,13 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
                 "Tuple",
                 "Debug",
                 "Platform",
-                "Cmd", // actually Platform.Cmd but aliased as `Cmd` by the Elm compiler
-                "Sub"  // actually Platform.Sub but aliased as `Sub` by the Elm compiler
+                "Platform.Cmd",
+                "Platform.Sub"
+        )
+
+        val defaultAliases = mapOf(
+                "Cmd" to "Platform.Cmd",
+                "Sub" to "Platform.Sub"
         )
 
         /**
@@ -44,6 +51,17 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
         val builtInTypes = setOf("Bool", "String", "Char", "Int", "Float", "List")
 
         val allBuiltInSymbols = builtInValues.union(builtInTypes)
+
+        fun implicitModulesMatching(name: String, elmFile: ElmFile): List<ElmModuleDeclaration> {
+            val implicitModuleName = when (name) {
+                in defaultImports -> name
+                in defaultAliases.keys -> defaultAliases[name]
+                else -> null
+            } ?: return emptyList()
+
+            return ElmModules.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
+                    .filter { it.elmFile.isCore() }
+        }
     }
 
     // TODO [kl] this is crazy inefficient, and it should be easy to cache

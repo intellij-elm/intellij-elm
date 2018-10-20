@@ -241,13 +241,34 @@ class ElmWorkspaceService(
 
     private val directoryIndex: LightDirectoryIndex<ElmProject> =
             LightDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
-                val visited = mutableSetOf<VirtualFile>()
                 fun put(path: Path?, elmProject: ElmProject) {
                     if (path == null) return
-                    val file = LocalFileSystem.getInstance().findFileByPath(path)
-                    if (file == null || file in visited) return
-                    visited += file
-                    index.putInfo(file, elmProject)
+                    val file = LocalFileSystem.getInstance().findFileByPath(path) ?: return
+                    val existingElmProject = findProjectForFile(file)
+                    if (existingElmProject == null) {
+                        index.putInfo(file, elmProject)
+                    } else {
+                        /*
+                        Conflict: There is already an Elm project associated with this directory.
+
+                        Elm's source directories can be shared between Elm projects.
+                        The "right" thing to do would be to model this fully, allowing an Elm file
+                        to belong to multiple Elm projects. But that would complicate things everywhere,
+                        and so I have chosen to instead keep things simple by associating each Elm file
+                        with a SINGLE Elm project only.
+
+                        The conflict will be resolved by always associating an Elm file with
+                        the Elm project that is nearest in the file system hierarchy. This is by no
+                        means perfect, but it should be good enough in nearly all cases.
+
+                        In the future we may want to re-visit this decision.
+                        */
+                        val oldDistance = existingElmProject.projectDirPath.relativize(path.normalize()).toList().size
+                        val newDistance = elmProject.projectDirPath.relativize(path.normalize()).toList().size
+                        if (newDistance < oldDistance) {
+                            index.putInfo(file, elmProject)
+                        }
+                    }
                 }
 
                 for (project in allProjects) {
@@ -264,44 +285,8 @@ class ElmWorkspaceService(
     // INTEGRATION TEST SUPPORT
 
 
-    fun setupForTests() {
-        val toolchain = ElmToolchain.suggest(intellijProject)
-        require(toolchain != null) { "failed to find Elm toolchain: cannot setup the workspace for tests" }
+    fun setupForTests(toolchain: ElmToolchain, elmProject: ElmProject) {
         useToolchain(toolchain)
-
-        // NOTE: this must be kept in sync with the packages installed during the CircleCI build.
-        val fakeManifestPath = Paths.get("/in-memory/tests/elm.json")
-        val jsonStream = """
-            {
-                "type": "application",
-                "source-directories": [
-                    "."
-                ],
-                "elm-version": "0.19.0",
-                "dependencies": {
-                    "direct": {
-                        "NoRedInk/elm-json-decode-pipeline": "1.0.0",
-                        "elm/core": "1.0.0",
-                        "elm/html": "1.0.0",
-                        "elm/json": "1.0.0",
-                        "elm/time": "1.0.0",
-                        "elm-explorations/markdown": "1.0.0"
-                    },
-                    "indirect": {
-                        "elm/virtual-dom": "1.0.2"
-                    }
-                },
-                "test-dependencies": {
-                    "direct": {
-                        "elm-explorations/test": "1.0.0"
-                    },
-                    "indirect": {
-                        "elm/random": "1.0.0"
-                    }
-                }
-            }
-        """.trimIndent().byteInputStream()
-        val elmProject = ElmProject.parse(jsonStream, fakeManifestPath, toolchain!!)
         upsertProject(elmProject)
     }
 
@@ -341,6 +326,15 @@ class ElmWorkspaceService(
         val settingsElement = state.getChild("settings")
         val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
         modifySettings(notify = false) { RawSettings(binDirPath = binDirPath) }
+
+        // Ensure that `elm-stuff` directories are always excluded so that they don't pollute open-by-filename, etc.
+        intellijProject.modules
+                .asSequence()
+                .flatMap { ModuleRootManager.getInstance(it).contentEntries.asSequence() }
+                .forEach {
+                    if ("elm-stuff" !in it.excludePatterns)
+                        it.addExcludePattern("elm-stuff")
+                }
 
         return state.getChild("elmProjects")
                 .getChildren("project")

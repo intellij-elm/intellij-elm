@@ -43,6 +43,15 @@ class ElmNeedsConfigNotificationProvider(
         if (!file.isElmFile || isNotificationDisabled())
             return null
 
+        val elmProject = project.elmWorkspace.findProjectForFile(file)
+
+        if (false) {
+            // simple debugging for issues with associating Elm files with Elm projects
+            return EditorNotificationPanel().apply {
+                setText(elmProject?.projectDirPath?.toString() ?: "No Elm project associated with this file")
+            }
+        }
+
         val toolchain = project.elmToolchain
         if (toolchain == null || !toolchain.looksLikeValidToolchain()) {
             return createBadToolchainPanel("No Elm toolchain configured")
