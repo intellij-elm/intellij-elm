@@ -583,6 +583,7 @@ private class InferenceScope(
 
         // Bind the element even if it's shadowing something so that later inference knows it's a parameter
         bindings[element] = ty
+        expressionTypes[element] = ty
     }
 
     /**
