@@ -287,6 +287,7 @@ foo bar = ()
 
     fun `test function parameter with primitive type annotation`() = doTest(
             """
+type Int = Int
 foo : Int -> Int
 foo bar = bar
         --^
@@ -296,20 +297,22 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function parameter with nested parametric type annotation`() = doTest(
-            """
-type Foo a = Bar
-foo : Foo (Foo a) -> Foo (Foo a)
-foo bar = bar
-        --^
-""",
-            """
-<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Foo">Foo</a> (<a href="psi_element://Foo">Foo</a> a)
-<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
-""")
+// TODO[unification]
+//    fun `test function parameter with nested parametric type annotation`() = doTest(
+//            """
+//type Foo a = Bar
+//foo : Foo (Foo a) -> Foo (Foo a)
+//foo bar = bar
+//        --^
+//""",
+//            """
+//<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Foo">Foo</a> (<a href="psi_element://Foo">Foo</a> a)
+//<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+//""")
 
     fun `test function parameter with parenthesized type annotation`() = doTest(
             """
+type Int = Int
 foo : ((Int)) -> Int
 foo ((bar)) = bar
             --^
@@ -321,6 +324,9 @@ foo ((bar)) = bar
 
     fun `test function parameter with nested tuple type annotation`() = doTest(
             """
+type Int = Int
+type String = String
+type Float = Float
 foo : (Int, (String, Float)) -> String
 foo (_, (bar, _)) = bar
                   --^
@@ -332,6 +338,8 @@ foo (_, (bar, _)) = bar
 
     fun `test function parameter with record type annotation`() = doTest(
             """
+type Int = Int
+type Float = Float
 foo : {x: Int, y: Float} -> Float
 foo {x, y} = y
            --^
@@ -343,12 +351,14 @@ foo {x, y} = y
 
     fun `test function parameter with record type and as annotation`() = doTest(
             """
+type Int = Int
+type Float = Float
 foo : {x: Int, y: Float} -> {x: Int, y: Float}
 foo ({x, y} as z) = z
                   --^
 """,
             """
-<div class='definition'><pre><i>parameter</i> z : {x: <a href="psi_element://Int">Int</a>,<br>y: <a href="psi_element://Float">Float</a>}
+<div class='definition'><pre><i>parameter</i> z : { x: <a href="psi_element://Int">Int</a>,<br>y: <a href="psi_element://Float">Float</a> }
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
