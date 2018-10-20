@@ -366,6 +366,7 @@ private class InferenceScope(
         }
 
         val baseTy = inferReferenceElement(recordIdentifier)
+        if (baseTy == TyUnknown || baseTy is TyVar) return TyUnknown // TODO[unification]
         if (baseTy !is TyRecord) {
             diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
             return TyUnknown

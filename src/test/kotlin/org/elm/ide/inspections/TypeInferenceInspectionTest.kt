@@ -429,6 +429,12 @@ main : () -> ()
 main = (\a -> a)
 """)
 
+    fun `test record update in lambda`() = checkByText("""
+type alias R = {x : ()}
+main : R -> R
+main = (\r -> { r | x = () })
+""")
+
     fun `test matched lambda type with closure pattern matching` () = checkByText("""
 type Foo = Bar
 main : (Foo, Foo) -> ((Foo, Foo) -> Foo)
