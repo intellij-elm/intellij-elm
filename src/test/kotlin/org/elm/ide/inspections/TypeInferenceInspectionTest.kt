@@ -825,7 +825,7 @@ infix non 4 (~~) = foo
 main a = () ~~ <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    fun `test chain non-associative operator`() = checkByText("""
+    fun `test chained non-associative operator`() = checkByText("""
 foo : () -> () -> ()
 foo a b = a
 infix non 4 (~~) = foo
@@ -869,5 +869,29 @@ foo a b = Bar
 infix right 4 (~~) = foo
 
 main a = () ~~ <error descr="Type mismatch.Required: ()Found: Foo">() ~~ ()</error>
+""")
+
+    fun `test apply-right into Maybe`() = checkByText("""
+type Maybe a = Just a | Nothing
+apR : a -> (a -> b) -> b
+apR x f = f x
+infix left  0 (|>) = apR
+
+main : Maybe ()
+main = () |> Just
+""")
+
+    fun `test multiple non-associative operators`() = checkByText("""
+type Bool = True | False
+lt : a -> a -> Bool
+lt a b = True
+and : Bool -> Bool -> Bool
+and a b = False
+
+infix right 3 (&&) = and
+infix non   4 (<)  = lt
+
+main : Bool
+main = 1 < 2 && 3 < 4
 """)
 }

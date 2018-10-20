@@ -184,13 +184,15 @@ private class InferenceScope(
         // code like `1 + + 1`, since it won't parse as an expression.
         val operatorPrecedences = HashMap<ElmOperator, OperatorPrecedence>(parts.size / 2)
         val operatorTys = HashMap<ElmOperator, TyFunction>(parts.size / 2)
+        var lastPrecedence: OperatorPrecedence? = null
         for (part in parts) {
             if (part is ElmOperator) {
                 val (ty, precedence) = inferOperatorAndPrecedence(part)
                 when {
                     precedence == null || ty !is TyFunction || ty.parameters.size != 2 -> return TyUnknown
-                    precedence.associativity == NON && parts.size > 3 -> {
-                        // Non-associative operators can't be chained with other operators.
+                    precedence.associativity == NON && lastPrecedence?.associativity == NON -> {
+                        // Non-associative operators can't be chained directly with other non-associative
+                        // operators.
                         diagnostics += NonAssociativeOperatorError(expr, part)
                         return TyUnknown
                     }
@@ -199,6 +201,7 @@ private class InferenceScope(
                         operatorTys[part] = ty
                     }
                 }
+                lastPrecedence = precedence
             }
         }
 

@@ -11,6 +11,7 @@ sealed class BinaryExprTree<T : Any> {
     data class Binary<T : Any>(val left: BinaryExprTree<T>, val operator: T, val right: BinaryExprTree<T>) : BinaryExprTree<T>()
 
     companion object {
+        private const val DEFAULT_PRECEDENCE = -1
         /**
          * Parse a list of operands and operators into a binary tree structured in evaluation
          * order based on precedence and associativity.
@@ -25,7 +26,7 @@ sealed class BinaryExprTree<T : Any> {
          *   [expression]. Every function in [expression] must have an entry.
          */
         fun <T : Any> parse(expression: List<T>, operatorPrecedences: Map<out T, OperatorPrecedence>): BinaryExprTree<T> {
-            return parseExpression(expression, operatorPrecedences, 0, 0).first
+            return parseExpression(expression, operatorPrecedences, DEFAULT_PRECEDENCE, 0).first
         }
 
         /*
@@ -46,7 +47,7 @@ sealed class BinaryExprTree<T : Any> {
 
             var i = idx + 1
             fun nextPrecedence(): Int = when {
-                i >= expression.lastIndex -> 0
+                i >= expression.lastIndex -> DEFAULT_PRECEDENCE
                 else -> operatorPrecedences[expression[i]]!!.precedence
             }
             while (precedence < nextPrecedence()) {
