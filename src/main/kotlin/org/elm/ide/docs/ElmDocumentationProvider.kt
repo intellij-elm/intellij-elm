@@ -143,7 +143,7 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
     val function = element.parentOfType<ElmFunctionDeclarationLeft>() ?: return null
     val decl = function.parentOfType<ElmValueDeclaration>() ?: return null
     val inference = decl.inference()
-    val ty = inference.bindingType(element)
+    val ty = inference.elementType(element)
 
     definition {
         i { append("parameter") }

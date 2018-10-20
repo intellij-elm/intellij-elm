@@ -63,6 +63,8 @@ private class InferenceScope(
      * so that we can find which ancestor to start inference from.
      */
     private val childDeclarations: MutableSet<ElmValueDeclaration> = mutableSetOf()
+    /** The inferred types of elements that should be exposed through documentation. */
+    private val expressionTypes: MutableMap<ElmPsiElement, Ty> = mutableMapOf()
 
     private val ancestors: Sequence<InferenceScope> get() = generateSequence(this) { it.parent }
 
@@ -80,7 +82,7 @@ private class InferenceScope(
         // surprising bugs.
         // We don't currently infer recursive functions in order to avoid infinite loop in the inference.
         if (checkRecursion(declaration) || PsiTreeUtil.hasErrorElements(declaration)) {
-            return InferenceResult(bindings, diagnostics, TyUnknown)
+            return InferenceResult(expressionTypes, diagnostics, TyUnknown)
         }
 
         activeScopes += declaration
@@ -101,7 +103,7 @@ private class InferenceScope(
         }
 
         val ty = if (declaredTy === TyUnknown) bodyTy else declaredTy
-        return InferenceResult(bindings, diagnostics, ty)
+        return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunction): InferenceResult {
@@ -111,7 +113,7 @@ private class InferenceScope(
         patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
         val ty = TyFunction(paramVars, bodyTy)
-        return InferenceResult(bindings, diagnostics, ty)
+        return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
     private fun beginLetInInference(letIn: ElmLetIn): InferenceResult {
@@ -133,7 +135,7 @@ private class InferenceScope(
     private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpression(branchExpression)
-        return InferenceResult(bindings, diagnostics, ty)
+        return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
     private inline fun inferChild(activeScopes: MutableSet<ElmValueDeclaration> = this.activeScopes.toMutableSet(),
@@ -157,7 +159,7 @@ private class InferenceScope(
             if (pattern != null) {
                 val patterns = pattern.descendantsOfType<ElmLowerPattern>()
                 for (p in patterns) {
-                    setBinding(p, result.bindingType(p))
+                    setBinding(p, result.elementType(p))
                     shadowableNames += p.name
                 }
             }
@@ -189,6 +191,12 @@ private class InferenceScope(
         if (expr == null || elementContainsErrors(expr)) return TyUnknown
 
         val parts: List<ElmExpressionPartTag> = expr.parts.toList()
+
+        // fast path for single part expressions
+        // don't add to expressionTypes since the operand is already there
+        if (parts.size == 1) {
+            return (parts[0] as? ElmOperandTag)?.let { inferOperand(it) } ?: TyUnknown
+        }
 
         // Get the operator types and precedences. We don't have to worry about invalid
         // code like `1 + + 1`, since it won't parse as an expression.
@@ -233,11 +241,12 @@ private class InferenceScope(
         }
 
         val result = validateTree(BinaryExprTree.parse(parts, operatorPrecedences))
+        expressionTypes[expr] = result.ty
         return result.ty
     }
 
     private fun inferOperand(operand: ElmOperandTag): Ty {
-        return when (operand) {
+        val ty = when (operand) {
             is ElmAnonymousFunction -> inferLambda(operand)
             is ElmCaseOf -> inferCase(operand)
             is ElmCharConstant -> TyChar
@@ -262,13 +271,15 @@ private class InferenceScope(
             is ElmValueExpr -> inferReferenceElement(operand)
             else -> error("unexpected operand type $operand")
         }
+        expressionTypes[operand] = ty
+        return ty
     }
 
     private fun inferOperatorAndPrecedence(operator: ElmOperator): Pair<Ty, OperatorPrecedence?> {
         val ref = operator.reference.resolve() as? ElmInfixDeclaration ?: return TyUnknown to null
         val precedence = ref.precedence.text.toIntOrNull() ?: return TyUnknown to null
         val decl = ref.valueExpr?.reference?.resolve() ?: return TyUnknown to null
-        val ty = inferChildValueDeclaration(decl.parentOfType())
+        val ty = inferReferencedValueDeclaration(decl.parentOfType())
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
 
@@ -452,7 +463,7 @@ private class InferenceScope(
         return when (ref) {
             is ElmUnionMember -> unionMemberType(ref)
             is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref)
-            is ElmFunctionDeclarationLeft -> inferChildValueDeclaration(ref.parentOfType())
+            is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> portAnnotationType(ref)
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
@@ -461,7 +472,7 @@ private class InferenceScope(
                 // Pattern declarations might not have been inferred yet
                 val parentPatternDecl = parentPatternDecl(ref)
                 if (parentPatternDecl != null) {
-                    return inferChildValueDeclaration(parentPatternDecl)
+                    return inferReferencedValueDeclaration(parentPatternDecl)
                 }
 
                 // All patterns should now be bound
@@ -529,10 +540,10 @@ private class InferenceScope(
         if (ref is ElmInfixDeclaration) {
             ref = ref.valueExpr?.reference?.resolve()
         }
-        return inferChildValueDeclaration(ref?.parentOfType())
+        return inferReferencedValueDeclaration(ref?.parentOfType())
     }
 
-    private fun inferChildValueDeclaration(decl: ElmValueDeclaration?): Ty {
+    private fun inferReferencedValueDeclaration(decl: ElmValueDeclaration?): Ty {
         if (decl == null || checkRecursion(decl)) return TyUnknown
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
@@ -858,12 +869,14 @@ private class InferenceScope(
 
 
 /**
+ * @property elementTypes the types for any psi elements inferred
+ * @property diagnostics any errors encountered dirung inference
  * @property ty the return type of the function or expression being inferred
  */
-data class InferenceResult(val bindings: Map<ElmNamedElement, Ty>,
+data class InferenceResult(val elementTypes: Map<ElmPsiElement, Ty>,
                            val diagnostics: List<ElmDiagnostic>,
                            val ty: Ty) {
-    fun bindingType(element: ElmNamedElement): Ty = bindings[element] ?: TyUnknown
+    fun elementType(element: ElmPsiElement): Ty = elementTypes[element] ?: TyUnknown
 }
 
 val ElmPsiElement.moduleName: String
