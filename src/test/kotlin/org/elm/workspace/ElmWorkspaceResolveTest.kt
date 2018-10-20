@@ -107,19 +107,15 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         val elmProjA = project.elmWorkspace.allProjects[0]
         val elmProjB = project.elmWorkspace.allProjects[1]
 
-        val debug = true
+        val debug = false
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
-
             val moduleDeclsForA = ElmModules.getAll(project, elmProjA)
             val moduleDeclsForB = ElmModules.getAll(project, elmProjB)
-
             println("module decls for A")
             moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
-
             println("\n\n")
-
             println("module decls for B")
             moduleDeclsForB.forEach { println(it.elmFile.virtualFile.path) }
         }
@@ -269,19 +265,15 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         val elmProjA = project.elmWorkspace.allProjects.find { it.presentableName == "a" }!!
         val elmProjB = project.elmWorkspace.allProjects.find { it.presentableName == "b" }!!
 
-        val debug = true
+        val debug = false
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
-
             val moduleDeclsForA = ElmModules.getAll(project, elmProjA)
             val moduleDeclsForB = ElmModules.getAll(project, elmProjB)
-
             println("module decls for A")
             moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
-
             println("\n\n")
-
             println("module decls for B")
             moduleDeclsForB.forEach { println(it.elmFile.virtualFile.path) }
         }

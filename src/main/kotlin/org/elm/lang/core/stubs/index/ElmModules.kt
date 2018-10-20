@@ -6,8 +6,6 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.findFileByPath
 import org.elm.workspace.ElmProject
-import java.nio.file.Files
-import java.nio.file.Path
 
 
 // TODO [kl] figure out a better name for this. Maybe it should be part of the 'Scope' system?
@@ -79,34 +77,21 @@ private fun ElmProject.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean
  */
 private fun ElmProject.sourceDirectoryContains(moduleDeclaration: ElmModuleDeclaration): Boolean {
 
-    val mySrcDirs = sourceDirectories.map { projectDirPath.resolve(it) }
+    val moduleDeclProject = moduleDeclaration.elmProject
+            ?: return false
 
-    val candidateSrcDirs = mutableListOf<Path>()
-
-    if (moduleDeclaration.elmProject?.manifestPath != manifestPath) {
-        // The module declaration does not belong to this Elm project.
-        // Normally this means that there's no match, but it is possible
-        // to have 2 Elm projects with the same src directory. Lame, but that's what people do
-        // to workaround Elm's simplistic package system.
-
-        val moduleProj = moduleDeclaration.elmProject ?: return false
-        val moduleSrcDirs = moduleProj.sourceDirectories.map { moduleProj.projectDirPath.resolve(it) }
-
-        var compatible = false
-        for (a in mySrcDirs) {
-            for (b in moduleSrcDirs) {
-                if (Files.exists(a) && Files.exists(b) && Files.isSameFile(a, b)) {
-                    compatible = true
-                    candidateSrcDirs.add(a)
-                }
-            }
-        }
-
-        if (!compatible) {
-            return false
-        }
+    val candidateSrcDirs = if (moduleDeclProject.manifestPath == manifestPath) {
+        // They belong to the same Elm project, all source dirs are candidates
+        absoluteSourceDirectories
     } else {
-        candidateSrcDirs.addAll(mySrcDirs)
+        // The module declaration does not belong to this Elm project.
+        //
+        // Normally this means that there's no match, but it is possible
+        // to have 2 Elm projects that share one-or-more source directories.
+        // There is no guarantee that they are mutually exclusive.
+        //
+        // The only valid candidates are those that are shared between the 2 projects.
+        sharedSourceDirs(moduleDeclProject)
     }
 
     val elmModuleRelativePath = moduleDeclaration.name.replace('.', '/') + ".elm"

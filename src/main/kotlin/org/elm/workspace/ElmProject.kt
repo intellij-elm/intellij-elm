@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -24,7 +25,7 @@ private val objectMapper = ObjectMapper()
  * @param manifestPath The location of the manifest file (e.g. `elm.json`). Uniquely identifies a project.
  * @param dependencies Additional Elm packages that this project depends on
  * @param testDependencies Additional Elm packages that this project's **tests** depends on
- * @param sourceDirectories The paths to one-or-more directories containing Elm source files belonging to this project.
+ * @param sourceDirectories The relative paths to one-or-more directories containing Elm source files belonging to this project.
  */
 sealed class ElmProject(
         val manifestPath: Path,
@@ -49,6 +50,13 @@ sealed class ElmProject(
     val presentableName: String
         get() = projectDirPath.fileName.toString()
 
+    /**
+     * Returns the absolute paths for each source directory.
+     *
+     * @see sourceDirectories
+     */
+    val absoluteSourceDirectories: List<Path>
+        get() = sourceDirectories.map { projectDirPath.resolve(it) }
 
     /**
      * Returns all packages which this project depends on, whether it be for normal,
@@ -57,6 +65,21 @@ sealed class ElmProject(
     val allResolvedDependencies: Sequence<ElmPackageProject>
         get() = sequenceOf(dependencies, testDependencies).flatten()
 
+    /**
+     * Returns the absolute path of each source directory which is shared between the
+     * receiver and [otherProject].
+     */
+    fun sharedSourceDirs(otherProject: ElmProject): List<Path> {
+        val paths = mutableListOf<Path>()
+        for (a in absoluteSourceDirectories) {
+            for (b in otherProject.absoluteSourceDirectories) {
+                if (Files.exists(a) && Files.exists(b) && Files.isSameFile(a, b)) {
+                    paths.add(a)
+                }
+            }
+        }
+        return paths
+    }
 
     companion object {
 

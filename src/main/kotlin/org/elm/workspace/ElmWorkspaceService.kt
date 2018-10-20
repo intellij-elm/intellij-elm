@@ -245,26 +245,29 @@ class ElmWorkspaceService(
                     if (path == null) return
                     val file = LocalFileSystem.getInstance().findFileByPath(path) ?: return
                     val existingElmProject = findProjectForFile(file)
-                    if (existingElmProject != null) {
-                        println("CONFLICT: want to put ${elmProject.projectDirPath}" +
-                                "\n\t\tfor $path " +
-                                "\n\t\tbut already have ${existingElmProject.projectDirPath}")
-                        // resolve conflict
-                        val oldRelPath = existingElmProject.projectDirPath.relativize(path.normalize())
-                        val newRelPath = elmProject.projectDirPath.relativize(path.normalize())
-                        val oldDistance = oldRelPath.toList().size
-                        val newDistance = newRelPath.toList().size
-                        println("oldRelPath = $oldRelPath")
-                        println("newRelPath = $newRelPath")
-                        if (newDistance < oldDistance) {
-                            println("Resolved conflict by taking the new project")
-                            index.putInfo(file, elmProject)
-                        } else {
-                            println("Resolved conflict by keeping the old project")
-                            // ignore, the previously-registered project is "closer" to this source directory.
-                        }
-                    } else {
+                    if (existingElmProject == null) {
                         index.putInfo(file, elmProject)
+                    } else {
+                        /*
+                        Conflict: There is already an Elm project associated with this directory.
+
+                        Elm's source directories can be shared between Elm projects.
+                        The "right" thing to do would be to model this fully, allowing an Elm file
+                        to belong to multiple Elm projects. But that would complicate things everywhere,
+                        and so I have chosen to instead keep things simple by associating each Elm file
+                        with a SINGLE Elm project only.
+
+                        The conflict will be resolved by always associating an Elm file with
+                        the Elm project that is nearest in the file system hierarchy. This is by no
+                        means perfect, but it should be good enough in nearly all cases.
+
+                        In the future we may want to re-visit this decision.
+                        */
+                        val oldDistance = existingElmProject.projectDirPath.relativize(path.normalize()).toList().size
+                        val newDistance = elmProject.projectDirPath.relativize(path.normalize()).toList().size
+                        if (newDistance < oldDistance) {
+                            index.putInfo(file, elmProject)
+                        }
                     }
                 }
 
