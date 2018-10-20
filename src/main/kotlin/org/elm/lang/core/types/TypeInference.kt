@@ -72,7 +72,8 @@ private class InferenceScope(
         // If the declaration has any syntax errors, we don't run inference on it. Trying to resolve
         // references in expressions that contain syntax errors can result in infinite recursion and
         // surprising bugs.
-        if (checkBadRecursion(declaration) || PsiTreeUtil.hasErrorElements(declaration)) {
+        // We don't currently infer recursive functions in order to avoid infinite loop in the inference.
+        if (checkRecursion(declaration) || PsiTreeUtil.hasErrorElements(declaration)) {
             return InferenceResult(bindings, diagnostics, TyUnknown)
         }
 
@@ -158,9 +159,12 @@ private class InferenceScope(
         return result
     }
 
-    private fun checkBadRecursion(declaration: ElmValueDeclaration): Boolean {
+    private fun checkRecursion(declaration: ElmValueDeclaration): Boolean {
         val isRecursive = declaration in activeScopes
-        if (isRecursive) {
+        // Recursion is a compile-time error if the function doesn't have any parameters
+        val fdl = declaration.functionDeclarationLeft
+        val isBad = isRecursive && (fdl == null || fdl.patterns.firstOrNull() == null)
+        if (isBad) {
             diagnostics += BadRecursionError(declaration)
         }
 
@@ -523,7 +527,7 @@ private class InferenceScope(
     }
 
     private fun inferChildValueDeclaration(decl: ElmValueDeclaration?): Ty {
-        if (decl == null || checkBadRecursion(decl)) return TyUnknown
+        if (decl == null || checkRecursion(decl)) return TyUnknown
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one

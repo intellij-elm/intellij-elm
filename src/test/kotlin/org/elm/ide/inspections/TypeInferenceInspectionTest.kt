@@ -646,13 +646,13 @@ main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
-    fun `test bad self-recursion in annotated function`() = checkByText("""
+    fun `test allowed self-recursion in annotated function`() = checkByText("""
 main : () -> ()
-<error descr="Infinite recursion">main a = main a</error>
+main a = main a -- This is a runtime error, not compile time
 """)
 
-    fun `test bad self-recursion in unannotated function`() = checkByText("""
-<error descr="Infinite recursion">main a = main a</error>
+    fun `test allowed self-recursion in unannotated function`() = checkByText("""
+main a = main a -- This is a runtime error, not compile time
 """)
 
     fun `test allowed self-recursion in lambda`() = checkByText("""
