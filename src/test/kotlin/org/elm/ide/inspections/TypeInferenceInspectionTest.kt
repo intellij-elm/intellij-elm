@@ -761,6 +761,21 @@ main arg =
         _ -> ()
 """)
 
+    fun `test case branches using union patterns to unresolved type`() = checkByText("""
+-- This will lead to unresolved reference errors, but we still to test that we're binding
+-- the parameters so that we can infer the branch expressions.
+main arg =
+    case arg of
+        Bar (<error descr="Unresolved reference 'Just'">Just {x}</error>) -> x
+        <error descr="Unresolved reference 'Baz'">Baz x</error> -> x
+        _ -> ()
+
+""")
+
+    fun `test function parameters using union patterns to unresolved type`() = checkByText("""
+<error descr="<module declaration> expected, got 'main'">main</error> <error descr="Unresolved reference 'Foo'">Foo bar</error> = <error descr="Value cannot be defined in terms of itself">bar</error>
+""")
+
     fun `test valid case branch with cons pattern`() = checkByText("""
 main : ()
 main arg =

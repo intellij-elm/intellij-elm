@@ -709,7 +709,7 @@ private class InferenceScope(
 
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing to bind
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.let { unionMemberType(it) } ?: return
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.let { unionMemberType(it) }
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
@@ -726,6 +726,9 @@ private class InferenceScope(
                     if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
                 }
             }
+        } else if (memberTy == null) {
+            // null memberTy means the reference didn't resolve
+            pat.namedParameters.forEach { setBinding(it, TyUnknown) }
         } else if (argumentPatterns.isNotEmpty()) {
             issueError(argumentPatterns.size, 0)
         }
