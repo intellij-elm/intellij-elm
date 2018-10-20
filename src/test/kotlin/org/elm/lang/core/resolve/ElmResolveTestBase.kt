@@ -38,17 +38,19 @@ abstract class ElmResolveTestBase : ElmTestBase() {
     protected fun checkByCode(@Language("Elm") code: String) {
         InlineFile(code)
 
-        val (refElement, data) = findElementAndDataInEditor<ElmReferenceElement>("^")
+        val (ref, data) = findReferenceWithDataInEditor("^")
 
         if (data == "unresolved") {
-            val resolved = refElement.reference.resolve()
+            val resolved = ref?.resolve()
             check(resolved == null) {
-                "$refElement `${refElement.text}`should be unresolved, was resolved to\n$resolved `${resolved?.text}`"
+                "`${ref?.element?.text}` should be unresolved, was resolved to\n$resolved `${resolved?.text}`"
             }
             return
         }
 
-        val resolved = refElement.reference.resolve()
+        check(ref != null) { "no reference found at caret" }
+
+        val resolved = ref!!.resolve()
         check(resolved != null) { "resolve did not find anything"}
 
         val target = findElementInEditor<ElmNamedElement>("X")
@@ -62,18 +64,20 @@ abstract class ElmResolveTestBase : ElmTestBase() {
             !file.path.endsWith(testProject.fileWithCaret)
         })
 
-        val (refElement, resolveFile) = findElementAndDataInEditor<ElmReferenceElement>()
+        val (ref, resolveFile) = findReferenceWithDataInEditor()
 
         if (resolveFile == "unresolved") {
-            val element = refElement.reference.resolve()
+            val element = ref?.resolve()
             if (element != null) {
-                error("Should not resolve ${refElement.text} to ${element.text}")
+                error("Should not resolve ${ref.element.text} to ${element.text}")
             }
             return
         }
 
-        val element = refElement.reference.resolve()
-                ?: error("Failed to resolve ${refElement.text}")
+        check(ref != null) { "no reference found at caret" }
+
+        val element = ref!!.resolve()
+                ?: error("Failed to resolve ${ref.element.text}")
         val actualResolveFile = element.containingFile.virtualFile
 
         if (resolveFile.isEmpty()) {

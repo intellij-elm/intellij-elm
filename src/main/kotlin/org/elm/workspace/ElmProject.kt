@@ -3,13 +3,16 @@ package org.elm.workspace
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.vfs.LocalFileSystem
-import org.elm.lang.core.moduleLookupHack
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
+import java.io.File
+import java.io.FileNotFoundException
 import java.io.InputStream
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -23,7 +26,7 @@ private val objectMapper = ObjectMapper()
  * @param manifestPath The location of the manifest file (e.g. `elm.json`). Uniquely identifies a project.
  * @param dependencies Additional Elm packages that this project depends on
  * @param testDependencies Additional Elm packages that this project's **tests** depends on
- * @param sourceDirectories The paths to one-or-more directories containing Elm source files belonging to this project.
+ * @param sourceDirectories The relative paths to one-or-more directories containing Elm source files belonging to this project.
  */
 sealed class ElmProject(
         val manifestPath: Path,
@@ -48,6 +51,13 @@ sealed class ElmProject(
     val presentableName: String
         get() = projectDirPath.fileName.toString()
 
+    /**
+     * Returns the absolute paths for each source directory.
+     *
+     * @see sourceDirectories
+     */
+    val absoluteSourceDirectories: List<Path>
+        get() = sourceDirectories.map { projectDirPath.resolve(it) }
 
     /**
      * Returns all packages which this project depends on, whether it be for normal,
@@ -56,6 +66,21 @@ sealed class ElmProject(
     val allResolvedDependencies: Sequence<ElmPackageProject>
         get() = sequenceOf(dependencies, testDependencies).flatten()
 
+    /**
+     * Returns the absolute path of each source directory which is shared between the
+     * receiver and [otherProject].
+     */
+    fun sharedSourceDirs(otherProject: ElmProject): List<Path> {
+        val paths = mutableListOf<Path>()
+        for (a in absoluteSourceDirectories) {
+            for (b in otherProject.absoluteSourceDirectories) {
+                if (Files.exists(a) && Files.exists(b) && Files.isSameFile(a, b)) {
+                    paths.add(a)
+                }
+            }
+        }
+        return paths
+    }
 
     companion object {
 
@@ -71,17 +96,10 @@ sealed class ElmProject(
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
         fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
-                // Handle legacy Elm 0.18 package. We don't need to model the dependencies
-                // because Elm 0.18 stored everything in a local `elm-stuff` directory, and we assume
-                // that the user has not excluded that directory from the project.
-                return ElmApplicationProject(
-                        manifestPath = manifestPath,
-                        elmVersion = Version(0, 18, 0),
-                        dependencies = emptyList(),
-                        testDependencies = emptyList(),
-                        sourceDirectories = emptyList()
-                )
+                val elmStuffPath = manifestPath.resolveSibling("elm-stuff")
+                return parseLegacy(manifestPath, elmStuffPath)
             }
 
             val node = try {
@@ -89,6 +107,7 @@ sealed class ElmProject(
             } catch (e: JsonProcessingException) {
                 throw ProjectLoadException("Bad JSON: ${e.message}")
             }
+
             val type = node.get("type")?.textValue()
             return when (type) {
                 "application" -> {
@@ -128,6 +147,40 @@ sealed class ElmProject(
                 }
                 else -> throw ProjectLoadException("The 'type' field is '$type', "
                         + "but expected either 'application' or 'package'")
+            }
+        }
+
+        // TODO [drop 0.18]
+        fun parseLegacy(manifestPath: Path, elmStuffPath: Path): ElmProject {
+            // Handle legacy Elm 0.18 projects
+            val dto = try {
+                objectMapper.readValue(File(manifestPath.toString()), Elm18ProjectDTO::class.java)
+            } catch (e: JsonProcessingException) {
+                throw ProjectLoadException("Invalid elm-package.json: ${e.message}")
+            }
+
+            return if (dto.exposedModules.isEmpty()) {
+                ElmApplicationProject(
+                        manifestPath = manifestPath,
+                        elmVersion = Version(0, 18, 0),
+                        dependencies = dto.depsToPackages(elmStuffPath),
+                        testDependencies = emptyList(),
+                        sourceDirectories = dto.sourceDirectories)
+            } else {
+                ElmPackageProject(
+                        manifestPath = manifestPath,
+                        elmVersion = dto.elmVersion,
+                        dependencies = dto.depsToPackages(elmStuffPath),
+                        testDependencies = emptyList(),
+                        name = if (manifestPath.startsWith(elmStuffPath))
+                            manifestPath.parent.parent.toString()
+                                    .removePrefix(elmStuffPath.toString())
+                                    .removePrefix("/packages/")
+                        else
+                            manifestPath.parent.fileName.toString(),
+                        version = dto.version,
+                        exposedModules = dto.exposedModules,
+                        sourceDirectories = dto.sourceDirectories)
             }
         }
     }
@@ -192,6 +245,19 @@ fun loadPackage(toolchain: ElmToolchain, name: String, version: Version): ElmPac
 }
 
 
+// TODO [drop 0.18] remove me
+fun loadPackageLegacy(elmStuffPath: Path, name: String, version: Version): ElmPackageProject {
+    val manifestPath =
+            elmStuffPath.resolve("packages")
+                    .resolve(name)
+                    .resolve(version.toString())
+                    .resolve("elm-package.json")
+
+    return ElmProject.parseLegacy(manifestPath, elmStuffPath) as? ElmPackageProject
+            ?: throw ProjectLoadException("Could not load $name ($version): expected an Elm 0.18 package!")
+}
+
+
 /**
  * A dummy sentinel value because [LightDirectoryIndex] needs it.
  */
@@ -235,6 +301,36 @@ private class ElmPackageProjectDTO(
 ) : ElmProjectDTO
 
 
+// TODO [drop 0.18]
+private class Elm18ProjectDTO(
+        @JsonProperty("elm-version") val elmVersion: Constraint,
+        @JsonProperty("source-directories") val sourceDirectories: List<Path>,
+        @JsonProperty("dependencies") val dependencies: Map<String, Constraint>,
+        @JsonProperty("version") val version: Version,
+        @JsonProperty("exposed-modules") val exposedModules: List<String>
+) : ElmProjectDTO {
+
+    object VERSION_MAP_TYPEREF : TypeReference<Map<String, Version>>()
+
+    fun depsToPackages(elmStuffPath: Path): List<ElmPackageProject> {
+        val exactDepsFile = File(elmStuffPath.resolve("exact-dependencies.json").toString())
+        val exactDepsMap: Map<String, Version> = try {
+            objectMapper.readValue(exactDepsFile, VERSION_MAP_TYPEREF)
+        } catch (e: JsonProcessingException) {
+            throw ProjectLoadException("Invalid exact-dependencies.json: ${e.message}")
+        } catch (e: FileNotFoundException) {
+            throw ProjectLoadException("Could not find exact-dependencies.json. Did you run `elm-package install`?")
+        }
+
+        return dependencies.keys.map {
+            val exactVersion = exactDepsMap[it]
+                    ?: throw ProjectLoadException("Could not find exact version of $it")
+            loadPackageLegacy(elmStuffPath, it, exactVersion)
+        }
+    }
+}
+
+
 private fun JsonNode.toExposedModuleMap(): List<String> {
     // Normalize the 2 exposed-modules formats into a single format.
     // format 1: a list of strings, where each string is the name of an exposed module
@@ -242,11 +338,11 @@ private fun JsonNode.toExposedModuleMap(): List<String> {
     //           exposed in that category. We discard the categories because they are not useful.
     return when (this.nodeType) {
         JsonNodeType.ARRAY -> {
-            this.elements().asSequence().map { moduleLookupHack(it.textValue()) }.toList()
+            this.elements().asSequence().map { it.textValue() }.toList()
         }
         JsonNodeType.OBJECT -> {
             this.fields().asSequence().flatMap { (_, nameNodes) ->
-                nameNodes.asSequence().map { moduleLookupHack(it.textValue()) }
+                nameNodes.asSequence().map { it.textValue() }
             }.toList()
         }
         else -> {

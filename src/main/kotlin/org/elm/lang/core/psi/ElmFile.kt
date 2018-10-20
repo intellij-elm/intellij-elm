@@ -11,6 +11,7 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.stubs.*
+import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
 
@@ -30,11 +31,9 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
             super.getStub() as ElmFileStub?
 
     fun isCore(): Boolean {
-        val path = virtualFile?.path
+        val pkgName = (elmProject as? ElmPackageProject)?.name
                 ?: return false
-
-        return path.contains("/package/elm/core/")
-                || path.contains("/packages/elm-lang/core/") // TODO [drop 0.18] delete the "packages" clause
+        return (pkgName == "elm/core" || pkgName == "elm-lang/core") // TODO [drop 0.18] remove "elm-core/lang" clause
     }
 
     override fun setName(name: String): PsiElement {

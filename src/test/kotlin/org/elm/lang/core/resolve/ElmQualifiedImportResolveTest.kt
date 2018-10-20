@@ -15,6 +15,18 @@ bar = 42
 """)
 
 
+    fun `test qualified value ref with caret on the qualifier`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Foo
+main = Foo.bar
+      --^Foo.elm
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""")
+
+
     fun `test qualified union type ref`() = stubOnlyResolve(
 """
 --@ main.elm

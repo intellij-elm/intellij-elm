@@ -13,12 +13,24 @@ import java.nio.file.Path
 
 class ElmCLI(private val elmExecutablePath: Path) {
 
+    // TODO [kl] allow the caller to specify the main entry point Elm file
+
     fun make(owner: Disposable, elmProject: ElmProject): ProcessOutput {
         val workDir = elmProject.manifestPath.parent
         val commandLine = GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
                 .withParameters("make", "src/Main.elm", "--output=/dev/null")
         return execute(commandLine, owner, ignoreExitCode = true)
+    }
+
+    fun installDeps(owner: Disposable, elmProjectManifestPath: Path): ProcessOutput {
+        // Elm 0.19 does not have a way to install dependencies directly,
+        // so we have to compile an empty file to make it work.
+        val workDir = elmProjectManifestPath.parent
+        val commandLine = GeneralCommandLine(elmExecutablePath)
+                .withWorkDirectory(workDir)
+                .withParameters("make", "./Main.elm", "--output=/dev/null")
+        return execute(commandLine, owner, ignoreExitCode = false)
     }
 
     private fun execute(cmdLine: GeneralCommandLine, owner: Disposable, ignoreExitCode: Boolean = false): ProcessOutput {
