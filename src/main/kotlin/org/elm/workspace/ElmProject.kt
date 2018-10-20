@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.vfs.LocalFileSystem
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -317,6 +318,8 @@ private class Elm18ProjectDTO(
             objectMapper.readValue(exactDepsFile, VERSION_MAP_TYPEREF)
         } catch (e: JsonProcessingException) {
             throw ProjectLoadException("Invalid exact-dependencies.json: ${e.message}")
+        } catch (e: FileNotFoundException) {
+            throw ProjectLoadException("Could not find exact-dependencies.json. Did you run `elm-package install`?")
         }
 
         return dependencies.keys.map {
