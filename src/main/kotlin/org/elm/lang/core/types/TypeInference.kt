@@ -309,7 +309,7 @@ private class InferenceScope(
         var ty: Ty = baseTy
 
         for (field in fields) {
-            if (ty === TyUnknown || ty is TyVar) { // TODO[unification] infer vars
+            if (!isInferable(ty)) {
                 return TyUnknown
             }
 
@@ -387,7 +387,7 @@ private class InferenceScope(
         }
 
         val baseTy = inferReferenceElement(recordIdentifier)
-        if (baseTy == TyUnknown || baseTy is TyVar) return TyUnknown // TODO[unification]
+        if (!isInferable(baseTy)) return TyUnknown
         if (baseTy !is TyRecord) {
             diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
             return TyUnknown
@@ -769,8 +769,7 @@ private class InferenceScope(
     private fun bindTuplePattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
         if (ty !is TyTuple) {
             pat.patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
-            // TODO [unification] handle binding vars
-            if (ty !is TyVar && ty !is TyUnknown) {
+            if (isInferable(ty)) {
                 val actualTy = TyTuple(uniqueVars(pat.patternList.size))
                 diagnostics += TypeMismatchError(pat, actualTy, ty)
             }
@@ -785,7 +784,7 @@ private class InferenceScope(
         val lowerPatternList = pat.lowerPatternList
         if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
             // TODO[unification] bind to vars
-            if (ty !is TyVar && ty !is TyUnknown) {
+            if (isInferable(ty)) {
                 val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
                 val actualTy = TyRecord(actualTyParams.toMap())
 
@@ -826,20 +825,19 @@ private class InferenceScope(
 
     /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
     private fun assignable(ty1: Ty, ty2: Ty): Boolean {
-        // TODO[unification] assignability for vars
-        return ty1 === ty2 || ty2 is TyVar || ty2 is TyUnknown || when (ty1) {
+        return ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
             is TyVar -> true
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
-                    && allAssignable(ty1.types, ty2.types)
+                    && argumentsAssignable(ty1.types, ty2.types)
             is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
                     || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
-                    && allAssignable(ty1.parameters, ty2.parameters)
+                    && argumentsAssignable(ty1.parameters, ty2.parameters)
             is TyFunction -> ty2 is TyFunction
-                    && allAssignable(ty1.allTys, ty2.allTys)
+                    && argumentsAssignable(ty1.allTys, ty2.allTys)
             // object tys are covered by the identity check above
             TyShader, TyUnit -> false
             TyUnknown -> true
@@ -864,12 +862,18 @@ private class InferenceScope(
     private fun recordAssignableToFunction(record: TyRecord, function: TyFunction): Boolean {
         return record.alias != null
                 && assignable(record, function.ret)
-                && allAssignable(record.fields.values.toList(), function.parameters)
+                && argumentsAssignable(record.fields.values.toList(), function.parameters)
     }
 
-    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>) =
-            ty1.size == ty2.size &&
-                    ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+    private fun argumentsAssignable(ty1: List<Ty>, ty2: List<Ty>): Boolean {
+        // If we can't infer the last parameter, it might be a function type which would have
+        // uncurried to allow more parameters than we know about.
+        return (ty1.size == ty2.size || !isInferable(ty1.last()) || !isInferable(ty2.last())) &&
+                ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+    }
+
+    // TODO[unification] allow vars
+    private fun isInferable(ty: Ty): Boolean = ty !== TyUnknown && ty !is TyVar
 
     //</editor-fold>
 }

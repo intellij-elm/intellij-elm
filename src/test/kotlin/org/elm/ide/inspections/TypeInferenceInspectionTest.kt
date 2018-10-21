@@ -662,6 +662,19 @@ main = (\_ -> main) 1
 bar = foo
 """)
 
+    fun `test uncurrying return value from unannotated function`() = checkByText("""
+lazy3 : (a -> b -> c -> ()) -> a -> b -> c -> ()
+lazy3 a = a
+
+apply1 fn a = embed (fn a)
+
+embed : () -> () -> ()
+embed a b = a
+
+main : (a -> ()) -> a -> a -> ()
+main fn a = lazy3 apply1 fn a
+""")
+
     fun `test function argument mismatch in case expression`() = checkByText("""
 foo : () -> ()
 foo a = a
