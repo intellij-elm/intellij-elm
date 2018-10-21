@@ -20,6 +20,17 @@ class ArgumentCountError(
             else "The ${if (isType) "type" else "function"} expects $expected ${pl(expected, "argument")}, but it got $actual instead."
 }
 
+class ParameterCountError(
+        element: PsiElement,
+        endElement: PsiElement,
+        private val actual: Int,
+        private val expected: Int
+) : ElmDiagnostic(element, endElement) {
+    override val message: String
+        get() =
+            "The function expects $expected ${pl(expected, "parameter")}, but it got $actual instead."
+}
+
 class RedefinitionError(
         element: PsiElement
 ) : ElmDiagnostic(element) {

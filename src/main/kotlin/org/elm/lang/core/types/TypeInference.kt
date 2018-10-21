@@ -625,8 +625,14 @@ private class InferenceScope(
                 else -> TyFunction(patterns.map { TyUnknown }, TyUnknown) to patterns.size
             }
         }
-
         val typeRefTy = typeRefType(typeRef)
+        val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
+        if (patterns.size > maxParams) {
+            diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
+            patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
+            return TyUnknown to maxParams
+        }
+
         if (typeRefTy is TyFunction) {
             patterns.zip(typeRefTy.parameters).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
         }

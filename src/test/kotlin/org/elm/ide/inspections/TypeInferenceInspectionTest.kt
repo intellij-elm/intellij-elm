@@ -24,6 +24,16 @@ infix left 6 (+) = add
 main = <error descr="The function expects 2 arguments, but it got 3 instead.">(+) () () ()</error>
 """)
 
+    fun `test too many parameters in value`() = checkByText("""
+main: ()
+main <error descr="The function expects 0 parameters, but it got 1 instead.">foo</error> = foo
+""")
+
+    fun `test too many parameters in function`() = checkByText("""
+main: () -> ()
+main <error descr="The function expects 1 parameter, but it got 2 instead.">foo bar</error> = (foo, bar)
+""")
+
     fun `test mismatched int value type`() = checkByText("""
 main : ()
 main = <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
@@ -160,7 +170,7 @@ foo : { r | x : ()} -> { r | x : ()}
 foo r = r
 
 main : R
-main r = foo <error descr="Type mismatch.Required: { r | x: () }Found: { y: () }">{ y = () }</error>
+main = foo <error descr="Type mismatch.Required: { r | x: () }Found: { y: () }">{ y = () }</error>
 """)
 
     fun `test field accessor as argument`() = checkByText("""
@@ -765,7 +775,7 @@ main arg =
 
     fun `test valid case branch with cons pattern`() = checkByText("""
 main : ()
-main arg =
+main =
     case [()] of
         x :: xs -> x
         _ -> ()
@@ -773,7 +783,7 @@ main arg =
 
     fun `test valid case branch with list pattern`() = checkByText("""
 main : ()
-main arg =
+main =
     case [()] of
         [x, y] -> x
         _ -> ()
@@ -781,7 +791,7 @@ main arg =
 
     fun `test valid case branch with const and list pattern`() = checkByText("""
 main : ()
-main arg =
+main =
     case [()] of
         z :: [x, y] -> x
         _ -> ()
@@ -789,7 +799,7 @@ main arg =
 
     fun `test invalid return value from cons pattern`() = checkByText("""
 main : ()
-main arg =
+main =
     <error descr="Type mismatch.Required: ()Found: String">case [""] of
         x :: xs -> x</error>
 """)
