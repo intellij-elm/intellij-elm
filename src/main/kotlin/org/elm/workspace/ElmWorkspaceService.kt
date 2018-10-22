@@ -23,7 +23,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.util.Consumer
-import com.intellij.util.indexing.LightDirectoryIndex
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
@@ -32,6 +31,7 @@ import org.elm.openapiext.findFileBreadthFirst
 import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.modules
 import org.elm.openapiext.pathAsPath
+import org.elm.utils.MyDirectoryIndex
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
 import org.elm.workspace.ElmToolchain.Companion.ELM_MANIFEST_FILE_NAMES
@@ -139,6 +139,7 @@ class ElmWorkspaceService(
      */
     private fun modifyProjects(f: (List<ElmProject>) -> List<ElmProject>): List<ElmProject> {
         projectsRef.getAndUpdate(f)
+        log.info("Resetting the directoryIndex for project lookup")
         directoryIndex.resetIndex()
         notifyDidChangeWorkspace()
         return allProjects
@@ -239,8 +240,8 @@ class ElmWorkspaceService(
             directoryIndex.getInfoForFile(file).takeIf { it !== noProjectSentinel }
 
 
-    private val directoryIndex: LightDirectoryIndex<ElmProject> =
-            LightDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
+    private val directoryIndex: MyDirectoryIndex<ElmProject> =
+            MyDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
                 fun put(path: Path?, elmProject: ElmProject) {
                     if (path == null) return
                     val file = LocalFileSystem.getInstance().findFileByPath(path) ?: return
@@ -266,16 +267,21 @@ class ElmWorkspaceService(
                         val oldDistance = existingElmProject.projectDirPath.relativize(path.normalize()).toList().size
                         val newDistance = elmProject.projectDirPath.relativize(path.normalize()).toList().size
                         if (newDistance < oldDistance) {
+                            log.debug("Resolved conflict by by re-associating $file with $elmProject")
                             index.putInfo(file, elmProject)
+                        } else {
+                            log.debug("Resolved conflict by keeping the existing association of $file with $existingElmProject")
                         }
                     }
                 }
 
                 for (project in allProjects) {
                     for (sourceDir in project.sourceDirectories) {
+                        log.debug("Registering source directory $sourceDir for $project")
                         put(project.projectDirPath.resolve(sourceDir), project)
                     }
                     for (pkg in project.allResolvedDependencies) {
+                        log.debug("Registering dependency directory ${pkg.projectDirPath} for $pkg")
                         put(pkg.projectDirPath, pkg)
                     }
                 }
