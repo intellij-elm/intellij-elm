@@ -358,7 +358,7 @@ foo ({x, y} as z) = z
                   --^
 """,
             """
-<div class='definition'><pre><i>parameter</i> z : { x: <a href="psi_element://Int">Int</a>,<br>y: <a href="psi_element://Float">Float</a> }
+<div class='definition'><pre><i>parameter</i> z : { x: <a href="psi_element://Int">Int</a>, y: <a href="psi_element://Float">Float</a> }
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
