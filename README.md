@@ -39,6 +39,24 @@ on its own, but you may need to manually attach it if the magic fails.
 See the elm-format [integration instructions](https://github.com/klazuka/intellij-elm/blob/master/docs/elm-format/setup.md).
 
 
+# Creating a new Elm project
+
+The plugin does not currently provide any new-project templates. Until that work is done, the easiest way to create a new
+Elm project is to do everything from the command line using the standard Elm tools. If you're using Elm 0.19, this means:
+
+1. create a new directory for your project
+1. run `elm init`
+1. open that directory in IntelliJ (or WebStorm, etc.)
+1. select the `src` directory in the IntelliJ project window
+1. select `File -> New -> Elm Module`, call the new file `Main`
+1. follow the prompt to setup the Elm toolchain by specifying the path to the directory which contains the Elm compiler
+1. follow the prompt to attach your project's `elm.json` file.
+1. you're all set to write some code
+
+Please note that the IntelliJ plugin does not install any of your project dependencies for you. It assumes that you have
+already installed them via the standard Elm command line tools.
+
+
 # Attribution
 
 This project heavily leverages the open-source work of other IntelliJ plugin developers:
