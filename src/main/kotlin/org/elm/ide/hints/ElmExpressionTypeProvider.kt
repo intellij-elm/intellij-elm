@@ -5,12 +5,8 @@ import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
-import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.inference
 import org.elm.lang.core.types.renderedText
@@ -35,6 +31,6 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
         return element.ancestors.takeWhile { it !is ElmFile }
                 .filterIsInstance<ElmValueDeclaration>()
                 .firstOrNull { it.isTopLevel }
-                ?.inference()?.elementTypes
+                ?.inference()?.expressionTypes
     }
 }

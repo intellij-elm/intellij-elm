@@ -880,14 +880,14 @@ private class InferenceScope(
 
 
 /**
- * @property elementTypes the types for any psi elements inferred
- * @property diagnostics any errors encountered dirung inference
+ * @property expressionTypes the types for any psi elements inferred that should be available to inspections
+ * @property diagnostics any errors encountered during inference
  * @property ty the return type of the function or expression being inferred
  */
-data class InferenceResult(val elementTypes: Map<ElmPsiElement, Ty>,
+data class InferenceResult(val expressionTypes: Map<ElmPsiElement, Ty>,
                            val diagnostics: List<ElmDiagnostic>,
                            val ty: Ty) {
-    fun elementType(element: ElmPsiElement): Ty = elementTypes[element] ?: TyUnknown
+    fun elementType(element: ElmPsiElement): Ty = expressionTypes[element] ?: TyUnknown
 }
 
 val ElmPsiElement.moduleName: String

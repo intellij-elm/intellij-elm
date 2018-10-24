@@ -197,7 +197,7 @@ main = <error descr="Type mismatch.Required: RFound: { x: () }">{x = ()}</error>
     fun `test mismatched value type from record superset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: { x: (),y: (),z: () }">{x = (), y=(), z=()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x: (), y: (), z: () }">{x = (), y=(), z=()}</error>
 """)
 
     fun `test matched field accessor chains`() = checkByText("""
@@ -559,7 +559,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Type mismatch.Required: ()Found: { x: a,y: b }">{x, y}</error> = ()
+        <error descr="Type mismatch.Required: ()Found: { x: a, y: b }">{x, y}</error> = ()
     in
         y
 """)
