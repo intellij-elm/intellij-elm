@@ -53,7 +53,11 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
             // increment the function local modification counter. Otherwise, we will increment the
             // global modification counter.
 
-            val owner = element.parentOfType<ElmValueDeclaration>()
+            val owner = element.ancestors
+                    .drop(1) // skip self
+                    .takeWhile { it !is ElmFile }
+                    .filterIsInstance<ElmValueDeclaration>()
+                    .firstOrNull { it.isTopLevel }
             if (owner == null) {
                 modificationTracker.incModificationCount()
             } else {
