@@ -129,7 +129,7 @@ private class InferenceScope(
         }
 
         val exprTy = inferExpression(letIn.expression)
-        return InferenceResult(emptyMap(), diagnostics, exprTy)
+        return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
     private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
@@ -142,6 +142,7 @@ private class InferenceScope(
                                   block: InferenceScope.() -> InferenceResult): InferenceResult {
         val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, this).block()
         diagnostics += result.diagnostics
+        expressionTypes += result.expressionTypes
         return result
     }
 
