@@ -145,7 +145,7 @@ class ElmPsiFactory(private val project: Project) {
     // newline, not just any whitespace
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, "\n")
-                    .descendantOfType(WHITE_SPACE)
+                    .descendants.find { it.elementType == WHITE_SPACE }
                     ?: error("failed to create fresh line: should never happen")
 
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
@@ -156,5 +156,5 @@ class ElmPsiFactory(private val project: Project) {
     private fun createFromText(code: String, elementType: IElementType): PsiElement? =
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)
-                    .descendantOfType(elementType)
+                    .descendants.find { it.elementType == elementType }
 }

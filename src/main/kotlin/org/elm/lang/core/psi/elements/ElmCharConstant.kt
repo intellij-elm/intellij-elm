@@ -1,9 +1,9 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmConstantTag
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
 /** A literal char. e.g. `'x'` or `'\u{0042}'` */
-class ElmCharConstant(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmConsPatternChildTag,
-        ElmFunctionParamTag, ElmPatternChildTag, ElmConstantTag
+class ElmCharConstant(node: ASTNode) : ElmPsiElementImpl(node), ElmConstantTag

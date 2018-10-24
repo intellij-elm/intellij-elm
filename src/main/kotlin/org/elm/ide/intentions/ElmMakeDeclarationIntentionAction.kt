@@ -47,11 +47,11 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
         PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(editor.document)
         editor.caretModel.moveCaretRelatively(0, 1, false, false, false)
 
-        val template = generateTemplate(project, editor, context)
+        val template = generateTemplate(project, context)
         TemplateManager.getInstance(project).startTemplate(editor, template)
     }
 
-    private fun generateTemplate(project: Project, editor: Editor, context: Context): Template {
+    private fun generateTemplate(project: Project, context: Context): Template {
         val templateManager = TemplateManager.getInstance(project)
         val template = templateManager.createTemplate("", "")
         template.isToReformat = true

@@ -1,6 +1,7 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.PsiComment
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
@@ -28,6 +29,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     constructor(stub: ElmValueDeclarationStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
+    val modificationTracker = SimpleModificationTracker()
+
     override fun getIcon(flags: Int) =
             ElmIcons.FUNCTION
 
@@ -39,6 +42,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
 
+    /** The pattern if this declaration is binding multiple names. */
+    // In Elm 0.19, this is only valid inside a let block
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
 
@@ -79,7 +84,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
 
         } else if (pattern != null) {
             // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(PsiTreeUtil.collectElementsOfType(pattern, ElmLowerPattern::class.java))
+            namedElements.addAll(pattern!!.descendantsOfType<ElmLowerPattern>())
         }
 
         return namedElements
@@ -106,4 +111,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     override val docComment: PsiComment?
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
                 ?.takeIf { it.text.startsWith("{-|") }
+
+    /** Return true if this declaration is not nested in a let-in expression */
+    val isTopLevel: Boolean
+        get() = parent is ElmFile
 }

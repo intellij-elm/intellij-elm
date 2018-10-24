@@ -2,7 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmFunctionCallTarget
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.*
@@ -16,7 +16,7 @@ import org.elm.lang.core.resolve.reference.SimpleOperatorReference
  *
  * e.g. the `(+)` in the expression `foldl (+) 0`
  */
-class ElmOperatorAsFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTarget {
+class ElmOperatorAsFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
 
     val operator: PsiElement
         get() = findNotNullChildByType(OPERATOR_IDENTIFIER)

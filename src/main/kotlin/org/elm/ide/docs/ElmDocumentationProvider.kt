@@ -6,14 +6,14 @@ import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import org.elm.lang.core.psi.ElmDocTarget
-import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
-import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.types.TyUnknown
+import org.elm.lang.core.types.inference
+import org.elm.lang.core.types.renderedText
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -33,6 +33,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmLowerPattern -> documentationFor(element)
         is ElmModuleDeclaration -> documentationFor(element)
         is ElmAsClause -> documentationFor(element)
+        is ElmPatternAs -> documentationFor(element)
         else -> null
     }
 
@@ -136,18 +137,26 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
     }
 }
 
-private fun documentationFor(pattern: ElmLowerPattern): String? = buildString {
-    val decl = pattern.ancestors.filterIsInstance<ElmFunctionDeclarationLeft>()
-            .firstOrNull() ?: return null
+private fun documentationFor(pattern: ElmLowerPattern): String? = documentationForParameter(pattern)
+private fun documentationFor(patternAs: ElmPatternAs): String? = documentationForParameter(patternAs)
+private fun documentationForParameter(element: ElmNamedElement): String? = buildString {
+    val function = element.parentOfType<ElmFunctionDeclarationLeft>() ?: return null
+    val decl = function.parentOfType<ElmValueDeclaration>() ?: return null
+    val inference = decl.inference()
+    val ty = inference.elementType(element)
 
     definition {
         i { append("parameter") }
-        append(" ", pattern.identifier.text, " ")
+        append(" ", element.name, " ")
+
+        if (ty !is TyUnknown) {
+            append(": ", ty.renderedText(true, false), "\n")
+        }
 
         i { append("of function ") }
-        renderLink(decl.name, decl.name)
+        renderLink(function.name, function.name)
 
-        renderDefinitionLocation(pattern)
+        renderDefinitionLocation(element)
     }
 }
 
@@ -197,28 +206,15 @@ private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
 }
 
 private fun StringBuilder.renderDefinition(record: ElmRecordType) {
-    append("{ ")
-
-    for ((i, field) in record.fieldTypeList.withIndex()) {
-        if (i > 0) append(", ")
-        append(field.lowerCaseIdentifier.text).append(" : ")
-        renderDefinition(field.typeRef)
+    record.fieldTypeList.renderTo(this, prefix = "{ ", postfix = " }") {
+        append(it.lowerCaseIdentifier.text, " : ")
+        renderDefinition(it.typeRef)
     }
-    append(" }")
 }
 
 private fun StringBuilder.renderDefinition(tuple: ElmTupleType) {
-    val unit = tuple.unit
-    if (unit == null) {
-        append("( ")
-        for ((i, ref) in tuple.typeRefList.withIndex()) {
-            if (i > 0) append(", ")
-            renderDefinition(ref)
-        }
-        append(" )")
-    } else {
-        append("()")
-    }
+    if (tuple.unit != null) append("()")
+    else tuple.typeRefList.renderTo(this, prefix = "( ", postfix = " )") { renderDefinition(it) }
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
@@ -332,3 +328,13 @@ private inline fun StringBuilder.section(title: String, block: StringBuilder.() 
 }
 
 private val String.escaped: String get() = StringUtil.escapeXml(this)
+
+private fun <T, A : Appendable> Iterable<T>.renderTo(buffer: A, separator: CharSequence = ", ", prefix: CharSequence = "", postfix: CharSequence = "", render: (A.(T) -> Unit)): A {
+    buffer.append(prefix)
+    for ((i, field) in withIndex()) {
+        if (i > 0) buffer.append(separator)
+        buffer.render(field)
+    }
+    buffer.append(postfix)
+    return buffer
+}

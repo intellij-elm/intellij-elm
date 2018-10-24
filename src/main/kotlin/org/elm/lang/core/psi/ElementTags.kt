@@ -1,10 +1,16 @@
 package org.elm.lang.core.psi
 
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.ElmReferenceElement
+/**
+ * An element that is at least one of [ElmUnionMemberParameterTag], [ElmTypeRefParameterTag],
+ * or [ElmParametricTypeRefParameterTag].
+ *
+ * No elements implement this directly.
+ */
+interface ElmTypeSignatureDeclarationTag: ElmPsiElement
 
 /** An element that can appear in the parameter list of an [ElmUnionMember] */
-interface ElmUnionMemberParameterTag : ElmPsiElement
+interface ElmUnionMemberParameterTag : ElmTypeSignatureDeclarationTag
 
 /** An element that can occur in an [ElmExpression]; either an operator or operand */
 interface ElmExpressionPartTag : ElmPsiElement
@@ -16,7 +22,7 @@ interface ElmOperandTag : ElmExpressionPartTag
 interface ElmNameDeclarationPatternTag : ElmNamedElement
 
 /** A function being called as the child of a [ElmFunctionCall] */
-interface ElmFunctionCallTarget : ElmOperandTag
+interface ElmFunctionCallTargetTag : ElmOperandTag
 
 /** An element that is either an [ElmFunctionParamTag], a [ElmPatternChildTag], or both. No elements implement this directly. */
 interface ElmFunctionParamOrPatternChildTag : ElmPsiElement
@@ -27,17 +33,14 @@ interface ElmFunctionParamTag : ElmFunctionParamOrPatternChildTag
 /** An element that can be the direct child of an [ElmPattern] */
 interface ElmPatternChildTag : ElmFunctionParamOrPatternChildTag
 
-/** An element that can be the direct child of an [ElmConsPattern] */
-interface ElmConsPatternChildTag : ElmPsiElement
-
-/** An element that is either an [ElmTypeRefParameterTag], a [ElmParametricTypeRefParameterTag], or both. No elements implement this directly. */
-interface ElmTypeRefOrParametricTypeRefParameterTag : ElmPsiElement
+/** A pattern that can appear as the argument list of a UnionPattern */
+interface ElmUnionPatternChildTag : ElmPsiElement
 
 /** An element that can be a parameter of an [ElmTypeRef], but not necessarily an [ElmParametricTypeRef] */
-interface ElmTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
+interface ElmTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** An element that can be a parameter of an [ElmTypeRef] or an [ElmParametricTypeRef] */
-interface ElmParametricTypeRefParameterTag : ElmTypeRefOrParametricTypeRefParameterTag
+interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
-interface ElmConstantTag : ElmPsiElement
+interface ElmConstantTag : ElmOperandTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag

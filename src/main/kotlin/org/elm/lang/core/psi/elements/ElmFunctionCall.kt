@@ -1,7 +1,7 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.ElmFunctionCallTarget
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
@@ -20,8 +20,8 @@ import org.elm.lang.core.psi.directChildren
  */
 class ElmFunctionCall(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
     /** The function or operator being called */
-    val target: ElmFunctionCallTarget get() = findNotNullChildByClass(ElmFunctionCallTarget::class.java)
+    val target: ElmFunctionCallTargetTag get() = findNotNullChildByClass(ElmFunctionCallTargetTag::class.java)
 
     /** The arguments to the function. This will always have at least one element */
-    val operands: Sequence<ElmOperandTag> get() = directChildren.filterIsInstance<ElmOperandTag>().drop(1)
+    val arguments: Sequence<ElmOperandTag> get() = directChildren.filterIsInstance<ElmOperandTag>().drop(1)
 }

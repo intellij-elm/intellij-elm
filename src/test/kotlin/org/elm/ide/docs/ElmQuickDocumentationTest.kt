@@ -31,6 +31,15 @@ foo bar baz = bar baz
 <div class='definition'><pre><b>foo</b> bar baz</pre></div>
 """)
 
+    fun `test binary function with as`() = doTest(
+            """
+foo (bar as baz) qux = bar
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> (bar as baz) qux</pre></div>
+""")
+
     fun `test function with doc comment`() = doTest(
             """
 {-| this should be included. -}
@@ -276,6 +285,82 @@ foo bar = ()
 <div class='definition'><pre><i>parameter</i> bar <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    fun `test function parameter with primitive type annotation`() = doTest(
+            """
+type Int = Int
+foo : Int -> Int
+foo bar = bar
+        --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Int">Int</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+// TODO[unification]
+//    fun `test function parameter with nested parametric type annotation`() = doTest(
+//            """
+//type Foo a = Bar
+//foo : Foo (Foo a) -> Foo (Foo a)
+//foo bar = bar
+//        --^
+//""",
+//            """
+//<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Foo">Foo</a> (<a href="psi_element://Foo">Foo</a> a)
+//<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+//""")
+
+    fun `test function parameter with parenthesized type annotation`() = doTest(
+            """
+type Int = Int
+foo : ((Int)) -> Int
+foo ((bar)) = bar
+            --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Int">Int</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with nested tuple type annotation`() = doTest(
+            """
+type Int = Int
+type String = String
+type Float = Float
+foo : (Int, (String, Float)) -> String
+foo (_, (bar, _)) = bar
+                  --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://String">String</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with record type annotation`() = doTest(
+            """
+type Int = Int
+type Float = Float
+foo : {x: Int, y: Float} -> Float
+foo {x, y} = y
+           --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> y : <a href="psi_element://Float">Float</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test function parameter with record type and as annotation`() = doTest(
+            """
+type Int = Int
+type Float = Float
+foo : {x: Int, y: Float} -> {x: Int, y: Float}
+foo ({x, y} as z) = z
+                  --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> z : { x: <a href="psi_element://Int">Int</a>, y: <a href="psi_element://Float">Float</a> }
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
 
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)

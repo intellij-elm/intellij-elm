@@ -2,8 +2,8 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmOperandTag
+import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
 /**
@@ -19,8 +19,6 @@ import org.elm.lang.core.psi.ElmOperandTag
  *  ```
  */
 class ElmLetIn(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
-
-
     /**
      * The local declaration bindings.
      *
@@ -29,14 +27,6 @@ class ElmLetIn(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
     val valueDeclarationList: List<ElmValueDeclaration>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmValueDeclaration::class.java)
 
-
-    /**
-     * Optional type annotations on each local declaration
-     */
-    val typeAnnotationList: List<ElmTypeAnnotation>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeAnnotation::class.java)
-
-
     /**
      * The body expression.
      *
@@ -44,5 +34,4 @@ class ElmLetIn(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
      */
     val expression: ElmExpression?
         get() = findChildByClass(ElmExpression::class.java)
-
 }

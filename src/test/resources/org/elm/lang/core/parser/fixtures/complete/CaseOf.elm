@@ -6,6 +6,9 @@ f x =
         Nothing ->
             0
 
+        Foo Bar baz ->
+            baz
+
 g x y =
     case (x,y) of
         (0, 0) ->

@@ -80,6 +80,10 @@
         <importFilteringRule implementation="org.elm.ide.usages.ElmImportFilteringRule"/>
         <lang.quoteHandler language="Elm" implementationClass="org.elm.ide.typing.ElmQuoteHandler"/>
         <backspaceHandlerDelegate implementation="org.elm.ide.typing.ElmBackspaceHandler"/>
+        <codeInsight.typeInfo language="Elm" implementationClass="org.elm.ide.hints.ElmExpressionTypeProvider"/>
+
+        <localInspection language="Elm" groupName="Elm" displayName="Type checker" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmTypeInferenceInspection"/>
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
         <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />
@@ -99,6 +103,11 @@
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider" />
     </extensions>
 
+    <project-components>
+        <component>
+            <implementation-class>org.elm.lang.core.psi.ElmPsiManager</implementation-class>
+        </component>
+    </project-components>
 
     <actions>
         <!-- TODO [drop 0.18] change "Attach Elm JSON..." to "Attach elm.json ..."-->

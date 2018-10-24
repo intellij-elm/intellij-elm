@@ -3,9 +3,8 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.IdentifierCase
+import com.intellij.psi.tree.TokenSet
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmInfixDeclarationStub
 
 /**
@@ -28,6 +27,16 @@ class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub> 
 
     val precedence: PsiElement
         get() = findNotNullChildByType(ElmTypes.NUMBER_LITERAL)
+
+    val associativity : OperatorAssociativity
+        get() {
+            val element = findNotNullChildByType<PsiElement>(ElmTypes.LOWER_CASE_IDENTIFIER)
+            return when (element.text) {
+                "left" -> OperatorAssociativity.LEFT
+                "right" -> OperatorAssociativity.RIGHT
+                else -> OperatorAssociativity.NON
+            }
+        }
 
     val operatorIdentifier: PsiElement
         get() = findNotNullChildByType(ElmTypes.OPERATOR_IDENTIFIER)

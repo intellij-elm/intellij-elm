@@ -239,6 +239,14 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         PsiManagerEx.getInstanceEx(project).setAssertOnFileLoadingFilter(fileFilter, testRootDisposable)
     }
 
+    protected open fun configureByText(text: String) {
+        InlineFile(text.trimIndent())
+    }
+
+    protected open fun configureByFileTree(text: String) {
+        fileTreeFromText(text).createAndOpenFileWithCaretMarker()
+    }
+
     companion object {
         // XXX: hides `Assert.fail`
         fun fail(message: String): Nothing {

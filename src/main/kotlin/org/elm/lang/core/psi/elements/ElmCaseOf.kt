@@ -23,7 +23,6 @@ class ElmCaseOf(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
     val expression: ElmExpression?
         get() = findChildByClass(ElmExpression::class.java)
 
-
     /**
      * The pattern-matching branches.
      *
@@ -31,5 +30,4 @@ class ElmCaseOf(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
      */
     val branches: List<ElmCaseOfBranch>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmCaseOfBranch::class.java)
-
 }

@@ -64,10 +64,9 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
         }
     }
 
-    // TODO [kl] this is crazy inefficient, and it should be easy to cache
-    // well, at least this is now stub-based, but it's still a lot of busy work and allocations.
-
     fun getVisibleValues(): List<ElmNamedElement> {
+        // ModuleScope.getDeclaredValues is cached, so there's no need to cache the results of this
+        // function.
         fun helper(moduleName: String) =
                 ElmModules.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }

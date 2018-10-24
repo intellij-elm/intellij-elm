@@ -12,7 +12,7 @@ object ElmLanguage : Language("Elm")
 
 object ElmFileType : LanguageFileType(ElmLanguage) {
 
-    val EXTENSION = "elm"
+    const val EXTENSION = "elm"
 
     override fun getIcon() =
             ElmIcons.FILE

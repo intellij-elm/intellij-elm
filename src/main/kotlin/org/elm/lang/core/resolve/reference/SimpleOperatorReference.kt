@@ -16,7 +16,6 @@ class SimpleOperatorReference(element: ElmReferenceElement)
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] filter the variants to just include binary operators
-        return ModuleScope(element.elmFile).getVisibleValues()
-                .toTypedArray()
+        return ModuleScope(element.elmFile).getVisibleValues().all.toTypedArray()
     }
 }

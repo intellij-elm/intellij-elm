@@ -8,14 +8,14 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.70"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.71"
         classpath "com.github.JetBrains:gradle-grammar-kit-plugin:2018.1.7"
     }
 }
 
 plugins {
     id "org.jetbrains.intellij" version "0.3.7"
-    id "org.jetbrains.kotlin.jvm" version "1.2.70"
+    id "org.jetbrains.kotlin.jvm" version "1.2.71"
 }
 
 repositories {
@@ -30,7 +30,7 @@ repositories {
     maven { url 'http://dl.bintray.com/jetbrains/markdown' }
 }
 
-ext.kotlinVersion = '1.2.70'
+ext.kotlinVersion = '1.2.71'
 ext.junitVersion = '4.12'
 ext.jacksonVersion = '2.9.6'
 ext.markdownVersion = '0.1.31'

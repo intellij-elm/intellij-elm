@@ -9,7 +9,7 @@ import org.elm.lang.core.psi.*
  *
  * e.g. `(fn arg).foo.bar`
  */
-class ElmExpressionWithAccessor(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionCallTarget {
+class ElmExpressionWithAccessor(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionCallTargetTag, ElmOperandTag {
     val expression: ElmExpression get() = childOfType()!!
     val accessor: ElmExpressionAccessor get() = childOfType()!!
 }
