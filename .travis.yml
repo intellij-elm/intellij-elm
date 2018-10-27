@@ -12,6 +12,8 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then npm install -g elm                 ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then npm install -g elm                 ; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install --yes elm-platform   ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then dir "C:\Program Files\Java"        ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then dir "C:\Program Files\Java (x86)"  ; fi
     - echo Installed elm `elm --version`
 
 install: ./gradlew assemble
