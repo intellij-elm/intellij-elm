@@ -1,4 +1,4 @@
-language: java
+language: shell # should be 'java' but https://travis-ci.community/t/java-support-on-windows/286/2
 
 jdk:
     - oraclejdk8
@@ -14,7 +14,15 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install elm-platform   ; fi
     - echo Installed elm `elm --version`
 
-script: ./gradlew check --info --stacktrace --console=plain --max-workers=1 --no-daemon -Dkotlin.compiler.execution.strategy="in-process" -Dkotlin.colors.enabled=false
+install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then ./gradlew assemble           ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then ./gradlew assemble           ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then gradlew assemble             ; fi
+
+script:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then ./gradlew check              ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then ./gradlew check              ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then gradlew check                ; fi
 
 before_cache:
     - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
