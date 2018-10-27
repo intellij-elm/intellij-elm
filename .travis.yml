@@ -3,9 +3,16 @@ language: java
 jdk:
     - oraclejdk8
 
-install:
-    # TODO cache the Elm binary
-    - ci/install-elm-compiler.sh
+os:
+    - osx
+    - linux
+    - windows
+
+before_install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then npm install -g elm           ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then npm install -g elm           ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install elm-platform   ; fi
+    - echo Installed elm `elm --version`
 
 script: ./gradlew check --info --stacktrace --console=plain --max-workers=1 --no-daemon -Dkotlin.compiler.execution.strategy="in-process" -Dkotlin.colors.enabled=false
 
