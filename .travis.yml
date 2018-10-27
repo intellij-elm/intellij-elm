@@ -9,18 +9,14 @@ os:
     - windows
 
 before_install:
-    - npm install -g elm
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then npm install -g elm                 ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then npm install -g elm                 ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install --yes elm-platform   ; fi
     - echo Installed elm `elm --version`
 
-install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then ./gradlew assemble           ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then ./gradlew assemble           ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then gradlew assemble             ; fi
+install: ./gradlew assemble
 
-script:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then ./gradlew check              ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then ./gradlew check              ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then gradlew check                ; fi
+script: ./gradlew check --info --stacktrace --console=plain --max-workers=1 --no-daemon
 
 before_cache:
     - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
