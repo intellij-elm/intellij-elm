@@ -5,11 +5,7 @@ jdk:
 
 install:
     # TODO cache the Elm binary
-    - echo Installing the Elm compiler
-    - wget "https://github.com/elm/compiler/releases/download/0.19.0/binaries-for-linux.tar.gz"
-    - tar zxvf binaries-for-linux.tar.gz
-    - sudo mv elm /usr/local/bin/
-    - echo Installed elm `elm --version`
+    - ci/install-elm-compiler.sh
 
 script: ./gradlew check --info --stacktrace --console=plain --max-workers=1 --no-daemon -Dkotlin.compiler.execution.strategy="in-process" -Dkotlin.colors.enabled=false
 
