@@ -17,7 +17,7 @@ before_install:
 
 install: ./gradlew assemble --no-daemon
 
-script: ./gradlew check --info --stacktrace --console=plain --max-workers=1 --no-daemon
+script: ./gradlew check --info --console=plain --max-workers=1 --no-daemon
 
 before_cache:
     - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
