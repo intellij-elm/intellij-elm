@@ -173,10 +173,15 @@ private fun suggestionsForUnix(): Sequence<Path> {
 private fun suggestionsForWindows(): Sequence<Path> {
     if (!SystemInfo.isWindows) return emptySequence()
     return sequenceOf(
-            Paths.get("C:/Program Files (x86)/Elm Platform/0.19/bin"),
+            Paths.get("C:/Program Files (x86)/Elm Platform/0.19/bin"), // npm install -g elm
             Paths.get("C:/Program Files/Elm Platform/0.19/bin"),
+            Paths.get("C:/Program Files (x86)/Elm/0.19/bin"), // choco install elm-platform
+            Paths.get("C:/Program Files/Elm/0.19/bin"),
             Paths.get("C:/Program Files (x86)/Elm Platform/0.18/bin"), // TODO [drop 0.18]
-            Paths.get("C:/Program Files/Elm Platform/0.18/bin"))
+            Paths.get("C:/Program Files/Elm Platform/0.18/bin"),
+            Paths.get("C:/Program Files (x86)/Elm/0.18/bin"), // TODO [drop 0.18]
+            Paths.get("C:/Program Files/Elm/0.18/bin")
+    )
 }
 
 
