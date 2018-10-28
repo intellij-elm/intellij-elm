@@ -172,12 +172,14 @@ sealed class ElmProject(
                         elmVersion = dto.elmVersion,
                         dependencies = dto.depsToPackages(elmStuffPath),
                         testDependencies = emptyList(),
-                        name = if (manifestPath.startsWith(elmStuffPath))
-                            manifestPath.parent.parent.toString()
-                                    .removePrefix(elmStuffPath.toString())
-                                    .removePrefix("/packages/")
-                        else
-                            manifestPath.parent.fileName.toString(),
+                        name = if (manifestPath.startsWith(elmStuffPath)) {
+                            // convert "<absolute_path>/foo/elm-stuff/packages/elm-lang/html/1.0.0/elm-package.json"
+                            // to "elm-lang/html"
+                            elmStuffPath.relativize(manifestPath).drop(1).take(2).joinToString("/")
+                        }
+                        else {
+                            manifestPath.parent.fileName.toString()
+                        },
                         version = dto.version,
                         exposedModules = dto.exposedModules,
                         sourceDirectories = dto.sourceDirectories)
