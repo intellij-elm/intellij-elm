@@ -31,5 +31,3 @@ cache:
 notifications:
     email: false
 
-sudo: false
-
