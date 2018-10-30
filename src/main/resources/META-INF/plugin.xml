@@ -91,6 +91,7 @@
         <importFilteringRule implementation="org.elm.ide.usages.ElmImportFilteringRule"/>
         <lang.quoteHandler language="Elm" implementationClass="org.elm.ide.typing.ElmQuoteHandler"/>
         <backspaceHandlerDelegate implementation="org.elm.ide.typing.ElmBackspaceHandler"/>
+        <codeInsight.parameterInfo language="Elm" implementationClass="org.elm.ide.hints.ElmParameterInfoHandler"/>
         <codeInsight.typeInfo language="Elm" implementationClass="org.elm.ide.hints.ElmExpressionTypeProvider"/>
 
         <localInspection language="Elm" groupName="Elm" displayName="Type checker" enabledByDefault="true" level="ERROR"
