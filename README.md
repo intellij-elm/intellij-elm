@@ -9,6 +9,7 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * Go to declaration
 * Go to symbol
 * Find usages
+* Type Inference and Type Checking (see below for more info)
 * Rename refactoring
 * Code folding
 * Syntax highlighting
@@ -37,6 +38,20 @@ on its own, but you may need to manually attach it if the magic fails.
 # Integrating with elm-format
 
 See the elm-format [integration instructions](https://github.com/klazuka/intellij-elm/blob/master/docs/elm-format/setup.md).
+
+
+# Type Inference and Type Checking
+
+The plugin can perform type inference on arbitrary expressions in your program. Press `ctrl-shift-p` to display the inferred type of the expression under the cursor/caret.
+
+The plugin also performs type checking, marking incompatible types in red.
+
+There are 2 limitations to the type system as currently implemented:
+
+1. it does not work if a function is missing a type annotation (typically not a problem)
+2. it does not work if type variables (such as `List a` or `Maybe a` are involved)
+
+We hope to remove the type variable limitation in the future.
 
 
 # Creating a new Elm project

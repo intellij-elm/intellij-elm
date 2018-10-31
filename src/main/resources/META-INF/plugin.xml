@@ -15,6 +15,7 @@
           <li>Go to declaration</li>
           <li>Go to symbol</li>
           <li>Find usages</li>
+          <li>Type Inference and Type Checking</li>
           <li>Rename refactoring</li>
           <li>Code folding</li>
           <li>Syntax highlighting</li>
@@ -28,13 +29,23 @@
 
     <change-notes><![CDATA[
 
-        <p>
-        One major change since earlier versions of this plugin is that you must now attach your Elm project's JSON manifest
-        file (either `elm.json` for Elm 0.19 or `elm-package.json` for 0.18). The plugin will try to find this JSON file
-        on its own, but you may need to manually attach it if the magic fails.
+        <p><b>ANNOUNCEMENT</b><br>
+        Version 2.0.0 adds Type Inference and Type Checking!
         </p>
 
+        <p>The plugin can now perform type inference on arbitrary expressions in your program. Press `ctrl-shift-p` to display the inferred type of the expression under the cursor/caret. The plugin also performs type checking, marking incompatible types in red.</p>
+
+        <p>There are 2 limitations to the type system as currently implemented:</p>
+
+        <ol>
+            <li>it does not work if a function is missing a type annotation (typically not a problem)</li>
+            <li>it does not work if type variables (such as `List a` or `Maybe a` are involved)</li>
+        </ol>
+
+        <p>We hope to remove the type variable limitation in the future.</p>
+
         <ul>
+            <li><b>2.0.0</b> <em>(2018-10-31)</em> - added type inference and type checking; added support for multiple Elm projects</li>
             <li><b>1.3.3</b> <em>(2018-09-20)</em> - added Elm tool window listing attached projects; parser bug fix</li>
             <li><b>1.3.2</b> <em>(2018-09-08)</em> - add code folding; various bug fixes</li>
             <li><b>1.3.1</b> <em>(2018-08-26)</em> - add support for Elm 0.19 package projects</li>

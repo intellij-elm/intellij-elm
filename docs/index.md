@@ -6,6 +6,7 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 * Go to declaration
 * Go to symbol
 * Find usages
+* Type Inference and Type Checking
 * Rename refactoring
 * Code folding
 * Syntax highlighting
