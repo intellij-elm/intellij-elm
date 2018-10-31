@@ -2,6 +2,7 @@ package org.elm.ide.hints
 
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.lang.parameterInfo.*
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elements.ElmFunctionCall
@@ -71,10 +72,12 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 
         hintText = p.presentText
 
+        val range = p.getHighlightRange(context.currentParameterIndex)
+
         context.setupUIComponentPresentation(
                 hintText,
-                0,
-                3,
+                range.startOffset,
+                range.endOffset,
                 !context.isUIComponentEnabled,
                 false,
                 false,
@@ -93,9 +96,17 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 
 class ElmParametersDescription(val parameters: List<String>) {
     val presentText: String
-        get() = parameters.joinToString(", ")
+        get() = parameters.joinToString(separator)
+
+    fun getHighlightRange(index: Int): TextRange {
+        if (index < 0 || index >= parameters.size) return TextRange.EMPTY_RANGE
+        val start = parameters.take(index).sumBy { it.length + separator.length }
+        return TextRange(start, start + parameters[index].length)
+    }
 
     companion object {
+        private val separator = ", "
+
         fun fromFuncCall(funcDecl: ElmFunctionDeclarationLeft): ElmParametersDescription {
             // TODO handle destructured parameter names
             // TODO add type information for each parameter
