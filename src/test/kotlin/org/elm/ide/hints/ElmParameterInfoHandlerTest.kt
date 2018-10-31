@@ -114,7 +114,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
     // UTILS
 
     private fun checkByText(code: String, hint: String, index: Int) {
-        myFixture.configureByText("main.elm", code)
+        myFixture.configureByText("main.elm", replaceCaretMarker(code))
         val handler = ElmParameterInfoHandler()
         val createContext = MockCreateParameterInfoContext(myFixture.editor, myFixture.file)
 

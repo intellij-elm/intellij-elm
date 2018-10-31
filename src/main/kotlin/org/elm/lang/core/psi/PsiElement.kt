@@ -40,6 +40,7 @@ import kotlin.reflect.KClass
 
 val PsiElement.descendants: Sequence<PsiElement> get() = directChildren.flatMap { sequenceOf(it) + it.descendants }
 val PsiElement.ancestors: Sequence<PsiElement> get() = generateSequence(this) { it.parent }
+val PsiElement.ancestorsStrict: Sequence<PsiElement> get() = ancestors.drop(1)
 val PsiElement.prevSiblings: Sequence<PsiElement> get() = generateSequence(prevSibling) { it.prevSibling }
 val PsiElement.nextSiblings: Sequence<PsiElement> get() = generateSequence(nextSibling) { it.nextSibling }
 val PsiElement.directChildren: Sequence<PsiElement> get() = generateSequence(firstChild) { it.nextSibling }
