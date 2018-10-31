@@ -24,5 +24,8 @@ class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandT
 
     /** Named elements introduced by pattern destructuring in the parameter list */
     val namedParameters: List<ElmNameDeclarationPatternTag>
-        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
+        get() = patternList.flatMap {
+            PsiTreeUtil.collectElementsOfType(it, ElmNameDeclarationPatternTag::class.java)
+        }
+
 }
