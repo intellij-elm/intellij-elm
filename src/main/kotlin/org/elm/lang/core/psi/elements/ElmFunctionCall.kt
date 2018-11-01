@@ -35,16 +35,13 @@ class ElmFunctionCall(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
         if (resolved !is ElmFunctionDeclarationLeft) return null
 
         val inference = resolved.parentOfType<ElmValueDeclaration>()?.inference()
-        val parameters: List<CallInfo.Parameter>
-        if (inference != null && inference.ty is TyFunction) {
-            parameters = resolved.namedParameters
-                    .zip(inference.ty.parameters)
-                    .map { (param, ty) -> CallInfo.Parameter(param.name ?: "?", ty) }
+        val parameterPairs = if (inference != null && inference.ty is TyFunction) {
+            resolved.namedParameters.zip(inference.ty.parameters)
         } else {
-            parameters = resolved.namedParameters
-                    .map { param -> CallInfo.Parameter(param.name ?: "?", TyUnknown) }
+            resolved.namedParameters.map { it to TyUnknown }
         }
 
+        val parameters = parameterPairs.map { (param, ty) -> CallInfo.Parameter(param.name ?: "?", ty) }
         return CallInfo(resolved.name, parameters)
     }
 }

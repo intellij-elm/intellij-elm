@@ -32,88 +32,102 @@ import com.intellij.testFramework.utils.parameterInfo.MockUpdateParameterInfoCon
 import junit.framework.AssertionFailedError
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
+import org.intellij.lang.annotations.Language
 
 class ElmParameterInfoHandlerTest : ElmTestBase() {
     // TODO: At some point, the type annotations on each function should no longer be necessary.
     //       But right now the type inference system needs them.
 
+
+    // must include Elm stdlib because the type inference code must resolve types like String, Char, Int
+    override fun getProjectDescriptor() =
+            ElmWithStdlibDescriptor
+
+
     // NO ARGS (VALUES)
+
 
     fun `test function with no args`() {
         checkByText("""
-            x : Int
-            x = 42
-            main = x{-caret-}
-        """.trimIndent(), "<no arguments>", 0)
+x : Int
+x = 42
+main = x{-caret-}
+""", "<no arguments>", 0)
     }
+
 
     // SOLO ARGUMENT
 
+
     fun `test function with one arg`() {
         checkByText("""
-            f : String -> Int
-            f x = 42
-            main = f {-caret-}
-        """.trimIndent(), "x: String", 0)
+f : String -> Int
+f x = 42
+main = f {-caret-}
+""", "x: String", 0)
     }
 
     fun `test function with one arg but caret before args`() {
         checkByText("""
-            f : String -> Int
-            f x = 42
-            main = f{-caret-}
-        """.trimIndent(), "<no arguments>", 0)
+f : String -> Int
+f x = 42
+main = f{-caret-}
+""", "<no arguments>", 0)
     }
 
     fun `test function with one arg nested in another function call`() {
         checkByText("""
-            f : Int -> Int
-            f x = 42
-            g : Char -> Int
-            g x = 99
-            main = f (g {-caret-})
-        """.trimIndent(), "x: Char", 0)
+f : Int -> String
+f x = "blah"
+g : Char -> Int
+g x = 99
+main = f (g {-caret-})
+""", "x: Char", 0)
     }
+
 
     // MULTIPLE ARGUMENTS
 
+
     fun `test function with two args, caret on first arg`() {
         checkByText("""
-            f : String -> Char -> Int
-            f x y = 42
-            main = f {-caret-}
-        """.trimIndent(), "x: String, y: Char", 0)
+f : String -> Char -> Int
+f x y = 42
+main = f {-caret-}
+""", "x: String, y: Char", 0)
     }
 
     fun `test function with two args, caret on second arg`() {
         checkByText("""
-            f : String -> Char -> Int
-            f x y = 42
-            main = f "x" {-caret-}
-        """.trimIndent(), "x: String, y: Char", 1)
+f : String -> Char -> Int
+f x y = 42
+main = f "x" {-caret-}
+""", "x: String, y: Char", 1)
     }
 
     fun `test function with two args, fully specified, caret on first arg`() {
         checkByText("""
-            f : String -> Char -> Int
-            f x y = 42
-            main = f "x"{-caret-} 'y'
-        """.trimIndent(), "x: String, y: Char", 0)
+f : String -> Char -> Int
+f x y = 42
+main = f "x"{-caret-} 'y'
+""", "x: String, y: Char", 0)
     }
 
     fun `test function with two args nested in another function call`() {
         checkByText("""
-            f : Int -> Int
-            f x = 42
-            g : Char -> Bool -> Int
-            g x y = 99
-            main = f (g 'x' {-caret-})
-        """.trimIndent(), "y: Bool", 1)
+f : Int -> Int
+f x = 42
+g : Char -> Bool -> Int
+g x y = 99
+main = f (g 'x' {-caret-})
+""", "x: Char, y: Bool", 1)
     }
+
 
     // UTILS
 
-    private fun checkByText(code: String, hint: String, index: Int) {
+
+    private fun checkByText(@Language("Elm") code: String, hint: String, index: Int) {
         myFixture.configureByText("main.elm", replaceCaretMarker(code))
         val handler = ElmParameterInfoHandler()
         val createContext = MockCreateParameterInfoContext(myFixture.editor, myFixture.file)
