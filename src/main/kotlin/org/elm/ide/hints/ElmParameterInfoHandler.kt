@@ -6,8 +6,6 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elements.ElmFunctionCall
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmValueExpr
 
 class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDescription> {
 
@@ -16,6 +14,10 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
     override fun couldShowInLookup() = true
 
     override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?) =
+    // TODO double-check this
+    // intellij-rust actually returns something here, but i-pascal just returns null
+    // https://github.com/intellij-rust/intellij-rust/blob/63b968356c1875e2dd538b07ac50ff646f418f7c/src/main/kotlin/org/rust/ide/hints/RsParameterInfoHandler.kt#L32
+    // https://github.com/casteng/i-pascal/blob/master/plugin/src/editor/PascalParameterInfoHandler.java
             null
 
     override fun findElementForParameterInfo(context: CreateParameterInfoContext): PsiElement? {
@@ -42,7 +44,7 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
     override fun showParameterInfo(element: PsiElement, context: CreateParameterInfoContext) {
         if (element !is ElmFunctionCall) return
 
-        val paramsDescription = describeParametersOf(element)
+        val paramsDescription = ElmParametersDescription.fromCall(element)
         if (paramsDescription == null) {
             println("showParameterInfo() for ${element.text} FAILED to produce a description of the func parameters")
             return
@@ -51,10 +53,7 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
         println("showParameterInfo() for '${element.text}', itemsToShow='${paramsDescription.presentText}'")
 
         context.itemsToShow = arrayOf(paramsDescription)
-        context.showHint(
-                element,                        // TODO re-consider this
-                element.textRange.startOffset,  // TODO re-consider this
-                this)
+        context.showHint(element, element.textRange.startOffset, this)
     }
 
     override fun updateParameterInfo(parameterOwner: PsiElement, context: UpdateParameterInfoContext) {
@@ -73,7 +72,6 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
         hintText = p.presentText
 
         val range = p.getHighlightRange(context.currentParameterIndex)
-
         context.setupUIComponentPresentation(
                 hintText,
                 range.startOffset,
@@ -83,14 +81,6 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
                 false,
                 context.defaultParameterColor
         )
-
-    }
-
-    private fun describeParametersOf(funcCall: ElmFunctionCall): ElmParametersDescription? {
-        val target = funcCall.target as? ElmValueExpr ?: return null
-        val resolved = target.reference.resolve() ?: return null
-        if (resolved !is ElmFunctionDeclarationLeft) return null
-        return ElmParametersDescription.fromFuncCall(resolved)
     }
 }
 
@@ -105,13 +95,11 @@ class ElmParametersDescription(val parameters: List<String>) {
     }
 
     companion object {
-        private val separator = ", "
+        private const val separator = ", "
 
-        fun fromFuncCall(funcDecl: ElmFunctionDeclarationLeft): ElmParametersDescription {
-            // TODO handle destructured parameter names
-            // TODO add type information for each parameter
-            val params = funcDecl.namedParameters
-            return ElmParametersDescription(params.map { it.name ?: "???" })
+        fun fromCall(functionCall: ElmFunctionCall): ElmParametersDescription? {
+            val info = functionCall.resolveCallInfo() ?: return null
+            return ElmParametersDescription(info.parameters.map { it.toString() })
         }
     }
 }

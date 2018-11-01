@@ -54,7 +54,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             f : String -> Int
             f x = 42
             main = f {-caret-}
-        """.trimIndent(), "String", 0)
+        """.trimIndent(), "x: String", 0)
     }
 
     fun `test function with one arg but caret before args`() {
@@ -72,7 +72,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             g : Char -> Int
             g x = 99
             main = f (g {-caret-})
-        """.trimIndent(), "Char", 0)
+        """.trimIndent(), "x: Char", 0)
     }
 
     // MULTIPLE ARGUMENTS
@@ -82,7 +82,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             f : String -> Char -> Int
             f x y = 42
             main = f {-caret-}
-        """.trimIndent(), "String, Char", 0)
+        """.trimIndent(), "x: String, y: Char", 0)
     }
 
     fun `test function with two args, caret on second arg`() {
@@ -90,7 +90,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             f : String -> Char -> Int
             f x y = 42
             main = f "x" {-caret-}
-        """.trimIndent(), "String, Char", 1)
+        """.trimIndent(), "x: String, y: Char", 1)
     }
 
     fun `test function with two args, fully specified, caret on first arg`() {
@@ -98,7 +98,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             f : String -> Char -> Int
             f x y = 42
             main = f "x"{-caret-} 'y'
-        """.trimIndent(), "String, Char", 0)
+        """.trimIndent(), "x: String, y: Char", 0)
     }
 
     fun `test function with two args nested in another function call`() {
@@ -108,7 +108,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             g : Char -> Bool -> Int
             g x y = 99
             main = f (g 'x' {-caret-})
-        """.trimIndent(), "Char", 1)
+        """.trimIndent(), "y: Bool", 1)
     }
 
     // UTILS
