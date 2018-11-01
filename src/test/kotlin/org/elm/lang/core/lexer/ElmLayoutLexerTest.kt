@@ -21,8 +21,6 @@ class ElmLayoutLexerTest: ElmLexerTestCaseBase() {
         return false
     }
 
-    //    fun testKeith() = doTest()
-
     fun testBasics() = doTest()
     fun testHeader() = doTest()
     fun testComments() = doTest()
@@ -35,4 +33,5 @@ class ElmLayoutLexerTest: ElmLexerTestCaseBase() {
     fun testCaseOfPartial() = doTest()
     fun testTypes() = doTest()
     fun testTypeAnnotations() = doTest()
+    fun testWhitespaceHandling() = doTest()
 }
