@@ -6,6 +6,7 @@
     parserUtilClass="org.elm.lang.core.parser.manual.ElmManualParseRules"
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
+    parserImports=[ "static com.intellij.lang.WhitespacesBinders.*" ]
 
     elementTypeFactory("ModuleDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -308,7 +309,13 @@ NegateExpression ::= MinusWithoutTrailingWhitespace Expression
 
 FunctionCall ::=
     FunctionCallTarget Operand+
-    { pin = 2 }
+    { pin = 2
+      /* Bind trailing whitespace as part of the function call. Imagine that the user has begun
+         making a function call and the caret is on some whitespace. We want that whitespace
+         to be part of the FunctionCall parse node to support things like ParameterInfoHandler.
+      */
+      hooks = [ rightBinder="GREEDY_RIGHT_BINDER" ]
+    }
 
 private FunctionCallTarget ::=
     RecordWithAccessor
