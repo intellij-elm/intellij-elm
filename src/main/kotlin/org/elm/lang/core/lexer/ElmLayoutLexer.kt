@@ -144,13 +144,23 @@ private fun doLayout(lexer: Lexer): ArrayList<Token> {
                 } else if (token.isFirstSignificantTokenOnLine()) {
                     var insertAt = i
 
-                    // We want to insert virtual tokens after the last code token so that following comments
-                    // don't get included in this expression. However, a virtual token has to appear after a
-                    // whitespace token, since the real token is combined with the virtual token during
-                    // parsing.
-                    for (k in (i - 1) downTo 1) {
-                        if (tokens[k].isCode) break
-                        insertAt = k + 1
+                    // We want to insert virtual tokens immediately after the newline that follows
+                    // the last code token. This is important so that:
+                    //
+                    //   (1) trailing spaces at the end of the declaration are part of the declaration
+                    //   (2) top-level comments that follow the declaration are NOT part of the declaration
+                    //
+                    // Note that a virtual token has to appear after a whitespace token, since the real token
+                    // is combined with the virtual token during parsing (their text ranges overlap).
+                    loop@ for (k in (i - 1) downTo 1) {
+                        if (tokens[k].isCode) {
+                            for (m in (k + 1) until (i + 1)) {
+                                if (tokens[m].elementType == NEWLINE) {
+                                    insertAt = m + 1
+                                    break@loop
+                                }
+                            }
+                        }
                     }
 
                     val precedingToken = tokens[insertAt - 1]
