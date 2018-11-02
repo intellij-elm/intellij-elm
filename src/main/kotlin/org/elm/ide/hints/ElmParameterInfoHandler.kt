@@ -3,6 +3,7 @@ package org.elm.ide.hints
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.lang.parameterInfo.*
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
@@ -15,6 +16,16 @@ import org.elm.lang.core.types.renderedText
 
 private val log = logger<ElmParameterInfoHandler>()
 
+/**
+ * Provide information about the parameters expected by a function at a call-site.
+ * In a normal programming language, this would just show the parameter names/types
+ * and highlight the parameter which the caret currently corresponds to. But that
+ * doesn't work well with ML-style languages where functions are partially applied,
+ * application order can be inverted, and where there are no delimiting parentheses
+ * around the function's arguments.
+ *
+ * So instead we will just show the function call target's type annotation.
+ */
 class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDescription> {
 
     var hintText: String = ""
@@ -22,6 +33,7 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
     override fun couldShowInLookup() = false
 
     override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?) =
+    // TODO maybe we should implement this. I'm not sure what it does, though.
             null
 
     override fun findElementForParameterInfo(context: CreateParameterInfoContext): PsiElement? {
@@ -73,11 +85,12 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
         }
 
         hintText = p.presentText
+        val range = p.rangeToHighlight
 
         context.setupUIComponentPresentation(
                 hintText,
-                0, // no highlighting
-                0,
+                range.startOffset,
+                range.endOffset,
                 !context.isUIComponentEnabled,
                 false,
                 false,
@@ -93,6 +106,8 @@ class ElmParametersDescription(val callInfo: CallInfo) {
                     .joinToString(" → ") { it.renderedText(linkify = false, withModule = false) }
             return "${callInfo.functionName} : $signature"
         }
+    val rangeToHighlight: TextRange
+        get() = TextRange(0, callInfo.functionName.length)
 
     companion object {
         fun fromCall(functionCall: ElmFunctionCall): ElmParametersDescription? {
