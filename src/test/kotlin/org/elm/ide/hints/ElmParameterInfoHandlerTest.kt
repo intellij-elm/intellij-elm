@@ -44,18 +44,6 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
             ElmWithStdlibDescriptor
 
 
-    // NO ARGS (VALUES)
-
-
-    fun `test function with no args`() {
-        checkByText("""
-x : Int
-x = 42
-main = x{-caret-}
-""", "<no arguments>")
-    }
-
-
     // SOLO ARGUMENT
 
 
@@ -65,14 +53,6 @@ f : String -> Int
 f x = 42
 main = f "foo"{-caret-}
 """, "f : String → Int")
-    }
-
-    fun `test function with one arg but caret before args`() {
-        checkByText("""
-f : String -> Int
-f x = 42
-main = f{-caret-}
-""", "<no arguments>")
     }
 
     fun `test function with one arg nested in another function call`() {

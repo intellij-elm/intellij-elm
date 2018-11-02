@@ -2,17 +2,24 @@ package org.elm.ide.hints
 
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.lang.parameterInfo.*
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
+import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.ancestorsStrict
+import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.CallInfo
 import org.elm.lang.core.psi.elements.ElmFunctionCall
 import org.elm.lang.core.types.renderedText
+
+private val log = logger<ElmParameterInfoHandler>()
 
 class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDescription> {
 
     var hintText: String = ""
 
-    override fun couldShowInLookup() = true
+    override fun couldShowInLookup() = false
 
     override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?) =
             null
@@ -20,20 +27,23 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
     override fun findElementForParameterInfo(context: CreateParameterInfoContext): PsiElement? {
         val caretElement = context.file.findElementAt(context.editor.caretModel.offset) ?: return null
         val element = findFuncCall(caretElement)
-        println("findElementForParameterInfo() caret on $caretElement returning $element")
+        log.debug("findElementForParameterInfo() caret on $caretElement returning $element")
         return element
     }
 
     override fun findElementForUpdatingParameterInfo(context: UpdateParameterInfoContext): PsiElement? {
         val caretElement = context.file.findElementAt(context.editor.caretModel.offset) ?: return null
-        val element = findFuncCall(caretElement)
-        println("findElementForUpdatingParameterInfo() caret on $caretElement returning $element")
-        return element
+        return findFuncCall(caretElement)
     }
 
-    private fun findFuncCall(element: PsiElement): ElmFunctionCall? {
+    private fun findFuncCall(caretElement: PsiElement): ElmFunctionCall? {
+        val element = when (caretElement.elementType) {
+            VIRTUAL_END_DECL, RIGHT_PARENTHESIS -> PsiTreeUtil.prevVisibleLeaf(caretElement) ?: return null
+            else -> caretElement
+        }
+
         val ancestorsStrict = element.ancestorsStrict
-        println("findFuncCall for $element (${element.text}) ancestorsStrict=${ancestorsStrict.toList()}")
+        log.debug("findFuncCall for $element (${element.text}) ancestorsStrict=${ancestorsStrict.toList()}")
         return ancestorsStrict.filterIsInstance<ElmFunctionCall>().firstOrNull()
     }
 
