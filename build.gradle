@@ -1,0 +1,67 @@
+plugins {
+    id "org.jetbrains.intellij" version "0.2.15"
+}
+
+repositories {
+    mavenCentral()
+}
+
+version = '0.1.0'
+
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+    tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+
+    apply plugin: 'org.jetbrains.intellij'
+    intellij {
+        version 'IC-2017.2'
+        pluginName 'ElmTestRunnerPlugin'
+
+        //plugin dependencies, see https://github.com/JetBrains/gradle-intellij-plugin
+        //plugins 'IntelliLang'
+    }
+
+    publishPlugin {
+        username 'your-jetbrains-username'
+        //add your user's password on the command line using '-Dintellij.publish.password=...'
+        password System.properties['intellij.publish.password']
+
+        //use a custom channel if you'd offer nightly/unstable versions
+        //channels 'eap'
+    }
+
+    // code coverage using the Jacoco engine, see https://docs.gradle.org/current/userguide/jacoco_plugin.html
+    // the coverage reports will be available at build/reports/coverage/test/html/index.html
+    apply plugin: 'jacoco'
+    jacoco {
+        toolVersion = "0.7.9"
+        reportsDir = file("$buildDir/reports/coverage")
+    }
+    test {
+        finalizedBy jacocoTestReport
+        jacoco {
+            enabled true
+            append false
+            includes ["com.*"]
+        }
+    }
+
+    // test logging configuration, shows test progress and messages to standard error
+    // see https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/testing/logging/TestLogEvent.html
+    test {
+        testLogging {
+            events = [
+                org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+                org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
+                org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
+                org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_ERROR
+            ]
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.4'
+}

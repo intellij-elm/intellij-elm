@@ -1,0 +1,52 @@
+<idea-plugin>
+  <id>org.frawa.elmtest</id>
+  <name>Elm Test Runner</name>
+  <version>0.1</version>
+
+  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+
+  <description><![CDATA[
+      Enter short description for your plugin here.<br>
+      <em>most HTML tags may be used</em>
+    ]]></description>
+
+  <change-notes><![CDATA[
+      Add change notes here.<br>
+      <em>most HTML tags may be used</em>
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="172.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <depends>com.intellij.modules.lang</depends>
+
+  <extensionPoints>
+    <!-- Add your own extension points here -->
+  </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+
+
+
+    <configurationType implementation="org.frawa.elmtest.run.configuration.ElmTestRunConfigurationType"/>
+
+    <!--
+      https://github.com/JetBrains/intellij-plugins/blob/master/js-karma/src/META-INF/plugin.xml
+      https://github.com/JetBrains/intellij-plugins/blob/master/js-karma/src/com/intellij/javascript/karma/execution/KarmaRunProgramRunner.java
+    -->
+    <programRunner implementation="org.frawa.elmtest.run.configuration.ElmTestProgramRunner"/>
+
+    <!--
+    https://github.com/JetBrains/intellij-plugins/blob/master/js-karma/src/com/intellij/javascript/karma/execution/KarmaRunConfigurationProducer.java
+    <runConfigurationProducer implementation="org.frawa.elmtest.execution.execution.ElmTestRunConfigurationProducer"/>
+    -->
+
+  </extensions>
+
+  <actions>
+    <!-- Add your actions here -->
+  </actions>
+</idea-plugin>
