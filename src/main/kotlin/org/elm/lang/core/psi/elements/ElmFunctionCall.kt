@@ -2,7 +2,10 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.types.*
+import org.elm.lang.core.types.Ty
+import org.elm.lang.core.types.TyFunction
+import org.elm.lang.core.types.TyUnknown
+import org.elm.lang.core.types.inference
 
 
 /**
@@ -28,21 +31,17 @@ class ElmFunctionCall(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
      * Compare to [arguments], which is what the caller actually provided, and may differ.
      */
     fun resolveCallInfo(): CallInfo? {
-        // TODO handle destructured parameter names
         // TODO generalize so that it works with other kinds of call targets (such as lambdas)
-
-        val resolved = target.reference?.resolve() ?: return null
-        if (resolved !is ElmFunctionDeclarationLeft) return null
+        val resolved = target.reference?.resolve() as? ElmFunctionDeclarationLeft
+                ?: return null
 
         val inference = resolved.parentOfType<ElmValueDeclaration>()?.inference()
-        val parameterPairs = if (inference != null && inference.ty is TyFunction) {
-            resolved.namedParameters.zip(inference.ty.parameters)
+        if (inference != null && inference.ty is TyFunction) {
+            val parameters = inference.ty.parameters.map { CallInfo.Parameter(it) }
+            return CallInfo(resolved.name, parameters, inference.ty.ret)
         } else {
-            resolved.namedParameters.map { it to TyUnknown }
+            return CallInfo(resolved.name, emptyList(), TyUnknown)
         }
-
-        val parameters = parameterPairs.map { (param, ty) -> CallInfo.Parameter(param.name ?: "?", ty) }
-        return CallInfo(resolved.name, parameters)
     }
 }
 
@@ -54,19 +53,14 @@ class ElmFunctionCall(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
  * the outside view of the function, ignoring any kind of internal destructuring that
  * may happen within the function body.
  *
- * With that being said, Elm's parameter destructuring can cause a problem here because
- * you may have, say, a single tuple argument which is destructured internally, deriving
- * the parameter of its rightful name. In such cases, the parameter will be given
- * an anonymous name.
+ * Hence, the parameters are given by their types only: the names are treated as an
+ * internal detail. In the future we may want to give the choice to include parameter
+ * names, but, if so, we will have to deal with destructured, anonymous parameters.
  */
 data class CallInfo(
         val functionName: String,
-        val parameters: List<Parameter>
+        val parameters: List<Parameter>,
+        val returnType: Ty
 ) {
-
-    data class Parameter(val name: String, val ty: Ty) {
-        override fun toString(): String {
-            return "$name: ${ty.renderedText(linkify = false, withModule = false)}"
-        }
-    }
+    data class Parameter(val ty: Ty)
 }

@@ -52,7 +52,7 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
 x : Int
 x = 42
 main = x{-caret-}
-""", "<no arguments>", 0)
+""", "<no arguments>")
     }
 
 
@@ -63,8 +63,8 @@ main = x{-caret-}
         checkByText("""
 f : String -> Int
 f x = 42
-main = f {-caret-}
-""", "x: String", 0)
+main = f "foo"{-caret-}
+""", "f : String → Int")
     }
 
     fun `test function with one arg but caret before args`() {
@@ -72,7 +72,7 @@ main = f {-caret-}
 f : String -> Int
 f x = 42
 main = f{-caret-}
-""", "<no arguments>", 0)
+""", "<no arguments>")
     }
 
     fun `test function with one arg nested in another function call`() {
@@ -81,8 +81,8 @@ f : Int -> String
 f x = "blah"
 g : Char -> Int
 g x = 99
-main = f (g {-caret-})
-""", "x: Char", 0)
+main = f (g 'c'{-caret-})
+""", "g : Char → Int")
     }
 
 
@@ -93,8 +93,8 @@ main = f (g {-caret-})
         checkByText("""
 f : String -> Char -> Int
 f x y = 42
-main = f {-caret-}
-""", "x: String, y: Char", 0)
+main = f "hi"{-caret-}
+""", "f : String → Char → Int")
     }
 
     fun `test function with two args, caret on second arg`() {
@@ -102,15 +102,7 @@ main = f {-caret-}
 f : String -> Char -> Int
 f x y = 42
 main = f "x" {-caret-}
-""", "x: String, y: Char", 1)
-    }
-
-    fun `test function with two args, fully specified, caret on first arg`() {
-        checkByText("""
-f : String -> Char -> Int
-f x y = 42
-main = f "x"{-caret-} 'y'
-""", "x: String, y: Char", 0)
+""", "f : String → Char → Int")
     }
 
     fun `test function with two args nested in another function call`() {
@@ -120,14 +112,14 @@ f x = 42
 g : Char -> Bool -> Int
 g x y = 99
 main = f (g 'x' {-caret-})
-""", "x: Char, y: Bool", 1)
+""", "g : Char → Bool → Int")
     }
 
 
     // UTILS
 
 
-    private fun checkByText(@Language("Elm") code: String, hint: String, index: Int) {
+    private fun checkByText(@Language("Elm") code: String, hint: String) {
         myFixture.configureByText("main.elm", replaceCaretMarker(code))
         val handler = ElmParameterInfoHandler()
         val createContext = MockCreateParameterInfoContext(myFixture.editor, myFixture.file)
@@ -147,8 +139,7 @@ main = f (g 'x' {-caret-})
             val updateContext = MockUpdateParameterInfoContext(myFixture.editor, myFixture.file)
             val element = handler.findElementForUpdatingParameterInfo(updateContext)
                     ?: throw AssertionFailedError("Parameter not found")
-            handler.updateParameterInfo(element, updateContext)
-            TestCase.assertEquals(index, updateContext.currentParameter)
+            TestCase.assertNotNull(element)
         } else if (elt != null) {
             throw AssertionFailedError("Unexpected hint found")
         }
