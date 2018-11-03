@@ -578,7 +578,7 @@ private class InferenceScope(
     /** Cache the type for a pattern binding, and report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        if (elementName != null && !shadowableNames.add(elementName) && !elementIsInTopLevelPattern(element)) {
+        if (elementName != null && !shadowableNames.add(elementName) && !elementAllowsShadowing(element)) {
             diagnostics += RedefinitionError(element)
         }
 
@@ -921,4 +921,8 @@ private fun elementContainsErrors(element: ElmPsiElement): Boolean {
 
 private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
     constructor(element: ElmPsiElement, ty: Ty) : this(element, element, ty)
+}
+
+private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
+    return elementIsInTopLevelPattern(element) || (element.elmProject?.isElm18 ?: false)
 }

@@ -82,6 +82,12 @@ sealed class ElmProject(
         return paths
     }
 
+    val isElm18: Boolean
+        get() = when (this) {
+            is ElmApplicationProject -> elmVersion == Version.ELM_18
+            is ElmPackageProject -> elmVersion.contains(Version.ELM_18)
+        }
+
     companion object {
 
         fun parse(manifestPath: Path, toolchain: ElmToolchain, ignoreTestDeps: Boolean = false): ElmProject {
