@@ -45,6 +45,7 @@
         <p>We hope to remove the type variable limitation in the future.</p>
 
         <ul>
+            <li><b>2.0.1</b> <em>(2018-11-03)</em> - added 'Parameter Info' support; bug fixes</li>
             <li><b>2.0.0</b> <em>(2018-10-31)</em> - added type inference and type checking; added support for multiple Elm projects</li>
             <li><b>1.3.3</b> <em>(2018-09-20)</em> - added Elm tool window listing attached projects; parser bug fix</li>
             <li><b>1.3.2</b> <em>(2018-09-08)</em> - add code folding; various bug fixes</li>
