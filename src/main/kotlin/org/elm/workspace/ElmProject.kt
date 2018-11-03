@@ -84,10 +84,10 @@ sealed class ElmProject(
 
     companion object {
 
-        fun parse(manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+        fun parse(manifestPath: Path, toolchain: ElmToolchain, ignoreTestDeps: Boolean = false): ElmProject {
             val inputStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
                     ?: throw ProjectLoadException("Could not find file $manifestPath")
-            return parse(inputStream, manifestPath, toolchain)
+            return parse(inputStream, manifestPath, toolchain, ignoreTestDeps)
         }
 
         /**
@@ -95,7 +95,7 @@ sealed class ElmProject(
          *
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
-        fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain): ElmProject {
+        fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain, ignoreTestDeps: Boolean = false): ElmProject {
 
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
                 val elmStuffPath = manifestPath.resolveSibling("elm-stuff")
@@ -120,7 +120,7 @@ sealed class ElmProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
                             dependencies = dto.dependencies.depsToPackages(toolchain),
-                            testDependencies = dto.testDependencies.depsToPackages(toolchain),
+                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.depsToPackages(toolchain),
                             sourceDirectories = dto.sourceDirectories
                     )
                 }
@@ -139,7 +139,7 @@ sealed class ElmProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
                             dependencies = dto.dependencies.constraintDepsToPackages(toolchain),
-                            testDependencies = dto.testDependencies.constraintDepsToPackages(toolchain),
+                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.constraintDepsToPackages(toolchain),
                             sourceDirectories = listOf(Paths.get("src")),
                             name = dto.name,
                             version = dto.version,
@@ -222,7 +222,7 @@ private fun ExactDependenciesDTO.depsToPackages(toolchain: ElmToolchain) =
 
 private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
         map { (name, version) ->
-            loadPackage(toolchain, name, version)
+            loadDependency(toolchain, name, version)
         }
 
 private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolchain) =
@@ -233,14 +233,17 @@ private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolc
                     .firstOrNull()
                     ?: throw ProjectLoadException("Could not load $name ($constraint)")
 
-            loadPackage(toolchain, name, version)
+            loadDependency(toolchain, name, version)
         }
 
-fun loadPackage(toolchain: ElmToolchain, name: String, version: Version): ElmPackageProject {
+fun loadDependency(toolchain: ElmToolchain, name: String, version: Version): ElmPackageProject {
     val manifestPath = toolchain.findPackageManifest(name, version)
             ?: throw ProjectLoadException("Could not load $name ($version): manifest not found")
     // TODO [kl] guard against circular dependencies
-    val elmProject = ElmProject.parse(manifestPath, toolchain) as? ElmPackageProject
+    // NOTE: we ignore the test dependencies of our dependencies because it is highly unlikely
+    // that they have been installed by Elm in the local package cache (the user would have
+    // to actually run the package's tests from within the package cache, which no one is going to do).
+    val elmProject = ElmProject.parse(manifestPath, toolchain, ignoreTestDeps = true) as? ElmPackageProject
             ?: throw ProjectLoadException("Could not load $name ($version): expected a package!")
 
     return elmProject
