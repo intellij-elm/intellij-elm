@@ -1,4 +1,4 @@
-package org.frawa.elmtest.run.configuration;
+package org.frawa.elmtest.run;
 
 import com.intellij.openapi.options.SettingsEditor;
 import org.jetbrains.annotations.NotNull;

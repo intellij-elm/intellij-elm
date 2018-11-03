@@ -31,13 +31,13 @@
 
 
 
-    <configurationType implementation="org.frawa.elmtest.run.configuration.ElmTestRunConfigurationType"/>
+    <configurationType implementation="org.frawa.elmtest.run.ElmTestRunConfigurationType"/>
 
     <!--
       https://github.com/JetBrains/intellij-plugins/blob/master/js-karma/src/META-INF/plugin.xml
       https://github.com/JetBrains/intellij-plugins/blob/master/js-karma/src/com/intellij/javascript/karma/execution/KarmaRunProgramRunner.java
     -->
-    <programRunner implementation="org.frawa.elmtest.run.configuration.ElmTestProgramRunner"/>
+    <programRunner implementation="org.frawa.elmtest.run.ElmTestProgramRunner"/>
 
     <!--
     https://github.com/JetBrains/intellij-plugins/blob/master/js-karma/src/com/intellij/javascript/karma/execution/KarmaRunConfigurationProducer.java
