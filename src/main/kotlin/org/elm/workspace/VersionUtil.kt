@@ -24,6 +24,7 @@ data class Version(val x: Int, val y: Int, val z: Int) : Comparable<Version> {
 
     companion object {
         val UNKNOWN: Version = Version(0, 0, 0)
+        val ELM_18: Version = Version(0, 18, 0) // TODO [drop 0.18]
 
         fun parse(text: String): Version {
             val parts = text.split(".")
