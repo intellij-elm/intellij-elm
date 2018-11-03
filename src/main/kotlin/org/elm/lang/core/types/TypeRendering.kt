@@ -14,7 +14,7 @@ fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String = when (this)
 }
 
 fun TyFunction.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return (parameters + ret).joinToString(" -> ") {
+    return (parameters + ret).joinToString(" → ") {
         if (it is TyFunction) "(${it.renderedText(linkify, withModule)})" else it.renderedText(linkify, withModule)
     }
 }

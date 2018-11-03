@@ -441,7 +441,7 @@ main a = (\(_, b) -> b)
     fun `test mismatched lambda type with closure`() = checkByText("""
 type Foo = Bar
 main : () -> (Foo -> Foo)
-main a = <error descr="Type mismatch.Required: Foo -> FooFound: a -> ()">(\_ -> a)</error>
+main a = <error descr="Type mismatch.Required: Foo → FooFound: a → ()">(\_ -> a)</error>
 """)
 
     fun `test mismatched tuple pattern in parameter`() = checkByText("""

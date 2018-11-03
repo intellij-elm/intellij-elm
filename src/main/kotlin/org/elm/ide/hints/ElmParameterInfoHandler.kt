@@ -12,6 +12,8 @@ import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.CallInfo
 import org.elm.lang.core.psi.elements.ElmFunctionCall
+import org.elm.lang.core.types.Ty
+import org.elm.lang.core.types.TyFunction
 import org.elm.lang.core.types.renderedText
 
 private val log = logger<ElmParameterInfoHandler>()
@@ -103,7 +105,7 @@ class ElmParametersDescription(val callInfo: CallInfo) {
     val presentText: String
         get() {
             val signature = (callInfo.parameters.map { it.ty } + callInfo.returnType)
-                    .joinToString(" → ") { it.renderedText(linkify = false, withModule = false) }
+                    .joinToString(" → ") { it.pretty() }
             return "${callInfo.functionName} : $signature"
         }
     val rangeToHighlight: TextRange
@@ -114,5 +116,13 @@ class ElmParametersDescription(val callInfo: CallInfo) {
             val info = functionCall.resolveCallInfo() ?: return null
             return ElmParametersDescription(info)
         }
+    }
+}
+
+private fun Ty.pretty(): String {
+    val s = this.renderedText(linkify = false, withModule = false)
+    return when (this) {
+        is TyFunction -> "($s)"
+        else -> s
     }
 }

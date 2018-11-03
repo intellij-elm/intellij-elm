@@ -65,6 +65,14 @@ main = f (g 'c'{-caret-})
 """, "g : Char → Int")
     }
 
+    fun `test higher-order function renders the hint with parens`() {
+        checkByText("""
+f : (String -> Char) -> Int
+f g = 0
+main = f {-caret-}(\s -> 'x')
+""", "f : (String → Char) → Int")
+    }
+
 
     // MULTIPLE ARGUMENTS
 
