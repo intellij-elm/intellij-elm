@@ -1,5 +1,5 @@
 plugins {
-    id "org.jetbrains.intellij" version "0.2.15"
+    id "org.jetbrains.intellij" version "0.3.12"
 }
 
 repositories {
@@ -16,7 +16,7 @@ allprojects {
 
     apply plugin: 'org.jetbrains.intellij'
     intellij {
-        version 'IC-2017.2'
+//        version 'IC-2017.2'
         pluginName 'ElmTestRunnerPlugin'
 
         //plugin dependencies, see https://github.com/JetBrains/gradle-intellij-plugin
@@ -63,5 +63,5 @@ allprojects {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.4'
+    gradleVersion = '4.10'
 }
