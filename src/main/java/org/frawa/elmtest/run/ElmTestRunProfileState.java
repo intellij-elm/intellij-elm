@@ -1,5 +1,6 @@
 package org.frawa.elmtest.run;
 
+import com.google.gson.Gson;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
+import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
 
@@ -38,7 +40,7 @@ public class ElmTestRunProfileState extends CommandLineState {
 //        GeneralCommandLine commandLine = new GeneralCommandLine("/usr/local/bin/elm", "test")
 //        GeneralCommandLine commandLine = new GeneralCommandLine("/bin/sh", "-i", "-c", "elm test")
         GeneralCommandLine commandLine = new GeneralCommandLine("/usr/bin/script", "-q", "/dev/null",
-                "elm", "test", "--report=junit")
+                "elm", "test", "--report=json")
                 .withWorkDirectory(this.getEnvironment().getProject().getBasePath())
                 .withRedirectErrorStream(true)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
@@ -67,14 +69,15 @@ public class ElmTestRunProfileState extends CommandLineState {
         @Override
         public OutputToGeneralTestEventsConverter createTestEventsConverter(@NotNull String testFrameworkName, @NotNull TestConsoleProperties consoleProperties) {
             return new OutputToGeneralTestEventsConverter(testFrameworkName, consoleProperties) {
+                ElmTestJsonProcessor processor = new ElmTestJsonProcessor();
 
                 @Override
                 public synchronized void finishTesting() {
                     String name = "FW";
                     String test = "a test";
 
-                    this.getProcessor().onSuiteStarted(new TestSuiteStartedEvent(name,null));
-                    this.getProcessor().onTestStarted(new TestStartedEvent(test,  null));
+                    this.getProcessor().onSuiteStarted(new TestSuiteStartedEvent(name, null));
+                    this.getProcessor().onTestStarted(new TestStartedEvent(test, null));
                     this.getProcessor().onTestFinished(new TestFinishedEvent(test, 13L));
                     this.getProcessor().onSuiteFinished(new TestSuiteFinishedEvent(name));
 
@@ -83,7 +86,13 @@ public class ElmTestRunProfileState extends CommandLineState {
 
                 @Override
                 protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
-                    return false;
+                    List<ServiceMessage> messages = processor.accept(text);
+                    if (messages == null) {
+                        return false;
+                    }
+                    messages.stream()
+                            .forEach(m -> m.visit(visitor));
+                    return true;
                 }
             };
         }
