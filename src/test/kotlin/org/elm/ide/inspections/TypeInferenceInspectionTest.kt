@@ -722,6 +722,21 @@ main =
        _ -> ()
 """)
 
+    // issue #113
+    fun `test field access on field subset`() = checkByText("""
+type alias Subset a =
+    { a | extra : () }
+
+
+type alias Foo =
+    { bar : () }
+
+main : Subset Foo -> ()
+main a =
+    a.bar
+""")
+
+
     fun `test case branches with mismatched tuple type`() = checkByText("""
 type Foo = Bar
 type Baz = Qux(Foo, Foo)

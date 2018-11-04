@@ -321,7 +321,10 @@ private class InferenceScope(
 
             val text = field.text
             if (text !in ty.fields) {
-                diagnostics += RecordFieldError(field, text)
+                // TODO[unification] once we know all available fields, we can be stricter about subset records.
+                if (!ty.isSubset) {
+                    diagnostics += RecordFieldError(field, text)
+                }
                 return TyUnknown
             }
 
