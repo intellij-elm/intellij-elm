@@ -709,6 +709,19 @@ main =
         _ -> ()
 """)
 
+    // issue #113
+    fun `test case branches with union value call`() = checkByText("""
+type Maybe a = Just a | Nothing
+
+foo : Maybe (List a)
+foo = Nothing
+
+main =
+    case foo of
+       Just [] -> ()
+       _ -> ()
+""")
+
     fun `test case branches with mismatched tuple type`() = checkByText("""
 type Foo = Bar
 type Baz = Qux(Foo, Foo)
