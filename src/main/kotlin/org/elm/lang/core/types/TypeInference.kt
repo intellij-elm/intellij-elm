@@ -321,7 +321,10 @@ private class InferenceScope(
 
             val text = field.text
             if (text !in ty.fields) {
-                diagnostics += RecordFieldError(field, text)
+                // TODO[unification] once we know all available fields, we can be stricter about subset records.
+                if (!ty.isSubset) {
+                    diagnostics += RecordFieldError(field, text)
+                }
                 return TyUnknown
             }
 
@@ -716,16 +719,18 @@ private class InferenceScope(
         // `[a, b]` is equivalent to `a :: b :: []`, i.e. a list of length exactly two.
         // The last part is bound to the tail of the list, and any leading parts are bound to
         // individual elements.
-        if (ty !is TyUnknown && (ty !is TyUnion || !ty.isTyList)) {
-            diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
+        if (!isInferable(ty) || ty !is TyUnion || !ty.isTyList) {
+            if (isInferable(ty)) {
+                diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
+            }
             parts.forEach { bindPattern(it, TyUnknown, false) }
             return
         }
 
-        val elementTy = (ty as? TyUnion)?.parameters?.get(0) ?: TyUnknown
+        val innerTy = ty.parameters[0] // lists only have one parameter
 
         for (part in parts.dropLast(1)) {
-            val t = if (part is ElmListPattern) ty else elementTy
+            val t = if (part is ElmListPattern) ty else innerTy
             bindPattern(part, t, false)
         }
 

@@ -709,6 +709,34 @@ main =
         _ -> ()
 """)
 
+    // issue #113
+    fun `test case branches with union value call`() = checkByText("""
+type Maybe a = Just a | Nothing
+
+foo : Maybe (List a)
+foo = Nothing
+
+main =
+    case foo of
+       Just [] -> ()
+       _ -> ()
+""")
+
+    // issue #113
+    fun `test field access on field subset`() = checkByText("""
+type alias Subset a =
+    { a | extra : () }
+
+
+type alias Foo =
+    { bar : () }
+
+main : Subset Foo -> ()
+main a =
+    a.bar
+""")
+
+
     fun `test case branches with mismatched tuple type`() = checkByText("""
 type Foo = Bar
 type Baz = Qux(Foo, Foo)
