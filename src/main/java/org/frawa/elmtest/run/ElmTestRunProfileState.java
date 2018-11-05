@@ -14,10 +14,7 @@ import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
-import com.intellij.execution.testframework.sm.runner.events.TestFinishedEvent;
-import com.intellij.execution.testframework.sm.runner.events.TestStartedEvent;
-import com.intellij.execution.testframework.sm.runner.events.TestSuiteFinishedEvent;
-import com.intellij.execution.testframework.sm.runner.events.TestSuiteStartedEvent;
+import com.intellij.execution.testframework.sm.runner.events.*;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.util.Key;
@@ -73,26 +70,42 @@ public class ElmTestRunProfileState extends CommandLineState {
 
                 @Override
                 public synchronized void finishTesting() {
-                    String name = "FW";
-                    String test = "a test";
-
-                    this.getProcessor().onSuiteStarted(new TestSuiteStartedEvent(name, null));
-                    this.getProcessor().onTestStarted(new TestStartedEvent(test, null));
-                    this.getProcessor().onTestFinished(new TestFinishedEvent(test, 13L));
-                    this.getProcessor().onSuiteFinished(new TestSuiteFinishedEvent(name));
+//                    String name = "FW";
+//                    String test = "a test";
+//
+//                    this.getProcessor().onSuiteStarted(new TestSuiteStartedEvent(name, null));
+//                    this.getProcessor().onTestStarted(new TestStartedEvent(test, null));
+//                    this.getProcessor().onTestFinished(new TestFinishedEvent(test, 13L));
+////                    this.getProcessor().onTestFailure(new TestFailedEvent());
+////                    this.getProcessor().onTestOutput(new TestOutputEvent());
+//                    this.getProcessor().onSuiteFinished(new TestSuiteFinishedEvent(name));
 
                     super.finishTesting();
                 }
 
                 @Override
                 protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
-                    List<ServiceMessage> messages = processor.accept(text);
-                    if (messages == null) {
+                    List<TreeNodeEvent> events = processor.accept(text);
+                    if (events == null) {
                         return false;
                     }
-                    messages.stream()
-                            .forEach(m -> m.visit(visitor));
+                    events.stream()
+                            .forEach(this::processEvent);
                     return true;
+                }
+
+                private void processEvent(TreeNodeEvent event) {
+                    if (event instanceof TestStartedEvent) {
+                        this.getProcessor().onTestStarted((TestStartedEvent) event);
+                    } else if (event instanceof TestFinishedEvent) {
+                        this.getProcessor().onTestFinished((TestFinishedEvent) event);
+                    } else if (event instanceof TestFailedEvent) {
+                        this.getProcessor().onTestFailure((TestFailedEvent) event);
+                    } else if (event instanceof TestSuiteStartedEvent) {
+                        this.getProcessor().onSuiteStarted((TestSuiteStartedEvent) event);
+                    } else if (event instanceof TestSuiteFinishedEvent) {
+                        this.getProcessor().onSuiteFinished((TestSuiteFinishedEvent) event);
+                    }
                 }
             };
         }
