@@ -70,16 +70,6 @@ public class ElmTestRunProfileState extends CommandLineState {
 
                 @Override
                 public synchronized void finishTesting() {
-//                    String name = "FW";
-//                    String test = "a test";
-//
-//                    this.getProcessor().onSuiteStarted(new TestSuiteStartedEvent(name, null));
-//                    this.getProcessor().onTestStarted(new TestStartedEvent(test, null));
-//                    this.getProcessor().onTestFinished(new TestFinishedEvent(test, 13L));
-////                    this.getProcessor().onTestFailure(new TestFailedEvent());
-////                    this.getProcessor().onTestOutput(new TestOutputEvent());
-//                    this.getProcessor().onSuiteFinished(new TestSuiteFinishedEvent(name));
-
                     super.finishTesting();
                 }
 
@@ -89,8 +79,7 @@ public class ElmTestRunProfileState extends CommandLineState {
                     if (events == null) {
                         return false;
                     }
-                    events.stream()
-                            .forEach(this::processEvent);
+                    events.stream().forEach(this::processEvent);
                     return true;
                 }
 
