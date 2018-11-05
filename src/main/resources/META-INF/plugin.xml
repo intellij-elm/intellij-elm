@@ -3,16 +3,16 @@
   <name>Elm Test Runner</name>
   <version>0.1</version>
 
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <vendor email="agilecoderfrank@gmail.com" url="https://github.com/frawa">Frank Wagner</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      Run Elm Tests.<br/>
+      <em>Run and navigate Elm tests within IntelliJ the framework.</em>
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      Early DRAFT<br>
+      <em>Feedback welcome.</em>
     ]]>
   </change-notes>
 
@@ -28,8 +28,6 @@
   </extensionPoints>
 
   <extensions defaultExtensionNs="com.intellij">
-
-
 
     <configurationType implementation="org.frawa.elmtest.run.ElmTestRunConfigurationType"/>
 
