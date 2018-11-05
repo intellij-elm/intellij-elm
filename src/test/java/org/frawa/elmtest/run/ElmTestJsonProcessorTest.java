@@ -1,10 +1,8 @@
 package org.frawa.elmtest.run;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.intellij.execution.testframework.sm.runner.events.TreeNodeEvent;
-import jetbrains.buildServer.messages.serviceMessages.ServiceMessage;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -121,4 +119,48 @@ public class ElmTestJsonProcessorTest {
         assertEquals(Arrays.asList("suite2", "deep2"), names);
     }
 
+
+    @Test
+    public void todo() {
+        String text = "{\"event\":\"testCompleted\",\"status\":\"todo\",\"labels\":[\"Exploratory\",\"describe\"],\"failures\":[\"TODO comment\"],\"duration\":\"2\"}";
+        JsonObject obj = getObject(text);
+        assertEquals("TODO comment", ElmTestJsonProcessor.getComment(obj));
+        assertEquals(null, ElmTestJsonProcessor.getMessage(obj));
+        assertEquals(null, ElmTestJsonProcessor.getExpected(obj));
+        assertEquals(null, ElmTestJsonProcessor.getActual(obj));
+    }
+
+    @Test
+    public void fail() {
+        String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"describe\",\"fail\"],\"failures\":[{\"given\":null,\"message\":\"boom\",\"reason\":{\"type\":\"custom\",\"data\":\"boom\"}}],\"duration\":\"1\"}";
+        JsonObject obj = getObject(text);
+        assertEquals(null, ElmTestJsonProcessor.getComment(obj));
+        assertEquals("boom", ElmTestJsonProcessor.getMessage(obj));
+        assertEquals(null, ElmTestJsonProcessor.getExpected(obj));
+        assertEquals(null, ElmTestJsonProcessor.getActual(obj));
+    }
+
+    @Test
+    public void failEqual() {
+        String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"describe\",\"duplicate nested\",\"ok1\"],\"failures\":[{\"given\":null,\"message\":\"Expect.equal\",\"reason\":{\"type\":\"custom\",\"data\":{\"expected\":\"\\\"value\\\"\",\"actual\":\"\\\"value2\\\"\",\"comparison\":\"Expect.equal\"}}}],\"duration\":\"2\"}";
+        JsonObject obj = getObject(text);
+        assertEquals(null, ElmTestJsonProcessor.getComment(obj));
+        assertEquals("Expect.equal", ElmTestJsonProcessor.getMessage(obj));
+        assertEquals("\"value\"", ElmTestJsonProcessor.getExpected(obj));
+        assertEquals("\"value2\"", ElmTestJsonProcessor.getActual(obj));
+    }
+
+    @Test
+    public void failHtml() {
+        String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"Html tests 1\",\"... fails\"],\"failures\":[{\"given\":null,\"message\":\"▼ Query.fromHtml\\n\\n    <div class=\\\"container\\\">\\n        <button>\\n            I'm a button!\\n        </button>\\n    </div>\\n\\n\\n▼ Query.find [ tag \\\"button1\\\" ]\\n\\n0 matches found for this query.\\n\\n\\n✗ Query.find always expects to find 1 element, but it found 0 instead.\",\"reason\":{\"type\":\"custom\",\"data\":\"▼ Query.fromHtml\\n\\n    <div class=\\\"container\\\">\\n        <button>\\n            I'm a button!\\n        </button>\\n    </div>\\n\\n\\n▼ Query.find [ tag \\\"button1\\\" ]\\n\\n0 matches found for this query.\\n\\n\\n✗ Query.find always expects to find 1 element, but it found 0 instead.\"}}],\"duration\":\"15\"}";
+        JsonObject obj = getObject(text);
+        assertEquals(null, ElmTestJsonProcessor.getComment(obj));
+        assertTrue(ElmTestJsonProcessor.getMessage(obj).contains("I'm a button!"));
+        assertEquals(null, ElmTestJsonProcessor.getExpected(obj));
+        assertEquals(null, ElmTestJsonProcessor.getActual(obj));
+    }
+
+    private JsonObject getObject(String text) {
+        return new Gson().fromJson(text, JsonObject.class);
+    }
 }

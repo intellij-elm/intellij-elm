@@ -30,7 +30,7 @@ public class ElmTestJsonProcessor {
             }
 
             Path path = toPath(obj);
-            if ("todo".equals(obj.get("status").getAsString())) {
+            if ("todo".equals(getStatus(obj))) {
                 path = path.resolve("todo");
             }
             if (currentPath == null) {
@@ -63,7 +63,7 @@ public class ElmTestJsonProcessor {
     Stream<TreeNodeEvent> testEvents(String name, JsonObject obj) {
 
 
-        String status = obj.get("status").getAsString();
+        String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
@@ -71,19 +71,65 @@ public class ElmTestJsonProcessor {
                     new TestFinishedEvent(name, duration)
             );
         } else if ("todo".equals(status)) {
-            String comment = obj.get("failures").getAsJsonArray().get(0).getAsString();
+            String comment = getComment(obj);
             return Stream.of(
                     new TestIgnoredEvent(name, comment, null)
             );
         }
-        String message = "message";
-        String actual = "actual";
-        String expected = "expected";
+        String message = getMessage(obj);
+        String actual = getActual(obj);
+        String expected = getExpected(obj);
 
         return Stream.of(
                 new TestStartedEvent(name, null),
                 new TestFailedEvent(name, message, null, false, actual, expected)
         );
+    }
+
+    static String getComment(JsonObject obj) {
+        return getFirstFailure(obj).isJsonPrimitive()
+                ? getFirstFailure(obj).getAsString()
+                : null;
+    }
+
+    static String getMessage(JsonObject obj) {
+        return getFirstFailure(obj).isJsonObject()
+                ? getFirstFailure(obj).getAsJsonObject().get("message").getAsString()
+                : null;
+    }
+
+    static private JsonObject getReason(JsonObject obj) {
+        return getFirstFailure(obj).isJsonObject()
+                ? getFirstFailure(obj).getAsJsonObject().get("reason").getAsJsonObject()
+                : null;
+    }
+
+    static private JsonObject getData(JsonObject obj) {
+        return getReason(obj) != null
+                ? getReason(obj).get("data").isJsonObject()
+                ? getReason(obj).get("data").getAsJsonObject()
+                : null
+                : null;
+    }
+
+    static String getActual(JsonObject obj) {
+        return getData(obj) != null
+                ? getData(obj).get("actual").getAsString()
+                : null;
+    }
+
+    static String getExpected(JsonObject obj) {
+        return getData(obj) != null
+                ? getData(obj).get("expected").getAsString()
+                : null;
+    }
+
+    private static JsonElement getFirstFailure(JsonObject obj) {
+        return obj.get("failures").getAsJsonArray().get(0);
+    }
+
+    static private String getStatus(JsonObject obj) {
+        return obj.get("status").getAsString();
     }
 
     static Path toPath(JsonObject element) {
