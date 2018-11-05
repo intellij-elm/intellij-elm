@@ -90,6 +90,8 @@ public class ElmTestRunProfileState extends CommandLineState {
                         this.getProcessor().onTestFinished((TestFinishedEvent) event);
                     } else if (event instanceof TestFailedEvent) {
                         this.getProcessor().onTestFailure((TestFailedEvent) event);
+                    } else if (event instanceof TestIgnoredEvent) {
+                        this.getProcessor().onTestIgnored((TestIgnoredEvent) event);
                     } else if (event instanceof TestSuiteStartedEvent) {
                         this.getProcessor().onSuiteStarted((TestSuiteStartedEvent) event);
                     } else if (event instanceof TestSuiteFinishedEvent) {

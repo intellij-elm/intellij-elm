@@ -30,6 +30,9 @@ public class ElmTestJsonProcessor {
             }
 
             Path path = toPath(obj);
+            if ("todo".equals(obj.get("status").getAsString())) {
+                path = path.resolve("todo");
+            }
             if (currentPath == null) {
                 currentPath = path;
             }
@@ -38,12 +41,17 @@ public class ElmTestJsonProcessor {
             Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, null);
             Function<String, TreeNodeEvent> toFinishSuiteEvent = name -> new TestSuiteFinishedEvent(name);
 
-            List<TreeNodeEvent> result = Stream.of(
+            Stream<TreeNodeEvent> suiteEvents = diff.toString().isEmpty()
+                    ? Stream.empty()
+                    : Stream.concat(
                     closeSuiteNames(diff, currentPath).stream().map(toFinishSuiteEvent),
-                    openSuiteNames(diff).stream().map(toStartSuiteEvent),
+                    openSuiteNames(diff).stream().map(toStartSuiteEvent)
+            );
+
+            List<TreeNodeEvent> result = Stream.concat(
+                    suiteEvents,
                     testEvents(path.getFileName().toString(), obj)
-            ).flatMap(Function.identity())
-                    .collect(Collectors.toList());
+            ).collect(Collectors.toList());
 
             currentPath = path;
             return result;
@@ -55,14 +63,19 @@ public class ElmTestJsonProcessor {
     Stream<TreeNodeEvent> testEvents(String name, JsonObject obj) {
 
 
-        if ("pass".equals(obj.get("status").getAsString())) {
+        String status = obj.get("status").getAsString();
+        if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
                     new TestStartedEvent(name, null),
                     new TestFinishedEvent(name, duration)
             );
+        } else if ("todo".equals(status)) {
+            String comment = obj.get("failures").getAsJsonArray().get(0).getAsString();
+            return Stream.of(
+                    new TestIgnoredEvent(name, comment, null)
+            );
         }
-
         String message = "message";
         String actual = "actual";
         String expected = "expected";
