@@ -18,7 +18,7 @@ public class ElmTestProgramRunner extends GenericProgramRunner {
     @Override
     protected RunContentDescriptor doExecute(RunProfileState state, ExecutionEnvironment environment) throws ExecutionException {
         ExecutionResult result = state.execute(environment.getExecutor(), this);
-        return new RunContentBuilder(result, environment).showRunContent(null);
+        return new RunContentBuilder(result, environment).showRunContent(environment.getContentToReuse());
     }
 
     @NotNull
