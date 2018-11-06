@@ -25,20 +25,29 @@ import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
 
-    protected ElmTestRunProfileState(ExecutionEnvironment environment) {
+    private final ElmTestRunConfiguration configuration;
+
+    protected ElmTestRunProfileState(ExecutionEnvironment environment, ElmTestRunConfiguration configuration) {
         super(environment);
+        this.configuration = configuration;
     }
 
     @NotNull
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
-//        GeneralCommandLine commandLine = new GeneralCommandLine("/usr/local/bin/elm", "test")
-//        GeneralCommandLine commandLine = new GeneralCommandLine("/usr/bin/script", "-q", "/dev/null",
-        GeneralCommandLine commandLine = new GeneralCommandLine("/bin/sh", "-i", "-c",
-                "elm test --report=json")
-                .withWorkDirectory(this.getEnvironment().getProject().getBasePath())
+        String elmFolder = configuration.options.elmFolder == null || configuration.options.elmFolder.isEmpty()
+                ? this.getEnvironment().getProject().getBasePath()
+                : configuration.options.elmFolder;
+
+        GeneralCommandLine commandLine = configuration.options.elmBinary == null || configuration.options.elmBinary.isEmpty()
+                ? new GeneralCommandLine("/bin/sh", "-i", "-c", "elm test --report=json")
+                : new GeneralCommandLine(configuration.options.elmBinary, "test", "--report=json");
+
+        commandLine
+                .withWorkDirectory(elmFolder)
                 .withRedirectErrorStream(true)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE);
+
         return new ColoredProcessHandler(commandLine);
     }
 
