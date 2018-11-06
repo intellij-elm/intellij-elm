@@ -2,6 +2,9 @@ package org.frawa.elmtest.run;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.intellij.execution.testframework.sm.runner.events.TestFinishedEvent;
+import com.intellij.execution.testframework.sm.runner.events.TestStartedEvent;
+import com.intellij.execution.testframework.sm.runner.events.TestSuiteStartedEvent;
 import com.intellij.execution.testframework.sm.runner.events.TreeNodeEvent;
 import org.junit.Test;
 
@@ -37,7 +40,13 @@ public class ElmTestJsonProcessorTest {
     @Test
     public void testCompleted() {
         List<TreeNodeEvent> list = processor.accept("{\"event\":\"testCompleted\",\"status\":\"pass\",\"labels\":[\"Module\",\"test\"],\"failures\":[],\"duration\":\"1\"}");
-        assertEquals(2, list.size());
+        assertEquals(3, list.size());
+        assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
+        assertTrue(list.get(1) instanceof TestStartedEvent);
+        assertTrue(list.get(2) instanceof TestFinishedEvent);
+        assertEquals("Module", list.get(0).getName());
+        assertEquals("test", list.get(1).getName());
+        assertEquals("test", list.get(2).getName());
     }
 
     @Test

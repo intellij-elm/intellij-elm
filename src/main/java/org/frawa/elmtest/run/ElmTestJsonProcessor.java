@@ -17,15 +17,29 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class ElmTestJsonProcessor {
+    private final static Path EMPTY_PATH = Paths.get("");
+
     private Gson gson = new Gson();
 
-    private Path currentPath = null;
+    private Path currentPath = EMPTY_PATH;
 
     public List<TreeNodeEvent> accept(String text) {
         try {
             JsonObject obj = gson.fromJson(text, JsonObject.class);
 
-            if (!"testCompleted".equals(obj.get("event").getAsString())) {
+            String event = obj.get("event").getAsString();
+
+            if ("runStart".equals(event)) {
+                currentPath = EMPTY_PATH;
+                return Collections.emptyList();
+            } else if ("runComplete".equals(event)) {
+                Path diff = diffPaths(currentPath, EMPTY_PATH);
+                List<TreeNodeEvent> closeAll = closeSuiteNames(diff, currentPath).stream()
+                        .map(toFinishSuiteEvent)
+                        .collect(Collectors.toList());
+                currentPath = EMPTY_PATH;
+                return closeAll;
+            } else if (!"testCompleted".equals(event)) {
                 return Collections.emptyList();
             }
 
@@ -33,13 +47,8 @@ public class ElmTestJsonProcessor {
             if ("todo".equals(getStatus(obj))) {
                 path = path.resolve("todo");
             }
-            if (currentPath == null) {
-                currentPath = path;
-            }
-            Path diff = diffPaths(currentPath, path);
 
-            Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, null);
-            Function<String, TreeNodeEvent> toFinishSuiteEvent = name -> new TestSuiteFinishedEvent(name);
+            Path diff = diffPaths(currentPath, path);
 
             Stream<TreeNodeEvent> suiteEvents = diff.toString().isEmpty()
                     ? Stream.empty()
@@ -60,9 +69,10 @@ public class ElmTestJsonProcessor {
         }
     }
 
+    private Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, null);
+    private Function<String, TreeNodeEvent> toFinishSuiteEvent = name -> new TestSuiteFinishedEvent(name);
+
     Stream<TreeNodeEvent> testEvents(String name, JsonObject obj) {
-
-
         String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
@@ -137,7 +147,7 @@ public class ElmTestJsonProcessor {
                 .map(JsonElement::getAsString)
                 .collect(Collectors.toList());
         if (labels.isEmpty()) {
-            return Paths.get("");
+            return EMPTY_PATH;
         }
         return Paths.get(
                 labels.get(0),
@@ -146,7 +156,9 @@ public class ElmTestJsonProcessor {
     }
 
     static Path diffPaths(Path from, Path to) {
-        return from.getParent().relativize(to);
+        return from.getParent() != null
+                ? from.getParent().relativize(to)
+                : to;
     }
 
     static List<String> closeSuiteNames(Path diff, Path from) {
