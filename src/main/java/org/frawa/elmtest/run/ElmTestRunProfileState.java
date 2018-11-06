@@ -1,6 +1,5 @@
 package org.frawa.elmtest.run;
 
-import com.google.gson.Gson;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
@@ -18,11 +17,10 @@ import com.intellij.execution.testframework.sm.runner.events.*;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.util.Key;
-import jetbrains.buildServer.messages.serviceMessages.*;
+import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.ParseException;
 import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
@@ -35,20 +33,18 @@ public class ElmTestRunProfileState extends CommandLineState {
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
 //        GeneralCommandLine commandLine = new GeneralCommandLine("/usr/local/bin/elm", "test")
-//        GeneralCommandLine commandLine = new GeneralCommandLine("/bin/sh", "-i", "-c", "elm test")
-        GeneralCommandLine commandLine = new GeneralCommandLine("/usr/bin/script", "-q", "/dev/null",
-                "elm", "test", "--report=json")
+//        GeneralCommandLine commandLine = new GeneralCommandLine("/usr/bin/script", "-q", "/dev/null",
+        GeneralCommandLine commandLine = new GeneralCommandLine("/bin/sh", "-i", "-c",
+                "elm test --report=json")
                 .withWorkDirectory(this.getEnvironment().getProject().getBasePath())
                 .withRedirectErrorStream(true)
-                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                .withEnvironment("TERM", "xterm-256color")
-                .withEnvironment("COLORTERM", "truecolor");
+                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE);
         return new ColoredProcessHandler(commandLine);
     }
 
     @Nullable
     @Override
-    protected ConsoleView createConsole(@NotNull Executor executor) throws ExecutionException {
+    protected ConsoleView createConsole(@NotNull Executor executor) {
         RunConfiguration runConfiguration = (RunConfiguration) this.getEnvironment().getRunProfile();
         TestConsoleProperties properties = new ConsoleProperties(runConfiguration, executor);
         SMTRunnerConsoleView consoleView = new SMTRunnerConsoleView(properties);
@@ -74,7 +70,7 @@ public class ElmTestRunProfileState extends CommandLineState {
                 }
 
                 @Override
-                protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
+                protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) {
                     List<TreeNodeEvent> events = processor.accept(text);
                     if (events == null) {
                         return false;
