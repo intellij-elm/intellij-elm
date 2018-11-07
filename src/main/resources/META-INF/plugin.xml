@@ -13,6 +13,11 @@
   <change-notes><![CDATA[
       Early DRAFT<br>
       <em>Feedback welcome.</em>
+
+      - Run configuration to launch Elm tests
+      - Optionally, configure Elm project folder
+      - Optionally, configure path to elm-test binary
+      - Primitive navigation from test to file
     ]]>
   </change-notes>
 

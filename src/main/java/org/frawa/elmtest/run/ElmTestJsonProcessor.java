@@ -32,6 +32,8 @@ class ElmTestJsonProcessor {
 
             String event = obj.get("event").getAsString();
 
+            Function<String, TreeNodeEvent> toFinishSuiteEvent = TestSuiteFinishedEvent::new;
+
             if ("runStart".equals(event)) {
                 currentPath = EMPTY_PATH;
                 return Collections.emptyList();
@@ -53,16 +55,19 @@ class ElmTestJsonProcessor {
 
             Path diff = diffPaths(currentPath, path);
 
+            String locationUrl = toLocationUrl(path);
+
+            Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, locationUrl);
+
             Stream<TreeNodeEvent> suiteEvents = diff.toString().isEmpty()
                     ? Stream.empty()
                     : Stream.concat(
                     closeSuiteNames(diff, currentPath).stream().map(toFinishSuiteEvent),
-                    openSuiteNames(diff).stream().map(toStartSuiteEvent)
-            );
+                    openSuiteNames(diff).stream().map(toStartSuiteEvent));
 
             List<TreeNodeEvent> result = Stream.concat(
                     suiteEvents,
-                    testEvents(decodeLabel(path.getFileName()), obj)
+                    testEvents(decodeLabel(path.getFileName()), obj, locationUrl)
             ).collect(Collectors.toList());
 
             currentPath = path;
@@ -72,15 +77,12 @@ class ElmTestJsonProcessor {
         }
     }
 
-    private Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, null);
-    private Function<String, TreeNodeEvent> toFinishSuiteEvent = TestSuiteFinishedEvent::new;
-
-    private Stream<TreeNodeEvent> testEvents(String name, JsonObject obj) {
+    private Stream<TreeNodeEvent> testEvents(String name, JsonObject obj, String locationUrl) {
         String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
-                    new TestStartedEvent(name, null),
+                    new TestStartedEvent(name, locationUrl),
                     new TestFinishedEvent(name, duration)
             );
         } else if ("todo".equals(status)) {
@@ -211,5 +213,11 @@ class ElmTestJsonProcessor {
             }
         }
         return result;
+    }
+
+    static String toLocationUrl(Path path) {
+        String moduleName = decodeLabel(path.getName(0));
+        String modulePath = String.format("tests/%s.elm", moduleName.replace(".", "/"));
+        return String.format("file://%s:13:0", modulePath);
     }
 }
