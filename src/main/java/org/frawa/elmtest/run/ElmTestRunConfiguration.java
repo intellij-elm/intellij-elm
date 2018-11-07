@@ -22,9 +22,9 @@ import static org.frawa.elmtest.run.ElmTestConfigurationFactory.RUN_ICON;
 
 public class ElmTestRunConfiguration extends RunConfigurationBase {
 
-    final Options options = new Options();
+    Options options = new Options();
 
-    protected ElmTestRunConfiguration(Project project, ConfigurationFactory factory, String name) {
+    ElmTestRunConfiguration(Project project, ConfigurationFactory factory, String name) {
         super(project, factory, name);
     }
 
@@ -58,32 +58,7 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
 
     // <ElmTestRunConfiguration elm-folder="" elm-test-binary=""/>
 
-    @Override
-    public void readExternal(@NotNull Element element) throws InvalidDataException {
-        super.readExternal(element);
-        String name = ElmTestRunConfiguration.class.getSimpleName();
-        Element settingsElement = element.getChild(name);
-        //if it is in wrong format (e.g., old with different class or tag name, or missing data from experiments), missing this check will produce a nullpointer and user loses all run definitions
-        if (settingsElement == null) return;
-        //not sure if you can create a new instance or not but just to be sure I don't
-        Attribute elmFolderAttr = settingsElement.getAttribute("elm-folder");
-        options.elmFolder = null;
-        if (elmFolderAttr != null) {
-            options.elmFolder = elmFolderAttr.getValue();
-        }
-        Attribute elmTestBinAttr = settingsElement.getAttribute("elm-test-binary");
-        options.elmTestBinary = null;
-        if (elmTestBinAttr != null) {
-            options.elmTestBinary = elmTestBinAttr.getValue();
-        }
-
-
-    }
-
-    @Override
-    public void writeExternal(@NotNull Element element) throws WriteExternalException {
-        super.writeExternal(element);
-        //the tag name in the XML file will be the class name of runParameters
+    static void writeOptions(Options options, Element element) {
         Element e = new Element(ElmTestRunConfiguration.class.getSimpleName());
         if (options.elmFolder != null) {
             e.setAttribute("elm-folder", options.elmFolder);
@@ -92,5 +67,37 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
             e.setAttribute("elm-test-binary", options.elmTestBinary);
         }
         element.addContent(e);
+    }
+
+    static Options readOptions(Element element) {
+        Options result = new Options();
+
+        String name = ElmTestRunConfiguration.class.getSimpleName();
+        Element optionsElement = element.getChild(name);
+
+        if (optionsElement != null) {
+            Attribute elmFolderAttr = optionsElement.getAttribute("elm-folder");
+            result.elmFolder = null;
+            if (elmFolderAttr != null) {
+                result.elmFolder = elmFolderAttr.getValue();
+            }
+
+            Attribute elmTestBinAttr = optionsElement.getAttribute("elm-test-binary");
+            result.elmTestBinary = null;
+            if (elmTestBinAttr != null) {
+                result.elmTestBinary = elmTestBinAttr.getValue();
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void readExternal(@NotNull Element element) throws InvalidDataException {
+        this.options = readOptions(element);
+    }
+
+    @Override
+    public void writeExternal(@NotNull Element element) throws WriteExternalException {
+        writeOptions(this.options, element);
     }
 }
