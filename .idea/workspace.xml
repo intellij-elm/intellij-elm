@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e5dadbe4-d828-4cd9-812c-16c1419878fe" name="Default Changelist" comment="" />
+    <list default="true" id="e5dadbe4-d828-4cd9-812c-16c1419878fe" name="Default Changelist" comment="test persisting run config options">
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/intellij-elm-test-runner_main.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/intellij-elm-test-runner_test.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestRunConfigurationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
     <ignored path="$PROJECT_DIR$/build/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -31,6 +39,28 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="intellij-elm-test-runner" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="intellij-elm-test-runner" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="intellij-elm-test-runner" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="build" type="c8890929:TasksNode$1" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="intellij-elm-test-runner" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="verification" type="c8890929:TasksNode$1" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="intellij-elm-test-runner" type="f1a62948:ProjectNode" />
+                <item name="Run Configurations" type="7b0102dc:RunConfigurationsNode" />
               </path>
             </expand>
             <select />
@@ -136,28 +166,30 @@
         <counts>
           <entry key="gitignore" value="3" />
           <entry key="iml" value="1" />
-          <entry key="java" value="1" />
+          <entry key="java" value="4" />
           <entry key="xml" value="6" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="IDEA_MODULE" value="1" />
-          <entry key="JAVA" value="1" />
+          <entry key="JAVA" value="4" />
           <entry key="PLAIN_TEXT" value="3" />
           <entry key="XML" value="6" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="gitignore" value="50" />
-          <entry key="txt" value="20" />
+          <entry key="gitignore" value="55" />
+          <entry key="java" value="576" />
+          <entry key="txt" value="54" />
           <entry key="xml" value="1" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="70" />
+          <entry key="JAVA" value="576" />
+          <entry key="PLAIN_TEXT" value="109" />
           <entry key="XML" value="1" />
         </counts>
       </usages-collector>
@@ -168,8 +200,41 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
+            <state relative-caret-position="136">
+              <caret line="71" column="4" selection-start-line="71" selection-start-column="4" selection-end-line="71" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestRunConfigurationTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="275">
+              <caret line="40" column="65" selection-start-line="40" selection-start-column="65" selection-end-line="40" selection-end-column="65" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestJsonProcessorTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="281">
+              <caret line="26" selection-start-line="26" selection-end-line="26" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/org/w3c/dom/Element.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="144">
+              <caret line="60" column="17" selection-start-line="60" selection-start-column="17" selection-end-line="60" selection-end-column="17" />
             </state>
           </provider>
         </entry>
@@ -177,8 +242,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-387">
-              <caret line="10" column="41" selection-start-line="10" selection-start-column="41" selection-end-line="10" selection-end-column="41" />
+            <state relative-caret-position="-327">
+              <caret line="14" column="41" selection-start-line="14" selection-start-column="41" selection-end-line="14" selection-end-column="41" />
             </state>
           </provider>
         </entry>
@@ -186,8 +251,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
+            <state relative-caret-position="15">
+              <caret line="1" column="4" selection-start-line="1" selection-start-column="4" selection-end-line="1" selection-end-column="4" />
             </state>
           </provider>
         </entry>
@@ -222,31 +287,13 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.idea/gradle.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" selection-start-line="14" selection-end-line="14" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.idea/compiler.xml">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.idea/vcs.xml">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="JUnit4 Test Class" />
       </list>
     </option>
   </component>
@@ -706,14 +753,20 @@
         <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestRunConfiguration.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestRunProfileState.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestProgramRunner.java" />
-        <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" />
         <option value="$PROJECT_DIR$/.idea/gradle.xml" />
         <option value="$PROJECT_DIR$/testing/exploratory/.gitignore" />
         <option value="$PROJECT_DIR$/testing/exploratory2/.gitignore" />
         <option value="$PROJECT_DIR$/.idea/workspace.xml" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestRunConfigurationTest.java" />
+        <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" />
       </list>
     </option>
+  </component>
+  <component name="JavaAutoRunManager">
+    <enabled-run-configurations>
+      <run-configuration type="JUnit" name="ElmTestRunConfigurationTest" />
+    </enabled-run-configurations>
   </component>
   <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
   <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
@@ -772,6 +825,49 @@
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="run" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+            </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="run" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; 1.8 &gt;" type="70bed36:NamedLibraryElementNode" />
+            </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; 1.8 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="rt.jar" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; 1.8 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="rt.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="dom" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -782,13 +878,21 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1541617318435" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1541619304206" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="JUnit4" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit4" value="" />
     <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="org.frawa.elmtest.run" />
+    </key>
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
     <key name="CreateClassDialog.RecentsKey">
       <recent name="org.frawa.elmtest.run.configuration" />
     </key>
@@ -805,7 +909,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Gradle.intellij-plugin-base [runIdea]">
+  <component name="RunManager" selected="JUnit.ElmTestRunConfigurationTest">
     <configuration name="Unnamed" type="Applet" factoryName="Applet">
       <method v="2">
         <option name="Make" enabled="true" />
@@ -865,32 +969,30 @@
       </ExternalSystemSettings>
       <method v="2" />
     </configuration>
-    <configuration name="PluginTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="intellij-plugin-base_test" />
+    <configuration name="ElmTestJsonProcessorTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="intellij-elm-test-runner_test" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.test.*" />
+          <option name="PATTERN" value="org.frawa.elmtest.run.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.test" />
-      <option name="MAIN_CLASS_NAME" value="com.test.PluginTest" />
+      <option name="PACKAGE_NAME" value="org.frawa.elmtest.run" />
+      <option name="MAIN_CLASS_NAME" value="org.frawa.elmtest.run.ElmTestJsonProcessorTest" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="PluginTest.testBasics" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="intellij-plugin-base_test" />
+    <configuration name="ElmTestRunConfigurationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="intellij-elm-test-runner_test" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.test.*" />
+          <option name="PATTERN" value="org.frawa.elmtest.run.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.test" />
-      <option name="MAIN_CLASS_NAME" value="com.test.PluginTest" />
-      <option name="METHOD_NAME" value="testBasics" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="PACKAGE_NAME" value="org.frawa.elmtest.run" />
+      <option name="MAIN_CLASS_NAME" value="org.frawa.elmtest.run.ElmTestRunConfigurationTest" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -900,16 +1002,16 @@
       <item itemvalue="Gradle.intellij-plugin-base [check]" />
       <item itemvalue="Gradle.intellij-plugin-base [runIde]" />
       <item itemvalue="Gradle.intellij-plugin-base [runIdea]" />
-      <item itemvalue="JUnit.PluginTest" />
-      <item itemvalue="JUnit.PluginTest.testBasics" />
+      <item itemvalue="JUnit.ElmTestRunConfigurationTest" />
+      <item itemvalue="JUnit.ElmTestJsonProcessorTest" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.intellij-plugin-base [runIdea]" />
+        <item itemvalue="JUnit.ElmTestRunConfigurationTest" />
         <item itemvalue="Gradle.intellij-plugin-base [check]" />
+        <item itemvalue="JUnit.ElmTestJsonProcessorTest" />
+        <item itemvalue="Gradle.intellij-plugin-base [runIdea]" />
         <item itemvalue="Gradle.intellij-plugin-base [runIde]" />
-        <item itemvalue="JUnit.PluginTest.testBasics" />
-        <item itemvalue="JUnit.PluginTest" />
       </list>
     </recent_temporary>
   </component>
@@ -953,30 +1055,46 @@
       <option name="project" value="LOCAL" />
       <updated>1541617476774</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="cleanup .idea, still">
+      <created>1541617654426</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1541617654426</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="PluginTest - 2018.10.27 at 22h 12m 56s.xml">
-      <configuration name="PluginTest" configurationId="JUnit" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 19m 49s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="intellij-plugin-base_[check] - 2018.10.27 at 22h 14m 02s.xml">
-      <configuration name="intellij-plugin-base [check]" configurationId="GradleRunConfiguration" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 20m 48s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="PluginTest - 2018.10.27 at 22h 14m 24s.xml">
-      <configuration name="PluginTest" configurationId="JUnit" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 22m 45s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="PluginTest_testBasics - 2018.10.27 at 22h 14m 36s.xml">
-      <configuration name="PluginTest.testBasics" configurationId="JUnit" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 23m 10s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="intellij-plugin-base_[check] - 2018.10.28 at 20h 16m 50s.xml">
-      <configuration name="intellij-plugin-base [check]" configurationId="GradleRunConfiguration" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 23m 20s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="intellij-plugin-base_[check] - 2018.11.02 at 14h 39m 30s.xml">
-      <configuration name="intellij-plugin-base [check]" configurationId="GradleRunConfiguration" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 24m 31s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
-    <history-entry file="intellij-plugin-base_[check] - 2018.11.02 at 14h 39m 38s.xml">
-      <configuration name="intellij-plugin-base [check]" configurationId="GradleRunConfiguration" />
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 24m 48s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 24m 58s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 31m 09s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="ElmTestRunConfigurationTest - 2018.11.07 at 20h 33m 44s.xml">
+      <configuration name="ElmTestRunConfigurationTest" configurationId="JUnit" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
@@ -984,8 +1102,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="797" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2911302" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2911302" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -994,24 +1113,24 @@
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49713877" weight="0.32844576" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49642345" weight="0.32844576" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.71030045" weight="0.398827" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="sbt-shell-toolwindow" order="8" />
-      <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.49928468" weight="0.32844576" />
-      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5007153" side_tool="true" visible="true" weight="0.32697946" />
-      <window_info anchor="bottom" id="Build" order="11" sideWeight="0.49928468" visible="true" weight="0.32697946" />
-      <window_info anchor="bottom" id="Messages" order="12" sideWeight="0.49928468" weight="0.32991204" />
+      <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.4985694" weight="0.32844576" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5035765" side_tool="true" weight="0.32844576" />
+      <window_info anchor="bottom" id="Build" order="11" sideWeight="0.49928468" weight="0.32697946" />
+      <window_info active="true" anchor="bottom" id="Messages" order="12" sideWeight="0.49928468" visible="true" weight="0.32991204" />
       <window_info anchor="bottom" id="Database Changes" order="13" show_stripe_button="false" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24964234" />
       <window_info anchor="right" id="Palette" order="3" />
       <window_info anchor="right" id="Capture Analysis" order="4" />
-      <window_info anchor="right" id="Gradle" order="5" visible="true" weight="0.3297568" />
+      <window_info anchor="right" id="Gradle" order="5" weight="0.3297568" />
       <window_info anchor="right" id="Theme Preview" order="6" />
       <window_info anchor="right" id="Palette&#9;" order="7" />
       <window_info anchor="right" id="sbt" order="8" />
@@ -1029,7 +1148,8 @@
     </ignored-roots>
     <MESSAGE value="cleanup .idea" />
     <MESSAGE value="cleanup .idea, still" />
-    <option name="LAST_COMMIT_MESSAGE" value="cleanup .idea, still" />
+    <MESSAGE value="test persisting run config options" />
+    <option name="LAST_COMMIT_MESSAGE" value="test persisting run config options" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1050,9 +1170,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/terminal/TerminalExecutionConsole.java" />
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/ui/ConsoleView.java" />
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/process/OSProcessHandler.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/process/ProcessHandler.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/filters/TextConsoleBuilder.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/5155889067278eb216234aa0eeb8e1944644624c/ideaIC-2017.2/lib/idea.jar!/com/intellij/execution/impl/ConsoleViewImpl.class" />
@@ -1168,22 +1285,49 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-387">
-          <caret line="10" column="41" selection-start-line="10" selection-start-column="41" selection-end-line="10" selection-end-column="41" />
+        <state relative-caret-position="-327">
+          <caret line="14" column="41" selection-start-line="14" selection-start-column="41" selection-end-line="14" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/org/w3c/dom/Element.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="144">
+          <caret line="60" column="17" selection-start-line="60" selection-start-column="17" selection-end-line="60" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestJsonProcessorTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="281">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
+        <state relative-caret-position="15">
+          <caret line="1" column="4" selection-start-line="1" selection-start-column="4" selection-end-line="1" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestRunConfigurationTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="40" column="65" selection-start-line="40" selection-start-column="65" selection-end-line="40" selection-end-column="65" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
+        <state relative-caret-position="136">
+          <caret line="71" column="4" selection-start-line="71" selection-start-column="4" selection-end-line="71" selection-end-column="4" />
         </state>
       </provider>
     </entry>
@@ -1239,7 +1383,7 @@
       </state>
       <state key="ModuleStructureConfigurable.UI">
         <settings>
-          <last-edited>intellij-elm-test-runner</last-edited>
+          <last-edited>intellij-elm-test-runner_test|intellij-elm-test-runner</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
