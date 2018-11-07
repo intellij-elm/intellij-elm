@@ -12,15 +12,6 @@
         </option>
         <option name="useAutoImport" value="true" />
       </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="distributionType" value="WRAPPED" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/../intellij-plugins/js-karma" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$/../intellij-plugins/js-karma" />
-          </set>
-        </option>
-      </GradleProjectSettings>
     </option>
   </component>
 </project>

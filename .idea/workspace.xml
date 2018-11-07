@@ -2,10 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e5dadbe4-d828-4cd9-812c-16c1419878fe" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/intellij-elm-test-runner.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sbt.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/uiDesigner.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
     <ignored path="$PROJECT_DIR$/build/" />
@@ -128,32 +131,74 @@
         </counts>
       </usages-collector>
     </session>
+    <session id="-1785087751">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.open.time.12" value="1" />
+          <entry key="project.opened" value="1" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="xml" value="6" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="XML" value="6" />
+        </counts>
+      </usages-collector>
+    </session>
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="845">
-              <caret line="94" column="5" lean-forward="true" selection-start-line="94" selection-start-column="5" selection-end-line="94" selection-end-column="5" />
+            <state relative-caret-position="495">
+              <caret line="96" selection-start-line="96" selection-end-line="96" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="400">
-              <caret line="28" column="2" selection-start-line="28" selection-start-column="2" selection-end-line="28" selection-end-column="2" />
+            <state relative-caret-position="-329">
+              <caret line="31" column="2" selection-start-line="31" selection-start-column="2" selection-end-line="31" selection-end-column="2" />
             </state>
           </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/.idea/uiDesigner.xml">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.idea/gradle.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="14" selection-start-line="14" selection-end-line="14" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/.idea/compiler.xml">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/.idea/vcs.xml">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
         <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2018.2/23c6ef0bbf1c37259081353251774c1afd9d4797/ideaIC-2018.2/lib/jdom.jar!/org/jdom/Element.class">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="569">
-              <caret line="91" column="28" selection-start-line="91" selection-start-column="28" selection-end-line="91" selection-end-column="28" />
+            <state relative-caret-position="915">
+              <caret line="91" column="9" selection-start-line="91" selection-start-column="9" selection-end-line="91" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -498,7 +543,7 @@
     </option>
     <option name="modificationStamps">
       <map>
-        <entry key="$PROJECT_DIR$" value="4624743160000" />
+        <entry key="$PROJECT_DIR$" value="4624244127000" />
         <entry key="$PROJECT_DIR$/.gradle" value="0" />
         <entry key="$PROJECT_DIR$/build.gradle" value="343831033" />
         <entry key="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" value="1324473749" />
@@ -615,75 +660,75 @@
               <option name="name" value="intellij-elm-test-runner" />
               <option name="projectBuildClasspath">
                 <list>
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-script-kotlin-0.5.1.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-version-info-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-cli-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-base-services-groovy-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-ui-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-resources-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-logging-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-model-groovy-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-jvm-services-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-tooling-api-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-messaging-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-wrapper-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/groovy-all-2.4.7.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-process-services-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-open-api-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-installation-beacon-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-base-services-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/ant-1.9.6.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-launcher-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-core-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/ant-launcher-1.9.6.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-native-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-docs-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-model-core-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-composite-builds-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-javascript-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-build-cache-http-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-maven-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-resources-sftp-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-diagnostics-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ear-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ide-native-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-jvm-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-jvm-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-base-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-scala-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-groovy-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-base-services-groovy-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-installation-beacon-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-process-services-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-ui-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-version-info-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-native-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/ant-1.9.6.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-logging-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-wrapper-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-model-groovy-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-script-kotlin-0.5.1.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-resources-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/ant-launcher-1.9.6.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-tooling-api-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-open-api-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-docs-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-cli-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-launcher-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-jvm-services-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-messaging-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/groovy-all-2.4.7.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/gradle-base-services-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-testing-native-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ide-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-test-kit-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-jacoco-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-testing-base-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-jetty-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-dependency-management-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-code-quality-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-plugins-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-tooling-api-builders-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-composite-builds-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-publish-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-antlr-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ear-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-jvm-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-base-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ide-native-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-diagnostics-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-plugin-development-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-workers-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-build-cache-http-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-javascript-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-native-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-build-comparison-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-plugins-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-jacoco-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-native-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-plugin-use-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-announce-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-tooling-api-builders-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-scala-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ide-play-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-build-init-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-testing-jvm-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-testing-base-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-jvm-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-maven-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-code-quality-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-resources-s3-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-play-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-signing-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-resources-sftp-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ivy-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-test-kit-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-groovy-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-java-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-osgi-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ivy-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-resources-http-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-announce-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-native-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-signing-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/ivy-2.2.0.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-plugin-use-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-build-comparison-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-workers-3.4.jar" />
                   <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-reporting-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-testing-jvm-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-plugin-development-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-native-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ide-play-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-language-scala-3.4.jar" />
-                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-build-init-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-antlr-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-ide-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-jetty-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-platform-play-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-resources-http-3.4.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/ivy-2.2.0.jar" />
+                  <option value="$USER_HOME$/.gradle/wrapper/dists/gradle-3.4-bin/aeufj4znodijbvwfbsq3044r0/gradle-3.4/lib/plugins/gradle-scala-3.4.jar" />
                 </list>
               </option>
             </ExternalProjectBuildClasspathPojo>
@@ -810,6 +855,7 @@
         <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestProgramRunner.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" />
         <option value="$PROJECT_DIR$/.idea/workspace.xml" />
+        <option value="$PROJECT_DIR$/.idea/gradle.xml" />
       </list>
     </option>
   </component>
@@ -819,15 +865,16 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="795" />
-    <option name="y" value="147" />
-    <option name="width" value="2693" />
-    <option name="height" value="1920" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="105" />
+    <option name="y" value="23" />
+    <option name="width" value="1606" />
+    <option name="height" value="797" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
+      <autoscrollFromSource ProjectPane="true" />
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
@@ -843,32 +890,6 @@
               <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
               <item name=".idea" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
-              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
-              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
-              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="intellij-elm-test-runner" type="b2602c69:ProjectViewProjectNode" />
-              <item name="intellij-elm-test-runner" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="run" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -879,7 +900,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1541599112760" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1541617187482" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
@@ -1058,10 +1079,10 @@
     <option name="totallyTimeSpent" value="34000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="795" y="147" width="2693" height="1920" extended-state="0" />
+    <frame x="0" y="23" width="1440" height="797" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2872381" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2911302" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -1077,9 +1098,9 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="sbt-shell-toolwindow" order="8" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.32844576" />
-      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.28969958" side_tool="true" weight="0.398827" />
-      <window_info anchor="bottom" id="Build" order="11" visible="true" weight="0.32798165" />
+      <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.49928468" visible="true" weight="0.32844576" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5007153" side_tool="true" visible="true" weight="0.32844576" />
+      <window_info anchor="bottom" id="Build" order="11" weight="0.32798165" />
       <window_info anchor="bottom" id="Messages" order="12" sideWeight="0.49928468" weight="0.32991204" />
       <window_info anchor="bottom" id="Database Changes" order="13" show_stripe_button="false" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -1123,12 +1144,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestConfigurationFactory.java" />
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/ExecutionResult.java" />
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/process/BaseOSProcessHandler.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestRunConfigurationType.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/configuration/ElmTestSettingsEditor.java" />
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/configurations/RunConfigurationBase.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/ui/ExecutionConsole.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/DefaultExecutionResult.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/configurations/PtyCommandLine.java" />
@@ -1196,41 +1211,51 @@
     <entry file="file://$PROJECT_DIR$/src/main/resources/META-INF/pluginIconDark.svg">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/javax/swing/ImageIcon.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7424">
-          <caret line="299" column="18" selection-start-line="299" selection-start-column="18" selection-end-line="299" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/javax/swing/Icon.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="348">
-          <caret line="36" column="17" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/javax/swing/ImageIcon.java" />
+    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/javax/swing/Icon.java" />
     <entry file="file://$PROJECT_DIR$/src/main/resources/elm-logo.svg">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2018.2/23c6ef0bbf1c37259081353251774c1afd9d4797/ideaIC-2018.2/lib/jdom.jar!/org/jdom/Element.class">
+    <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="569">
-          <caret line="91" column="28" selection-start-line="91" selection-start-column="28" selection-end-line="91" selection-end-column="28" />
+        <state relative-caret-position="495">
+          <caret line="96" selection-start-line="96" selection-end-line="96" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java">
+    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2018.2/23c6ef0bbf1c37259081353251774c1afd9d4797/ideaIC-2018.2/lib/jdom.jar!/org/jdom/Element.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="845">
-          <caret line="94" column="5" lean-forward="true" selection-start-line="94" selection-start-column="5" selection-end-line="94" selection-end-column="5" />
+        <state relative-caret-position="915">
+          <caret line="91" column="9" selection-start-line="91" selection-start-column="9" selection-end-line="91" selection-end-column="9" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/vcs.xml">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="28" column="2" selection-start-line="28" selection-start-column="2" selection-end-line="28" selection-end-column="2" />
+        <state relative-caret-position="-329">
+          <caret line="31" column="2" selection-start-line="31" selection-start-column="2" selection-end-line="31" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/sbt.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/misc.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/uiDesigner.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/compiler.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/gradle.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
         </state>
       </provider>
     </entry>
@@ -1286,7 +1311,7 @@
       </state>
       <state key="ModuleStructureConfigurable.UI">
         <settings>
-          <last-edited>intellij-plugin-base</last-edited>
+          <last-edited>intellij-elm-test-runner</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
