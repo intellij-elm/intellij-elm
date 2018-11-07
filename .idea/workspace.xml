@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e5dadbe4-d828-4cd9-812c-16c1419878fe" name="Default Changelist" comment="test persisting run config options">
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules/intellij-elm-test-runner_main.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules/intellij-elm-test-runner_test.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestRunConfigurationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="e5dadbe4-d828-4cd9-812c-16c1419878fe" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
     <ignored path="$PROJECT_DIR$/build/" />
@@ -165,6 +160,7 @@
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="gitignore" value="3" />
+          <entry key="gradle" value="1" />
           <entry key="iml" value="1" />
           <entry key="java" value="4" />
           <entry key="xml" value="6" />
@@ -172,6 +168,7 @@
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
+          <entry key="Groovy" value="1" />
           <entry key="IDEA_MODULE" value="1" />
           <entry key="JAVA" value="4" />
           <entry key="PLAIN_TEXT" value="3" />
@@ -181,15 +178,17 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="gitignore" value="55" />
+          <entry key="gradle" value="2" />
           <entry key="java" value="576" />
-          <entry key="txt" value="54" />
+          <entry key="txt" value="65" />
           <entry key="xml" value="1" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
+          <entry key="Groovy" value="2" />
           <entry key="JAVA" value="576" />
-          <entry key="PLAIN_TEXT" value="109" />
+          <entry key="PLAIN_TEXT" value="120" />
           <entry key="XML" value="1" />
         </counts>
       </usages-collector>
@@ -197,11 +196,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="136">
               <caret line="71" column="4" selection-start-line="71" selection-start-column="4" selection-end-line="71" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/build.gradle">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="16" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
             </state>
           </provider>
         </entry>
@@ -254,13 +262,6 @@
             <state relative-caret-position="15">
               <caret line="1" column="4" selection-start-line="1" selection-start-column="4" selection-end-line="1" selection-end-column="4" />
             </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.idea/uiDesigner.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1524" />
           </provider>
         </entry>
       </file>
@@ -760,6 +761,7 @@
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/src/test/java/org/frawa/elmtest/run/ElmTestRunConfigurationTest.java" />
         <option value="$PROJECT_DIR$/src/main/java/org/frawa/elmtest/run/ElmTestRunConfiguration.java" />
+        <option value="$PROJECT_DIR$/build.gradle" />
       </list>
     </option>
   </component>
@@ -878,7 +880,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1541619304206" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1541619372016" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="JUnit4" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit4" value="" />
     <property name="project.structure.last.edited" value="Project" />
@@ -1062,7 +1064,21 @@
       <option name="project" value="LOCAL" />
       <updated>1541617654426</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="test persisting run config options">
+      <created>1541619316341</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1541619316341</updated>
+    </task>
+    <task id="LOCAL-00006" summary="more .idea">
+      <created>1541619337155</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1541619337155</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1104,7 +1120,7 @@
     <frame x="0" y="23" width="1440" height="797" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2911302" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2911302" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -1123,7 +1139,7 @@
       <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.4985694" weight="0.32844576" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5035765" side_tool="true" weight="0.32844576" />
       <window_info anchor="bottom" id="Build" order="11" sideWeight="0.49928468" weight="0.32697946" />
-      <window_info active="true" anchor="bottom" id="Messages" order="12" sideWeight="0.49928468" visible="true" weight="0.32991204" />
+      <window_info anchor="bottom" id="Messages" order="12" sideWeight="0.49928468" visible="true" weight="0.32991204" />
       <window_info anchor="bottom" id="Database Changes" order="13" show_stripe_button="false" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -1143,13 +1159,15 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_NEW_TODO" value="false" />
     <ignored-roots>
       <path value="$PROJECT_DIR$/../intellij-plugins" />
     </ignored-roots>
     <MESSAGE value="cleanup .idea" />
     <MESSAGE value="cleanup .idea, still" />
     <MESSAGE value="test persisting run config options" />
-    <option name="LAST_COMMIT_MESSAGE" value="test persisting run config options" />
+    <MESSAGE value="more .idea" />
+    <option name="LAST_COMMIT_MESSAGE" value="more .idea" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1170,7 +1188,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/process/ProcessHandler.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/filters/TextConsoleBuilder.java" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/5155889067278eb216234aa0eeb8e1944644624c/ideaIC-2017.2/lib/idea.jar!/com/intellij/execution/impl/ConsoleViewImpl.class" />
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2017.2/50c339bda29b6a6b632f4d14cfe79d6ad09d38d5/ideaIC-2017.2-sources.jar!/com/intellij/execution/impl/ConsoleViewRunningState.java" />
@@ -1328,6 +1345,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="136">
           <caret line="71" column="4" selection-start-line="71" selection-start-column="4" selection-end-line="71" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="16" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
         </state>
       </provider>
     </entry>
