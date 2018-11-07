@@ -6,6 +6,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.intellij.execution.testframework.sm.runner.events.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -16,14 +19,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class ElmTestJsonProcessor {
-    private final static Path EMPTY_PATH = Paths.get("");
+class ElmTestJsonProcessor {
+    final static Path EMPTY_PATH = Paths.get("");
 
     private Gson gson = new Gson();
 
     private Path currentPath = EMPTY_PATH;
 
-    public List<TreeNodeEvent> accept(String text) {
+    List<TreeNodeEvent> accept(String text) {
         try {
             JsonObject obj = gson.fromJson(text, JsonObject.class);
 
@@ -59,7 +62,7 @@ public class ElmTestJsonProcessor {
 
             List<TreeNodeEvent> result = Stream.concat(
                     suiteEvents,
-                    testEvents(path.getFileName().toString(), obj)
+                    testEvents(decodeLabel(path.getFileName()), obj)
             ).collect(Collectors.toList());
 
             currentPath = path;
@@ -70,9 +73,9 @@ public class ElmTestJsonProcessor {
     }
 
     private Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, null);
-    private Function<String, TreeNodeEvent> toFinishSuiteEvent = name -> new TestSuiteFinishedEvent(name);
+    private Function<String, TreeNodeEvent> toFinishSuiteEvent = TestSuiteFinishedEvent::new;
 
-    Stream<TreeNodeEvent> testEvents(String name, JsonObject obj) {
+    private Stream<TreeNodeEvent> testEvents(String name, JsonObject obj) {
         String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
@@ -83,7 +86,7 @@ public class ElmTestJsonProcessor {
         } else if ("todo".equals(status)) {
             String comment = getComment(obj);
             return Stream.of(
-                    new TestIgnoredEvent(name, comment, null)
+                    new TestIgnoredEvent(name, comment != null ? comment : "", null)
             );
         }
         String message = getMessage(obj);
@@ -92,7 +95,7 @@ public class ElmTestJsonProcessor {
 
         return Stream.of(
                 new TestStartedEvent(name, null),
-                new TestFailedEvent(name, message, null, false, actual, expected)
+                new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
         );
     }
 
@@ -116,8 +119,10 @@ public class ElmTestJsonProcessor {
 
     static private JsonObject getData(JsonObject obj) {
         return getReason(obj) != null
+                ? getReason(obj).get("data") != null
                 ? getReason(obj).get("data").isJsonObject()
                 ? getReason(obj).get("data").getAsJsonObject()
+                : null
                 : null
                 : null;
     }
@@ -142,16 +147,39 @@ public class ElmTestJsonProcessor {
         return obj.get("status").getAsString();
     }
 
+    static private String encodeLabel(String label) {
+        try {
+            return URLEncoder.encode(label, "utf8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static private String decodeLabel(Path encoded) {
+        try {
+            return URLDecoder.decode(encoded.toString(), "utf8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     static Path toPath(JsonObject element) {
-        List<String> labels = StreamSupport.stream(element.get("labels").getAsJsonArray().spliterator(), false)
+        return toPath(StreamSupport.stream(element.get("labels").getAsJsonArray().spliterator(), false)
                 .map(JsonElement::getAsString)
+                .collect(Collectors.toList())
+        );
+    }
+
+    static Path toPath(List<String> labels) {
+        List<String> encoded = labels.stream()
+                .map(ElmTestJsonProcessor::encodeLabel)
                 .collect(Collectors.toList());
-        if (labels.isEmpty()) {
+        if (encoded.isEmpty()) {
             return EMPTY_PATH;
         }
         return Paths.get(
-                labels.get(0),
-                labels.subList(1, labels.size()).toArray(new String[0])
+                encoded.get(0),
+                encoded.subList(1, encoded.size()).toArray(new String[0])
         );
     }
 
@@ -166,7 +194,7 @@ public class ElmTestJsonProcessor {
         int dirIndex = from.getNameCount() - 2;
         for (int i = 0; i < diff.getNameCount(); i++) {
             if (diff.getName(i).toString().equals("..")) {
-                result.add(from.getName(dirIndex - i).toString());
+                result.add(decodeLabel(from.getName(dirIndex - i)));
             } else {
                 break;
             }
@@ -177,10 +205,8 @@ public class ElmTestJsonProcessor {
     static List<String> openSuiteNames(Path diff) {
         List<String> result = new ArrayList<>();
         for (int i = 0; i < diff.getNameCount() - 1; i++) {
-            String name = diff.getName(i).toString();
-            if (name.equals("..")) {
-                continue;
-            } else {
+            String name = decodeLabel(diff.getName(i));
+            if (!name.equals("..")) {
                 result.add(name);
             }
         }

@@ -9,7 +9,6 @@ import com.intellij.execution.testframework.sm.runner.events.TreeNodeEvent;
 import org.junit.Test;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,6 +49,18 @@ public class ElmTestJsonProcessorTest {
     }
 
     @Test
+    public void testCompletedWithSlashes() {
+        List<TreeNodeEvent> list = processor.accept("{\"event\":\"testCompleted\",\"status\":\"pass\",\"labels\":[\"Module\",\"test / stuff\"],\"failures\":[],\"duration\":\"1\"}");
+        assertEquals(3, list.size());
+        assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
+        assertTrue(list.get(1) instanceof TestStartedEvent);
+        assertTrue(list.get(2) instanceof TestFinishedEvent);
+        assertEquals("Module", list.get(0).getName());
+        assertEquals("test / stuff", list.get(1).getName());
+        assertEquals("test / stuff", list.get(2).getName());
+    }
+
+    @Test
     public void toPath() {
         JsonObject obj = new Gson().fromJson("{\"labels\":[\"Module\",\"test\"]}", JsonObject.class);
         Path path = ElmTestJsonProcessor.toPath(obj);
@@ -59,25 +70,34 @@ public class ElmTestJsonProcessorTest {
     }
 
     @Test
+    public void toPathWithSlashes() {
+        JsonObject obj = new Gson().fromJson("{\"labels\":[\"Module\",\"test / stuff\"]}", JsonObject.class);
+        Path path = ElmTestJsonProcessor.toPath(obj);
+        assertEquals(2, path.getNameCount());
+        assertEquals("Module", path.getName(0).toString());
+        assertEquals("test+%2F+stuff", path.getName(1).toString());
+    }
+
+    @Test
     public void diffPathTest() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         assertEquals("test2", diff.toString());
     }
 
     @Test
     public void diffPathSuite() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite2", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite2", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         assertEquals("../suite2/test2", diff.toString());
     }
 
     @Test
     public void closeNoSuites() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         List<String> names = ElmTestJsonProcessor.closeSuiteNames(diff, from);
         assertEquals(Arrays.asList(), names);
@@ -85,8 +105,8 @@ public class ElmTestJsonProcessorTest {
 
     @Test
     public void closeOneSuite() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite2", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite2", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         List<String> names = ElmTestJsonProcessor.closeSuiteNames(diff, from);
         assertEquals(Arrays.asList("suite"), names);
@@ -94,8 +114,8 @@ public class ElmTestJsonProcessorTest {
 
     @Test
     public void closeTwoSuite() {
-        Path from = Paths.get("Module", "suite", "deep", "test");
-        Path to = Paths.get("Module", "suite2", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "deep", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite2", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         List<String> names = ElmTestJsonProcessor.closeSuiteNames(diff, from);
         assertEquals(Arrays.asList("deep", "suite"), names);
@@ -103,8 +123,8 @@ public class ElmTestJsonProcessorTest {
 
     @Test
     public void openNoSuites() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         List<String> names = ElmTestJsonProcessor.openSuiteNames(diff);
         assertEquals(Arrays.asList(), names);
@@ -112,8 +132,8 @@ public class ElmTestJsonProcessorTest {
 
     @Test
     public void openOneSuite() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite2", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite2", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         List<String> names = ElmTestJsonProcessor.openSuiteNames(diff);
         assertEquals(Arrays.asList("suite2"), names);
@@ -121,13 +141,21 @@ public class ElmTestJsonProcessorTest {
 
     @Test
     public void openTwoSuites() {
-        Path from = Paths.get("Module", "suite", "test");
-        Path to = Paths.get("Module", "suite2", "deep2", "test2");
+        Path from = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite2", "deep2", "test2"));
         Path diff = ElmTestJsonProcessor.diffPaths(from, to);
         List<String> names = ElmTestJsonProcessor.openSuiteNames(diff);
         assertEquals(Arrays.asList("suite2", "deep2"), names);
     }
 
+    @Test
+    public void openSuiteWithSlash() {
+        Path from = ElmTestJsonProcessor.EMPTY_PATH;
+        Path to = ElmTestJsonProcessor.toPath(Arrays.asList("Module", "suite / stuff", "test"));
+        Path diff = ElmTestJsonProcessor.diffPaths(from, to);
+        List<String> names = ElmTestJsonProcessor.openSuiteNames(diff);
+        assertEquals(Arrays.asList("Module", "suite / stuff"), names);
+    }
 
     @Test
     public void todo() {
