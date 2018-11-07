@@ -46,12 +46,12 @@ public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguratio
     @Override
     protected void resetEditorFrom(@NotNull ElmTestRunConfiguration configuration) {
         folderChooser.setText(configuration.options.elmFolder);
-        binaryChooser.setText(configuration.options.elmBinary);
+        binaryChooser.setText(configuration.options.elmTestBinary);
     }
 
     @Override
     protected void applyEditorTo(@NotNull ElmTestRunConfiguration configuration) {
         configuration.options.elmFolder = folderChooser.getText();
-        configuration.options.elmBinary = binaryChooser.getText();
+        configuration.options.elmTestBinary = binaryChooser.getText();
     }
 }

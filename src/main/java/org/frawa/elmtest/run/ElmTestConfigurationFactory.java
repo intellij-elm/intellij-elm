@@ -4,17 +4,26 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.IconLoader;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class ElmTestConfigurationFactory extends ConfigurationFactory {
 
     private static final String FACTORY_NAME = "Elm Test configuration factory";
 
-    protected ElmTestConfigurationFactory(ConfigurationType type) {
+    static final Icon RUN_ICON = IconLoader.getIcon("/elm-logo.svg");
+
+    ElmTestConfigurationFactory(ConfigurationType type) {
         super(type);
     }
 
+    @NotNull
     @Override
-    public RunConfiguration createTemplateConfiguration(Project project) {
+    public RunConfiguration createTemplateConfiguration(@NotNull  Project project) {
         return new ElmTestRunConfiguration(project, this, "Elm Test");
     }
 
@@ -22,4 +31,11 @@ public class ElmTestConfigurationFactory extends ConfigurationFactory {
     public String getName() {
         return FACTORY_NAME;
     }
+
+    @Nullable
+    @Override
+    public Icon getIcon() {
+        return RUN_ICON;
+    }
+
 }

@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
+import static org.frawa.elmtest.run.ElmTestConfigurationFactory.RUN_ICON;
+
 public class ElmTestRunConfigurationType implements ConfigurationType {
     @Override
     public String getDisplayName() {
@@ -20,7 +22,7 @@ public class ElmTestRunConfigurationType implements ConfigurationType {
 
     @Override
     public Icon getIcon() {
-        return AllIcons.General.Information;
+        return RUN_ICON;
     }
 
     @NotNull
@@ -33,5 +35,7 @@ public class ElmTestRunConfigurationType implements ConfigurationType {
     public ConfigurationFactory[] getConfigurationFactories() {
         return new ConfigurationFactory[]{new ElmTestConfigurationFactory(this)};
     }
+
+
 }
 

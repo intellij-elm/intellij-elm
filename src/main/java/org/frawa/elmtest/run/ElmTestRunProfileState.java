@@ -39,9 +39,9 @@ public class ElmTestRunProfileState extends CommandLineState {
                 ? this.getEnvironment().getProject().getBasePath()
                 : configuration.options.elmFolder;
 
-        GeneralCommandLine commandLine = configuration.options.elmBinary == null || configuration.options.elmBinary.isEmpty()
-                ? new GeneralCommandLine("/bin/sh", "-i", "-c", "elm test --report=json")
-                : new GeneralCommandLine(configuration.options.elmBinary, "test", "--report=json");
+        GeneralCommandLine commandLine = configuration.options.elmTestBinary == null || configuration.options.elmTestBinary.isEmpty()
+                ? new GeneralCommandLine("/bin/sh", "-i", "-c", "elm-test --report=json")
+                : new GeneralCommandLine(configuration.options.elmTestBinary, "--report=json");
 
         commandLine
                 .withWorkDirectory(elmFolder)

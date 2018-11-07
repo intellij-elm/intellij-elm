@@ -8,8 +8,13 @@ import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.IconLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
+
+import static org.frawa.elmtest.run.ElmTestConfigurationFactory.RUN_ICON;
 
 public class ElmTestRunConfiguration extends RunConfigurationBase {
 
@@ -37,6 +42,12 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
 
     static class Options {
         String elmFolder;
-        String elmBinary;
+        String elmTestBinary;
+    }
+
+    @Nullable
+    @Override
+    public Icon getIcon() {
+        return RUN_ICON;
     }
 }
