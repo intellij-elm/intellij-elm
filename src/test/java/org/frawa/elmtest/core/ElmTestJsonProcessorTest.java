@@ -1,4 +1,4 @@
-package org.frawa.elmtest.run;
+package org.frawa.elmtest.core;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -12,7 +12,9 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.frawa.elmtest.run.ElmTestJsonProcessor.*;
+import static org.frawa.elmtest.core.ElmTestJsonProcessor.*;
+import static org.frawa.elmtest.core.LabelUtils.*;
+import static org.frawa.elmtest.core.LabelUtils.toPath;
 import static org.junit.Assert.*;
 
 public class ElmTestJsonProcessorTest {
@@ -64,7 +66,7 @@ public class ElmTestJsonProcessorTest {
     @Test
     public void toPath1() {
         JsonObject obj = new Gson().fromJson("{\"labels\":[\"Module\",\"test\"]}", JsonObject.class);
-        Path path = toPath(obj);
+        Path path = ElmTestJsonProcessor.toPath(obj);
         assertEquals(2, path.getNameCount());
         assertEquals("Module", path.getName(0).toString());
         assertEquals("test", path.getName(1).toString());
@@ -73,26 +75,10 @@ public class ElmTestJsonProcessorTest {
     @Test
     public void toPathWithSlashes() {
         JsonObject obj = new Gson().fromJson("{\"labels\":[\"Module\",\"test / stuff\"]}", JsonObject.class);
-        Path path = toPath(obj);
+        Path path = ElmTestJsonProcessor.toPath(obj);
         assertEquals(2, path.getNameCount());
         assertEquals("Module", path.getName(0).toString());
         assertEquals("test+%2F+stuff", path.getName(1).toString());
-    }
-
-    @Test
-    public void diffPathTest() {
-        Path from = toPath(Arrays.asList("Module", "suite", "test"));
-        Path to = toPath(Arrays.asList("Module", "suite", "test2"));
-        Path diff = diffPaths(from, to);
-        assertEquals("test2", diff.toString());
-    }
-
-    @Test
-    public void diffPathSuite() {
-        Path from = toPath(Arrays.asList("Module", "suite", "test"));
-        Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        Path diff = diffPaths(from, to);
-        assertEquals("../suite2/test2", diff.toString());
     }
 
     @Test
@@ -203,20 +189,14 @@ public class ElmTestJsonProcessorTest {
     }
 
     @Test
-    public void locationUrl() {
-        String url1 = toLocationUrl(toPath(Arrays.asList("Module", "suite", "test")));
-        assertEquals("file://tests/Module.elm:13:0", url1);
-    }
-
-    @Test
     public void testCompletedWithLocation() {
         List<TreeNodeEvent> list = processor.accept("{\"event\":\"testCompleted\",\"status\":\"pass\",\"labels\":[\"Module\",\"test\"],\"failures\":[],\"duration\":\"1\"}");
         assertEquals(3, list.size());
         assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
         assertTrue(list.get(1) instanceof TestStartedEvent);
         assertTrue(list.get(2) instanceof TestFinishedEvent);
-        assertEquals("file://tests/Module.elm:13:0", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
-        assertEquals("file://tests/Module.elm:13:0", ((TestStartedEvent) list.get(1)).getLocationUrl());
+        assertEquals("elmTest://Module/test", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
+        assertEquals("elmTest://Module/test", ((TestStartedEvent) list.get(1)).getLocationUrl());
     }
 
     @Test
@@ -226,7 +206,7 @@ public class ElmTestJsonProcessorTest {
         assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
         assertTrue(list.get(1) instanceof TestStartedEvent);
         assertTrue(list.get(2) instanceof TestFinishedEvent);
-        assertEquals("file://tests/Nested/Module.elm:13:0", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
-        assertEquals("file://tests/Nested/Module.elm:13:0", ((TestStartedEvent) list.get(1)).getLocationUrl());
+        assertEquals("elmTest://Nested.Module/test", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
+        assertEquals("elmTest://Nested.Module/test", ((TestStartedEvent) list.get(1)).getLocationUrl());
     }
 }

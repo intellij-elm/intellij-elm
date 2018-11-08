@@ -3,7 +3,7 @@ package org.frawa.elmtest.run;
 import org.jdom.Element;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ElmTestRunConfigurationTest {
 
