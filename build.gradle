@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 
-version = '0.2.0'
+version = '0.2.1'
 
 allprojects {
     apply plugin: 'java'
@@ -21,6 +21,7 @@ allprojects {
 
         //plugin dependencies, see https://github.com/JetBrains/gradle-intellij-plugin
         //plugins 'IntelliLang'
+//        plugins 'org.elm.klazuka'
     }
 
     publishPlugin {
