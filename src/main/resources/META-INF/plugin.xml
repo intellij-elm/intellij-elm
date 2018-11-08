@@ -8,16 +8,25 @@
   <description><![CDATA[
       Run Elm Tests.<br/>
       <em>Run and navigate Elm tests within IntelliJ the framework.</em>
+
+      Features:<br>
+      <ul>
+        <li>Run configuration to launch Elm tests</li>
+        <li>Optionally, configure Elm project folder</li>
+        <li>Optionally, configure path to elm-test binary</li>
+        <li>Primitive navigation from test to file</li>
+        <li>If the Elm plugin is present, naive navigation from test to file</li>
+      </ul>
     ]]></description>
 
   <change-notes><![CDATA[
       Early DRAFT<br>
       <em>Feedback welcome.</em>
 
-      - Run configuration to launch Elm tests
-      - Optionally, configure Elm project folder
-      - Optionally, configure path to elm-test binary
-      - Primitive navigation from test to file
+      <ul>
+        <li><b>0.2.1</b> <em>(2018-11-08)</em> - Naive navigation from test to file</li>
+        <li><b>0.2.0</b> <em>(2018-11-07)</em> - Primitive navigation from test to file</li>
+      </ul>
     ]]>
   </change-notes>
 
