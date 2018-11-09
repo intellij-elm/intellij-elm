@@ -2,10 +2,7 @@ package org.frawa.elmtest.core;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.intellij.execution.testframework.sm.runner.events.TestFinishedEvent;
-import com.intellij.execution.testframework.sm.runner.events.TestStartedEvent;
-import com.intellij.execution.testframework.sm.runner.events.TestSuiteStartedEvent;
-import com.intellij.execution.testframework.sm.runner.events.TreeNodeEvent;
+import com.intellij.execution.testframework.sm.runner.events.*;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -195,7 +192,7 @@ public class ElmTestJsonProcessorTest {
         assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
         assertTrue(list.get(1) instanceof TestStartedEvent);
         assertTrue(list.get(2) instanceof TestFinishedEvent);
-        assertEquals("elmTest://Module/test", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
+        assertEquals("elmTest://Module", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
         assertEquals("elmTest://Module/test", ((TestStartedEvent) list.get(1)).getLocationUrl());
     }
 
@@ -206,7 +203,20 @@ public class ElmTestJsonProcessorTest {
         assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
         assertTrue(list.get(1) instanceof TestStartedEvent);
         assertTrue(list.get(2) instanceof TestFinishedEvent);
-        assertEquals("elmTest://Nested.Module/test", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
+        assertEquals("elmTest://Nested.Module", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
         assertEquals("elmTest://Nested.Module/test", ((TestStartedEvent) list.get(1)).getLocationUrl());
+    }
+
+    @Test
+    public void testCompletedFailedWithLocation() {
+        List<TreeNodeEvent> list = processor.accept("{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"describe\",\"fail\"],\"failures\":[{\"given\":null,\"message\":\"boom\",\"reason\":{\"type\":\"custom\",\"data\":\"boom\"}}],\"duration\":\"1\"}");
+        assertEquals(4, list.size());
+        assertTrue(list.get(0) instanceof TestSuiteStartedEvent);
+        assertTrue(list.get(1) instanceof TestSuiteStartedEvent);
+        assertTrue(list.get(2) instanceof TestStartedEvent);
+        assertTrue(list.get(3) instanceof TestFailedEvent);
+        assertEquals("elmTest://Exploratory", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
+        assertEquals("elmTest://Exploratory/describe", ((TestSuiteStartedEvent) list.get(1)).getLocationUrl());
+        assertEquals("elmTest://Exploratory/fail", ((TestStartedEvent) list.get(2)).getLocationUrl());
     }
 }

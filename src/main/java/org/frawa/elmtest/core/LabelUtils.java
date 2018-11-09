@@ -15,6 +15,10 @@ public class LabelUtils {
 
     final static Path EMPTY_PATH = Paths.get("");
 
+    static String getModuleName(Path path) {
+        return path.getName(0).toString();
+    }
+
     static String encodeLabel(String label) {
         try {
             return URLEncoder.encode(label, "utf8");
@@ -50,13 +54,15 @@ public class LabelUtils {
                 : to;
     }
 
-    public static String toLocationUrl(String protocol, Path path) {
-        return String.format("%s://%s", protocol, path);
+    public static String toLocationUrl(String modelName, String label) {
+        return modelName.equals(label)
+                ? String.format("%s://%s", ELM_TEST_PROTOCOL, modelName)
+                : String.format("%s://%s/%s", ELM_TEST_PROTOCOL, modelName, encodeLabel(label));
     }
 
     public static Pair<String, String> fromLocationUrlPath(String path) {
         Path path1 = Paths.get(path);
-        String moduleName = path1.getName(0).toString();
+        String moduleName = getModuleName(path1);
         String moduleFile = String.format("tests/%s.elm", moduleName.replace(".", "/"));
         String label = decodeLabel(path1.getFileName());
         return new Pair<>(moduleFile, label);

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static org.frawa.elmtest.core.LabelUtils.ELM_TEST_PROTOCOL;
+import static org.frawa.elmtest.core.LabelUtils.getModuleName;
 import static org.frawa.elmtest.core.LabelUtils.toLocationUrl;
 
 public class ElmTestJsonProcessor {
@@ -53,9 +53,10 @@ public class ElmTestJsonProcessor {
 
             Path diff = LabelUtils.diffPaths(currentPath, path);
 
-            String locationUrl = toLocationUrl(ELM_TEST_PROTOCOL, path);
+            String moduleName = getModuleName(path);
 
-            Function<String, TreeNodeEvent> toStartSuiteEvent = name -> new TestSuiteStartedEvent(name, locationUrl);
+            Function<String, TreeNodeEvent> toStartSuiteEvent = label ->
+                    new TestSuiteStartedEvent(label, toLocationUrl(moduleName, label));
 
             Stream<TreeNodeEvent> suiteEvents = diff.toString().isEmpty()
                     ? Stream.empty()
@@ -65,7 +66,7 @@ public class ElmTestJsonProcessor {
 
             List<TreeNodeEvent> result = Stream.concat(
                     suiteEvents,
-                    testEvents(LabelUtils.decodeLabel(path.getFileName()), obj, locationUrl)
+                    testEvents(LabelUtils.decodeLabel(path.getFileName()), obj, moduleName)
             ).collect(Collectors.toList());
 
             currentPath = path;
@@ -75,18 +76,18 @@ public class ElmTestJsonProcessor {
         }
     }
 
-    private Stream<TreeNodeEvent> testEvents(String name, JsonObject obj, String locationUrl) {
+    private Stream<TreeNodeEvent> testEvents(String label, JsonObject obj, String moduleName) {
         String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
-                    new TestStartedEvent(name, locationUrl),
-                    new TestFinishedEvent(name, duration)
+                    new TestStartedEvent(label, toLocationUrl(moduleName, label)),
+                    new TestFinishedEvent(label, duration)
             );
         } else if ("todo".equals(status)) {
             String comment = getComment(obj);
             return Stream.of(
-                    new TestIgnoredEvent(name, comment != null ? comment : "", null)
+                    new TestIgnoredEvent(label, comment != null ? comment : "", null)
             );
         }
         String message = getMessage(obj);
@@ -94,8 +95,8 @@ public class ElmTestJsonProcessor {
         String expected = getExpected(obj);
 
         return Stream.of(
-                new TestStartedEvent(name, null),
-                new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
+                new TestStartedEvent(label, toLocationUrl(moduleName, label)),
+                new TestFailedEvent(label, message != null ? message : "", null, false, actual, expected)
         );
     }
 
