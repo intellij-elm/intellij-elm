@@ -67,6 +67,13 @@ public class ElmTestRunProfileState extends CommandLineState {
 
         public ConsoleProperties(@NotNull RunConfiguration config, @NotNull Executor executor) {
             super(config, "elm-test", executor);
+
+            setIfUndefined(TestConsoleProperties.TRACK_RUNNING_TEST, true);
+            setIfUndefined(TestConsoleProperties.OPEN_FAILURE_LINE, true);
+            setIfUndefined(TestConsoleProperties.HIDE_PASSED_TESTS, false);
+            setIfUndefined(TestConsoleProperties.SHOW_STATISTICS, true);
+            setIfUndefined(TestConsoleProperties.SELECT_FIRST_DEFECT, true);
+            setIfUndefined(TestConsoleProperties.SCROLL_TO_SOURCE, true);
         }
 
 
