@@ -54,7 +54,7 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
     private fun generateTemplate(project: Project, context: Context): Template {
         val templateManager = TemplateManager.getInstance(project)
         val template = templateManager.createTemplate("", "")
-        template.isToReformat = true
+        template.isToReformat = false
 
         val typeAnnotation = context.typeAnnotation
         val name = typeAnnotation.referenceName
@@ -73,7 +73,7 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
                     is ElmTupleType -> "tuple"
                     is ElmTypeRef -> "function" // not quite true: need to check for an ARROW child
                     else -> "?"
-                }.toLowerCase()
+                }.toLowerCamelCase()
             }
         }
 
@@ -87,3 +87,12 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
         return template
     }
 }
+
+/// NOTE: Assumes that the receiver is already InterCapped.
+private fun String.toLowerCamelCase(): String =
+        this.mapIndexed { idx, c ->
+            if (idx == 0)
+                c.toLowerCase()
+            else
+                c
+        }.joinToString("")
