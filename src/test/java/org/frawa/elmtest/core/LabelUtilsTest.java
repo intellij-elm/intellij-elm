@@ -58,4 +58,26 @@ public class LabelUtilsTest {
         assertEquals("tests/Module.elm", pair.first);
         assertEquals("test / stuff", pair.second);
     }
+
+    @Test
+    public void commonParentSameSuite() {
+        Path from = toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = toPath(Arrays.asList("Module", "suite", "test2"));
+
+        Path parent = commonParent(from, to);
+        assertEquals("Module/suite", parent.toString());
+    }
+
+    @Test
+    public void commonParentDifferentSuite() {
+        Path from = toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
+
+        Path parent = commonParent(from, to);
+        assertEquals("Module", parent.toString());
+
+        Path parent2 = commonParent(to, from);
+        assertEquals("Module", parent2.toString());
+    }
+
 }

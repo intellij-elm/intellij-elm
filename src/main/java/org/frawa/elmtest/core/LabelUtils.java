@@ -67,4 +67,15 @@ public class LabelUtils {
         String label = decodeLabel(path1.getFileName());
         return new Pair<>(moduleFile, label);
     }
+
+    static Path commonParent(Path path1, Path path2) {
+        if (path1.getNameCount() > path2.getNameCount()) {
+            return commonParent(path2, path2);
+        }
+        if (path2.startsWith(path1)) {
+            return path1;
+        } else {
+            return commonParent(path1.getParent(), path2);
+        }
+    }
 }
