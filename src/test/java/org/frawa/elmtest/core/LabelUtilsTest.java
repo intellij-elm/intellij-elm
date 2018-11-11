@@ -15,19 +15,25 @@ public class LabelUtilsTest {
 
     @Test
     public void locationUrl() {
-        String url = toLocationUrl(toPath(Arrays.asList("Module", "test")));
-        assertEquals("elmTest://Module/test", url);
+        String url = toTestLocationUrl(toPath(Arrays.asList("Module", "test")));
+        assertEquals("elmTestTest://Module/test", url);
+    }
+
+    @Test
+    public void suiteLocationUrl() {
+        String url = toSuiteLocationUrl(toPath(Arrays.asList("Module", "suite")));
+        assertEquals("elmTestDescribe://Module/suite", url);
     }
 
     @Test
     public void locationUrlWithSlash() {
-        String url = toLocationUrl(toPath(Arrays.asList("Nested.Module", "test / stuff")));
-        assertEquals("elmTest://Nested.Module/test+%2F+stuff", url);
+        String url = toTestLocationUrl(toPath(Arrays.asList("Nested.Module", "test / stuff")));
+        assertEquals("elmTestTest://Nested.Module/test+%2F+stuff", url);
     }
 
     @Test
     public void useLocationUrl() {
-        String url = toLocationUrl(toPath(Arrays.asList("Nested.Module", "test")));
+        String url = toTestLocationUrl(toPath(Arrays.asList("Nested.Module", "test")));
         String urlPath = url.substring(url.indexOf("://") + 3);
 
         Pair<String, String> pair = fromLocationUrlPath(urlPath);
@@ -37,7 +43,7 @@ public class LabelUtilsTest {
 
     @Test
     public void useLocationUrlWithSlash() {
-        String url = toLocationUrl(toPath(Arrays.asList("Module", "test / stuff")));
+        String url = toTestLocationUrl(toPath(Arrays.asList("Module", "test / stuff")));
         String urlPath = url.substring(url.indexOf("://") + 3);
 
         Pair<String, String> pair = fromLocationUrlPath(urlPath);

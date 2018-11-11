@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 
 public class LabelUtils {
     public static final String ELM_TEST_PROTOCOL = "elmTest";
+    public static final String DESCRIBE_PROTOCOL = ELM_TEST_PROTOCOL + "Describe";
+    public static final String TEST_PROTOCOL = ELM_TEST_PROTOCOL + "Test";
 
     final static Path EMPTY_PATH = Paths.get("");
 
@@ -54,8 +56,16 @@ public class LabelUtils {
         return decodeLabel(path.getFileName());
     }
 
-    public static String toLocationUrl(Path path) {
-        return String.format("%s://%s", ELM_TEST_PROTOCOL, path.toString());
+    public static String toSuiteLocationUrl(Path path) {
+        return toLocationUrl(DESCRIBE_PROTOCOL, path);
+    }
+
+    public static String toTestLocationUrl(Path path) {
+        return toLocationUrl(TEST_PROTOCOL, path);
+    }
+
+    private static String toLocationUrl(String protocol, Path path) {
+        return String.format("%s://%s", protocol, path.toString());
     }
 
     public static Pair<String, String> fromLocationUrlPath(String path) {

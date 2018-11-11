@@ -50,7 +50,7 @@ public class ElmTestJsonProcessor {
             }
 
             Function<Path, TreeNodeEvent> toStartSuiteEvent = path1 ->
-                    new TestSuiteStartedEvent(getName(path1), toLocationUrl(path1));
+                    new TestSuiteStartedEvent(getName(path1), toSuiteLocationUrl(path1));
 
             List<TreeNodeEvent> result = Stream.of(
                     closeSuitePaths(currentPath, path).map(toFinishSuiteEvent),
@@ -74,7 +74,7 @@ public class ElmTestJsonProcessor {
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
-                    new TestStartedEvent(name, toLocationUrl(path)),
+                    new TestStartedEvent(name, toTestLocationUrl(path)),
                     new TestFinishedEvent(name, duration)
             );
         } else if ("todo".equals(status)) {
@@ -88,7 +88,7 @@ public class ElmTestJsonProcessor {
         String expected = getExpected(obj);
 
         return Stream.of(
-                new TestStartedEvent(name, toLocationUrl(path)),
+                new TestStartedEvent(name, toTestLocationUrl(path)),
                 new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
         );
     }

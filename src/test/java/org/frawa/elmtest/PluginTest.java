@@ -1,4 +1,4 @@
-package com.test;
+package org.frawa.elmtest;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,7 +8,7 @@ import org.junit.Test;
  */
 public class PluginTest {
     @Test
-    public void testBasics() throws Exception {
+    public void testBasics() {
         Assert.assertTrue("All is well", true);
     }
 }

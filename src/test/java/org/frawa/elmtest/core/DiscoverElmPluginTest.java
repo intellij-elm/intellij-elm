@@ -1,4 +1,4 @@
-package com.test;
+package org.frawa.elmtest.core;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
