@@ -40,7 +40,7 @@ public class ElmTestLocator extends FileUrlProvider {
 
         Pair<String, String> pair = LabelUtils.fromLocationUrlPath(path);
         String filePath = pair.first;
-        String labels = String.format("\"%s\"", pair.second);
+        String labels = pair.second;
 
         final String systemIndependentPath = FileUtil.toSystemIndependentName(filePath);
         final List<VirtualFile> virtualFiles = TestsLocationProviderUtil.findSuitableFilesFor(systemIndependentPath, project);
