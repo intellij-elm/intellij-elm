@@ -7,7 +7,6 @@ import com.google.gson.JsonSyntaxException;
 import com.intellij.execution.testframework.sm.runner.events.*;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -15,8 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static org.frawa.elmtest.core.LabelUtils.getModuleName;
-import static org.frawa.elmtest.core.LabelUtils.toLocationUrl;
+import static org.frawa.elmtest.core.LabelUtils.*;
 
 public class ElmTestJsonProcessor {
 
@@ -30,14 +28,14 @@ public class ElmTestJsonProcessor {
 
             String event = obj.get("event").getAsString();
 
-            Function<String, TreeNodeEvent> toFinishSuiteEvent = TestSuiteFinishedEvent::new;
+            Function<Path, TreeNodeEvent> toFinishSuiteEvent = path1 ->
+                    new TestSuiteFinishedEvent(getName(path1));
 
             if ("runStart".equals(event)) {
                 currentPath = LabelUtils.EMPTY_PATH;
                 return Collections.emptyList();
             } else if ("runComplete".equals(event)) {
-                Path diff = LabelUtils.diffPaths(currentPath, LabelUtils.EMPTY_PATH);
-                List<TreeNodeEvent> closeAll = closeSuiteNames(diff, currentPath).stream()
+                List<TreeNodeEvent> closeAll = closeSuitePaths(currentPath, EMPTY_PATH)
                         .map(toFinishSuiteEvent)
                         .collect(Collectors.toList());
                 currentPath = LabelUtils.EMPTY_PATH;
@@ -51,23 +49,17 @@ public class ElmTestJsonProcessor {
                 path = path.resolve("todo");
             }
 
-            Path diff = LabelUtils.diffPaths(currentPath, path);
+            Function<Path, TreeNodeEvent> toStartSuiteEvent = path1 ->
+                    new TestSuiteStartedEvent(getName(path1), toLocationUrl(path1));
 
-            String moduleName = getModuleName(path);
-
-            Function<String, TreeNodeEvent> toStartSuiteEvent = label ->
-                    new TestSuiteStartedEvent(label, toLocationUrl(moduleName, label));
-
-            Stream<TreeNodeEvent> suiteEvents = diff.toString().isEmpty()
-                    ? Stream.empty()
-                    : Stream.concat(
-                    closeSuiteNames(diff, currentPath).stream().map(toFinishSuiteEvent),
-                    openSuiteNames(diff).stream().map(toStartSuiteEvent));
-
-            List<TreeNodeEvent> result = Stream.concat(
-                    suiteEvents,
-                    testEvents(LabelUtils.decodeLabel(path.getFileName()), obj, moduleName)
-            ).collect(Collectors.toList());
+            List<TreeNodeEvent> result = Stream.of(
+                    closeSuitePaths(currentPath, path).map(toFinishSuiteEvent),
+                    openSuitePaths(currentPath, path).map(toStartSuiteEvent),
+                    testEvents(path, obj)
+            )
+//                    .flatMap(Functions.identity())
+                    .flatMap(s -> s)
+                    .collect(Collectors.toList());
 
             currentPath = path;
             return result;
@@ -76,18 +68,19 @@ public class ElmTestJsonProcessor {
         }
     }
 
-    private Stream<TreeNodeEvent> testEvents(String label, JsonObject obj, String moduleName) {
+    private Stream<TreeNodeEvent> testEvents(Path path, JsonObject obj) {
+        String name = getName(path);
         String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
-                    new TestStartedEvent(label, toLocationUrl(moduleName, label)),
-                    new TestFinishedEvent(label, duration)
+                    new TestStartedEvent(name, toLocationUrl(path)),
+                    new TestFinishedEvent(name, duration)
             );
         } else if ("todo".equals(status)) {
             String comment = getComment(obj);
             return Stream.of(
-                    new TestIgnoredEvent(label, comment != null ? comment : "", null)
+                    new TestIgnoredEvent(name, comment != null ? comment : "", null)
             );
         }
         String message = getMessage(obj);
@@ -95,8 +88,8 @@ public class ElmTestJsonProcessor {
         String expected = getExpected(obj);
 
         return Stream.of(
-                new TestStartedEvent(label, toLocationUrl(moduleName, label)),
-                new TestFailedEvent(label, message != null ? message : "", null, false, actual, expected)
+                new TestStartedEvent(name, toLocationUrl(path)),
+                new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
         );
     }
 
@@ -155,27 +148,15 @@ public class ElmTestJsonProcessor {
         );
     }
 
-    static List<String> closeSuiteNames(Path diff, Path from) {
-        List<String> result = new ArrayList<>();
-        int dirIndex = from.getNameCount() - 2;
-        for (int i = 0; i < diff.getNameCount(); i++) {
-            if (diff.getName(i).toString().equals("..")) {
-                result.add(LabelUtils.decodeLabel(from.getName(dirIndex - i)));
-            } else {
-                break;
-            }
-        }
-        return result;
+    static Stream<Path> closeSuitePaths(Path from, Path to) {
+        Path commonParent = commonParent(from, to);
+        return subParents(from, commonParent);
     }
 
-    static List<String> openSuiteNames(Path diff) {
-        List<String> result = new ArrayList<>();
-        for (int i = 0; i < diff.getNameCount() - 1; i++) {
-            String name = LabelUtils.decodeLabel(diff.getName(i));
-            if (!name.equals("..")) {
-                result.add(name);
-            }
-        }
-        return result;
+    static Stream<Path> openSuitePaths(Path from, Path to) {
+        Path commonParent = commonParent(from, to);
+        List<Path> parents = subParents(to, commonParent).collect(Collectors.toList());
+        Collections.reverse(parents);
+        return parents.stream();
     }
 }

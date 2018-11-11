@@ -8,9 +8,10 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.frawa.elmtest.core.ElmTestJsonProcessor.*;
-import static org.frawa.elmtest.core.LabelUtils.*;
+import static org.frawa.elmtest.core.LabelUtils.EMPTY_PATH;
 import static org.frawa.elmtest.core.LabelUtils.toPath;
 import static org.junit.Assert.*;
 
@@ -82,63 +83,72 @@ public class ElmTestJsonProcessorTest {
     public void closeNoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite", "test2"));
-        Path diff = diffPaths(from, to);
-        List<String> names = closeSuiteNames(diff, from);
-        assertEquals(Arrays.asList(), names);
+        List<Path> paths = closeSuitePaths(from, to).collect(Collectors.toList());
+        assertEquals(Arrays.asList(), paths);
     }
 
     @Test
     public void closeOneSuite() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        Path diff = diffPaths(from, to);
-        List<String> names = closeSuiteNames(diff, from);
-        assertEquals(Arrays.asList("suite"), names);
+        List<String> paths = closeSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module/suite"), paths);
     }
 
     @Test
-    public void closeTwoSuite() {
+    public void closeTwoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "deep", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        Path diff = diffPaths(from, to);
-        List<String> names = closeSuiteNames(diff, from);
-        assertEquals(Arrays.asList("deep", "suite"), names);
+        List<String> paths = closeSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module/suite/deep", "Module/suite"), paths);
+    }
+
+    @Test
+    public void closeInitialSuite() {
+        Path from = EMPTY_PATH;
+        Path to = toPath(Arrays.asList("Module", "suite", "test"));
+        List<String> paths = closeSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList(), paths);
     }
 
     @Test
     public void openNoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite", "test2"));
-        Path diff = diffPaths(from, to);
-        List<String> names = openSuiteNames(diff);
-        assertEquals(Arrays.asList(), names);
+        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList(), paths);
     }
 
     @Test
     public void openOneSuite() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        Path diff = diffPaths(from, to);
-        List<String> names = openSuiteNames(diff);
-        assertEquals(Arrays.asList("suite2"), names);
+        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module/suite2"), paths);
     }
 
     @Test
     public void openTwoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "deep2", "test2"));
-        Path diff = diffPaths(from, to);
-        List<String> names = openSuiteNames(diff);
-        assertEquals(Arrays.asList("suite2", "deep2"), names);
+        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module/suite2", "Module/suite2/deep2"), paths);
+    }
+
+    @Test
+    public void openInitialSuites() {
+        Path from = EMPTY_PATH;
+        Path to = toPath(Arrays.asList("Module", "suite", "test"));
+        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module", "Module/suite"), paths);
     }
 
     @Test
     public void openSuiteWithSlash() {
-        Path from = EMPTY_PATH;
+        Path from = toPath(Arrays.asList("Module"));
         Path to = toPath(Arrays.asList("Module", "suite / stuff", "test"));
-        Path diff = diffPaths(from, to);
-        List<String> names = openSuiteNames(diff);
-        assertEquals(Arrays.asList("Module", "suite / stuff"), names);
+        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module/suite+%2F+stuff"), paths);
     }
 
     @Test
@@ -217,6 +227,6 @@ public class ElmTestJsonProcessorTest {
         assertTrue(list.get(3) instanceof TestFailedEvent);
         assertEquals("elmTest://Exploratory", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
         assertEquals("elmTest://Exploratory/describe", ((TestSuiteStartedEvent) list.get(1)).getLocationUrl());
-        assertEquals("elmTest://Exploratory/fail", ((TestStartedEvent) list.get(2)).getLocationUrl());
+        assertEquals("elmTest://Exploratory/describe/fail", ((TestStartedEvent) list.get(2)).getLocationUrl());
     }
 }

@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.frawa.elmtest.core.LabelUtils.*;
 import static org.junit.Assert.assertEquals;
@@ -12,36 +14,20 @@ import static org.junit.Assert.assertEquals;
 public class LabelUtilsTest {
 
     @Test
-    public void diffPathTest() {
-        Path from = toPath(Arrays.asList("Module", "suite", "test"));
-        Path to = toPath(Arrays.asList("Module", "suite", "test2"));
-        Path diff = diffPaths(from, to);
-        assertEquals("test2", diff.toString());
-    }
-
-    @Test
-    public void diffPathSuite() {
-        Path from = toPath(Arrays.asList("Module", "suite", "test"));
-        Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        Path diff = diffPaths(from, to);
-        assertEquals("../suite2/test2", diff.toString());
-    }
-
-    @Test
     public void locationUrl() {
-        String url = toLocationUrl("Module", "test");
+        String url = toLocationUrl(toPath(Arrays.asList("Module", "test")));
         assertEquals("elmTest://Module/test", url);
     }
 
     @Test
     public void locationUrlWithSlash() {
-        String url = toLocationUrl("Nested.Module", "test / stuff");
+        String url = toLocationUrl(toPath(Arrays.asList("Nested.Module", "test / stuff")));
         assertEquals("elmTest://Nested.Module/test+%2F+stuff", url);
     }
 
     @Test
     public void useLocationUrl() {
-        String url = toLocationUrl("Nested.Module", "test");
+        String url = toLocationUrl(toPath(Arrays.asList("Nested.Module", "test")));
         String urlPath = url.substring(url.indexOf("://") + 3);
 
         Pair<String, String> pair = fromLocationUrlPath(urlPath);
@@ -51,7 +37,7 @@ public class LabelUtilsTest {
 
     @Test
     public void useLocationUrlWithSlash() {
-        String url = toLocationUrl("Module", "test / stuff");
+        String url = toLocationUrl(toPath(Arrays.asList("Module", "test / stuff")));
         String urlPath = url.substring(url.indexOf("://") + 3);
 
         Pair<String, String> pair = fromLocationUrlPath(urlPath);
@@ -79,5 +65,38 @@ public class LabelUtilsTest {
         Path parent2 = commonParent(to, from);
         assertEquals("Module", parent2.toString());
     }
+
+    @Test
+    public void commonParentDifferentSuite2() {
+        Path from = toPath(Arrays.asList("Module", "suite", "deep", "test"));
+        Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
+
+        Path parent = commonParent(from, to);
+        assertEquals("Module", parent.toString());
+
+        Path parent2 = commonParent(to, from);
+        assertEquals("Module", parent2.toString());
+    }
+
+    @Test
+    public void commonParentNoParent() {
+        Path from = toPath(Arrays.asList("Module", "suite", "test"));
+        Path to = toPath(Arrays.asList("Module2", "suite2", "test2"));
+
+        Path parent = commonParent(from, to);
+        assertEquals("", parent.toString());
+    }
+
+    @Test
+    public void parentPaths() {
+        Path path = toPath(Arrays.asList("Module", "suite", "test"));
+        Path parent = toPath(Arrays.asList("Module"));
+
+        List<String> parents = subParents(path, parent)
+                .map(Path::toString)
+                .collect(Collectors.toList());
+        assertEquals(Arrays.asList("Module/suite"), parents);
+    }
+
 
 }
