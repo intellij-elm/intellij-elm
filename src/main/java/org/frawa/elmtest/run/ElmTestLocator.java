@@ -63,8 +63,7 @@ public class ElmTestLocator extends FileUrlProvider {
         }
 
         Optional<? extends PsiElement> found = findPsiElement(isDescribe, labels, psiFile);
-        return found
-                .map(element -> PsiLocation.fromPsiElement(project, element))
-                .orElse(null);
+        PsiElement element = found.isPresent() ? found.get() : psiFile;
+        return PsiLocation.fromPsiElement(project, element);
     }
 }
