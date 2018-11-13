@@ -1,5 +1,6 @@
 package org.frawa.elmtest.core;
 
+import com.intellij.openapi.util.Condition;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -29,7 +30,8 @@ public class ElmPluginHelper {
 
         if (isDescribe) {
             // TODO remove duplication
-            Stream<ElmFunctionCall> current = allSuites(decodeLabel(labelPath.getName(0))).apply(file);
+            Stream<ElmFunctionCall> current = allSuites(decodeLabel(labelPath.getName(0))).apply(file)
+                    .filter(topLevel());
             for (int i = 1; i < labelPath.getNameCount(); i++) {
                 String label = decodeLabel(labelPath.getName(i));
                 current = current
@@ -42,7 +44,8 @@ public class ElmPluginHelper {
 
         if (labelPath.getNameCount() > 1) {
             // TODO remove duplication
-            Stream<ElmFunctionCall> current = allSuites(decodeLabel(labelPath.getName(0))).apply(file);
+            Stream<ElmFunctionCall> current = allSuites(decodeLabel(labelPath.getName(0))).apply(file)
+                    .filter(topLevel());
             for (int i = 1; i < labelPath.getNameCount() - 1; i++) {
                 String label = decodeLabel(labelPath.getName(i));
                 current = current
@@ -58,6 +61,7 @@ public class ElmPluginHelper {
 
         // TODO remove duplication
         return allTests(decodeLabel(labelPath.getName(0))).apply(file)
+                .filter(topLevel())
                 .findFirst();
     }
 
@@ -76,6 +80,19 @@ public class ElmPluginHelper {
         return PsiTreeUtil.findChildrenOfType(parent, ElmFunctionCall.class)
                 .stream()
                 .filter(call -> call.getTarget().getText().equals(targetName));
+    }
+
+    private static Predicate<ElmFunctionCall> topLevel() {
+        return call -> null == PsiTreeUtil.findFirstParent(call, true, new Condition<PsiElement>() {
+            @Override
+            public boolean value(PsiElement element) {
+                return isSuite(element);
+            }
+        });
+    }
+
+    private static boolean isSuite(PsiElement element) {
+        return (element instanceof ElmFunctionCall) && ((ElmFunctionCall) element).getTarget().getText().equals("describe");
     }
 
     private static Predicate<ElmFunctionCall> firstArgumentIsString(String value) {
