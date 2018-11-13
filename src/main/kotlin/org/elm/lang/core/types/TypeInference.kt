@@ -788,7 +788,7 @@ private class InferenceScope(
 
     private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
         val lowerPatternList = pat.lowerPatternList
-        if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
+        if (ty !is TyRecord || !ty.isSubset && lowerPatternList.any { it.name !in ty.fields }) {
             // TODO[unification] bind to vars
             if (isInferable(ty)) {
                 val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
@@ -807,7 +807,8 @@ private class InferenceScope(
         }
 
         for (id in lowerPatternList) {
-            val fieldTy = ty.fields[id.name]!!
+            // TODO[unification] once we know all fields, fieldTy will never be TyUnknown
+            val fieldTy = ty.fields[id.name] ?: TyUnknown
             bindPattern(id, fieldTy, isParameter)
         }
     }

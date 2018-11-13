@@ -3,6 +3,8 @@ package org.elm.ide.inspections
 // These tests don't have access to the standard imports, so you can't use them in type signatures,
 // although literals still work.
 class TypeInferenceInspectionTest : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
+    override fun getProjectDescriptor() = ElmWithStdlibDescriptor
+
     fun `test too many arguments to value`() = checkByText("""
 foo : ()
 foo = ()
@@ -144,6 +146,7 @@ type alias R = {x: (), y: ()}
 main : R -> R
 main r = { r | <error descr="Type mismatch.Required: ()Found: String">x</error> = "" }
 """)
+
     fun `test matched parameter with base record identifier`() = checkByText("""
 type alias R = {x: (), y: ()}
 foo : { r | x : () } -> ()
@@ -294,11 +297,11 @@ main = foo 1
 """)
 
     fun `test matched value from function call with parenthesized arguments`() = checkByText("""
-foo : a -> a -> ()
-foo _ _ = ()
+foo : Int -> Int -> Int
+foo a b = a
 
 main : Int
-main = foo (()) (())
+main = foo (1) (2)
 """)
 
     fun `test mismatched value from function call`() = checkByText("""
@@ -432,7 +435,7 @@ main : R -> R
 main = (\r -> { r | x = () })
 """)
 
-    fun `test matched lambda type with closure pattern matching` () = checkByText("""
+    fun `test matched lambda type with closure pattern matching`() = checkByText("""
 type Foo = Bar
 main : (Foo, Foo) -> ((Foo, Foo) -> Foo)
 main a = (\(_, b) -> b)
@@ -478,6 +481,22 @@ main (<error descr="The function expects 2 arguments, but it got 1 instead.">Foo
 type Foo = Foo
 main : Foo -> ()
 main (<error descr="This value is not a function, but it was given 1 argument.">Foo foo</error>) = foo
+""")
+
+    fun `test mismatched record subset pattern in parameter`() = checkByText("""
+type alias Foo = { foo : (), bar : Int }
+main : Foo -> ()
+main {bar} = <error descr="Type mismatch.Required: ()Found: Int">bar</error>
+""")
+
+    // issue #122
+    // TODO[unification] add mismatch check
+    fun `test matched record pattern from extension alias`() = checkByText("""
+type alias Foo a = { a | foo : ()}
+type alias Bar = { bar : () }
+
+main : Foo Bar -> ()
+main {bar} = ()
 """)
 
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
@@ -800,14 +819,13 @@ main arg =
 """)
 
     fun `test case branches using union patterns to unresolved type`() = checkByText("""
--- This will lead to unresolved reference errors, but we still to test that we're binding
--- the parameters so that we can infer the branch expressions.
+-- This will lead to unresolved reference errors, but we need to test that we're still
+-- binding the parameters so that we can infer the branch expressions.
 main arg =
     case arg of
-        Bar (<error descr="Unresolved reference 'Just'">Just {x}</error>) -> x
+        <error descr="Unresolved reference 'Bar'">Bar (Just {x})</error> -> x
         <error descr="Unresolved reference 'Baz'">Baz x</error> -> x
         _ -> ()
-
 """)
 
     fun `test function parameters using union patterns to unresolved type`() = checkByText("""
@@ -941,7 +959,6 @@ main = () |> Just
 """)
 
     fun `test multiple non-associative operators`() = checkByText("""
-type Bool = True | False
 lt : a -> a -> Bool
 lt a b = True
 and : Bool -> Bool -> Bool
