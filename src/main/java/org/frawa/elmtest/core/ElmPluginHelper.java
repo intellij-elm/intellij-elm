@@ -28,23 +28,9 @@ public class ElmPluginHelper {
             return Optional.empty();
         }
 
-        if (isDescribe) {
-            // TODO remove duplication
-            Stream<ElmFunctionCall> current = allSuites(decodeLabel(labelPath.getName(0))).apply(file)
-                    .filter(topLevel());
-            for (int i = 1; i < labelPath.getNameCount(); i++) {
-                String label = decodeLabel(labelPath.getName(i));
-                current = current
-                        .map(secondOperand())
-                        .flatMap(allSuites(label));
-            }
-            return current
-                    .findFirst();
-        }
-
-        if (labelPath.getNameCount() > 1) {
-            // TODO remove duplication
-            Stream<ElmFunctionCall> current = allSuites(decodeLabel(labelPath.getName(0))).apply(file)
+        String topLabel = decodeLabel(labelPath.getName(0));
+        if (labelPath.getNameCount() > 1 || isDescribe) {
+            Stream<ElmFunctionCall> current = allSuites(topLabel).apply(file)
                     .filter(topLevel());
             for (int i = 1; i < labelPath.getNameCount() - 1; i++) {
                 String label = decodeLabel(labelPath.getName(i));
@@ -52,15 +38,21 @@ public class ElmPluginHelper {
                         .map(secondOperand())
                         .flatMap(allSuites(label));
             }
-            String testLabel = decodeLabel(labelPath.getName(labelPath.getNameCount() - 1));
+
+            if (labelPath.getNameCount() > 1) {
+                String leafLabel = decodeLabel(labelPath.getName(labelPath.getNameCount() - 1));
+                Function<PsiElement, Stream<ElmFunctionCall>> leaf = isDescribe
+                        ? allSuites(leafLabel)
+                        : allTests(leafLabel);
+                current = current
+                        .map(secondOperand())
+                        .flatMap(leaf);
+            }
             return current
-                    .map(secondOperand())
-                    .flatMap(allTests(testLabel))
                     .findFirst();
         }
 
-        // TODO remove duplication
-        return allTests(decodeLabel(labelPath.getName(0))).apply(file)
+        return allTests(topLabel).apply(file)
                 .filter(topLevel())
                 .findFirst();
     }
