@@ -22,16 +22,14 @@ public class ElmPluginHelperTest extends ParsingTestCase {
         return "src/test/resources";
     }
 
-    public void testFirst() {
-        // see file resources/elmPluginHelper/First
-        doTest(false);
-
-        assertSuite(25, "describe1");
-        assertTest(56, "describe1", "test1");
+    @NotNull
+    @Override
+    // see file resources/elmPluginHelper/Navigation
+    protected String getTestName(boolean lowercaseFirstLetter) {
+        return "Navigation";
     }
 
     public void testNavigation() {
-        // see file resources/elmPluginHelper/Navigation
         doTest(false);
 
         assertSuite(27, "suite1");
@@ -39,6 +37,29 @@ public class ElmPluginHelperTest extends ParsingTestCase {
 
         assertTest(137, "test1");
 
+        assertSuite(207, "suite2");
+        assertTest(235, "suite2", "test1");
+        assertSuite(291, "suite2", "nested1");
+        assertTest(324, "suite2", "nested1", "test1");
+    }
+
+    public void testTopLevelSuite() {
+        doTest(false);
+        assertSuite(27, "suite1");
+    }
+
+    public void testTestInSuite() {
+        doTest(false);
+        assertTest(55, "suite1", "test1");
+    }
+
+    public void testTopLevelTest() {
+        doTest(false);
+        assertTest(137, "test1");
+    }
+
+    public void testNestedSuitesAndTests() {
+        doTest(false);
         assertSuite(207, "suite2");
         assertTest(235, "suite2", "test1");
         assertSuite(291, "suite2", "nested1");
