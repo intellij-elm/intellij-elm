@@ -9,13 +9,14 @@
       Run Elm Tests.<br/>
       <em>Run and navigate Elm tests within IntelliJ the framework.</em>
 
+      This plugin requires the <em>Elm</em>(<code>org.elm.klazuka</code>) plugin for navigation.
+
       Features:<br>
       <ul>
         <li>Run configuration to launch Elm tests</li>
         <li>Optionally, configure Elm project folder</li>
         <li>Optionally, configure path to elm-test binary</li>
-        <li>Primitive navigation from test to file</li>
-        <li>If the Elm plugin is present, naive navigation from test to file</li>
+        <li>Navigation from test to file, based on labels</li>
       </ul>
     ]]></description>
 
@@ -24,6 +25,7 @@
       <em>Feedback welcome.</em>
 
       <ul>
+        <li><b>0.3.0</b> <em>(2018-11-08)</em> - Navigation from test to file, based on labels</li>
         <li><b>0.2.1</b> <em>(2018-11-08)</em> - Naive navigation from test to file</li>
         <li><b>0.2.0</b> <em>(2018-11-07)</em> - Primitive navigation from test to file</li>
       </ul>
