@@ -25,7 +25,8 @@
       <em>Feedback welcome.</em>
 
       <ul>
-        <li><b>0.3.0</b> <em>(2018-11-08)</em> - Navigation from test to file, based on labels</li>
+        <li><b>0.3.1</b> <em>(2018-11-14)</em> - Improved navigation with renamed test labels</li>
+        <li><b>0.3.0</b> <em>(2018-11-09)</em> - Navigation from test to file, based on labels</li>
         <li><b>0.2.1</b> <em>(2018-11-08)</em> - Naive navigation from test to file</li>
         <li><b>0.2.0</b> <em>(2018-11-07)</em> - Primitive navigation from test to file</li>
       </ul>
