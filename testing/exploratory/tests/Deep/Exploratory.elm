@@ -60,3 +60,12 @@ htmlSuite =
 
 top : Test
 top = test "top" <| \_ -> Expect.fail "boom"
+
+failSuite : Test
+failSuite =
+    describe "Variuous Fails"
+        [ test "equal" <|
+            \_ -> Expect.equal "expected" "actual"
+        , test "equalLists" <|
+                    \_ -> Expect.equalLists [ "one","expected"] ["one","actual"]
+        ]

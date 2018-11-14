@@ -1,9 +1,6 @@
 package org.frawa.elmtest.core;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
 import com.intellij.execution.testframework.sm.runner.events.*;
 
 import java.nio.file.Path;
@@ -18,7 +15,7 @@ import static org.frawa.elmtest.core.LabelUtils.*;
 
 public class ElmTestJsonProcessor {
 
-    private Gson gson = new Gson();
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private Path currentPath = LabelUtils.EMPTY_PATH;
 
@@ -68,7 +65,7 @@ public class ElmTestJsonProcessor {
         }
     }
 
-    private Stream<TreeNodeEvent> testEvents(Path path, JsonObject obj) {
+    static Stream<TreeNodeEvent> testEvents(Path path, JsonObject obj) {
         String name = getName(path);
         String status = getStatus(obj);
         if ("pass".equals(status)) {
@@ -83,14 +80,22 @@ public class ElmTestJsonProcessor {
                     new TestIgnoredEvent(name, comment != null ? comment : "", null)
             );
         }
-        String message = getMessage(obj);
-        String actual = getActual(obj);
-        String expected = getExpected(obj);
+        try {
+            String message = getMessage(obj);
+            String actual = getActual(obj);
+            String expected = getExpected(obj);
 
-        return Stream.of(
-                new TestStartedEvent(name, toTestLocationUrl(path)),
-                new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
-        );
+            return Stream.of(
+                    new TestStartedEvent(name, toTestLocationUrl(path)),
+                    new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
+            );
+        } catch (Throwable e) {
+            String failures = new GsonBuilder().setPrettyPrinting().create().toJson(obj.get("failures"));
+            return Stream.of(
+                    new TestStartedEvent(name, toTestLocationUrl(path)),
+                    new TestFailedEvent(name, failures, null, false, null, null)
+            );
+        }
     }
 
     static String getComment(JsonObject obj) {
@@ -122,14 +127,24 @@ public class ElmTestJsonProcessor {
     }
 
     static String getActual(JsonObject obj) {
-        return getData(obj) != null
-                ? getData(obj).get("actual").getAsString()
-                : null;
+        return pretty(getDataMember(obj, "actual"));
     }
 
     static String getExpected(JsonObject obj) {
+        return pretty(getDataMember(obj, "expected"));
+    }
+
+    private static JsonElement getDataMember(JsonObject obj, String name) {
         return getData(obj) != null
-                ? getData(obj).get("expected").getAsString()
+                ? getData(obj).get(name)
+                : null;
+    }
+
+    private static String pretty(JsonElement element) {
+        return element != null
+                ? element.isJsonPrimitive()
+                ? element.getAsString()
+                : gson.toJson(element)
                 : null;
     }
 

@@ -191,6 +191,39 @@ public class ElmTestJsonProcessorTest {
         assertEquals(null, getActual(obj));
     }
 
+    @Test
+    public void failEqualLists() {
+        String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Deep.Exploratory\",\"Variuous Fails\",\"equalLists\"],\"failures\":[{\"given\":null,\"message\":\"Expect.equalLists\",\"reason\":{\"type\":\"custom\",\"data\":{\"expected\":[\"\\\"one\\\"\",\"\\\"expected\\\"\"],\"actual\":[\"\\\"one\\\"\",\"\\\"actual\\\"\"]}}}],\"duration\":\"1\"}\n";
+        JsonObject obj = getObject(text);
+        assertEquals(null, getComment(obj));
+        assertEquals("Expect.equalLists", getMessage(obj));
+        assertEquals("[\n" +
+                "  \"\\\"one\\\"\",\n" +
+                "  \"\\\"expected\\\"\"\n" +
+                "]", getExpected(obj));
+        assertEquals("[\n" +
+                "  \"\\\"one\\\"\",\n" +
+                "  \"\\\"actual\\\"\"\n" +
+                "]", getActual(obj));
+    }
+
+    @Test
+    public void failFallback() {
+        String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Module\",\"Fails\"],\"failures\":[{\"unknown\": \"format\"}],\"duration\":\"1\"}\n";
+        JsonObject obj = getObject(text);
+        Path path = ElmTestJsonProcessor.toPath(obj);
+
+        List<TreeNodeEvent> list = testEvents(path, obj).collect(Collectors.toList());
+
+        assertEquals(2, list.size());
+        assertTrue(list.get(1) instanceof TestFailedEvent);
+        assertEquals("[\n" +
+                "  {\n" +
+                "    \"unknown\": \"format\"\n" +
+                "  }\n" +
+                "]", ((TestFailedEvent) list.get(1)).getLocalizedFailureMessage());
+    }
+
     private JsonObject getObject(String text) {
         return new Gson().fromJson(text, JsonObject.class);
     }
