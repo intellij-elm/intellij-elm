@@ -19,10 +19,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.frawa.elmtest.core.ElmPluginHelper.findPsiElement;
+import static org.frawa.elmtest.core.ElmPluginHelper.getPsiElement;
 
 
 public class ElmTestLocator extends FileUrlProvider {
@@ -62,8 +61,7 @@ public class ElmTestLocator extends FileUrlProvider {
             return null;
         }
 
-        Optional<? extends PsiElement> found = findPsiElement(isDescribe, labels, psiFile);
-        PsiElement element = found.isPresent() ? found.get() : psiFile;
-        return PsiLocation.fromPsiElement(project, element);
+        PsiElement found = getPsiElement(isDescribe, labels, psiFile);
+        return PsiLocation.fromPsiElement(project, found);
     }
 }

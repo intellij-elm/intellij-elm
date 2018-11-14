@@ -7,9 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Optional;
 
-import static org.frawa.elmtest.core.ElmPluginHelper.findPsiElement;
+import static org.frawa.elmtest.core.ElmPluginHelper.getPsiElement;
 
 public class ElmPluginHelperTest extends ParsingTestCase {
 
@@ -27,20 +26,6 @@ public class ElmPluginHelperTest extends ParsingTestCase {
     // see file resources/elmPluginHelper/Navigation
     protected String getTestName(boolean lowercaseFirstLetter) {
         return "Navigation";
-    }
-
-    public void testNavigation() {
-        doTest(false);
-
-        assertSuite(27, "suite1");
-        assertTest(55, "suite1", "test1");
-
-        assertTest(137, "test1");
-
-        assertSuite(207, "suite2");
-        assertTest(235, "suite2", "test1");
-        assertSuite(291, "suite2", "nested1");
-        assertTest(324, "suite2", "nested1", "test1");
     }
 
     public void testTopLevelSuite() {
@@ -66,29 +51,59 @@ public class ElmPluginHelperTest extends ParsingTestCase {
         assertTest(324, "suite2", "nested1", "test1");
     }
 
+    public void testMissingTopLevelSuite() {
+        doTest(false);
+        assertMissing("suiteMissing");
+    }
+
+    public void testMissingTopLevelTest() {
+        doTest(false);
+        assertMissing("testMissing");
+    }
+
+    public void testMissingNestedSuitesAndTests() {
+        doTest(false);
+        assertSuite(207, "suite2");
+        assertMissing("suite2", "testMissing");
+        assertFallback("suite2", "suite2", "nestedMissing");
+        assertFallback("nested1", "suite2", "nested1", "testMissing");
+    }
+
     private void assertSuite(int offset, String... labels) {
         Path path = LabelUtils.toPath(Arrays.asList(labels));
-        Optional<? extends PsiElement> element = findPsiElement(true, path.toString(), myFile);
-        assertTrue(element.isPresent());
+        PsiElement element = getPsiElement(true, path.toString(), myFile);
 
         String expected = String.format("describe \"%s\"", labels[labels.length - 1]);
         assertEquals(expected, firstLine(text(element)));
-        assertEquals(offset, element.get().getNode().getStartOffset());
+        assertEquals(offset, element.getNode().getStartOffset());
     }
 
     private void assertTest(int offset, String... labels) {
         Path path = LabelUtils.toPath(Arrays.asList(labels));
-        Optional<? extends PsiElement> element = findPsiElement(false, path.toString(), myFile);
-        assertTrue(element.isPresent());
+        PsiElement element = getPsiElement(false, path.toString(), myFile);
 
         String expected = String.format("test \"%s\"", labels[labels.length - 1]);
         assertEquals(expected, text(element));
-        assertEquals(offset, element.get().getNode().getStartOffset());
+        assertEquals(offset, element.getNode().getStartOffset());
+    }
+
+    private void assertMissing(String... labels) {
+        Path path = LabelUtils.toPath(Arrays.asList(labels));
+        PsiElement element = getPsiElement(false, path.toString(), myFile);
+        assertSame(myFile, element);
+    }
+
+    private void assertFallback(String fallback, String... labels) {
+        Path path = LabelUtils.toPath(Arrays.asList(labels));
+        PsiElement element = getPsiElement(true, path.toString(), myFile);
+
+        String expected = String.format("describe \"%s\"", fallback);
+        assertEquals(expected, firstLine(text(element)));
     }
 
     @NotNull
-    private String text(Optional<? extends PsiElement> element) {
-        return element.get().getText().trim();
+    private String text(PsiElement element) {
+        return element.getText().trim();
     }
 
     private String firstLine(String text) {

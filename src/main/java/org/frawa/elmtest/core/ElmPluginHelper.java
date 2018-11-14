@@ -21,9 +21,21 @@ import static org.frawa.elmtest.core.LabelUtils.decodeLabel;
 
 public class ElmPluginHelper {
 
-    public static Optional<? extends PsiElement> findPsiElement(boolean isDescribe, String labels, PsiFile file) {
-        Path labelPath = Paths.get(labels);
+    public static PsiElement getPsiElement(boolean isDescribe, String labels, PsiFile file) {
+        return getPsiElement(isDescribe, Paths.get(labels), file);
+    }
 
+    private static PsiElement getPsiElement(boolean isDescribe, Path labelPath, PsiFile file) {
+        Optional<? extends PsiElement> found = findPsiElement(isDescribe, labelPath, file);
+        if (found.isPresent()) {
+            return found.get();
+        } else if (labelPath.getParent() != null) {
+            return getPsiElement(isDescribe, labelPath.getParent(), file);
+        }
+        return file;
+    }
+
+    private static Optional<? extends PsiElement> findPsiElement(boolean isDescribe, Path labelPath, PsiFile file) {
         if (labelPath.getNameCount() == 0) {
             return Optional.empty();
         }
