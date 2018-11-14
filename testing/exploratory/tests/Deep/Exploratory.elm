@@ -57,3 +57,6 @@ htmlSuite =
                     |> Query.find [ tag "button1" ]
                     |> Query.has [ text "I'm a button!1" ]
         ]
+
+top : Test
+top = test "top" <| \_ -> Expect.fail "boom"
