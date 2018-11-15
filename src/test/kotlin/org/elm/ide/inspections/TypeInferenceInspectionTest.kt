@@ -79,6 +79,17 @@ main : Foo -> ()
 main a = <error descr="Type mismatch.Required: ()Found: Foo">a</error>
 """)
 
+    fun `test mismatched return type from List argument`() = checkByText("""
+main : List Int -> ()
+main a = <error descr="Type mismatch.Required: ()Found: List a">a</error>
+""")
+
+    fun `test mismatched return type from shadowed List`() = checkByText("""
+type List a = List a
+main : List ()
+main = <error descr="Type mismatch.Required: List aFound: List.List a">[]</error>
+""")
+
     fun `test mismatched return type from float literal`() = checkByText("""
 type Foo = Bar
 main : () -> Foo
@@ -262,26 +273,22 @@ recordAccessor = {b = {a = { x = () } } }.b.<error descr="Record does not have f
 """)
 
     fun `test matched value type from union case`() = checkByText("""
-type Maybe a = Just a | Nothing
 main : Maybe a
 main = Nothing
 """)
 
     fun `test mismatched value type from union case`() = checkByText("""
-type Maybe a = Just a | Nothing
 type Foo = Bar
 main : Maybe a
 main = <error descr="Type mismatch.Required: Maybe aFound: Foo">Bar</error>
 """)
 
     fun `test invalid constructor as type annotation`() = checkByText("""
-type Maybe a = Just a | Nothing
 main : <error descr="Unresolved reference 'Just'">Just a</error> -> ()
 main a = ()
 """)
 
     fun `test matched value from union constructor`() = checkByText("""
-type Maybe = Just () | Nothing
 foo : (() -> Maybe) -> () -> ()
 foo _ _ = ()
 
@@ -365,19 +372,11 @@ main = person George
 
 --@ Foo.elm
 module People.Washington exposing (People(..), person)
-import Maybe exposing (Maybe(..))
 
 type People = George
 
 person : People -> Maybe People
 person a = Just a
-
---@ Maybe.elm
-module Maybe exposing (Maybe(..))
-
-type Maybe a
-    = Just a
-    | Nothing
 """)
 
     fun `test duplicate function parameter`() = checkByText("""
@@ -730,8 +729,6 @@ main =
 
     // issue #113
     fun `test case branches with union value call`() = checkByText("""
-type Maybe a = Just a | Nothing
-
 foo : Maybe (List a)
 foo = Nothing
 
@@ -767,10 +764,6 @@ main x =
 """)
 
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
-type Maybe a
-    = Just a
-    | Nothing
-
 type Foo
     = Bar ()
     | Baz ()
@@ -785,10 +778,6 @@ main arg =
 """)
 
     fun `test case branches using union patterns with tuple destructuring of var`() = checkByText("""
-type Maybe a
-    = Just a
-    | Nothing
-
 type Foo
     = Bar (Maybe ((), ()))
     | Baz ()
@@ -802,10 +791,6 @@ main arg =
 """)
 
     fun `test case branches using union patterns with tuple destructuring of record`() = checkByText("""
-type Maybe a
-    = Just a
-    | Nothing
-
 type Foo
     = Bar (Maybe {x: ()})
     | Baz ()
@@ -949,7 +934,6 @@ main a = () ~~ <error descr="Type mismatch.Required: ()Found: Foo">() ~~ ()</err
 """)
 
     fun `test apply-right into Maybe`() = checkByText("""
-type Maybe a = Just a | Nothing
 apR : a -> (a -> b) -> b
 apR x f = f x
 infix left  0 (|>) = apR

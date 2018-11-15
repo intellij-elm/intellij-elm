@@ -423,7 +423,7 @@ private class InferenceScope(
             }
         }
 
-        return TyList(expressionTys.firstOrNull() ?: TyUnknown)
+        return TyList(expressionTys.firstOrNull() ?: TyVar("a"))
     }
 
     private fun inferIfElse(ifElse: ElmIfElse): Ty {
