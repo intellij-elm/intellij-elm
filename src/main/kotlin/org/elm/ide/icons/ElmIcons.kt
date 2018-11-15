@@ -27,7 +27,7 @@ object ElmIcons {
     /**
      * Gutter icon for values and types exposed by an Elm module
      */
-    val EXPOSED_GUTTER = getIcon("elm-toolwindow.png")  // TODO use a better icon
+    val EXPOSED_GUTTER = getIcon("elm-exposure.png")
 
 
     // STRUCTURE VIEW ICONS
