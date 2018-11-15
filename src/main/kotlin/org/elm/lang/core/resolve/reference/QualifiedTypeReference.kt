@@ -19,10 +19,9 @@ class QualifiedTypeReference(
     override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == element.referenceName }
 
-    private fun getCandidates(): Array<ElmNamedElement> {
+    private fun getCandidates(): List<ElmNamedElement> {
         val qualifierPrefix = upperCaseQID.qualifierPrefix
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 .flatMap { it.getExposedTypes() }
-                .toTypedArray()
     }
 }

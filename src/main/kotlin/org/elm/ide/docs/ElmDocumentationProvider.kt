@@ -11,9 +11,7 @@ import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.types.TyUnknown
-import org.elm.lang.core.types.inference
-import org.elm.lang.core.types.renderedText
+import org.elm.lang.core.types.*
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -224,7 +222,7 @@ private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmTypeRef) {
-    renderParameters(ref.allSegments, " -> ".escaped, true, true)
+    append(TypeExpression.inferTypeRef(ref).ty.renderedText(true, false))
 }
 
 private fun StringBuilder.renderParameters(params: Sequence<ElmPsiElement>,
