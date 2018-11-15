@@ -29,7 +29,17 @@ fun recordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
 }
 
 fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
-    return resolvedTypeRefType(typeRef.reference.resolve())
+    val ref = typeRef.reference.resolve()
+
+    // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
+    // reference won't resolve. So we check for reference to that type here. Note that users can
+    // create their own List types that shadow the built-in, so we only want to do this check if the
+    // reference is null.
+    if (ref == null && typeRef.upperCaseQID.text == "List") {
+        return TyList(TyVar("a"))
+    }
+
+    return resolvedTypeRefType(ref)
 }
 
 fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {

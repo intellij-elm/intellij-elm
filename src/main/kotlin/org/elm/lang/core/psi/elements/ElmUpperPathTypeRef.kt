@@ -15,9 +15,7 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
 /**
  * An upper-case path which references a type
  *
- * e.g. type Error = Network Http.Error
- *                           ^^^^^^^^^^
- *                           this
+ * e.g. `Http.Error` in `type Error = Network Http.Error`
  */
 class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement,
         ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag, ElmUnionMemberParameterTag {
