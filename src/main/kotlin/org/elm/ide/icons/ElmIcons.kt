@@ -24,6 +24,12 @@ object ElmIcons {
     val COLORFUL = getIcon("elm-colorful.png")
 
 
+    /**
+     * Gutter icon for values and types exposed by an Elm module
+     */
+    val EXPOSED_GUTTER = getIcon("elm-exposure.png")
+
+
     // STRUCTURE VIEW ICONS
 
 

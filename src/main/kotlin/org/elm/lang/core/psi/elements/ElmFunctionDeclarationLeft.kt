@@ -10,7 +10,7 @@ import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
 /**
- * A value or function declaration.
+ * The left-hand side of a value or function declaration.
  *
  * Examples:
  *
@@ -19,6 +19,11 @@ import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
  *
  * A function that takes 2 arguments:
  * `update msg model = model`
+ *
+ * A declaration inside a `let/in` expression:
+ * `let
+ *      foo = 42
+ *  in ...`
  */
 class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub> {
 
@@ -49,4 +54,12 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
      */
     val namedParameters: List<ElmNameDeclarationPatternTag>
         get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
+
+
+    /** Return true if this declaration is not nested in a let-in expression */
+    val isTopLevel: Boolean
+        get() {
+            val p = parent
+            return p is ElmValueDeclaration && p.isTopLevel
+        }
 }
