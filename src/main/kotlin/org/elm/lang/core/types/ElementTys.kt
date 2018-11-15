@@ -30,26 +30,27 @@ fun recordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
 
 fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
     val ref = typeRef.reference.resolve()
+    val args = typeRef.allParameters.map { typeSignatureDeclType(it) }.toList()
 
     // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
     // reference won't resolve. So we check for reference to that type here. Note that users can
     // create their own List types that shadow the built-in, so we only want to do this check if the
     // reference is null.
     if (ref == null && typeRef.upperCaseQID.text == "List") {
-        return TyList(TyVar("a"))
+        return TyList(substituteParamTys(listOf(TyVar("a")), args).first())
     }
 
-    return resolvedTypeRefType(ref)
+    return resolvedTypeRefType(ref, args)
 }
 
 fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
-    return resolvedTypeRefType(typeRef.reference.resolve())
+    return resolvedTypeRefType(typeRef.reference.resolve(), emptyList())
 }
 
-fun resolvedTypeRefType(ref: ElmNamedElement?): Ty {
+fun resolvedTypeRefType(ref: ElmNamedElement?, args: List<Ty>): Ty {
     return when (ref) {
-        is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref)
-        is ElmTypeDeclaration -> typeDeclarationType(ref)
+        is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref, args)
+        is ElmTypeDeclaration -> typeDeclarationType(ref, args)
         // We only get here if the reference doesn't resolve. We could create a TyUnion from the
         // ref name, but we don't know what module it's supposed to be defined in, so that would
         // lead to false positives.
@@ -57,7 +58,7 @@ fun resolvedTypeRefType(ref: ElmNamedElement?): Ty {
     }
 }
 
-fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Ty {
+fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration, args: List<Ty>?): Ty {
     val record = decl.aliasedRecord
     if (record != null) {
         val aliasParams = decl.lowerTypeNameList.map { TyVar(it.name) }
@@ -71,18 +72,21 @@ fun typeRefType(typeRef: ElmTypeRef): Ty {
     val params = typeRef.allParameters.map { typeSignatureDeclType(it) }.toList()
     val last = params.last()
     return when {
-        params.size == 1 -> params[0]
+        params.size == 1 -> last
         last is TyFunction -> TyFunction(params.dropLast(1) + last.parameters, last.ret)
         else -> TyFunction(params.dropLast(1), last)
     }
 }
 
-fun typeDeclarationType(declaration: ElmTypeDeclaration): Ty {
-    return TyUnion(declaration.moduleName, declaration.name, declaration.lowerTypeNameList.map { TyVar(it.name) })
+fun typeDeclarationType(declaration: ElmTypeDeclaration, args: List<Ty>?): Ty {
+    val params = declaration.lowerTypeNameList.map { TyVar(it.name) }
+    val actualParams = substituteParamTys(params, args)
+    return TyUnion(declaration.moduleName, declaration.name, actualParams)
 }
 
+
 fun unionMemberType(member: ElmUnionMember): Ty {
-    val decl = member.parentOfType<ElmTypeDeclaration>()?.let { typeDeclarationType(it) } ?: return TyUnknown
+    val decl = member.parentOfType<ElmTypeDeclaration>()?.let { typeDeclarationType(it, null) } ?: return TyUnknown
     val params = member.allParameters.map { typeSignatureDeclType(it) }.toList()
 
     return if (params.isNotEmpty()) {
@@ -96,4 +100,12 @@ fun unionMemberType(member: ElmUnionMember): Ty {
 
 fun portAnnotationType(annotation: ElmPortAnnotation): Ty {
     return annotation.typeRef?.let { typeRefType(it) } ?: TyUnknown
+}
+
+private fun substituteParamTys(params: List<Ty>, args: List<Ty>?): List<Ty> {
+    // TODO: issue diagnostic on incorrect number of type arguments
+    return when {
+        args != null && params.size == args.size -> args
+        else -> params
+    }
 }

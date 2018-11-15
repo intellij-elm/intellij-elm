@@ -466,7 +466,7 @@ private class InferenceScope(
 
         return when (ref) {
             is ElmUnionMember -> unionMemberType(ref)
-            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref)
+            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref, null)
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> portAnnotationType(ref)
             is ElmLowerPattern -> {

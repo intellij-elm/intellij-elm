@@ -2,6 +2,7 @@ package org.elm.lang.core.diagnostics
 
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.types.Ty
+import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.renderedText
 
 sealed class ElmDiagnostic(val element: PsiElement, val endElement: PsiElement? = null) {
@@ -99,7 +100,7 @@ class TypeMismatchError(
             var expectedRendered = expected.renderedText(false, false)
             var foundRendered = actual.renderedText(false, false)
 
-            if (expectedRendered == foundRendered) {
+            if (expectedRendered == foundRendered || tysAreAmbiguousUnions(actual, expected)) {
                 expectedRendered = expected.renderedText(false, true)
                 foundRendered = actual.renderedText(false, true)
             }
@@ -107,6 +108,12 @@ class TypeMismatchError(
                     "<br>Required: $expectedRendered" +
                     "<br>Found: $foundRendered"
         }
+
+    private fun tysAreAmbiguousUnions(l: Ty, r: Ty): Boolean {
+        return l is TyUnion && r is TyUnion
+                && l.name == r.name
+                && l.module != r.module
+    }
 }
 
 

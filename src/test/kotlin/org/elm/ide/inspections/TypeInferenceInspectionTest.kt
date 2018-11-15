@@ -80,14 +80,14 @@ main a = <error descr="Type mismatch.Required: ()Found: Foo">a</error>
 """)
 
     fun `test mismatched return type from List argument`() = checkByText("""
-main : List Int -> ()
-main a = <error descr="Type mismatch.Required: ()Found: List a">a</error>
+main : List Int -> List ()
+main a = <error descr="Type mismatch.Required: List ()Found: List Int">a</error>
 """)
 
     fun `test mismatched return type from shadowed List`() = checkByText("""
 type List a = List a
 main : List ()
-main = <error descr="Type mismatch.Required: List aFound: List.List a">[]</error>
+main = <error descr="Type mismatch.Required: List ()Found: List.List a">[]</error>
 """)
 
     fun `test mismatched return type from float literal`() = checkByText("""
