@@ -78,9 +78,12 @@ class TypeExpression private constructor(
     }
 
     private fun recordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
-        val fields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeRefType(it.typeRef) }
+        val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeRefType(it.typeRef) }
         val baseName = record.baseTypeIdentifier?.referenceName
-        return TyRecord(fields, baseName, alias)
+        val baseTy = subs.tysByName[baseName]
+        // TODO diagnostic if base is not a record
+        val baseFields = (baseTy as? TyRecord)?.fields.orEmpty()
+        return TyRecord(baseFields + declaredFields, baseName, alias)
     }
 
     private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
@@ -148,7 +151,7 @@ class TypeExpression private constructor(
  * @property tysByName A map of the names of TyVars present in parameters to the types of arguments
  *   provided to those parameters.
  */
-private data class SubstitutionTable(private val tysByName: Map<String, Ty>) {
+private data class SubstitutionTable(val tysByName: Map<String, Ty>) {
     companion object {
         fun fromVars(vars: List<TyVar>, args: List<Ty>?) =
                 SubstitutionTable(vars.zip(args ?: emptyList()).associate { (v, t) -> v.name to t })

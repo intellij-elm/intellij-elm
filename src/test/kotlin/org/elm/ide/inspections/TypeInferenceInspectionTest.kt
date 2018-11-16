@@ -507,7 +507,15 @@ type alias Foo a = { a | foo : ()}
 type alias Bar = { bar : () }
 
 main : Foo Bar -> ()
-main {bar} = ()
+main {bar} = bar
+""")
+
+    fun `test mismatched record pattern from extension alias`() = checkByText("""
+type alias Foo a = { a | foo : ()}
+type alias Bar = { bar : () }
+
+main : Foo Bar -> Int
+main {bar} = <error descr="Type mismatch.Required: IntFound: ()">bar</error>
 """)
 
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
