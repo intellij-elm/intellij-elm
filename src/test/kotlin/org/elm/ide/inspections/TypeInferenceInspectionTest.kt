@@ -1,7 +1,5 @@
 package org.elm.ide.inspections
 
-// These tests don't have access to the standard imports, so you can't use them in type signatures,
-// although literals still work.
 class TypeInferenceInspectionTest : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 

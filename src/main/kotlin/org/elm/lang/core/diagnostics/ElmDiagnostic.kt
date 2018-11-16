@@ -116,5 +116,15 @@ class TypeMismatchError(
     }
 }
 
+class TypeArgumentCountError(
+        element: PsiElement,
+        private val actual: Int,
+        private val expected: Int
+) : ElmDiagnostic(element, null) {
+    override val message: String
+        get() =
+            "The type expects $expected ${pl(expected, "argument")}, but it got $actual instead."
+}
+
 
 private fun pl(n: Int, singular: String, plural: String = singular + "s") = if (n == 1) singular else plural

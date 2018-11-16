@@ -1,7 +1,9 @@
 package org.elm.lang.core.types
 
 import org.elm.lang.core.diagnostics.ElmDiagnostic
+import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
@@ -28,6 +30,12 @@ class TypeExpression private constructor(
             return scope.result(ty)
         }
 
+        fun inferTypeDeclaration(typeDeclaration: ElmTypeDeclaration): InferenceResult {
+            val scope = TypeExpression(SubstitutionTable.empty())
+            val ty = scope.typeDeclarationType(typeDeclaration, null)
+            return scope.result(ty)
+        }
+
         fun inferUnionConstructor(member: ElmUnionMember): InferenceResult {
             val scope = TypeExpression(SubstitutionTable.empty())
             val decl = member.parentOfType<ElmTypeDeclaration>()
@@ -45,8 +53,10 @@ class TypeExpression private constructor(
             return scope.result(ty)
         }
 
-        fun inferTypeAliasDeclaration(decl: ElmTypeAliasDeclaration): Ty {
-            return TypeExpression(SubstitutionTable.empty()).typeAliasDeclarationType(decl, null)
+        fun inferTypeAliasDeclaration(decl: ElmTypeAliasDeclaration): InferenceResult {
+            val scope = TypeExpression(SubstitutionTable.empty())
+            val ty = scope.typeAliasDeclarationType(decl, null)
+            return scope.result(ty)
         }
     }
 
@@ -89,26 +99,31 @@ class TypeExpression private constructor(
     private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
         val ref = typeRef.reference.resolve()
         val args = typeRef.allParameters.map { typeSignatureDeclType(it) }.toList()
-
+        val caller = Caller(typeRef, args)
         // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
         // reference won't resolve. So we check for reference to that type here. Note that users can
         // create their own List types that shadow the built-in, so we only want to do this check if the
         // reference is null.
         if (ref == null && typeRef.upperCaseQID.text == "List") {
-            return TyList(replaceParamsWithArgs(listOf(TyVar("a")), args).first())
+            return TyList(replaceParamsWithArgs(listOf(TyVar("a")), caller).first())
         }
 
-        return resolvedTypeRefType(ref, args)
+        return resolvedTypeRefType(ref, caller)
     }
 
     private fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
-        return resolvedTypeRefType(typeRef.reference.resolve(), emptyList())
+        val ref = typeRef.reference.resolve()
+        if (ref == null && typeRef.upperCaseQID.text == "List") {
+            diagnostics += TypeArgumentCountError(typeRef, 0, 1)
+            return TyList(TyVar("a"))
+        }
+        return resolvedTypeRefType(ref, Caller(typeRef, emptyList()))
     }
 
-    private fun resolvedTypeRefType(ref: ElmNamedElement?, args: List<Ty>): Ty {
+    private fun resolvedTypeRefType(ref: ElmNamedElement?, caller: Caller): Ty {
         return when (ref) {
-            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref, args)
-            is ElmTypeDeclaration -> typeDeclarationType(ref, args)
+            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref, caller)
+            is ElmTypeDeclaration -> typeDeclarationType(ref, caller)
             // We only get here if the reference doesn't resolve. We could create a TyUnion from the
             // ref name, but we don't know what module it's supposed to be defined in, so that would
             // lead to false positives.
@@ -116,31 +131,35 @@ class TypeExpression private constructor(
         }
     }
 
-    private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration, args: List<Ty>?): Ty {
+    private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration, caller: Caller?): Ty {
         val record = decl.aliasedRecord
         val params = decl.lowerTypeNameList.map { TyVar(it.name) }.toList()
-        val childTable = SubstitutionTable.fromVars(params, subs.resolveAll(args ?: emptyList()))
-        val childScope = TypeExpression(childTable)
+        val childTable = SubstitutionTable.fromVars(params, subs.resolveAll(caller?.args ?: emptyList()))
+        val childScope = TypeExpression(childTable, diagnostics)
 
         if (record != null) {
-            val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, replaceParamsWithArgs(params, args))
+            val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, replaceParamsWithArgs(params, caller))
             return childScope.recordTypeDeclType(record, aliasTy)
         }
         return decl.typeRef?.let { childScope.typeRefType(it) } ?: return TyUnknown
     }
 
-    private fun typeDeclarationType(declaration: ElmTypeDeclaration, args: List<Ty>?): Ty {
+    private fun typeDeclarationType(declaration: ElmTypeDeclaration, caller: Caller?): Ty {
         val params = declaration.lowerTypeNameList.map { TyVar(it.name) }
-        val actualParams = replaceParamsWithArgs(params, subs.resolveAll(args ?: emptyList()))
+        val resolvedCaller = caller?.let { it.copy(args = subs.resolveAll(it.args)) }
+        val actualParams = replaceParamsWithArgs(params, resolvedCaller)
         return TyUnion(declaration.moduleName, declaration.name, actualParams)
     }
 
-
-    private fun replaceParamsWithArgs(params: List<Ty>, args: List<Ty>?): List<Ty> {
-        // TODO: issue diagnostic on incorrect number of type arguments
+    private fun replaceParamsWithArgs(params: List<Ty>, caller: Caller?): List<Ty> {
         return when {
-            args != null && params.size == args.size -> args
-            else -> params
+            caller != null && params.size == caller.args.size -> caller.args
+            else -> {
+                if (caller != null) {
+                    diagnostics += TypeArgumentCountError(caller.element, caller.args.size, params.size)
+                }
+                params
+            }
         }
     }
 }
@@ -162,3 +181,5 @@ private data class SubstitutionTable(val tysByName: Map<String, Ty>) {
     fun resolve(it: Ty): Ty = (it as? TyVar)?.let { tysByName[it.name] } ?: it
     fun resolveAll(params: List<Ty>): List<Ty> = params.map { resolve(it) }
 }
+
+private data class Caller(val element: ElmPsiElement, val args: List<Ty>)

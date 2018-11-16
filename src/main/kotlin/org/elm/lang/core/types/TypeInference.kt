@@ -466,7 +466,7 @@ private class InferenceScope(
 
         return when (ref) {
             is ElmUnionMember -> TypeExpression.inferUnionConstructor(ref).ty
-            is ElmTypeAliasDeclaration -> TypeExpression.inferTypeAliasDeclaration(ref)
+            is ElmTypeAliasDeclaration -> TypeExpression.inferTypeAliasDeclaration(ref).ty
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> TypeExpression.inferPortAnnotation(ref).ty
             is ElmLowerPattern -> {
@@ -879,9 +879,6 @@ private class InferenceScope(
                 ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
     }
 
-    // TODO[unification] allow vars
-    private fun isInferable(ty: Ty): Boolean = ty !== TyUnknown && ty !is TyVar
-
     //</editor-fold>
 }
 
@@ -932,3 +929,6 @@ private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val
 private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
     return elementIsInTopLevelPattern(element) || (element.elmProject?.isElm18 ?: false)
 }
+
+// TODO[unification] allow vars
+fun isInferable(ty: Ty): Boolean = ty !== TyUnknown && ty !is TyVar
