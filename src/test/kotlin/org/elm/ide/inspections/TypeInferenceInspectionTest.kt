@@ -198,8 +198,14 @@ main = foo .x
 
     fun `test correct value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
-main : A ()
+main : A Float
 main = {x = 1.0, y = ()}
+""")
+
+    fun `test mismatched value type from parametric record alias`() = checkByText("""
+type alias A a = {x: a, y: ()}
+main : A ()
+main = <error descr="Type mismatch.Required: A ()Found: { x: Float, y: () }">{x = 1.0, y = ()}</error>
 """)
 
     fun `test mismatched value type from record subset`() = checkByText("""
@@ -212,6 +218,13 @@ main = <error descr="Type mismatch.Required: RFound: { x: () }">{x = ()}</error>
 type alias R = {x: (), y: ()}
 main : R
 main = <error descr="Type mismatch.Required: RFound: { x: (), y: (), z: () }">{x = (), y=(), z=()}</error>
+""")
+
+    fun `test mismatched return type from propagated type vars`() = checkByText("""
+type alias A a = {x: Maybe a}
+type alias B a = A a
+main : B () -> Maybe Int
+main b = <error descr="Type mismatch.Required: Maybe IntFound: Maybe ()">b.x</error>
 """)
 
     fun `test matched field accessor chains`() = checkByText("""
@@ -489,7 +502,6 @@ main {bar} = <error descr="Type mismatch.Required: ()Found: Int">bar</error>
 """)
 
     // issue #122
-    // TODO[unification] add mismatch check
     fun `test matched record pattern from extension alias`() = checkByText("""
 type alias Foo a = { a | foo : ()}
 type alias Bar = { bar : () }

@@ -465,10 +465,10 @@ private class InferenceScope(
         }
 
         return when (ref) {
-            is ElmUnionMember -> unionMemberType(ref)
-            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref, null)
+            is ElmUnionMember -> TypeExpression.inferUnionConstructor(ref).ty
+            is ElmTypeAliasDeclaration -> TypeExpression.inferTypeAliasDeclaration(ref)
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
-            is ElmPortAnnotation -> portAnnotationType(ref)
+            is ElmPortAnnotation -> TypeExpression.inferPortAnnotation(ref).ty
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
                 if (elementIsInTopLevelPattern(ref)) return TyUnknown
@@ -552,7 +552,7 @@ private class InferenceScope(
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeRef?.let { typeRefType(it) }
+        var ty = decl.typeAnnotation?.typeRef?.let { TypeExpression.inferTypeRef(it).ty }
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
             // First we have to find the parent of the declaration so that it has access to the
@@ -629,7 +629,7 @@ private class InferenceScope(
                 else -> TyFunction(patterns.map { TyUnknown }, TyUnknown) to patterns.size
             }
         }
-        val typeRefTy = typeRefType(typeRef)
+        val typeRefTy = TypeExpression.inferTypeRef(typeRef).ty
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
@@ -747,7 +747,8 @@ private class InferenceScope(
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing
         // to bind.
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.let { unionMemberType(it) }
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)
+                ?.let { TypeExpression.inferUnionConstructor(it).ty }
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {

@@ -4,7 +4,7 @@ import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
-import org.elm.lang.core.psi.ElmTypeRefParameterTag
+import org.elm.lang.core.psi.ElmTypeRefSegmentTag
 import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 
 
@@ -18,14 +18,16 @@ import org.elm.lang.core.psi.ElmUnionMemberParameterTag
  *  - `Int -> String`
  *  - `a -> (a -> {a: String})`
  */
-class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag {
+class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefSegmentTag {
 
     /**
-     * All parameters of the type annotation.
+     * All segments of the type annotation.
      *
-     * The elements will be in source order. If the reference is not a function, there will be one parameter in
-     * well-formed programs. For functions, there will be one parameter per function argument, plus the return type.
+     * The segments will be in source order. If this element is not a function, there will be one segment in
+     * well-formed programs. For functions, there will be one segment per function argument, plus the return type.
+     *
+     * e.g. `Int` and `String` in `Int -> String`
      */
-    val allParameters: Sequence<ElmTypeRefParameterTag>
-        get() = directChildren.filterIsInstance<ElmTypeRefParameterTag>()
+    val allSegments: Sequence<ElmTypeRefSegmentTag>
+        get() = directChildren.filterIsInstance<ElmTypeRefSegmentTag>()
 }

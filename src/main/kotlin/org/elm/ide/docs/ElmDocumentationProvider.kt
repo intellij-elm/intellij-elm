@@ -224,7 +224,7 @@ private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmTypeRef) {
-    renderParameters(ref.allParameters, " -> ".escaped, true, true)
+    renderParameters(ref.allSegments, " -> ".escaped, true, true)
 }
 
 private fun StringBuilder.renderParameters(params: Sequence<ElmPsiElement>,

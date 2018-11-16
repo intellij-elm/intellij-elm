@@ -2,7 +2,7 @@ package org.elm.lang.core.psi
 
 import org.elm.lang.core.psi.elements.*
 /**
- * An element that is at least one of [ElmUnionMemberParameterTag], [ElmTypeRefParameterTag],
+ * An element that is at least one of [ElmUnionMemberParameterTag], [ElmTypeRefSegmentTag],
  * or [ElmParametricTypeRefParameterTag].
  *
  * No elements implement this directly.
@@ -37,7 +37,7 @@ interface ElmPatternChildTag : ElmFunctionParamOrPatternChildTag
 interface ElmUnionPatternChildTag : ElmPsiElement
 
 /** An element that can be a parameter of an [ElmTypeRef], but not necessarily an [ElmParametricTypeRef] */
-interface ElmTypeRefParameterTag : ElmTypeSignatureDeclarationTag
+interface ElmTypeRefSegmentTag : ElmTypeSignatureDeclarationTag
 
 /** An element that can be a parameter of an [ElmTypeRef] or an [ElmParametricTypeRef] */
 interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
