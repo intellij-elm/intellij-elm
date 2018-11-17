@@ -1,10 +1,9 @@
 package org.elm.lang.core.stubs.index
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.openapiext.findFileByMaybeRelativePath
-import org.elm.openapiext.findFileByPath
+import org.elm.openapiext.findFileByPathTestAware
 import org.elm.workspace.ElmProject
 
 
@@ -20,35 +19,32 @@ class ElmModules {
          * Returns all Elm modules which are visible to [elmProject]
          */
         fun getAll(intellijProject: Project, elmProject: ElmProject?): List<ElmModuleDeclaration> {
-            // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
-            val allModules = ElmModulesIndex.getAll(intellijProject)
-            return when (elmProject) {
-                null -> allModules
-                else -> allModules.filter { elmProject.exposes(it) }
+            if (elmProject == null) {
+                return emptyList()
             }
+            val allModules = ElmModulesIndex.getAll(intellijProject)
+            return allModules.filter { elmProject.exposes(it) }
         }
 
         /**
          * Returns all Elm modules whose names match an element in [moduleNames] and which are visible to [elmProject]
          */
         fun getAll(moduleNames: Collection<String>, intellijProject: Project, elmProject: ElmProject?): List<ElmModuleDeclaration> {
-            // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
-            val allModules = ElmModulesIndex.getAll(moduleNames, intellijProject)
-            return when (elmProject) {
-                null -> allModules
-                else -> allModules.filter { elmProject.exposes(it) }
+            if (elmProject == null) {
+                return emptyList()
             }
+            val allModules = ElmModulesIndex.getAll(moduleNames, intellijProject)
+            return allModules.filter { elmProject.exposes(it) }
         }
 
         /**
          * Returns an Elm module named [moduleName] which is visible to [elmProject], if any
          */
         fun get(moduleName: String, intellijProject: Project, elmProject: ElmProject?): ElmModuleDeclaration? {
-            // TODO [kl] make more restrictive by forbidding null [ElmProject] arg
-            val elmModules = ElmModulesIndex.get(moduleName, intellijProject)
             if (elmProject == null) {
-                return elmModules.firstOrNull()
+                return null
             }
+            val elmModules = ElmModulesIndex.get(moduleName, intellijProject)
             return elmModules.firstOrNull { elmProject.exposes(it) }
         }
     }
@@ -66,7 +62,7 @@ private fun ElmProject.exposes(moduleDeclaration: ElmModuleDeclaration): Boolean
 
 
     // Check if the module is reachable from this project's dependencies
-    return dependencies.asSequence()
+    return allResolvedDependencies.asSequence()
             .filter { it.exposedModules.contains(moduleDeclaration.name) }
             .any { it.sourceDirectoryContains(moduleDeclaration) }
 }
@@ -96,6 +92,6 @@ private fun ElmProject.sourceDirectoryContains(moduleDeclaration: ElmModuleDecla
 
     val elmModuleRelativePath = moduleDeclaration.name.replace('.', '/') + ".elm"
     return candidateSrcDirs
-            .mapNotNull { LocalFileSystem.getInstance().findFileByPath(it) }
+            .mapNotNull { findFileByPathTestAware(it) }
             .any { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null }
 }

@@ -125,14 +125,20 @@ class MyDirectoryIndex<T>(parentDisposable: Disposable,
 
     private fun cacheInfo(file: VirtualFile, info: T) {
         val id = (file as VirtualFileWithId).id
-//        log.debug("Putting $info for $file using id $id")
+        if (log.isDebugEnabled) {
+            val thing = if (info == myDefValue) "sentinel" else info.toString()
+            log.debug("Putting $thing for $file using id $id")
+        }
         myInfoCache.put(id, info)
     }
 
     private fun getCachedInfo(file: VirtualFile): T? {
         val id = (file as VirtualFileWithId).id
         val info = myInfoCache.get(id)
-//        log.debug("Got $info for $file using id $id")
+        if (log.isDebugEnabled) {
+            val thing = if (info == myDefValue) "sentinel" else info.toString()
+            log.debug("Got $thing for $file using id $id")
+        }
         return info
     }
 
