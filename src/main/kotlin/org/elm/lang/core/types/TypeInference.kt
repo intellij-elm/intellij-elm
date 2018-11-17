@@ -465,10 +465,10 @@ private class InferenceScope(
         }
 
         return when (ref) {
-            is ElmUnionMember -> unionMemberType(ref)
-            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref)
+            is ElmUnionMember -> TypeExpression.inferUnionConstructor(ref).ty
+            is ElmTypeAliasDeclaration -> TypeExpression.inferTypeAliasDeclaration(ref).ty
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
-            is ElmPortAnnotation -> portAnnotationType(ref)
+            is ElmPortAnnotation -> TypeExpression.inferPortAnnotation(ref).ty
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
                 if (elementIsInTopLevelPattern(ref)) return TyUnknown
@@ -552,7 +552,7 @@ private class InferenceScope(
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeRef?.let { typeRefType(it) }
+        var ty = decl.typeAnnotation?.typeRef?.let { TypeExpression.inferTypeRef(it).ty }
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
             // First we have to find the parent of the declaration so that it has access to the
@@ -629,7 +629,7 @@ private class InferenceScope(
                 else -> TyFunction(patterns.map { TyUnknown }, TyUnknown) to patterns.size
             }
         }
-        val typeRefTy = typeRefType(typeRef)
+        val typeRefTy = TypeExpression.inferTypeRef(typeRef).ty
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
@@ -747,7 +747,8 @@ private class InferenceScope(
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing
         // to bind.
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.let { unionMemberType(it) }
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)
+                ?.let { TypeExpression.inferUnionConstructor(it).ty }
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
@@ -788,7 +789,7 @@ private class InferenceScope(
 
     private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
         val lowerPatternList = pat.lowerPatternList
-        if (ty !is TyRecord || !ty.isSubset && lowerPatternList.any { it.name !in ty.fields }) {
+        if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
             // TODO[unification] bind to vars
             if (isInferable(ty)) {
                 val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
@@ -807,8 +808,7 @@ private class InferenceScope(
         }
 
         for (id in lowerPatternList) {
-            // TODO[unification] once we know all fields, fieldTy will never be TyUnknown
-            val fieldTy = ty.fields[id.name] ?: TyUnknown
+            val fieldTy = ty.fields[id.name]!!
             bindPattern(id, fieldTy, isParameter)
         }
     }
@@ -879,9 +879,6 @@ private class InferenceScope(
                 ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
     }
 
-    // TODO[unification] allow vars
-    private fun isInferable(ty: Ty): Boolean = ty !== TyUnknown && ty !is TyVar
-
     //</editor-fold>
 }
 
@@ -932,3 +929,6 @@ private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val
 private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
     return elementIsInTopLevelPattern(element) || (element.elmProject?.isElm18 ?: false)
 }
+
+// TODO[unification] allow vars
+fun isInferable(ty: Ty): Boolean = ty !== TyUnknown && ty !is TyVar

@@ -4,7 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
-import org.elm.lang.core.psi.ElmTypeRefParameterTag
+import org.elm.lang.core.psi.ElmTypeRefSegmentTag
 import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
@@ -18,7 +18,7 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  * e.g. `Http.Error` in `type Error = Network Http.Error`
  */
 class ElmUpperPathTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement,
-        ElmParametricTypeRefParameterTag, ElmTypeRefParameterTag, ElmUnionMemberParameterTag {
+        ElmParametricTypeRefParameterTag, ElmTypeRefSegmentTag, ElmUnionMemberParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)

@@ -1,7 +1,5 @@
 package org.elm.ide.inspections
 
-// These tests don't have access to the standard imports, so you can't use them in type signatures,
-// although literals still work.
 class TypeInferenceInspectionTest : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
@@ -80,14 +78,14 @@ main a = <error descr="Type mismatch.Required: ()Found: Foo">a</error>
 """)
 
     fun `test mismatched return type from List argument`() = checkByText("""
-main : List Int -> ()
-main a = <error descr="Type mismatch.Required: ()Found: List a">a</error>
+main : List Int -> List ()
+main a = <error descr="Type mismatch.Required: List ()Found: List Int">a</error>
 """)
 
     fun `test mismatched return type from shadowed List`() = checkByText("""
 type List a = List a
 main : List ()
-main = <error descr="Type mismatch.Required: List aFound: List.List a">[]</error>
+main = <error descr="Type mismatch.Required: List ()Found: List.List a">[]</error>
 """)
 
     fun `test mismatched return type from float literal`() = checkByText("""
@@ -198,8 +196,14 @@ main = foo .x
 
     fun `test correct value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
-main : A ()
+main : A Float
 main = {x = 1.0, y = ()}
+""")
+
+    fun `test mismatched value type from parametric record alias`() = checkByText("""
+type alias A a = {x: a, y: ()}
+main : A ()
+main = <error descr="Type mismatch.Required: A ()Found: { x: Float, y: () }">{x = 1.0, y = ()}</error>
 """)
 
     fun `test mismatched value type from record subset`() = checkByText("""
@@ -212,6 +216,13 @@ main = <error descr="Type mismatch.Required: RFound: { x: () }">{x = ()}</error>
 type alias R = {x: (), y: ()}
 main : R
 main = <error descr="Type mismatch.Required: RFound: { x: (), y: (), z: () }">{x = (), y=(), z=()}</error>
+""")
+
+    fun `test mismatched return type from propagated type vars`() = checkByText("""
+type alias A a = {x: Maybe a}
+type alias B a = A a
+main : B () -> Maybe Int
+main b = <error descr="Type mismatch.Required: Maybe IntFound: Maybe ()">b.x</error>
 """)
 
     fun `test matched field accessor chains`() = checkByText("""
@@ -489,13 +500,20 @@ main {bar} = <error descr="Type mismatch.Required: ()Found: Int">bar</error>
 """)
 
     // issue #122
-    // TODO[unification] add mismatch check
     fun `test matched record pattern from extension alias`() = checkByText("""
 type alias Foo a = { a | foo : ()}
 type alias Bar = { bar : () }
 
 main : Foo Bar -> ()
-main {bar} = ()
+main {bar} = bar
+""")
+
+    fun `test mismatched record pattern from extension alias`() = checkByText("""
+type alias Foo a = { a | foo : ()}
+type alias Bar = { bar : () }
+
+main : Foo Bar -> Int
+main {bar} = <error descr="Type mismatch.Required: IntFound: ()">bar</error>
 """)
 
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
