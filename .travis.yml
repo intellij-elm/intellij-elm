@@ -14,7 +14,7 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install --yes elm-platform   ; fi
     - echo Installed elm `elm --version`
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install jdk8                 ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then ls /c/Program Files/Java           ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then ls "/c/Program Files/Java"         ; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export PATH=$PATH:"/c/Program Files/Java/jdk1.8.0_191/bin"   ; fi
     - java -version
 
