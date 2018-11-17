@@ -17,7 +17,18 @@ import java.util.*
 
 private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
 
-fun ElmValueDeclaration.inference(): InferenceResult = inference(emptySet())
+/** Find the inference result that contains the given element */
+fun ElmPsiElement.findInference(): InferenceResult? {
+    // ancestors is non-strict here so that we can return this element
+    return ancestors.takeWhile { it !is ElmFile }
+            .filterIsInstance<ElmValueDeclaration>()
+            .firstOrNull { it.isTopLevel }
+            ?.inference(emptySet())
+}
+
+/** Find the type of a given element, if the element is a value expression or declaration */
+fun ElmPsiElement.findTy() : Ty? = findInference()?.expressionTypes?.get(this)
+
 
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     return CachedValuesManager.getCachedValue(this, TYPE_INFERENCE_KEY) {

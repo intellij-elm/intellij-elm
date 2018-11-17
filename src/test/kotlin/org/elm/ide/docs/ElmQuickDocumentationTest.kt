@@ -56,8 +56,34 @@ foo bar baz = bar baz
     fun `test function with type annotation`() = doTest(
             """
 foo : Int -> Int -> Int
-foo bar baz = bar baz
+foo bar baz = bar
 --^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
+""")
+
+    fun `test function with type annotation with nested types`() = doTest(
+            """
+foo : List (List a) -> ()
+foo bar = ()
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://List">List</a> (<a href="psi_element://List">List</a> a) → ()
+<b>foo</b> bar</pre></div>
+""")
+
+    fun `test nested function with type annotation`() = doTest(
+            """
+main a =
+    let
+        foo : Int -> Int -> Int
+        foo bar baz = a
+    in
+        foo
+        --^
 """,
             """
 <div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>

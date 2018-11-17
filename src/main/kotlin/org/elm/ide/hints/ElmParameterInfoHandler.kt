@@ -10,10 +10,11 @@ import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.CallInfo
 import org.elm.lang.core.psi.elements.ElmFunctionCall
+import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.types.Ty
-import org.elm.lang.core.types.TyFunction
+import org.elm.lang.core.types.TyUnknown
+import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
 
 private val log = logger<ElmParameterInfoHandler>()
@@ -34,7 +35,7 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 
     override fun couldShowInLookup() = false
 
-    override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?) =
+    override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?): Array<Any>? =
     // TODO maybe we should implement this. I'm not sure what it does, though.
             null
 
@@ -101,28 +102,26 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
     }
 }
 
-class ElmParametersDescription(val callInfo: CallInfo) {
+class ElmParametersDescription(private val name: String?, private val ty: Ty) {
     val presentText: String
-        get() {
-            val signature = (callInfo.parameters.map { it.ty } + callInfo.returnType)
-                    .joinToString(" → ") { it.pretty() }
-            return "${callInfo.functionName} : $signature"
-        }
+        get() =
+            if (name == null) ty.renderedText(false, false)
+            else "$name : ${ty.renderedText(false, false)}"
+
     val rangeToHighlight: TextRange
-        get() = TextRange(0, callInfo.functionName.length)
+        get() = TextRange(0, name?.length ?: 0)
 
     companion object {
         fun fromCall(functionCall: ElmFunctionCall): ElmParametersDescription? {
-            val info = functionCall.resolveCallInfo() ?: return null
-            return ElmParametersDescription(info)
-        }
-    }
-}
+            // If calling a declared function or constructor, show its unqualified name
+            val name = (functionCall.target as? ElmValueExpr)?.referenceName
+            val ty = functionCall.target.findTy()
 
-private fun Ty.pretty(): String {
-    val s = this.renderedText(linkify = false, withModule = false)
-    return when (this) {
-        is TyFunction -> "($s)"
-        else -> s
+            if (ty != null && ty !is TyUnknown) {
+                return ElmParametersDescription(name, ty)
+            }
+
+            return null
+        }
     }
 }

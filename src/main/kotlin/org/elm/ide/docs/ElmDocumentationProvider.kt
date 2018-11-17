@@ -139,15 +139,13 @@ private fun documentationFor(pattern: ElmLowerPattern): String? = documentationF
 private fun documentationFor(patternAs: ElmPatternAs): String? = documentationForParameter(patternAs)
 private fun documentationForParameter(element: ElmNamedElement): String? = buildString {
     val function = element.parentOfType<ElmFunctionDeclarationLeft>() ?: return null
-    val decl = function.parentOfType<ElmValueDeclaration>() ?: return null
-    val inference = decl.inference()
-    val ty = inference.elementType(element)
+    val ty = element.findTy()
 
     definition {
         i { append("parameter") }
         append(" ", element.name, " ")
 
-        if (ty !is TyUnknown) {
+        if (ty != null &&  ty !is TyUnknown) {
             append(": ", ty.renderedText(true, false), "\n")
         }
 
