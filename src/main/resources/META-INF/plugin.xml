@@ -45,6 +45,14 @@
         <p>We hope to remove the type variable limitation in the future.</p>
 
         <ul>
+            <li><b>2.0.3</b> <em>(2018-11-16)</em>
+                <ul>
+                    <li>Improved function generation from a type annotation</li>
+                    <li>Improved type inference and added more error checking</li>
+                    <li>Added a line marker for exposed functions/types</li>
+                    <li>Fixed bugs related to 'test-dependencies'</li>
+                </ul>
+            </li>
             <li><b>2.0.2</b> <em>(2018-11-08)</em> - type checking bug fixes; improvements to Find Usages</li>
             <li><b>2.0.1</b> <em>(2018-11-03)</em> - added 'Parameter Info' support; bug fixes</li>
             <li><b>2.0.0</b> <em>(2018-10-31)</em> - added type inference and type checking; added support for multiple Elm projects</li>
