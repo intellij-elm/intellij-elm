@@ -26,6 +26,7 @@ SOFTWARE.
 
 package org.elm.lang
 
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
@@ -33,6 +34,7 @@ import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileFilter
 import com.intellij.psi.PsiElement
@@ -46,11 +48,15 @@ import org.elm.FileTree
 import org.elm.TestProject
 import org.elm.fileTreeFromText
 import org.elm.lang.core.psi.parentOfType
+import org.elm.openapiext.pathAsPath
+import org.elm.workspace.ElmProject
 import org.elm.workspace.ElmToolchain
+import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.elm.workspace.MinimalElmStdlibVariant
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 
+private val log = logger<ElmTestBase>()
 
 /**
  * Base class for basically all Elm tests *except* lexing, parsing and stuff that depends
@@ -222,13 +228,37 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
             if (skipTestReason != null)
                 return
 
-            if (enableStdlib) {
-                val toolchain = ElmToolchain.suggest(module.project)
-                require(toolchain != null) { "failed to find Elm toolchain: cannot setup stdlib workspace for tests" }
+            val toolchain = ElmToolchain.suggest(module.project)
+            require(toolchain != null) { "failed to find Elm toolchain: cannot setup workspace for tests" }
 
-                val elmProject = MinimalElmStdlibVariant.ensureElmStdlibInstalled(module.project, toolchain!!)
-                module.project.elmWorkspace.setupForTests(toolchain, elmProject)
+            val elmProject = if (enableStdlib) {
+                log.debug("Configuring Elm Stdlib")
+                MinimalElmStdlibVariant.ensureElmStdlibInstalled(module.project, toolchain!!)
+            } else {
+                log.debug("Configuring bare Elm project")
+                @Language("JSON") val json = """
+                    {
+                        "type": "application",
+                        "source-directories": [
+                            "."
+                        ],
+                        "elm-version": "0.19.0",
+                        "dependencies": {
+                            "direct": {},
+                            "indirect": {}
+                        },
+                        "test-dependencies": {
+                            "direct": {},
+                            "indirect": {}
+                        }
+                    }
+                    """
+                val contentRoot = contentEntry.file!!
+                val elmJsonFile = contentRoot.createChildData(contentRoot, ELM_JSON)
+                VfsUtil.saveText(elmJsonFile, json)
+                ElmProject.parse(json.byteInputStream(), elmJsonFile.pathAsPath, toolchain!!)
             }
+            module.project.elmWorkspace.setupForTests(toolchain, elmProject)
         }
     }
 
@@ -262,7 +292,8 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
                     .joinToString("_")
         }
 
-        @JvmStatic fun getResourceAsString(path: String): String? {
+        @JvmStatic
+        fun getResourceAsString(path: String): String? {
             val stream = ElmTestBase::class.java.classLoader.getResourceAsStream(path)
                     ?: return null
 

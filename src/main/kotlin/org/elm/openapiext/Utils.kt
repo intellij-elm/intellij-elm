@@ -23,6 +23,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.ex.temp.TempFileSystem
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -144,8 +145,37 @@ class CachedVirtualFile(private val url: String?) {
     }
 }
 
+/**
+ * Unless you are absolutely certain that the file will only ever exist
+ * on disk (and not in-memory when running tests), you should use [findFileByPathTestAware]
+ * instead.
+ */
 fun LocalFileSystem.findFileByPath(path: Path): VirtualFile? {
     return findFileByPath(path.toString())
+}
+
+/**
+ * Attempt to find a [VirtualFile] for [path].
+ *
+ * If running in unit test mode, try the in-memory VFS first.
+ *
+ * Background: most of our unit tests run in the "light" mode which uses in-memory VFS
+ * (http://www.jetbrains.org/intellij/sdk/docs/basics/testing_plugins/light_and_heavy_tests.html).
+ * But some things like `elm/core` and other package dependencies exist in a real filesystem
+ * on disk, [LocalFileSystem].
+ *
+ * Whenever you find yourself calling [LocalFileSystem.findFileByPath], consider using this
+ * function instead.
+ */
+fun findFileByPathTestAware(path: Path): VirtualFile? {
+    if (isUnitTestMode) {
+        val vFile = TempFileSystem.getInstance().findFileByPath(path)
+        if (vFile != null) {
+            return vFile
+        }
+    }
+
+    return LocalFileSystem.getInstance().findFileByPath(path)
 }
 
 val isUnitTestMode: Boolean get() = ApplicationManager.getApplication().isUnitTestMode

@@ -36,6 +36,8 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
     }
 
     protected fun ensureElmStdlibInstalled(variant: ElmStdlibVariant) {
+        // IMPORTANT: do not use the returned `ElmProject` from [ensureElmStdlibInstalled] as it
+        // uses paths designed for IntelliJ's "light" tests (in-memory VFS).
         variant.ensureElmStdlibInstalled(project, toolchain!!)
     }
 

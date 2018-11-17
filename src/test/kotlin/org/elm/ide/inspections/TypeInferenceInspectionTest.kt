@@ -381,7 +381,7 @@ main : Maybe People
 main = person George
 --^
 
---@ Foo.elm
+--@ People/Washington.elm
 module People.Washington exposing (People(..), person)
 
 type People = George

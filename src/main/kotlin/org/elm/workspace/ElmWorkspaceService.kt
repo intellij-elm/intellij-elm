@@ -19,7 +19,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
 import com.intellij.openapi.util.EmptyRunnable
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.util.Consumer
@@ -28,7 +27,7 @@ import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.openapiext.findFileBreadthFirst
-import org.elm.openapiext.findFileByPath
+import org.elm.openapiext.findFileByPathTestAware
 import org.elm.openapiext.modules
 import org.elm.openapiext.pathAsPath
 import org.elm.utils.MyDirectoryIndex
@@ -244,7 +243,7 @@ class ElmWorkspaceService(
             MyDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
                 fun put(path: Path?, elmProject: ElmProject) {
                     if (path == null) return
-                    val file = LocalFileSystem.getInstance().findFileByPath(path) ?: return
+                    val file = findFileByPathTestAware(path) ?: return
                     val existingElmProject = findProjectForFile(file)
                     if (existingElmProject == null) {
                         index.putInfo(file, elmProject)
@@ -276,13 +275,22 @@ class ElmWorkspaceService(
                 }
 
                 for (project in allProjects) {
-                    for (sourceDir in project.sourceDirectories) {
+                    for (sourceDir in project.absoluteSourceDirectories) {
                         log.debug("Registering source directory $sourceDir for $project")
-                        put(project.projectDirPath.resolve(sourceDir), project)
+                        put(sourceDir, project)
                     }
                     for (pkg in project.allResolvedDependencies) {
                         log.debug("Registering dependency directory ${pkg.projectDirPath} for $pkg")
                         put(pkg.projectDirPath, pkg)
+                    }
+
+                    if (project.isElm18) {
+                        // Elm 0.18 requires a separate manifest/project for the test code, so we
+                        // don't need to register the 'tests' directory in this case.
+                    } else {
+                        // Testing on Elm 0.19 requires that there be a "tests" directory next
+                        // to the elm.json file. So we must register that as a source root if it exists.
+                        put(project.manifestPath.resolveSibling("tests"), project)
                     }
                 }
             })

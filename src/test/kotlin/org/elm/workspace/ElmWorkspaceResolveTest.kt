@@ -284,6 +284,39 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         }
     }
 
+    fun `test resolves modules provided by packages which are direct test dependencies`() {
+
+        ensureElmStdlibInstalled(FullElmStdlibVariant)
+
+        buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.19.0",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {
+                        "elm-explorations/test": "1.0.0"
+                    },
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("tests") {
+                elm("MyTests.elm", """
+                    import Test
+                           --^
+                """.trimIndent())
+            }
+        }.checkReferenceIsResolved<ElmImportClause>("tests/MyTests.elm", toPackage = "elm-explorations/test 1.0.0")
+    }
+
 
     // TODO [kl] re-enable once a distinction is made between direct and indirect deps
 //    fun `test does not resolve modules which are not direct dependencies`() {

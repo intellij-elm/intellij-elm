@@ -5,8 +5,9 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import org.elm.fileTree
 import org.elm.openapiext.pathAsPath
+import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.intellij.lang.annotations.Language
-import java.nio.file.Files
+import java.nio.file.Paths
 
 /*
 Some of the Elm tests depend on having certain Elm packages installed in the global location.
@@ -33,26 +34,32 @@ interface ElmStdlibVariant {
         val elm = toolchain.elmCompilerPath?.let { ElmCLI(it) }
                 ?: error("Must have a path to the Elm compiler to install Elm stdlib")
 
-        val tmpDir = LocalFileSystem.getInstance()
+        // Create the dummy Elm project on-disk (real file system) and invoke the Elm compiler on it.
+        val onDiskTmpDir = LocalFileSystem.getInstance()
                 .refreshAndFindFileByIoFile(FileUtil.createTempDirectory("elm-stdlib-variant", null, true))
-                ?: error("Could not create temp dir for Elm stdlib installation")
+                ?: error("Could not create on-disk temp dir for Elm stdlib installation")
 
         fileTree {
-            project("elm.json", jsonManifest)
+            project(ELM_JSON, jsonManifest)
             file("Main.elm", elmHeadlessWorkerCode)
-        }.create(project, tmpDir)
-
-        val manifestPath = tmpDir.pathAsPath.resolve("elm.json")
+        }.create(project, onDiskTmpDir)
 
 //        println("-----------------------------")
 //        println("Installing Deps for $this")
-        val output = elm.installDeps(project, manifestPath)
+        val output = elm.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
 //        println("STDOUT: ${output.stdout}")
 //        println("\n")
 //        println("STDERR: ${output.stderr}")
 //        println("-----------------------------")
 
-        return ElmProject.parse(Files.newInputStream(manifestPath), manifestPath, toolchain)
+        // Now return an `ElmProject` with a manifest path suitable for IntelliJ's "light"
+        // integration tests which put everything at `/src` using the in-memory VFS.
+        val inMemManifestPath = Paths.get("/src/$ELM_JSON")
+        val elmProj = ElmProject.parse(jsonManifest.byteInputStream(), inMemManifestPath, toolchain)
+        require(Paths.get(".") in elmProj.sourceDirectories) {
+            "Since the elm.json file is stored in `/src` (in-memory VFS), `source-directories` must contain \".\""
+        }
+        return elmProj
     }
 }
 
