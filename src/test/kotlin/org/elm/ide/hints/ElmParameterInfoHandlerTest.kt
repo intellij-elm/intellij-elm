@@ -47,61 +47,61 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
     // SOLO ARGUMENT
 
 
-    fun `test function with one arg`() {
-        checkByText("""
+    fun `test function with one arg`() = checkByText("""
 f : String -> Int
 f x = 42
 main = f "foo"{-caret-}
 """, "f : String → Int")
-    }
 
-    fun `test function with one arg nested in another function call`() {
-        checkByText("""
+    fun `test function with one arg nested in another function call`() = checkByText("""
 f : Int -> String
 f x = "blah"
 g : Char -> Int
 g x = 99
 main = f (g 'c'{-caret-})
 """, "g : Char → Int")
-    }
 
-    fun `test higher-order function renders the hint with parens`() {
-        checkByText("""
+    fun `test higher-order function renders the hint with parens`() = checkByText("""
 f : (String -> Char) -> Int
 f g = 0
 main = f {-caret-}(\s -> 'x')
 """, "f : (String → Char) → Int")
-    }
 
 
     // MULTIPLE ARGUMENTS
 
 
-    fun `test function with two args, caret on first arg`() {
-        checkByText("""
+    fun `test function with two args, caret on first arg`() = checkByText("""
 f : String -> Char -> Int
 f x y = 42
 main = f "hi"{-caret-}
 """, "f : String → Char → Int")
-    }
 
-    fun `test function with two args, caret on second arg`() {
-        checkByText("""
+    fun `test function with two args, caret on second arg`() = checkByText("""
 f : String -> Char -> Int
 f x y = 42
 main = f "x" {-caret-}
 """, "f : String → Char → Int")
-    }
 
-    fun `test function with two args nested in another function call`() {
-        checkByText("""
+    fun `test function with two args nested in another function call`() = checkByText("""
 f : Int -> Int
 f x = 42
 g : Char -> Bool -> Int
 g x y = 99
 main = f (g 'x' {-caret-})
 """, "g : Char → Bool → Int")
-    }
+
+
+    // UNNAMED FUNCTIONS
+
+
+    fun `test lambda`() = checkByText("""
+main = (\a b -> "done") "hi"{-caret-}
+""", "a → b → String")
+
+    fun `test expression`() = checkByText("""
+main = ((+) 1) 1{-caret-}
+""", "number → number")
 
 
     // UTILS

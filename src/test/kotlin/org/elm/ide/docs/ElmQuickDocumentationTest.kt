@@ -3,6 +3,8 @@ package org.elm.ide.docs
 import org.intellij.lang.annotations.Language
 
 class ElmQuickDocumentationTest : ElmDocumentationProviderTest() {
+    override fun getProjectDescriptor() = ElmWithStdlibDescriptor
+
     fun `test variable declaration`() = doTest(
             """
 foo = 0
@@ -54,23 +56,50 @@ foo bar baz = bar baz
     fun `test function with type annotation`() = doTest(
             """
 foo : Int -> Int -> Int
-foo bar baz = bar baz
+foo bar baz = bar
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
+<b>foo</b> bar baz</pre></div>
+""")
+
+    fun `test function with type annotation with nested types`() = doTest(
+            """
+foo : List (List a) -> ()
+foo bar = ()
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://List">List</a> (<a href="psi_element://List">List</a> a) → ()
+<b>foo</b> bar</pre></div>
+""")
+
+    fun `test nested function with type annotation`() = doTest(
+            """
+main a =
+    let
+        foo : Int -> Int -> Int
+        foo bar baz = a
+    in
+        foo
+        --^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
 <b>foo</b> bar baz</pre></div>
 """)
 
     fun `test function with qualified type annotation`() = doTest(
             """
-foo : Int -> Http.Error
-foo bar = bar
+import Json.Decode
+foo : Json.Decode.Decoder ()
+foo = Json.Decode.succeed ()
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Http.Error">Http.Error</a>
-<b>foo</b> bar</pre></div>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Decoder">Decoder</a> ()
+<b>foo</b></pre></div>
 """)
 
     fun `test function with type and docs`() = doTest(
@@ -81,7 +110,7 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
 <b>foo</b> bar baz</pre></div>
 <div class='content'><p>foo some ints together</p></div>
 """)
@@ -120,7 +149,7 @@ foo bar baz =
   bar baz
 """,
             """
-<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a> -&gt; <a href="psi_element://Int">Int</a>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
 <b>foo</b> bar baz</pre></div>
 <div class='content'><p>Map some <code>Int</code>s together,
 producing another <code>Int</code></p><h2>Example</h2><pre><code>bar = 1
@@ -175,8 +204,8 @@ type Foo
      --^
      = Bar
      | Baz a
-     | Qux (Maybe a) a
-     | Lorem { ipsum: Dolor }
+     | Qux (List a) a
+     | Lorem { ipsum: Int }
 """,
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
@@ -184,8 +213,8 @@ type Foo
 <table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
 <p><code>Bar</code>
 <p><code>Baz</code> a
-<p><code>Qux</code> (<a href="psi_element://Maybe">Maybe</a> a) a
-<p><code>Lorem</code> { ipsum : <a href="psi_element://Dolor">Dolor</a> }</td></table>
+<p><code>Qux</code> (<a href="psi_element://List">List</a> a) a
+<p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
 """)
 
     fun `test type alias`() = doTest(
@@ -297,18 +326,17 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-// TODO[unification]
-//    fun `test function parameter with nested parametric type annotation`() = doTest(
-//            """
-//type Foo a = Bar
-//foo : Foo (Foo a) -> Foo (Foo a)
-//foo bar = bar
-//        --^
-//""",
-//            """
-//<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Foo">Foo</a> (<a href="psi_element://Foo">Foo</a> a)
-//<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
-//""")
+    fun `test function parameter with nested parametric type annotation`() = doTest(
+            """
+type Foo a = Bar
+foo : Foo (Foo a) -> Foo (Foo a)
+foo bar = bar
+        --^
+""",
+            """
+<div class='definition'><pre><i>parameter</i> bar : <a href="psi_element://Foo">Foo</a> (<a href="psi_element://Foo">Foo</a> a)
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
 
     fun `test function parameter with parenthesized type annotation`() = doTest(
             """

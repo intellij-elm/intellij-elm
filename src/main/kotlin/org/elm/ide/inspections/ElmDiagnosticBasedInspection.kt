@@ -6,8 +6,6 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.elm.lang.core.diagnostics.ElmDiagnostic
-import org.elm.lang.core.psi.elements.ElmValueDeclaration
-import org.elm.lang.core.types.inference
 
 abstract class ElmDiagnosticBasedInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean) = object : PsiElementVisitor() {
