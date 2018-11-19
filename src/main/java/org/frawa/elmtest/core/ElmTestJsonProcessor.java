@@ -2,6 +2,7 @@ package org.frawa.elmtest.core;
 
 import com.google.gson.*;
 import com.intellij.execution.testframework.sm.runner.events.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -25,15 +26,12 @@ public class ElmTestJsonProcessor {
 
             String event = obj.get("event").getAsString();
 
-            Function<Path, TreeNodeEvent> toFinishSuiteEvent = path1 ->
-                    new TestSuiteFinishedEvent(getName(path1));
-
             if ("runStart".equals(event)) {
                 currentPath = LabelUtils.EMPTY_PATH;
                 return Collections.emptyList();
             } else if ("runComplete".equals(event)) {
                 List<TreeNodeEvent> closeAll = closeSuitePaths(currentPath, EMPTY_PATH)
-                        .map(toFinishSuiteEvent)
+                        .map((Function<Path, TreeNodeEvent>) this::newTestSuiteFinishedEvent)
                         .collect(Collectors.toList());
                 currentPath = LabelUtils.EMPTY_PATH;
                 return closeAll;
@@ -46,16 +44,12 @@ public class ElmTestJsonProcessor {
                 path = path.resolve("todo");
             }
 
-            Function<Path, TreeNodeEvent> toStartSuiteEvent = path1 ->
-                    new TestSuiteStartedEvent(getName(path1), toSuiteLocationUrl(path1));
-
             List<TreeNodeEvent> result = Stream.of(
-                    closeSuitePaths(currentPath, path).map(toFinishSuiteEvent),
-                    openSuitePaths(currentPath, path).map(toStartSuiteEvent),
+                    closeSuitePaths(currentPath, path).map((Function<Path, TreeNodeEvent>) this::newTestSuiteFinishedEvent),
+                    openSuitePaths(currentPath, path).map((Function<Path, TreeNodeEvent>) this::newTestSuiteStartedEvent),
                     testEvents(path, obj)
             )
-//                    .flatMap(Functions.identity())
-                    .flatMap(s -> s)
+                    .flatMap(Function.identity())
                     .collect(Collectors.toList());
 
             currentPath = path;
@@ -66,18 +60,17 @@ public class ElmTestJsonProcessor {
     }
 
     static Stream<TreeNodeEvent> testEvents(Path path, JsonObject obj) {
-        String name = getName(path);
         String status = getStatus(obj);
         if ("pass".equals(status)) {
             long duration = Long.parseLong(obj.get("duration").getAsString());
             return Stream.of(
-                    new TestStartedEvent(name, toTestLocationUrl(path)),
-                    new TestFinishedEvent(name, duration)
+                    newTestStartedEvent(path),
+                    newTestFinishedEvent(path, duration)
             );
         } else if ("todo".equals(status)) {
             String comment = getComment(obj);
             return Stream.of(
-                    new TestIgnoredEvent(name, comment != null ? comment : "", null)
+                    newTestIgnoredEvent(path, comment)
             );
         }
         try {
@@ -86,16 +79,51 @@ public class ElmTestJsonProcessor {
             String expected = getExpected(obj);
 
             return Stream.of(
-                    new TestStartedEvent(name, toTestLocationUrl(path)),
-                    new TestFailedEvent(name, message != null ? message : "", null, false, actual, expected)
+                    newTestStartedEvent(path),
+                    newTestFailedEvent(path, actual, expected, message != null ? message : "")
             );
         } catch (Throwable e) {
             String failures = new GsonBuilder().setPrettyPrinting().create().toJson(obj.get("failures"));
             return Stream.of(
-                    new TestStartedEvent(name, toTestLocationUrl(path)),
-                    new TestFailedEvent(name, failures, null, false, null, null)
+                    newTestStartedEvent(path),
+                    newTestFailedEvent(path, null, null, failures)
             );
         }
+    }
+
+    @NotNull
+    private TestSuiteStartedEvent newTestSuiteStartedEvent(Path path) {
+        return new TestSuiteStartedEvent(getName(path), toSuiteLocationUrl(path));
+    }
+
+    @NotNull
+    private TestSuiteFinishedEvent newTestSuiteFinishedEvent(Path path) {
+        return new TestSuiteFinishedEvent(getName(path));
+    }
+
+    @NotNull
+    private static TestIgnoredEvent newTestIgnoredEvent(Path path, String comment) {
+        return new TestIgnoredEvent(getName(path), sureText(comment), null);
+    }
+
+    @NotNull
+    private static TestFinishedEvent newTestFinishedEvent(Path path, long duration) {
+        return new TestFinishedEvent(getName(path), duration);
+    }
+
+    @NotNull
+    private static TestFailedEvent newTestFailedEvent(Path path, String actual, String expected, String message) {
+        return new TestFailedEvent(getName(path), sureText(message), null, false, actual, expected);
+    }
+
+    @NotNull
+    private static TestStartedEvent newTestStartedEvent(Path path) {
+        return new TestStartedEvent(getName(path), toTestLocationUrl(path));
+    }
+
+    @NotNull
+    private static String sureText(String comment) {
+        return comment != null ? comment : "";
     }
 
     static String getComment(JsonObject obj) {

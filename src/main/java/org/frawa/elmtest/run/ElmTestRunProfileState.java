@@ -74,6 +74,9 @@ public class ElmTestRunProfileState extends CommandLineState {
             setIfUndefined(TestConsoleProperties.SHOW_STATISTICS, true);
             setIfUndefined(TestConsoleProperties.SELECT_FIRST_DEFECT, true);
             setIfUndefined(TestConsoleProperties.SCROLL_TO_SOURCE, true);
+//            INCLUDE_NON_STARTED_IN_RERUN_FAILED
+//            setIdBasedTestTree(true);
+//            setPrintTestingStartedTime(false);
         }
 
 

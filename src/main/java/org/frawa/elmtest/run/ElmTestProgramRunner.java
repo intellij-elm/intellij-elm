@@ -9,6 +9,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.GenericProgramRunner;
 import com.intellij.execution.runners.RunContentBuilder;
 import com.intellij.execution.ui.RunContentDescriptor;
+import com.intellij.execution.ui.RunContentDescriptorReusePolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +19,20 @@ public class ElmTestProgramRunner extends GenericProgramRunner {
     @Override
     protected RunContentDescriptor doExecute(RunProfileState state, ExecutionEnvironment environment) throws ExecutionException {
         ExecutionResult result = state.execute(environment.getExecutor(), this);
-        return new RunContentBuilder(result, environment).showRunContent(environment.getContentToReuse());
+        RunContentDescriptor descriptor = new RunContentBuilder(result, environment).showRunContent(environment.getContentToReuse());
+        return withReusePolicy(descriptor);
+    }
+
+
+    @NotNull
+    private static RunContentDescriptor withReusePolicy(@NotNull RunContentDescriptor descriptor) {
+        descriptor.setReusePolicy(new RunContentDescriptorReusePolicy() {
+            @Override
+            public boolean canBeReusedBy(@NotNull RunContentDescriptor newDescriptor) {
+                return true;
+            }
+        });
+        return descriptor;
     }
 
     @NotNull
