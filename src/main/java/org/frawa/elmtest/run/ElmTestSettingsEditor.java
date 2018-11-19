@@ -25,7 +25,7 @@ import javax.swing.*;
 public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguration> {
     private JPanel myPanel;
     private TextFieldWithBrowseButton folderChooser;
-    private TextFieldWithBrowseButton binaryChooser;
+    private TextFieldWithBrowseButton elmTestChooser;
 
     public ElmTestSettingsEditor(Project project) {
         FileChooserDescriptor elmFolderDescriptor = FileChooserDescriptorFactory
@@ -34,7 +34,7 @@ public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguratio
 
         FileChooserDescriptor elmBinaryDescriptor = FileChooserDescriptorFactory
                 .createSingleFileDescriptor();
-        binaryChooser.addBrowseFolderListener("Elm Binary", null, project, elmBinaryDescriptor);
+        elmTestChooser.addBrowseFolderListener("elm-test Binary", null, project, elmBinaryDescriptor);
     }
 
     @NotNull
@@ -46,12 +46,12 @@ public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguratio
     @Override
     protected void resetEditorFrom(@NotNull ElmTestRunConfiguration configuration) {
         folderChooser.setText(configuration.options.elmFolder);
-        binaryChooser.setText(configuration.options.elmTestBinary);
+        elmTestChooser.setText(configuration.options.elmTestBinary);
     }
 
     @Override
     protected void applyEditorTo(@NotNull ElmTestRunConfiguration configuration) {
         configuration.options.elmFolder = folderChooser.getText();
-        configuration.options.elmTestBinary = binaryChooser.getText();
+        configuration.options.elmTestBinary = elmTestChooser.getText();
     }
 }
