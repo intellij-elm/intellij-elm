@@ -22,7 +22,10 @@ import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.frawa.elmtest.core.ElmTestJsonProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.SystemIndependent;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
@@ -37,20 +40,60 @@ public class ElmTestRunProfileState extends CommandLineState {
     @NotNull
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
-        String elmFolder = configuration.options.elmFolder == null || configuration.options.elmFolder.isEmpty()
-                ? this.getEnvironment().getProject().getBasePath()
-                : configuration.options.elmFolder;
+        String elmFolder = getElmFolder();
+        String elmTestBinary = getElmTestBinary(elmFolder);
+        String elmBinary = getElmBinary(elmTestBinary);
 
-        GeneralCommandLine commandLine = configuration.options.elmTestBinary == null || configuration.options.elmTestBinary.isEmpty()
-                ? new GeneralCommandLine("/bin/sh", "-i", "-c", "elm-test --report=json")
-                : new GeneralCommandLine(configuration.options.elmTestBinary, "--report=json");
+        GeneralCommandLine commandLine = elmTestBinary != null
+                ? new GeneralCommandLine(elmTestBinary, "--report=json")
+                : new GeneralCommandLine("/bin/sh", "-i", "-c", "elm-test --report=json");
 
         commandLine
                 .withWorkDirectory(elmFolder)
                 .withRedirectErrorStream(true)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE);
 
+        if (elmTestBinary != null && elmBinary != null) {
+            commandLine.withParameters("--compiler", elmBinary);
+        }
+
         return new ColoredProcessHandler(commandLine);
+    }
+
+    @SystemIndependent
+    private String getElmFolder() {
+        return configuration.options.elmFolder == null || configuration.options.elmFolder.isEmpty()
+                ? this.getEnvironment().getProject().getBasePath()
+                : configuration.options.elmFolder;
+    }
+
+    private String getElmTestBinary(String elmFolder) {
+        if (configuration.options.elmTestBinary == null || configuration.options.elmTestBinary.isEmpty()) {
+            return getLocalElmTestBinary(elmFolder);
+        }
+        return configuration.options.elmTestBinary;
+    }
+
+    private String getLocalElmTestBinary(String elmFolder) {
+        if (elmFolder != null) {
+            Path elmFolderPath = Paths.get(elmFolder);
+            Path elmTestPath = elmFolderPath.resolve("node_modules/.bin/elm-test");
+            if (elmTestPath.toFile().exists()) {
+                return elmTestPath.toString();
+            }
+        }
+        return null;
+    }
+
+    private String getElmBinary(String elmTestBinary) {
+        if (elmTestBinary != null) {
+            Path elmTestPath = Paths.get(elmTestBinary);
+            Path elmPath = elmTestPath.resolveSibling("elm");
+            if (elmPath.toFile().exists()) {
+                return elmPath.toString();
+            }
+        }
+        return null;
     }
 
     @Nullable
