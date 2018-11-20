@@ -22,10 +22,8 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
     }
 
     override fun getExpressionsAt(elementAt: PsiElement): List<PsiElement> {
-        val elementTypes = (elementAt as? ElmPsiElement)
-                ?.findInference()?.expressionTypes
-                ?: return emptyList()
+        val expressionTypes = elementAt.findInference()?.expressionTypes ?: return emptyList()
         return elementAt.ancestors.takeWhile { it !is ElmFile }
-                .filter { it in elementTypes }.toList()
+                .filter { it in expressionTypes }.toList()
     }
 }
