@@ -18,7 +18,7 @@ import java.util.*
 private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
 
 /** Find the inference result that contains the given element */
-fun ElmPsiElement.findInference(): InferenceResult? {
+fun PsiElement.findInference(): InferenceResult? {
     // ancestors is non-strict here so that we can return this element
     return ancestors.takeWhile { it !is ElmFile }
             .filterIsInstance<ElmValueDeclaration>()
