@@ -40,19 +40,4 @@ f foo =
     foo.name.fir{-caret-}
 """)
 
-
-    fun `test update field`() = doSingleCompletion(
-            """
-type alias Foo = { name : String }
-
-f : Foo -> String
-f foo =
-    { foo | {-caret-}
-""", """
-type alias Foo = { name : String }
-
-f : Foo -> String
-f foo =
-    { foo | name {-caret-}
-""")
 }
