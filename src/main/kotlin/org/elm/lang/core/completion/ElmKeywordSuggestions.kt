@@ -54,7 +54,8 @@ object ElmKeywordSuggestor : Suggestor {
             }
 
             // various expressions
-            if (PsiTreeUtil.getParentOfType(pos, ElmExpression::class.java) != null) {
+            // TODO [kl] this needs to be more specific & less hacky
+            if (PsiTreeUtil.getParentOfType(pos, ElmExpression::class.java) != null && prevVisibleLeaf?.elementType != DOT) {
                 result.add("if")
                 result.add("case")
                 result.add("let")
