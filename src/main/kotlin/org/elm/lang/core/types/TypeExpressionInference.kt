@@ -141,7 +141,15 @@ class TypeExpression private constructor(
             val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, replaceParamsWithArgs(params, caller))
             return childScope.recordTypeDeclType(record, aliasTy)
         }
-        return decl.typeRef?.let { childScope.typeRefType(it) } ?: return TyUnknown
+        val aliasedTy = decl.typeRef?.let { childScope.typeRefType(it) } ?: TyUnknown
+
+        // It's common for Elm core code to define aliases for types defined in JS code, which don't
+        // resolve in elm. For these cases, just return the alias as a union
+        if (aliasedTy == TyUnknown) {
+            return TyUnion(decl.moduleName, decl.name, params)
+        }
+
+        return aliasedTy
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration, caller: Caller?): Ty {

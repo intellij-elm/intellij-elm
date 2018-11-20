@@ -64,6 +64,19 @@ foo bar baz = bar
 <b>foo</b> bar baz</pre></div>
 """)
 
+    fun `test function with type annotation to alias with unresolved ref`() = doTest(
+            """
+type alias Html msg = VirtualDom.Node msg
+foo : Html () -> ()
+foo = ()
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Html">Html</a> msg → ()
+<b>foo</b></pre></div>
+""")
+
+
     fun `test function with type annotation with nested types`() = doTest(
             """
 foo : List (List a) -> ()
