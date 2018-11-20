@@ -3,41 +3,47 @@ package org.elm.lang.core.completion
 class ElmRecordCompletionTest : ElmCompletionTestBase() {
 
 
-    fun `test getName from one letter`() = checkContainsCompletion("name",
+    fun `test access name field from one letter`() = doSingleCompletion(
             """
-type alias Foo =
-    { name : String
-    , age : Int
-    }
-
-getName : Foo -> String
-getName foo =
+type alias Foo = { name : String }
+f : Foo -> String
+f foo =
     foo.n{-caret-}
+""", """
+type alias Foo = { name : String }
+f : Foo -> String
+f foo =
+    foo.name{-caret-}
 """)
 
 
-    fun `test getName from blank`() = checkContainsCompletion("name",
+    fun `test access name field from blank`() = doSingleCompletion(
             """
-type alias Foo =
-    { name : String
-    , age : Int
-    }
-
-getName : Foo -> String
-getName foo =
+type alias Foo = { name : String }
+f : Foo -> String
+f foo =
     foo.{-caret-}
+""", """
+type alias Foo = { name : String }
+f : Foo -> String
+f foo =
+    foo.name{-caret-}
 """)
 
 
-    fun `test chained field access is not currently supported`() = checkNoCompletion(
+    fun `test chained field access`() = doSingleCompletion(
             """
-type alias Foo =
-    { name : { first: String, last: String }
-    , age : Int
-    }
+type alias Foo = { name : { first: String } }
 
-getName : Foo -> String
-getName foo =
+f : Foo -> String
+f foo =
     foo.name.fir{-caret-}
+""", """
+type alias Foo = { name : { first: String } }
+
+f : Foo -> String
+f foo =
+    foo.name.first{-caret-}
 """)
+
 }

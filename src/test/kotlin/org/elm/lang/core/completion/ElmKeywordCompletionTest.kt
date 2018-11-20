@@ -141,4 +141,48 @@ x = let
         in{-caret-}
 """)
 
+
+    // keywords like 'if', 'case' and 'let' should be suggested in any context that begins a new expression
+
+
+    fun `test keywords that can begin an expression after a left paren`() = doSingleCompletion(
+            """
+x =
+    (i{-caret-}, 0)
+""", """
+x =
+    (if {-caret-}, 0)
+""")
+
+    fun `test keywords that can begin an expression after a left square bracket`() = doSingleCompletion(
+            """
+x =
+    [i{-caret-}, 0]
+""", """
+x =
+    [if {-caret-}, 0]
+""")
+
+    fun `test keywords that can begin an expression after 'in'`() = doSingleCompletion(
+            """
+x =
+    let y = 0
+    in
+    i{-caret-}
+""", """
+x =
+    let y = 0
+    in
+    if {-caret-}
+""")
+
+    fun `test keywords that can begin an expression after case branch arrow`() = doSingleCompletion(
+            """
+x = case () of
+        () -> i{-caret-}
+""", """
+x = case () of
+        () -> if {-caret-}
+""")
+
 }
