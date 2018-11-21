@@ -139,8 +139,7 @@ external MinusWithoutTrailingWhitespace ::= parseMinusWithoutTrailingWhitespace
 
 UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)* !DotWithoutLeadingWhitespace
 ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
-FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
-ExpressionAccessor ::= (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
+private FieldAccessFragment ::= DotWithoutWhitespace LOWER_CASE_IDENTIFIER
 FieldAccessorFunction ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
 
 
@@ -277,10 +276,8 @@ private CallOrOperand ::=
 
 private Operand ::=
     Literal
-    | RecordWithAccessor
-    | ExpressionWithAccessor
-    | NegateExpression
     | FieldAccess
+    | NegateExpression
     | ValueExpr
     | FieldAccessorFunction
     | OperatorAsFunction
@@ -298,11 +295,16 @@ private Operand ::=
 // Various tokens that can begin a new operand. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
-ExpressionWithAccessor ::=
-    ParenthesizedExpression ExpressionAccessor
+FieldAccess ::=
+     FieldAccessStart FieldAccessFragment FieldAccessContinue?
 
-RecordWithAccessor ::=
-    Record ExpressionAccessor
+// in all three cases, the left-hand side before the DOT are expected to correspond to record values
+FieldAccessStart ::=
+    Record | ParenthesizedExpression | LOWER_CASE_IDENTIFIER
+
+FieldAccessContinue ::=
+    FieldAccessFragment FieldAccessContinue?
+
 
 NegateExpression ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
@@ -318,9 +320,7 @@ FunctionCall ::=
     }
 
 private FunctionCallTarget ::=
-    RecordWithAccessor
-    | ExpressionWithAccessor
-    | FieldAccess
+    FieldAccess
     | ValueExpr
     | FieldAccessorFunction
     | OperatorAsFunction

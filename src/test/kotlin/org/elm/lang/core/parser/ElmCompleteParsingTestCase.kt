@@ -16,6 +16,7 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testComments() = doTest(true)
     fun testExpressionAccessors() = doTest(true)
     fun testImports() = doTest(true)
+    fun testFieldAccess() = doTest(true)
     fun testFieldAccessorFunction() = doTest(true)
     fun testFunctionCall() = doTest(true)
     fun testIfElse() = doTest(true)

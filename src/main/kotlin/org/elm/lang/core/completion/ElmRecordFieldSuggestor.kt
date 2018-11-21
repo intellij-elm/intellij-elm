@@ -4,14 +4,10 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmFieldAccess
+import org.elm.lang.core.psi.elements.ElmFieldAccessExpression
 import org.elm.lang.core.types.Ty
-import org.elm.lang.core.types.TyRecord
-import org.elm.lang.core.types.findInference
 import org.elm.lang.core.types.renderedText
 
 object ElmRecordFieldSuggestor : Suggestor {
@@ -21,8 +17,9 @@ object ElmRecordFieldSuggestor : Suggestor {
         val parent = pos.parent
         val file = pos.containingFile as ElmFile
 
-        if (pos.elementType == LOWER_CASE_IDENTIFIER && parent is ElmFieldAccess) {
-            // Infer the type of the record whose fields are being accessed
+        if (pos.elementType == LOWER_CASE_IDENTIFIER && parent is ElmFieldAccessExpression) {
+            // TODO [kl] re-implement
+/*            // Infer the type of the record whose fields are being accessed
             // and suggest that record's fields as completion results.
 
             val inference = parent.findInference() ?: return
@@ -46,7 +43,7 @@ object ElmRecordFieldSuggestor : Suggestor {
             // provide each field as a completion result
             recordTy.fields.forEach { fieldName, fieldTy ->
                 result.add(fieldName, fieldTy)
-            }
+            }*/
         }
     }
 }

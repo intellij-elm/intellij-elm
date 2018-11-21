@@ -2,29 +2,36 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ExpressionScope
 
-
 /**
- * Accessing one or more fields on a base record.
- *
- * e.g. `model.currentUser.name`
+ * Base expression which can start a field access chain
  */
-class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
+class ElmFieldAccessStart(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
-    val lowerCaseIdentifierList: List<PsiElement>
-        get() = findChildrenByType(LOWER_CASE_IDENTIFIER)
+    // at least one of the 3 will be non-null
 
+    val recordLiteral: ElmRecord?
+        get() = findChildByClass(ElmRecord::class.java)
+
+    val parenthesizedExpression: ElmExpression?
+        get() = findChildByClass(ElmExpression::class.java)
+
+    val lowerCaseIdentifier: PsiElement?
+        get() = findChildByType(LOWER_CASE_IDENTIFIER)
+
+
+    // PSI REFERENCE
+
+    // TODO [kl] provide dummy/null reference in record literal and parenthesized-expr cases
 
     override val referenceNameElement: PsiElement
-        get() = lowerCaseIdentifierList.first()
+        get() = lowerCaseIdentifier!!
 
     override val referenceName: String
         get() = referenceNameElement.text

@@ -263,8 +263,7 @@ private class InferenceScope(
             is ElmCaseOf -> inferCase(operand)
             is ElmCharConstant -> TyChar
             is ElmExpression -> inferExpression(operand) // parenthesized expression
-            is ElmExpressionWithAccessor -> inferExpressionWithAccessor(operand)
-            is ElmFieldAccess -> inferFieldAccess(operand)
+            is ElmFieldAccessExpression -> inferFieldAccess(operand)
             is ElmFieldAccessorFunction -> inferFieldAccessorFunction(operand)
             is ElmFunctionCall -> inferFunctionCall(operand)
             is ElmGlslCode -> TyShader
@@ -276,7 +275,6 @@ private class InferenceScope(
             is ElmNumberConstant -> if (operand.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
             is ElmOperatorAsFunction -> inferOperatorAsFunction(operand)
             is ElmRecord -> inferRecord(operand)
-            is ElmRecordWithAccessor -> inferRecordWithAccessor(operand)
             is ElmStringConstant -> TyString
             is ElmTupleConstructor -> TyUnknown // TODO [drop 0.18] remove this case
             is ElmUnit -> TyUnit
@@ -295,25 +293,13 @@ private class InferenceScope(
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
 
-    private fun inferFieldAccess(fieldAccess: ElmFieldAccess): Ty {
-        val baseElement = fieldAccess.referenceNameElement
-        val baseTy = inferReferenceElement(fieldAccess)
-        val fields = fieldAccess.lowerCaseIdentifierList.drop(1)
-        return inferAccessorChain(baseElement, baseTy, fields)
-    }
-
-    private fun inferExpressionWithAccessor(expressionWithAccessor: ElmExpressionWithAccessor): Ty {
-        val baseElement = expressionWithAccessor.expression
-        val baseTy = inferExpression(baseElement)
-        val fields = expressionWithAccessor.accessor.lowerCaseIdentifierList
-        return inferAccessorChain(baseElement, baseTy, fields)
-    }
-
-    private fun inferRecordWithAccessor(recordWithAccessor: ElmRecordWithAccessor): Ty {
-        val baseElement = recordWithAccessor.record
-        val baseTy = inferRecord(baseElement)
-        val fields = recordWithAccessor.accessor.lowerCaseIdentifierList
-        return inferAccessorChain(baseElement, baseTy, fields)
+    private fun inferFieldAccess(fieldAccessExpression: ElmFieldAccessExpression): Ty {
+        val baseElement = fieldAccessExpression.start
+        val baseTy = inferReferenceElement(baseElement)
+        // TODO [kl] re-enable
+        return TyUnknown
+//        val fields = fieldAccessExpression.lowerCaseIdentifierList.drop(1)
+//        return inferAccessorChain(baseElement.referenceNameElement, baseTy, fields)
     }
 
     private fun inferAccessorChain(baseElement: PsiElement, baseTy: Ty, fields: List<PsiElement>): Ty {
