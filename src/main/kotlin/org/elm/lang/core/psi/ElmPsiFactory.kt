@@ -44,7 +44,7 @@ class ElmPsiFactory(private val project: Project) {
                     EXPRESSION -> ElmExpression(node)
                     FIELD -> ElmField(node)
                     FIELD_ACCESS_START -> ElmFieldAccessStart(node)
-                    FIELD_ACCESS -> ElmFieldAccessExpression(node)
+                    FIELD_ACCESS -> ElmFieldAccess(node)
                     FIELD_ACCESS_CONTINUE -> ElmFieldAccessContinue(node)
                     FIELD_ACCESSOR_FUNCTION -> ElmFieldAccessorFunction(node)
                     FIELD_TYPE -> ElmFieldType(node)

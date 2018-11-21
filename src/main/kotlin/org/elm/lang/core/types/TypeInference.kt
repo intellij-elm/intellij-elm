@@ -263,7 +263,7 @@ private class InferenceScope(
             is ElmCaseOf -> inferCase(operand)
             is ElmCharConstant -> TyChar
             is ElmExpression -> inferExpression(operand) // parenthesized expression
-            is ElmFieldAccessExpression -> inferFieldAccess(operand)
+            is ElmFieldAccess -> inferFieldAccess(operand)
             is ElmFieldAccessorFunction -> inferFieldAccessorFunction(operand)
             is ElmFunctionCall -> inferFunctionCall(operand)
             is ElmGlslCode -> TyShader
@@ -293,12 +293,12 @@ private class InferenceScope(
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
 
-    private fun inferFieldAccess(fieldAccessExpression: ElmFieldAccessExpression): Ty {
-        val baseElement = fieldAccessExpression.start
+    private fun inferFieldAccess(fieldAccess: ElmFieldAccess): Ty {
+        val baseElement = fieldAccess.start
         val baseTy = inferReferenceElement(baseElement)
         // TODO [kl] re-enable
         return TyUnknown
-//        val fields = fieldAccessExpression.lowerCaseIdentifierList.drop(1)
+//        val fields = fieldAccess.lowerCaseIdentifierList.drop(1)
 //        return inferAccessorChain(baseElement.referenceNameElement, baseTy, fields)
     }
 

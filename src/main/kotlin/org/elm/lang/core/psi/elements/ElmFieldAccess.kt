@@ -11,7 +11,7 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
  *
  * e.g. `myRecord.foo.bar` and `{foo={bar=1}}.foo.bar`
  */
-class ElmFieldAccessExpression(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
+class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
 
     val start: ElmFieldAccessStart
         get() = findNotNullChildByClass(ElmFieldAccessStart::class.java)

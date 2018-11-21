@@ -6,7 +6,7 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmFieldAccessExpression
+import org.elm.lang.core.psi.elements.ElmFieldAccess
 import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.renderedText
 
@@ -17,7 +17,7 @@ object ElmRecordFieldSuggestor : Suggestor {
         val parent = pos.parent
         val file = pos.containingFile as ElmFile
 
-        if (pos.elementType == LOWER_CASE_IDENTIFIER && parent is ElmFieldAccessExpression) {
+        if (pos.elementType == LOWER_CASE_IDENTIFIER && parent is ElmFieldAccess) {
             // TODO [kl] re-implement
 /*            // Infer the type of the record whose fields are being accessed
             // and suggest that record's fields as completion results.
