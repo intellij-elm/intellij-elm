@@ -22,7 +22,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.text.CharArrayUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
-import org.elm.lang.core.psi.elements.ElmRecord
+import org.elm.lang.core.psi.elements.ElmRecordExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 
 /**
@@ -97,7 +97,7 @@ class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
         }
 
         if (elementAtCaretType == ElmTypes.EQ
-                && elementAtCaret.parentOfType(ElmRecord::class, ElmTypeDeclaration::class) != null) {
+                && elementAtCaret.parentOfType(ElmRecordExpr::class, ElmTypeDeclaration::class) != null) {
             return Result.Continue
         }
 

@@ -18,7 +18,7 @@ interface ElmExpressionPartTag : ElmPsiElement
 /** An element that can occur in an [ElmExpression] as the argument to a function or operator */
 interface ElmOperandTag : ElmExpressionPartTag
 
-/** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunction], or [ElmCaseOfBranch] */
+/** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunctionExpr], or [ElmCaseOfBranch] */
 interface ElmNameDeclarationPatternTag : ElmNamedElement
 
 /** A function being called as the child of a [ElmFunctionCall] */

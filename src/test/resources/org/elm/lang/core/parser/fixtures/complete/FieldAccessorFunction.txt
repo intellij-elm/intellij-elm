@@ -17,7 +17,7 @@ Elm File
             PsiElement(DOT)('.')
             PsiElement(LOWER_CASE_IDENTIFIER)('map')
         PsiWhiteSpace(' ')
-        ElmFieldAccessorFunction(FIELD_ACCESSOR_FUNCTION)
+        ElmFieldAccessorFunctionExpr(FIELD_ACCESSOR_FUNCTION_EXPR)
           PsiElement(DOT)('.')
           PsiElement(LOWER_CASE_IDENTIFIER)('credentials')
         PsiWhiteSpace(' ')

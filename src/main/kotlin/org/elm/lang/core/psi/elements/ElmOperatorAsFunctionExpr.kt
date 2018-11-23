@@ -16,7 +16,7 @@ import org.elm.lang.core.resolve.reference.SimpleOperatorReference
  *
  * e.g. the `(+)` in the expression `foldl (+) 0`
  */
-class ElmOperatorAsFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
+class ElmOperatorAsFunctionExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
 
     val operator: PsiElement
         get() = findNotNullChildByType(OPERATOR_IDENTIFIER)

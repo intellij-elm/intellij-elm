@@ -6,6 +6,6 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
 /** A literal number. e.g. `-123` or `1.23` */
-class ElmNumberConstant(node: ASTNode) : ElmPsiElementImpl(node), ElmConstantTag {
+class ElmNumberConstantExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmConstantTag {
     val isFloat get() = text.contains('.')
 }

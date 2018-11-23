@@ -76,7 +76,7 @@ private Module ::=
 
 ModuleDeclaration ::=
     PORT? MODULE UpperCaseQID ExposingList
-    | 'effect' MODULE UpperCaseQID WHERE Record ExposingList
+    | 'effect' MODULE UpperCaseQID WHERE RecordExpr ExposingList
     { pin(".*")=UpperCaseQID; recoverWhile=module_recover }
 
 // Recover from a module declaration by finding the next top-level statement. Typically
@@ -139,9 +139,9 @@ external MinusWithoutTrailingWhitespace ::= parseMinusWithoutTrailingWhitespace
 
 UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)* !DotWithoutLeadingWhitespace
 ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
-FieldAccess ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
+FieldAccessExpr ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
 ExpressionAccessor ::= (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
-FieldAccessorFunction ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
+FieldAccessorFunctionExpr ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
 
 
 // IMPORT DECLARATION
@@ -185,10 +185,10 @@ private FunctionDeclarationPattern ::=
         AnythingPattern
         | LowerPattern
         | TuplePattern
-        | Unit
+        | UnitExpr
         | ListPattern // Always a partial pattern, but not a syntax error
         | RecordPattern
-        | Literal // Always a partial pattern, but not a syntax error
+        | LiteralExprGroup // Always a partial pattern, but not a syntax error
         | ParenthesizedPattern
 
 // TYPE DECLARATIONS AND REFERENCES
@@ -243,7 +243,7 @@ FieldType ::=
     LOWER_CASE_IDENTIFIER COLON TypeRef
 
 TupleType ::=
-    Unit
+    UnitExpr
     | LEFT_PARENTHESIS TypeRef (COMMA TypeRef)+ RIGHT_PARENTHESIS
 
 
@@ -265,7 +265,7 @@ Expression ::= CallOrOperand (Operator CallOrOperand)*
 Operator ::=
     OPERATOR_IDENTIFIER
 
-OperatorAsFunction ::=
+OperatorAsFunctionExpr ::=
     OperatorAsFunction_inner
 
 private OperatorAsFunction_inner ::=
@@ -275,36 +275,40 @@ private CallOrOperand ::=
     FunctionCall
     | Operand
 
+// NOTE: all descendants must be:
+//       either a private group (such as `LiteralExprGroup`)
+//       *or* a public rule named with `Expr` suffix
 private Operand ::=
-    Literal
-    | RecordWithAccessor
-    | ExpressionWithAccessor
-    | NegateExpression
-    | FieldAccess
+    LiteralExprGroup
+    | RecordWithAccessorExpr
+    | ExpressionWithAccessorExpr
+    | NegateExpr
+    | FieldAccessExpr
     | ValueExpr
-    | FieldAccessorFunction
-    | OperatorAsFunction
-    | ParenthesizedExpression
-    | TupleConstructor
-    | Tuple
-    | List
-    | Record
-    | IfElse
-    | CaseOf
-    | LetIn
-    | AnonymousFunction
-    | GlslCode
+    | FieldAccessorFunctionExpr
+    | OperatorAsFunctionExpr
+    | ParenthesizedExpr
+    | TupleConstructorExpr
+    | UnitExpr
+    | TupleExpr
+    | ListExpr
+    | RecordExpr
+    | IfElseExpr
+    | CaseOfExpr
+    | LetInExpr
+    | AnonymousFunctionExpr
+    | GlslCodeExpr
 
 // Various tokens that can begin a new operand. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
-ExpressionWithAccessor ::=
-    ParenthesizedExpression ExpressionAccessor
+ExpressionWithAccessorExpr ::=
+    ParenthesizedExpr ExpressionAccessor
 
-RecordWithAccessor ::=
-    Record ExpressionAccessor
+RecordWithAccessorExpr ::=
+    RecordExpr ExpressionAccessor
 
-NegateExpression ::= MinusWithoutTrailingWhitespace Expression
+NegateExpr ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
 
 FunctionCall ::=
@@ -318,27 +322,27 @@ FunctionCall ::=
     }
 
 private FunctionCallTarget ::=
-    RecordWithAccessor
-    | ExpressionWithAccessor
-    | FieldAccess
+    RecordWithAccessorExpr
+    | ExpressionWithAccessorExpr
+    | FieldAccessExpr
     | ValueExpr
-    | FieldAccessorFunction
-    | OperatorAsFunction
-    | ParenthesizedExpression
-    | TupleConstructor
-    | AnonymousFunction
+    | FieldAccessorFunctionExpr
+    | OperatorAsFunctionExpr
+    | ParenthesizedExpr
+    | TupleConstructorExpr
+    | AnonymousFunctionExpr
 
-private ParenthesizedExpression ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+private ParenthesizedExpr ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
-private Literal ::=
-    CharConstant
-    | NumberConstant
-    | StringConstant
+private LiteralExprGroup ::=
+    CharConstantExpr
+    | NumberConstantExpr
+    | StringConstantExpr
 
-CharConstant ::= OPEN_CHAR StringPart CLOSE_CHAR
+CharConstantExpr ::= OPEN_CHAR StringPart CLOSE_CHAR
     { pin = 1 }
-NumberConstant ::= NUMBER_LITERAL
-StringConstant ::= OPEN_QUOTE StringParts CLOSE_QUOTE
+NumberConstantExpr ::= NUMBER_LITERAL
+StringConstantExpr ::= OPEN_QUOTE StringParts CLOSE_QUOTE
     { pin = 1 }
 
 private StringPart ::= REGULAR_STRING_PART | STRING_ESCAPE | INVALID_STRING_ESCAPE
@@ -347,32 +351,28 @@ private StringParts ::= StringPart*
 
 private string_recover ::= !(CLOSE_QUOTE|VIRTUAL_END_DECL|expr_delimiters)
 
-AnonymousFunction ::= BACKSLASH Pattern+ ARROW Expression
+AnonymousFunctionExpr ::= BACKSLASH Pattern+ ARROW Expression
 
 ValueExpr ::=
     ValueQID
     | UpperCaseQID
 
-private Tuple ::=
-    Unit
-    | NonEmptyTuple
-
-NonEmptyTuple ::=
+TupleExpr ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
     {pin(".*")=2}
 
 // TODO [drop 0.18] remove this
-TupleConstructor ::=
+TupleConstructorExpr ::=
     LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
-Unit ::=
+UnitExpr ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
 
-List ::=
+ListExpr ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list2 Expression>>] RIGHT_SQUARE_BRACKET
     { pin = 1 }
 
-Record ::=
+RecordExpr ::=
     LEFT_BRACE RecordInner? RIGHT_BRACE
     { pin = 1 }
 
@@ -398,12 +398,12 @@ Field ::=
     { pin = 2 }
 
 
-IfElse ::=
+IfElseExpr ::=
     IF Expression THEN Expression (ELSE IF Expression THEN Expression)* ELSE Expression
     { pin = 'IF' }
 
 
-CaseOf ::=
+CaseOfExpr ::=
     CASE Expression CaseOfTail
     { pin = 'CASE' }
 
@@ -428,7 +428,7 @@ private MoreCaseOfBranches ::= (VIRTUAL_END_DECL CaseOfBranch)+
     { pin(".*")=1 }
 
 
-LetIn ::=
+LetInExpr ::=
     LET LetInTail
     { pin = 'LET' }
 
@@ -463,10 +463,10 @@ private SinglePattern ::=
     | LowerPattern
     | UnionPattern
     | TuplePattern
-    | Unit
+    | UnitExpr
     | ListPattern
     | RecordPattern
-    | Literal
+    | LiteralExprGroup
 
 LowerPattern ::= LOWER_CASE_IDENTIFIER
 
@@ -486,10 +486,10 @@ private UnionArgumentPattern ::=
     | LowerPattern
     | TuplePattern
     | UpperCaseQID
-    | Unit
+    | UnitExpr
     | ListPattern
     | RecordPattern
-    | Literal
+    | LiteralExprGroup
     | ParenthesizedPattern
 
 TuplePattern ::=
@@ -508,7 +508,7 @@ InfixDeclaration ::=
     { pin = 'EQ' }
 
 
-GlslCode ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
+GlslCodeExpr ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 
 
  // TODO [drop 0.18] remove OperatorConfig

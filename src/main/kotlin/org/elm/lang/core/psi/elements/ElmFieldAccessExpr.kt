@@ -17,7 +17,7 @@ import org.elm.lang.core.resolve.scope.ExpressionScope
  *
  * e.g. `model.currentUser.name`
  */
-class ElmFieldAccess(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
+class ElmFieldAccessExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmOperandTag, ElmFunctionCallTargetTag {
 
     val lowerCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(LOWER_CASE_IDENTIFIER)

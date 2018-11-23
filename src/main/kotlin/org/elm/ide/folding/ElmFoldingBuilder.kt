@@ -25,7 +25,7 @@ class ElmFoldingBuilder : FoldingBuilderEx(), DumbAware {
                 if (nl > 0) node.text.substring(0, nl) + " ...-}"
                 else "{-...-}"
             }
-            RECORD, RECORD_TYPE -> "{...}"
+            RECORD_EXPR, RECORD_TYPE -> "{...}"
             TYPE_ALIAS_DECLARATION, TYPE_DECLARATION, VALUE_DECLARATION -> " = ..."
             else -> "..."
         }
@@ -70,7 +70,7 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
             is PsiComment -> {
                 if (element.elementType == BLOCK_COMMENT) fold(element)
             }
-            is ElmRecordType, is ElmRecord -> {
+            is ElmRecordType, is ElmRecordExpr -> {
                 fold(element)
             }
             is ElmValueDeclaration -> {
@@ -82,13 +82,13 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
             is ElmTypeAliasDeclaration -> {
                 foldToEnd(element) { lowerTypeNameList.lastOrNull() ?: nameIdentifier }
             }
-            is ElmLetIn -> {
+            is ElmLetInExpr -> {
                 val letKw = element.directChildren.find { it.elementType == LET } ?: return
                 val inKw = element.directChildren.find { it.elementType == IN } ?: return
                 foldBetween(letKw, letKw, inKw, false, false)
                 foldBetween(inKw, inKw, element.lastChild, false, true)
             }
-            is ElmCaseOf -> {
+            is ElmCaseOfExpr -> {
                 foldToEnd(element) { directChildren.find { it.elementType == OF } }
             }
             is ElmCaseOfBranch -> {

@@ -80,7 +80,7 @@ class TypeExpression private constructor(
             is ElmUpperPathTypeRef -> upperPathTypeRefType(decl)
             is ElmTypeVariableRef -> subs.resolve(TyVar(decl.identifier.text))
             is ElmRecordType -> recordTypeDeclType(decl, null)
-            is ElmTupleType -> if (decl.unit != null) TyUnit else TyTuple(decl.typeRefList.map { typeRefType(it) })
+            is ElmTupleType -> if (decl.unitExpr != null) TyUnit else TyTuple(decl.typeRefList.map { typeRefType(it) })
             is ElmParametricTypeRef -> parametricTypeRefType(decl)
             is ElmTypeRef -> typeRefType(decl)
             else -> error("unimplemented type $decl")

@@ -18,7 +18,7 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
  *      x + y
  *  ```
  */
-class ElmLetIn(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
+class ElmLetInExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
     /**
      * The local declaration bindings.
      *

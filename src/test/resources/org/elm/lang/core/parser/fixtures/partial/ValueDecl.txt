@@ -26,7 +26,7 @@ Elm File
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('f3')
       PsiWhiteSpace(' ')
-      ElmNumberConstant(NUMBER_CONSTANT)
+      ElmNumberConstantExpr(NUMBER_CONSTANT_EXPR)
         PsiElement(NUMBER_LITERAL)('42')
     PsiWhiteSpace(' ')
     PsiElement(EQ)('=')

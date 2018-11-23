@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
  *
  * e.g. `\x -> x + 1`
  */
-class ElmAnonymousFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionCallTargetTag {
+class ElmAnonymousFunctionExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionCallTargetTag {
 
     /** Zero-or-more parameters to the lambda expression */
     val patternList: List<ElmPattern>

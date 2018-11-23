@@ -6,4 +6,4 @@ import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
 // TODO [drop 0.18] remove this class
-class ElmTupleConstructor(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionCallTargetTag
+class ElmTupleConstructorExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionCallTargetTag

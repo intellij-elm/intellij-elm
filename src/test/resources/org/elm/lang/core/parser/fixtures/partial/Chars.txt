@@ -4,7 +4,7 @@ Elm File
       PsiElement(LOWER_CASE_IDENTIFIER)('a')
     PsiElement(EQ)('=')
     ElmExpression(EXPRESSION)
-      ElmCharConstant(CHAR_CONSTANT)
+      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
         PsiElement(OPEN_CHAR)(''')
         PsiElement(REGULAR_STRING_PART)('c')
         PsiErrorElement:CLOSE_CHAR expected, got '+'
@@ -13,7 +13,7 @@ Elm File
       ElmOperator(OPERATOR)
         PsiElement(OPERATOR_IDENTIFIER)('+')
       PsiWhiteSpace(' ')
-      ElmCharConstant(CHAR_CONSTANT)
+      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
         PsiElement(OPEN_CHAR)(''')
         PsiElement(REGULAR_STRING_PART)('e')
         PsiElement(CLOSE_CHAR)(''')
@@ -24,7 +24,7 @@ Elm File
       PsiElement(LOWER_CASE_IDENTIFIER)('b')
     PsiElement(EQ)('=')
     ElmExpression(EXPRESSION)
-      ElmCharConstant(CHAR_CONSTANT)
+      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
         PsiElement(OPEN_CHAR)(''')
         PsiElement(REGULAR_STRING_PART)('d')
         PsiErrorElement:CLOSE_CHAR expected, got '
@@ -37,10 +37,10 @@ Elm File
       PsiElement(LOWER_CASE_IDENTIFIER)('c')
     PsiElement(EQ)('=')
     ElmExpression(EXPRESSION)
-      ElmList(LIST)
+      ElmListExpr(LIST_EXPR)
         PsiElement(LEFT_SQUARE_BRACKET)('[')
         ElmExpression(EXPRESSION)
-          ElmCharConstant(CHAR_CONSTANT)
+          ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
             PsiElement(OPEN_CHAR)(''')
             PsiElement(REGULAR_STRING_PART)('1')
             PsiErrorElement:CLOSE_CHAR expected, got '
@@ -62,7 +62,7 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmCharConstant(CHAR_CONSTANT)
+      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
         PsiElement(OPEN_CHAR)(''')
         PsiElement(REGULAR_STRING_PART)('3')
         PsiErrorElement:CLOSE_CHAR expected, unexpected end of file

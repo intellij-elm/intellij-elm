@@ -9,7 +9,7 @@ Elm File
     PsiWhiteSpace(' ')
     PsiElement(WHERE)('where')
     PsiWhiteSpace(' ')
-    ElmRecord(RECORD)
+    ElmRecordExpr(RECORD_EXPR)
       PsiElement(LEFT_BRACE)('{')
       PsiWhiteSpace(' ')
       ElmField(FIELD)

@@ -61,13 +61,13 @@ object ElmKeywordSuggestor : Suggestor {
             }
 
             // keywords within the context of an 'if' expression
-            if (PsiTreeUtil.getParentOfType(pos, ElmIfElse::class.java) != null) {
+            if (PsiTreeUtil.getParentOfType(pos, ElmIfElseExpr::class.java) != null) {
                 result.add("then")
                 result.add("else")
             }
 
             // the 'of' in a 'case' expression
-            val caseOfExpr = PsiTreeUtil.getParentOfType(pos, ElmCaseOf::class.java)
+            val caseOfExpr = PsiTreeUtil.getParentOfType(pos, ElmCaseOfExpr::class.java)
             if (caseOfExpr != null) {
                 // boy this is ugly. I either need to level-up my PsiTreeUtil-fu or learn how to use PsiPattern.
                 val functionCall = PsiTreeUtil.getParentOfType(pos, ElmFunctionCall::class.java)
@@ -78,7 +78,7 @@ object ElmKeywordSuggestor : Suggestor {
 
             // the 'in' in a 'let' expression
             // TODO [kl] this is not nearly specific enough, but it will do for now
-            if (PsiTreeUtil.getParentOfType(pos, ElmLetIn::class.java) != null) {
+            if (PsiTreeUtil.getParentOfType(pos, ElmLetInExpr::class.java) != null) {
                 result.add("in")
             }
         }

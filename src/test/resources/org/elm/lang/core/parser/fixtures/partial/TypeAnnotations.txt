@@ -25,7 +25,7 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmExpression(EXPRESSION)
-      ElmNumberConstant(NUMBER_CONSTANT)
+      ElmNumberConstantExpr(NUMBER_CONSTANT_EXPR)
         PsiElement(NUMBER_LITERAL)('42')
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')

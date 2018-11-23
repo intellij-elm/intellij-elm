@@ -47,8 +47,8 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
     /**
      * Very rare. This will only appear in Effect Manager modules.
      */
-    val effectModuleDetailRecord: ElmRecord?
-        get() = findChildByClass(ElmRecord::class.java)
+    val effectModuleDetailRecord: ElmRecordExpr?
+        get() = findChildByClass(ElmRecordExpr::class.java)
 
 
     val exposesAll: Boolean

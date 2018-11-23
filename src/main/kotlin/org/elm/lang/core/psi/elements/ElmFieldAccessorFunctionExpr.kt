@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.ElmTypes
  *
  * e.g. `.x` in `List.map .x [{x=1}]`
  */
-class ElmFieldAccessorFunction(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionCallTargetTag, ElmOperandTag {
+class ElmFieldAccessorFunctionExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionCallTargetTag, ElmOperandTag {
     /** The name of the field being accessed */
     val identifier: PsiElement
         get() = findNotNullChildByType(ElmTypes.LOWER_CASE_IDENTIFIER)

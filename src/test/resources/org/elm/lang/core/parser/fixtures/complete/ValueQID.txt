@@ -13,6 +13,6 @@ Elm File
             PsiElement(DOT)('.')
             PsiElement(LOWER_CASE_IDENTIFIER)('length')
         PsiWhiteSpace(' ')
-        ElmList(LIST)
+        ElmListExpr(LIST_EXPR)
           PsiElement(LEFT_SQUARE_BRACKET)('[')
           PsiElement(RIGHT_SQUARE_BRACKET)(']')
