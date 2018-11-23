@@ -260,7 +260,7 @@ PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
 // EXPRESSIONS
 
 
-Expression ::= CallOrOperand (Operator CallOrOperand)*
+Expression ::= CallOrAtom (Operator CallOrAtom)*
 
 Operator ::=
     OPERATOR_IDENTIFIER
@@ -271,14 +271,14 @@ OperatorAsFunctionExpr ::=
 private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
-private CallOrOperand ::=
+private CallOrAtom ::=
     FunctionCall
-    | Operand
+    | Atom
 
 // NOTE: all descendants must be:
 //       either a private group (such as `LiteralExprGroup`)
 //       *or* a public rule named with `Expr` suffix
-private Operand ::=
+private Atom ::=
     LiteralExprGroup
     | RecordWithAccessorExpr
     | ExpressionWithAccessorExpr
@@ -312,7 +312,7 @@ NegateExpr ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
 
 FunctionCall ::=
-    FunctionCallTarget Operand+
+    FunctionCallTarget Atom+
     { pin = 2
       /* Bind trailing whitespace as part of the function call. Imagine that the user has begun
          making a function call and the caret is on some whitespace. We want that whitespace
