@@ -7,6 +7,7 @@
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
     parserImports=[ "static com.intellij.lang.WhitespacesBinders.*" ]
+    extends(".+Expr") = Atom
 
     elementTypeFactory("ModuleDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -278,7 +279,10 @@ private CallOrAtom ::=
 // NOTE: all descendants must be:
 //       either a private group (such as `LiteralExprGroup`)
 //       *or* a public rule named with `Expr` suffix
-private Atom ::=
+//
+// If you see an error "Unknown element type: ATOM" in [ElmPsiFactory.createElement]
+// then you probably broke one of the above rules.
+Atom ::=
     LiteralExprGroup
     | RecordWithAccessorExpr
     | ExpressionWithAccessorExpr
@@ -298,6 +302,7 @@ private Atom ::=
     | LetInExpr
     | AnonymousFunctionExpr
     | GlslCodeExpr
+{ name="expression" }
 
 // Various tokens that can begin a new operand. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET

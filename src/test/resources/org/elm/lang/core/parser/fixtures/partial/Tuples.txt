@@ -22,7 +22,7 @@ Elm File
           ElmValueExpr(VALUE_EXPR)
             ElmValueQID(VALUE_QID)
               PsiElement(LOWER_CASE_IDENTIFIER)('mag')
-        PsiErrorElement:<value expr>, BACKSLASH, CASE, COMMA, IF, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE, OPERATOR_IDENTIFIER, RIGHT_PARENTHESIS or START_GLSL_CODE expected, got '
+        PsiErrorElement:<expression>, COMMA, OPERATOR_IDENTIFIER or RIGHT_PARENTHESIS expected, got '
 '
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
