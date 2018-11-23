@@ -337,7 +337,7 @@ private FunctionCallTarget ::=
     | TupleConstructorExpr
     | AnonymousFunctionExpr
 
-private ParenthesizedExpr ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+ParenthesizedExpr ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 
 private LiteralExprGroup ::=
     CharConstantExpr

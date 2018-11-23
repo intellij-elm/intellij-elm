@@ -262,7 +262,6 @@ private class InferenceScope(
             is ElmAnonymousFunctionExpr -> inferLambda(operand)
             is ElmCaseOfExpr -> inferCase(operand)
             is ElmCharConstantExpr -> TyChar
-            is ElmExpression -> inferExpression(operand) // parenthesized expression
             is ElmExpressionWithAccessorExpr -> inferExpressionWithAccessor(operand)
             is ElmFieldAccessExpr -> inferFieldAccess(operand)
             is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(operand)
@@ -275,6 +274,7 @@ private class InferenceScope(
             is ElmTupleExpr -> TyTuple(operand.expressionList.map { inferExpression(it) })
             is ElmNumberConstantExpr -> if (operand.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
             is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(operand)
+            is ElmParenthesizedExpr -> inferExpression(operand.expression)
             is ElmRecordExpr -> inferRecord(operand)
             is ElmRecordWithAccessorExpr -> inferRecordWithAccessor(operand)
             is ElmStringConstantExpr -> TyString
