@@ -2,7 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmOperandTag
+import org.elm.lang.core.psi.ElmAtomTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
 /**
@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
  * - `if True then 1 else 2`
  * - `if False then 1 else if True then 2 else 3`
  */
-class ElmIfElseExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
+class ElmIfElseExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag {
 
     /**
      * In a well-formed program, will contain an odd number of expressions, with at least three.

@@ -4,7 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
-import org.elm.lang.core.psi.ElmOperandTag
+import org.elm.lang.core.psi.ElmAtomTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
 /**
@@ -12,7 +12,7 @@ import org.elm.lang.core.psi.ElmPsiElementImpl
  *
  * e.g. `\x -> x + 1`
  */
-class ElmAnonymousFunctionExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionCallTargetTag {
+class ElmAnonymousFunctionExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag, ElmFunctionCallTargetTag {
 
     /** Zero-or-more parameters to the lambda expression */
     val patternList: List<ElmPattern>

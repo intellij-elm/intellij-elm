@@ -12,17 +12,17 @@ interface ElmTypeSignatureDeclarationTag: ElmPsiElement
 /** An element that can appear in the parameter list of an [ElmUnionMember] */
 interface ElmUnionMemberParameterTag : ElmTypeSignatureDeclarationTag
 
-/** An element that can occur in an [ElmExpression]; either an operator or operand */
+/** An element that can occur in an [ElmExpression]; either an operator or an atom */
 interface ElmExpressionPartTag : ElmPsiElement
 
 /** An element that can occur in an [ElmExpression] as the argument to a function or operator */
-interface ElmOperandTag : ElmExpressionPartTag
+interface ElmAtomTag : ElmExpressionPartTag
 
 /** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunctionExpr], or [ElmCaseOfBranch] */
 interface ElmNameDeclarationPatternTag : ElmNamedElement
 
 /** A function being called as the child of a [ElmFunctionCall] */
-interface ElmFunctionCallTargetTag : ElmOperandTag
+interface ElmFunctionCallTargetTag : ElmAtomTag
 
 /** An element that is either an [ElmFunctionParamTag], a [ElmPatternChildTag], or both. No elements implement this directly. */
 interface ElmFunctionParamOrPatternChildTag : ElmPsiElement
@@ -43,4 +43,4 @@ interface ElmTypeRefSegmentTag : ElmTypeSignatureDeclarationTag
 interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
-interface ElmConstantTag : ElmOperandTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag
+interface ElmConstantTag : ElmAtomTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag

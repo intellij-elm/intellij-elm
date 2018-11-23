@@ -304,7 +304,7 @@ Atom ::=
     | GlslCodeExpr
 { name="expression" }
 
-// Various tokens that can begin a new operand. Useful for parse error recovery.
+// Various tokens that can begin a new expression. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
 ExpressionWithAccessorExpr ::=

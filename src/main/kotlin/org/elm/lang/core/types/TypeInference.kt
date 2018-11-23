@@ -205,9 +205,9 @@ private class InferenceScope(
         val parts: List<ElmExpressionPartTag> = expr.parts.toList()
 
         // fast path for single part expressions
-        // don't add to expressionTypes since the operand is already there
+        // don't add to expressionTypes since the atom is already there
         if (parts.size == 1) {
-            return (parts[0] as? ElmOperandTag)?.let { inferOperand(it) } ?: TyUnknown
+            return (parts[0] as? ElmAtomTag)?.let { inferAtom(it) } ?: TyUnknown
         }
 
         // Get the operator types and precedences. We don't have to worry about invalid
@@ -239,7 +239,7 @@ private class InferenceScope(
         fun validateTree(tree: BinaryExprTree<ElmExpressionPartTag>): RangeTy {
             return when (tree) {
                 is BinaryExprTree.Operand -> {
-                    RangeTy(tree.operand, inferOperand(tree.operand as ElmOperandTag))
+                    RangeTy(tree.operand, inferAtom(tree.operand as ElmAtomTag))
                 }
                 is BinaryExprTree.Binary -> {
                     val l = validateTree(tree.left)
@@ -257,33 +257,33 @@ private class InferenceScope(
         return result.ty
     }
 
-    private fun inferOperand(operand: ElmOperandTag): Ty {
-        val ty = when (operand) {
-            is ElmAnonymousFunctionExpr -> inferLambda(operand)
-            is ElmCaseOfExpr -> inferCase(operand)
+    private fun inferAtom(atom: ElmAtomTag): Ty {
+        val ty = when (atom) {
+            is ElmAnonymousFunctionExpr -> inferLambda(atom)
+            is ElmCaseOfExpr -> inferCase(atom)
             is ElmCharConstantExpr -> TyChar
-            is ElmExpressionWithAccessorExpr -> inferExpressionWithAccessor(operand)
-            is ElmFieldAccessExpr -> inferFieldAccess(operand)
-            is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(operand)
-            is ElmFunctionCall -> inferFunctionCall(operand)
+            is ElmExpressionWithAccessorExpr -> inferExpressionWithAccessor(atom)
+            is ElmFieldAccessExpr -> inferFieldAccess(atom)
+            is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(atom)
+            is ElmFunctionCall -> inferFunctionCall(atom)
             is ElmGlslCodeExpr -> TyShader
-            is ElmIfElseExpr -> inferIfElse(operand)
-            is ElmLetInExpr -> inferChild { beginLetInInference(operand) }.ty
-            is ElmListExpr -> inferList(operand)
-            is ElmNegateExpr -> inferNegateExpression(operand)
-            is ElmTupleExpr -> TyTuple(operand.expressionList.map { inferExpression(it) })
-            is ElmNumberConstantExpr -> if (operand.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
-            is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(operand)
-            is ElmParenthesizedExpr -> inferExpression(operand.expression)
-            is ElmRecordExpr -> inferRecord(operand)
-            is ElmRecordWithAccessorExpr -> inferRecordWithAccessor(operand)
+            is ElmIfElseExpr -> inferIfElse(atom)
+            is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
+            is ElmListExpr -> inferList(atom)
+            is ElmNegateExpr -> inferNegateExpression(atom)
+            is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
+            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
+            is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
+            is ElmParenthesizedExpr -> inferExpression(atom.expression)
+            is ElmRecordExpr -> inferRecord(atom)
+            is ElmRecordWithAccessorExpr -> inferRecordWithAccessor(atom)
             is ElmStringConstantExpr -> TyString
             is ElmTupleConstructorExpr -> TyUnknown // TODO [drop 0.18] remove this case
             is ElmUnitExpr -> TyUnit
-            is ElmValueExpr -> inferReferenceElement(operand)
-            else -> error("unexpected operand type $operand")
+            is ElmValueExpr -> inferReferenceElement(atom)
+            else -> error("unexpected atom type $atom")
         }
-        expressionTypes[operand] = ty
+        expressionTypes[atom] = ty
         return ty
     }
 
@@ -517,7 +517,7 @@ private class InferenceScope(
     }
 
     private fun inferFunctionCall(call: ElmFunctionCall): Ty {
-        val inferredTy = inferOperand(call.target)
+        val inferredTy = inferAtom(call.target)
 
         val arguments = call.arguments.toList()
 
@@ -542,7 +542,7 @@ private class InferenceScope(
         }
 
         for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
-            val argTy = inferOperand(arg)
+            val argTy = inferAtom(arg)
             requireAssignable(arg, argTy, paramTy)
         }
 
