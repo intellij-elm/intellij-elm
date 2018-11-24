@@ -972,4 +972,13 @@ infix non   4 (<)  = lt
 main : Bool
 main = 1 < 2 && 3 < 4
 """)
+
+    fun `test operator mixed with function call`() = checkByText("""
+type Foo = Bar
+foo : Foo -> () -> Foo
+foo a b = a
+infix left 4 (~~) = foo
+
+main = foo Bar () ~~ ()
+""")
 }

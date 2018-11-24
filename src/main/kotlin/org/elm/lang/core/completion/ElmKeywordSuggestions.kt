@@ -75,7 +75,7 @@ object ElmKeywordSuggestor : Suggestor {
             if (caseOfExpr != null) {
                 // boy this is ugly. I either need to level-up my PsiTreeUtil-fu or learn how to use PsiPattern.
                 val functionCall = PsiTreeUtil.getParentOfType(pos, ElmFunctionCallExpr::class.java)
-                if (functionCall?.parent?.parent == caseOfExpr && grandParent?.parent == functionCall) {
+                if (functionCall?.parent == caseOfExpr && grandParent?.parent == functionCall) {
                     result.add("of")
                 }
             }

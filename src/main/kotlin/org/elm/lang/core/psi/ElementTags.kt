@@ -15,11 +15,14 @@ interface ElmUnionMemberParameterTag : ElmTypeSignatureDeclarationTag
 /** An Elm expression; either a chain of binary operators, a function call, or an atom */
 interface ElmExpressionTag : ElmPsiElement
 
-/** An element that can occur in an [ElmExpressionTag]; either an operator or an atom */
-interface ElmExpressionPartTag : ElmPsiElement
+/** An element that can occur on its own or as an argument to a function or operator */
+interface ElmAtomTag : ElmExpressionTag, ElmOperandTag
 
-/** An element that can occur in an [ElmExpressionTag] as the argument to a function or operator */
-interface ElmAtomTag : ElmExpressionPartTag, ElmExpressionTag
+/** An element that can occur as an argument to an operator */
+interface ElmOperandTag : ElmPsiElement, ElmBinOpPartTag
+
+/** An element that can occur in a binary operator expression */
+interface ElmBinOpPartTag : ElmPsiElement
 
 /** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunctionExpr], or [ElmCaseOfBranch] */
 interface ElmNameDeclarationPatternTag : ElmNamedElement
