@@ -2,10 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmFunctionCallTargetTag
-import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
-import org.elm.lang.core.psi.ElmAtomTag
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.*
 
 /**
  * A lambda expression
@@ -19,8 +16,8 @@ class ElmAnonymousFunctionExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtom
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
 
     /** The body expression */
-    val expression: ElmExpression
-        get() = findNotNullChildByClass(ElmExpression::class.java)
+    val expression: ElmExpressionTag
+        get() = findNotNullChildByClass(ElmExpressionTag::class.java)
 
     /** Named elements introduced by pattern destructuring in the parameter list */
     val namedParameters: List<ElmNameDeclarationPatternTag>

@@ -9,11 +9,9 @@ import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.OperatorAssociativity.NON
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
-import java.util.*
 
 private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
 
@@ -96,6 +94,10 @@ private class InferenceScope(
             return InferenceResult(expressionTypes, diagnostics, TyUnknown)
         }
 
+        // TODO [kl] re-enable
+        return InferenceResult(expressionTypes, diagnostics, TyUnknown)
+
+        /*
         activeScopes += declaration
 
         val (declaredTy, paramCount) = bindParameters(declaration)
@@ -115,6 +117,7 @@ private class InferenceScope(
 
         val ty = if (declaredTy === TyUnknown) bodyTy else declaredTy
         return InferenceResult(expressionTypes, diagnostics, ty)
+        */
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
@@ -143,7 +146,7 @@ private class InferenceScope(
         return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
-    private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
+    private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpressionTag): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpression(branchExpression)
         return InferenceResult(expressionTypes, diagnostics, ty)
@@ -199,9 +202,12 @@ private class InferenceScope(
      * These functions recurse down into children elements, if any, and report diagnostics on them.
      */
 
-    private fun inferExpression(expr: ElmExpression?): Ty {
+    private fun inferExpression(expr: ElmExpressionTag?): Ty {
         if (expr == null || elementContainsErrors(expr)) return TyUnknown
 
+        return TyUnknown
+        // TODO [kl] re-enable
+        /*
         val parts: List<ElmExpressionPartTag> = expr.parts.toList()
 
         // fast path for single part expressions
@@ -255,6 +261,7 @@ private class InferenceScope(
         val result = validateTree(BinaryExprTree.parse(parts, operatorPrecedences))
         expressionTypes[expr] = result.ty
         return result.ty
+        */
     }
 
     private fun inferAtom(atom: ElmAtomTag): Ty {
@@ -265,7 +272,7 @@ private class InferenceScope(
             is ElmExpressionWithAccessorExpr -> inferExpressionWithAccessor(atom)
             is ElmFieldAccessExpr -> inferFieldAccess(atom)
             is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(atom)
-            is ElmFunctionCall -> inferFunctionCall(atom)
+            is ElmFunctionCallExpr -> inferFunctionCall(atom)
             is ElmGlslCodeExpr -> TyShader
             is ElmIfElseExpr -> inferIfElse(atom)
             is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
@@ -516,13 +523,13 @@ private class InferenceScope(
         }
     }
 
-    private fun inferFunctionCall(call: ElmFunctionCall): Ty {
-        val inferredTy = inferAtom(call.target)
+    private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
+        val inferredTy = inferAtom(callExpr.target)
 
-        val arguments = call.arguments.toList()
+        val arguments = callExpr.arguments.toList()
 
         fun argCountError(expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(call, arguments.size, expected)
+            diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
             return TyUnknown
         }
 

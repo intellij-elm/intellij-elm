@@ -1,8 +1,8 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmAtomTag
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.directChildren
 
@@ -18,7 +18,7 @@ import org.elm.lang.core.psi.directChildren
  *  - `(\x -> x) 1`
  *  - `(a << b) c
  */
-class ElmFunctionCall(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag {
+class ElmFunctionCallExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag {
     /** The function or operator being called */
     val target: ElmFunctionCallTargetTag get() = findNotNullChildByClass(ElmFunctionCallTargetTag::class.java)
 

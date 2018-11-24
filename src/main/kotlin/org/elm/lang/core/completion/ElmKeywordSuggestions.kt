@@ -6,9 +6,13 @@ import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.editor.EditorModificationUtil
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmCaseOfExpr
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
+import org.elm.lang.core.psi.elements.ElmIfElseExpr
+import org.elm.lang.core.psi.elements.ElmLetInExpr
 
 /**
  * Provide code completion for Elm's keywords
@@ -54,7 +58,7 @@ object ElmKeywordSuggestor : Suggestor {
             }
 
             // various expressions
-            if (PsiTreeUtil.getParentOfType(pos, ElmExpression::class.java) != null) {
+            if (PsiTreeUtil.getParentOfType(pos, ElmExpressionTag::class.java) != null) {
                 result.add("if")
                 result.add("case")
                 result.add("let")
@@ -70,7 +74,7 @@ object ElmKeywordSuggestor : Suggestor {
             val caseOfExpr = PsiTreeUtil.getParentOfType(pos, ElmCaseOfExpr::class.java)
             if (caseOfExpr != null) {
                 // boy this is ugly. I either need to level-up my PsiTreeUtil-fu or learn how to use PsiPattern.
-                val functionCall = PsiTreeUtil.getParentOfType(pos, ElmFunctionCall::class.java)
+                val functionCall = PsiTreeUtil.getParentOfType(pos, ElmFunctionCallExpr::class.java)
                 if (functionCall?.parent?.parent == caseOfExpr && grandParent?.parent == functionCall) {
                     result.add("of")
                 }
@@ -96,10 +100,10 @@ object ElmKeywordSuggestor : Suggestor {
     private fun addInsertionHandler(keyword: String, item: LookupElementBuilder): LookupElementBuilder {
         when (keyword) {
             in ALWAYS_NEEDS_SPACE ->
-                return item.withInsertHandler({ ctx, _ -> ctx.addSuffix(" ") })
+                return item.withInsertHandler { ctx, _ -> ctx.addSuffix(" ") }
 
             "exposing" ->
-                return item.withInsertHandler({ ctx, _ -> ctx.addSuffix(" ()", moveCursorLeft = 1) })
+                return item.withInsertHandler { ctx, _ -> ctx.addSuffix(" ()", moveCursorLeft = 1) }
 
             else ->
                 return item
@@ -107,7 +111,7 @@ object ElmKeywordSuggestor : Suggestor {
     }
 
 
-    fun InsertionContext.addSuffix(suffix: String, moveCursorLeft: Int = 0) {
+    private fun InsertionContext.addSuffix(suffix: String, moveCursorLeft: Int = 0) {
         document.insertString(selectionEndOffset, suffix)
         EditorModificationUtil.moveCaretRelatively(editor, suffix.length - moveCursorLeft)
     }

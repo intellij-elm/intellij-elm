@@ -10,7 +10,7 @@ import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmFunctionCall
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.TyUnknown
@@ -51,7 +51,7 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
         return findFuncCall(caretElement)
     }
 
-    private fun findFuncCall(caretElement: PsiElement): ElmFunctionCall? {
+    private fun findFuncCall(caretElement: PsiElement): ElmFunctionCallExpr? {
         val element = when (caretElement.elementType) {
             VIRTUAL_END_DECL, RIGHT_PARENTHESIS -> PsiTreeUtil.prevVisibleLeaf(caretElement) ?: return null
             else -> caretElement
@@ -59,12 +59,12 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 
         val ancestorsStrict = element.ancestorsStrict
         log.debug("findFuncCall for $element (${element.text}) ancestorsStrict=${ancestorsStrict.toList()}")
-        return ancestorsStrict.filterIsInstance<ElmFunctionCall>().firstOrNull()
+        return ancestorsStrict.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()
     }
 
     // receives the element as returned by findElementForParameterInfo
     override fun showParameterInfo(element: PsiElement, context: CreateParameterInfoContext) {
-        if (element !is ElmFunctionCall) return
+        if (element !is ElmFunctionCallExpr) return
 
         val paramsDescription = ElmParametersDescription.fromCall(element)
                 ?: return
@@ -112,7 +112,7 @@ class ElmParametersDescription(private val name: String?, private val ty: Ty) {
         get() = TextRange(0, name?.length ?: 0)
 
     companion object {
-        fun fromCall(functionCall: ElmFunctionCall): ElmParametersDescription? {
+        fun fromCall(functionCall: ElmFunctionCallExpr): ElmParametersDescription? {
             // If calling a declared function or constructor, show its unqualified name
             val name = (functionCall.target as? ElmValueExpr)?.referenceName
             val ty = functionCall.target.findTy()

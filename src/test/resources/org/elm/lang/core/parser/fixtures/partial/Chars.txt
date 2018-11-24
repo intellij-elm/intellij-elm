@@ -3,7 +3,7 @@ Elm File
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('a')
     PsiElement(EQ)('=')
-    ElmExpression(EXPRESSION)
+    ElmBinOpExpr(BIN_OP_EXPR)
       ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
         PsiElement(OPEN_CHAR)(''')
         PsiElement(REGULAR_STRING_PART)('c')
@@ -23,29 +23,26 @@ Elm File
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('b')
     PsiElement(EQ)('=')
-    ElmExpression(EXPRESSION)
-      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
-        PsiElement(OPEN_CHAR)(''')
-        PsiElement(REGULAR_STRING_PART)('d')
-        PsiErrorElement:CLOSE_CHAR expected, got '
+    ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
+      PsiElement(OPEN_CHAR)(''')
+      PsiElement(REGULAR_STRING_PART)('d')
+      PsiErrorElement:CLOSE_CHAR expected, got '
 '
-          <empty list>
+        <empty list>
   PsiElement(BAD_CHARACTER)('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
       PsiElement(LOWER_CASE_IDENTIFIER)('c')
     PsiElement(EQ)('=')
-    ElmExpression(EXPRESSION)
-      ElmListExpr(LIST_EXPR)
-        PsiElement(LEFT_SQUARE_BRACKET)('[')
-        ElmExpression(EXPRESSION)
-          ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
-            PsiElement(OPEN_CHAR)(''')
-            PsiElement(REGULAR_STRING_PART)('1')
-            PsiErrorElement:CLOSE_CHAR expected, got '
+    ElmListExpr(LIST_EXPR)
+      PsiElement(LEFT_SQUARE_BRACKET)('[')
+      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
+        PsiElement(OPEN_CHAR)(''')
+        PsiElement(REGULAR_STRING_PART)('1')
+        PsiErrorElement:CLOSE_CHAR expected, got '
 '
-              <empty list>
+          <empty list>
   PsiElement(BAD_CHARACTER)('\n')
   PsiWhiteSpace('  ')
   PsiElement(COMMA)(',')
@@ -61,9 +58,8 @@ Elm File
       PsiElement(LOWER_CASE_IDENTIFIER)('d')
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
-    ElmExpression(EXPRESSION)
-      ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
-        PsiElement(OPEN_CHAR)(''')
-        PsiElement(REGULAR_STRING_PART)('3')
-        PsiErrorElement:CLOSE_CHAR expected, unexpected end of file
-          <empty list>
+    ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
+      PsiElement(OPEN_CHAR)(''')
+      PsiElement(REGULAR_STRING_PART)('3')
+      PsiErrorElement:CLOSE_CHAR expected, unexpected end of file
+        <empty list>

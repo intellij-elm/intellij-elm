@@ -31,6 +31,7 @@ class ElmPsiFactory(private val project: Project) {
                     ANONYMOUS_FUNCTION_EXPR -> ElmAnonymousFunctionExpr(node)
                     ANYTHING_PATTERN -> ElmAnythingPattern(node)
                     AS_CLAUSE -> ElmAsClause(node)
+                    BIN_OP_EXPR -> ElmBinOpExpr(node)
                     CASE_OF_EXPR -> ElmCaseOfExpr(node)
                     CASE_OF_BRANCH -> ElmCaseOfBranch(node)
                     CHAR_CONSTANT_EXPR -> ElmCharConstantExpr(node)
@@ -41,14 +42,13 @@ class ElmPsiFactory(private val project: Project) {
                     EXPOSED_UNION_CONSTRUCTORS -> ElmExposedUnionConstructors(node)
                     EXPOSED_UNION_CONSTRUCTOR -> ElmExposedUnionConstructor(node)
                     EXPOSING_LIST -> ElmExposingList(node)
-                    EXPRESSION -> ElmExpression(node)
                     EXPRESSION_ACCESSOR -> ElmExpressionAccessor(node)
                     EXPRESSION_WITH_ACCESSOR_EXPR -> ElmExpressionWithAccessorExpr(node)
                     FIELD -> ElmField(node)
                     FIELD_ACCESS_EXPR -> ElmFieldAccessExpr(node)
                     FIELD_ACCESSOR_FUNCTION_EXPR -> ElmFieldAccessorFunctionExpr(node)
                     FIELD_TYPE -> ElmFieldType(node)
-                    FUNCTION_CALL -> ElmFunctionCall(node)
+                    FUNCTION_CALL_EXPR -> ElmFunctionCallExpr(node)
                     FUNCTION_DECLARATION_LEFT -> ElmFunctionDeclarationLeft(node)
                     OPERATOR_DECLARATION_LEFT -> ElmOperatorDeclarationLeft(node) // TODO [drop 0.18] remove this line
                     OPERATOR_CONFIG -> ElmOperatorConfig(node) // TODO [drop 0.18] remove this line

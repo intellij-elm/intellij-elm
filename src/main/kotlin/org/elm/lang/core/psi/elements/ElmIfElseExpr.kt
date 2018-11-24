@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmAtomTag
+import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
 /**
@@ -17,7 +18,7 @@ class ElmIfElseExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag {
     /**
      * In a well-formed program, will contain an odd number of expressions, with at least three.
      */
-    val expressionList: List<ElmExpression>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmExpression::class.java)
+    val expressionList: List<ElmExpressionTag>
+        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmExpressionTag::class.java)
 
 }

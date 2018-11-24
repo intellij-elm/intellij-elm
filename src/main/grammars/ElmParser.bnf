@@ -7,7 +7,7 @@
     elementTypeClass="org.elm.lang.core.psi.ElmElementType"
     tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
     parserImports=[ "static com.intellij.lang.WhitespacesBinders.*" ]
-    extends(".+Expr") = Atom
+    extends(".+Expr") = Expression
 
     elementTypeFactory("ModuleDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -261,7 +261,14 @@ PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
 // EXPRESSIONS
 
 
-Expression ::= CallOrAtom (Operator CallOrAtom)*
+Expression ::=
+    CallOrAtom BinOpExprUpper?
+
+upper BinOpExprUpper ::=
+    (Operator CallOrAtom)+
+    { elementType = BinOpExpr }
+
+fake BinOpExpr ::= 'exists solely to create an element type for BinOpExprUpper'
 
 Operator ::=
     OPERATOR_IDENTIFIER
@@ -273,7 +280,7 @@ private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
 private CallOrAtom ::=
-    FunctionCall
+    FunctionCallExpr
     | Atom
 
 // NOTE: all descendants must be:
@@ -282,7 +289,7 @@ private CallOrAtom ::=
 //
 // If you see an error "Unknown element type: ATOM" in [ElmPsiFactory.createElement]
 // then you probably broke one of the above rules.
-Atom ::=
+private Atom ::=
     LiteralExprGroup
     | RecordWithAccessorExpr
     | ExpressionWithAccessorExpr
@@ -316,7 +323,7 @@ RecordWithAccessorExpr ::=
 NegateExpr ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
 
-FunctionCall ::=
+FunctionCallExpr ::=
     FunctionCallTarget Atom+
     { pin = 2
       /* Bind trailing whitespace as part of the function call. Imagine that the user has begun
