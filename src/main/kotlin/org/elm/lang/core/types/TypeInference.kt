@@ -262,6 +262,41 @@ private class InferenceScope(
         return result.ty
     }
 
+    private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
+        val inferredTy = inferAtom(callExpr.target)
+
+        val arguments = callExpr.arguments.toList()
+
+        fun argCountError(expected: Int): TyUnknown {
+            diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
+            return TyUnknown
+        }
+
+        val targetTy = when (inferredTy) {
+            is TyFunction -> inferredTy
+            is TyRecord -> when {
+                // Record constructor
+                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
+                else -> return argCountError(0)
+            }
+            TyUnknown, is TyVar -> return TyUnknown // TODO[unification] infer vars
+            else -> return argCountError(0)
+        }
+
+        if (arguments.size > targetTy.parameters.size) {
+            return argCountError(targetTy.parameters.size)
+        }
+
+        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
+            val argTy = inferAtom(arg)
+            requireAssignable(arg, argTy, paramTy)
+        }
+
+        val resultTy = targetTy.partiallyApply(arguments.size)
+        expressionTypes[callExpr] = resultTy
+        return resultTy
+    }
+
     private fun inferAtom(atom: ElmAtomTag): Ty {
         val ty = when (atom) {
             is ElmAnonymousFunctionExpr -> inferLambda(atom)
@@ -518,39 +553,6 @@ private class InferenceScope(
                 TyUnknown
             }
         }
-    }
-
-    private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
-        val inferredTy = inferAtom(callExpr.target)
-
-        val arguments = callExpr.arguments.toList()
-
-        fun argCountError(expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
-            return TyUnknown
-        }
-
-        val targetTy = when (inferredTy) {
-            is TyFunction -> inferredTy
-            is TyRecord -> when {
-                // Record constructor
-                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
-                else -> return argCountError(0)
-            }
-            TyUnknown, is TyVar -> return TyUnknown // TODO[unification] infer vars
-            else -> return argCountError(0)
-        }
-
-        if (arguments.size > targetTy.parameters.size) {
-            return argCountError(targetTy.parameters.size)
-        }
-
-        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
-            val argTy = inferAtom(arg)
-            requireAssignable(arg, argTy, paramTy)
-        }
-
-        return targetTy.partiallyApply(arguments.size)
     }
 
     private fun inferOperatorAsFunction(op: ElmOperatorAsFunctionExpr): Ty {
