@@ -6,7 +6,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.RangeMarker
 import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.elements.ElmStringConstant
+import org.elm.lang.core.psi.elements.ElmStringConstantExpr
 
 // A BackspaceHandlerDelegate is called during character deletion.
 // We use this to delete triple quotes, since the QuoteHandler can only delete single characters.
@@ -27,7 +27,7 @@ class ElmBackspaceHandler : BackspaceHandlerDelegate() {
         // We need to save the element range now, because the PSI will be changed by the time charDeleted is
         // called
         val parent = psiElement.parent ?: return
-        if (parent is ElmStringConstant
+        if (parent is ElmStringConstantExpr
                 && parent.text == "\"\"\"\"\"\""
                 && editor.caretModel.offset == parent.textOffset + 3) {
             rangeMarker = editor.document.createRangeMarker(parent.textRange)

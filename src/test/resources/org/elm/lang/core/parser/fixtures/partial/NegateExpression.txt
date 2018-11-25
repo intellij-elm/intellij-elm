@@ -5,8 +5,7 @@ Elm File
     PsiWhiteSpace(' ')
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
-    ElmExpression(EXPRESSION)
-      ElmNegateExpression(NEGATE_EXPRESSION)
-        PsiElement(OPERATOR_IDENTIFIER)('-')
-        PsiErrorElement:<expression> expected, unexpected end of file
-          <empty list>
+    ElmNegateExpr(NEGATE_EXPR)
+      PsiElement(OPERATOR_IDENTIFIER)('-')
+      PsiErrorElement:<expression> expected, unexpected end of file
+        <empty list>

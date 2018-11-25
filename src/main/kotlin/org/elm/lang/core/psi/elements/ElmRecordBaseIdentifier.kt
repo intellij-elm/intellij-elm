@@ -35,7 +35,7 @@ class ElmRecordBaseIdentifier(node: ASTNode) : ElmPsiElementImpl(node), ElmRefer
     override fun getReferences(): Array<ElmReference> {
         return when (parent) {
             is ElmRecordType -> arrayOf(TypeVariableReference(this))
-            is ElmRecord -> arrayOf(LexicalValueReference(this))
+            is ElmRecordExpr -> arrayOf(LexicalValueReference(this))
             else -> emptyArray()
         }
     }

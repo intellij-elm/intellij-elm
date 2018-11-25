@@ -12,17 +12,23 @@ interface ElmTypeSignatureDeclarationTag: ElmPsiElement
 /** An element that can appear in the parameter list of an [ElmUnionMember] */
 interface ElmUnionMemberParameterTag : ElmTypeSignatureDeclarationTag
 
-/** An element that can occur in an [ElmExpression]; either an operator or operand */
-interface ElmExpressionPartTag : ElmPsiElement
+/** An Elm expression; either a chain of binary operators, a function call, or an atom */
+interface ElmExpressionTag : ElmPsiElement
 
-/** An element that can occur in an [ElmExpression] as the argument to a function or operator */
-interface ElmOperandTag : ElmExpressionPartTag
+/** An element that can occur on its own or as an argument to a function or operator */
+interface ElmAtomTag : ElmExpressionTag, ElmOperandTag
 
-/** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunction], or [ElmCaseOfBranch] */
+/** An element that can occur as an argument to an operator */
+interface ElmOperandTag : ElmPsiElement, ElmBinOpPartTag
+
+/** An element that can occur in a binary operator expression */
+interface ElmBinOpPartTag : ElmPsiElement
+
+/** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunctionExpr], or [ElmCaseOfBranch] */
 interface ElmNameDeclarationPatternTag : ElmNamedElement
 
-/** A function being called as the child of a [ElmFunctionCall] */
-interface ElmFunctionCallTargetTag : ElmOperandTag
+/** A function being called as the child of a [ElmFunctionCallExpr] */
+interface ElmFunctionCallTargetTag : ElmAtomTag
 
 /** An element that is either an [ElmFunctionParamTag], a [ElmPatternChildTag], or both. No elements implement this directly. */
 interface ElmFunctionParamOrPatternChildTag : ElmPsiElement
@@ -43,4 +49,4 @@ interface ElmTypeRefSegmentTag : ElmTypeSignatureDeclarationTag
 interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
-interface ElmConstantTag : ElmOperandTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag
+interface ElmConstantTag : ElmAtomTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag

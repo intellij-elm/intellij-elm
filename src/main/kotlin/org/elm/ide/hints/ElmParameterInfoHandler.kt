@@ -5,12 +5,12 @@ import com.intellij.lang.parameterInfo.*
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
-import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmFunctionCall
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.TyUnknown
@@ -51,20 +51,29 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
         return findFuncCall(caretElement)
     }
 
-    private fun findFuncCall(caretElement: PsiElement): ElmFunctionCall? {
+    private fun findFuncCall(caretElement: PsiElement): ElmFunctionCallExpr? {
+        // NOTE: this logic is not restrictive enough. It accepts some things as a blank line
+        //       following a function call expr as being part of the function call.
+        // TODO this could be made cleaner if we could figure out how to get GrammarKit to parse
+        //      trailing whitespace after a FunctionCallExpr as being part of the Expr itself.
         val element = when (caretElement.elementType) {
-            VIRTUAL_END_DECL, RIGHT_PARENTHESIS -> PsiTreeUtil.prevVisibleLeaf(caretElement) ?: return null
+            TokenType.WHITE_SPACE,
+            VIRTUAL_END_DECL,
+            VIRTUAL_END_SECTION,
+            RIGHT_BRACE,
+            RIGHT_SQUARE_BRACKET,
+            RIGHT_PARENTHESIS -> PsiTreeUtil.prevVisibleLeaf(caretElement) ?: return null
             else -> caretElement
         }
 
         val ancestorsStrict = element.ancestorsStrict
         log.debug("findFuncCall for $element (${element.text}) ancestorsStrict=${ancestorsStrict.toList()}")
-        return ancestorsStrict.filterIsInstance<ElmFunctionCall>().firstOrNull()
+        return ancestorsStrict.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()
     }
 
     // receives the element as returned by findElementForParameterInfo
     override fun showParameterInfo(element: PsiElement, context: CreateParameterInfoContext) {
-        if (element !is ElmFunctionCall) return
+        if (element !is ElmFunctionCallExpr) return
 
         val paramsDescription = ElmParametersDescription.fromCall(element)
                 ?: return
@@ -112,7 +121,7 @@ class ElmParametersDescription(private val name: String?, private val ty: Ty) {
         get() = TextRange(0, name?.length ?: 0)
 
     companion object {
-        fun fromCall(functionCall: ElmFunctionCall): ElmParametersDescription? {
+        fun fromCall(functionCall: ElmFunctionCallExpr): ElmParametersDescription? {
             // If calling a declared function or constructor, show its unqualified name
             val name = (functionCall.target as? ElmValueExpr)?.referenceName
             val ty = functionCall.target.findTy()

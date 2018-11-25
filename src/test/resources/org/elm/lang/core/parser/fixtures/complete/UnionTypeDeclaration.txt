@@ -48,7 +48,7 @@ Elm File
       PsiElement(LEFT_PARENTHESIS)('(')
       ElmTypeRef(TYPE_REF)
         ElmTupleType(TUPLE_TYPE)
-          ElmUnit(UNIT)
+          ElmUnitExpr(UNIT_EXPR)
             PsiElement(LEFT_PARENTHESIS)('(')
             PsiElement(RIGHT_PARENTHESIS)(')')
         PsiWhiteSpace(' ')

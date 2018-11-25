@@ -13,7 +13,6 @@ import org.elm.lang.core.psi.OperatorAssociativity.NON
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
-import java.util.*
 
 private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
 
@@ -27,7 +26,7 @@ fun PsiElement.findInference(): InferenceResult? {
 }
 
 /** Find the type of a given element, if the element is a value expression or declaration */
-fun ElmPsiElement.findTy() : Ty? = findInference()?.expressionTypes?.get(this)
+fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
 
 
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
@@ -106,8 +105,7 @@ private class InferenceScope(
             bodyTy = inferExpression(expr)
 
             // If the body is just a let expression, show the diagnostic on its expression rather than the whole body.
-            val parts = expr.parts.toList()
-            val errorExpr = (parts.singleOrNull() as? ElmLetIn)?.expression ?: expr
+            val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
 
             val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
             requireAssignable(errorExpr, bodyTy, expected)
@@ -117,7 +115,7 @@ private class InferenceScope(
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
-    private fun beginLambdaInference(lambda: ElmAnonymousFunction): InferenceResult {
+    private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
         // TODO [unification] infer param types
         val patternList = lambda.patternList
         val paramVars = uniqueVars(patternList.size)
@@ -127,7 +125,7 @@ private class InferenceScope(
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
-    private fun beginLetInInference(letIn: ElmLetIn): InferenceResult {
+    private fun beginLetInInference(letIn: ElmLetInExpr): InferenceResult {
         val valueDeclarationList = letIn.valueDeclarationList
         childDeclarations += valueDeclarationList
 
@@ -143,7 +141,7 @@ private class InferenceScope(
         return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
-    private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpression): InferenceResult {
+    private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpressionTag): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpression(branchExpression)
         return InferenceResult(expressionTypes, diagnostics, ty)
@@ -199,16 +197,18 @@ private class InferenceScope(
      * These functions recurse down into children elements, if any, and report diagnostics on them.
      */
 
-    private fun inferExpression(expr: ElmExpression?): Ty {
+    private fun inferExpression(expr: ElmExpressionTag?): Ty {
         if (expr == null || elementContainsErrors(expr)) return TyUnknown
-
-        val parts: List<ElmExpressionPartTag> = expr.parts.toList()
-
-        // fast path for single part expressions
-        // don't add to expressionTypes since the operand is already there
-        if (parts.size == 1) {
-            return (parts[0] as? ElmOperandTag)?.let { inferOperand(it) } ?: TyUnknown
+        return when (expr) {
+            is ElmBinOpExpr -> inferBinOpExpr(expr)
+            is ElmFunctionCallExpr -> inferFunctionCall(expr)
+            is ElmAtomTag -> inferAtom(expr)
+            else -> error("unexpected expression type: $expr")
         }
+    }
+
+    private fun inferBinOpExpr(expr: ElmBinOpExpr): Ty {
+        val parts: List<ElmBinOpPartTag> = expr.parts.toList()
 
         // Get the operator types and precedences. We don't have to worry about invalid
         // code like `1 + + 1`, since it won't parse as an expression.
@@ -236,10 +236,11 @@ private class InferenceScope(
         }
 
         // Parse the tree and walk it, validating all the operator calls.
-        fun validateTree(tree: BinaryExprTree<ElmExpressionPartTag>): RangeTy {
+        fun validateTree(tree: BinaryExprTree<ElmBinOpPartTag>): RangeTy {
             return when (tree) {
                 is BinaryExprTree.Operand -> {
-                    RangeTy(tree.operand, inferOperand(tree.operand as ElmOperandTag))
+                    val ty = inferOperand(tree.operand as ElmOperandTag)
+                    RangeTy(tree.operand, ty)
                 }
                 is BinaryExprTree.Binary -> {
                     val l = validateTree(tree.left)
@@ -257,33 +258,74 @@ private class InferenceScope(
         return result.ty
     }
 
-    private fun inferOperand(operand: ElmOperandTag): Ty {
-        val ty = when (operand) {
-            is ElmAnonymousFunction -> inferLambda(operand)
-            is ElmCaseOf -> inferCase(operand)
-            is ElmCharConstant -> TyChar
-            is ElmExpression -> inferExpression(operand) // parenthesized expression
-            is ElmExpressionWithAccessor -> inferExpressionWithAccessor(operand)
-            is ElmFieldAccess -> inferFieldAccess(operand)
-            is ElmFieldAccessorFunction -> inferFieldAccessorFunction(operand)
-            is ElmFunctionCall -> inferFunctionCall(operand)
-            is ElmGlslCode -> TyShader
-            is ElmIfElse -> inferIfElse(operand)
-            is ElmLetIn -> inferChild { beginLetInInference(operand) }.ty
-            is ElmList -> inferList(operand)
-            is ElmNegateExpression -> inferNegateExpression(operand)
-            is ElmNonEmptyTuple -> TyTuple(operand.expressionList.map { inferExpression(it) })
-            is ElmNumberConstant -> if (operand.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
-            is ElmOperatorAsFunction -> inferOperatorAsFunction(operand)
-            is ElmRecord -> inferRecord(operand)
-            is ElmRecordWithAccessor -> inferRecordWithAccessor(operand)
-            is ElmStringConstant -> TyString
-            is ElmTupleConstructor -> TyUnknown // TODO [drop 0.18] remove this case
-            is ElmUnit -> TyUnit
-            is ElmValueExpr -> inferReferenceElement(operand)
-            else -> error("unexpected operand type $operand")
+    private fun inferOperand(operand: ElmOperandTag): Ty =
+            when (operand) {
+                is ElmFunctionCallExpr -> inferFunctionCall(operand)
+                is ElmAtomTag -> inferAtom(operand)
+                else -> error("unexpected operand type $operand")
+            }
+
+    private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
+        val inferredTy = inferAtom(callExpr.target)
+
+        val arguments = callExpr.arguments.toList()
+
+        fun argCountError(expected: Int): TyUnknown {
+            diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
+            return TyUnknown
         }
-        expressionTypes[operand] = ty
+
+        val targetTy = when (inferredTy) {
+            is TyFunction -> inferredTy
+            is TyRecord -> when {
+                // Record constructor
+                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
+                else -> return argCountError(0)
+            }
+            TyUnknown, is TyVar -> return TyUnknown // TODO[unification] infer vars
+            else -> return argCountError(0)
+        }
+
+        if (arguments.size > targetTy.parameters.size) {
+            return argCountError(targetTy.parameters.size)
+        }
+
+        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
+            val argTy = inferAtom(arg)
+            requireAssignable(arg, argTy, paramTy)
+        }
+
+        val resultTy = targetTy.partiallyApply(arguments.size)
+        expressionTypes[callExpr] = resultTy
+        return resultTy
+    }
+
+    private fun inferAtom(atom: ElmAtomTag): Ty {
+        val ty = when (atom) {
+            is ElmAnonymousFunctionExpr -> inferLambda(atom)
+            is ElmCaseOfExpr -> inferCase(atom)
+            is ElmCharConstantExpr -> TyChar
+            is ElmExpressionWithAccessorExpr -> inferExpressionWithAccessor(atom)
+            is ElmFieldAccessExpr -> inferFieldAccess(atom)
+            is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(atom)
+            is ElmGlslCodeExpr -> TyShader
+            is ElmIfElseExpr -> inferIfElse(atom)
+            is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
+            is ElmListExpr -> inferList(atom)
+            is ElmNegateExpr -> inferNegateExpression(atom)
+            is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
+            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
+            is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
+            is ElmParenthesizedExpr -> inferExpression(atom.expression)
+            is ElmRecordExpr -> inferRecord(atom)
+            is ElmRecordWithAccessorExpr -> inferRecordWithAccessor(atom)
+            is ElmStringConstantExpr -> TyString
+            is ElmTupleConstructorExpr -> TyUnknown // TODO [drop 0.18] remove this case
+            is ElmUnitExpr -> TyUnit
+            is ElmValueExpr -> inferReferenceElement(atom)
+            else -> error("unexpected atom type $atom")
+        }
+        expressionTypes[atom] = ty
         return ty
     }
 
@@ -295,24 +337,24 @@ private class InferenceScope(
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
 
-    private fun inferFieldAccess(fieldAccess: ElmFieldAccess): Ty {
+    private fun inferFieldAccess(fieldAccess: ElmFieldAccessExpr): Ty {
         val baseElement = fieldAccess.referenceNameElement
         val baseTy = inferReferenceElement(fieldAccess)
         val fields = fieldAccess.lowerCaseIdentifierList.drop(1)
         return inferAccessorChain(baseElement, baseTy, fields)
     }
 
-    private fun inferExpressionWithAccessor(expressionWithAccessor: ElmExpressionWithAccessor): Ty {
+    private fun inferExpressionWithAccessor(expressionWithAccessor: ElmExpressionWithAccessorExpr): Ty {
         val baseElement = expressionWithAccessor.expression
         val baseTy = inferExpression(baseElement)
         val fields = expressionWithAccessor.accessor.lowerCaseIdentifierList
         return inferAccessorChain(baseElement, baseTy, fields)
     }
 
-    private fun inferRecordWithAccessor(recordWithAccessor: ElmRecordWithAccessor): Ty {
-        val baseElement = recordWithAccessor.record
+    private fun inferRecordWithAccessor(recordWithAccessorExpr: ElmRecordWithAccessorExpr): Ty {
+        val baseElement = recordWithAccessorExpr.record
         val baseTy = inferRecord(baseElement)
-        val fields = recordWithAccessor.accessor.lowerCaseIdentifierList
+        val fields = recordWithAccessorExpr.accessor.lowerCaseIdentifierList
         return inferAccessorChain(baseElement, baseTy, fields)
     }
 
@@ -346,12 +388,12 @@ private class InferenceScope(
         return ty
     }
 
-    private fun inferLambda(lambda: ElmAnonymousFunction): Ty {
+    private fun inferLambda(lambda: ElmAnonymousFunctionExpr): Ty {
         // Self-recursion is allowed inside lambdas, so don't copy the active scopes when inferring them
         return inferChild(activeScopes = mutableSetOf()) { beginLambdaInference(lambda) }.ty
     }
 
-    private fun inferCase(caseOf: ElmCaseOf): Ty {
+    private fun inferCase(caseOf: ElmCaseOfExpr): Ty {
         // Currently, if the type of a case expression doesn't match the value it's assigned to, we issue a
         // diagnostic on the entire case expression. The elm compiler only issues the diagnostic on
         // the first branch expression.
@@ -392,7 +434,7 @@ private class InferenceScope(
     }
 
 
-    private fun inferRecord(record: ElmRecord): Ty {
+    private fun inferRecord(record: ElmRecordExpr): Ty {
         val recordIdentifier = record.baseRecordIdentifier
         if (recordIdentifier == null) {
             val fields = record.fieldList.associate { f ->
@@ -423,7 +465,7 @@ private class InferenceScope(
         return baseTy
     }
 
-    private fun inferList(expr: ElmList): Ty {
+    private fun inferList(expr: ElmListExpr): Ty {
         val expressionList = expr.expressionList
         val expressionTys = expressionList.map { inferExpression(it) }
 
@@ -437,7 +479,7 @@ private class InferenceScope(
         return TyList(expressionTys.firstOrNull() ?: TyVar("a"))
     }
 
-    private fun inferIfElse(ifElse: ElmIfElse): Ty {
+    private fun inferIfElse(ifElse: ElmIfElseExpr): Ty {
         val expressionList = ifElse.expressionList
         if (expressionList.size < 3 || expressionList.size % 2 == 0) return TyUnknown // incomplete program
         val expressionTys = expressionList.map { inferExpression(it) }
@@ -497,13 +539,13 @@ private class InferenceScope(
         }
     }
 
-    private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunction): Ty {
+    private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
         val tyVar = TyVar("b")
         return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseName = "a")), tyVar)
     }
 
-    private fun inferNegateExpression(expr: ElmNegateExpression): Ty {
+    private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
         val subExpr = expr.expression
         val subTy = inferExpression(subExpr)
         // TODO [unification] restrict vars to only number
@@ -516,40 +558,7 @@ private class InferenceScope(
         }
     }
 
-    private fun inferFunctionCall(call: ElmFunctionCall): Ty {
-        val inferredTy = inferOperand(call.target)
-
-        val arguments = call.arguments.toList()
-
-        fun argCountError(expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(call, arguments.size, expected)
-            return TyUnknown
-        }
-
-        val targetTy = when (inferredTy) {
-            is TyFunction -> inferredTy
-            is TyRecord -> when {
-                // Record constructor
-                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
-                else -> return argCountError(0)
-            }
-            TyUnknown, is TyVar -> return TyUnknown // TODO[unification] infer vars
-            else -> return argCountError(0)
-        }
-
-        if (arguments.size > targetTy.parameters.size) {
-            return argCountError(targetTy.parameters.size)
-        }
-
-        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
-            val argTy = inferOperand(arg)
-            requireAssignable(arg, argTy, paramTy)
-        }
-
-        return targetTy.partiallyApply(arguments.size)
-    }
-
-    private fun inferOperatorAsFunction(op: ElmOperatorAsFunction): Ty {
+    private fun inferOperatorAsFunction(op: ElmOperatorAsFunctionExpr): Ty {
         var ref = op.reference.resolve()
         // For operators, we need to resolve the infix declaration to the actual function
         if (ref is ElmInfixDeclaration) {
@@ -711,7 +720,7 @@ private class InferenceScope(
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
             is ElmTuplePattern -> bindTuplePattern(pat, ty, isParameter)
             is ElmUnionPattern -> bindUnionPattern(pat, isParameter)
-            is ElmUnit -> {
+            is ElmUnitExpr -> {
             }
             else -> error("unexpected type $pat")
         }

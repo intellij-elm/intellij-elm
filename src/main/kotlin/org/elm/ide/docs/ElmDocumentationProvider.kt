@@ -11,7 +11,10 @@ import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.types.*
+import org.elm.lang.core.types.TyUnknown
+import org.elm.lang.core.types.TypeExpression
+import org.elm.lang.core.types.findTy
+import org.elm.lang.core.types.renderedText
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -209,7 +212,7 @@ private fun StringBuilder.renderDefinition(record: ElmRecordType) {
 }
 
 private fun StringBuilder.renderDefinition(tuple: ElmTupleType) {
-    if (tuple.unit != null) append("()")
+    if (tuple.unitExpr != null) append("()")
     else tuple.typeRefList.renderTo(this, prefix = "( ", postfix = " )") { renderDefinition(it) }
 }
 

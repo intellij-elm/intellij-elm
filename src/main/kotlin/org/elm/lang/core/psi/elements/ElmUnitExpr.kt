@@ -4,5 +4,5 @@ import com.intellij.lang.ASTNode
 import org.elm.lang.core.psi.*
 
 
-class ElmUnit(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag, ElmFunctionParamTag,
+class ElmUnitExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag, ElmFunctionParamTag,
         ElmPatternChildTag, ElmUnionPatternChildTag

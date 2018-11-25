@@ -2,8 +2,8 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmAtomTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmOperandTag
 
 
 /**
@@ -11,7 +11,7 @@ import org.elm.lang.core.psi.ElmOperandTag
  *
  * e.g. { name = "George", age = 42 }
  */
-class ElmRecord(node: ASTNode) : ElmPsiElementImpl(node), ElmOperandTag {
+class ElmRecordExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag {
 
     /**
      * The name of the existing record which is to be updated, or null

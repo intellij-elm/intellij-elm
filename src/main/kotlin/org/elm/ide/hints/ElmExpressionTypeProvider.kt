@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
 import org.elm.lang.core.types.findInference
 import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
@@ -24,6 +25,7 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
     override fun getExpressionsAt(elementAt: PsiElement): List<PsiElement> {
         val expressionTypes = elementAt.findInference()?.expressionTypes ?: return emptyList()
         return elementAt.ancestors.takeWhile { it !is ElmFile }
-                .filter { it in expressionTypes }.toList()
+                .filter { it in expressionTypes && it !is ElmParenthesizedExpr }
+                .toList()
     }
 }

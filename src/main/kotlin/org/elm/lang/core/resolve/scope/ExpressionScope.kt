@@ -4,9 +4,9 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elements.ElmAnonymousFunction
+import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
-import org.elm.lang.core.psi.elements.ElmLetIn
+import org.elm.lang.core.psi.elements.ElmLetInExpr
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
@@ -31,7 +31,7 @@ class ExpressionScope(val element: PsiElement) {
                 results.addAll(it.declaredNames())
             }
 
-            if (it is ElmLetIn) {
+            if (it is ElmLetInExpr) {
                 for (innerDecl in it.valueDeclarationList) {
                     val includeParameters = element.ancestors.any { it === innerDecl }
                     results.addAll(innerDecl.declaredNames(includeParameters))
@@ -42,7 +42,7 @@ class ExpressionScope(val element: PsiElement) {
                 results.addAll(it.destructuredNames)
             }
 
-            if (it is ElmAnonymousFunction) {
+            if (it is ElmAnonymousFunctionExpr) {
                 results.addAll(it.namedParameters)
             }
 

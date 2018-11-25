@@ -5,5 +5,5 @@ import org.elm.lang.core.psi.ElmConstantTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 
 
-/** A literal string. e.g. `""` or `"""a"b"""` */
-class ElmStringConstant(node: ASTNode) : ElmPsiElementImpl(node), ElmConstantTag
+/** A literal char. e.g. `'x'` or `'\u{0042}'` */
+class ElmCharConstantExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmConstantTag
