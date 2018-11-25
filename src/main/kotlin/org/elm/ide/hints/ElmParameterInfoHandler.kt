@@ -5,9 +5,9 @@ import com.intellij.lang.parameterInfo.*
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
-import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
@@ -52,8 +52,17 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
     }
 
     private fun findFuncCall(caretElement: PsiElement): ElmFunctionCallExpr? {
+        // NOTE: this logic is not restrictive enough. It accepts some things as a blank line
+        //       following a function call expr as being part of the function call.
+        // TODO this could be made cleaner if we could figure out how to get GrammarKit to parse
+        //      trailing whitespace after a FunctionCallExpr as being part of the Expr itself.
         val element = when (caretElement.elementType) {
-            VIRTUAL_END_DECL, RIGHT_PARENTHESIS -> PsiTreeUtil.prevVisibleLeaf(caretElement) ?: return null
+            TokenType.WHITE_SPACE,
+            VIRTUAL_END_DECL,
+            VIRTUAL_END_SECTION,
+            RIGHT_BRACE,
+            RIGHT_SQUARE_BRACKET,
+            RIGHT_PARENTHESIS -> PsiTreeUtil.prevVisibleLeaf(caretElement) ?: return null
             else -> caretElement
         }
 

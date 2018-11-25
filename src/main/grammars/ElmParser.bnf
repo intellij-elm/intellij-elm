@@ -329,6 +329,9 @@ FunctionCallExpr ::=
       /* Bind trailing whitespace as part of the function call. Imagine that the user has begun
          making a function call and the caret is on some whitespace. We want that whitespace
          to be part of the FunctionCall parse node to support things like ParameterInfoHandler.
+
+         NOTE: this used to work, but now after making FunctionCallExpr extend Expression,
+               it appears to be broken. Possible GrammarKit bug?
       */
       hooks = [ rightBinder="GREEDY_RIGHT_BINDER" ]
     }
