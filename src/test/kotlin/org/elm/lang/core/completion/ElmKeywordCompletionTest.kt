@@ -1,9 +1,9 @@
 package org.elm.lang.core.completion
 
-class ElmKeywordCompletionTest: ElmCompletionTestBase() {
+class ElmKeywordCompletionTest : ElmCompletionTestBase() {
 
     fun `test 'type' keyword preceded by module decl`() = doSingleCompletion(
-"""
+            """
 module Foo exposing (..)
 typ{-caret-}
 """, """
@@ -12,7 +12,7 @@ type {-caret-}
 """)
 
     fun `test 'type' keyword`() = doSingleCompletion(
-"""
+            """
 typ{-caret-}
 """, """
 type {-caret-}
@@ -20,49 +20,55 @@ type {-caret-}
 
 
     fun `test 'alias' keyword`() = doSingleCompletion(
-"""
+            """
 type al{-caret-}
 """, """
 type alias {-caret-}
 """)
 
     fun `test 'module' keyword`() = doSingleCompletion(
-"""
+            """
 mod{-caret-}
 """, """
 module {-caret-}
 """)
 
+    fun `test 'module' keyword is only suggested at the beginning of a file`() = checkNoCompletion(
+            """
+x = 0
+modu{-caret-}
+""")
+
     fun `test 'exposing' keyword in a module`() = doSingleCompletion(
-"""
+            """
 module Foo exp{-caret-}
 """, """
 module Foo exposing ({-caret-})
 """)
 
     fun `test 'exposing' keyword in an import`() = doSingleCompletion(
-"""
+            """
 import Foo exp{-caret-}
 """, """
 import Foo exposing ({-caret-})
 """)
 
     fun `test 'exposing' keyword on an aliased import`() = doSingleCompletion(
-"""
+            """
 import Foo as F exp{-caret-}
 """, """
 import Foo as F exposing ({-caret-})
 """)
 
     fun `test 'as' keyword in an import`() = doSingleCompletion(
-"""
+            """
 import Foo a{-caret-}
 """, """
 import Foo as {-caret-}
 """)
 
     fun `test 'if' keyword`() = doSingleCompletion(
-"""
+            """
 x =
     if{-caret-}
 """, """
@@ -71,7 +77,7 @@ x =
 """)
 
     fun `test 'then' keyword`() = doSingleCompletion(
-"""
+            """
 x =
     if True th{-caret-}
 """, """
@@ -80,7 +86,7 @@ x =
 """)
 
     fun `test 'else' keyword`() = doSingleCompletion(
-"""
+            """
 x =
     if True then 1 el{-caret-}
 """, """
@@ -89,7 +95,7 @@ x =
 """)
 
     fun `test 'case' keyword`() = doSingleCompletion(
-"""
+            """
 x =
     ca{-caret-}
 """, """
@@ -98,7 +104,7 @@ x =
 """)
 
     fun `test 'of' keyword`() = doSingleCompletion(
-"""
+            """
 f x =
     case x o{-caret-}
 """, """
@@ -107,23 +113,14 @@ f x =
 """)
 
     fun `test 'let' keyword`() = doSingleCompletion(
-"""
+            """
 x = le{-caret-}
 """, """
 x = let{-caret-}
 """)
 
-    fun `test 'in' keyword on same line`() = doSingleCompletion(
-"""
-x = let
-        a = 42 in{-caret-}
-""", """
-x = let
-        a = 42 in{-caret-}
-""")
-
     fun `test 'in' keyword on separate line normal`() = doSingleCompletion(
-"""
+            """
 x = let
         a = 42
     in{-caret-}
@@ -134,7 +131,7 @@ x = let
 """)
 
     fun `test 'in' keyword on separate line indented`() = doSingleCompletion(
-"""
+            """
 x = let
         a = 42
         in{-caret-}

@@ -32,12 +32,15 @@ object ElmKeywordSuggestor : Suggestor {
             //                             but does not skip over PsiErrorElement, which is bad
             // TODO [kl] find a less brittle way to express this. Maybe using IntelliJ's pattern DSL.
             val prevVisibleLeaf = PsiTreeUtil.prevVisibleLeaf(pos)
+
+            if (prevVisibleLeaf == null) {
+                // at the beginning of the file
+                result.add("module")
+            }
+
             if (prevVisibleLeaf == null || pos.prevSibling?.text == "\n") {
                 // at the beginning of the file or beginning of a line
-                // TODO [kl] make this more restrictive
-                // (i.e. we shouldn't suggest "module" when we are in the middle of the file)
                 result.add("type")
-                result.add("module")
                 result.add("import")
             }
 
