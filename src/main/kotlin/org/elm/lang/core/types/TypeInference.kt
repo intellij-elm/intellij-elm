@@ -26,7 +26,7 @@ fun PsiElement.findInference(): InferenceResult? {
 }
 
 /** Find the type of a given element, if the element is a value expression or declaration */
-fun ElmPsiElement.findTy() : Ty? = findInference()?.expressionTypes?.get(this)
+fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
 
 
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
@@ -239,11 +239,7 @@ private class InferenceScope(
         fun validateTree(tree: BinaryExprTree<ElmBinOpPartTag>): RangeTy {
             return when (tree) {
                 is BinaryExprTree.Operand -> {
-                    val ty = when (tree.operand) {
-                        is ElmFunctionCallExpr -> inferFunctionCall(tree.operand)
-                        is ElmAtomTag -> inferAtom(tree.operand)
-                        else -> error("unexpected operand type ${tree.operand}")
-                    }
+                    val ty = inferOperand(tree.operand as ElmOperandTag)
                     RangeTy(tree.operand, ty)
                 }
                 is BinaryExprTree.Binary -> {
@@ -261,6 +257,13 @@ private class InferenceScope(
         expressionTypes[expr] = result.ty
         return result.ty
     }
+
+    private fun inferOperand(operand: ElmOperandTag): Ty =
+            when (operand) {
+                is ElmFunctionCallExpr -> inferFunctionCall(operand)
+                is ElmAtomTag -> inferAtom(operand)
+                else -> error("unexpected operand type $operand")
+            }
 
     private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
         val inferredTy = inferAtom(callExpr.target)
