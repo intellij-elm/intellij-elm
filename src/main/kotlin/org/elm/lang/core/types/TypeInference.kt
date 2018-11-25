@@ -305,7 +305,6 @@ private class InferenceScope(
             is ElmAnonymousFunctionExpr -> inferLambda(atom)
             is ElmCaseOfExpr -> inferCase(atom)
             is ElmCharConstantExpr -> TyChar
-            is ElmExpressionWithAccessorExpr -> inferExpressionWithAccessor(atom)
             is ElmFieldAccessExpr -> inferFieldAccess(atom)
             is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(atom)
             is ElmGlslCodeExpr -> TyShader
@@ -318,7 +317,6 @@ private class InferenceScope(
             is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
             is ElmParenthesizedExpr -> inferExpression(atom.expression)
             is ElmRecordExpr -> inferRecord(atom)
-            is ElmRecordWithAccessorExpr -> inferRecordWithAccessor(atom)
             is ElmStringConstantExpr -> TyString
             is ElmTupleConstructorExpr -> TyUnknown // TODO [drop 0.18] remove this case
             is ElmUnitExpr -> TyUnit
@@ -338,53 +336,50 @@ private class InferenceScope(
     }
 
     private fun inferFieldAccess(fieldAccess: ElmFieldAccessExpr): Ty {
-        val baseElement = fieldAccess.referenceNameElement
-        val baseTy = inferReferenceElement(fieldAccess)
-        val fields = fieldAccess.lowerCaseIdentifierList.drop(1)
-        return inferAccessorChain(baseElement, baseTy, fields)
-    }
-
-    private fun inferExpressionWithAccessor(expressionWithAccessor: ElmExpressionWithAccessorExpr): Ty {
-        val baseElement = expressionWithAccessor.expression
-        val baseTy = inferExpression(baseElement)
-        val fields = expressionWithAccessor.accessor.lowerCaseIdentifierList
-        return inferAccessorChain(baseElement, baseTy, fields)
-    }
-
-    private fun inferRecordWithAccessor(recordWithAccessorExpr: ElmRecordWithAccessorExpr): Ty {
-        val baseElement = recordWithAccessorExpr.record
-        val baseTy = inferRecord(baseElement)
-        val fields = recordWithAccessorExpr.accessor.lowerCaseIdentifierList
-        return inferAccessorChain(baseElement, baseTy, fields)
-    }
-
-    private fun inferAccessorChain(baseElement: PsiElement, baseTy: Ty, fields: List<PsiElement>): Ty {
-        var element = baseElement
-        var ty: Ty = baseTy
-
-        for (field in fields) {
-            if (!isInferable(ty)) {
-                return TyUnknown
-            }
-
-            if (ty !is TyRecord) {
-                diagnostics += TypeMismatchError(element, ty, TyVar("record"))
-                return TyUnknown
-            }
-
-            val text = field.text
-            if (text !in ty.fields) {
-                // TODO[unification] once we know all available fields, we can be stricter about subset records.
-                if (!ty.isSubset) {
-                    diagnostics += RecordFieldError(field, text)
-                }
-                return TyUnknown
-            }
-
-            ty = ty.fields[text]!!
-            element = field
+        val leftExpr = fieldAccess.leftExpr
+        val baseTy = when (leftExpr) {
+            is ElmFieldAccessStart -> inferFieldAccessStart(leftExpr)
+            is ElmFieldAccessExpr -> inferFieldAccess(leftExpr)
+            else -> error("unexpected field access left expression $leftExpr")
         }
 
+        if (baseTy !is TyRecord) {
+            if (isInferable(baseTy)) {
+                val errorElem = if (leftExpr is ElmFieldAccessExpr) leftExpr.lowerCaseIdentifier else leftExpr
+                diagnostics += TypeMismatchError(errorElem, baseTy, TyVar("record"))
+            }
+            return TyUnknown
+        }
+
+        val fieldName = fieldAccess.lowerCaseIdentifier.text
+        if (fieldName !in baseTy.fields) {
+            // TODO[unification] once we know all available fields, we can be stricter about subset records.
+            if (!baseTy.isSubset) {
+                diagnostics += RecordFieldError(fieldAccess.lowerCaseIdentifier, fieldName)
+            }
+            return TyUnknown
+        }
+
+        val ty = baseTy.fields[fieldName]!!
+        expressionTypes[fieldAccess] = ty
+        return ty
+    }
+
+    private fun inferFieldAccessStart(fieldAccessStart: ElmFieldAccessStart): Ty {
+        val ty = when {
+            fieldAccessStart.lowerCaseIdentifier != null ->
+                inferReferenceElement(fieldAccessStart)
+
+            fieldAccessStart.recordExpr != null ->
+                inferRecord(fieldAccessStart.recordExpr!!)
+
+            fieldAccessStart.parenExpr != null ->
+                inferExpression(fieldAccessStart.parenExpr!!.expression)
+
+            else ->
+                error("unexpected field access start $fieldAccessStart")
+        }
+        expressionTypes[fieldAccessStart] = ty
         return ty
     }
 
@@ -838,7 +833,7 @@ private class InferenceScope(
 
     /*
      * These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
-     * diagnostic will be reported if either type is TyUnkown. Other than `requireAssignable`, none
+     * diagnostic will be reported if either type is TyUnknown. Other than `requireAssignable`, none
      * of these functions access any scope `InferenceScope` properties.
      */
 

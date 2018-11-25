@@ -130,6 +130,7 @@ ExposedUnionConstructor ::=
 ExposedOperator ::=
     OperatorAsFunction_inner
 
+
 // WHITESPACE-SENSITIVE RULES
 
 
@@ -138,11 +139,9 @@ external DotWithoutTrailingWhitespace ::= parseDotWithoutTrailingWhitespace
 external DotWithoutLeadingWhitespace ::= parseDotWithoutLeadingWhitespace
 external MinusWithoutTrailingWhitespace ::= parseMinusWithoutTrailingWhitespace
 
-UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)* !DotWithoutLeadingWhitespace
-ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
-FieldAccessExpr ::= LOWER_CASE_IDENTIFIER (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
-ExpressionAccessor ::= (DotWithoutWhitespace LOWER_CASE_IDENTIFIER)+ !DotWithoutLeadingWhitespace
-FieldAccessorFunctionExpr ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER !DotWithoutLeadingWhitespace
+UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)*
+ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
+FieldAccessorFunctionExpr ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER
 
 
 // IMPORT DECLARATION
@@ -291,8 +290,6 @@ private CallOrAtom ::=
 // then you probably broke one of the above rules.
 private Atom ::=
     LiteralExprGroup
-    | RecordWithAccessorExpr
-    | ExpressionWithAccessorExpr
     | NegateExpr
     | FieldAccessExpr
     | ValueExpr
@@ -314,11 +311,9 @@ private Atom ::=
 // Various tokens that can begin a new expression. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
-ExpressionWithAccessorExpr ::=
-    ParenthesizedExpr ExpressionAccessor
-
-RecordWithAccessorExpr ::=
-    RecordExpr ExpressionAccessor
+FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+
+FieldAccessStart ::= LOWER_CASE_IDENTIFIER | ParenthesizedExpr | RecordExpr
+left FieldAccessSegment ::= DotWithoutWhitespace LOWER_CASE_IDENTIFIER { elementType = FieldAccessExpr }
 
 NegateExpr ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
@@ -337,9 +332,7 @@ FunctionCallExpr ::=
     }
 
 private FunctionCallTarget ::=
-    RecordWithAccessorExpr
-    | ExpressionWithAccessorExpr
-    | FieldAccessExpr
+    FieldAccessExpr
     | ValueExpr
     | FieldAccessorFunctionExpr
     | OperatorAsFunctionExpr

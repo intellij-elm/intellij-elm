@@ -8,6 +8,7 @@ import org.elm.ide.intentions.ElmImportIntentionAction
 import org.elm.ide.intentions.ElmMakeDeclarationIntentionAction
 import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.resolve.reference.ElmDummyReference
 import org.elm.lang.core.resolve.reference.TypeVariableReference
 import org.elm.lang.core.resolve.scope.GlobalScope
 
@@ -32,6 +33,10 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     }
 
     private fun safeToIgnore(ref: PsiReference, element: PsiElement): Boolean {
+        // Ignore dummy refs
+        if (ref is ElmDummyReference)
+            return true
+
         // Ignore refs to built-in types and values
         if (GlobalScope.allBuiltInSymbols.contains(ref.canonicalText))
             return true

@@ -50,3 +50,6 @@ interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
 interface ElmConstantTag : ElmAtomTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag
+
+/** An element which is part of a field access expression. */
+interface ElmFieldAccessPartTag : ElmPsiElement
