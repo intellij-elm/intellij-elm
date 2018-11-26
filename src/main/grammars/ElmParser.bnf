@@ -264,8 +264,10 @@ Expression ::=
     CallOrAtom BinOpExprUpper?
 
 upper BinOpExprUpper ::=
-    (Operator CallOrAtom)+
-    { elementType = BinOpExpr }
+    Operator CallOrAtom (Operator CallOrAtom)*
+    { pin(".*") = 1
+      elementType = BinOpExpr
+    }
 
 fake BinOpExpr ::= 'exists solely to create an element type for BinOpExprUpper'
 
@@ -281,6 +283,21 @@ private OperatorAsFunction_inner ::=
 private CallOrAtom ::=
     FunctionCallExpr
     | Atom
+
+FunctionCallExpr ::=
+    FunctionCallTarget Atom+
+    { pin = 2
+      hooks = [ rightBinder="GREEDY_RIGHT_BINDER" ]
+    }
+
+private FunctionCallTarget ::=
+    FieldAccessExpr
+    | ValueExpr
+    | FieldAccessorFunctionExpr
+    | OperatorAsFunctionExpr
+    | ParenthesizedExpr
+    | TupleConstructorExpr
+    | AnonymousFunctionExpr
 
 // NOTE: all descendants must be:
 //       either a private group (such as `LiteralExprGroup`)
@@ -306,7 +323,7 @@ private Atom ::=
     | LetInExpr
     | AnonymousFunctionExpr
     | GlslCodeExpr
-{ name="expression" }
+{ name="expr" }
 
 // Various tokens that can begin a new expression. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
@@ -316,33 +333,28 @@ FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+
 
 private FieldAccessStart ::= ValueExpr | ParenthesizedExpr | RecordExpr
 
-left FieldAccessSegment ::= DotWithoutWhitespace LOWER_CASE_IDENTIFIER { elementType = FieldAccessExpr }
+left FieldAccessSegment ::=
+    /*
+    Technically the '.' token should not be followed by any whitespace either, but in order
+    to support parse error recovery of expressions like "user.\n", we must relax the restriction.
+
+    Likewise, the LOWER_CASE_IDENTIFIER should only match if it is not preceded by whitespace.
+    Unfortunately, I was not able to figure out how to get the parser to require no whitespace
+    before the identifier, and so expressions like "foo. bar" will parse as a FieldAccessExpr
+    whereas it would be better if it parsed as a FunctionCallExpr with "foo." as the target
+    and "bar" as a function argument. Our usual trick for working with whitespace in the parser--
+    using an external/manual parse rule--did not work in this case.
+
+    TODO re-visit this once we have time to really understand how PsiBuilder works.
+     */
+    DotWithoutLeadingWhitespace LOWER_CASE_IDENTIFIER
+    { pin = 1
+      elementType = FieldAccessExpr
+    }
 
 
 NegateExpr ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
-
-FunctionCallExpr ::=
-    FunctionCallTarget Atom+
-    { pin = 2
-      /* Bind trailing whitespace as part of the function call. Imagine that the user has begun
-         making a function call and the caret is on some whitespace. We want that whitespace
-         to be part of the FunctionCall parse node to support things like ParameterInfoHandler.
-
-         NOTE: this used to work, but now after making FunctionCallExpr extend Expression,
-               it appears to be broken. Possible GrammarKit bug?
-      */
-      hooks = [ rightBinder="GREEDY_RIGHT_BINDER" ]
-    }
-
-private FunctionCallTarget ::=
-    FieldAccessExpr
-    | ValueExpr
-    | FieldAccessorFunctionExpr
-    | OperatorAsFunctionExpr
-    | ParenthesizedExpr
-    | TupleConstructorExpr
-    | AnonymousFunctionExpr
 
 ParenthesizedExpr ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 

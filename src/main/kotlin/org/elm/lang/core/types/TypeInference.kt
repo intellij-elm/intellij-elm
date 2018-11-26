@@ -341,22 +341,22 @@ private class InferenceScope(
 
         if (baseTy !is TyRecord) {
             if (isInferable(baseTy)) {
-                val errorElem = if (target is ElmFieldAccessExpr) target.lowerCaseIdentifier else target
+                val errorElem = if (target is ElmFieldAccessExpr) target.lowerCaseIdentifier ?: target else target
                 diagnostics += TypeMismatchError(errorElem, baseTy, TyVar("record"))
             }
             return TyUnknown
         }
 
-        val fieldName = fieldAccess.lowerCaseIdentifier.text
-        if (fieldName !in baseTy.fields) {
+        val fieldIdentifier = fieldAccess.lowerCaseIdentifier ?: return TyUnknown
+        if (fieldIdentifier.text !in baseTy.fields) {
             // TODO[unification] once we know all available fields, we can be stricter about subset records.
             if (!baseTy.isSubset) {
-                diagnostics += RecordFieldError(fieldAccess.lowerCaseIdentifier, fieldName)
+                diagnostics += RecordFieldError(fieldIdentifier, fieldIdentifier.text)
             }
             return TyUnknown
         }
 
-        val ty = baseTy.fields[fieldName]!!
+        val ty = baseTy.fields[fieldIdentifier.text]!!
         expressionTypes[fieldAccess] = ty
         return ty
     }

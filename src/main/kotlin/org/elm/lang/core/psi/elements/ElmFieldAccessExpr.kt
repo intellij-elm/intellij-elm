@@ -25,7 +25,7 @@ class ElmFieldAccessExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag, E
     val targetExpr: ElmFieldAccessTargetTag
         get() = findNotNullChildByClass(ElmFieldAccessTargetTag::class.java)
 
-    /** The name of the record field to read */
-    val lowerCaseIdentifier: PsiElement
-        get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
+    /** The name of the record field to read. This will be non-null in a well-formed program */
+    val lowerCaseIdentifier: PsiElement?
+        get() = findChildByType(LOWER_CASE_IDENTIFIER)
 }

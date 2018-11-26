@@ -1,8 +1,9 @@
-f1 = (1).
+f1 x = x.
+f2 x = x.bar.
+f3 x = Foo.bar.
 
-f2 = (1).a.
+p1 x = (foo x).
+p2 x = (foo x).bar.
 
-f3 = {x=1}.
-
-f4 = {x=1}.a.
-
+r1 = {x=2}.
+r2 = {x={y=2}}.x.
