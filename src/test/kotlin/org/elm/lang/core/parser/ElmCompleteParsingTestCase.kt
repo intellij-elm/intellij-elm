@@ -14,7 +14,8 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testCaseOf() = doTest(true)
     fun testCaseOfComments() = doTest(true)
     fun testComments() = doTest(true)
-    fun testExpressionAccessors() = doTest(true)
+    fun testDottedExpressions() = doTest(true)
+    fun testFieldAccessors() = doTest(true)
     fun testImports() = doTest(true)
     fun testFieldAccessorFunction() = doTest(true)
     fun testFunctionCall() = doTest(true)
@@ -31,7 +32,6 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testTypeAlias() = doTest(true)
     fun testTypeAnnotation() = doTest(true)
     fun testUnionTypeDeclaration() = doTest(true)
-    fun testDottedExpressions() = doTest(true)
     fun testValueQID() = doTest(true)
 
 
