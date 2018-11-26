@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>org.frawa.elmtest</id>
   <name>Elm Test Runner</name>
-  <version>0.1</version>
+  <version>0.3</version>
 
   <vendor email="agilecoderfrank@gmail.com" url="https://github.com/frawa">Frank Wagner</vendor>
 
@@ -26,6 +26,7 @@
       <em>Feedback welcome.</em>
 
       <ul>
+        <li><b>0.3.3</b> <em>(2018-11-26)</em> - Open for future versions of IntelliJ
         <li><b>0.3.2</b> <em>(2018-11-19)</em> - Fixes
         <ul>
           <li>Find locally npm-installed elm-test/elm binaries</li>
@@ -45,10 +46,11 @@
   </change-notes>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="172.0"/>
+  <idea-version since-build="162"/>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
+
   <!--<depends>com.intellij.modules.lang</depends>-->
   <depends>org.elm.klazuka</depends>
 
