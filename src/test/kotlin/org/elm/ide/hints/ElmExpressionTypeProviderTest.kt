@@ -60,6 +60,16 @@ y = { foo = x }
     }
 
 
+    fun `test record field access`() {
+        checkChoices("""
+type alias Foo = { x: { y: () } }
+f : Foo -> ()
+f foo = foo.x.y
+       --^
+""", listOf("foo", "foo.x", "foo.x.y"))
+    }
+
+
     private fun checkChoices(@Language("Elm") str: String, choices: List<String>) {
         val provider = ElmExpressionTypeProvider()
 

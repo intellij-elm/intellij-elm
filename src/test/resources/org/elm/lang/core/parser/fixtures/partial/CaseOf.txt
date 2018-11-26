@@ -24,7 +24,7 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
-      PsiErrorElement:<expression>, OF or OPERATOR_IDENTIFIER expected, got '
+      PsiErrorElement:<expr>, OF or OPERATOR_IDENTIFIER expected, got '
 '
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')

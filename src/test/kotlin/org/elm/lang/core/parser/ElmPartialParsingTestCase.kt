@@ -15,7 +15,7 @@ by constructing PSI trees from syntactically invalid files.
 */
 class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
 
-    fun testExpressionAccessors() = doTest(true)
+    fun testFieldAccessors() = doTest(true)
     fun testIfElse() = doTest(true)
     fun testModuleDecl0() = doTest(true)
     fun testModuleDecl1() = doTest(true)
@@ -33,6 +33,7 @@ class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
     fun testNegateExpression() = doTest(true)
     fun testChars() = doTest(true)
     fun testStrings() = doTest(true)
+    fun testOperators() = doTest(true)
 
     // The parse error recovery for case/of and let/in expressions is hard to get right
     // due to the parse rules depending on indentation. In a partial program that the

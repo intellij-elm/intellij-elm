@@ -2,49 +2,30 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmFunctionCallTargetTag
-import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmAtomTag
+import org.elm.lang.core.psi.ElmFieldAccessTargetTag
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.resolve.ElmReferenceElement
-import org.elm.lang.core.resolve.reference.ElmReferenceCached
-import org.elm.lang.core.resolve.scope.ExpressionScope
-
 
 /**
- * Accessing one or more fields on a base record.
+ * Accessing a field on a record.
  *
- * e.g. `model.currentUser.name`
+ * EXAMPLES: The following expressions each access a record field called `name`:
+ * ```
+ * user.name
+ * model.currentUser.name
+ * (defaultUser "George").name
+ * { user = { name = "George" } }.name
+ * ```
  */
-class ElmFieldAccessExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmAtomTag, ElmFunctionCallTargetTag {
+class ElmFieldAccessExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag, ElmFunctionCallTargetTag, ElmFieldAccessTargetTag {
 
-    val lowerCaseIdentifierList: List<PsiElement>
-        get() = findChildrenByType(LOWER_CASE_IDENTIFIER)
+    /** An expression which evaluates to a record value whose field we want to access */
+    val targetExpr: ElmFieldAccessTargetTag
+        get() = findNotNullChildByClass(ElmFieldAccessTargetTag::class.java)
 
-
-    override val referenceNameElement: PsiElement
-        get() = lowerCaseIdentifierList.first()
-
-    override val referenceName: String
-        get() = referenceNameElement.text
-
-    override fun getReference() =
-            BaseRecordReference(this)
-}
-
-
-class BaseRecordReference(element: ElmReferenceElement)
-    : ElmReferenceCached<ElmReferenceElement>(element) {
-
-    override fun resolveInner(): ElmNamedElement? {
-        return getVariants().find { it.name == element.referenceName }
-    }
-
-    /* TODO [kl] a more correct implementation would filter the visible values
-       to those that we know are actually records. But we haven't implemented
-       any kind of type system in the plugin yet. */
-    override fun getVariants(): Array<ElmNamedElement> =
-            ExpressionScope(element).getVisibleValues()
-                    .toTypedArray()
+    /** The name of the record field to read. This will be non-null in a well-formed program */
+    val lowerCaseIdentifier: PsiElement?
+        get() = findChildByType(LOWER_CASE_IDENTIFIER)
 }

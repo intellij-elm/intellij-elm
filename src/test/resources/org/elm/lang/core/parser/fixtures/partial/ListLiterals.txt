@@ -52,7 +52,7 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('m')
-      PsiErrorElement:<expression>, COMMA, OPERATOR_IDENTIFIER or RIGHT_SQUARE_BRACKET expected, got '
+      PsiErrorElement:<expr>, COMMA, OPERATOR_IDENTIFIER or RIGHT_SQUARE_BRACKET expected, got '
 '
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')

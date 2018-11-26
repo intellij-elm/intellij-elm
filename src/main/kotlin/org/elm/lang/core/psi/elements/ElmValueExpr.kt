@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmAtomTag
+import org.elm.lang.core.psi.ElmFieldAccessTargetTag
 import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.elements.Flavor.*
@@ -26,7 +27,7 @@ enum class Flavor {
  *  - `Json.Decode.Value`
  *  - `x`
  */
-class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmAtomTag, ElmFunctionCallTargetTag {
+class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmAtomTag, ElmFunctionCallTargetTag, ElmFieldAccessTargetTag {
 
     val valueQID: ElmValueQID?
         get() = findChildByClass(ElmValueQID::class.java)
