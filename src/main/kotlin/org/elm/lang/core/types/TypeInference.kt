@@ -336,16 +336,12 @@ private class InferenceScope(
     }
 
     private fun inferFieldAccess(fieldAccess: ElmFieldAccessExpr): Ty {
-        val leftExpr = fieldAccess.leftExpr
-        val baseTy = when (leftExpr) {
-            is ElmFieldAccessStart -> inferFieldAccessStart(leftExpr)
-            is ElmFieldAccessExpr -> inferFieldAccess(leftExpr)
-            else -> error("unexpected field access left expression $leftExpr")
-        }
+        val target = fieldAccess.targetExpr
+        val baseTy = inferFieldAccessTarget(target)
 
         if (baseTy !is TyRecord) {
             if (isInferable(baseTy)) {
-                val errorElem = if (leftExpr is ElmFieldAccessExpr) leftExpr.lowerCaseIdentifier else leftExpr
+                val errorElem = if (target is ElmFieldAccessExpr) target.lowerCaseIdentifier else target
                 diagnostics += TypeMismatchError(errorElem, baseTy, TyVar("record"))
             }
             return TyUnknown
@@ -365,21 +361,16 @@ private class InferenceScope(
         return ty
     }
 
-    private fun inferFieldAccessStart(fieldAccessStart: ElmFieldAccessStart): Ty {
-        val ty = when {
-            fieldAccessStart.lowerCaseIdentifier != null ->
-                inferReferenceElement(fieldAccessStart)
-
-            fieldAccessStart.recordExpr != null ->
-                inferRecord(fieldAccessStart.recordExpr!!)
-
-            fieldAccessStart.parenExpr != null ->
-                inferExpression(fieldAccessStart.parenExpr!!.expression)
-
-            else ->
-                error("unexpected field access start $fieldAccessStart")
+    private fun inferFieldAccessTarget(target: ElmFieldAccessTargetTag): Ty {
+        val ty = when (target) {
+            is ElmValueExpr -> inferReferenceElement(target)
+            is ElmParenthesizedExpr -> inferExpression(target.expression)
+            is ElmRecordExpr -> inferRecord(target)
+            is ElmFieldAccessExpr -> inferFieldAccess(target)
+            else -> error("unexpected field access target expression $target")
         }
-        expressionTypes[fieldAccessStart] = ty
+
+        expressionTypes[target] = ty
         return ty
     }
 

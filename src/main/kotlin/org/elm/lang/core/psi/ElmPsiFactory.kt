@@ -44,7 +44,6 @@ class ElmPsiFactory(private val project: Project) {
                     EXPOSING_LIST -> ElmExposingList(node)
                     FIELD -> ElmField(node)
                     FIELD_ACCESS_EXPR -> ElmFieldAccessExpr(node)
-                    FIELD_ACCESS_START -> ElmFieldAccessStart(node)
                     FIELD_ACCESSOR_FUNCTION_EXPR -> ElmFieldAccessorFunctionExpr(node)
                     FIELD_TYPE -> ElmFieldType(node)
                     FUNCTION_CALL_EXPR -> ElmFunctionCallExpr(node)

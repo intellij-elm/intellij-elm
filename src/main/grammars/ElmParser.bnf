@@ -311,9 +311,13 @@ private Atom ::=
 // Various tokens that can begin a new expression. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
+
 FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+
-FieldAccessStart ::= LOWER_CASE_IDENTIFIER | ParenthesizedExpr | RecordExpr
+
+private FieldAccessStart ::= ValueExpr | ParenthesizedExpr | RecordExpr
+
 left FieldAccessSegment ::= DotWithoutWhitespace LOWER_CASE_IDENTIFIER { elementType = FieldAccessExpr }
+
 
 NegateExpr ::= MinusWithoutTrailingWhitespace Expression
     { pin = 1 }
