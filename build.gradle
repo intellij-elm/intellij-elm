@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 
-version = '0.3.4'
+version = '0.3.5'
 
 allprojects {
     apply plugin: 'java'
@@ -16,8 +16,9 @@ allprojects {
 
     apply plugin: 'org.jetbrains.intellij'
     intellij {
-        version 'IC-2018.2'
+        version '2018.2'
         pluginName 'ElmTestRunnerPlugin'
+        updateSinceUntilBuild false
 
         //plugin dependencies, see https://github.com/JetBrains/gradle-intellij-plugin
         //plugins 'IntelliLang'
