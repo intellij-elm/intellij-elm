@@ -4,7 +4,7 @@ class ElmCompletionTest: ElmCompletionTestBase() {
 
 
     fun `test value completion from function parameter`() = doSingleCompletion(
-"""
+            """
 view model = text mo{-caret-}
 """, """
 view model = text model{-caret-}
@@ -12,7 +12,7 @@ view model = text model{-caret-}
 
 
     fun `test value completion from let-in decl`() = doSingleCompletion(
-"""
+            """
 f = let name = "Arnold" in na{-caret-}
 """, """
 f = let name = "Arnold" in name{-caret-}
@@ -20,7 +20,7 @@ f = let name = "Arnold" in name{-caret-}
 
 
     fun `test value completion from case-of pattern destructuring`() = doSingleCompletion(
-"""
+            """
 f = case user of { name, age } -> nam{-caret-}
 """, """
 f = case user of { name, age } -> name{-caret-}
@@ -28,7 +28,7 @@ f = case user of { name, age } -> name{-caret-}
 
 
     fun `test union constructor completion from pattern destructuring`() = doSingleCompletion(
-"""
+            """
 type MyState = State Int
 f (Sta{-caret-} n) = n
 """, """
@@ -38,7 +38,7 @@ f (State{-caret-} n) = n
 
 
     fun `test union type completion in a type annotation`() = doSingleCompletion(
-"""
+            """
 type Page = Home
 defaultPage : Pa{-caret-}
 """, """
@@ -48,7 +48,7 @@ defaultPage : Page{-caret-}
 
 
     fun `test type alias completion in a type annotation`() = doSingleCompletion(
-"""
+            """
 type alias User = { name : String, age : Int }
 viewUser : Us{-caret-}
 """, """
@@ -57,11 +57,8 @@ viewUser : User{-caret-}
 """)
 
 
-
-
-
     fun `test qualified value completion`() = doSingleCompletionMultiFile(
-"""
+            """
 --@ main.elm
 import User
 g = User.defa{-caret-}
@@ -77,7 +74,7 @@ g = User.defaultUser{-caret-}
 
 
     fun `test qualified type completion`() = doSingleCompletionMultiFile(
-"""
+            """
 --@ main.elm
 import User
 g : User.Us{-caret-}
@@ -93,7 +90,7 @@ g : User.User{-caret-}
 
 
     fun `test qualified union constructor completion in expr`() = doSingleCompletionMultiFile(
-"""
+            """
 --@ main.elm
 import Page
 defaultPage = Page.Ho{-caret-}
@@ -109,7 +106,7 @@ defaultPage = Page.Home{-caret-}
 
 
     fun `test qualified union constructor completion in pattern`() = doSingleCompletionMultiFile(
-"""
+            """
 --@ main.elm
 import Page
 defaultPage p = case p of
@@ -126,17 +123,15 @@ defaultPage p = case p of
 """)
 
 
-
-
     fun `test does not complete union constructors in type namespace`() = checkNoCompletion(
-"""
+            """
 type Page = NotFound
 f : NotF{-caret-}
 """)
 
 
     fun `test does not complete number literals`() = checkNoCompletion(
-"""
+            """
 x = 42
 y = 4{-caret-}
 """)
@@ -145,7 +140,7 @@ y = 4{-caret-}
 // TODO [kl] eventually code completion should add a 'dot' suffix when completing a module qualifier
 
     fun `test value completion of module prefix, before dot`() = doSingleCompletionMultiFile(
-"""
+            """
 --@ main.elm
 import Data.User
 g = Dat{-caret-}
@@ -160,7 +155,14 @@ g = Data{-caret-}
 """)
 
 
-    fun `test value completion of module prefix, after dot`() = doSingleCompletionMultiFile(
+/*
+TODO re-enable these tests once we figure out how to intelligently pick
+upper- vs lower-case dummy identifier immediately following a dot.
+See [ElmCompletionContributor.beforeCompletion]
+*/
+
+/*
+fun `test value completion of module prefix, after dot`() = doSingleCompletionMultiFile(
 """
 --@ main.elm
 import Data.User
@@ -190,4 +192,5 @@ g = Data.User.defaultUser{-caret-}
 
 """)
 
+*/
 }

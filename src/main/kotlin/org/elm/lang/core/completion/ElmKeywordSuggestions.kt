@@ -5,14 +5,17 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.editor.EditorModificationUtil
+import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmIfElseExpr
 import org.elm.lang.core.psi.elements.ElmLetInExpr
+import org.elm.lang.core.psi.prevLeaves
+import org.elm.lang.core.psi.withoutErrors
 
 /**
  * Provide code completion for Elm's keywords
@@ -60,8 +63,8 @@ object ElmKeywordSuggestor : Suggestor {
                 result.add("exposing")
             }
 
-            // various expressions
-            if (PsiTreeUtil.getParentOfType(pos, ElmExpressionTag::class.java) != null) {
+            // keywords that can appear at the beginning of an expression
+            if (prevVisibleLeaf?.elementType in listOf(EQ, ARROW, IN, COMMA, LEFT_SQUARE_BRACKET, LEFT_PARENTHESIS)) {
                 result.add("if")
                 result.add("case")
                 result.add("let")
@@ -84,9 +87,13 @@ object ElmKeywordSuggestor : Suggestor {
             }
 
             // the 'in' in a 'let' expression
-            // TODO [kl] this is not nearly specific enough, but it will do for now
-            if (PsiTreeUtil.getParentOfType(pos, ElmLetInExpr::class.java) != null) {
-                result.add("in")
+            val letInExpr = PsiTreeUtil.getParentOfType(pos, ElmLetInExpr::class.java)
+            if (letInExpr != null) {
+                // Check to see if we are immediately after a VIRTUAL_END_(DECL|SECTION).
+                val leaves = pos.prevLeaves.withoutErrors.filter { it !is PsiWhiteSpace && it !is PsiComment }
+                if (leaves.firstOrNull()?.elementType in listOf(VIRTUAL_END_SECTION, VIRTUAL_END_DECL)) {
+                    result.add("in")
+                }
             }
         }
     }
