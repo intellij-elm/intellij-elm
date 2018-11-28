@@ -1,5 +1,7 @@
 package org.elm.lang.core.types
 
+import org.bouncycastle.asn1.ua.DSTU4145NamedCurves.params
+import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.ElmNamedElement
@@ -15,7 +17,8 @@ import org.elm.lang.core.psi.parentOfType
  */
 class TypeExpression private constructor(
         private val subs: SubstitutionTable,
-        private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
+        private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf(),
+        private val activeAliases: Set<ElmTypeAliasDeclaration> = mutableSetOf()
 ) {
     companion object {
         fun inferPortAnnotation(annotation: ElmPortAnnotation): InferenceResult {
@@ -132,16 +135,25 @@ class TypeExpression private constructor(
     }
 
     private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration, caller: Caller?): Ty {
+        if (decl in activeAliases) {
+            diagnostics += BadRecursionError(decl)
+            return TyUnknown
+        }
+
         val record = decl.aliasedRecord
         val params = decl.lowerTypeNameList.map { TyVar(it.name) }.toList()
         val childTable = SubstitutionTable.fromVars(params, subs.resolveAll(caller?.args ?: emptyList()))
-        val childScope = TypeExpression(childTable, diagnostics)
+        val childScope = TypeExpression(childTable, diagnostics, activeAliases + decl)
 
-        if (record != null) {
+        val ty = if (record == null) {
+            decl.typeRef?.let { childScope.typeRefType(it) } ?: TyUnknown
+        } else {
             val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, replaceParamsWithArgs(params, caller))
-            return childScope.recordTypeDeclType(record, aliasTy)
+            childScope.recordTypeDeclType(record, aliasTy)
         }
-        return decl.typeRef?.let { childScope.typeRefType(it) } ?: return TyUnknown
+
+        diagnostics += childScope.diagnostics
+        return ty
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration, caller: Caller?): Ty {
