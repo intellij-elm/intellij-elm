@@ -679,6 +679,14 @@ main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
+    // Issue #142
+    // this tests for infinite recursion; the diagnostic is tested in TypeDeclarationInspectionTest
+    fun `test bad self-recursion in type alias`() = checkByText("""
+type alias A = A
+foo : A
+foo = ()
+""")
+
     fun `test allowed self-recursion in annotated function`() = checkByText("""
 main : () -> ()
 main a = main a -- This is a runtime error, not compile time
