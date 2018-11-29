@@ -10,10 +10,9 @@ import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.modificationTracker
-import org.elm.lang.core.types.InferenceResult
 
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
-private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("DECLARED_VALUES_KEY")
+private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
 
 data class VisibleNames(
         val global: List<ElmNamedElement>,
