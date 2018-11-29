@@ -72,7 +72,7 @@ public class LabelUtils {
         Path path1 = Paths.get(path);
         String moduleName = getModuleName(path1);
         String moduleFile = String.format("tests/%s.elm", moduleName.replace(".", "/"));
-        String label = decodeLabel(path1.getFileName());
+        String label = decodeLabel(path1.subpath(1, path1.getNameCount()));
         return new Pair<>(moduleFile, label);
     }
 

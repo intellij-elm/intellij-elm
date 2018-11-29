@@ -26,6 +26,11 @@
       <em>Feedback welcome.</em>
 
       <ul>
+        <li><b>0.3.6</b> <em>(2018-11-29)</em> - Fixes
+        <ul>
+          <li>Navigation with nested suites/li>
+        </ul
+        </li>
         <li><b>0.3.5</b> <em>(2018-11-27)</em> - Open for future versions of IntelliJ
         <li><b>0.3.2</b> <em>(2018-11-19)</em> - Fixes
         <ul>

@@ -42,6 +42,16 @@ public class LabelUtilsTest {
     }
 
     @Test
+    public void useNestedLocationUrl() {
+        String url = toTestLocationUrl(toPath(Arrays.asList("Nested.Module", "suite", "test")));
+        String urlPath = url.substring(url.indexOf("://") + 3);
+
+        Pair<String, String> pair = fromLocationUrlPath(urlPath);
+        assertEquals("tests/Nested/Module.elm", pair.first);
+        assertEquals("suite/test", pair.second);
+    }
+
+    @Test
     public void useLocationUrlWithSlash() {
         String url = toTestLocationUrl(toPath(Arrays.asList("Module", "test / stuff")));
         String urlPath = url.substring(url.indexOf("://") + 3);
