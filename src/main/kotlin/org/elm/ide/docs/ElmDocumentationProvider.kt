@@ -43,7 +43,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         val lastDot = link.indexOfLast { it == '.' }
         return if (lastDot <= 0) {
             with(ModuleScope(context.elmFile)) {
-                getVisibleTypes().find { it.name == link } ?: getDeclaredValues().find { it.name == link }
+                getVisibleTypes().all.find { it.name == link } ?: getDeclaredValues().find { it.name == link }
             }
         } else {
             val qualifierPrefix = link.substring(0, lastDot)

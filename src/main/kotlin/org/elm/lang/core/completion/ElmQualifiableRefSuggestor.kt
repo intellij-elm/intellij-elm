@@ -40,7 +40,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 is ElmValueExpr -> {
                     if (qualifierPrefix.isEmpty()) {
                         ExpressionScope(parent).getVisibleValues().forEach { result.add(it) }
-                        ModuleScope(file).getVisibleConstructors().forEach { result.add(it) }
+                        ModuleScope(file).getVisibleConstructors().all.forEach { result.add(it) }
                         GlobalScope.builtInValues.forEach { result.add(it) }
                     } else {
                         val importScopes = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
@@ -50,7 +50,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 }
                 is ElmUnionPattern -> {
                     if (qualifierPrefix.isEmpty()) {
-                        ModuleScope(file).getVisibleConstructors()
+                        ModuleScope(file).getVisibleConstructors().all
                                 .filter { it is ElmUnionMember }
                                 .forEach { result.add(it) }
                     } else {
@@ -62,7 +62,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 }
                 is ElmUpperPathTypeRef, is ElmParametricTypeRef -> {
                     if (qualifierPrefix.isEmpty()) {
-                        ModuleScope(file).getVisibleTypes().forEach { result.add(it) }
+                        ModuleScope(file).getVisibleTypes().all.forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }
                     } else {
                         ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)

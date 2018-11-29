@@ -18,7 +18,7 @@ class SimpleUnionConstructorReference(element: ElmReferenceElement)
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> =
-            ModuleScope(element.elmFile).getVisibleConstructors()
+            ModuleScope(element.elmFile).getVisibleConstructors().all
                     .filter { it is ElmUnionMember }
                     .toTypedArray()
 

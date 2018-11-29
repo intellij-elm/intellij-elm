@@ -14,7 +14,9 @@ import org.elm.lang.core.psi.modificationTracker
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
 private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
 private val DECLARED_TYPES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_TYPES_KEY")
+private val VISIBLE_TYPES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_TYPES_KEY")
 private val DECLARED_CONSTRUCTORS_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_CONSTRUCTORS_KEY")
+private val VISIBLE_CONSTRUCTORS_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_CONSTRUCTORS_KEY")
 
 data class VisibleNames(
         val global: List<ElmNamedElement>,
@@ -78,16 +80,11 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleValues(): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_VALUES_KEY) {
-            val globallyExposedValues =
-            // TODO [kl] re-think this lame hack to avoid an infinite loop
-                    if (elmFile.isCore())
-                        emptyList()
-                    else
-                        GlobalScope(elmFile.project, elmFile.elmProject).getVisibleValues()
-            val topLevelValues = getDeclaredValues()
-            val importedValues = elmFile.findChildrenByClass(ElmImportClause::class.java)
+            val fromGlobal = elmFile.implicitGlobalScope()?.getVisibleValues() ?: emptyList()
+            val fromTopLevel = getDeclaredValues()
+            val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportNames(it) }
-            val visibleValues = VisibleNames(globallyExposedValues, topLevelValues, importedValues)
+            val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
             Result.create(visibleValues, elmFile.project.modificationTracker)
         }
     }
@@ -122,25 +119,24 @@ class ModuleScope(val elmFile: ElmFile) {
     // TYPES
 
 
-    fun getDeclaredTypes(): List<ElmNamedElement> =
-            CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_KEY) {
-                val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
-                        (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
-                Result.create(declaredTypes, elmFile.project.modificationTracker)
-            }
+    fun getDeclaredTypes(): List<ElmNamedElement> {
+        return CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_KEY) {
+            val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
+                    (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
+            Result.create(declaredTypes, elmFile.project.modificationTracker)
+        }
+    }
 
 
-    fun getVisibleTypes(): List<ElmNamedElement> {
-        val globallyExposedTypes =
-        // TODO [kl] re-think this lame hack to avoid an infinite loop
-                if (elmFile.isCore())
-                    emptyList()
-                else
-                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleTypes()
-        val topLevelTypes = getDeclaredTypes()
-        val importedTypes = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                .flatMap { getVisibleImportTypes(it) }
-        return listOf(globallyExposedTypes, topLevelTypes, importedTypes).flatten()
+    fun getVisibleTypes(): VisibleNames {
+        return CachedValuesManager.getCachedValue(elmFile, VISIBLE_TYPES_KEY) {
+            val fromGlobal = elmFile.implicitGlobalScope()?.getVisibleTypes() ?: emptyList()
+            val fromTopLevel = getDeclaredTypes()
+            val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
+                    .flatMap { getVisibleImportTypes(it) }
+            val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
+            Result.create(names, elmFile.project.modificationTracker)
+        }
     }
 
 
@@ -175,17 +171,16 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-    fun getVisibleConstructors(): List<ElmNamedElement> {
-        val globallyExposedConstructors =
-        // TODO [kl] re-think this lame hack to avoid an infinite loop
-                if (elmFile.isCore())
-                    emptyList()
-                else
-                    GlobalScope(elmFile.project, elmFile.elmProject).getVisibleConstructors()
-        val topLevelConstructors = getDeclaredConstructors()
-        val importedConstructors = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                .flatMap { getVisibleImportConstructors(it) }
-        return listOf(globallyExposedConstructors, topLevelConstructors, importedConstructors).flatten()
+    fun getVisibleConstructors(): VisibleNames {
+        return CachedValuesManager.getCachedValue(elmFile, VISIBLE_CONSTRUCTORS_KEY) {
+            val fromGlobal = elmFile.implicitGlobalScope()?.getVisibleConstructors() ?: emptyList()
+            val fromTopLevel = getDeclaredConstructors()
+            val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
+                    .flatMap { getVisibleImportConstructors(it) }
+            val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
+            Result.create(names, elmFile.project.modificationTracker)
+        }
+
     }
 
     private fun getVisibleImportConstructors(importClause: ElmImportClause): List<ElmNamedElement> {
@@ -230,4 +225,13 @@ class ModuleScope(val elmFile: ElmFile) {
         val allExposedNames = locallyExposedUnionConstructorNames.union(locallyExposedRecordConstructorNames)
         return allExposedConstructors.filter { allExposedNames.contains(it.name) }
     }
+}
+
+private fun ElmFile.implicitGlobalScope(): GlobalScope? {
+    if (isCore()) {
+        // The `elm/core` standard library does not have an implicit global scope. It must explicitly
+        // import modules like `List`, `String`, etc.
+        return null
+    }
+    return GlobalScope(project, elmProject)
 }
