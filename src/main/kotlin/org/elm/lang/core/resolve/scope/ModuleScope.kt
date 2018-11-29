@@ -13,6 +13,8 @@ import org.elm.lang.core.psi.modificationTracker
 
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
 private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
+private val DECLARED_TYPES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_TYPES_KEY")
+private val DECLARED_CONSTRUCTORS_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_CONSTRUCTORS_KEY")
 
 data class VisibleNames(
         val global: List<ElmNamedElement>,
@@ -120,9 +122,12 @@ class ModuleScope(val elmFile: ElmFile) {
     // TYPES
 
 
-    fun getDeclaredTypes(): List<ElmNamedElement> {
-        return elmFile.getTypeDeclarations() + elmFile.getTypeAliasDeclarations()
-    }
+    fun getDeclaredTypes(): List<ElmNamedElement> =
+            CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_KEY) {
+                val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
+                        (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
+                Result.create(declaredTypes, elmFile.project.modificationTracker)
+            }
 
 
     fun getVisibleTypes(): List<ElmNamedElement> {
@@ -160,10 +165,13 @@ class ModuleScope(val elmFile: ElmFile) {
 
 
     fun getDeclaredConstructors(): List<ElmNamedElement> {
-        return listOf(
-                elmFile.getTypeDeclarations().flatMap { it.unionMemberList },
-                elmFile.getTypeAliasDeclarations().filter { it.isRecordAlias }
-        ).flatten()
+        return CachedValuesManager.getCachedValue(elmFile, DECLARED_CONSTRUCTORS_KEY) {
+            val declaredConstructors = listOf(
+                    elmFile.getTypeDeclarations().flatMap { it.unionMemberList },
+                    elmFile.getTypeAliasDeclarations().filter { it.isRecordAlias }
+            ).flatten()
+            Result.create(declaredConstructors, elmFile.project.modificationTracker)
+        }
     }
 
 
