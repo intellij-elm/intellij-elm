@@ -3,7 +3,7 @@ package org.elm.workspace
 import org.elm.FileTreeBuilder
 import org.elm.fileTree
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 import org.elm.openapiext.pathAsPath
 
 class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
@@ -111,8 +111,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
-            val moduleDeclsForA = ElmModules.getAll(project, elmProjA)
-            val moduleDeclsForB = ElmModules.getAll(project, elmProjB)
+            val moduleDeclsForA = ElmModulesIndex.getAll(project, elmProjA)
+            val moduleDeclsForB = ElmModulesIndex.getAll(project, elmProjB)
             println("module decls for A")
             moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
             println("\n\n")
@@ -269,8 +269,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
-            val moduleDeclsForA = ElmModules.getAll(project, elmProjA)
-            val moduleDeclsForB = ElmModules.getAll(project, elmProjB)
+            val moduleDeclsForA = ElmModulesIndex.getAll(project, elmProjA)
+            val moduleDeclsForB = ElmModulesIndex.getAll(project, elmProjB)
             println("module decls for A")
             moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
             println("\n\n")

@@ -7,7 +7,7 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
-import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 private val log = logger<ElmImportClause>()
 
@@ -50,6 +50,6 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
                         getVariants().find { it.name == element.referenceName }
 
                 override fun getVariants(): Array<ElmNamedElement> =
-                        ElmModules.getAll(project, element.elmProject).toTypedArray()
+                        ElmModulesIndex.getAll(project, element.elmProject).toTypedArray()
             }
 }

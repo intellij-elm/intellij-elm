@@ -5,7 +5,7 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
 /**
@@ -23,7 +23,7 @@ class ImportScope(val elmFile: ElmFile) {
          */
         fun fromImportDecl(importDecl: ElmImportClause): ImportScope? {
             val moduleName = importDecl.moduleQID.text
-            return ElmModules.get(moduleName, importDecl.project, importDecl.elmProject)
+            return ElmModulesIndex.get(moduleName, importDecl.project, importDecl.elmProject)
                     ?.let { ImportScope(it.elmFile) }
         }
 

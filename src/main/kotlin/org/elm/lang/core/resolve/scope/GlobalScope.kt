@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 import org.elm.workspace.ElmProject
 
 
@@ -59,7 +59,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
                 else -> null
             } ?: return emptyList()
 
-            return ElmModules.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
+            return ElmModulesIndex.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
                     .filter { it.elmFile.isCore() }
         }
     }
@@ -68,7 +68,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
         // ModuleScope.getDeclaredValues is cached, so there's no need to cache the results of this
         // function.
         fun helper(moduleName: String) =
-                ElmModules.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                         ?: emptyList()
 
@@ -85,7 +85,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModules.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredTypes() }
                         ?: emptyList()
 
@@ -104,7 +104,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModules.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredConstructors() }
                         ?: emptyList()
 

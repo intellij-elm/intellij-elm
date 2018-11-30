@@ -9,7 +9,7 @@ import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
 /**
@@ -75,7 +75,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
     }
 
     private fun suggestQualifiers(qualifierPrefix: String, file: ElmFile, result: CompletionResultSet) {
-        ElmModules.getAll(file.project, file.elmProject)
+        ElmModulesIndex.getAll(file.project, file.elmProject)
                 .filter { it.name.startsWith(qualifierPrefix) && it.name != qualifierPrefix }
                 .map { it.name.removePrefix("$qualifierPrefix.").substringBefore('.') }
                 .forEach { result.add(it) }
