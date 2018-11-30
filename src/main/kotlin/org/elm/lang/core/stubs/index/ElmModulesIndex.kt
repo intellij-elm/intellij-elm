@@ -52,8 +52,7 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
             val key = makeKey(moduleName)
             return StubIndex.getElements(KEY, key, project,
                     GlobalSearchScope.allScope(project),
-                    ElmModuleDeclaration::class.java)
-                    .sortedWith(elmAppVsLibraryComparator)
+                    ElmModuleDeclaration::class.java).toList()
         }
 
         /**
@@ -70,7 +69,7 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
                     results.add(it)
                 }
             }
-            return results.sortedWith(elmAppVsLibraryComparator)
+            return results
         }
 
         /**
@@ -81,16 +80,3 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
         }
     }
 }
-
-/*
-There should be only a single file in project scope for a given module name,
-but until we start loading the `elm-package.json` manifest file to determine
-source roots and library roots, we will need to deal with indexed Elm files
-that do not truly belong to THIS project. To mitigate the problem, we will
-order the module declarations such that the ones that live in the `elm-stuff`
-directory are at the end of the list.
-*/
-private val elmAppVsLibraryComparator =
-        compareBy<ElmModuleDeclaration> {
-            if (it.containingFile.virtualFile.path.contains("/elm-stuff/")) 1 else 0
-        }
