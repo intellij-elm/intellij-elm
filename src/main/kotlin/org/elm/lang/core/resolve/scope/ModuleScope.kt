@@ -6,7 +6,7 @@ import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.descendantsOfType
+import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.modificationTracker
@@ -36,7 +36,7 @@ data class VisibleNames(
 class ModuleScope(val elmFile: ElmFile) {
 
     fun getImportDecls() =
-            elmFile.descendantsOfType<ElmImportClause>()
+            elmFile.directChildren.filterIsInstance<ElmImportClause>().toList()
 
     fun getAliasDecls() =
             getImportDecls().mapNotNull { it.asClause }
