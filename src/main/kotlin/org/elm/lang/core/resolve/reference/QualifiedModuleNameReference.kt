@@ -12,7 +12,6 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmModules
-import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
  * Qualified module-name reference from the value or type namespaces.
@@ -34,14 +33,16 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
+        val intellijProject = element.project
+        val elmProject = element.elmProject
         val moduleDecls =
                 ModuleScope(element.elmFile)
                         .getImportDecls()
                         .map { it.moduleQID.text }
-                        .let { ElmModulesIndex.getAll(it, element.project) }
+                        .let { ElmModules.getAll(it, intellijProject, elmProject) }
 
         val implicitDecls =
-                ElmModules.getAll(GlobalScope.defaultImports, element.project, element.elmProject)
+                ElmModules.getAll(GlobalScope.defaultImports, intellijProject, elmProject)
                         .filter { it.elmFile.isCore() }
 
         val aliasDecls = ModuleScope(element.elmFile).getAliasDecls() as List<ElmNamedElement>
