@@ -12,12 +12,20 @@ import org.elm.workspace.ElmProject
  * The subset of implicitly exposed values, types and constructors provided by Elm's
  * standard library ("Core").
  */
-// TODO [kl] eventually ElmProject should be non-null, but we need to straighten out
-//           some things with the integration tests and legacy Elm 0.18 projects before
-//           we can be more restrictive here.
-class GlobalScope(val project: Project, val elmProject: ElmProject?) {
+class GlobalScope private constructor(val project: Project, val elmProject: ElmProject) {
 
     companion object {
+
+        fun forElmFile(elmFile: ElmFile): GlobalScope? {
+            val elmProject = elmFile.elmProject ?: return null
+            if (elmFile.isCore()) {
+                // The `elm/core` standard library does not have an implicit global scope. It must explicitly
+                // import modules like `List`, `String`, etc.
+                return null
+            }
+            return GlobalScope(elmFile.project, elmProject)
+        }
+
         /**
          * Modules that the Elm compiler treats as being implicitly imported.
          */

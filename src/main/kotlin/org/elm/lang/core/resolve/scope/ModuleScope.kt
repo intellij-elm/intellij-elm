@@ -80,7 +80,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleValues(): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_VALUES_KEY) {
-            val fromGlobal = elmFile.implicitGlobalScope()?.getVisibleValues() ?: emptyList()
+            val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
             val fromTopLevel = getDeclaredValues()
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportNames(it) }
@@ -130,7 +130,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleTypes(): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_TYPES_KEY) {
-            val fromGlobal = elmFile.implicitGlobalScope()?.getVisibleTypes() ?: emptyList()
+            val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleTypes() ?: emptyList()
             val fromTopLevel = getDeclaredTypes()
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportTypes(it) }
@@ -173,7 +173,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
     fun getVisibleConstructors(): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_CONSTRUCTORS_KEY) {
-            val fromGlobal = elmFile.implicitGlobalScope()?.getVisibleConstructors() ?: emptyList()
+            val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleConstructors() ?: emptyList()
             val fromTopLevel = getDeclaredConstructors()
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportConstructors(it) }
@@ -225,13 +225,4 @@ class ModuleScope(val elmFile: ElmFile) {
         val allExposedNames = locallyExposedUnionConstructorNames.union(locallyExposedRecordConstructorNames)
         return allExposedConstructors.filter { allExposedNames.contains(it.name) }
     }
-}
-
-private fun ElmFile.implicitGlobalScope(): GlobalScope? {
-    if (isCore()) {
-        // The `elm/core` standard library does not have an implicit global scope. It must explicitly
-        // import modules like `List`, `String`, etc.
-        return null
-    }
-    return GlobalScope(project, elmProject)
 }
