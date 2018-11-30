@@ -15,7 +15,7 @@ class SimpleUnionOrRecordConstructorReference(element: ElmReferenceElement)
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> {
-        return ModuleScope(element.elmFile).getVisibleConstructors().toTypedArray()
+        return ModuleScope(element.elmFile).getVisibleConstructors().all.toTypedArray()
     }
 
 }

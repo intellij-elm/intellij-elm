@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
-import org.elm.lang.core.stubs.index.ElmModules
+import org.elm.lang.core.stubs.index.ElmModulesIndex
 import org.elm.workspace.ElmProject
 
 
@@ -12,12 +12,20 @@ import org.elm.workspace.ElmProject
  * The subset of implicitly exposed values, types and constructors provided by Elm's
  * standard library ("Core").
  */
-// TODO [kl] eventually ElmProject should be non-null, but we need to straighten out
-//           some things with the integration tests and legacy Elm 0.18 projects before
-//           we can be more restrictive here.
-class GlobalScope(val project: Project, val elmProject: ElmProject?) {
+class GlobalScope private constructor(val project: Project, val elmProject: ElmProject) {
 
     companion object {
+
+        fun forElmFile(elmFile: ElmFile): GlobalScope? {
+            val elmProject = elmFile.elmProject ?: return null
+            if (elmFile.isCore()) {
+                // The `elm/core` standard library does not have an implicit global scope. It must explicitly
+                // import modules like `List`, `String`, etc.
+                return null
+            }
+            return GlobalScope(elmFile.project, elmProject)
+        }
+
         /**
          * Modules that the Elm compiler treats as being implicitly imported.
          */
@@ -59,7 +67,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
                 else -> null
             } ?: return emptyList()
 
-            return ElmModules.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
+            return ElmModulesIndex.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
                     .filter { it.elmFile.isCore() }
         }
     }
@@ -68,7 +76,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
         // ModuleScope.getDeclaredValues is cached, so there's no need to cache the results of this
         // function.
         fun helper(moduleName: String) =
-                ElmModules.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                         ?: emptyList()
 
@@ -85,7 +93,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModules.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredTypes() }
                         ?: emptyList()
 
@@ -104,7 +112,7 @@ class GlobalScope(val project: Project, val elmProject: ElmProject?) {
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModules.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, project, elmProject)
                         ?.let { ModuleScope(it.elmFile).getDeclaredConstructors() }
                         ?: emptyList()
 

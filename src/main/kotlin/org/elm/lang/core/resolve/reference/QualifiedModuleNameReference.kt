@@ -11,7 +11,6 @@ import org.elm.lang.core.psi.offsetIn
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.stubs.index.ElmModules
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
@@ -34,17 +33,16 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
-        val moduleDecls =
-                ModuleScope(element.elmFile)
-                        .getImportDecls()
-                        .map { it.moduleQID.text }
-                        .let { ElmModulesIndex.getAll(it, element.project) }
+        val intellijProject = element.project
+        val elmProject = element.elmProject
+        val importDecls = ModuleScope(element.elmFile).getImportDecls()
+        val moduleDecls = importDecls.map { it.moduleQID.text }
+                        .let { ElmModulesIndex.getAll(it, intellijProject, elmProject) }
 
-        val implicitDecls =
-                ElmModules.getAll(GlobalScope.defaultImports, element.project, element.elmProject)
+        val implicitDecls = ElmModulesIndex.getAll(GlobalScope.defaultImports, intellijProject, elmProject)
                         .filter { it.elmFile.isCore() }
 
-        val aliasDecls = ModuleScope(element.elmFile).getAliasDecls() as List<ElmNamedElement>
+        val aliasDecls = importDecls.mapNotNull { it.asClause } as List<ElmNamedElement>
 
         return listOf(moduleDecls, implicitDecls, aliasDecls).flatten().toTypedArray()
     }
