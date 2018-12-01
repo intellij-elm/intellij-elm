@@ -45,6 +45,13 @@
         <p>We hope to remove the type variable limitation in the future.</p>
 
         <ul>
+            <li><b>2.1.0</b> <em>(2018-12-01)</em>
+                <ul>
+                    <li>Added code completion for accessing fields in a record</li>
+                    <li>Performance improvements</li>
+                    <li>Improved type inference</li>
+                </ul>
+            </li>
             <li><b>2.0.3</b> <em>(2018-11-16)</em>
                 <ul>
                     <li>Improved function generation from a type annotation</li>
