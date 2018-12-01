@@ -526,6 +526,26 @@ main =
         foo
 """)
 
+    // issue #153
+    fun `test let-in with tuple with too small arity`() = checkByText("""
+main : ()
+main =
+    let
+        <error descr="Type mismatch.Required: ((), ())Found: (a, b, c)">(x, y, z)</error> = ((), ())
+    in
+        y
+""")
+
+    fun `test let-in with tuple with too large arity`() = checkByText("""
+main : ()
+main =
+    let
+        <error descr="Type mismatch.Required: ((), (), ())Found: (a, b)">(x, y)</error> = ((), (), ())
+    in
+        y
+""")
+
+
     fun `test let-in with mismatched type from annotated inner func`() = checkByText("""
 type Foo = Bar
 main : Foo
