@@ -780,16 +780,16 @@ private class InferenceScope(
     }
 
     private fun bindTuplePattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
-        if (ty !is TyTuple) {
-            pat.patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
+        val patternList = pat.patternList
+        if (ty !is TyTuple || ty.types.size != patternList.size) {
+            patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
             if (isInferable(ty)) {
-                val actualTy = TyTuple(uniqueVars(pat.patternList.size))
+                val actualTy = TyTuple(uniqueVars(patternList.size))
                 diagnostics += TypeMismatchError(pat, actualTy, ty)
             }
             return
         }
-        pat.patternList
-                .zip(ty.types)
+        patternList.zip(ty.types)
                 .forEach { (pat, type) -> bindPattern(pat.child, type, isParameter) }
     }
 
