@@ -69,7 +69,9 @@ abstract class ElmResolveTestBase : ElmTestBase() {
         if (resolveFile == "unresolved") {
             val element = ref?.resolve()
             if (element != null) {
-                error("Should not resolve ${ref.element.text} to ${element.text}")
+                // Note: we cannot log the element text here because it may force a stub to load ASTNode
+                // causing the `checkAstNotLoaded` filter above to throw an exception.
+                error("Should not resolve ${ref.element.text} to $element")
             }
             return
         }

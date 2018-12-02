@@ -67,4 +67,29 @@ module App exposing (Person)
 type alias Person = { name : String, age: Int }
 """)
 
+
+    // issue #93
+    fun `test introducing an alias hides the original module name from qualified refs`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Foo as F
+main = Foo.bar
+           --^unresolved
+
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""")
+
+
+    fun `test an import with an alias still provides a ref for the original module name`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Foo as F
+       --^Foo.elm
+
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""")
 }

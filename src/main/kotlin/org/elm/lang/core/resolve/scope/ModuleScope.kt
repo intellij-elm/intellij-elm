@@ -60,7 +60,8 @@ class ModuleScope(val elmFile: ElmFile) {
      */
     fun importDeclsForQualifierPrefix(qualifierPrefix: String) =
             getImportDecls().filter {
-                it.moduleQID.text == qualifierPrefix || it.asClause?.name == qualifierPrefix
+                // If a module has an alias, then the alias hides the original module name. (issue #93)
+                qualifierPrefix == it.asClause?.name ?: it.moduleQID.text
             }
 
 

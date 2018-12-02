@@ -61,6 +61,10 @@ g = 0
 """)
 
 
+    fun testIssue93() = doTest("Issue93Module.elm")
+
+
+
     // LEGACY Elm 0.18 TESTS
 
     // TODO [drop 0.18] remove this test

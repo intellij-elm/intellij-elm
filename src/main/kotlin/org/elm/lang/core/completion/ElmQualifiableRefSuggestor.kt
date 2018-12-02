@@ -75,11 +75,20 @@ object ElmQualifiableRefSuggestor : Suggestor {
     }
 
     private fun suggestQualifiers(qualifierPrefix: String, file: ElmFile, result: CompletionResultSet) {
-        ElmModulesIndex.getAll(file.project, file.elmProject)
+        // Get all modules exposed to this Elm project, regardless of whether they have been imported,
+        // and suggest them hierarchically based on the dotted module name.
+        //
+        // EXAMPLE:
+        // assume that the Elm project has a dependency on elm/json which provides Json.Decode and Json.Encode modules
+        // if the input text is "Jso" then we would suggest "Json"
+        // and if the input text is "Json." then we might suggest "Decode" and "Encode"
+        ElmModulesIndex.getAll(file.project, file.elmProject).asSequence()
                 .filter { it.name.startsWith(qualifierPrefix) && it.name != qualifierPrefix }
                 .map { it.name.removePrefix("$qualifierPrefix.").substringBefore('.') }
                 .forEach { result.add(it) }
 
+        // Aliases are forbidden from having dots in the name. So if the qualifier prefix is empty, then
+        // we are in a state where aliases can (and should) be suggested.
         if (qualifierPrefix.isEmpty()) {
             ModuleScope(file).getAliasDecls().forEach { result.add(it) }
         }
