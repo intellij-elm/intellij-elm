@@ -73,6 +73,20 @@ g = User.defaultUser{-caret-}
 """)
 
 
+    fun `test qualified value completion also includes non-imported modules`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+g = User.defa{-caret-}
+
+--@ User.elm
+module User exposing (..)
+defaultUser = "Arnold"
+""", """
+g = User.defaultUser{-caret-}
+
+""")
+
+
     fun `test qualified type completion`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -84,6 +98,20 @@ module User exposing (..)
 type User = String
 """, """
 import User
+g : User.User{-caret-}
+
+""")
+
+
+    fun `test qualified type completion also includes non-imported modules`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+g : User.Us{-caret-}
+
+--@ User.elm
+module User exposing (..)
+type User = String
+""", """
 g : User.User{-caret-}
 
 """)

@@ -43,7 +43,11 @@ object ElmQualifiableRefSuggestor : Suggestor {
                         ModuleScope(file).getVisibleConstructors().all.forEach { result.add(it) }
                         GlobalScope.builtInValues.forEach { result.add(it) }
                     } else {
-                        val importScopes = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
+                        /* TODO Make a distinction between completion results that are already imported
+                                and those that are not. When selecting a completion that is not yet imported,
+                                the import declaration should be automatically added.
+                        */
+                        val importScopes = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
                         importScopes.flatMap { it.getExposedValues() }.forEach { result.add(it) }
                         importScopes.flatMap { it.getExposedConstructors() }.forEach { result.add(it) }
                     }
@@ -54,7 +58,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                                 .filter { it is ElmUnionMember }
                                 .forEach { result.add(it) }
                     } else {
-                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
+                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
                                 .flatMap { it.getExposedConstructors() }
                                 .filter { it is ElmUnionMember }
                                 .forEach { result.add(it) }
@@ -65,7 +69,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                         ModuleScope(file).getVisibleTypes().all.forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }
                     } else {
-                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file)
+                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
                                 .flatMap { it.getExposedTypes() }
                                 .forEach { result.add(it) }
                     }

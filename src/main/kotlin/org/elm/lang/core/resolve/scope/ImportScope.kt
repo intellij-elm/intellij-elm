@@ -29,17 +29,30 @@ class ImportScope(val elmFile: ElmFile) {
 
         /**
          * Returns an [ImportScope] for the module named by [qualifierPrefix] reachable
-         * via [elmFile], either via import declarations or implicit imports from Elm's
-         * Core standard library.
+         * via [elmFile]. By default, the import scopes will be found by crawling the
+         * explicit import declarations in [elmFile] and automatically adding the
+         * implicit imports from Elm's Core standard library.
+         *
+         * @param qualifierPrefix The name of a module or an alias
+         * @param elmFile The Elm file from which the search should be performed
+         * @param importsOnly If true, include only modules reachable via imports (implicit and explicit).
+         *                    Otherwise, include all modules which could be reached by the file's [ElmProject]
          */
-        fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile): List<ImportScope> {
+        fun fromQualifierPrefixInModule(qualifierPrefix: String, elmFile: ElmFile, importsOnly: Boolean = true): List<ImportScope> {
             val implicitScopes = GlobalScope.implicitModulesMatching(qualifierPrefix, elmFile)
                     .map { ImportScope(it.elmFile) }
 
             val explicitScopes = ModuleScope(elmFile).importDeclsForQualifierPrefix(qualifierPrefix)
                     .mapNotNull { ImportScope.fromImportDecl(it) }
 
-            return implicitScopes + explicitScopes
+            return if (importsOnly) {
+                implicitScopes + explicitScopes
+            } else {
+                val projectWideScopes = ElmModulesIndex.getAll(listOf(qualifierPrefix), elmFile.project, elmFile.elmProject)
+                        .map { ImportScope(it.elmFile) }
+                val allScopes = projectWideScopes + implicitScopes + explicitScopes
+                allScopes.distinctBy { it.elmFile.virtualFile.path }
+            }
         }
     }
 
