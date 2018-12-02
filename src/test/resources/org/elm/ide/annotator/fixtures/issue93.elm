@@ -14,3 +14,7 @@ type alias Foo =
 f a b = <error descr="Unresolved reference 'x'. Module 'Issue93Module' is imported as 'I' and so you must use the alias here.">Issue93Module.x</error>
 
 g = <error descr="Unresolved reference 'ConstructorA'. Module 'Issue93Module' is imported as 'I' and so you must use the alias here.">Issue93Module.ConstructorA</error>
+
+ok = I.x
+
+badRefRegardlessOfAlias = <error descr="Unresolved reference 'bogus'">Issue93Module.bogus</error>
