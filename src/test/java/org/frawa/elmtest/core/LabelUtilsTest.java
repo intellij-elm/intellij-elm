@@ -1,6 +1,7 @@
 package org.frawa.elmtest.core;
 
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -114,5 +115,21 @@ public class LabelUtilsTest {
         assertEquals(Arrays.asList("Module/suite"), parents);
     }
 
+    @Test
+    public void errorLocationUrl() {
+        String url = toErrorLocationUrl("my/path/file", 1313, 13);
+        assertEquals("elmTestError://my/path/file::1313::13", url);
+
+        String path = VirtualFileManager.extractPath(url);
+        Pair<String, Pair<Integer, Integer>> pair = fromErrorLocationUrlPath(path);
+
+        String file = pair.first;
+        int line = pair.second.first;
+        int column = pair.second.second;
+
+        assertEquals("my/path/file", file);
+        assertEquals(1313, line);
+        assertEquals(13, column);
+    }
 
 }

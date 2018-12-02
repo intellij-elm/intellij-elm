@@ -16,6 +16,7 @@ public class LabelUtils {
     public static final String ELM_TEST_PROTOCOL = "elmTest";
     public static final String DESCRIBE_PROTOCOL = ELM_TEST_PROTOCOL + "Describe";
     public static final String TEST_PROTOCOL = ELM_TEST_PROTOCOL + "Test";
+    public static final String ERROR_PROTOCOL = ELM_TEST_PROTOCOL + "Error";
 
     final static Path EMPTY_PATH = Paths.get("");
 
@@ -118,4 +119,17 @@ public class LabelUtils {
 //        return Stream.iterate(path, current -> current != null ? current.getParent() : null)
 //                .takeWile(current -> !current.equals(excludeParent));
     }
+
+    public static String toErrorLocationUrl(String path, int line, int column) {
+        return String.format("%s://%s::%d::%d", ERROR_PROTOCOL, path, line, column);
+    }
+
+    public static Pair<String, Pair<Integer, Integer>> fromErrorLocationUrlPath(String spec) {
+        String[] parts = spec.split("::");
+        String file = parts[0];
+        int line = parts.length > 1 ? Integer.parseInt(parts[1]) : 1;
+        int column = parts.length > 2 ? Integer.parseInt(parts[2]) : 1;
+        return new Pair<>(file, new Pair<>(line, column));
+    }
+
 }

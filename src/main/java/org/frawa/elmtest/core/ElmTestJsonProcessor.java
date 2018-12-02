@@ -3,6 +3,7 @@ package org.frawa.elmtest.core;
 import com.google.gson.*;
 import com.intellij.execution.testframework.sm.runner.events.*;
 import org.frawa.elmtest.core.json.CompileErrors;
+import org.frawa.elmtest.core.json.Error;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -23,13 +24,16 @@ public class ElmTestJsonProcessor {
 
     public List<TreeNodeEvent> accept(String text) {
         try {
-            JsonObject obj = gson.fromJson(text, JsonObject.class);
-
-            JsonElement type = obj.get("type");
-            if (type != null && "compile-errors".equals(type)) {
-                return accept(toCompileErrors(obj));
+            if (text.contains("Compilation failed")) {
+                String json = text.substring(0, text.lastIndexOf("Compilation failed"));
+                JsonObject obj = gson.fromJson(json, JsonObject.class);
+                JsonElement type = obj.get("type");
+                if (type != null && "compile-errors".equals(type.getAsString())) {
+                    return accept(toCompileErrors(obj));
+                }
             }
 
+            JsonObject obj = gson.fromJson(text, JsonObject.class);
             String event = obj.get("event").getAsString();
 
             if ("runStart".equals(event)) {
@@ -63,14 +67,6 @@ public class ElmTestJsonProcessor {
         } catch (JsonSyntaxException e) {
             return null;
         }
-    }
-
-    private List<TreeNodeEvent> accept(CompileErrors obj) {
-        return Collections.emptyList();
-    }
-
-    CompileErrors toCompileErrors(JsonObject obj) {
-        return gson.fromJson(obj, CompileErrors.class);
     }
 
     static Stream<TreeNodeEvent> testEvents(Path path, JsonObject obj) {
@@ -216,4 +212,23 @@ public class ElmTestJsonProcessor {
         Collections.reverse(parents);
         return parents.stream();
     }
+
+    private List<TreeNodeEvent> accept(CompileErrors compileErrors) {
+        return compileErrors.errors.stream()
+                .flatMap(error -> toErrorEvents(error))
+                .collect(Collectors.toList());
+    }
+
+    CompileErrors toCompileErrors(JsonObject obj) {
+        return gson.fromJson(obj, CompileErrors.class);
+    }
+
+    private Stream<TreeNodeEvent> toErrorEvents(Error error) {
+        return error.problems.stream()
+                .flatMap(problem -> Stream.of(
+                        new TestStartedEvent(problem.title, toErrorLocationUrl(error.path, problem.region.start.line, problem.region.start.column)),
+                        new TestFailedEvent(problem.title, null, problem.getTextMessage(), null, true, null, null, null, null, false, false, -1)
+                ));
+    }
+
 }

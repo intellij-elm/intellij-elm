@@ -270,7 +270,7 @@ public class ElmTestJsonProcessorTest {
     @Test
     public void parseCompileErrors() {
         String json = "{\n" +
-                "    \"type\": \"compileErrors-compileErrors\",\n" +
+                "    \"type\": \"compile-errors\",\n" +
                 "    \"errors\": [\n" +
                 "        {\n" +
                 "            \"path\": \"PATH/tests/UiTests.elm\",\n" +
@@ -327,5 +327,52 @@ public class ElmTestJsonProcessorTest {
                 "\n" +
                 "What is missing? Are some parentheses misplaced?";
         assertEquals(expectedMessage, problem.getTextMessage());
+    }
+
+    @Test
+    public void acceptCompileErrors() {
+        String json = "{\n" +
+                "    \"type\": \"compile-errors\",\n" +
+                "    \"errors\": [\n" +
+                "        {\n" +
+                "            \"path\": \"PATH/tests/UiTests.elm\",\n" +
+                "            \"name\": \"UiTests\",\n" +
+                "            \"problems\": [\n" +
+                "                {\n" +
+                "                    \"title\": \"TOO FEW ARGS\",\n" +
+                "                    \"region\": {\n" +
+                "                        \"start\": {\n" +
+                "                            \"line\": 131,\n" +
+                "                            \"column\": 33\n" +
+                "                        },\n" +
+                "                        \"end\": {\n" +
+                "                            \"line\": 131,\n" +
+                "                            \"column\": 39\n" +
+                "                        }\n" +
+                "                    },\n" +
+                "                    \"message\": [\n" +
+                "                        \"The `Msg` type needs 1 argument, but I see 0 instead:\\n\\n131| update : Highlighter MyStyle -> IT.Msg -> Model MyStyle -> Model MyStyle\\n                                     \",\n" +
+                "                        {\n" +
+                "                            \"bold\": false,\n" +
+                "                            \"underline\": false,\n" +
+                "                            \"color\": \"red\",\n" +
+                "                            \"string\": \"^^^^^^\"\n" +
+                "                        },\n" +
+                "                        \"\\nWhat is missing? Are some parentheses misplaced?\"\n" +
+                "                    ]\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}";
+
+        List<TreeNodeEvent> list = processor.accept(json);
+        assertEquals(2, list.size());
+
+        assertTrue(list.get(0) instanceof TestStartedEvent);
+        assertTrue(list.get(1) instanceof TestFailedEvent);
+        assertEquals("elmTestError://PATH/tests/UiTests.elm::131::33", ((TestStartedEvent) list.get(0)).getLocationUrl());
+        assertEquals("TOO FEW ARGS", list.get(0).getName());
+        assertEquals("TOO FEW ARGS", list.get(1).getName());
     }
 }
