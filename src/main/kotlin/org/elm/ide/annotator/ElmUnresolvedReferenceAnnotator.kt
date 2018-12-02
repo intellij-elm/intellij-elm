@@ -93,7 +93,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     // Elm prohibits the use of the original module name in qualified references.
     // So we will try to detect this condition and present a helpful error.
     private fun handleModuleHiddenByAlias(ref: PsiReference, element: PsiElement, holder: AnnotationHolder): Boolean {
-        if (element !is ElmValueExpr && element !is ElmUpperPathTypeRef) return false
+        if (element !is ElmValueExpr && element !is ElmUpperPathTypeRef && element !is ElmParametricTypeRef) return false
         val elmFile = element.containingFile as? ElmFile ?: return false
 
         val qid: ElmQID = when (ref) {

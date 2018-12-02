@@ -30,6 +30,10 @@ import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
 
 abstract class ElmAnnotatorTestBase : ElmTestBase() {
+
+    override val dataPath: String
+        get() = "org/elm/ide/annotator/fixtures"
+
     protected fun doTest(vararg additionalFilenames: String) {
         myFixture.testHighlighting(fileName, *additionalFilenames)
     }
