@@ -1,8 +1,12 @@
 package org.frawa.elmtest.core;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.intellij.execution.testframework.sm.runner.events.*;
+import org.frawa.elmtest.core.json.CompileErrors;
+import org.frawa.elmtest.core.json.Error;
+import org.frawa.elmtest.core.json.Problem;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -261,5 +265,67 @@ public class ElmTestJsonProcessorTest {
         assertEquals("elmTestDescribe://Exploratory", ((TestSuiteStartedEvent) list.get(0)).getLocationUrl());
         assertEquals("elmTestDescribe://Exploratory/describe", ((TestSuiteStartedEvent) list.get(1)).getLocationUrl());
         assertEquals("elmTestTest://Exploratory/describe/fail", ((TestStartedEvent) list.get(2)).getLocationUrl());
+    }
+
+    @Test
+    public void parseCompileErrors() {
+        String json = "{\n" +
+                "    \"type\": \"compileErrors-compileErrors\",\n" +
+                "    \"errors\": [\n" +
+                "        {\n" +
+                "            \"path\": \"PATH/tests/UiTests.elm\",\n" +
+                "            \"name\": \"UiTests\",\n" +
+                "            \"problems\": [\n" +
+                "                {\n" +
+                "                    \"title\": \"TOO FEW ARGS\",\n" +
+                "                    \"region\": {\n" +
+                "                        \"start\": {\n" +
+                "                            \"line\": 131,\n" +
+                "                            \"column\": 33\n" +
+                "                        },\n" +
+                "                        \"end\": {\n" +
+                "                            \"line\": 131,\n" +
+                "                            \"column\": 39\n" +
+                "                        }\n" +
+                "                    },\n" +
+                "                    \"message\": [\n" +
+                "                        \"The `Msg` type needs 1 argument, but I see 0 instead:\\n\\n131| update : Highlighter MyStyle -> IT.Msg -> Model MyStyle -> Model MyStyle\\n                                     \",\n" +
+                "                        {\n" +
+                "                            \"bold\": false,\n" +
+                "                            \"underline\": false,\n" +
+                "                            \"color\": \"red\",\n" +
+                "                            \"string\": \"^^^^^^\"\n" +
+                "                        },\n" +
+                "                        \"\\nWhat is missing? Are some parentheses misplaced?\"\n" +
+                "                    ]\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}";
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonObject obj = gson.fromJson(json, JsonObject.class);
+        CompileErrors compileErrors = processor.toCompileErrors(obj);
+//        assertEquals("",gson.toJson(compileErrors));
+
+        assertNotNull(compileErrors);
+        assertEquals(1, compileErrors.errors.size());
+
+        Error error = compileErrors.errors.get(0);
+        assertEquals("PATH/tests/UiTests.elm", error.path);
+        assertEquals(1, error.problems.size());
+
+        Problem problem = error.problems.get(0);
+        assertEquals("TOO FEW ARGS", problem.title);
+        assertEquals(131, problem.region.start.line);
+        assertEquals(33, problem.region.start.column);
+
+        String expectedMessage = "The `Msg` type needs 1 argument, but I see 0 instead:\n" +
+                "\n" +
+                "131| update : Highlighter MyStyle -> IT.Msg -> Model MyStyle -> Model MyStyle\n" +
+                "                                     \n" +
+                "\n" +
+                "What is missing? Are some parentheses misplaced?";
+        assertEquals(expectedMessage, problem.getTextMessage());
     }
 }

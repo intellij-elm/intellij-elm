@@ -2,6 +2,7 @@ package org.frawa.elmtest.core;
 
 import com.google.gson.*;
 import com.intellij.execution.testframework.sm.runner.events.*;
+import org.frawa.elmtest.core.json.CompileErrors;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -23,6 +24,11 @@ public class ElmTestJsonProcessor {
     public List<TreeNodeEvent> accept(String text) {
         try {
             JsonObject obj = gson.fromJson(text, JsonObject.class);
+
+            JsonElement type = obj.get("type");
+            if (type != null && "compile-errors".equals(type)) {
+                return accept(toCompileErrors(obj));
+            }
 
             String event = obj.get("event").getAsString();
 
@@ -57,6 +63,14 @@ public class ElmTestJsonProcessor {
         } catch (JsonSyntaxException e) {
             return null;
         }
+    }
+
+    private List<TreeNodeEvent> accept(CompileErrors obj) {
+        return Collections.emptyList();
+    }
+
+    CompileErrors toCompileErrors(JsonObject obj) {
+        return gson.fromJson(obj, CompileErrors.class);
     }
 
     static Stream<TreeNodeEvent> testEvents(Path path, JsonObject obj) {
