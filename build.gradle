@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 
-version = '0.4.0'
+version = '0.4.1'
 
 allprojects {
     apply plugin: 'java'
@@ -22,11 +22,11 @@ allprojects {
 
         //plugin dependencies, see https://github.com/JetBrains/gradle-intellij-plugin
         //plugins 'IntelliLang'
-        plugins 'org.elm.klazuka:2.0.1'
+        plugins 'org.elm.klazuka:2.1.0'
     }
 
     publishPlugin {
-        username 'your-jetbrains-username'
+        username 'agilecoderfrank@gmail.com'
         //add your user's password on the command line using '-Dintellij.publish.password=...'
         password System.properties['intellij.publish.password']
 

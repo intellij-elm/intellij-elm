@@ -4,10 +4,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.ParsingTestCase;
 import org.elm.lang.core.parser.ElmParserDefinition;
+import org.elm.lang.core.psi.ElmAtomTag;
 import org.elm.lang.core.psi.ElmOperandTag;
 import org.elm.lang.core.psi.ElmTypes;
-import org.elm.lang.core.psi.elements.ElmFunctionCall;
-import org.elm.lang.core.psi.elements.ElmStringConstant;
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr;
+import org.elm.lang.core.psi.elements.ElmStringConstantExpr;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -60,52 +61,52 @@ public class DiscoverElmPluginTest extends ParsingTestCase {
                 .map(secondOperand());
     }
 
-    private static Function<PsiElement, Stream<ElmFunctionCall>> allTests(String label) {
+    private static Function<PsiElement, Stream<ElmFunctionCallExpr>> allTests(String label) {
         return psi -> functionCalls(psi, "test")
                 .filter(firstArgumentIsString(label));
     }
 
-    private static Predicate<ElmFunctionCall> firstArgumentIsString(String value) {
+    private static Predicate<ElmFunctionCallExpr> firstArgumentIsString(String value) {
         return call -> firstOperand()
                 .andThen(literalString())
                 .andThen(s -> s.equals(value))
                 .apply(call);
     }
 
-    private static ElmOperandTag firstArgument(ElmFunctionCall call) {
+    private static ElmOperandTag firstArgument(ElmFunctionCallExpr call) {
         return call.getArguments().iterator().next();
     }
 
-    private static Function<ElmFunctionCall, ElmOperandTag> firstOperand() {
+    private static Function<ElmFunctionCallExpr, ElmOperandTag> firstOperand() {
         return call -> call.getArguments().iterator().next();
     }
 
-    private static ElmOperandTag secondArgument(ElmFunctionCall call) {
-        Iterator<ElmOperandTag> iterator = call.getArguments().iterator();
+    private static ElmAtomTag secondArgument(ElmFunctionCallExpr call) {
+        Iterator<ElmAtomTag> iterator = call.getArguments().iterator();
         iterator.next();
         return iterator.next();
     }
 
 
-    private static Function<ElmFunctionCall, ElmOperandTag> secondOperand() {
+    private static Function<ElmFunctionCallExpr, ElmAtomTag> secondOperand() {
         return call -> {
-            Iterator<ElmOperandTag> iterator = call.getArguments().iterator();
+            Iterator<ElmAtomTag> iterator = call.getArguments().iterator();
             iterator.next();
             return iterator.next();
         };
     }
 
-    private static Stream<ElmFunctionCall> functionCalls(PsiElement parent, String targetName) {
-        return PsiTreeUtil.findChildrenOfType(parent, ElmFunctionCall.class)
+    private static Stream<ElmFunctionCallExpr> functionCalls(PsiElement parent, String targetName) {
+        return PsiTreeUtil.findChildrenOfType(parent, ElmFunctionCallExpr.class)
                 .stream()
                 .filter(call -> call.getTarget().getText().equals(targetName));
     }
 
     private static String stringConstant(ElmOperandTag op) {
-        if (op instanceof ElmStringConstant) {
+        if (op instanceof ElmStringConstantExpr) {
             return PsiTreeUtil.findSiblingForward(op.getFirstChild(), ElmTypes.REGULAR_STRING_PART, null).getText();
         }
-        return PsiTreeUtil.findChildOfType(op, ElmStringConstant.class).getText();
+        return PsiTreeUtil.findChildOfType(op, ElmStringConstantExpr.class).getText();
     }
 
     private static Function<ElmOperandTag, String> literalString() {

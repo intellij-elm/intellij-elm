@@ -24,16 +24,11 @@ public class ElmTestJsonProcessor {
 
     public List<TreeNodeEvent> accept(String text) {
         try {
-            if (text.contains("Compilation failed")) {
-                String json = text.substring(0, text.lastIndexOf("Compilation failed"));
-                JsonObject obj = gson.fromJson(json, JsonObject.class);
-                JsonElement type = obj.get("type");
-                if (type != null && "compile-errors".equals(type.getAsString())) {
-                    return accept(toCompileErrors(obj));
-                }
-            }
-
             JsonObject obj = gson.fromJson(text, JsonObject.class);
+            JsonElement type = obj.get("type");
+            if (type != null && "compile-errors".equals(type.getAsString())) {
+                return accept(toCompileErrors(obj));
+            }
             String event = obj.get("event").getAsString();
 
             if ("runStart".equals(event)) {
@@ -64,7 +59,16 @@ public class ElmTestJsonProcessor {
 
             currentPath = path;
             return result;
+
         } catch (JsonSyntaxException e) {
+            if (text.contains("Compilation failed")) {
+                String json = text.substring(0, text.lastIndexOf("Compilation failed"));
+                JsonObject obj = gson.fromJson(json, JsonObject.class);
+                JsonElement type = obj.get("type");
+                if (type != null && "compile-errors".equals(type.getAsString())) {
+                    return accept(toCompileErrors(obj));
+                }
+            }
             return null;
         }
     }

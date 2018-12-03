@@ -9,7 +9,7 @@
       Run Elm Tests.<br/>
       <em>Run and navigate Elm tests within IntelliJ the framework.</em>
 
-      This plugin requires the <em>Elm</em>(<code>org.elm.klazuka</code>) plugin for navigation.
+      This plugin requires the <em>Elm</em> plugin (<code>org.elm.klazuka</code>) for navigation.
 
       Features:<br>
       <ul>
@@ -27,6 +27,8 @@
       <em>Feedback welcome.</em>
 
       <ul>
+        <li><b>0.4.1</b> <em>(2018-12-3)</em> - Upgrade to Elm plugin version 2.1.0
+        </li>
         <li><b>0.4.0</b> <em>(2018-12-2)</em> - Feature
         <ul>
           <li>Navigate to compile errors/li>
@@ -38,6 +40,7 @@
         </ul
         </li>
         <li><b>0.3.5</b> <em>(2018-11-27)</em> - Open for future versions of IntelliJ
+        </li>
         <li><b>0.3.2</b> <em>(2018-11-19)</em> - Fixes
         <ul>
           <li>Find locally npm-installed elm-test/elm binaries</li>
@@ -49,9 +52,12 @@
           <li>fix for <code>equalLists</code></li>
         </ul
         </li>
-        <li><b>0.3.0</b> <em>(2018-11-09)</em> - Navigation from test to file, based on labels</li>
-        <li><b>0.2.1</b> <em>(2018-11-08)</em> - Naive navigation from test to file</li>
-        <li><b>0.2.0</b> <em>(2018-11-07)</em> - Primitive navigation from test to file</li>
+        <li><b>0.3.0</b> <em>(2018-11-09)</em> - Navigation from test to file, based on labels
+        </li>
+        <li><b>0.2.1</b> <em>(2018-11-08)</em> - Naive navigation from test to file
+        </li>
+        <li><b>0.2.0</b> <em>(2018-11-07)</em> - Primitive navigation from test to file
+        </li>
       </ul>
     ]]>
   </change-notes>
