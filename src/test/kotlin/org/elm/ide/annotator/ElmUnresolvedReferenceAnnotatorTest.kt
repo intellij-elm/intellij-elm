@@ -23,6 +23,12 @@ h = <error descr="Unresolved reference 'Foo'"><error descr="Unresolved reference
 """)
 
 
+    fun `test unresolved parametric type ref`() = checkErrors("""
+f0 : <error descr="Unresolved reference 'Quux'">Quux</error> ()
+f1 : <error descr="Unresolved reference 'Foo'"><error descr="Unresolved reference 'Quux'">Foo.Quux</error></error> ()
+""")
+
+
     fun `test built-in type refs have no errors`() = checkErrors("""
 type alias MyList = List
 """)

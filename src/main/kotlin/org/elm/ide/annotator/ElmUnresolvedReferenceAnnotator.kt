@@ -49,10 +49,21 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
 
                 if (!handled) {
                     // Generic unresolved ref error
+                    //
                     // TODO [kl] make this smarter in the case of qualified references
                     //           so that we don't report a double error when really the problem
                     //           is with the qualified module name reference.
-                    holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'")
+
+                    // Most of the time an ElmReferenceElement is not the ancestor of any other ElmReferenceElement.
+                    // And in these cases, it's ok to treat the error as spanning the entire reference element.
+                    // However, in cases like ElmParametricTypeRef, its children can also be reference elements,
+                    // and so it is vital that we correctly mark the error only on the text range that
+                    // contributed the reference.
+                    val errorRange = when (element) {
+                        is ElmParametricTypeRef -> element.upperCaseQID.textRange
+                        else -> element.textRange
+                    }
+                    holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
                             .also { it.registerFix(ElmImportIntentionAction()) }
                 }
             }
