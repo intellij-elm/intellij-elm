@@ -323,8 +323,7 @@ public class ElmTestJsonProcessorTest {
         String expectedMessage = "The `Msg` type needs 1 argument, but I see 0 instead:\n" +
                 "\n" +
                 "131| update : Highlighter MyStyle -> IT.Msg -> Model MyStyle -> Model MyStyle\n" +
-                "                                     \n" +
-                "\n" +
+                "                                     ^^^^^^\n" +
                 "What is missing? Are some parentheses misplaced?";
         assertEquals(expectedMessage, problem.getTextMessage());
     }

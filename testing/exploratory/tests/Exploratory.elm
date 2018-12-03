@@ -16,7 +16,7 @@ suite =
 
         -- , todo "todasfsdasdffosdasdff12adsf23431221"
         -- , test "fail" <| \_ -> Expect.fail ""
-        , describe "nested describ2e"
+        , describe1 "nested describ2e"
             [ test "ok" <| \_ -> Expect.pass
             ]
         , describe "deeply nested describe"
