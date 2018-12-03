@@ -10,10 +10,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
-import org.elm.lang.core.resolve.reference.QualifiedTypeReference
-import org.elm.lang.core.resolve.reference.QualifiedValueReference
-import org.elm.lang.core.resolve.reference.TypeVariableReference
+import org.elm.lang.core.resolve.reference.*
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -37,25 +34,39 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     )
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
-        for (ref in element.references) {
-            if (ref.resolve() == null) {
-                var handled = false
-                for (handler in handlers) {
-                    if (handler(ref, element, holder)) {
-                        handled = true
-                        break
-                    }
-                }
+        var refs = element.references.asSequence()
 
-                if (!handled) {
-                    // Generic unresolved ref error
-                    // TODO [kl] make this smarter in the case of qualified references
-                    //           so that we don't report a double error when really the problem
-                    //           is with the qualified module name reference.
-                    holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'")
-                            .also { it.registerFix(ElmImportIntentionAction()) }
+        // Pre-processing: ignore any qualified value/type refs where the module qualifier could not be resolved.
+        // This is necessary because a single Psi element like ElmValueExpr can return multiple references:
+        // one for the module name and the other for the value/type name. If the former reference cannot be resolved,
+        // then the latter is guaranteed not to resolve. And we don't want to double-report the error, so we will
+        // instead filter them out.
+        if (refs.any { it is QualifiedModuleNameReference<*> && it.resolve() == null }) {
+            refs = refs.filterNot { it is QualifiedTypeReference || it is QualifiedValueReference || it is QualifiedConstructorReference }
+        }
+
+        // Give each handler a chance to deal with the unresolved ref before falling back on an error
+        outerLoop@
+        for (ref in refs.filter { it.resolve() == null }) {
+            for (handler in handlers) {
+                if (handler(ref, element, holder)) {
+                    continue@outerLoop
                 }
             }
+
+            // Generic unresolved ref error
+            //
+            // Most of the time an ElmReferenceElement is not the ancestor of any other ElmReferenceElement.
+            // And in these cases, it's ok to treat the error as spanning the entire reference element.
+            // However, in cases like ElmParametricTypeRef, its children can also be reference elements,
+            // and so it is vital that we correctly mark the error only on the text range that
+            // contributed the reference.
+            val errorRange = when (element) {
+                is ElmParametricTypeRef -> element.upperCaseQID.textRange
+                else -> element.textRange
+            }
+            holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
+                    .also { it.registerFix(ElmImportIntentionAction()) }
         }
     }
 

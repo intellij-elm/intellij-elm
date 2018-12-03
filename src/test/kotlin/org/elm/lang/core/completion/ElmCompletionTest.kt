@@ -1,6 +1,6 @@
 package org.elm.lang.core.completion
 
-class ElmCompletionTest: ElmCompletionTestBase() {
+class ElmCompletionTest : ElmCompletionTestBase() {
 
 
     fun `test value completion from function parameter`() = doSingleCompletion(
@@ -73,6 +73,20 @@ g = User.defaultUser{-caret-}
 """)
 
 
+    fun `test qualified value completion also includes non-imported modules`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+g = User.defa{-caret-}
+
+--@ User.elm
+module User exposing (..)
+defaultUser = "Arnold"
+""", """
+g = User.defaultUser{-caret-}
+
+""")
+
+
     fun `test qualified type completion`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -84,6 +98,20 @@ module User exposing (..)
 type User = String
 """, """
 import User
+g : User.User{-caret-}
+
+""")
+
+
+    fun `test qualified type completion also includes non-imported modules`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+g : User.Us{-caret-}
+
+--@ User.elm
+module User exposing (..)
+type User = String
+""", """
 g : User.User{-caret-}
 
 """)
@@ -139,7 +167,23 @@ y = 4{-caret-}
 
 // TODO [kl] eventually code completion should add a 'dot' suffix when completing a module qualifier
 
-    fun `test value completion of module prefix, before dot`() = doSingleCompletionMultiFile(
+
+    fun `test module completion of module prefix, after dot`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+import Data.User
+g = Data.{-caret-}
+
+--@ Data/User.elm
+module Data.User exposing (..)
+""", """
+import Data.User
+g = Data.User{-caret-}
+
+""")
+
+
+    fun `test module name completion with caret before dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
 import Data.User
@@ -147,7 +191,6 @@ g = Dat{-caret-}
 
 --@ Data/User.elm
 module Data.User exposing (..)
-defaultUser = "Arnold"
 """, """
 import Data.User
 g = Data{-caret-}
@@ -155,42 +198,74 @@ g = Data{-caret-}
 """)
 
 
-/*
-TODO re-enable these tests once we figure out how to intelligently pick
-upper- vs lower-case dummy identifier immediately following a dot.
-See [ElmCompletionContributor.beforeCompletion]
-*/
-
-/*
-fun `test value completion of module prefix, after dot`() = doSingleCompletionMultiFile(
-"""
+    fun `test module name completion with caret after dot`() = doSingleCompletionMultiFile(
+            """
 --@ main.elm
 import Data.User
 g = Data.{-caret-}
 
 --@ Data/User.elm
 module Data.User exposing (..)
-defaultUser = "Arnold"
 """, """
 import Data.User
 g = Data.User{-caret-}
 
 """)
 
-    fun `test value completion of module prefix, final step`() = doSingleCompletionMultiFile(
-"""
---@ main.elm
-import Data.User
-g = Data.User.{-caret-}
 
---@ Data/User.elm
-module Data.User exposing (..)
+    fun `test qualified value completion with caret after dot`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+import User
+g = User.{-caret-}
+
+--@ User.elm
+module User exposing (..)
 defaultUser = "Arnold"
 """, """
-import Data.User
-g = Data.User.defaultUser{-caret-}
+import User
+g = User.defaultUser{-caret-}
 
 """)
 
+
+    /*
+    TODO investigate
+
+    This test is temporarily disabled until we can figure out how to conditionally change
+    the IntelliJ dummy identifier to use an upper-case identifier in contexts such as types
+    which must start with an upper-case letter.
+
+    fun `test qualified type completion with caret after dot`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+import Foo
+g : Foo.{-caret-}
+
+--@ Foo.elm
+module Foo exposing (Bar)
+type Bar = Baz String
+""", """
+import Foo
+g : Foo.Bar{-caret-}
+
+""")
 */
+
+
+    fun `test qualified type constructor completion with caret after dot`() = doSingleCompletionMultiFile(
+            """
+--@ main.elm
+import Foo
+g = Foo.{-caret-}
+
+--@ Foo.elm
+module Foo exposing (..)
+type Bar = Baz String
+""", """
+import Foo
+g = Foo.Baz{-caret-}
+
+""")
+
 }
