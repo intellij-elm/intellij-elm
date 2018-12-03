@@ -14,18 +14,18 @@ h = <error descr="Unresolved reference 'Quux'">Quux</error>
 
 
     fun `test unresolved qualified refs`() = checkErrors("""
-f = <error descr="Unresolved reference 'Foo'"><error descr="Unresolved reference 'foobar'">Foo.foobar</error></error>
+f = <error descr="Unresolved reference 'Foo'">Foo.foobar</error>
 
-g : <error descr="Unresolved reference 'Foo'"><error descr="Unresolved reference 'Bar'">Foo.Bar</error></error>
+g : <error descr="Unresolved reference 'Foo'">Foo.Bar</error>
 g = 42
 
-h = <error descr="Unresolved reference 'Foo'"><error descr="Unresolved reference 'Quux'">Foo.Quux</error></error>
+h = <error descr="Unresolved reference 'Foo'">Foo.Quux</error>
 """)
 
 
     fun `test unresolved parametric type ref`() = checkErrors("""
 f0 : <error descr="Unresolved reference 'Quux'">Quux</error> ()
-f1 : <error descr="Unresolved reference 'Foo'"><error descr="Unresolved reference 'Quux'">Foo.Quux</error></error> ()
+f1 : <error descr="Unresolved reference 'Foo'">Foo.Quux</error> ()
 """)
 
 
