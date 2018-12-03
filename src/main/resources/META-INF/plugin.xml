@@ -27,7 +27,11 @@
       <em>Feedback welcome.</em>
 
       <ul>
-        <li><b>0.4.1</b> <em>(2018-12-3)</em> - Upgrade to Elm plugin version 2.1.0
+        <li><b>0.4.3</b> <em>(2018-12-3)</em> - Fixes
+        <ul>
+          <li>Upgrade to Elm plugin version 2.1.0</li>
+          <li>Fix compile error messages to be complete/li>
+        </ul
         </li>
         <li><b>0.4.0</b> <em>(2018-12-2)</em> - Feature
         <ul>
@@ -68,7 +72,7 @@
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
 
-  <!--<depends>com.intellij.modules.lang</depends>-->
+  <depends>com.intellij.modules.lang</depends>
   <depends>org.elm.klazuka</depends>
 
   <extensionPoints>
