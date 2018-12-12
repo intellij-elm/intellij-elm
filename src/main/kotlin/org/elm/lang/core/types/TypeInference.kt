@@ -527,8 +527,9 @@ private class InferenceScope(
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
+        // TODO [unification] neither of these vars should be rigid
         val tyVar = TyVar("b")
-        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseName = "a")), tyVar)
+        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {

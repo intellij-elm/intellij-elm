@@ -7,11 +7,10 @@ package org.elm.lang.core.types
  */
 sealed class Ty
 
+// vars are not a data class because they need to be compared by identity
 /** A declared ("rigid") type variable (e.g. `a` in `Maybe a`) */
-data class TyVar(val name: String) : Ty() {
-    override fun toString(): String {
-        return "<TyVar $name>"
-    }
+class TyVar(val name: String) : Ty() {
+    override fun toString(): String = "<TyVar $name>"
 }
 
 /** A tuple type like `(Int, String)` */
@@ -25,17 +24,17 @@ data class TyTuple(val types: List<Ty>) : Ty() {
  * A record type like `{x: Int, y: Float}` or `{a | x: Int}`
  *
  * @property fields map of field name to ty
- * @property baseName The name of the base record identifier, if there is one. Non-null for field
+ * @property baseTy The type of the base record identifier, if there is one. Non-null for field
  *   accessors, record with base identifiers etc. that match a subset of record fields
  * @property alias The alias for this record, if there is one. Used for rendering and tracking record constructors
  */
 data class TyRecord(
         val fields: Map<String, Ty>,
-        val baseName: String? = null,
+        val baseTy: Ty? = null,
         val alias: TyUnion? = null
 ) : Ty() {
     /** true if this record has a base name, and will match a subset of a record's fields */
-    val isSubset: Boolean get() = baseName != null
+    val isSubset: Boolean get() = baseTy != null
 }
 
 /** A type like `String` or `Maybe a` */
@@ -56,6 +55,7 @@ val TyChar = TyUnion("Char", "Char", emptyList())
 // GLSL code to infer the type variables, so we just don't report diagnostics on shared types.
 val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown, TyUnknown, TyUnknown))
 
+@Suppress("FunctionName")
 fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 
@@ -72,7 +72,7 @@ data class TyFunction(val parameters: List<Ty>, val ret: Ty) : Ty() {
     }
 
     override fun toString(): String {
-        return allTys.joinToString(" -> ", prefix = "<TyFunction ", postfix = ">")
+        return allTys.joinToString(" → ", prefix = "<TyFunction ", postfix = ">")
     }
 }
 

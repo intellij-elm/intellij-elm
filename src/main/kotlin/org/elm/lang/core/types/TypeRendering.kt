@@ -39,7 +39,7 @@ fun TyRecord.renderedText(linkify: Boolean, withModule: Boolean): String {
         return alias.renderedText(linkify, withModule)
     }
     // TODO we probably don't want to render all fields
-    val prefix = if (baseName != null) "{ $baseName | " else "{ "
+    val prefix = if (baseTy != null) "{ ${baseTy.renderedText(linkify, withModule)} | " else "{ "
     return fields.entries.joinToString(", ", prefix = prefix, postfix = " }") { (name, ty) ->
         "$name: ${ty.renderedText(linkify, withModule)}"
     }
