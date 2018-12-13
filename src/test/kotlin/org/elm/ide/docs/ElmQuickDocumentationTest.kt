@@ -390,6 +390,31 @@ foo ({x, y} as z) = z
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    fun `test aliased types`() = doTest(
+            """
+type alias T1 t = ()
+type alias T2 u = T1 t
+foo : T1 a -> T2 b
+foo a = a
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://T1">T1</a> t → <a href="psi_element://T2">T2</a> u
+<b>foo</b> a</pre></div>
+""")
+
+    fun `test alias to unresolved type`() = doTest(
+            """
+type alias Html msg = VirtualDom.Node msg
+foo : Html msg -> Html msg
+foo a = a
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Html">Html</a> msg → <a href="psi_element://Html">Html</a> msg
+<b>foo</b> a</pre></div>
+""")
+
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }

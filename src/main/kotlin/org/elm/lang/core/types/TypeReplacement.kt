@@ -20,7 +20,7 @@ class TypeReplacement private constructor(
 
             if (paramTys.size != argTys.size) {
                 val error = TypeArgumentCountError(element, argTys.size, paramTys.size)
-                return InferenceResult(emptyMap(), listOf(error), TyUnknown)
+                return InferenceResult(emptyMap(), listOf(error), TyUnknown())
             }
 
             if (paramTys.isEmpty()) {
@@ -42,7 +42,7 @@ class TypeReplacement private constructor(
         is TyUnion -> TyUnion(ty.module, ty.name, ty.parameters.map { replace(it) })
         is TyFunction -> TyFunction(ty.parameters.map { replace(it) }, replace(ty.ret))
         is TyRecord -> replaceRecord(ty)
-        TyUnit, TyUnknown, TyInProgressBinding -> ty
+        is TyUnit, is TyUnknown, TyInProgressBinding -> ty
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {

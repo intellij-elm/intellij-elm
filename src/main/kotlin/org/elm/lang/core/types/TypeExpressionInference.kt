@@ -21,7 +21,7 @@ class TypeExpression private constructor(
     companion object {
         fun inferPortAnnotation(annotation: ElmPortAnnotation): InferenceResult {
             val scope = TypeExpression(mutableMapOf())
-            val ty = annotation.typeRef?.let { scope.typeRefType(it) } ?: TyUnknown
+            val ty = annotation.typeRef?.let { scope.typeRefType(it) } ?: TyUnknown()
             return scope.result(ty)
         }
 
@@ -41,10 +41,10 @@ class TypeExpression private constructor(
             val scope = TypeExpression(mutableMapOf())
             val decl = member.parentOfType<ElmTypeDeclaration>()
                     ?.let { scope.typeDeclarationType(it).second }
-                    ?: return scope.result(TyUnknown)
+                    ?: return scope.result(TyUnknown())
             val params = member.allParameters.map { scope.typeSignatureDeclType(it) }.toList()
 
-            val ty = if (params.isNotEmpty()) {
+            val ty: Ty = if (params.isNotEmpty()) {
                 // Constructors with parameters are functions returning the type.
                 TyFunction(params, decl)
             } else {
@@ -80,18 +80,18 @@ class TypeExpression private constructor(
         return when (decl) {
             is ElmUpperPathTypeRef -> upperPathTypeRefType(decl)
             is ElmTypeVariableRef -> getTyVar(decl.identifier.text)
-            is ElmRecordType -> recordTypeDeclType(decl, null)
-            is ElmTupleType -> if (decl.unitExpr != null) TyUnit else TyTuple(decl.typeRefList.map { typeRefType(it) })
+            is ElmRecordType -> recordTypeDeclType(decl)
+            is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeRefList.map { typeRefType(it) })
             is ElmParametricTypeRef -> parametricTypeRefType(decl)
             is ElmTypeRef -> typeRefType(decl)
             else -> error("unimplemented type $decl")
         }
     }
 
-    private fun recordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
+    private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeRefType(it.typeRef) }
         val baseTy = record.baseTypeIdentifier?.referenceName?.let { getTyVar(it) }
-        return TyRecord(declaredFields, baseTy, alias)
+        return TyRecord(declaredFields, baseTy)
     }
 
     private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
@@ -126,7 +126,7 @@ class TypeExpression private constructor(
             // We only get here if the reference doesn't resolve. We could create a TyUnion from the
             // ref name, but we don't know what module it's supposed to be defined in, so that would
             // lead to false positives.
-            else -> emptyList<TyVar>() to TyUnknown
+            else -> emptyList<TyVar>() to TyUnknown()
         }
 
         val result = TypeReplacement.replaceCall(typeRef, params, args, argElements, declaredTy)
@@ -141,19 +141,19 @@ class TypeExpression private constructor(
 
         if (decl in activeAliases) {
             diagnostics += BadRecursionError(decl)
-            return params to TyUnknown
+            return params to TyUnknown()
         }
 
         activeAliases += decl
 
         val ty = if (record == null) {
-            decl.typeRef?.let { typeRefType(it) } ?: TyUnknown
+            decl.typeRef?.let { typeRefType(it) } ?: TyUnknown()
         } else {
-            val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, params)
-            recordTypeDeclType(record, aliasTy)
+            recordTypeDeclType(record)
         }
 
-        return params to ty
+        val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, params)
+        return params to ty.withAlias(aliasTy)
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): Pair<List<TyVar>, TyUnion> {
