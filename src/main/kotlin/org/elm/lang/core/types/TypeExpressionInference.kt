@@ -33,14 +33,14 @@ class TypeExpression private constructor(
 
         fun inferTypeDeclaration(typeDeclaration: ElmTypeDeclaration): InferenceResult {
             val scope = TypeExpression(mutableMapOf())
-            val ty = scope.typeDeclarationType(typeDeclaration).second
+            val ty = scope.typeDeclarationType(typeDeclaration)
             return scope.result(ty)
         }
 
         fun inferUnionConstructor(member: ElmUnionMember): InferenceResult {
             val scope = TypeExpression(mutableMapOf())
             val decl = member.parentOfType<ElmTypeDeclaration>()
-                    ?.let { scope.typeDeclarationType(it).second }
+                    ?.let { scope.typeDeclarationType(it) }
                     ?: return scope.result(TyUnknown())
             val params = member.allParameters.map { scope.typeSignatureDeclType(it) }.toList()
 
@@ -56,7 +56,7 @@ class TypeExpression private constructor(
 
         fun inferTypeAliasDeclaration(decl: ElmTypeAliasDeclaration): InferenceResult {
             val scope = TypeExpression(mutableMapOf())
-            val ty = scope.typeAliasDeclarationType(decl).second
+            val ty = scope.typeAliasDeclarationType(decl)
             return scope.result(ty)
         }
     }
@@ -106,7 +106,7 @@ class TypeExpression private constructor(
 
     private fun resolvedTypeRefType(args: List<Ty>, argElements: List<PsiElement>, typeRef: ElmReferenceElement): Ty {
         val ref = typeRef.reference.resolve()
-        val (params, declaredTy) = when {
+        val declaredTy = when {
             ref is ElmTypeAliasDeclaration -> {
                 val scope = TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet())
                 scope.typeAliasDeclarationType(ref)
@@ -120,14 +120,18 @@ class TypeExpression private constructor(
             // create their own List types that shadow the built-in, so we only want to do this check if the
             // reference is null.
             ref == null && typeRef.referenceName == "List" -> {
-                val tyVar = TyVar("a")
-                listOf(tyVar) to TyList(tyVar)
+                TyList(TyVar("a"))
             }
             // We only get here if the reference doesn't resolve. We could create a TyUnion from the
             // ref name, but we don't know what module it's supposed to be defined in, so that would
             // lead to false positives.
-            else -> emptyList<TyVar>() to TyUnknown()
+            else -> TyUnknown()
         }
+
+        val params = when (declaredTy) {
+            is TyUnion -> declaredTy.parameters
+            else -> declaredTy.alias?.parameters.orEmpty()
+        }.map { it as TyVar }
 
         val result = TypeReplacement.replaceCall(typeRef, params, args, argElements, declaredTy)
         diagnostics += result.diagnostics
@@ -135,13 +139,13 @@ class TypeExpression private constructor(
         return result.ty
     }
 
-    private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Pair<List<TyVar>, Ty> {
+    private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Ty {
         val record = decl.aliasedRecord
         val params = decl.lowerTypeNameList.map { getTyVar(it.name) }.toList()
 
         if (decl in activeAliases) {
             diagnostics += BadRecursionError(decl)
-            return params to TyUnknown()
+            return TyUnknown()
         }
 
         activeAliases += decl
@@ -153,12 +157,12 @@ class TypeExpression private constructor(
         }
 
         val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, params)
-        return params to ty.withAlias(aliasTy)
+        return ty.withAlias(aliasTy)
     }
 
-    private fun typeDeclarationType(declaration: ElmTypeDeclaration): Pair<List<TyVar>, TyUnion> {
+    private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
         val params = declaration.lowerTypeNameList.map { getTyVar(it.name) }
-        return params to TyUnion(declaration.moduleName, declaration.name, params)
+        return TyUnion(declaration.moduleName, declaration.name, params)
     }
 
     private fun getTyVar(name: String) = varsByName.getOrPut(name) { TyVar(name) }
