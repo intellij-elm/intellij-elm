@@ -23,6 +23,10 @@ class TypeReplacement private constructor(
                 return InferenceResult(emptyMap(), listOf(error), TyUnknown)
             }
 
+            if (paramTys.isEmpty()) {
+                return InferenceResult(emptyMap(), emptyList(), ty)
+            }
+
             val replacements = paramTys.indices.associate { i -> paramTys[i] to (argElements[i] to argTys[i]) }
             val typeReplacement = TypeReplacement(replacements)
             val newTy = typeReplacement.replace(ty)

@@ -1,8 +1,8 @@
 package org.elm.lang.core.types
 
+import com.intellij.psi.PsiElement
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
-import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
@@ -97,26 +97,16 @@ class TypeExpression private constructor(
     private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
         val argElements = typeRef.allParameters.toList()
         val args = argElements.map { typeSignatureDeclType(it) }
-
-        val (params, declaredTy) = resolvedTypeRefType(typeRef)
-
-        val result = TypeReplacement.replaceCall(typeRef, params, args, argElements, declaredTy)
-        diagnostics += result.diagnostics
-
-        return result.ty
+        return resolvedTypeRefType(args, argElements, typeRef)
     }
 
     private fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
-        val (params, ty) = resolvedTypeRefType(typeRef)
-        return if (params.isEmpty()) ty else {
-            diagnostics += TypeArgumentCountError(typeRef, 0, params.size)
-            TyUnknown
-        }
+        return resolvedTypeRefType(emptyList(), emptyList(), typeRef)
     }
 
-    private fun resolvedTypeRefType(typeRef: ElmReferenceElement): Pair<List<TyVar>, Ty> {
+    private fun resolvedTypeRefType(args: List<Ty>, argElements: List<PsiElement>, typeRef: ElmReferenceElement): Ty {
         val ref = typeRef.reference.resolve()
-        return when {
+        val (params, declaredTy) = when {
             ref is ElmTypeAliasDeclaration -> {
                 val scope = TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet())
                 scope.typeAliasDeclarationType(ref)
@@ -138,6 +128,11 @@ class TypeExpression private constructor(
             // lead to false positives.
             else -> emptyList<TyVar>() to TyUnknown
         }
+
+        val result = TypeReplacement.replaceCall(typeRef, params, args, argElements, declaredTy)
+        diagnostics += result.diagnostics
+
+        return result.ty
     }
 
     private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration): Pair<List<TyVar>, Ty> {

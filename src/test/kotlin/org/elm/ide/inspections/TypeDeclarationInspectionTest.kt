@@ -1,9 +1,18 @@
 package org.elm.ide.inspections
 
 class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationInspection()) {
-    override fun getProjectDescriptor() = ElmWithStdlibDescriptor
+    fun `test bad argument to aliased record extension`() = checkByText("""
+type alias R a = { a | foo : () }
+type alias S = R <error descr="Type mismatch.Required: recordFound: ()">()</error>
+""")
+
     fun `test bad self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = A</error>
+""")
+
+    fun `test bad mutual self-recursion in type alias`() = checkByText("""
+<error descr="Infinite recursion">type alias A = B</error>
+<error descr="Infinite recursion">type alias B = A</error>
 """)
 
     fun `test too many arguments to type`() = checkByText("""
