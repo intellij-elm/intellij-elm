@@ -200,6 +200,14 @@ main : A Float
 main = {x = 1.0, y = ()}
 """)
 
+    fun `test mismatched value from chained alias`() = checkByText("""
+type Foo a = Foo
+type alias Bar = Foo ()
+
+main : Bar -> Foo Int
+main a = <error descr="Type mismatch.Required: Foo IntFound: Bar">a</error>
+""")
+
     fun `test mismatched value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
 main : A ()

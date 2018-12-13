@@ -122,15 +122,18 @@ class TypeExpression private constructor(
             ref == null && typeRef.referenceName == "List" -> {
                 TyList(TyVar("a"))
             }
-            // We only get here if the reference doesn't resolve. We could create a TyUnion from the
-            // ref name, but we don't know what module it's supposed to be defined in, so that would
-            // lead to false positives.
+            // We only get here if the reference doesn't resolve.
             else -> TyUnknown()
         }
 
-        val params = when (declaredTy) {
-            is TyUnion -> declaredTy.parameters
-            else -> declaredTy.alias?.parameters.orEmpty()
+        if (!isInferable(declaredTy)) {
+            return declaredTy
+        }
+
+        val params = when {
+            declaredTy.alias != null -> declaredTy.alias!!.parameters
+            declaredTy is TyUnion -> declaredTy.parameters
+            else -> emptyList()
         }.map { it as TyVar }
 
         val result = TypeReplacement.replaceCall(typeRef, params, args, argElements, declaredTy)
