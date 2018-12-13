@@ -5,16 +5,31 @@ import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.RecordBaseTypeError
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
 
+/**
+ * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
+ * which could also be [TyVar]s.
+ *
+ * It relies on the fact that [TyVar]s can be compared by identity.
+ */
 class TypeReplacement private constructor(
         private val replacements: Map<TyVar, Pair<PsiElement, Ty>>
 ) {
     companion object {
+        /**
+         * Replace types in a ty that is the result of a parameterized type reference.
+         *
+         * @param element the reference element that [ty] was inferred from
+         * @param ty the type to perform replacement in
+         * @param paramTys the parameters of [ty] that will be replaced
+         * @param argTys the arguments that will replaces the parameters.
+         * @param argElements the PsiElements that [argTys] were inferred from. Must be the same size as [argTys].
+         */
         fun replaceCall(
                 element: PsiElement,
+                ty: Ty,
                 paramTys: List<TyVar>,
                 argTys: List<Ty>,
-                argElements: List<PsiElement>,
-                ty: Ty
+                argElements: List<PsiElement>
         ): InferenceResult {
             require(argTys.size == argElements.size) { "mismatched arg sizes ${argTys.size} != ${argElements.size}" }
 

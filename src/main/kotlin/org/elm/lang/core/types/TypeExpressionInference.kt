@@ -101,6 +101,7 @@ class TypeExpression private constructor(
     }
 
     private fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
+        // upper path type refs are just parametric type refs without any arguments
         return resolvedTypeRefType(emptyList(), emptyList(), typeRef)
     }
 
@@ -130,13 +131,17 @@ class TypeExpression private constructor(
             return declaredTy
         }
 
+        // This cast is safe, since parameters of type declarations and aliases are always inferred
+        // as TyVar. This function is never called after on a type after its vars have been
+        // replaced.
+        @Suppress("UNCHECKED_CAST")
         val params = when {
             declaredTy.alias != null -> declaredTy.alias!!.parameters
             declaredTy is TyUnion -> declaredTy.parameters
             else -> emptyList()
-        }.map { it as TyVar }
+        } as List<TyVar>
 
-        val result = TypeReplacement.replaceCall(typeRef, params, args, argElements, declaredTy)
+        val result = TypeReplacement.replaceCall(typeRef, declaredTy, params, args, argElements)
         diagnostics += result.diagnostics
 
         return result.ty
