@@ -87,7 +87,6 @@ class ElmPsiFactory(private val project: Project) {
                     UNION_PATTERN -> ElmUnionPattern(node)
                     UNIT_EXPR -> ElmUnitExpr(node)
                     UPPER_CASE_QID -> ElmUpperCaseQID(node)
-                    UPPER_PATH_TYPE_REF -> ElmUpperPathTypeRef(node)
                     VALUE_DECLARATION -> ElmValueDeclaration(node)
                     VALUE_EXPR -> ElmValueExpr(node)
                     VALUE_QID -> ElmValueQID(node)

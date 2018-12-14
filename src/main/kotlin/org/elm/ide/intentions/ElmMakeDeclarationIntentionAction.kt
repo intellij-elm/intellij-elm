@@ -66,7 +66,6 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
         } else {
             typeRef.children.dropLast(1).map {
                 when (it) {
-                    is ElmUpperPathTypeRef -> it.upperCaseQID.text
                     is ElmTypeVariableRef -> it.text
                     is ElmParametricTypeRef -> it.upperCaseQID.text
                     is ElmRecordType -> "record"
