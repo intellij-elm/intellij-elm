@@ -26,6 +26,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
     override fun generateDoc(element: PsiElement?, originalElement: PsiElement?) = when (element) {
         is ElmFunctionDeclarationLeft -> documentationFor(element)
         is ElmTypeDeclaration -> documentationFor(element)
+        is ElmUnionMember -> documentationFor(element)
         is ElmTypeAliasDeclaration -> documentationFor(element)
         is ElmLowerPattern -> documentationFor(element)
         is ElmModuleDeclaration -> documentationFor(element)
@@ -79,12 +80,11 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
 }
 
 private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
-    val name = decl.nameIdentifier
     val ty = decl.typeExpressionInference().ty
 
     definition {
         b { append("type") }
-        append(" ", name.text)
+        append(" ", ty.name)
         for (param in ty.parameters) {
             append(" ", param.renderedText(true, false))
         }
@@ -97,34 +97,27 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
         section("Members") {
             for (member in ty.members) {
                 append("\n<p><code>${member.name}</code>")
-                if (member.parameters.isNotEmpty()) {
-                    append(" ")
-                    member.parameters.joinTo(this, " ") {
-                        val renderedText = it.renderedText(true, false)
-                        if (it is TyUnion) "($renderedText)" else renderedText
-                    }
-                }
+                renderMemberParameters(member)
             }
         }
     }
 }
 
 private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildString {
-    val name = decl.nameIdentifier
-    val types = decl.lowerTypeNameList
+    val ty = decl.typeExpressionInference().ty
+    val alias = ty.alias ?: return null
 
     definition {
         b { append("type alias") }
-        append(" ").append(name.text)
-        for (type in types) {
-            append(" ", type.name)
+        append(" ").append(alias.name)
+        for (type in alias.parameters) {
+            append(" ", ty.renderedText(true, false))
         }
         renderDefinitionLocation(decl)
     }
 
     renderDocContent(decl)
 
-    val ty = decl.typeExpressionInference().ty
     if (ty is TyRecord && ty.fields.isNotEmpty()) {
         sections {
             section("Fields") {
@@ -158,6 +151,22 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
     }
 }
 
+private fun documentationFor(element: ElmUnionMember): String? = buildString {
+    val declaration = element.parentOfType<ElmTypeDeclaration>() ?: return null
+    val declTy = declaration.typeExpressionInference().ty
+    val name = element.name
+    val member = declTy.members.find { it.name == name } ?: return null
+
+    definition {
+        i { append("member") }
+        append(" ", name)
+        renderMemberParameters(member)
+        i { append(" of type ") }
+        renderLink(declTy.name, declTy.name)
+        renderDefinitionLocation(element)
+    }
+}
+
 private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString {
     val ids = decl.upperCaseQID.upperCaseIdentifierList
 
@@ -187,6 +196,16 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
 private fun documentationFor(clause: ElmAsClause): String? = buildString {
     val decl = clause.parent?.reference?.resolve() as? ElmModuleDeclaration ?: return null
     return documentationFor(decl)
+}
+
+
+private fun StringBuilder.renderMemberParameters(member: TyUnion.Member) {
+    if (member.parameters.isNotEmpty()) {
+        member.parameters.joinTo(this, " ", prefix = " ") {
+            val renderedText = it.renderedText(true, false)
+            if (it is TyUnion) "($renderedText)" else renderedText
+        }
+    }
 }
 
 private fun StringBuilder.renderDefinitionLocation(element: ElmPsiElement) {

@@ -75,6 +75,18 @@ foo bar = ()
 <b>foo</b> bar</pre></div>
 """)
 
+    fun `test function with type annotation and parameterized alias`() = doTest(
+            """
+type alias A a = {x: a, y: ()}
+main : A ()
+main = {x = (), y = ()}
+--^
+""",
+            """
+<div class='definition'><pre><b>main</b> : <a href="psi_element://A">A</a> ()
+<b>main</b></pre></div>
+""")
+
     fun `test nested function with type annotation`() = doTest(
             """
 main a =
@@ -215,6 +227,24 @@ type Foo
 <p><code>Baz</code> a
 <p><code>Qux</code> (<a href="psi_element://List">List</a> a) a
 <p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
+""")
+
+    fun `test union member with parameters`() = doTest(
+            """
+type Foo a = Bar | Baz a (List Int)
+                 --^
+""",
+            """
+<div class='definition'><pre><i>member</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>)<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
+""")
+
+    fun `test union member without parameters`() = doTest(
+            """
+type Foo a = Bar | Baz a Int
+             --^
+""",
+            """
+<div class='definition'><pre><i>member</i> Bar<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
     fun `test type alias`() = doTest(

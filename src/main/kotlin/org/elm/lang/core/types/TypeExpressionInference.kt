@@ -35,7 +35,23 @@ fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty
 /**
  * Inference for type declarations and expressions like function annotations and constructor calls.
  *
- * For inference of value declarations and expressions, see [InferenceScope]
+ * For inference of value declarations and expressions, see [InferenceScope].
+ *
+ * ### Algorithm
+ *
+ * Inference for most type expressions is straight forward, but we have to keep track of type
+ * variables in order to correctly infer parameterized type expressions.
+ *
+ * Vars are scoped to a single declaration or annotation. Within a scope, all vars with the same
+ * name must refer to the same object.
+ *
+ * To infer the types of parameterized type expressions, we infer the referenced target type, which
+ * will be either a union type or a type alias, and will have one type unique type variable for each
+ * parameter. We then infer the types of the arguments and use [TypeReplacement] to replace the type
+ * variables in the parameters with their arguments.
+ *
+ * This two step process is simpler than trying to pass arguments around while inferring
+ * declarations, and opens the door to caching the [Ty]s for declarations and aliases.
  */
 class TypeExpression(
         private val varsByName: MutableMap<String, TyVar> = mutableMapOf(),
@@ -142,19 +158,13 @@ class TypeExpression(
     private fun resolvedTypeRefType(args: List<Ty>, argElements: List<PsiElement>, typeRef: ElmReferenceElement): Ty {
         val ref = typeRef.reference.resolve()
         val declaredTy = when {
-            ref is ElmTypeAliasDeclaration -> {
-                inferChild { beginTypeAliasDeclarationInference(ref) }
-            }
-            ref is ElmTypeDeclaration -> {
-                inferChild { beginTypeDeclarationInference(ref) }
-            }
+            ref is ElmTypeAliasDeclaration -> inferChild { beginTypeAliasDeclarationInference(ref) }
+            ref is ElmTypeDeclaration -> inferChild { beginTypeDeclarationInference(ref) }
             // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
             // reference won't resolve. So we check for a reference to that type here. Note that users can
             // create their own List types that shadow the built-in, so we only want to do this check if the
             // reference is null.
-            ref == null && typeRef.referenceName == "List" -> {
-                TyList(TyVar("a"))
-            }
+            ref == null && typeRef.referenceName == "List" -> TyList(TyVar("a"))
             // We only get here if the reference doesn't resolve.
             else -> TyUnknown()
         }
@@ -164,7 +174,7 @@ class TypeExpression(
         }
 
         // This cast is safe, since parameters of type declarations are always inferred as TyVar.
-        // This function is never called after on a type after its vars have been replaced.
+        // We know the parameters haven't been replaced yet, since we just created the ty ourselves.
         @Suppress("UNCHECKED_CAST")
         val params = when {
             declaredTy.alias != null -> declaredTy.alias!!.parameters

@@ -9,7 +9,8 @@ import org.elm.lang.core.diagnostics.TypeArgumentCountError
  * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
  * which could also be [TyVar]s.
  *
- * It relies on the fact that [TyVar]s can be compared by identity.
+ * It relies on the fact that [TyVar]s can be compared by identity. Vars in different scopes must
+ * compare unequal, even if they have the same name.
  */
 class TypeReplacement private constructor(
         private val replacements: Map<TyVar, Pair<PsiElement, Ty>>
@@ -61,6 +62,15 @@ class TypeReplacement private constructor(
         is TyUnit, TyInProgressBinding -> ty
     }
 
+    /*
+     * Although aliases are not used in ty comparisons, we still need to do replacement on them to
+     * render their call sites correctly.
+     * e.g.
+     *     type alias A a = ...
+     *     main : A ()
+     * We replace the parameter of the AliasInfo in the return value of the main function with
+     * TyUnit so that it renders as `A ()` rather than `A a`.
+     */
     private fun replace(aliasInfo: AliasInfo?) = aliasInfo?.let { info ->
         info.copy(parameters = info.parameters.map { replace(it) })
     }
@@ -83,6 +93,5 @@ class TypeReplacement private constructor(
         val newBaseTy = (baseTy as? TyRecord)?.baseTy
         return TyRecord(baseFields + declaredFields, newBaseTy, replace(ty.alias))
     }
-
 }
 
