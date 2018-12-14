@@ -4,7 +4,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider.Result
+import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.*
@@ -35,7 +35,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope(elmFile).getVisibleValues().topLevel.mapNotNullTo(mutableSetOf()) { it.name }
         val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
-        Result.create(result, project.modificationTracker, modificationTracker)
+        CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
     }
 }
 
@@ -504,10 +504,10 @@ private class InferenceScope(
         }
 
         return when (ref) {
-            is ElmUnionMember -> TypeExpression.inferUnionConstructor(ref).ty
-            is ElmTypeAliasDeclaration -> TypeExpression.inferTypeAliasDeclaration(ref).ty
+            is ElmUnionMember -> ref.typeExpressionInference().ty
+            is ElmTypeAliasDeclaration -> ref.typeExpressionInference().ty
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
-            is ElmPortAnnotation -> TypeExpression.inferPortAnnotation(ref).ty
+            is ElmPortAnnotation -> ref.typeExpressionInference().ty
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
                 if (elementIsInTopLevelPattern(ref)) return TyUnknown()
@@ -559,7 +559,7 @@ private class InferenceScope(
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeRef?.let { TypeExpression.inferTypeRef(it).ty }
+        var ty = decl.typeAnnotation?.typeExpressionInference()?.ty
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
             // First we have to find the parent of the declaration so that it has access to the
@@ -626,17 +626,16 @@ private class InferenceScope(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
     ): Pair<Ty, Int> {
-        val typeRef = valueDeclaration.typeAnnotation?.typeRef
+        val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.ty
         val patterns = decl.patterns.toList()
 
-        if (typeRef == null) {
+        if (typeRefTy == null) {
             patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
             return when {
                 patterns.isEmpty() -> TyUnknown() to 0
                 else -> TyFunction(patterns.map { TyUnknown() }, TyUnknown()) to patterns.size
             }
         }
-        val typeRefTy = TypeExpression.inferTypeRef(typeRef).ty
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
@@ -754,8 +753,7 @@ private class InferenceScope(
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing
         // to bind.
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)
-                ?.let { TypeExpression.inferUnionConstructor(it).ty }
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.typeExpressionInference()?.ty
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {

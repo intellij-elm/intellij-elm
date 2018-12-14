@@ -11,10 +11,7 @@ import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.types.TyUnknown
-import org.elm.lang.core.types.TypeExpression
-import org.elm.lang.core.types.findTy
-import org.elm.lang.core.types.renderedText
+import org.elm.lang.core.types.*
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
@@ -62,10 +59,10 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
     definition {
         if (typeAnnotation != null) {
             val id = (typeAnnotation.lowerCaseIdentifier ?: typeAnnotation.operatorIdentifier) ?: return null
-            val typeRef = typeAnnotation.typeRef ?: return null
+            if (typeAnnotation.typeRef == null) return null
             b { append(id.text) }
             append(" : ")
-            renderDefinition(typeRef)
+            renderDefinition(typeAnnotation)
             append("\n")
         }
 
@@ -122,16 +119,13 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
 
     renderDocContent(decl)
 
-    val record = decl.aliasedRecord
-    if (record != null) {
-        val recordTypes = record.fieldTypeList
-        if (recordTypes.isNotEmpty()) {
-            sections {
-                section("Fields") {
-                    for (type in recordTypes) {
-                        append("\n<p><code>${type.lowerCaseIdentifier.text}</code> : ")
-                        renderDefinition(type.typeRef)
-                    }
+    val ty = decl.typeExpressionInference().ty
+    if (ty is TyRecord && ty.fields.isNotEmpty()) {
+        sections {
+            section("Fields") {
+                for ((fieldName, fieldTy) in ty.fields) {
+                    append("\n<p><code>$fieldName</code> : ")
+                    append(fieldTy.renderedText(true, false))
                 }
             }
         }
@@ -148,7 +142,7 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
         i { append("parameter") }
         append(" ", element.name, " ")
 
-        if (ty != null &&  ty !is TyUnknown) {
+        if (ty != null && ty !is TyUnknown) {
             append(": ", ty.renderedText(true, false), "\n")
         }
 
@@ -223,7 +217,12 @@ private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
 }
 
 private fun StringBuilder.renderDefinition(ref: ElmTypeRef) {
-    append(TypeExpression.inferTypeRef(ref).ty.renderedText(true, false))
+    // TODO: render with tys instead
+    append(TypeExpression(mutableMapOf()).beginTypeRefInference(ref).ty.renderedText(true, false))
+}
+
+private fun StringBuilder.renderDefinition(ref: ElmTypeAnnotation) {
+    append(ref.typeExpressionInference()!!.ty.renderedText(true, false))
 }
 
 private fun StringBuilder.renderParameters(params: Sequence<ElmPsiElement>,
