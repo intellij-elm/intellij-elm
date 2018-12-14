@@ -48,6 +48,10 @@ fun TyTuple.renderedText(linkify: Boolean, withModule: Boolean): String {
     return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderedText(linkify, withModule) }
 }
 
+fun AliasInfo.renderedText(linkify: Boolean, withModule: Boolean): String {
+    return TyUnion(module, name, parameters).renderedText(linkify, withModule)
+}
+
 private fun StringBuilder.renderLink(refText: String, text: String, linkify: Boolean) {
     if (linkify) DocumentationManagerUtil.createHyperlink(this, refText, text, true)
     else append(text)

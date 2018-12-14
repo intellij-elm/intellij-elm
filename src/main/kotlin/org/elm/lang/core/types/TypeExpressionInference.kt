@@ -87,8 +87,8 @@ class TypeExpression(
             recordTypeDeclType(record)
         }
 
-        val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, params)
-        return result(ty.withAlias(aliasTy))
+        val aliasInfo = AliasInfo(decl.moduleName, decl.upperCaseIdentifier.text, params)
+        return result(ty.withAlias(aliasInfo))
     }
 
     private fun result(ty: Ty) = InferenceResult(emptyMap(), diagnostics, ty)
@@ -159,9 +159,8 @@ class TypeExpression(
             return declaredTy
         }
 
-        // This cast is safe, since parameters of type declarations and aliases are always inferred
-        // as TyVar. This function is never called after on a type after its vars have been
-        // replaced.
+        // This cast is safe, since parameters of type declarations are always inferred as TyVar.
+        // This function is never called after on a type after its vars have been replaced.
         @Suppress("UNCHECKED_CAST")
         val params = when {
             declaredTy.alias != null -> declaredTy.alias!!.parameters

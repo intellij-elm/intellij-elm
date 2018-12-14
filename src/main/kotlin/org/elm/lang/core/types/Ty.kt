@@ -12,27 +12,28 @@ sealed class Ty {
      * If the type was inferred from a literal or referenced directly, this will be null. Types that
      * cannot be aliased like [TyVar] will always return null.
      */
-    abstract val alias: TyUnion?
-    /** Make a copy of this ty with the given [ty] as its alias */
-    abstract fun withAlias(ty: TyUnion): Ty
+    abstract val alias: AliasInfo?
+
+    /** Make a copy of this ty with the given [alias] as its alias */
+    abstract fun withAlias(alias: AliasInfo): Ty
 }
 
 // vars are not a data class because they need to be compared by identity
 /** A declared ("rigid") type variable (e.g. `a` in `Maybe a`) */
 class TyVar(val name: String) : Ty() {
-    override val alias: TyUnion? get() = null
-    override fun withAlias(ty: TyUnion): TyVar = this
+    override val alias: AliasInfo? get() = null
+    override fun withAlias(alias: AliasInfo): TyVar = this
 
     override fun toString(): String = "<TyVar $name>"
 }
 
 /** A tuple type like `(Int, String)` */
-data class TyTuple(val types: List<Ty>, override val alias: TyUnion? = null) : Ty() {
+data class TyTuple(val types: List<Ty>, override val alias: AliasInfo? = null) : Ty() {
     init {
         require(types.isNotEmpty()) { "can't create a tuple with no types. Use TyUnit." }
     }
 
-    override fun withAlias(ty: TyUnion): TyTuple = copy(alias = ty)
+    override fun withAlias(alias: AliasInfo): TyTuple = copy(alias = alias)
 }
 
 /**
@@ -46,12 +47,12 @@ data class TyTuple(val types: List<Ty>, override val alias: TyUnion? = null) : T
 data class TyRecord(
         val fields: Map<String, Ty>,
         val baseTy: Ty? = null,
-        override val alias: TyUnion? = null
+        override val alias: AliasInfo? = null
 ) : Ty() {
     /** true if this record has a base name, and will match a subset of a record's fields */
     val isSubset: Boolean get() = baseTy != null
 
-    override fun withAlias(ty: TyUnion): TyRecord = copy(alias = ty)
+    override fun withAlias(alias: AliasInfo): TyRecord = copy(alias = alias)
 }
 
 /** A type like `String` or `Maybe a` */
@@ -59,9 +60,9 @@ data class TyUnion(
         val module: String,
         val name: String,
         val parameters: List<Ty>,
-        override val alias: TyUnion? = null
+        override val alias: AliasInfo? = null
 ) : Ty() {
-    override fun withAlias(ty: TyUnion): TyUnion = copy(alias = ty)
+    override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
     override fun toString(): String {
         return "<TyUnion ${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")}>"
@@ -87,7 +88,7 @@ val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 data class TyFunction(
         val parameters: List<Ty>,
         val ret: Ty,
-        override val alias: TyUnion? = null
+        override val alias: AliasInfo? = null
 ) : Ty() {
     init {
         require(parameters.isNotEmpty()) { "can't create a function with no parameters" }
@@ -100,7 +101,7 @@ data class TyFunction(
         else -> ret
     }
 
-    override fun withAlias(ty: TyUnion): TyFunction = copy(alias = ty)
+    override fun withAlias(alias: AliasInfo): TyFunction = copy(alias = alias)
 
     override fun toString(): String {
         return allTys.joinToString(" → ", prefix = "<TyFunction ", postfix = ">")
@@ -108,8 +109,8 @@ data class TyFunction(
 }
 
 /** The [Ty] representing `()` */
-data class TyUnit(override val alias: TyUnion? = null) : Ty() {
-    override fun withAlias(ty: TyUnion): TyUnit = copy(alias = ty)
+data class TyUnit(override val alias: AliasInfo? = null) : Ty() {
+    override fun withAlias(alias: AliasInfo): TyUnit = copy(alias = alias)
     override fun toString(): String = javaClass.simpleName
 }
 
@@ -118,14 +119,17 @@ data class TyUnit(override val alias: TyUnion? = null) : Ty() {
  *
  * Used for unimplemented functionality and in partial programs where it's not possible to infer a type.
  */
-data class TyUnknown(override val alias: TyUnion? = null) : Ty() {
-    override fun withAlias(ty: TyUnion): TyUnknown = copy(alias = ty)
+data class TyUnknown(override val alias: AliasInfo? = null) : Ty() {
+    override fun withAlias(alias: AliasInfo): TyUnknown = copy(alias = alias)
     override fun toString(): String = javaClass.simpleName
 }
 
 /** Not a real ty, but used to diagnose cyclic values in parameter bindings */
 object TyInProgressBinding : Ty() {
-    override val alias: TyUnion? get() = null
-    override fun withAlias(ty: TyUnion): TyInProgressBinding = this
+    override val alias: AliasInfo? get() = null
+    override fun withAlias(alias: AliasInfo): TyInProgressBinding = this
     override fun toString(): String = javaClass.simpleName
 }
+
+/** Information about a type alias. This is not a [Ty]. */
+data class AliasInfo(val module: String, val name: String, val parameters: List<Ty>)

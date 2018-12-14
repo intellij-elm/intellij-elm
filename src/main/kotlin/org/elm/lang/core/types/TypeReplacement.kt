@@ -53,11 +53,16 @@ class TypeReplacement private constructor(
 
     private fun replace(ty: Ty): Ty = when (ty) {
         is TyVar -> replacements[ty]?.second ?: ty
-        is TyTuple -> TyTuple(ty.types.map { replace(it) })
-        is TyUnion -> TyUnion(ty.module, ty.name, ty.parameters.map { replace(it) })
-        is TyFunction -> TyFunction(ty.parameters.map { replace(it) }, replace(ty.ret))
+        is TyTuple -> TyTuple(ty.types.map { replace(it) }, alias = replace(ty.alias))
+        is TyUnion -> TyUnion(ty.module, ty.name, ty.parameters.map { replace(it) }, alias = replace(ty.alias))
+        is TyFunction -> TyFunction(ty.parameters.map { replace(it) }, replace(ty.ret), alias = replace(ty.alias))
         is TyRecord -> replaceRecord(ty)
-        is TyUnit, is TyUnknown, TyInProgressBinding -> ty
+        is TyUnknown -> TyUnknown(alias = replace(ty.alias))
+        is TyUnit, TyInProgressBinding -> ty
+    }
+
+    private fun replace(aliasInfo: AliasInfo?) = aliasInfo?.let { info ->
+        info.copy(parameters = info.parameters.map { replace(it) })
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {
@@ -69,9 +74,9 @@ class TypeReplacement private constructor(
         }
 
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
-        val alias = ty.alias?.let { replace(it) as TyUnion }
         val newBaseTy = (baseTy as? TyRecord)?.baseTy
-        return TyRecord(baseFields + declaredFields, newBaseTy, alias)
+        return TyRecord(baseFields + declaredFields, newBaseTy, replace(ty.alias))
     }
+
 }
 
