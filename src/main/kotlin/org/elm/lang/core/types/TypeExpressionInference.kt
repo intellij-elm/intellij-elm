@@ -14,15 +14,22 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 // These results should be able to be cached, but doing so with the CachedValueManager lead to invalid Psi references.
 
 
-fun ElmTypeDeclaration.typeExpressionInference(): InferenceResult = TypeExpression(mutableMapOf()).beginTypeDeclarationInference(this)
-fun ElmTypeAliasDeclaration.typeExpressionInference(): InferenceResult = TypeExpression(mutableMapOf()).beginTypeAliasDeclarationInference(this)
-fun ElmPortAnnotation.typeExpressionInference(): InferenceResult = TypeExpression(mutableMapOf()).beginPortAnnotationInference(this)
-fun ElmUnionMember.typeExpressionInference(): InferenceResult = TypeExpression(mutableMapOf()).beginUnionConstructorInference(this)
+fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> =
+        TypeExpression().beginTypeDeclarationInference(this)
+
+fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+        TypeExpression().beginTypeAliasDeclarationInference(this)
+
+fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+        TypeExpression().beginPortAnnotationInference(this)
+
+fun ElmUnionMember.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+        TypeExpression().beginUnionConstructorInference(this)
 
 /** Get the type of the type ref in this annotation, or null if the program is incomplete and no type ref exists*/
-fun ElmTypeAnnotation.typeExpressionInference(): InferenceResult? {
+fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty>? {
     val typeRef = typeRef ?: return null
-    return TypeExpression(mutableMapOf()).beginTypeRefInference(typeRef)
+    return TypeExpression().beginTypeRefInference(typeRef)
 }
 
 /**
@@ -31,32 +38,29 @@ fun ElmTypeAnnotation.typeExpressionInference(): InferenceResult? {
  * For inference of value declarations and expressions, see [InferenceScope]
  */
 class TypeExpression(
-        private val varsByName: MutableMap<String, TyVar>,
+        private val varsByName: MutableMap<String, TyVar> = mutableMapOf(),
         private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf(),
         private val activeAliases: MutableSet<ElmTypeAliasDeclaration> = mutableSetOf()
 ) {
-    fun beginPortAnnotationInference(annotation: ElmPortAnnotation): InferenceResult {
+    fun beginPortAnnotationInference(annotation: ElmPortAnnotation): ParameterizedInferenceResult<Ty> {
         val ty = annotation.typeRef?.let { typeRefType(it) } ?: TyUnknown()
         return result(ty)
     }
 
-    fun beginTypeRefInference(typeRef: ElmTypeRef): InferenceResult {
+    fun beginTypeRefInference(typeRef: ElmTypeRef): ParameterizedInferenceResult<Ty> {
         val ty = typeRefType(typeRef)
         return result(ty)
     }
 
-    fun beginTypeDeclarationInference(typeDeclaration: ElmTypeDeclaration): InferenceResult {
+    fun beginTypeDeclarationInference(typeDeclaration: ElmTypeDeclaration): ParameterizedInferenceResult<TyUnion> {
         val ty = typeDeclarationType(typeDeclaration)
         return result(ty)
     }
 
-    fun beginUnionConstructorInference(member: ElmUnionMember): InferenceResult {
+    fun beginUnionConstructorInference(member: ElmUnionMember): ParameterizedInferenceResult<Ty> {
         val decl = member.parentOfType<ElmTypeDeclaration>()
-                ?.typeExpressionInference()?.ty
+                ?.let { typeDeclarationType(it) }
                 ?: return result(TyUnknown())
-
-        // Populate this scope's vars from the declaration
-        (decl as TyUnion).parameters.associateTo(varsByName) { (it as TyVar).name to it }
 
         val params = member.allParameters.map { typeSignatureDeclType(it) }.toList()
 
@@ -70,7 +74,7 @@ class TypeExpression(
         return result(ty)
     }
 
-    fun beginTypeAliasDeclarationInference(decl: ElmTypeAliasDeclaration): InferenceResult {
+    fun beginTypeAliasDeclarationInference(decl: ElmTypeAliasDeclaration): ParameterizedInferenceResult<Ty> {
         val record = decl.aliasedRecord
         val params = decl.lowerTypeNameList.map { getTyVar(it.name) }.toList()
 
@@ -91,7 +95,7 @@ class TypeExpression(
         return result(ty.withAlias(aliasInfo))
     }
 
-    private fun result(ty: Ty) = InferenceResult(emptyMap(), diagnostics, ty)
+    private fun <T : Ty> result(ty: T) = ParameterizedInferenceResult(diagnostics, ty)
 
 
     /** Get the type for an entire type ref */
@@ -176,12 +180,15 @@ class TypeExpression(
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
         val params = declaration.lowerTypeNameList.map { getTyVar(it.name) }
-        return TyUnion(declaration.moduleName, declaration.name, params)
+        val members = declaration.unionMemberList.map { member ->
+            TyUnion.Member(member.name, member.allParameters.map { typeSignatureDeclType(it) }.toList())
+        }
+        return TyUnion(declaration.moduleName, declaration.name, params, members)
     }
 
     private fun getTyVar(name: String) = varsByName.getOrPut(name) { TyVar(name) }
 
-    private inline fun inferChild(block: TypeExpression.() -> InferenceResult) =
+    private inline fun <T : Ty> inferChild(block: TypeExpression.() -> ParameterizedInferenceResult<T>) =
             TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet()).block().ty
 }
 

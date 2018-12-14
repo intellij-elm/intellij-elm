@@ -30,22 +30,22 @@ class TypeReplacement private constructor(
                 paramTys: List<TyVar>,
                 argTys: List<Ty>,
                 argElements: List<PsiElement>
-        ): InferenceResult {
+        ): ParameterizedInferenceResult<Ty> {
             require(argTys.size == argElements.size) { "mismatched arg sizes ${argTys.size} != ${argElements.size}" }
 
             if (paramTys.size != argTys.size) {
                 val error = TypeArgumentCountError(element, argTys.size, paramTys.size)
-                return InferenceResult(emptyMap(), listOf(error), TyUnknown())
+                return ParameterizedInferenceResult(listOf(error), TyUnknown())
             }
 
             if (paramTys.isEmpty()) {
-                return InferenceResult(emptyMap(), emptyList(), ty)
+                return ParameterizedInferenceResult(emptyList(), ty)
             }
 
             val replacements = paramTys.indices.associate { i -> paramTys[i] to (argElements[i] to argTys[i]) }
             val typeReplacement = TypeReplacement(replacements)
             val newTy = typeReplacement.replace(ty)
-            return InferenceResult(emptyMap(), typeReplacement.diagnostics, newTy)
+            return ParameterizedInferenceResult(typeReplacement.diagnostics, newTy)
         }
     }
 
@@ -53,16 +53,22 @@ class TypeReplacement private constructor(
 
     private fun replace(ty: Ty): Ty = when (ty) {
         is TyVar -> replacements[ty]?.second ?: ty
-        is TyTuple -> TyTuple(ty.types.map { replace(it) }, alias = replace(ty.alias))
-        is TyUnion -> TyUnion(ty.module, ty.name, ty.parameters.map { replace(it) }, alias = replace(ty.alias))
-        is TyFunction -> TyFunction(ty.parameters.map { replace(it) }, replace(ty.ret), alias = replace(ty.alias))
+        is TyTuple -> TyTuple(ty.types.map { replace(it) }, replace(ty.alias))
+        is TyFunction -> TyFunction(ty.parameters.map { replace(it) }, replace(ty.ret), replace(ty.alias))
+        is TyUnknown -> TyUnknown(replace(ty.alias))
+        is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
-        is TyUnknown -> TyUnknown(alias = replace(ty.alias))
         is TyUnit, TyInProgressBinding -> ty
     }
 
     private fun replace(aliasInfo: AliasInfo?) = aliasInfo?.let { info ->
         info.copy(parameters = info.parameters.map { replace(it) })
+    }
+
+    private fun replaceUnion(ty: TyUnion): TyUnion {
+        val parameters = ty.parameters.map { replace(it) }
+        val members = ty.members.map { m -> m.copy(parameters = m.parameters.map { replace(it) }) }
+        return TyUnion(ty.module, ty.name, parameters, members, replace(ty.alias))
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {

@@ -898,6 +898,11 @@ data class InferenceResult(val expressionTypes: Map<ElmPsiElement, Ty>,
     fun elementType(element: ElmPsiElement): Ty = expressionTypes[element] ?: TyUnknown()
 }
 
+class ParameterizedInferenceResult<T : Ty>(
+        val diagnostics: List<ElmDiagnostic>,
+        val ty: T
+)
+
 val ElmPsiElement.moduleName: String
     get() = elmFile.getModuleDecl()?.name ?: ""
 

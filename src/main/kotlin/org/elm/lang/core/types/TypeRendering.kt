@@ -37,10 +37,9 @@ fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
 }
 
 fun TyRecord.renderedText(linkify: Boolean, withModule: Boolean): String {
-    // TODO we probably don't want to render all fields
     val prefix = if (baseTy != null) "{ ${baseTy.renderedText(linkify, withModule)} | " else "{ "
     return fields.entries.joinToString(", ", prefix = prefix, postfix = " }") { (name, ty) ->
-        "$name: ${ty.renderedText(linkify, withModule)}"
+        "$name : ${ty.renderedText(linkify, withModule)}"
     }
 }
 
@@ -49,7 +48,7 @@ fun TyTuple.renderedText(linkify: Boolean, withModule: Boolean): String {
 }
 
 fun AliasInfo.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return TyUnion(module, name, parameters).renderedText(linkify, withModule)
+    return TyUnion(module, name, parameters, emptyList()).renderedText(linkify, withModule)
 }
 
 private fun StringBuilder.renderLink(refText: String, text: String, linkify: Boolean) {

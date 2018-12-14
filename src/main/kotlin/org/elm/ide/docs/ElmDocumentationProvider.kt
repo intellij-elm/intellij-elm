@@ -3,7 +3,6 @@ package org.elm.ide.docs
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import org.elm.lang.core.psi.*
@@ -59,10 +58,10 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
     definition {
         if (typeAnnotation != null) {
             val id = (typeAnnotation.lowerCaseIdentifier ?: typeAnnotation.operatorIdentifier) ?: return null
-            if (typeAnnotation.typeRef == null) return null
+            val ty = typeAnnotation.typeExpressionInference()?.ty ?: return null
             b { append(id.text) }
             append(" : ")
-            renderDefinition(typeAnnotation)
+            append(ty.renderedText(true, false))
             append("\n")
         }
 
@@ -81,13 +80,13 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
 
 private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
     val name = decl.nameIdentifier
-    val types = decl.lowerTypeNameList
+    val ty = decl.typeExpressionInference().ty
 
     definition {
         b { append("type") }
         append(" ", name.text)
-        for (type in types) {
-            append(" ", type.name)
+        for (param in ty.parameters) {
+            append(" ", param.renderedText(true, false))
         }
         renderDefinitionLocation(decl)
     }
@@ -96,9 +95,15 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
 
     sections {
         section("Members") {
-            for (member in decl.unionMemberList) {
-                append("\n<p><code>${member.upperCaseIdentifier.text}</code>")
-                renderParameters(member.allParameters, " ", false, true)
+            for (member in ty.members) {
+                append("\n<p><code>${member.name}</code>")
+                if (member.parameters.isNotEmpty()) {
+                    append(" ")
+                    member.parameters.joinTo(this, " ") {
+                        val renderedText = it.renderedText(true, false)
+                        if (it is TyUnion) "($renderedText)" else renderedText
+                    }
+                }
             }
         }
     }
@@ -190,67 +195,6 @@ private fun StringBuilder.renderDefinitionLocation(element: ElmPsiElement) {
     append(module.upperCaseQID.text)
 }
 
-private fun StringBuilder.renderDefinition(ref: ElmUpperPathTypeRef) {
-    renderLink(ref.upperCaseQID.text, ref.text)
-}
-
-private fun StringBuilder.renderDefinition(ref: ElmTypeVariableRef) {
-    append(ref.identifier.text)
-}
-
-private fun StringBuilder.renderDefinition(record: ElmRecordType) {
-    record.fieldTypeList.renderTo(this, prefix = "{ ", postfix = " }") {
-        append(it.lowerCaseIdentifier.text, " : ")
-        renderDefinition(it.typeRef)
-    }
-}
-
-private fun StringBuilder.renderDefinition(tuple: ElmTupleType) {
-    if (tuple.unitExpr != null) append("()")
-    else tuple.typeRefList.renderTo(this, prefix = "( ", postfix = " )") { renderDefinition(it) }
-}
-
-private fun StringBuilder.renderDefinition(ref: ElmParametricTypeRef) {
-    val qid = ref.upperCaseQID
-    renderLink(qid.text, qid.text)
-    renderParameters(ref.allParameters, " ", false, false)
-}
-
-private fun StringBuilder.renderDefinition(ref: ElmTypeRef) {
-    // TODO: render with tys instead
-    append(TypeExpression(mutableMapOf()).beginTypeRefInference(ref).ty.renderedText(true, false))
-}
-
-private fun StringBuilder.renderDefinition(ref: ElmTypeAnnotation) {
-    append(ref.typeExpressionInference()!!.ty.renderedText(true, false))
-}
-
-private fun StringBuilder.renderParameters(params: Sequence<ElmPsiElement>,
-                                           sep: String,
-                                           skipFirstSep: Boolean,
-                                           parenthesizeTypeRefs: Boolean) {
-    for ((i, param) in params.withIndex()) {
-        if (i > 0 || !skipFirstSep) append(sep)
-        renderParameter(param, parenthesizeTypeRefs)
-    }
-}
-
-private fun StringBuilder.renderParameter(param: ElmPsiElement,
-                                          parenthesizeTypeRefs: Boolean) {
-    when (param) {
-        is ElmUpperPathTypeRef -> renderDefinition(param)
-        is ElmRecordType -> renderDefinition(param)
-        is ElmTupleType -> renderDefinition(param)
-        is ElmParametricTypeRef -> renderDefinition(param)
-        is ElmTypeVariableRef -> renderDefinition(param)
-        is ElmTypeRef -> {
-            if (parenthesizeTypeRefs) append("(")
-            renderDefinition(param)
-            if (parenthesizeTypeRefs) append(")")
-        }
-    }
-}
-
 private fun StringBuilder.renderLink(refText: String, text: String) {
     DocumentationManagerUtil.createHyperlink(this, refText, text, true)
 }
@@ -323,16 +267,4 @@ private inline fun StringBuilder.section(title: String, block: StringBuilder.() 
     append(DocumentationMarkup.SECTION_HEADER_START, title, ":", DocumentationMarkup.SECTION_SEPARATOR, "<p>")
     block()
     append(DocumentationMarkup.SECTION_END)
-}
-
-private val String.escaped: String get() = StringUtil.escapeXml(this)
-
-private fun <T, A : Appendable> Iterable<T>.renderTo(buffer: A, separator: CharSequence = ", ", prefix: CharSequence = "", postfix: CharSequence = "", render: (A.(T) -> Unit)): A {
-    buffer.append(prefix)
-    for ((i, field) in withIndex()) {
-        if (i > 0) buffer.append(separator)
-        buffer.render(field)
-    }
-    buffer.append(postfix)
-    return buffer
 }

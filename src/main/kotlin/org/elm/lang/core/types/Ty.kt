@@ -60,8 +60,11 @@ data class TyUnion(
         val module: String,
         val name: String,
         val parameters: List<Ty>,
+        val members: List<Member>,
         override val alias: AliasInfo? = null
 ) : Ty() {
+    data class Member(val name: String, val parameters: List<Ty>)
+
     override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
     override fun toString(): String {
@@ -69,19 +72,19 @@ data class TyUnion(
     }
 }
 
-val TyInt = TyUnion("Basics", "Int", emptyList())
-val TyFloat = TyUnion("Basics", "Float", emptyList())
-val TyBool = TyUnion("Basics", "Bool", emptyList())
-val TyString = TyUnion("String", "String", emptyList())
-val TyChar = TyUnion("Char", "Char", emptyList())
+val TyInt = TyUnion("Basics", "Int", emptyList(), listOf(TyUnion.Member("Int", emptyList())))
+val TyFloat = TyUnion("Basics", "Float", emptyList(), listOf(TyUnion.Member("Float", emptyList())))
+val TyBool = TyUnion("Basics", "Bool", emptyList(), listOf(TyUnion.Member("Bool", emptyList())))
+val TyString = TyUnion("String", "String", emptyList(), listOf(TyUnion.Member("String", emptyList())))
+val TyChar = TyUnion("Char", "Char", emptyList(), listOf(TyUnion.Member("Char", emptyList())))
 
 /** WebGL GLSL shader */
 // The actual type is `Shader attributes uniforms varyings`, but we would have to parse the
 // GLSL code to infer the type variables, so we just don't report diagnostics on shared types.
-val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnknown()))
+val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnknown()), emptyList())
 
 @Suppress("FunctionName")
-fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
+fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy), listOf(TyUnion.Member("List", listOf(elementTy))))
 
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 
