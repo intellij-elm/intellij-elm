@@ -2,7 +2,7 @@ package org.elm.ide.inspections
 
 class ElmIncompletePatternInspectionTest : ElmInspectionsTestBase(ElmIncompletePatternInspection()) {
 
-    fun `test no params, no existing branch`() = checkFixByText("Add missing case branches", """
+    fun `test no existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
@@ -21,7 +21,7 @@ foo it =
         Qux ->
 """)
 
-    fun `test no params, one existing branch`() = checkFixByText("Add missing case branches", """
+    fun `test one existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
@@ -41,7 +41,7 @@ foo it =
         Qux ->
 """)
 
-    fun `test no params, two existing branches`() = checkFixByText("Add missing case branches", """
+    fun `test two existing branches`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
@@ -65,5 +65,44 @@ foo it =
             ()
 
         Bar ->
+""")
+
+    fun `test params`() = checkFixByText("Add missing case branches", """
+type Foo = Foo
+type alias BarBaz = Foo
+type Maybe a = Just a | Nothing
+type Msg a b
+    = MsgOne Foo BarBaz
+    | MsgTwo (Maybe (Maybe Foo))
+    | MsgThree b a
+    | MsgFour {x: ()}
+    | MsgFive (x, y)
+
+foo : Msg a b -> ()
+foo it =
+    <error>case{-caret-}</error> it of
+""", """
+type Foo = Foo
+type alias BarBaz = Foo
+type Maybe a = Just a | Nothing
+type Msg a b
+    = MsgOne Foo BarBaz
+    | MsgTwo (Maybe (Maybe Foo))
+    | MsgThree b a
+    | MsgFour {x: ()}
+    | MsgFive (x, y)
+
+foo : Msg a b -> ()
+foo it =
+    case it of
+        MsgOne foo barBaz ->
+
+        MsgTwo maybe ->
+
+        MsgThree b a ->
+
+        MsgFour record ->
+
+        MsgFive (x, y) ->
 """)
 }

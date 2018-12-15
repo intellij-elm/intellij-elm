@@ -9,8 +9,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.types.TyFunction
+import org.elm.lang.core.types.renderParam
+import org.elm.lang.core.types.typeExpressionInference
 
 class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeDeclarationIntentionAction.Context>() {
 
@@ -60,20 +63,10 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
         val name = typeAnnotation.referenceName
         template.addTextSegment("$name ")
 
-        val typeRef = typeAnnotation.typeRef
-        val args: List<String> = if (typeRef == null) {
-            emptyList()
-        } else {
-            typeRef.children.dropLast(1).map {
-                when (it) {
-                    is ElmTypeVariableRef -> it.text
-                    is ElmParametricTypeRef -> it.upperCaseQID.text
-                    is ElmRecordType -> "record"
-                    is ElmTupleType -> "tuple"
-                    is ElmTypeRef -> "function" // not quite true: need to check for an ARROW child
-                    else -> "?"
-                }.toLowerCamelCase()
-            }
+        val ty = typeAnnotation.typeExpressionInference()?.ty
+        val args: List<String> = when (ty) {
+            is TyFunction -> ty.parameters.map { it.renderParam() }
+            else -> emptyList()
         }
 
         for (arg in args) {
@@ -86,12 +79,3 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
         return template
     }
 }
-
-/// NOTE: Assumes that the receiver is already InterCapped.
-private fun String.toLowerCamelCase(): String =
-        this.mapIndexed { idx, c ->
-            if (idx == 0)
-                c.toLowerCase()
-            else
-                c
-        }.joinToString("")

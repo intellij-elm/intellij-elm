@@ -12,9 +12,7 @@ import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmUnionPattern
-import org.elm.lang.core.types.TyUnion
-import org.elm.lang.core.types.findInference
-import org.elm.lang.core.types.renderedText
+import org.elm.lang.core.types.*
 
 class ElmIncompletePatternInspection : ElmLocalInspection() {
     override fun visitElement(element: ElmPsiElement, holder: ProblemsHolder, isOnTheFly: Boolean) {
@@ -52,7 +50,7 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
         override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
             val factory = ElmPsiFactory(caseOf.project)
             val patterns = branches.map { b ->
-                b.name + b.parameters.joinToString(" ") { it.renderedText(false, false).toLowerCase() }
+                (listOf(b.name) + b.parameters.map { it.renderParam() }).joinToString(" ")
             }
             val existingBranches = caseOf.branches
             val insertLocation = when {
