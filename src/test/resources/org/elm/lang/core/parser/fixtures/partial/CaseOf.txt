@@ -43,9 +43,6 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
       PsiWhiteSpace(' ')
       PsiElement(OF)('of')
-      PsiErrorElement:VIRTUAL_OPEN_SECTION expected, got '
-'
-        <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)

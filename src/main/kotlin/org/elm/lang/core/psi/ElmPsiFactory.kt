@@ -137,6 +137,12 @@ class ElmPsiFactory(private val project: Project) {
                 ?: error("Failed to create value declaration named $name")
     }
 
+    fun createCaseOfBranches(indent: String, patterns: List<String>): List<ElmCaseOfBranch> =
+            patterns.joinToString("\n\n$indent", prefix="foo = case 1 of\n\n$indent") { "$it ->" }
+                    .let { createFromText<ElmValueDeclaration>(it) }
+                    ?.childOfType<ElmCaseOfExpr>()?.branches
+                    ?: error("Failed to create case of branches from $patterns")
+
     fun createFreshLine() =
     // TODO [kl] make this more specific by actually find a token which contains
     // newline, not just any whitespace

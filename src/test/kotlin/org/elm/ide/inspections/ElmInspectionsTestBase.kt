@@ -36,6 +36,41 @@ abstract class ElmAnnotationTestBase : ElmTestBase() {
         myFixture.checkResult(replaceCaretMarker(text.trimIndent()))
     }
 
+    protected fun checkFixByText(
+            fixName: String,
+            @Language("Elm") before: String,
+            @Language("Elm") after: String,
+            checkWarn: Boolean = true,
+            checkInfo: Boolean = false,
+            checkWeakWarn: Boolean = false
+    ) = checkFix(fixName, before, after,
+            configure = this::configureByText,
+            checkBefore = { myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn) },
+            checkAfter = this::checkByText)
+
+    protected fun checkFixByTextWithoutHighlighting(
+            fixName: String,
+            @Language("Elm") before: String,
+            @Language("Elm") after: String
+    ) = checkFix(fixName, before, after,
+            configure = this::configureByText,
+            checkBefore = {},
+            checkAfter = this::checkByText)
+
+    private fun checkFix(
+            fixName: String,
+            @Language("Elm") before: String,
+            @Language("Elm") after: String,
+            configure: (String) -> Unit,
+            checkBefore: () -> Unit,
+            checkAfter: (String) -> Unit
+    ) {
+        configure(before)
+        checkBefore()
+        applyQuickFix(fixName)
+        checkAfter(after)
+    }
+
     private fun check(
             @Language("Elm") text: String,
             checkWarn: Boolean,

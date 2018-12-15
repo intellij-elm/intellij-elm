@@ -393,7 +393,7 @@ private class InferenceScope(
         for (branch in caseOf.branches) {
             // The elm compiler stops issuing diagnostics for branches when it encounters most errors,
             // but will still issue errors within expressions if an earlier type error was encountered
-            val pat = branch.pattern ?: break
+            val pat = branch.pattern
             val branchExpression = branch.expression ?: break
 
             if (errorEncountered) {
