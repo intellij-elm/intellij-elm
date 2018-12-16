@@ -341,7 +341,8 @@ private class InferenceScope(
 
         if (baseTy !is TyRecord) {
             if (isInferable(baseTy)) {
-                val errorElem = if (target is ElmFieldAccessExpr) target.lowerCaseIdentifier ?: target else target
+                val errorElem = if (target is ElmFieldAccessExpr) target.lowerCaseIdentifier
+                        ?: target else target
                 diagnostics += TypeMismatchError(errorElem, baseTy, TyVar("record"))
             }
             return TyUnknown
@@ -713,18 +714,14 @@ private class InferenceScope(
     }
 
     private fun bindConsPattern(pat: ElmConsPattern, ty: Ty) {
-        bindListPatternParts(pat, pat.parts.toList(), ty)
+        bindListPatternParts(pat, pat.parts.toList(), ty, true)
     }
 
     private fun bindListPattern(pat: ElmListPattern, ty: Ty) {
-        bindListPatternParts(pat, pat.parts.toList(), ty)
+        bindListPatternParts(pat, pat.parts.toList(), ty, false)
     }
 
-    private fun bindListPatternParts(pat: ElmPatternChildTag, parts: List<ElmPatternChildTag>, ty: Ty) {
-        // Cons and list patterns both have the same semantics.
-        // `[a, b]` is equivalent to `a :: b :: []`, i.e. a list of length exactly two.
-        // The last part is bound to the tail of the list, and any leading parts are bound to
-        // individual elements.
+    private fun bindListPatternParts(pat: ElmPatternChildTag, parts: List<ElmPatternChildTag>, ty: Ty, isCons: Boolean) {
         if (!isInferable(ty) || ty !is TyUnion || !ty.isTyList) {
             if (isInferable(ty)) {
                 diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
@@ -741,7 +738,9 @@ private class InferenceScope(
         }
 
         if (parts.isNotEmpty()) {
-            bindPattern(parts.last(), ty, false)
+            // The last part of a cons pattern binds to the entire list type, while in list patterns
+            // it binds to the element type.
+            bindPattern(parts.last(), if (isCons) ty else innerTy, false)
         }
     }
 
