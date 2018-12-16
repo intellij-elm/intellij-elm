@@ -863,7 +863,7 @@ main arg =
 <error descr="<module declaration> expected, got 'main'">main</error> <error descr="Unresolved reference 'Foo'">Foo bar</error> = <error descr="Value cannot be defined in terms of itself">bar</error>
 """)
 
-    fun `test valid case branch with cons pattern`() = checkByText("""
+    fun `test valid case branch with cons pattern head`() = checkByText("""
 main : ()
 main =
     case [()] of
@@ -871,19 +871,27 @@ main =
         _ -> ()
 """)
 
+    fun `test valid case branch with cons pattern tail`() = checkByText("""
+main : List ()
+main =
+    case [()] of
+        x :: xs -> xs
+        _ -> []
+""")
+
     fun `test valid case branch with list pattern`() = checkByText("""
 main : ()
 main =
     case [()] of
-        [x, y] -> x
+        [x, y] -> y
         _ -> ()
 """)
 
-    fun `test valid case branch with const and list pattern`() = checkByText("""
+    fun `test valid case branch with cons and list pattern`() = checkByText("""
 main : ()
 main =
     case [()] of
-        z :: [x, y] -> x
+        z :: [x, y] -> y
         _ -> ()
 """)
 
