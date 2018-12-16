@@ -105,4 +105,22 @@ foo it =
 
         MsgFive (x, y) ->
 """)
+
+    fun `test one existing branch, wildcard pattern`() = checkFixByText("Add '_' branch", """
+type Foo = Bar | Baz | Qux
+
+foo : Foo -> ()
+foo it =
+    <error>case{-caret-}</error> it of
+        Baz -> ()
+""", """
+type Foo = Bar | Baz | Qux
+
+foo : Foo -> ()
+foo it =
+    case it of
+        Baz -> ()
+
+        _ ->
+""")
 }

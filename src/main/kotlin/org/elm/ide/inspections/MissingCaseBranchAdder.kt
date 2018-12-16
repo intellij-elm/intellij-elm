@@ -27,10 +27,20 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     fun addMissingBranches() {
         if (missingBranches.isEmpty()) return
 
-        val factory = ElmPsiFactory(element.project)
         val patterns = missingBranches.map { b ->
             (listOf(b.name) + b.parameters.map { it.renderParam() }).joinToString(" ")
         }
+
+        addPatterns(patterns)
+    }
+
+    fun addWildcardBranch() {
+        if (missingBranches.isEmpty()) return
+        addPatterns(listOf("_"))
+    }
+
+    private fun addPatterns(patterns: List<String>){
+        val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
         val insertLocation = when {
             existingBranches.isEmpty() -> element
@@ -58,7 +68,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     private fun calcMissingBranches(): List<TyUnion.Member> {
         val inference = element.findInference() ?: return emptyList()
 
-        // This only works on case expression with a union type for now
+        // This only works on case expressions with a union type for now
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
                 ?: return emptyList()
 
