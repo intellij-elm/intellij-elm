@@ -435,7 +435,7 @@ CaseOfExpr ::=
 // how to get GrammarKit to not be too greedy and try parsing top-level declarations as
 // if they were case branches. Is there a better way?
 private CaseOfTail ::=
-    OF CaseOfTail2
+    OF CaseOfTail2?
     {pin=1}
 
 private CaseOfTail2 ::=

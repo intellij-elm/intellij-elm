@@ -55,3 +55,25 @@ private fun StringBuilder.renderLink(refText: String, text: String, linkify: Boo
     if (linkify) DocumentationManagerUtil.createHyperlink(this, refText, text, true)
     else append(text)
 }
+
+
+fun Ty.renderParam(): String {
+    return alias?.name?.toFirstCharLowerCased() ?: when (this) {
+        is TyFunction -> "function"
+        is TyUnion -> name.toFirstCharLowerCased()
+        is TyRecord -> "record"
+        is TyTuple -> renderParam()
+        is TyVar -> name
+        is TyUnit -> "()"
+        is TyUnknown, TyInProgressBinding -> "unknown"
+        TyShader -> "shader"
+    }
+}
+
+fun TyTuple.renderParam(): String {
+    return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
+}
+
+private fun String.toFirstCharLowerCased(): String =
+        if (isEmpty()) ""
+        else first().toLowerCase() + substring(1)

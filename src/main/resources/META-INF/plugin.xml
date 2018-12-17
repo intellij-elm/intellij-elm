@@ -110,13 +110,26 @@
         <backspaceHandlerDelegate implementation="org.elm.ide.typing.ElmBackspaceHandler"/>
         <codeInsight.parameterInfo language="Elm" implementationClass="org.elm.ide.hints.ElmParameterInfoHandler"/>
         <codeInsight.typeInfo language="Elm" implementationClass="org.elm.ide.hints.ElmExpressionTypeProvider"/>
-        <codeInsight.lineMarkerProvider language="Elm"
-                                        implementationClass="org.elm.ide.lineMarkers.ElmExposureLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Elm" implementationClass="org.elm.ide.lineMarkers.ElmExposureLineMarkerProvider"/>
+        <lang.smartEnterProcessor language="Elm" implementationClass="org.elm.ide.typing.ElmSmartEnterProcessor"/>
 
-        <localInspection language="Elm" groupName="Elm" displayName="Type checker" enabledByDefault="true" level="ERROR"
+        <!-- Inspections -->
+
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Type checker"
+                         enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmTypeInferenceInspection"/>
-        <localInspection language="Elm" groupName="Elm" displayName="Type declaration checker" enabledByDefault="true" level="ERROR"
+
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Type declaration checker"
+                         enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmTypeDeclarationInspection"/>
+
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Add missing case branches"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmIncompletePatternInspection"/>
+
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
         <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />

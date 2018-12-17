@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
 class ElmMakeDeclarationIntentionTest : ElmIntentionTestBase(ElmMakeDeclarationIntentionAction()) {
+    override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
 
     fun `test make value declaration`() {
@@ -34,7 +35,7 @@ f : (Int -> Int) -> List a -> (Char, String) -> { foo : Int } -> Bool{-caret-}
 """
                 , """
 f : (Int -> Int) -> List a -> (Char, String) -> { foo : Int } -> Bool
-f function list tuple record = {-caret-}
+f function list (char, string) record = {-caret-}
 """)
     }
 
@@ -42,9 +43,13 @@ f function list tuple record = {-caret-}
     fun `test function parameters should be camelCased`() {
         doAvailableTest(
                 """
+type FooBar = FooBar
+type QuuxQuuxQuux = QuuxQuuxQuux
 f : FooBar -> QuuxQuuxQuux -> Int{-caret-}
 """
                 , """
+type FooBar = FooBar
+type QuuxQuuxQuux = QuuxQuuxQuux
 f : FooBar -> QuuxQuuxQuux -> Int
 f fooBar quuxQuuxQuux = {-caret-}
 """)

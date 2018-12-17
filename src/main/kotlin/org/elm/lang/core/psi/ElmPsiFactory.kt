@@ -6,11 +6,11 @@ import com.intellij.lang.PsiBuilder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.TokenType.WHITE_SPACE
 import com.intellij.psi.tree.IElementType
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
+import org.intellij.lang.annotations.Language
 
 
 class ElmPsiFactory(private val project: Project) {
@@ -137,13 +137,19 @@ class ElmPsiFactory(private val project: Project) {
                 ?: error("Failed to create value declaration named $name")
     }
 
+    fun createCaseOfBranches(indent: String, patterns: List<String>): List<ElmCaseOfBranch> =
+            patterns.joinToString("\n\n$indent", prefix = "foo = case 1 of\n\n$indent") { "$it ->\n$indent    " }
+                    .let { createFromText<ElmValueDeclaration>(it) }
+                    ?.childOfType<ElmCaseOfExpr>()?.branches
+                    ?: error("Failed to create case of branches from $patterns")
+
     fun createFreshLine() =
-    // TODO [kl] make this more specific by actually find a token which contains
-    // newline, not just any whitespace
+            createElements("\n").single()
+
+    fun createElements(@Language("Elm") code: String): List<PsiElement> =
             PsiFileFactory.getInstance(project)
-                    .createFileFromText("DUMMY.elm", ElmFileType, "\n")
-                    .descendants.find { it.elementType == WHITE_SPACE }
-                    ?: error("failed to create fresh line: should never happen")
+                    .createFileFromText("DUMMY.elm", ElmFileType, code)
+                    .children.asList()
 
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
