@@ -1,9 +1,8 @@
 package org.elm.ide.inspections
 
-import com.intellij.psi.TokenType
+import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.elementType
+import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmUnionPattern
@@ -42,32 +41,23 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     private fun addPatterns(patterns: List<String>) {
         val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
-        val insertLocation = when {
-            existingBranches.isEmpty() -> element
-            else -> existingBranches.last()
-        }
-
-        val ws = insertLocation.prevSibling
-        val indent = when (ws?.elementType) {
-            TokenType.WHITE_SPACE, ElmTypes.VIRTUAL_OPEN_SECTION -> ws.text
-            else -> "    "
-        } + if (existingBranches.isEmpty()) "    " else ""
-
+        val indent = "    ".repeat(element.ancestors.takeWhile { it !is ElmFile }.count())
         val elements = factory.createCaseOfBranches(indent, patterns)
-        // Add the two or three elements before the first generated branch, which are the indent
-        // and newlines
+        // Add the two or first generated branch, which are the indent
+        // and newline
         var start = elements.first().prevSibling.prevSibling
 
+        // Add the virtual open token if there isn't one already
         if (existingBranches.isNotEmpty()) {
             start = start.prevSibling
         }
 
-        element.addRangeAfter(start, elements.last(), insertLocation)
+        element.addRange(start, elements.last())
 
-        // We need to create the trailing whitespace separately, since the last branch doesn't have
-        // any following siblings due to the error element.
+        // Without a value in the last branch, the virtual end token ends up before the trailing
+        // whitespace, so we can't grab it from the factory element and need to add it separately.
         val trailingWs = factory.createElements("\n$indent    ")
-        element.addRangeAfter(trailingWs.first(), trailingWs.last(), element.lastChild)
+        element.addRange(trailingWs.first(), trailingWs.last())
     }
 
     private fun calcMissingBranches(): List<TyUnion.Member> {

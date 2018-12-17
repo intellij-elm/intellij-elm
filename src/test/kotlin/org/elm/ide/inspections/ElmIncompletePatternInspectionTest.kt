@@ -139,4 +139,62 @@ foo it =
         _ ->
             
 """)
+
+    fun `test no leading whitespace`() = checkFixByText("Add missing case branches", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =<error>case{-caret-}</error> it of
+""", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =case it of
+        Bar ->
+            
+""")
+
+    fun `test nesting in let`() = checkFixByText("Add missing case branches", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =
+    let
+        bar =
+            <error>case{-caret-}</error> it of
+    in
+        ()
+""", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =
+    let
+        bar =
+            case it of
+                Bar ->
+                    
+    in
+        ()
+""")
+
+    fun `test nesting in case`() = checkFixByText("Add missing case branches", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =
+    case () of
+        () ->
+            <error>case{-caret-}</error> it of
+""", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =
+    case () of
+        () ->
+            case it of
+                Bar ->
+                    
+""")
 }
