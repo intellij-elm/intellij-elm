@@ -48,6 +48,11 @@ class ConstraintTest {
     fun `parse throws on bad input`() {
         Constraint.parse("1.0.0 <= v <= bogus")
     }
+
+    @Test
+    fun `toString emits a readable string`() {
+        assertEquals("1.0.0 <= v < 2.0.0", Constraint.parse("1.0.0 <= v < 2.0.0").toString())
+    }
 }
 
 private fun v(x: Int, y: Int, z: Int) =

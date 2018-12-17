@@ -68,12 +68,17 @@ data class Constraint(
         LESS_THAN,
         LESS_THAN_OR_EQUAL;
 
-        fun evaluate(left: Version, right: Version): Boolean {
-            return when (this) {
-                LESS_THAN -> left < right
-                LESS_THAN_OR_EQUAL -> left <= right
-            }
-        }
+        override fun toString(): String =
+                when (this) {
+                    LESS_THAN -> "<"
+                    LESS_THAN_OR_EQUAL -> "<="
+                }
+
+        fun evaluate(left: Version, right: Version): Boolean =
+                when (this) {
+                    LESS_THAN -> left < right
+                    LESS_THAN_OR_EQUAL -> left <= right
+                }
 
         companion object {
             fun parse(text: String): Op =
@@ -85,9 +90,11 @@ data class Constraint(
         }
     }
 
-    fun contains(version: Version): Boolean {
-        return (lowOp.evaluate(low, version) && highOp.evaluate(version, high))
-    }
+    fun contains(version: Version): Boolean =
+            (lowOp.evaluate(low, version) && highOp.evaluate(version, high))
+
+    override fun toString() =
+            "$low $lowOp v $highOp $high"
 
     companion object {
         fun parse(text: String): Constraint {
