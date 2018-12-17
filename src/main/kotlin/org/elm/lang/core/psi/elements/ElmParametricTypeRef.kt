@@ -2,10 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
-import org.elm.lang.core.psi.ElmTypeRefSegmentTag
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
@@ -28,7 +25,8 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  * - `List String`
  * - `Task Http.Error String`
  */
-class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeRefSegmentTag, ElmParametricTypeRefParameterTag {
+class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeRefSegmentTag,
+        ElmParametricTypeRefParameterTag, ElmUnionMemberParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
