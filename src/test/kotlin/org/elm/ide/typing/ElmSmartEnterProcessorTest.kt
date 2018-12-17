@@ -17,11 +17,14 @@ type Foo = Bar | Baz | Qux
 foo : Foo -> ()
 foo it =
     case it of
-        Bar ->{-caret-}
+        Bar ->
+            {-caret-}
 
         Baz ->
+            
 
         Qux ->
+            
 """)
 
 

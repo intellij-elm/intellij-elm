@@ -15,10 +15,13 @@ foo : Foo -> ()
 foo it =
     case it of
         Bar ->
+            
 
         Baz ->
+            
 
         Qux ->
+            
 """)
 
     fun `test one existing branch`() = checkFixByText("Add missing case branches", """
@@ -27,18 +30,22 @@ type Foo = Bar | Baz | Qux
 foo : Foo -> ()
 foo it =
     <error>case{-caret-}</error> it of
-        Baz -> ()
+        Baz ->
+            ()
 """, """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
 foo it =
     case it of
-        Baz -> ()
+        Baz ->
+            ()
 
         Bar ->
+            
 
         Qux ->
+            
 """)
 
     fun `test two existing branches`() = checkFixByText("Add missing case branches", """
@@ -65,6 +72,7 @@ foo it =
             ()
 
         Bar ->
+            
 """)
 
     fun `test params`() = checkFixByText("Add missing case branches", """
@@ -96,14 +104,19 @@ foo : Msg a b -> ()
 foo it =
     case it of
         MsgOne foo barBaz ->
+            
 
         MsgTwo maybe ->
+            
 
         MsgThree b a ->
+            
 
         MsgFour record ->
+            
 
         MsgFive (x, y) ->
+            
 """)
 
     fun `test one existing branch, wildcard pattern`() = checkFixByText("Add '_' branch", """
@@ -112,15 +125,18 @@ type Foo = Bar | Baz | Qux
 foo : Foo -> ()
 foo it =
     <error>case{-caret-}</error> it of
-        Baz -> ()
+        Baz ->
+            ()
 """, """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
 foo it =
     case it of
-        Baz -> ()
+        Baz ->
+            ()
 
         _ ->
+            
 """)
 }

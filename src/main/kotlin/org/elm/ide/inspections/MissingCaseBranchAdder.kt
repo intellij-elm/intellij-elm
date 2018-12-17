@@ -39,7 +39,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         addPatterns(listOf("_"))
     }
 
-    private fun addPatterns(patterns: List<String>){
+    private fun addPatterns(patterns: List<String>) {
         val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
         val insertLocation = when {
@@ -63,6 +63,11 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         }
 
         element.addRangeAfter(start, elements.last(), insertLocation)
+
+        // We need to create the trailing whitespace separately, since the last branch doesn't have
+        // any following siblings due to the error element.
+        val trailingWs = factory.createElements("\n$indent    ")
+        element.addRangeAfter(trailingWs.first(), trailingWs.last(), element.lastChild)
     }
 
     private fun calcMissingBranches(): List<TyUnion.Member> {

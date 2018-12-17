@@ -29,8 +29,10 @@ private class PlainEnterProcessor : SmartEnterProcessorWithFixers.FixEnterProces
         if (modified && atCaret is ElmCaseOfExpr && atCaret.branches.isNotEmpty()) {
             val caretModel = editor.caretModel
             val branch = atCaret.branches.first()
-            val textOffset = branch.textOffset
-            caretModel.moveToOffset(textOffset + branch.textLength)
+            val branchOffset = branch.textOffset
+            val indentLen = branch.prevSibling.textLength
+            val extraIndent = 5 // \n + 4 spaces
+            caretModel.moveToOffset(branchOffset + branch.textLength + indentLen + extraIndent)
         } else {
             plainEnter(editor)
         }
