@@ -2,15 +2,17 @@ package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 
-fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String = when (this) {
-    is TyFunction -> renderedText(linkify, withModule)
-    is TyUnion -> renderedText(linkify, withModule)
-    is TyRecord -> renderedText(linkify, withModule)
-    is TyTuple -> renderedText(linkify, withModule)
-    is TyVar -> name
-    TyUnknown, TyInProgressBinding -> "unknown"
-    TyUnit -> "()"
-    TyShader -> "shader"
+fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String {
+    return alias?.renderedText(linkify, withModule) ?: when (this) {
+        is TyFunction -> renderedText(linkify, withModule)
+        is TyUnion -> renderedText(linkify, withModule)
+        is TyRecord -> renderedText(linkify, withModule)
+        is TyTuple -> renderedText(linkify, withModule)
+        is TyVar -> name
+        is TyUnit -> "()"
+        is TyUnknown, TyInProgressBinding -> "unknown"
+        TyShader -> "shader"
+    }
 }
 
 fun TyFunction.renderedText(linkify: Boolean, withModule: Boolean): String {
@@ -35,18 +37,18 @@ fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
 }
 
 fun TyRecord.renderedText(linkify: Boolean, withModule: Boolean): String {
-    if (alias != null) {
-        return alias.renderedText(linkify, withModule)
-    }
-    // TODO we probably don't want to render all fields
-    val prefix = if (baseName != null) "{ $baseName | " else "{ "
+    val prefix = if (baseTy != null) "{ ${baseTy.renderedText(linkify, withModule)} | " else "{ "
     return fields.entries.joinToString(", ", prefix = prefix, postfix = " }") { (name, ty) ->
-        "$name: ${ty.renderedText(linkify, withModule)}"
+        "$name : ${ty.renderedText(linkify, withModule)}"
     }
 }
 
 fun TyTuple.renderedText(linkify: Boolean, withModule: Boolean): String {
     return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderedText(linkify, withModule) }
+}
+
+fun AliasInfo.renderedText(linkify: Boolean, withModule: Boolean): String {
+    return TyUnion(module, name, parameters, emptyList()).renderedText(linkify, withModule)
 }
 
 private fun StringBuilder.renderLink(refText: String, text: String, linkify: Boolean) {

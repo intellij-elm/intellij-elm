@@ -8,6 +8,11 @@ import org.elm.lang.core.psi.ElmTypeRefSegmentTag
 import org.elm.lang.core.psi.ElmUnionMemberParameterTag
 
 
+/**
+ * A type expression for a tuple
+ *
+ * e.g. `(Int, String)` in a type declaration or annotation
+ */
 class ElmTupleType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefSegmentTag {
 
     val typeRefList: List<ElmTypeRef>

@@ -75,6 +75,18 @@ foo bar = ()
 <b>foo</b> bar</pre></div>
 """)
 
+    fun `test function with type annotation and parameterized alias`() = doTest(
+            """
+type alias A a = {x: a, y: ()}
+main : A ()
+main = {x = (), y = ()}
+--^
+""",
+            """
+<div class='definition'><pre><b>main</b> : <a href="psi_element://A">A</a> ()
+<b>main</b></pre></div>
+""")
+
     fun `test nested function with type annotation`() = doTest(
             """
 main a =
@@ -215,6 +227,24 @@ type Foo
 <p><code>Baz</code> a
 <p><code>Qux</code> (<a href="psi_element://List">List</a> a) a
 <p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
+""")
+
+    fun `test union member with parameters`() = doTest(
+            """
+type Foo a = Bar | Baz a (List Int)
+                 --^
+""",
+            """
+<div class='definition'><pre><i>member</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>)<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
+""")
+
+    fun `test union member without parameters`() = doTest(
+            """
+type Foo a = Bar | Baz a Int
+             --^
+""",
+            """
+<div class='definition'><pre><i>member</i> Bar<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
     fun `test type alias`() = doTest(
@@ -386,8 +416,33 @@ foo ({x, y} as z) = z
                   --^
 """,
             """
-<div class='definition'><pre><i>parameter</i> z : { x: <a href="psi_element://Int">Int</a>, y: <a href="psi_element://Float">Float</a> }
+<div class='definition'><pre><i>parameter</i> z : { x : <a href="psi_element://Int">Int</a>, y : <a href="psi_element://Float">Float</a> }
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+""")
+
+    fun `test aliased types`() = doTest(
+            """
+type alias T1 t = ()
+type alias T2 u = T1 t
+foo : T1 a -> T2 b
+foo a = a
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://T1">T1</a> t → <a href="psi_element://T2">T2</a> u
+<b>foo</b> a</pre></div>
+""")
+
+    fun `test alias to unresolved type`() = doTest(
+            """
+type alias Html msg = VirtualDom.Node msg
+foo : Html msg -> Html msg
+foo a = a
+--^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Html">Html</a> msg → <a href="psi_element://Html">Html</a> msg
+<b>foo</b> a</pre></div>
 """)
 
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =

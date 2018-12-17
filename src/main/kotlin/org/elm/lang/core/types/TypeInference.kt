@@ -4,7 +4,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider.Result
+import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.diagnostics.*
@@ -35,7 +35,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope(elmFile).getVisibleValues().topLevel.mapNotNullTo(mutableSetOf()) { it.name }
         val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
-        Result.create(result, project.modificationTracker, modificationTracker)
+        CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
     }
 }
 
@@ -92,7 +92,7 @@ private class InferenceScope(
         // surprising bugs.
         // We don't currently infer recursive functions in order to avoid infinite loop in the inference.
         if (checkRecursion(declaration) || PsiTreeUtil.hasErrorElements(declaration)) {
-            return InferenceResult(expressionTypes, diagnostics, TyUnknown)
+            return InferenceResult(expressionTypes, diagnostics, TyUnknown())
         }
 
         activeScopes += declaration
@@ -100,7 +100,7 @@ private class InferenceScope(
         val (declaredTy, paramCount) = bindParameters(declaration)
 
         val expr = declaration.expression
-        var bodyTy: Ty = TyUnknown
+        var bodyTy: Ty = TyUnknown()
         if (expr != null) {
             bodyTy = inferExpression(expr)
 
@@ -111,7 +111,7 @@ private class InferenceScope(
             requireAssignable(errorExpr, bodyTy, expected)
         }
 
-        val ty = if (declaredTy === TyUnknown) bodyTy else declaredTy
+        val ty = if (declaredTy === TyUnknown()) bodyTy else declaredTy
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
@@ -198,7 +198,7 @@ private class InferenceScope(
      */
 
     private fun inferExpression(expr: ElmExpressionTag?): Ty {
-        if (expr == null || elementContainsErrors(expr)) return TyUnknown
+        if (expr == null || elementContainsErrors(expr)) return TyUnknown()
         return when (expr) {
             is ElmBinOpExpr -> inferBinOpExpr(expr)
             is ElmFunctionCallExpr -> inferFunctionCall(expr)
@@ -219,12 +219,12 @@ private class InferenceScope(
             if (part is ElmOperator) {
                 val (ty, precedence) = inferOperatorAndPrecedence(part)
                 when {
-                    precedence == null || ty !is TyFunction || ty.parameters.size != 2 -> return TyUnknown
+                    precedence == null || ty !is TyFunction || ty.parameters.size != 2 -> return TyUnknown()
                     precedence.associativity == NON && lastPrecedence?.associativity == NON -> {
                         // Non-associative operators can't be chained directly with other non-associative
                         // operators.
                         diagnostics += NonAssociativeOperatorError(expr, part)
-                        return TyUnknown
+                        return TyUnknown()
                     }
                     else -> {
                         operatorPrecedences[part] = precedence
@@ -272,7 +272,7 @@ private class InferenceScope(
 
         fun argCountError(expected: Int): TyUnknown {
             diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
-            return TyUnknown
+            return TyUnknown()
         }
 
         val targetTy = when (inferredTy) {
@@ -282,7 +282,7 @@ private class InferenceScope(
                 inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
                 else -> return argCountError(0)
             }
-            TyUnknown, is TyVar -> return TyUnknown // TODO[unification] infer vars
+            is TyUnknown, is TyVar -> return TyUnknown() // TODO[unification] infer vars
             else -> return argCountError(0)
         }
 
@@ -318,8 +318,8 @@ private class InferenceScope(
             is ElmParenthesizedExpr -> inferExpression(atom.expression)
             is ElmRecordExpr -> inferRecord(atom)
             is ElmStringConstantExpr -> TyString
-            is ElmTupleConstructorExpr -> TyUnknown // TODO [drop 0.18] remove this case
-            is ElmUnitExpr -> TyUnit
+            is ElmTupleConstructorExpr -> TyUnknown()// TODO [drop 0.18] remove this case
+            is ElmUnitExpr -> TyUnit()
             is ElmValueExpr -> inferReferenceElement(atom)
             else -> error("unexpected atom type $atom")
         }
@@ -328,9 +328,9 @@ private class InferenceScope(
     }
 
     private fun inferOperatorAndPrecedence(operator: ElmOperator): Pair<Ty, OperatorPrecedence?> {
-        val ref = operator.reference.resolve() as? ElmInfixDeclaration ?: return TyUnknown to null
-        val precedence = ref.precedence.text.toIntOrNull() ?: return TyUnknown to null
-        val decl = ref.valueExpr?.reference?.resolve() ?: return TyUnknown to null
+        val ref = operator.reference.resolve() as? ElmInfixDeclaration ?: return TyUnknown() to null
+        val precedence = ref.precedence.text.toIntOrNull() ?: return TyUnknown() to null
+        val decl = ref.valueExpr?.reference?.resolve() ?: return TyUnknown() to null
         val ty = inferReferencedValueDeclaration(decl.parentOfType())
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
@@ -345,16 +345,16 @@ private class InferenceScope(
                         ?: target else target
                 diagnostics += TypeMismatchError(errorElem, baseTy, TyVar("record"))
             }
-            return TyUnknown
+            return TyUnknown()
         }
 
-        val fieldIdentifier = fieldAccess.lowerCaseIdentifier ?: return TyUnknown
+        val fieldIdentifier = fieldAccess.lowerCaseIdentifier ?: return TyUnknown()
         if (fieldIdentifier.text !in baseTy.fields) {
             // TODO[unification] once we know all available fields, we can be stricter about subset records.
             if (!baseTy.isSubset) {
                 diagnostics += RecordFieldError(fieldIdentifier, fieldIdentifier.text)
             }
-            return TyUnknown
+            return TyUnknown()
         }
 
         val ty = baseTy.fields[fieldIdentifier.text]!!
@@ -386,7 +386,7 @@ private class InferenceScope(
         // the first branch expression.
 
         val caseOfExprTy = inferExpression(caseOf.expression)
-        var ty: Ty = TyUnknown
+        var ty: Ty = TyUnknown()
         var errorEncountered = false
 
         // TODO: check patterns cover possibilities
@@ -398,7 +398,7 @@ private class InferenceScope(
 
             if (errorEncountered) {
                 // just check for internal errors
-                bindPattern(pat, TyUnknown, false)
+                bindPattern(pat, TyUnknown(), false)
                 inferExpression(branchExpression)
                 continue
             }
@@ -431,10 +431,10 @@ private class InferenceScope(
         }
 
         val baseTy = inferReferenceElement(recordIdentifier)
-        if (!isInferable(baseTy)) return TyUnknown
+        if (!isInferable(baseTy)) return TyUnknown()
         if (baseTy !is TyRecord) {
             diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
-            return TyUnknown
+            return TyUnknown()
         }
 
         val fields = record.fieldList.associate { f ->
@@ -468,7 +468,7 @@ private class InferenceScope(
 
     private fun inferIfElse(ifElse: ElmIfElseExpr): Ty {
         val expressionList = ifElse.expressionList
-        if (expressionList.size < 3 || expressionList.size % 2 == 0) return TyUnknown // incomplete program
+        if (expressionList.size < 3 || expressionList.size % 2 == 0) return TyUnknown() // incomplete program
         val expressionTys = expressionList.map { inferExpression(it) }
 
         // check all the conditions
@@ -491,27 +491,27 @@ private class InferenceScope(
     }
 
     private fun inferReferenceElement(expr: ElmReferenceElement): Ty {
-        val ref = expr.reference.resolve() ?: return TyUnknown
+        val ref = expr.reference.resolve() ?: return TyUnknown()
 
         // If the value is a parameter, its type has already been added to bindings
         getBinding(ref)?.let {
             return when (it) {
                 is TyInProgressBinding -> {
                     diagnostics += CyclicDefinitionError(expr)
-                    TyUnknown
+                    TyUnknown()
                 }
                 else -> it
             }
         }
 
         return when (ref) {
-            is ElmUnionMember -> TypeExpression.inferUnionConstructor(ref).ty
-            is ElmTypeAliasDeclaration -> TypeExpression.inferTypeAliasDeclaration(ref).ty
+            is ElmUnionMember -> ref.typeExpressionInference().ty
+            is ElmTypeAliasDeclaration -> ref.typeExpressionInference().ty
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
-            is ElmPortAnnotation -> TypeExpression.inferPortAnnotation(ref).ty
+            is ElmPortAnnotation -> ref.typeExpressionInference().ty
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
-                if (elementIsInTopLevelPattern(ref)) return TyUnknown
+                if (elementIsInTopLevelPattern(ref)) return TyUnknown()
 
                 // Pattern declarations might not have been inferred yet
                 val parentPatternDecl = parentPatternDecl(ref)
@@ -528,8 +528,9 @@ private class InferenceScope(
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
+        // TODO [unification] neither of these vars should be rigid
         val tyVar = TyVar("b")
-        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseName = "a")), tyVar)
+        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
@@ -537,10 +538,10 @@ private class InferenceScope(
         val subTy = inferExpression(subExpr)
         // TODO [unification] restrict vars to only number
         return when (subTy) {
-            TyInt, TyFloat, TyUnknown, is TyVar -> subTy
+            TyInt, TyFloat, is TyUnknown, is TyVar -> subTy
             else -> {
                 diagnostics += TypeMismatchError(subExpr!!, subTy, TyVar("number"))
-                TyUnknown
+                TyUnknown()
             }
         }
     }
@@ -555,11 +556,11 @@ private class InferenceScope(
     }
 
     private fun inferReferencedValueDeclaration(decl: ElmValueDeclaration?): Ty {
-        if (decl == null || checkRecursion(decl)) return TyUnknown
+        if (decl == null || checkRecursion(decl)) return TyUnknown()
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeRef?.let { TypeExpression.inferTypeRef(it).ty }
+        var ty = decl.typeAnnotation?.typeExpressionInference()?.ty
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
             // First we have to find the parent of the declaration so that it has access to the
@@ -615,10 +616,10 @@ private class InferenceScope(
             valueDeclaration.operatorDeclarationLeft != null -> {
                 // TODO [drop 0.18] remove this case
                 // this is 0.18 only, so we aren't going to bother implementing it
-                valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown }
-                TyUnknown to 2
+                valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown() }
+                TyUnknown() to 2
             }
-            else -> TyUnknown to 0
+            else -> TyUnknown() to 0
         }
     }
 
@@ -626,22 +627,21 @@ private class InferenceScope(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
     ): Pair<Ty, Int> {
-        val typeRef = valueDeclaration.typeAnnotation?.typeRef
+        val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.ty
         val patterns = decl.patterns.toList()
 
-        if (typeRef == null) {
-            patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
+        if (typeRefTy == null) {
+            patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
             return when {
-                patterns.isEmpty() -> TyUnknown to 0
-                else -> TyFunction(patterns.map { TyUnknown }, TyUnknown) to patterns.size
+                patterns.isEmpty() -> TyUnknown() to 0
+                else -> TyFunction(patterns.map { TyUnknown() }, TyUnknown()) to patterns.size
             }
         }
-        val typeRefTy = TypeExpression.inferTypeRef(typeRef).ty
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
-            patterns.forEach { pat -> bindPattern(pat, TyUnknown, true) }
-            return TyUnknown to maxParams
+            patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
+            return TyUnknown() to maxParams
         }
 
         if (typeRefTy is TyFunction) {
@@ -683,7 +683,7 @@ private class InferenceScope(
             is ElmConsPattern -> {
                 if (isParameter) {
                     diagnostics += PartialPatternError(pat)
-                    bindConsPattern(pat, TyUnknown)
+                    bindConsPattern(pat, TyUnknown())
                 } else {
                     bindConsPattern(pat, ty)
                 }
@@ -691,7 +691,7 @@ private class InferenceScope(
             is ElmListPattern -> {
                 if (isParameter) {
                     diagnostics += PartialPatternError(pat)
-                    bindListPattern(pat, TyUnknown)
+                    bindListPattern(pat, TyUnknown())
                 } else {
                     bindListPattern(pat, ty)
                 }
@@ -726,7 +726,7 @@ private class InferenceScope(
             if (isInferable(ty)) {
                 diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
             }
-            parts.forEach { bindPattern(it, TyUnknown, false) }
+            parts.forEach { bindPattern(it, TyUnknown(), false) }
             return
         }
 
@@ -752,13 +752,12 @@ private class InferenceScope(
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing
         // to bind.
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)
-                ?.let { TypeExpression.inferUnionConstructor(it).ty }
+        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.typeExpressionInference()?.ty
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
             diagnostics += ArgumentCountError(pat, actual, expected)
-            pat.namedParameters.forEach { setBinding(it, TyUnknown) }
+            pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         }
 
         if (memberTy is TyFunction) {
@@ -772,7 +771,7 @@ private class InferenceScope(
             }
         } else if (memberTy == null) {
             // null memberTy means the reference didn't resolve
-            pat.namedParameters.forEach { setBinding(it, TyUnknown) }
+            pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         } else if (argumentPatterns.isNotEmpty()) {
             issueError(argumentPatterns.size, 0)
         }
@@ -781,7 +780,7 @@ private class InferenceScope(
     private fun bindTuplePattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
         val patternList = pat.patternList
         if (ty !is TyTuple || ty.types.size != patternList.size) {
-            patternList.forEach { bindPattern(it, TyUnknown, isParameter) }
+            patternList.forEach { bindPattern(it, TyUnknown(), isParameter) }
             if (isInferable(ty)) {
                 val actualTy = TyTuple(uniqueVars(patternList.size))
                 diagnostics += TypeMismatchError(pat, actualTy, ty)
@@ -806,7 +805,7 @@ private class InferenceScope(
             }
 
             for (p in lowerPatternList) {
-                bindPattern(p, TyUnknown, isParameter)
+                bindPattern(p, TyUnknown(), isParameter)
             }
 
             return
@@ -850,9 +849,8 @@ private class InferenceScope(
                     && argumentsAssignable(ty1.parameters, ty2.parameters)
             is TyFunction -> ty2 is TyFunction
                     && argumentsAssignable(ty1.allTys, ty2.allTys)
-            // object tys are covered by the identity check above
-            TyShader, TyUnit -> false
-            TyUnknown -> true
+            is TyUnit -> ty2 is TyUnit
+            is TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign TyInProgressBinding")
         }
     }
@@ -896,8 +894,13 @@ private class InferenceScope(
 data class InferenceResult(val expressionTypes: Map<ElmPsiElement, Ty>,
                            val diagnostics: List<ElmDiagnostic>,
                            val ty: Ty) {
-    fun elementType(element: ElmPsiElement): Ty = expressionTypes[element] ?: TyUnknown
+    fun elementType(element: ElmPsiElement): Ty = expressionTypes[element] ?: TyUnknown()
 }
+
+class ParameterizedInferenceResult<T : Ty>(
+        val diagnostics: List<ElmDiagnostic>,
+        val ty: T
+)
 
 val ElmPsiElement.moduleName: String
     get() = elmFile.getModuleDecl()?.name ?: ""
@@ -936,4 +939,4 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 }
 
 // TODO[unification] allow vars
-fun isInferable(ty: Ty): Boolean = ty !== TyUnknown && ty !is TyVar
+fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar

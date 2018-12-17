@@ -1,69 +1,117 @@
 package org.elm.lang.core.types
 
-import org.bouncycastle.asn1.ua.DSTU4145NamedCurves.params
+import com.intellij.psi.PsiElement
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
-import org.elm.lang.core.diagnostics.TypeArgumentCountError
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.resolve.ElmReferenceElement
+
+
+// Changes to type expressions aways invalidate the whole project, since they influence inferred
+// value types (e.g. removing a field from a record causes usages of that field everywhere to be invalid.)
+// These results should be able to be cached, but doing so with the CachedValueManager lead to invalid Psi references.
+
+
+fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> =
+        TypeExpression().beginTypeDeclarationInference(this)
+
+fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+        TypeExpression().beginTypeAliasDeclarationInference(this)
+
+fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+        TypeExpression().beginPortAnnotationInference(this)
+
+fun ElmUnionMember.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+        TypeExpression().beginUnionConstructorInference(this)
+
+/** Get the type of the type ref in this annotation, or null if the program is incomplete and no type ref exists*/
+fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty>? {
+    val typeRef = typeRef ?: return null
+    return TypeExpression().beginTypeRefInference(typeRef)
+}
 
 /**
  * Inference for type declarations and expressions like function annotations and constructor calls.
  *
- * For inference of value declarations and expressions, see [InferenceScope]
+ * For inference of value declarations and expressions, see [InferenceScope].
+ *
+ * ### Algorithm
+ *
+ * Inference for most type expressions is straight forward, but we have to keep track of type
+ * variables in order to correctly infer parameterized type expressions.
+ *
+ * Vars are scoped to a single declaration or annotation. Within a scope, all vars with the same
+ * name must refer to the same object.
+ *
+ * To infer the types of parameterized type expressions, we infer the referenced target type, which
+ * will be either a union type or a type alias, and will have one type unique type variable for each
+ * parameter. We then infer the types of the arguments and use [TypeReplacement] to replace the type
+ * variables in the parameters with their arguments.
+ *
+ * This two step process is simpler than trying to pass arguments around while inferring
+ * declarations, and opens the door to caching the [Ty]s for declarations and aliases.
  */
-class TypeExpression private constructor(
-        private val subs: SubstitutionTable,
+class TypeExpression(
+        private val varsByName: MutableMap<String, TyVar> = mutableMapOf(),
         private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf(),
-        private val activeAliases: Set<ElmTypeAliasDeclaration> = mutableSetOf()
+        private val activeAliases: MutableSet<ElmTypeAliasDeclaration> = mutableSetOf()
 ) {
-    companion object {
-        fun inferPortAnnotation(annotation: ElmPortAnnotation): InferenceResult {
-            val scope = TypeExpression(SubstitutionTable.empty())
-            val ty = annotation.typeRef?.let { scope.typeRefType(it) } ?: TyUnknown
-            return scope.result(ty)
-        }
-
-        fun inferTypeRef(typeRef: ElmTypeRef): InferenceResult {
-            val scope = TypeExpression(SubstitutionTable.empty())
-            val ty = scope.typeRefType(typeRef)
-            return scope.result(ty)
-        }
-
-        fun inferTypeDeclaration(typeDeclaration: ElmTypeDeclaration): InferenceResult {
-            val scope = TypeExpression(SubstitutionTable.empty())
-            val ty = scope.typeDeclarationType(typeDeclaration, null)
-            return scope.result(ty)
-        }
-
-        fun inferUnionConstructor(member: ElmUnionMember): InferenceResult {
-            val scope = TypeExpression(SubstitutionTable.empty())
-            val decl = member.parentOfType<ElmTypeDeclaration>()
-                    ?.let { scope.typeDeclarationType(it, null) }
-                    ?: return scope.result(TyUnknown)
-            val params = member.allParameters.map { scope.typeSignatureDeclType(it) }.toList()
-
-            val ty = if (params.isNotEmpty()) {
-                // Constructors with parameters are functions returning the type.
-                TyFunction(params, decl)
-            } else {
-                // Constructors without parameters are just instances of the type, since there are no nullary functions.
-                decl
-            }
-            return scope.result(ty)
-        }
-
-        fun inferTypeAliasDeclaration(decl: ElmTypeAliasDeclaration): InferenceResult {
-            val scope = TypeExpression(SubstitutionTable.empty())
-            val ty = scope.typeAliasDeclarationType(decl, null)
-            return scope.result(ty)
-        }
+    fun beginPortAnnotationInference(annotation: ElmPortAnnotation): ParameterizedInferenceResult<Ty> {
+        val ty = annotation.typeRef?.let { typeRefType(it) } ?: TyUnknown()
+        return result(ty)
     }
 
-    private fun result(ty: Ty) = InferenceResult(emptyMap(), diagnostics, ty)
+    fun beginTypeRefInference(typeRef: ElmTypeRef): ParameterizedInferenceResult<Ty> {
+        val ty = typeRefType(typeRef)
+        return result(ty)
+    }
+
+    fun beginTypeDeclarationInference(typeDeclaration: ElmTypeDeclaration): ParameterizedInferenceResult<TyUnion> {
+        val ty = typeDeclarationType(typeDeclaration)
+        return result(ty)
+    }
+
+    fun beginUnionConstructorInference(member: ElmUnionMember): ParameterizedInferenceResult<Ty> {
+        val decl = member.parentOfType<ElmTypeDeclaration>()
+                ?.let { typeDeclarationType(it) }
+                ?: return result(TyUnknown())
+
+        val params = member.allParameters.map { typeSignatureDeclType(it) }.toList()
+
+        val ty: Ty = if (params.isNotEmpty()) {
+            // Constructors with parameters are functions returning the type.
+            TyFunction(params, decl)
+        } else {
+            // Constructors without parameters are just instances of the type, since there are no nullary functions.
+            decl
+        }
+        return result(ty)
+    }
+
+    fun beginTypeAliasDeclarationInference(decl: ElmTypeAliasDeclaration): ParameterizedInferenceResult<Ty> {
+        val record = decl.aliasedRecord
+        val params = decl.lowerTypeNameList.map { getTyVar(it.name) }.toList()
+
+        if (decl in activeAliases) {
+            diagnostics += BadRecursionError(decl)
+            return result(TyUnknown())
+        }
+
+        activeAliases += decl
+
+        val ty = if (record == null) {
+            decl.typeRef?.let { typeRefType(it) } ?: TyUnknown()
+        } else {
+            recordTypeDeclType(record)
+        }
+
+        val aliasInfo = AliasInfo(decl.moduleName, decl.upperCaseIdentifier.text, params)
+        return result(ty.withAlias(aliasInfo))
+    }
+
+    private fun <T : Ty> result(ty: T) = ParameterizedInferenceResult(diagnostics, ty)
 
 
     /** Get the type for an entire type ref */
@@ -81,117 +129,76 @@ class TypeExpression private constructor(
     private fun typeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
         return when (decl) {
             is ElmUpperPathTypeRef -> upperPathTypeRefType(decl)
-            is ElmTypeVariableRef -> subs.resolve(TyVar(decl.identifier.text))
-            is ElmRecordType -> recordTypeDeclType(decl, null)
-            is ElmTupleType -> if (decl.unitExpr != null) TyUnit else TyTuple(decl.typeRefList.map { typeRefType(it) })
+            is ElmTypeVariableRef -> getTyVar(decl.identifier.text)
+            is ElmRecordType -> recordTypeDeclType(decl)
+            is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeRefList.map { typeRefType(it) })
             is ElmParametricTypeRef -> parametricTypeRefType(decl)
             is ElmTypeRef -> typeRefType(decl)
             else -> error("unimplemented type $decl")
         }
     }
 
-    private fun recordTypeDeclType(record: ElmRecordType, alias: TyUnion?): TyRecord {
+    private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeRefType(it.typeRef) }
-        val baseName = record.baseTypeIdentifier?.referenceName
-        val baseTy = subs.tysByName[baseName]
-        // TODO diagnostic if base is not a record
-        val baseFields = (baseTy as? TyRecord)?.fields.orEmpty()
-        return TyRecord(baseFields + declaredFields, baseName, alias)
+        val baseTy = record.baseTypeIdentifier?.referenceName?.let { getTyVar(it) }
+        return TyRecord(declaredFields, baseTy)
     }
 
     private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
-        val ref = typeRef.reference.resolve()
-        val args = typeRef.allParameters.map { typeSignatureDeclType(it) }.toList()
-        val caller = Caller(typeRef, args)
-        // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
-        // reference won't resolve. So we check for reference to that type here. Note that users can
-        // create their own List types that shadow the built-in, so we only want to do this check if the
-        // reference is null.
-        if (ref == null && typeRef.upperCaseQID.text == "List") {
-            return TyList(replaceParamsWithArgs(listOf(TyVar("a")), caller).first())
-        }
-
-        return resolvedTypeRefType(ref, caller)
+        val argElements = typeRef.allParameters.toList()
+        val args = argElements.map { typeSignatureDeclType(it) }
+        return resolvedTypeRefType(args, argElements, typeRef)
     }
 
     private fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
+        // upper path type refs are just parametric type refs without any arguments
+        return resolvedTypeRefType(emptyList(), emptyList(), typeRef)
+    }
+
+    private fun resolvedTypeRefType(args: List<Ty>, argElements: List<PsiElement>, typeRef: ElmReferenceElement): Ty {
         val ref = typeRef.reference.resolve()
-        if (ref == null && typeRef.upperCaseQID.text == "List") {
-            diagnostics += TypeArgumentCountError(typeRef, 0, 1)
-            return TyList(TyVar("a"))
-        }
-        return resolvedTypeRefType(ref, Caller(typeRef, emptyList()))
-    }
-
-    private fun resolvedTypeRefType(ref: ElmNamedElement?, caller: Caller): Ty {
-        return when (ref) {
-            is ElmTypeAliasDeclaration -> typeAliasDeclarationType(ref, caller)
-            is ElmTypeDeclaration -> typeDeclarationType(ref, caller)
-            // We only get here if the reference doesn't resolve. We could create a TyUnion from the
-            // ref name, but we don't know what module it's supposed to be defined in, so that would
-            // lead to false positives.
-            else -> TyUnknown
-        }
-    }
-
-    private fun typeAliasDeclarationType(decl: ElmTypeAliasDeclaration, caller: Caller?): Ty {
-        if (decl in activeAliases) {
-            diagnostics += BadRecursionError(decl)
-            return TyUnknown
+        val declaredTy = when {
+            ref is ElmTypeAliasDeclaration -> inferChild { beginTypeAliasDeclarationInference(ref) }
+            ref is ElmTypeDeclaration -> inferChild { beginTypeDeclarationInference(ref) }
+            // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
+            // reference won't resolve. So we check for a reference to that type here. Note that users can
+            // create their own List types that shadow the built-in, so we only want to do this check if the
+            // reference is null.
+            ref == null && typeRef.referenceName == "List" -> TyList(TyVar("a"))
+            // We only get here if the reference doesn't resolve.
+            else -> TyUnknown()
         }
 
-        val record = decl.aliasedRecord
-        val params = decl.lowerTypeNameList.map { TyVar(it.name) }.toList()
-        val childTable = SubstitutionTable.fromVars(params, subs.resolveAll(caller?.args ?: emptyList()))
-        val childScope = TypeExpression(childTable, diagnostics, activeAliases + decl)
-
-        val ty = if (record == null) {
-            decl.typeRef?.let { childScope.typeRefType(it) } ?: TyUnknown
-        } else {
-            val aliasTy = TyUnion(decl.moduleName, decl.upperCaseIdentifier.text, replaceParamsWithArgs(params, caller))
-            childScope.recordTypeDeclType(record, aliasTy)
+        if (!isInferable(declaredTy)) {
+            return declaredTy
         }
 
-        diagnostics += childScope.diagnostics
-        return ty
+        // This cast is safe, since parameters of type declarations are always inferred as TyVar.
+        // We know the parameters haven't been replaced yet, since we just created the ty ourselves.
+        @Suppress("UNCHECKED_CAST")
+        val params = when {
+            declaredTy.alias != null -> declaredTy.alias!!.parameters
+            declaredTy is TyUnion -> declaredTy.parameters
+            else -> emptyList()
+        } as List<TyVar>
+
+        val result = TypeReplacement.replaceCall(typeRef, declaredTy, params, args, argElements)
+        diagnostics += result.diagnostics
+
+        return result.ty
     }
 
-    private fun typeDeclarationType(declaration: ElmTypeDeclaration, caller: Caller?): Ty {
-        val params = declaration.lowerTypeNameList.map { TyVar(it.name) }
-        val resolvedCaller = caller?.let { it.copy(args = subs.resolveAll(it.args)) }
-        val actualParams = replaceParamsWithArgs(params, resolvedCaller)
-        return TyUnion(declaration.moduleName, declaration.name, actualParams)
-    }
-
-    private fun replaceParamsWithArgs(params: List<Ty>, caller: Caller?): List<Ty> {
-        return when {
-            caller != null && params.size == caller.args.size -> caller.args
-            else -> {
-                if (caller != null) {
-                    diagnostics += TypeArgumentCountError(caller.element, caller.args.size, params.size)
-                }
-                params
-            }
+    private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
+        val params = declaration.lowerTypeNameList.map { getTyVar(it.name) }
+        val members = declaration.unionMemberList.map { member ->
+            TyUnion.Member(member.name, member.allParameters.map { typeSignatureDeclType(it) }.toList())
         }
+        return TyUnion(declaration.moduleName, declaration.name, params, members)
     }
+
+    private fun getTyVar(name: String) = varsByName.getOrPut(name) { TyVar(name) }
+
+    private inline fun <T : Ty> inferChild(block: TypeExpression.() -> ParameterizedInferenceResult<T>) =
+            TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet()).block().ty
 }
 
-/**
- * Keeps track of the current type of type variables, and can substitute a variable for it's current type.
- *
- * @property tysByName A map of the names of TyVars present in parameters to the types of arguments
- *   provided to those parameters.
- */
-private data class SubstitutionTable(val tysByName: Map<String, Ty>) {
-    companion object {
-        fun fromVars(vars: List<TyVar>, args: List<Ty>?) =
-                SubstitutionTable(vars.zip(args ?: emptyList()).associate { (v, t) -> v.name to t })
-
-        fun empty() = SubstitutionTable(emptyMap())
-    }
-
-    fun resolve(it: Ty): Ty = (it as? TyVar)?.let { tysByName[it.name] } ?: it
-    fun resolveAll(params: List<Ty>): List<Ty> = params.map { resolve(it) }
-}
-
-private data class Caller(val element: ElmPsiElement, val args: List<Ty>)
