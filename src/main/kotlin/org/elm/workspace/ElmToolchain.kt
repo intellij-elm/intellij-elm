@@ -91,8 +91,9 @@ data class ElmToolchain(val binDirPath: Path) {
         // TODO [kl] stop hard-coding the compiler version
         val compilerVersion = "0.19.0"
 
-        return File("$elmHomePath/$compilerVersion/package/$name/")
-                .listFiles().mapNotNull { Version.parseOrNull(it.name) }
+        val files = File("$elmHomePath/$compilerVersion/package/$name/").listFiles()
+                ?: return emptyList()
+        return files.mapNotNull { Version.parseOrNull(it.name) }
     }
 
     fun queryCompilerVersion(): Version? {

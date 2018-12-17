@@ -92,7 +92,7 @@ sealed class ElmProject(
 
         fun parse(manifestPath: Path, toolchain: ElmToolchain, ignoreTestDeps: Boolean = false): ElmProject {
             val inputStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
-                    ?: throw ProjectLoadException("Could not find file $manifestPath")
+                    ?: throw ProjectLoadException("Could not find file $manifestPath. Is the package installed?")
             return parse(inputStream, manifestPath, toolchain, ignoreTestDeps)
         }
 
@@ -237,7 +237,7 @@ private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolc
                     .filter { constraint.contains(it) }
                     .sorted()
                     .firstOrNull()
-                    ?: throw ProjectLoadException("Could not load $name ($constraint)")
+                    ?: throw ProjectLoadException("Could not load $name ($constraint). Is it installed?")
 
             loadDependency(toolchain, name, version)
         }

@@ -32,6 +32,11 @@ class VersionTest {
         Version.parse("1.2.3")
     }
 
+    @Test()
+    fun `toString emits the dotted version number without any adornment`() {
+        assertEquals("1.2.3", Version.parse("1.2.3").toString())
+    }
+
     @Test(expected = ParseException::class)
     fun `parse throws on bad input`() {
         Version.parse("bogus.version.number")
