@@ -47,7 +47,7 @@ Elm File
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
     ElmTypeRef(TYPE_REF)
-      ElmUpperPathTypeRef(UPPER_PATH_TYPE_REF)
+      ElmParametricTypeRef(PARAMETRIC_TYPE_REF)
         ElmUpperCaseQID(UPPER_CASE_QID)
           PsiElement(UPPER_CASE_IDENTIFIER)('String')
   PsiWhiteSpace(' ')

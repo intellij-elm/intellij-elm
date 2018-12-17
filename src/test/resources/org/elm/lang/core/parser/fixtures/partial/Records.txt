@@ -54,7 +54,7 @@ Elm File
           PsiElement(COLON)(':')
           PsiWhiteSpace(' ')
           ElmTypeRef(TYPE_REF)
-            ElmUpperPathTypeRef(UPPER_PATH_TYPE_REF)
+            ElmParametricTypeRef(PARAMETRIC_TYPE_REF)
               ElmUpperCaseQID(UPPER_CASE_QID)
                 PsiElement(UPPER_CASE_IDENTIFIER)('Int')
         PsiErrorElement:ARROW, COMMA, LEFT_BRACE, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER, RIGHT_BRACE or UPPER_CASE_IDENTIFIER expected, got '
@@ -80,7 +80,7 @@ Elm File
           PsiElement(COLON)(':')
           PsiWhiteSpace(' ')
           ElmTypeRef(TYPE_REF)
-            ElmUpperPathTypeRef(UPPER_PATH_TYPE_REF)
+            ElmParametricTypeRef(PARAMETRIC_TYPE_REF)
               ElmUpperCaseQID(UPPER_CASE_QID)
                 PsiElement(UPPER_CASE_IDENTIFIER)('Int')
         PsiElement(COMMA)(',')

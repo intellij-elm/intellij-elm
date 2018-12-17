@@ -64,7 +64,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                                 .forEach { result.add(it) }
                     }
                 }
-                is ElmUpperPathTypeRef, is ElmParametricTypeRef -> {
+                is ElmParametricTypeRef -> {
                     if (qualifierPrefix.isEmpty()) {
                         ModuleScope(file).getVisibleTypes().all.forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }

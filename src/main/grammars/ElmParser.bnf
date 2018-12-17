@@ -230,7 +230,7 @@ private SingleTypeRef ::=
     | LEFT_PARENTHESIS TypeRef RIGHT_PARENTHESIS
 
 UpperPathTypeRef ::=
-    UpperCaseQID
+    UpperCaseQID { elementType = ParametricTypeRef }
 
 TypeVariableRef ::=
     LOWER_CASE_IDENTIFIER

@@ -128,7 +128,6 @@ class TypeExpression(
     /** Get the type for one segment of a type ref */
     private fun typeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
         return when (decl) {
-            is ElmUpperPathTypeRef -> upperPathTypeRefType(decl)
             is ElmTypeVariableRef -> getTyVar(decl.identifier.text)
             is ElmRecordType -> recordTypeDeclType(decl)
             is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeRefList.map { typeRefType(it) })
@@ -147,16 +146,8 @@ class TypeExpression(
     private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
         val argElements = typeRef.allParameters.toList()
         val args = argElements.map { typeSignatureDeclType(it) }
-        return resolvedTypeRefType(args, argElements, typeRef)
-    }
-
-    private fun upperPathTypeRefType(typeRef: ElmUpperPathTypeRef): Ty {
-        // upper path type refs are just parametric type refs without any arguments
-        return resolvedTypeRefType(emptyList(), emptyList(), typeRef)
-    }
-
-    private fun resolvedTypeRefType(args: List<Ty>, argElements: List<PsiElement>, typeRef: ElmReferenceElement): Ty {
         val ref = typeRef.reference.resolve()
+
         val declaredTy = when {
             ref is ElmTypeAliasDeclaration -> inferChild { beginTypeAliasDeclarationInference(ref) }
             ref is ElmTypeDeclaration -> inferChild { beginTypeDeclarationInference(ref) }

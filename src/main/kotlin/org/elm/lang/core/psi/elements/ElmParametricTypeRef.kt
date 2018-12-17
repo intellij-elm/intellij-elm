@@ -14,7 +14,7 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
 
 
 /**
- * A type which is parameterized by one or more type parameters.
+ * A type which is parameterized by zero or more type parameters.
  *
  * The type parameters can be either a type variable (all lowercase) or an actual type
  * (initial uppercase).
@@ -23,11 +23,12 @@ import org.elm.lang.core.resolve.reference.SimpleTypeReference
  * where the type is defined.
  *
  * e.g.
+ * - `String`
  * - `List a`
  * - `List String`
  * - `Task Http.Error String`
  */
-class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeRefSegmentTag {
+class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeRefSegmentTag, ElmParametricTypeRefParameterTag {
 
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
@@ -37,7 +38,7 @@ class ElmParametricTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenc
      *
      * The elements will be in source order, and will be any of the following types:
      *
-     * [ElmUpperPathTypeRef], [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmTypeRef]
+     * [ElmParametricTypeRef], [ElmTypeVariableRef], [ElmRecordType], [ElmTupleType], [ElmTypeRef]
      */
     val allParameters: Sequence<ElmParametricTypeRefParameterTag>
         get() = directChildren.filterIsInstance<ElmParametricTypeRefParameterTag>()
