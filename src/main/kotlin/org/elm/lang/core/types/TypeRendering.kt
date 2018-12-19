@@ -62,7 +62,7 @@ private fun StringBuilder.renderLink(refText: String, text: String, linkify: Boo
     else append(text)
 }
 
-/** Render a name or destructuring pattern to use a parameter for a function or case branch */
+/** Render a name or destructuring pattern to use as a parameter for a function or case branch */
 fun Ty.renderParam(): String {
     return alias?.name?.toFirstCharLowerCased() ?: when (this) {
         is TyFunction -> "function"
