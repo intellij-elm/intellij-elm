@@ -80,7 +80,7 @@ val TyChar = TyUnion("Char", "Char", emptyList(), listOf(TyUnion.Member("Char", 
 
 /** WebGL GLSL shader */
 // The actual type is `Shader attributes uniforms varyings`, but we would have to parse the
-// GLSL code to infer the type variables, so we just don't report diagnostics on shared types.
+// GLSL code to infer the type variables, so we just don't report diagnostics on shader types.
 val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnknown()), emptyList())
 
 @Suppress("FunctionName")
@@ -132,6 +132,16 @@ object TyInProgressBinding : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyInProgressBinding = this
     override fun toString(): String = javaClass.simpleName
+}
+
+/**
+ * A Ty created from a type ref in a union member parameter list that references the
+ * union itself (creating a recursive type)
+ */
+class TyMemberSelfReference(val unionModule: String, val unionName: String) : Ty() {
+    override val alias: AliasInfo? get() = null
+    override fun withAlias(alias: AliasInfo): TyMemberSelfReference = this
+    override fun toString(): String = "<TyMemberSelfReference $unionName>"
 }
 
 /** Information about a type alias. This is not a [Ty]. */

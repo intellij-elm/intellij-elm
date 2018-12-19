@@ -1,12 +1,10 @@
 package org.elm.lang.core.types
 
-import com.intellij.psi.PsiElement
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
-import org.elm.lang.core.resolve.ElmReferenceElement
 
 
 // Changes to type expressions aways invalidate the whole project, since they influence inferred
@@ -58,6 +56,8 @@ class TypeExpression(
         private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf(),
         private val activeAliases: MutableSet<ElmTypeAliasDeclaration> = mutableSetOf()
 ) {
+    private var activeTypeDeclaration: ElmTypeDeclaration? = null
+
     fun beginPortAnnotationInference(annotation: ElmPortAnnotation): ParameterizedInferenceResult<Ty> {
         val ty = annotation.typeRef?.let { typeRefType(it) } ?: TyUnknown()
         return result(ty)
@@ -148,6 +148,10 @@ class TypeExpression(
         val args = argElements.map { typeSignatureDeclType(it) }
         val ref = typeRef.reference.resolve()
 
+        if (ref != null && ref is ElmTypeDeclaration && ref == activeTypeDeclaration) {
+            return TyMemberSelfReference(ref.moduleName, ref.name)
+        }
+
         val declaredTy = when {
             ref is ElmTypeAliasDeclaration -> inferChild { beginTypeAliasDeclarationInference(ref) }
             ref is ElmTypeDeclaration -> inferChild { beginTypeDeclarationInference(ref) }
@@ -180,6 +184,7 @@ class TypeExpression(
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
+        if (activeTypeDeclaration == null) activeTypeDeclaration = declaration
         val params = declaration.lowerTypeNameList.map { getTyVar(it.name) }
         val members = declaration.unionMemberList.map { member ->
             TyUnion.Member(member.name, member.allParameters.map { typeSignatureDeclType(it) }.toList())
