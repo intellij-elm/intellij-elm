@@ -1033,4 +1033,12 @@ infix left 4 (~~) = foo
 
 main = foo Bar () ~~ ()
 """)
+
+    fun `test self reference in union member`() = checkByText("""
+type Foo a = FooVariant Foo a
+type Bar = BarVariant Bar (Foo Bar)
+
+main : Foo ()
+main = <error descr="Type mismatch.Required: Foo ()Found: Bar → Foo Bar → Bar">BarVariant</error>
+""")
 }

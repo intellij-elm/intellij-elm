@@ -85,6 +85,7 @@ type Msg a b
     | MsgThree b a
     | MsgFour {x: ()}
     | MsgFive (x, y)
+    | MsgSix (Msg () ())
 
 foo : Msg a b -> ()
 foo it =
@@ -99,6 +100,7 @@ type Msg a b
     | MsgThree b a
     | MsgFour {x: ()}
     | MsgFive (x, y)
+    | MsgSix (Msg () ())
 
 foo : Msg a b -> ()
 foo it =
@@ -116,6 +118,9 @@ foo it =
             
 
         MsgFive (x, y) ->
+            
+
+        MsgSix msg ->
             
 """)
 

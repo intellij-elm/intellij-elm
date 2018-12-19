@@ -215,7 +215,7 @@ type Foo = Bar
 type Foo
      --^
      = Bar
-     | Baz a
+     | Baz Foo
      | Qux (List a) a
      | Lorem { ipsum: Int }
 """,
@@ -224,7 +224,7 @@ type Foo
 <div class='content'><p>included <em>docs</em></p></div>
 <table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
 <p><code>Bar</code>
-<p><code>Baz</code> a
+<p><code>Baz</code> <a href="psi_element://">Foo</a>
 <p><code>Qux</code> (<a href="psi_element://List">List</a> a) a
 <p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
 """)
@@ -240,7 +240,7 @@ type Foo a = Bar | Baz a (List Int)
 
     fun `test union member without parameters`() = doTest(
             """
-type Foo a = Bar | Baz a Int
+type Foo a = Bar | Baz a Foo
              --^
 """,
             """

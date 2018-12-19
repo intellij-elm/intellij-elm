@@ -851,7 +851,7 @@ private class InferenceScope(
                     && argumentsAssignable(ty1.allTys, ty2.allTys)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
-            TyInProgressBinding -> error("should never try to assign TyInProgressBinding")
+            TyInProgressBinding, is TyMemberSelfReference -> error("should never try to assign $ty1")
         }
     }
 
