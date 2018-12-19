@@ -203,7 +203,7 @@ private fun StringBuilder.renderMemberParameters(member: TyUnion.Member) {
     if (member.parameters.isNotEmpty()) {
         member.parameters.joinTo(this, " ", prefix = " ") {
             val renderedText = it.renderedText(true, false)
-            if (it is TyUnion) "($renderedText)" else renderedText
+            if (it is TyUnion && it.parameters.isNotEmpty()) "($renderedText)" else renderedText
         }
     }
 }
