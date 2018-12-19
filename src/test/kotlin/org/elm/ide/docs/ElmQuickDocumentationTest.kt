@@ -231,11 +231,11 @@ type Foo
 
     fun `test union member with parameters`() = doTest(
             """
-type Foo a = Bar | Baz a (List Int)
+type Foo a = Bar | Baz a (List Int) Int
                  --^
 """,
             """
-<div class='definition'><pre><i>member</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>)<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
+<div class='definition'><pre><i>member</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>) <a href="psi_element://Int">Int</a><i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
     fun `test union member without parameters`() = doTest(
