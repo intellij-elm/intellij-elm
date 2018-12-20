@@ -15,6 +15,11 @@ type alias S = R <error descr="Type mismatch.Required: recordFound: ()">()</erro
 <error descr="Infinite recursion">type alias B = A</error>
 """)
 
+    fun `test good recursion in through union`() = checkByText("""
+type alias Alias = { value : Union }
+type Union = TUnion Alias
+""")
+
     fun `test too few arguments to type`() = checkByText("""
 type Foo a b = Bar
 main : <error descr="The type expects 2 arguments, but it got 1 instead.">Foo ()</error>

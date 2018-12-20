@@ -2,6 +2,7 @@ package org.elm.lang.core.types
 
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
+import org.elm.lang.core.psi.ElmNameIdentifierOwner
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
@@ -148,13 +149,19 @@ class TypeExpression(
         val args = argElements.map { typeSignatureDeclType(it) }
         val ref = typeRef.reference.resolve()
 
-        if (ref != null && ref is ElmTypeDeclaration && ref == activeTypeDeclaration) {
-            return TyMemberSelfReference(ref.moduleName, ref.name)
+        if (ref != null &&
+                (ref is ElmTypeDeclaration && ref == activeTypeDeclaration
+                        || ref is ElmTypeAliasDeclaration && ref in activeAliases && activeTypeDeclaration != null)) {
+            return TyMemberRecursiveReference(ref.moduleName, (ref as ElmNameIdentifierOwner).name)
         }
 
         val declaredTy = when {
-            ref is ElmTypeAliasDeclaration -> inferChild { beginTypeAliasDeclarationInference(ref) }
-            ref is ElmTypeDeclaration -> inferChild { beginTypeDeclarationInference(ref) }
+            ref is ElmTypeAliasDeclaration -> {
+                inferChild { beginTypeAliasDeclarationInference(ref) }
+            }
+            ref is ElmTypeDeclaration -> {
+                inferChild { beginTypeDeclarationInference(ref) }
+            }
             // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
             // reference won't resolve. So we check for a reference to that type here. Note that users can
             // create their own List types that shadow the built-in, so we only want to do this check if the

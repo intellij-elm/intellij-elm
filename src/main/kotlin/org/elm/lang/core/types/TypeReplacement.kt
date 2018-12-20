@@ -59,7 +59,7 @@ class TypeReplacement private constructor(
         is TyUnknown -> TyUnknown(replace(ty.alias))
         is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
-        is TyMemberSelfReference -> ty
+        is TyMemberRecursiveReference -> ty
         is TyUnit, TyInProgressBinding -> ty
     }
 

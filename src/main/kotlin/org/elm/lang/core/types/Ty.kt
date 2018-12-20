@@ -136,12 +136,12 @@ object TyInProgressBinding : Ty() {
 
 /**
  * A Ty created from a type ref in a union member parameter list that references the
- * union itself (creating a recursive type)
+ * union itself or an alias that references this union (creating a recursive type).
  */
-class TyMemberSelfReference(val unionModule: String, val unionName: String) : Ty() {
+class TyMemberRecursiveReference(val module: String, val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
-    override fun withAlias(alias: AliasInfo): TyMemberSelfReference = this
-    override fun toString(): String = "<TyMemberSelfReference $unionName>"
+    override fun withAlias(alias: AliasInfo): TyMemberRecursiveReference = this
+    override fun toString(): String = "<TyMemberRecursiveReference $name>"
 }
 
 /** Information about a type alias. This is not a [Ty]. */
