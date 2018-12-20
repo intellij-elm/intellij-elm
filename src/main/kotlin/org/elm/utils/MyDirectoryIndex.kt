@@ -111,8 +111,8 @@ class MyDirectoryIndex<T>(parentDisposable: Disposable,
         return cacheInfos(dir, null, myDefValue)
     }
 
-    private fun cacheInfos(dir: VirtualFile?, stopAt: VirtualFile?, info: T): T {
-        var dir = dir
+    private fun cacheInfos(virtualFile: VirtualFile?, stopAt: VirtualFile?, info: T): T {
+        var dir = virtualFile
         while (dir != null) {
             cacheInfo(dir, info)
             if (dir == stopAt) {

@@ -16,12 +16,12 @@ import org.elm.lang.core.types.renderParam
 class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     // This should be a lazy {}, but using it causes a compilation error due to conflicting
     // declarations.
-    val missingBranches: List<TyUnion.Member>
+    val missingBranches: List<TyUnion.Variant>
         get() {
             if (_missingBranches == null) _missingBranches = calcMissingBranches()
             return _missingBranches!!
         }
-    private var _missingBranches: List<TyUnion.Member>? = null
+    private var _missingBranches: List<TyUnion.Variant>? = null
 
     fun addMissingBranches() {
         if (missingBranches.isEmpty()) return
@@ -60,14 +60,14 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         element.addRange(trailingWs.first(), trailingWs.last())
     }
 
-    private fun calcMissingBranches(): List<TyUnion.Member> {
+    private fun calcMissingBranches(): List<TyUnion.Variant> {
         val inference = element.findInference() ?: return emptyList()
 
         // This only works on case expressions with a union type for now
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
                 ?: return emptyList()
 
-        val allBranches = exprTy.members.associateBy { it.name }
+        val allBranches = exprTy.variants.associateBy { it.name }
         val missingBranches = allBranches.toMutableMap()
 
         for (branch in element.branches) {

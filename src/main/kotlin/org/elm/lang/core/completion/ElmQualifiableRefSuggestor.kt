@@ -55,16 +55,16 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 is ElmUnionPattern -> {
                     if (qualifierPrefix.isEmpty()) {
                         ModuleScope(file).getVisibleConstructors().all
-                                .filter { it is ElmUnionMember }
+                                .filter { it is ElmUnionVariant }
                                 .forEach { result.add(it) }
                     } else {
                         ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
                                 .flatMap { it.getExposedConstructors() }
-                                .filter { it is ElmUnionMember }
+                                .filter { it is ElmUnionVariant }
                                 .forEach { result.add(it) }
                     }
                 }
-                is ElmParametricTypeRef -> {
+                is ElmTypeRef -> {
                     if (qualifierPrefix.isEmpty()) {
                         ModuleScope(file).getVisibleTypes().all.forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }

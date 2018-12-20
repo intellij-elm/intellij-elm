@@ -1,33 +1,55 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
-import org.elm.lang.core.psi.ElmTypeRefSegmentTag
-import org.elm.lang.core.psi.ElmUnionMemberParameterTag
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.*
+import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
+import org.elm.lang.core.resolve.reference.QualifiedModuleNameReference
+import org.elm.lang.core.resolve.reference.QualifiedTypeReference
+import org.elm.lang.core.resolve.reference.SimpleTypeReference
 
 
 /**
- * A type reference.
+ * A type expression which references an [ElmTypeAliasDeclaration] or an [ElmTypeDeclaration].
+ *
+ * It may have one or more type arguments, which are each a type expression.
  *
  * e.g.
- *
- *  - `Float`
- *  - `Maybe a`
- *  - `Int -> String`
- *  - `a -> (a -> {a: String})`
+ * - `String`
+ * - `List a`
+ * - `List { x : Int }`
+ * - `Task.Task Http.Error String`
  */
-class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefSegmentTag {
+class ElmTypeRef(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmTypeExpressionSegmentTag,
+        ElmTypeRefArgumentTag, ElmUnionVariantParameterTag {
+
+    val upperCaseQID: ElmUpperCaseQID
+        get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
 
     /**
-     * All segments of the type annotation.
+     * All arguments to the type, if there are any.
      *
-     * The segments will be in source order. If this element is not a function, there will be one segment in
-     * well-formed programs. For functions, there will be one segment per function argument, plus the return type.
-     *
-     * e.g. `Int` and `String` in `Int -> String`
+     * The elements will be in source order.
      */
-    val allSegments: Sequence<ElmTypeRefSegmentTag>
-        get() = directChildren.filterIsInstance<ElmTypeRefSegmentTag>()
+    val allArguments: Sequence<ElmTypeRefArgumentTag>
+        get() = directChildren.filterIsInstance<ElmTypeRefArgumentTag>()
+
+    override val referenceNameElement: PsiElement
+        get() = upperCaseQID.upperCaseIdentifierList.last()
+
+    override val referenceName: String
+        get() = referenceNameElement.text
+
+    override fun getReference(): ElmReference =
+            references.first()
+
+    override fun getReferences(): Array<ElmReference> {
+        return if (upperCaseQID.upperCaseIdentifierList.size > 1) {
+            arrayOf(QualifiedTypeReference(this, upperCaseQID),
+                    QualifiedModuleNameReference(this, upperCaseQID))
+        } else {
+            arrayOf(SimpleTypeReference(this))
+        }
+    }
 }

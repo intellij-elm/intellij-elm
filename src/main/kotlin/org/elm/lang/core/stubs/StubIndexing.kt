@@ -31,7 +31,7 @@ fun IndexSink.indexTypeAliasDecl(stub: ElmTypeAliasDeclarationStub) {
     indexNamedStub(stub)
 }
 
-fun IndexSink.indexUnionMember(stub: ElmUnionMemberStub) {
+fun IndexSink.indexUnionVariant(stub: ElmUnionVariantStub) {
     indexNamedStub(stub)
 }
 

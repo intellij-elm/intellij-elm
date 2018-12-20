@@ -89,7 +89,7 @@ class ImportScope(val elmFile: ElmFile) {
             return ModuleScope(elmFile).getDeclaredTypes()
 
         return moduleDecl.exposingList?.exposedTypeList
-                ?.mapNotNull { it.reference.resolve() as? ElmNamedElement }
+                ?.mapNotNull { it.reference.resolve() }
                 ?: emptyList()
     }
 
@@ -110,11 +110,11 @@ class ImportScope(val elmFile: ElmFile) {
                     when {
                         it.exposesAll ->
                             // It's a union type that exposes all of its constructors
-                            (it.reference.resolve() as? ElmTypeDeclaration)?.unionMemberList ?: emptyList()
+                            (it.reference.resolve() as? ElmTypeDeclaration)?.unionVariantList ?: emptyList()
 
                         ctors != null ->
                             // It's a union type that exposes one or more constructors
-                            ctors.exposedUnionConstructors.mapNotNull { it.reference.resolve() as? ElmNamedElement }
+                            ctors.exposedUnionConstructors.mapNotNull { it.reference.resolve() }
 
                         else -> {
                             // It's either a record type or a union type without any exposed constructors

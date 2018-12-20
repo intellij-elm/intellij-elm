@@ -42,11 +42,11 @@ class ElmFindUsagesProvider : FindUsagesProvider {
             is ElmInfixDeclaration -> "Infix Operator Declaration"
             is ElmTypeAliasDeclaration -> "Type Alias"
             is ElmTypeDeclaration -> "Union Type"
-            is ElmUnionMember -> "Union Member"
+            is ElmUnionVariant -> "Union Variant"
             is ElmLowerPattern -> "Value Binding"
             is ElmPatternAs -> "Destructured Pattern Alias"
             is ElmPortAnnotation -> "Port Annotation"
-            else -> "unknown type for ${element}"
+            else -> "unknown type for $element"
         }
     }
 

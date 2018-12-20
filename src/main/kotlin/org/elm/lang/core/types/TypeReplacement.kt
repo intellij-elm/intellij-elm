@@ -17,7 +17,7 @@ class TypeReplacement private constructor(
 ) {
     companion object {
         /**
-         * Replace types in a ty that is the result of a parameterized type reference.
+         * Replace types in a ty inferred from a type ref with arguments.
          *
          * @param element the reference element that [ty] was inferred from
          * @param ty the type to perform replacement in
@@ -59,7 +59,7 @@ class TypeReplacement private constructor(
         is TyUnknown -> TyUnknown(replace(ty.alias))
         is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
-        is TyMemberRecursiveReference -> ty
+        is TyVariantRecursiveReference -> ty
         is TyUnit, TyInProgressBinding -> ty
     }
 
@@ -78,8 +78,8 @@ class TypeReplacement private constructor(
 
     private fun replaceUnion(ty: TyUnion): TyUnion {
         val parameters = ty.parameters.map { replace(it) }
-        val members = ty.members.map { m -> m.copy(parameters = m.parameters.map { replace(it) }) }
-        return TyUnion(ty.module, ty.name, parameters, members, replace(ty.alias))
+        val variants = ty.variants.map { m -> m.copy(parameters = m.parameters.map { replace(it) }) }
+        return TyUnion(ty.module, ty.name, parameters, variants, replace(ty.alias))
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {

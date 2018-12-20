@@ -233,7 +233,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
             val elmProject = if (enableStdlib) {
                 log.debug("Configuring Elm Stdlib")
-                MinimalElmStdlibVariant.ensureElmStdlibInstalled(module.project, toolchain!!)
+                MinimalElmStdlibVariant.ensureElmStdlibInstalled(module.project, toolchain)
             } else {
                 log.debug("Configuring bare Elm project")
                 @Language("JSON") val json = """
@@ -256,7 +256,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
                 val contentRoot = contentEntry.file!!
                 val elmJsonFile = contentRoot.createChildData(contentRoot, ELM_JSON)
                 VfsUtil.saveText(elmJsonFile, json)
-                ElmProject.parse(json.byteInputStream(), elmJsonFile.pathAsPath, toolchain!!)
+                ElmProject.parse(json.byteInputStream(), elmJsonFile.pathAsPath, toolchain)
             }
             module.project.elmWorkspace.setupForTests(toolchain, elmProject)
         }

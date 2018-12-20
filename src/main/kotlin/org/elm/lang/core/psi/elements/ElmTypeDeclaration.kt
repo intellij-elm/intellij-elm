@@ -32,16 +32,16 @@ class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub>, E
             ElmIcons.UNION_TYPE
 
     /**
-     * Zero-or-more parametric type variables which may appear in the union members.
+     * Zero-or-more parametric type variables which may appear in the union variants.
      */
     val lowerTypeNameList: List<ElmLowerTypeName>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
 
     /**
-     * The union members which define the structure of the type.
+     * The union variants which define the structure of the type.
      *
      * In a well-formed program, this will contain at least one element.
      */
-    val unionMemberList: List<ElmUnionMember>
-        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmUnionMember::class.java)
+    val unionVariantList: List<ElmUnionVariant>
+        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmUnionVariant::class.java)
 }

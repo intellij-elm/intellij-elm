@@ -11,7 +11,7 @@ fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String {
         is TyVar -> name
         is TyUnit -> "()"
         is TyUnknown, TyInProgressBinding -> "unknown"
-        is TyMemberRecursiveReference -> renderedText(linkify, withModule)
+        is TyVariantRecursiveReference -> renderedText(linkify, withModule)
         TyShader -> "shader"
     }
 }
@@ -37,7 +37,7 @@ fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
     return if (withModule && module.isNotBlank()) "$module.$type" else type
 }
 
-fun TyMemberRecursiveReference.renderedText(linkify: Boolean, withModule: Boolean): String {
+fun TyVariantRecursiveReference.renderedText(linkify: Boolean, withModule: Boolean): String {
     val name = buildString { renderLink(module, name, linkify) }
     return if (withModule && module.isNotBlank()) "$module.$name" else name
 }
@@ -71,7 +71,7 @@ fun Ty.renderParam(): String {
         is TyTuple -> renderParam()
         is TyVar -> name
         is TyUnit -> "()"
-        is TyMemberRecursiveReference -> name.toFirstCharLowerCased()
+        is TyVariantRecursiveReference -> name.toFirstCharLowerCased()
         is TyUnknown, TyInProgressBinding -> "unknown"
         TyShader -> "shader"
     }

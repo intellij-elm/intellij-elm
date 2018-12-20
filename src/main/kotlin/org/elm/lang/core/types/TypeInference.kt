@@ -505,7 +505,7 @@ private class InferenceScope(
         }
 
         return when (ref) {
-            is ElmUnionMember -> ref.typeExpressionInference().ty
+            is ElmUnionVariant -> ref.typeExpressionInference().ty
             is ElmTypeAliasDeclaration -> ref.typeExpressionInference().ty
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> ref.typeExpressionInference().ty
@@ -750,9 +750,9 @@ private class InferenceScope(
     }
 
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
-        // If the referenced union member isn't a constructor (e.g. `Nothing`), then there's nothing
+        // If the referenced union variant isn't a constructor (e.g. `Nothing`), then there's nothing
         // to bind.
-        val memberTy = (pat.reference.resolve() as? ElmUnionMember)?.typeExpressionInference()?.ty
+        val variantTy = (pat.reference.resolve() as? ElmUnionVariant)?.typeExpressionInference()?.ty
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
@@ -760,17 +760,17 @@ private class InferenceScope(
             pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         }
 
-        if (memberTy is TyFunction) {
-            if (argumentPatterns.size != memberTy.parameters.size) {
-                issueError(argumentPatterns.size, memberTy.parameters.size)
+        if (variantTy is TyFunction) {
+            if (argumentPatterns.size != variantTy.parameters.size) {
+                issueError(argumentPatterns.size, variantTy.parameters.size)
             } else {
-                for ((p, t) in argumentPatterns.zip(memberTy.parameters)) {
+                for ((p, t) in argumentPatterns.zip(variantTy.parameters)) {
                     // The other option is an UpperCaseQID, which doesn't bind anything
                     if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
                 }
             }
-        } else if (memberTy == null) {
-            // null memberTy means the reference didn't resolve
+        } else if (variantTy == null) {
+            // null variantTy means the reference didn't resolve
             pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         } else if (argumentPatterns.isNotEmpty()) {
             issueError(argumentPatterns.size, 0)
@@ -851,7 +851,7 @@ private class InferenceScope(
                     && argumentsAssignable(ty1.allTys, ty2.allTys)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
-            TyInProgressBinding, is TyMemberRecursiveReference -> error("should never try to assign $ty1")
+            TyInProgressBinding, is TyVariantRecursiveReference -> error("should never try to assign $ty1")
         }
     }
 

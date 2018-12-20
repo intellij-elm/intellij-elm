@@ -50,7 +50,7 @@ abstract class ElmResolveTestBase : ElmTestBase() {
 
         check(ref != null) { "no reference found at caret" }
 
-        val resolved = ref!!.resolve()
+        val resolved = ref.resolve()
         check(resolved != null) { "resolve did not find anything"}
 
         val target = findElementInEditor<ElmNamedElement>("X")
@@ -78,7 +78,7 @@ abstract class ElmResolveTestBase : ElmTestBase() {
 
         check(ref != null) { "no reference found at caret" }
 
-        val element = ref!!.resolve()
+        val element = ref.resolve()
                 ?: error("Failed to resolve ${ref.element.text}")
         val actualResolveFile = element.containingFile.virtualFile
 

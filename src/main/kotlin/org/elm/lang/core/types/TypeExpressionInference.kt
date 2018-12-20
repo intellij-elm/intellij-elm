@@ -22,12 +22,12 @@ fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceRes
 fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
         TypeExpression().beginPortAnnotationInference(this)
 
-fun ElmUnionMember.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
+fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
         TypeExpression().beginUnionConstructorInference(this)
 
-/** Get the type of the type ref in this annotation, or null if the program is incomplete and no type ref exists*/
+/** Get the type of the expression in this annotation, or null if the program is incomplete and no expression exists */
 fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty>? {
-    val typeRef = typeRef ?: return null
+    val typeRef = typeExpression ?: return null
     return TypeExpression().beginTypeRefInference(typeRef)
 }
 
@@ -60,12 +60,12 @@ class TypeExpression(
     private var activeTypeDeclaration: ElmTypeDeclaration? = null
 
     fun beginPortAnnotationInference(annotation: ElmPortAnnotation): ParameterizedInferenceResult<Ty> {
-        val ty = annotation.typeRef?.let { typeRefType(it) } ?: TyUnknown()
+        val ty = annotation.typeExpression?.let { typeExpresionType(it) } ?: TyUnknown()
         return result(ty)
     }
 
-    fun beginTypeRefInference(typeRef: ElmTypeRef): ParameterizedInferenceResult<Ty> {
-        val ty = typeRefType(typeRef)
+    fun beginTypeRefInference(typeExpr: ElmTypeExpression): ParameterizedInferenceResult<Ty> {
+        val ty = typeExpresionType(typeExpr)
         return result(ty)
     }
 
@@ -74,12 +74,12 @@ class TypeExpression(
         return result(ty)
     }
 
-    fun beginUnionConstructorInference(member: ElmUnionMember): ParameterizedInferenceResult<Ty> {
-        val decl = member.parentOfType<ElmTypeDeclaration>()
+    fun beginUnionConstructorInference(variant: ElmUnionVariant): ParameterizedInferenceResult<Ty> {
+        val decl = variant.parentOfType<ElmTypeDeclaration>()
                 ?.let { typeDeclarationType(it) }
                 ?: return result(TyUnknown())
 
-        val params = member.allParameters.map { typeSignatureDeclType(it) }.toList()
+        val params = variant.allParameters.map { typeSignatureDeclType(it) }.toList()
 
         val ty: Ty = if (params.isNotEmpty()) {
             // Constructors with parameters are functions returning the type.
@@ -103,7 +103,7 @@ class TypeExpression(
         activeAliases += decl
 
         val ty = if (record == null) {
-            decl.typeRef?.let { typeRefType(it) } ?: TyUnknown()
+            decl.typeExpression?.let { typeExpresionType(it) } ?: TyUnknown()
         } else {
             recordTypeDeclType(record)
         }
@@ -115,9 +115,9 @@ class TypeExpression(
     private fun <T : Ty> result(ty: T) = ParameterizedInferenceResult(diagnostics, ty)
 
 
-    /** Get the type for an entire type ref */
-    private fun typeRefType(typeRef: ElmTypeRef): Ty {
-        val segments = typeRef.allSegments.map { typeSignatureDeclType(it) }.toList()
+    /** Get the type for an entire type expression */
+    private fun typeExpresionType(typeExpr: ElmTypeExpression): Ty {
+        val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }.toList()
         val last = segments.last()
         return when {
             segments.size == 1 -> last
@@ -126,33 +126,33 @@ class TypeExpression(
         }
     }
 
-    /** Get the type for one segment of a type ref */
+    /** Get the type for one segment of a type expression */
     private fun typeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
         return when (decl) {
             is ElmTypeVariableRef -> getTyVar(decl.identifier.text)
             is ElmRecordType -> recordTypeDeclType(decl)
-            is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeRefList.map { typeRefType(it) })
-            is ElmParametricTypeRef -> parametricTypeRefType(decl)
+            is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeExpressionList.map { typeExpresionType(it) })
             is ElmTypeRef -> typeRefType(decl)
+            is ElmTypeExpression -> typeExpresionType(decl)
             else -> error("unimplemented type $decl")
         }
     }
 
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
-        val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeRefType(it.typeRef) }
+        val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeExpresionType(it.typeExpression) }
         val baseTy = record.baseTypeIdentifier?.referenceName?.let { getTyVar(it) }
         return TyRecord(declaredFields, baseTy)
     }
 
-    private fun parametricTypeRefType(typeRef: ElmParametricTypeRef): Ty {
-        val argElements = typeRef.allParameters.toList()
+    private fun typeRefType(typeRef: ElmTypeRef): Ty {
+        val argElements = typeRef.allArguments.toList()
         val args = argElements.map { typeSignatureDeclType(it) }
         val ref = typeRef.reference.resolve()
 
         if (ref != null &&
                 (ref is ElmTypeDeclaration && ref == activeTypeDeclaration
                         || ref is ElmTypeAliasDeclaration && ref in activeAliases && activeTypeDeclaration != null)) {
-            return TyMemberRecursiveReference(ref.moduleName, (ref as ElmNameIdentifierOwner).name)
+            return TyVariantRecursiveReference(ref.moduleName, (ref as ElmNameIdentifierOwner).name)
         }
 
         val declaredTy = when {
@@ -193,10 +193,10 @@ class TypeExpression(
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
         if (activeTypeDeclaration == null) activeTypeDeclaration = declaration
         val params = declaration.lowerTypeNameList.map { getTyVar(it.name) }
-        val members = declaration.unionMemberList.map { member ->
-            TyUnion.Member(member.name, member.allParameters.map { typeSignatureDeclType(it) }.toList())
+        val variants = declaration.unionVariantList.map { variant ->
+            TyUnion.Variant(variant.name, variant.allParameters.map { typeSignatureDeclType(it) }.toList())
         }
-        return TyUnion(declaration.moduleName, declaration.name, params, members)
+        return TyUnion(declaration.moduleName, declaration.name, params, variants)
     }
 
     private fun getTyVar(name: String) = varsByName.getOrPut(name) { TyVar(name) }

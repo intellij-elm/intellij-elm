@@ -12,7 +12,6 @@ object ElmRecordFieldSuggestor : Suggestor {
     override fun addCompletions(parameters: CompletionParameters, result: CompletionResultSet) {
         val pos = parameters.position
         val parent = pos.parent
-        val file = pos.containingFile as ElmFile
 
         if (pos.elementType in ELM_IDENTIFIERS && parent is ElmFieldAccessExpr) {
             // Infer the type of the record whose fields are being accessed

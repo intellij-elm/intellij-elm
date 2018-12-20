@@ -1,7 +1,7 @@
 package org.elm.lang.core.resolve.reference
 
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.ElmUnionMember
+import org.elm.lang.core.psi.elements.ElmUnionVariant
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 
@@ -19,7 +19,7 @@ class SimpleUnionConstructorReference(element: ElmReferenceElement)
 
     private fun getCandidates(): Array<ElmNamedElement> =
             ModuleScope(element.elmFile).getVisibleConstructors().all
-                    .filter { it is ElmUnionMember }
+                    .filter { it is ElmUnionVariant }
                     .toTypedArray()
 
 }

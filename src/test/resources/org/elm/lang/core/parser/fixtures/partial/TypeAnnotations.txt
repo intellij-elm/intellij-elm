@@ -3,7 +3,7 @@ Elm File
     PsiElement(LOWER_CASE_IDENTIFIER)('f')
     PsiWhiteSpace(' ')
     PsiElement(COLON)(':')
-    PsiErrorElement:<type ref> expected, got 'if'
+    PsiErrorElement:<type expression> expected, got 'if'
       <empty list>
   PsiWhiteSpace(' ')
   PsiElement(IF)('if')
@@ -34,7 +34,7 @@ Elm File
     PsiElement(LOWER_CASE_IDENTIFIER)('doSomething')
     PsiWhiteSpace(' ')
     PsiElement(COLON)(':')
-    PsiErrorElement:<type ref> expected, got '['
+    PsiErrorElement:<type expression> expected, got '['
       <empty list>
   PsiWhiteSpace(' ')
   PsiElement(LEFT_SQUARE_BRACKET)('[')

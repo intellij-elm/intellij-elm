@@ -2,10 +2,10 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
+import org.elm.lang.core.psi.ElmTypeRefArgumentTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmTypeRefSegmentTag
-import org.elm.lang.core.psi.ElmUnionMemberParameterTag
+import org.elm.lang.core.psi.ElmTypeExpressionSegmentTag
+import org.elm.lang.core.psi.ElmUnionVariantParameterTag
 
 
 /**
@@ -13,10 +13,10 @@ import org.elm.lang.core.psi.ElmUnionMemberParameterTag
  *
  * e.g. `(Int, String)` in a type declaration or annotation
  */
-class ElmTupleType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefSegmentTag {
+class ElmTupleType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionVariantParameterTag, ElmTypeRefArgumentTag, ElmTypeExpressionSegmentTag {
 
-    val typeRefList: List<ElmTypeRef>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeRef::class.java)
+    val typeExpressionList: List<ElmTypeExpression>
+        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeExpression::class.java)
 
     val unitExpr: ElmUnitExpr?
         get() = findChildByClass(ElmUnitExpr::class.java)

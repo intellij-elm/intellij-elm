@@ -75,6 +75,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
      *
      * @return a child of specified type, taken from stubs (if this element is currently stub-based) or AST (otherwise).
      */
+    @Suppress("UNCHECKED_CAST")
     fun <Psi : PsiElement> getStubOrPsiChild(elementType: IStubElementType<out StubElement<*>, Psi>): Psi? {
         val stub = getGreenStub()
         if (stub != null) {

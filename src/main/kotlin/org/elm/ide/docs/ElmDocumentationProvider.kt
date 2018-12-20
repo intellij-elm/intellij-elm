@@ -26,7 +26,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
     override fun generateDoc(element: PsiElement?, originalElement: PsiElement?) = when (element) {
         is ElmFunctionDeclarationLeft -> documentationFor(element)
         is ElmTypeDeclaration -> documentationFor(element)
-        is ElmUnionMember -> documentationFor(element)
+        is ElmUnionVariant -> documentationFor(element)
         is ElmTypeAliasDeclaration -> documentationFor(element)
         is ElmLowerPattern -> documentationFor(element)
         is ElmModuleDeclaration -> documentationFor(element)
@@ -94,10 +94,10 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
     renderDocContent(decl)
 
     sections {
-        section("Members") {
-            for (member in ty.members) {
-                append("\n<p><code>${member.name}</code>")
-                renderMemberParameters(member)
+        section("Variants") {
+            for (variant in ty.variants) {
+                append("\n<p><code>${variant.name}</code>")
+                renderVariantParameters(variant)
             }
         }
     }
@@ -151,16 +151,16 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
     }
 }
 
-private fun documentationFor(element: ElmUnionMember): String? = buildString {
+private fun documentationFor(element: ElmUnionVariant): String? = buildString {
     val declaration = element.parentOfType<ElmTypeDeclaration>() ?: return null
     val declTy = declaration.typeExpressionInference().ty
     val name = element.name
-    val member = declTy.members.find { it.name == name } ?: return null
+    val variant = declTy.variants.find { it.name == name } ?: return null
 
     definition {
-        i { append("member") }
+        i { append("variant") }
         append(" ", name)
-        renderMemberParameters(member)
+        renderVariantParameters(variant)
         i { append(" of type ") }
         renderLink(declTy.name, declTy.name)
         renderDefinitionLocation(element)
@@ -199,9 +199,9 @@ private fun documentationFor(clause: ElmAsClause): String? = buildString {
 }
 
 
-private fun StringBuilder.renderMemberParameters(member: TyUnion.Member) {
-    if (member.parameters.isNotEmpty()) {
-        member.parameters.joinTo(this, " ", prefix = " ") {
+private fun StringBuilder.renderVariantParameters(variant: TyUnion.Variant) {
+    if (variant.parameters.isNotEmpty()) {
+        variant.parameters.joinTo(this, " ", prefix = " ") {
             val renderedText = it.renderedText(true, false)
             if (it is TyUnion && it.parameters.isNotEmpty()) "($renderedText)" else renderedText
         }
