@@ -39,12 +39,20 @@
 
         <ol>
             <li>it does not work if a function is missing a type annotation (typically not a problem)</li>
-            <li>it does not work if type variables (such as `List a` or `Maybe a` are involved)</li>
+            <li>it does not work if type variables (such as `List a` or `Maybe a`) are involved</li>
         </ol>
 
         <p>We hope to remove the type variable limitation in the future.</p>
 
         <ul>
+            <li><b>2.1.1</b> <em>(2018-12-20)</em>
+                <ul>
+                    <li>Add inspection and enter handler to complete case branches</li>
+                    <li>Do code completion for functions & types even when module not imported</li>
+                    <li>Aliased imports now hide the original module name from qualified refs</li>
+                    <li>Improved type checking</li>
+                </ul>
+            </li>
             <li><b>2.1.0</b> <em>(2018-12-01)</em>
                 <ul>
                     <li>Added code completion for accessing fields in a record</li>
