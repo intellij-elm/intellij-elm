@@ -1,4 +1,4 @@
-language: shell # should be 'java' but https://travis-ci.community/t/java-support-on-windows/286/2
+language: generic # should be 'java' but https://travis-ci.community/t/java-support-on-windows/286/2
 
 jdk:
     - oraclejdk8
