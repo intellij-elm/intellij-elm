@@ -22,6 +22,7 @@ matrix:
                 - npm install -g elm
 
         -   os: osx
+            osx_image: xcode9.3 # Xcode 9.3 is the last version that supports JDK 8 on Travis
             before_install:
                 - npm install -g elm
 
