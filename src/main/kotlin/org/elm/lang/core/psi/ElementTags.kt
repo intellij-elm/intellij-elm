@@ -2,15 +2,15 @@ package org.elm.lang.core.psi
 
 import org.elm.lang.core.psi.elements.*
 /**
- * An element that is at least one of [ElmUnionMemberParameterTag], [ElmTypeRefSegmentTag],
- * or [ElmParametricTypeRefParameterTag].
+ * An element that is at least one of [ElmUnionVariantParameterTag], [ElmTypeExpressionSegmentTag],
+ * or [ElmTypeRefArgumentTag].
  *
  * No elements implement this directly.
  */
 interface ElmTypeSignatureDeclarationTag: ElmPsiElement
 
-/** An element that can appear in the parameter list of an [ElmUnionMember] */
-interface ElmUnionMemberParameterTag : ElmTypeSignatureDeclarationTag
+/** An element that can appear in the parameter list of an [ElmUnionVariant] */
+interface ElmUnionVariantParameterTag : ElmTypeSignatureDeclarationTag
 
 /** An Elm expression; either a chain of binary operators, a function call, or an atom */
 interface ElmExpressionTag : ElmPsiElement
@@ -42,11 +42,11 @@ interface ElmPatternChildTag : ElmFunctionParamOrPatternChildTag
 /** A pattern that can appear as the argument list of a UnionPattern */
 interface ElmUnionPatternChildTag : ElmPsiElement
 
-/** An element that can be a parameter of an [ElmTypeRef], but not necessarily an [ElmParametricTypeRef] */
-interface ElmTypeRefSegmentTag : ElmTypeSignatureDeclarationTag
+/** An element that can be a parameter of an [ElmTypeExpression]*/
+interface ElmTypeExpressionSegmentTag : ElmTypeSignatureDeclarationTag
 
-/** An element that can be a parameter of an [ElmTypeRef] or an [ElmParametricTypeRef] */
-interface ElmParametricTypeRefParameterTag : ElmTypeSignatureDeclarationTag
+/** An element that can be an argument to an [ElmTypeRef] */
+interface ElmTypeRefArgumentTag : ElmTypeSignatureDeclarationTag
 
 /** A value literal. Either a number, string, or char. */
 interface ElmConstantTag : ElmAtomTag, ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag

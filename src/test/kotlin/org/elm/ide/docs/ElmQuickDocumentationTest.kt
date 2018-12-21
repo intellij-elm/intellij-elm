@@ -179,7 +179,7 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
 <p><code>Bar</code></td></table>
 """)
 
@@ -192,7 +192,7 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo<i> defined in </i>Foo.Bar</pre></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
 <p><code>Bar</code></td></table>
 """)
 
@@ -205,11 +205,11 @@ type Foo = Bar
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
 <div class='content'><p>included <em>docs</em></p></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
 <p><code>Bar</code></td></table>
 """)
 
-    fun `test type declaration with multiple members`() = doTest(
+    fun `test type declaration with multiple variants`() = doTest(
             """
 {-| included *docs* -}
 type Foo
@@ -222,29 +222,29 @@ type Foo
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
 <div class='content'><p>included <em>docs</em></p></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Members:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
 <p><code>Bar</code>
 <p><code>Baz</code> <a href="psi_element://">Foo</a>
 <p><code>Qux</code> (<a href="psi_element://List">List</a> a) a
 <p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
 """)
 
-    fun `test union member with parameters`() = doTest(
+    fun `test union variant with parameters`() = doTest(
             """
 type Foo a = Bar | Baz a (List Int) Int
                  --^
 """,
             """
-<div class='definition'><pre><i>member</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>) <a href="psi_element://Int">Int</a><i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
+<div class='definition'><pre><i>variant</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>) <a href="psi_element://Int">Int</a><i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
-    fun `test union member without parameters`() = doTest(
+    fun `test union variant without parameters`() = doTest(
             """
 type Foo a = Bar | Baz a Foo
              --^
 """,
             """
-<div class='definition'><pre><i>member</i> Bar<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
+<div class='definition'><pre><i>variant</i> Bar<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
     fun `test type alias`() = doTest(

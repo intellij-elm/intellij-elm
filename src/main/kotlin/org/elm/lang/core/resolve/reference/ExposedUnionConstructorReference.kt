@@ -24,7 +24,7 @@ class ExposedUnionConstructorReference(exposedUnionConstructor: ElmExposedUnionC
         val unionType = parent.reference.resolve() ?: return emptyArray()
 
         if (unionType is ElmTypeDeclaration) {
-            return unionType.unionMemberList.toTypedArray()
+            return unionType.unionVariantList.toTypedArray()
         } else {
             error("resolved to unexpected element")
         }

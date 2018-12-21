@@ -22,7 +22,7 @@ class ElmFieldType(node: ASTNode) : ElmPsiElementImpl(node) {
     /**
      * The definition of the type of the field.
      */
-    val typeRef: ElmTypeRef
-        get() = findNotNullChildByClass(ElmTypeRef::class.java)
+    val typeExpression: ElmTypeExpression
+        get() = findNotNullChildByClass(ElmTypeExpression::class.java)
 
 }

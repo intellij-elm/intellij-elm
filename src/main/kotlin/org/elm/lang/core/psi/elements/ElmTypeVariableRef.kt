@@ -4,9 +4,9 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.ElmParametricTypeRefParameterTag
-import org.elm.lang.core.psi.ElmTypeRefSegmentTag
-import org.elm.lang.core.psi.ElmUnionMemberParameterTag
+import org.elm.lang.core.psi.ElmTypeRefArgumentTag
+import org.elm.lang.core.psi.ElmTypeExpressionSegmentTag
+import org.elm.lang.core.psi.ElmUnionVariantParameterTag
 
 /**
  * Holds a lower-case identifier within a type reference which
@@ -14,7 +14,7 @@ import org.elm.lang.core.psi.ElmUnionMemberParameterTag
  *
  * e.g. the 'a' in `map : (a -> b) -> List a -> List b`
  */
-class ElmTypeVariableRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionMemberParameterTag, ElmParametricTypeRefParameterTag, ElmTypeRefSegmentTag {
+class ElmTypeVariableRef(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionVariantParameterTag, ElmTypeRefArgumentTag, ElmTypeExpressionSegmentTag {
 
     val identifier: PsiElement
         get() = findNotNullChildByType(ElmTypes.LOWER_CASE_IDENTIFIER)

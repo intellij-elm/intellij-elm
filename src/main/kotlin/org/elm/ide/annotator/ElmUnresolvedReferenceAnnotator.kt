@@ -62,7 +62,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             // and so it is vital that we correctly mark the error only on the text range that
             // contributed the reference.
             val errorRange = when (element) {
-                is ElmParametricTypeRef -> element.upperCaseQID.textRange
+                is ElmTypeRef -> element.upperCaseQID.textRange
                 else -> element.textRange
             }
             holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
@@ -104,7 +104,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     // Elm prohibits the use of the original module name in qualified references.
     // So we will try to detect this condition and present a helpful error.
     private fun handleModuleHiddenByAlias(ref: PsiReference, element: PsiElement, holder: AnnotationHolder): Boolean {
-        if (element !is ElmValueExpr && element !is ElmParametricTypeRef) return false
+        if (element !is ElmValueExpr && element !is ElmTypeRef) return false
         val elmFile = element.containingFile as? ElmFile ?: return false
 
         val qid: ElmQID = when (ref) {

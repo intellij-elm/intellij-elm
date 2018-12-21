@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 4
+        override fun getStubVersion() = 5
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -43,7 +43,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "MODULE_DECLARATION" -> ElmModuleDeclarationStub.Type
     "TYPE_DECLARATION" -> ElmTypeDeclarationStub.Type
     "TYPE_ALIAS_DECLARATION" -> ElmTypeAliasDeclarationStub.Type
-    "UNION_MEMBER" -> ElmUnionMemberStub.Type
+    "UNION_VARIANT" -> ElmUnionVariantStub.Type
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
     "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type  // TODO [drop 0.18] remove this line
     "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
@@ -152,30 +152,30 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
 }
 
 
-class ElmUnionMemberStub(parent: StubElement<*>?,
-                         elementType: IStubElementType<*, *>,
-                         override val name: String
-) : StubBase<ElmUnionMember>(parent, elementType), ElmNamedStub {
+class ElmUnionVariantStub(parent: StubElement<*>?,
+                          elementType: IStubElementType<*, *>,
+                          override val name: String
+) : StubBase<ElmUnionVariant>(parent, elementType), ElmNamedStub {
 
-    object Type : ElmStubElementType<ElmUnionMemberStub, ElmUnionMember>("UNION_MEMBER") {
+    object Type : ElmStubElementType<ElmUnionVariantStub, ElmUnionVariant>("UNION_VARIANT") {
 
-        override fun serialize(stub: ElmUnionMemberStub, dataStream: StubOutputStream) =
+        override fun serialize(stub: ElmUnionVariantStub, dataStream: StubOutputStream) =
                 with(dataStream) {
                     writeName(stub.name)
                 }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmUnionMemberStub(parentStub, this,
+                ElmUnionVariantStub(parentStub, this,
                         dataStream.readNameAsString() ?: error("expected non-null string"))
 
-        override fun createPsi(stub: ElmUnionMemberStub) =
-                ElmUnionMember(stub, this)
+        override fun createPsi(stub: ElmUnionVariantStub) =
+                ElmUnionVariant(stub, this)
 
-        override fun createStub(psi: ElmUnionMember, parentStub: StubElement<*>?) =
-                ElmUnionMemberStub(parentStub, this, psi.name)
+        override fun createStub(psi: ElmUnionVariant, parentStub: StubElement<*>?) =
+                ElmUnionVariantStub(parentStub, this, psi.name)
 
-        override fun indexStub(stub: ElmUnionMemberStub, sink: IndexSink) {
-            sink.indexUnionMember(stub)
+        override fun indexStub(stub: ElmUnionVariantStub, sink: IndexSink) {
+            sink.indexUnionVariant(stub)
         }
     }
 }

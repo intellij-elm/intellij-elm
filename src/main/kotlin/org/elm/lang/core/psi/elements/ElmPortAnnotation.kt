@@ -40,7 +40,7 @@ class ElmPortAnnotation : ElmStubbedNamedElementImpl<ElmPortAnnotationStub> {
      *
      * In a well-formed program, this will be non-null.
      */
-    val typeRef: ElmTypeRef?
-        get() = findChildByClass(ElmTypeRef::class.java)
+    val typeExpression: ElmTypeExpression?
+        get() = findChildByClass(ElmTypeExpression::class.java)
 
 }

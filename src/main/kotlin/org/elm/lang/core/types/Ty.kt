@@ -60,10 +60,10 @@ data class TyUnion(
         val module: String,
         val name: String,
         val parameters: List<Ty>,
-        val members: List<Member>,
+        val variants: List<Variant>,
         override val alias: AliasInfo? = null
 ) : Ty() {
-    data class Member(val name: String, val parameters: List<Ty>)
+    data class Variant(val name: String, val parameters: List<Ty>)
 
     override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
@@ -72,11 +72,11 @@ data class TyUnion(
     }
 }
 
-val TyInt = TyUnion("Basics", "Int", emptyList(), listOf(TyUnion.Member("Int", emptyList())))
-val TyFloat = TyUnion("Basics", "Float", emptyList(), listOf(TyUnion.Member("Float", emptyList())))
-val TyBool = TyUnion("Basics", "Bool", emptyList(), listOf(TyUnion.Member("Bool", emptyList())))
-val TyString = TyUnion("String", "String", emptyList(), listOf(TyUnion.Member("String", emptyList())))
-val TyChar = TyUnion("Char", "Char", emptyList(), listOf(TyUnion.Member("Char", emptyList())))
+val TyInt = TyUnion("Basics", "Int", emptyList(), listOf(TyUnion.Variant("Int", emptyList())))
+val TyFloat = TyUnion("Basics", "Float", emptyList(), listOf(TyUnion.Variant("Float", emptyList())))
+val TyBool = TyUnion("Basics", "Bool", emptyList(), listOf(TyUnion.Variant("Bool", emptyList())))
+val TyString = TyUnion("String", "String", emptyList(), listOf(TyUnion.Variant("String", emptyList())))
+val TyChar = TyUnion("Char", "Char", emptyList(), listOf(TyUnion.Variant("Char", emptyList())))
 
 /** WebGL GLSL shader */
 // The actual type is `Shader attributes uniforms varyings`, but we would have to parse the
@@ -84,7 +84,7 @@ val TyChar = TyUnion("Char", "Char", emptyList(), listOf(TyUnion.Member("Char", 
 val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnknown()), emptyList())
 
 @Suppress("FunctionName")
-fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy), listOf(TyUnion.Member("List", listOf(elementTy))))
+fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy), listOf(TyUnion.Variant("List", listOf(elementTy))))
 
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 
@@ -135,13 +135,13 @@ object TyInProgressBinding : Ty() {
 }
 
 /**
- * A Ty created from a type ref in a union member parameter list that references the
+ * A Ty created from a type ref in a union variant parameter list that references the
  * union itself or an alias that references this union (creating a recursive type).
  */
-class TyMemberRecursiveReference(val module: String, val name: String) : Ty() {
+class TyVariantRecursiveReference(val module: String, val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
-    override fun withAlias(alias: AliasInfo): TyMemberRecursiveReference = this
-    override fun toString(): String = "<TyMemberRecursiveReference $name>"
+    override fun withAlias(alias: AliasInfo): TyVariantRecursiveReference = this
+    override fun toString(): String = "<TyVariantRecursiveReference $name>"
 }
 
 /** Information about a type alias. This is not a [Ty]. */

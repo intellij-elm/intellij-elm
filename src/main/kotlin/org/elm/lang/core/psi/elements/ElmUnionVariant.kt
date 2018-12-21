@@ -7,8 +7,8 @@ import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.ElmUnionMemberParameterTag
-import org.elm.lang.core.stubs.ElmUnionMemberStub
+import org.elm.lang.core.psi.ElmUnionVariantParameterTag
+import org.elm.lang.core.stubs.ElmUnionVariantStub
 
 /**
  * One of the cases in a union type declaration
@@ -20,20 +20,20 @@ import org.elm.lang.core.stubs.ElmUnionMemberStub
  *     | Nothing
  * ```
  */
-class ElmUnionMember : ElmStubbedNamedElementImpl<ElmUnionMemberStub> {
+class ElmUnionVariant : ElmStubbedNamedElementImpl<ElmUnionVariantStub> {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.UPPER)
 
-    constructor(stub: ElmUnionMemberStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmUnionVariantStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType, IdentifierCase.UPPER)
 
 
-    /** the union tag/constructor */
+    /** the variant name */
     val upperCaseIdentifier: PsiElement
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
-    /** All parameters of the member, if any. */
-    val allParameters: Sequence<ElmUnionMemberParameterTag>
-        get() = directChildren.filterIsInstance<ElmUnionMemberParameterTag>()
+    /** All parameters of the variant, if any. */
+    val allParameters: Sequence<ElmUnionVariantParameterTag>
+        get() = directChildren.filterIsInstance<ElmUnionVariantParameterTag>()
 }

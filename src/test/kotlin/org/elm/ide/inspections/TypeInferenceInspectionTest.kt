@@ -1034,7 +1034,7 @@ infix left 4 (~~) = foo
 main = foo Bar () ~~ ()
 """)
 
-    fun `test self reference in union member`() = checkByText("""
+    fun `test self reference in union variant`() = checkByText("""
 type Foo a = FooVariant Foo a
 type Bar = BarVariant Bar (Foo Bar)
 

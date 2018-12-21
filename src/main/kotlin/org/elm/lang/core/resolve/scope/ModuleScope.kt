@@ -164,7 +164,7 @@ class ModuleScope(val elmFile: ElmFile) {
     fun getDeclaredConstructors(): List<ElmNamedElement> {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_CONSTRUCTORS_KEY) {
             val declaredConstructors = listOf(
-                    elmFile.getTypeDeclarations().flatMap { it.unionMemberList },
+                    elmFile.getTypeDeclarations().flatMap { it.unionVariantList },
                     elmFile.getTypeAliasDeclarations().filter { it.isRecordAlias }
             ).flatten()
             Result.create(declaredConstructors, elmFile.project.modificationTracker)
@@ -204,7 +204,7 @@ class ModuleScope(val elmFile: ElmFile) {
                     when {
                         it.exposesAll ->
                             (it.reference.resolve() as? ElmTypeDeclaration)
-                                    ?.unionMemberList
+                                    ?.unionVariantList
                                     ?.map { it.name }
                                     ?: emptyList()
 

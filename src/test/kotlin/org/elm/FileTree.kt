@@ -170,7 +170,7 @@ class TestProject(
             check(res != null) {
                 "Failed to resolve the reference `${ref.text}` in `$path`."
             }
-            if (toPackage != null && res != null) {
+            if (toPackage != null) {
                 val pkgProject = res.elmProject as? ElmPackageProject
                 val pkg = pkgProject?.let { "${it.name} ${it.version}" } ?: "<package not found>"
                 check(pkg == toPackage) {

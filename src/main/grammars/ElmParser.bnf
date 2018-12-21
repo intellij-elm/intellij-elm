@@ -12,7 +12,7 @@
     elementTypeFactory("ModuleDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeAliasDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("UnionMember")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UnionVariant")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("InfixDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -195,42 +195,42 @@ private FunctionDeclarationPattern ::=
 
 
 TypeDeclaration ::=
-    TYPE UPPER_CASE_IDENTIFIER (LowerTypeName)* EQ UnionMember MoreUnionMembers?
+    TYPE UPPER_CASE_IDENTIFIER (LowerTypeName)* EQ UnionVariant MoreUnionVariants?
     { pin = 2 }
 
 LowerTypeName ::= LOWER_CASE_IDENTIFIER
 
-UnionMember ::=
-    UPPER_CASE_IDENTIFIER SingleTypeRef*
-    { pin = 1; recoverWhile = union_member_recover }
+UnionVariant ::=
+    UPPER_CASE_IDENTIFIER SingleTypeExpression*
+    { pin = 1; recoverWhile = union_variant_recover }
 
-private union_member_recover ::= !(PIPE|VIRTUAL_END_DECL)
+private union_variant_recover ::= !(PIPE|VIRTUAL_END_DECL)
 
-private MoreUnionMembers ::= (PIPE UnionMember)+
+private MoreUnionVariants ::= (PIPE UnionVariant)+
     { pin(".*") = 1 }
 
 TypeAliasDeclaration ::=
-    TYPE ALIAS UPPER_CASE_IDENTIFIER LowerTypeName* EQ TypeRef
+    TYPE ALIAS UPPER_CASE_IDENTIFIER LowerTypeName* EQ TypeExpression
     { pin = 3 }
 
-TypeRef ::=
-    TypeRefInner (ARROW TypeRefInner)*
+TypeExpression ::=
+    TypeExpressionInner (ARROW TypeExpressionInner)*
 
-private TypeRefInner ::=
-    ParametricTypeRef
-    | SingleTypeRef
+private TypeExpressionInner ::=
+    TypeRef
+    | SingleTypeExpression
 
-ParametricTypeRef ::= UpperCaseQID (SingleTypeRef)+
+TypeRef ::= UpperCaseQID (SingleTypeExpression)+
 
-private SingleTypeRef ::=
-    UpperPathTypeRef
+private SingleTypeExpression ::=
+    TypeRefWithoutArgs
     | TypeVariableRef
     | RecordType
     | TupleType
-    | LEFT_PARENTHESIS TypeRef RIGHT_PARENTHESIS
+    | LEFT_PARENTHESIS TypeExpression RIGHT_PARENTHESIS
 
-UpperPathTypeRef ::=
-    UpperCaseQID { elementType = ParametricTypeRef }
+TypeRefWithoutArgs ::=
+    UpperCaseQID { elementType = TypeRef }
 
 TypeVariableRef ::=
     LOWER_CASE_IDENTIFIER
@@ -240,19 +240,19 @@ RecordType ::=
     { pin = 1 }
 
 FieldType ::=
-    LOWER_CASE_IDENTIFIER COLON TypeRef
+    LOWER_CASE_IDENTIFIER COLON TypeExpression
 
 TupleType ::=
     UnitExpr
-    | LEFT_PARENTHESIS TypeRef (COMMA TypeRef)+ RIGHT_PARENTHESIS
+    | LEFT_PARENTHESIS TypeExpression (COMMA TypeExpression)+ RIGHT_PARENTHESIS
 
 
  // TODO [drop 0.18] remove the OperatorAsFunction_inner clause
 TypeAnnotation ::=
-    (LOWER_CASE_IDENTIFIER|OperatorAsFunction_inner) COLON TypeRef
+    (LOWER_CASE_IDENTIFIER|OperatorAsFunction_inner) COLON TypeExpression
     { pin = 'COLON' }
 
-PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeRef
+PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeExpression
     { pin = 'COLON' }
 
 

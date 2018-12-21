@@ -7,7 +7,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBList
 import org.elm.lang.core.psi.*
@@ -211,8 +210,8 @@ class ElmImportIntentionAction : ElmAtCaretIntentionActionBase<ElmImportIntentio
  * @param name          the name of the value/type
  * @param nameForImport the name suitable for insert into an exposing clause.
  *                      Typically this is the same as `name`, but when importing
- *                      a bare union type member, it will be the parenthesized
- *                      form: "TypeName(MemberName)"
+ *                      a bare union type variant, it will be the parenthesized
+ *                      form: "TypeName(VariantName)"
  * @param targetElement the value/type element in the module-to-be-imported
  */
 data class Candidate(
@@ -232,7 +231,7 @@ data class Candidate(
             val name = element.name!!
 
             val (nameForImport, isExposedDirectly) = when (element) {
-                is ElmUnionMember -> {
+                is ElmUnionVariant -> {
                     val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
                     Pair("$typeName($name)", exposingList.exposesConstructor(name, typeName))
                 }
@@ -264,7 +263,7 @@ data class Candidate(
 /**
  * Returns true if [name] can be found in the list of exposed values, constructors and types
  *
- * NOTE: this doesn't handle the case where a union type exposes all of its members.
+ * NOTE: this doesn't handle the case where a union type exposes all of its variants.
  * For that case, see [ElmExposingList.exposesConstructor]
  *
  * TODO [kl] cleanup: there's got to be a cleaner way to do this. it also seems like it

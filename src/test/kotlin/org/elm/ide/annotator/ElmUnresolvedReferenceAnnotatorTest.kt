@@ -23,7 +23,7 @@ h = <error descr="Unresolved reference 'Foo'">Foo.Quux</error>
 """)
 
 
-    fun `test unresolved parametric type ref`() = checkErrors("""
+    fun `test unresolved type ref`() = checkErrors("""
 f0 : <error descr="Unresolved reference 'Quux'">Quux</error> ()
 f1 : <error descr="Unresolved reference 'Foo'">Foo.Quux</error> ()
 """)

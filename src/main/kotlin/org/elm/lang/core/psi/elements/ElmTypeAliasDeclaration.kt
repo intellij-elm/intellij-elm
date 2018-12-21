@@ -31,11 +31,11 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
             ElmIcons.TYPE_ALIAS
 
 
-    /** The new name (alias) which will hereafter refer to [typeRef] */
+    /** The new name (alias) which will hereafter refer to [typeExpression] */
     val upperCaseIdentifier: PsiElement
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
-    /** Zero-or-more type variables which may appear in [typeRef] */
+    /** Zero-or-more type variables which may appear in [typeExpression] */
     val lowerTypeNameList: List<ElmLowerTypeName>
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
 
@@ -44,8 +44,8 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
      *
      * In a well-formed program, this will be non-null.
      */
-    val typeRef: ElmTypeRef?
-        get() = findChildByClass(ElmTypeRef::class.java)
+    val typeExpression: ElmTypeExpression?
+        get() = findChildByClass(ElmTypeExpression::class.java)
 
 
     /** `true` if the alias is exclusively a record */
@@ -54,5 +54,5 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
 
     /** The aliased record type if this alias is exclusively a record, or `null` otherwise. */
     val aliasedRecord: ElmRecordType?
-        get() = typeRef?.firstChild as? ElmRecordType
+        get() = typeExpression?.firstChild as? ElmRecordType
 }
