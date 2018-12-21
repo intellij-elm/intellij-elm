@@ -8,8 +8,12 @@ os:
     - linux
     - windows
 
+env:
+    - NODE_VERSION="7.4.0"
+
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then npm install -g elm                 ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then nvm install $NODE_VERSION          ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then npm install -g elm                 ; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install --yes elm-platform   ; fi
     - echo Installed elm `elm --version`
@@ -33,6 +37,3 @@ cache:
 
 notifications:
     email: false
-
-sudo: false
-
