@@ -1,26 +1,40 @@
-language: shell # should be 'java' but https://travis-ci.community/t/java-support-on-windows/286/2
+language: java
 
 jdk:
     - oraclejdk8
 
-os:
-    - osx
-    - linux
-    - windows
+env:
+    - NODE_VERSION="7.4.0"
 
-before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]];     then npm install -g elm                 ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];   then npm install -g elm                 ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install --yes elm-platform   ; fi
+matrix:
+    include:
+        -   os: windows
+            language: shell # workaround for https://travis-ci.community/t/java-support-on-windows/286/2
+            before_install:
+                - choco install --yes elm-platform
+                - choco install jdk8
+                - ls "/c/Program Files/Java"
+                - export PATH=$PATH:"/c/Program Files/Java/jdk1.8.0_191/bin"
+
+        -   os: linux
+            before_install:
+                - nvm install $NODE_VERSION
+                - npm install -g elm
+
+        -   os: osx
+            osx_image: xcode9.3 # Xcode 9.3 is the last version that supports JDK 8 on Travis
+            before_install:
+                - npm install -g elm
+
+
+install:
     - echo Installed elm `elm --version`
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install jdk8                 ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then ls "/c/Program Files/Java"         ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export PATH=$PATH:"/c/Program Files/Java/jdk1.8.0_191/bin"   ; fi
     - java -version
+    - ./gradlew assemble  --console=plain --no-daemon
 
-install: ./gradlew assemble --no-daemon
 
 script: ./gradlew check --info --console=plain --max-workers=1 --no-daemon
+
 
 before_cache:
     - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -31,8 +45,6 @@ cache:
         - $HOME/.gradle/caches/
         - $HOME/.gradle/wrapper/
 
+
 notifications:
     email: false
-
-sudo: false
-
