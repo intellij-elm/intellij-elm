@@ -1,8 +1,7 @@
 package org.elm.ide.inspections
 
-import org.elm.lang.core.psi.ElmFile
+import org.elm.ide.presentation.guessIndent
 import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmUnionPattern
@@ -41,7 +40,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     private fun addPatterns(patterns: List<String>) {
         val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
-        val indent = "    ".repeat(element.ancestors.takeWhile { it !is ElmFile }.count())
+        val indent = guessIndent(element) + "    "
         val elements = factory.createCaseOfBranches(indent, patterns)
         // Add the two or first generated branch, which are the indent
         // and newline

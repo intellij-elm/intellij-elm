@@ -93,3 +93,7 @@ fun PsiElement.offsetIn(owner: PsiElement): Int =
  */
 fun PsiElement.isVirtualLayoutToken(): Boolean =
         elementType in ELM_VIRTUAL_TOKENS
+
+/** Return true if this element is a direct child of an [ElmFile] */
+val PsiElement.isTopLevel: Boolean
+    get() = parent is ElmFile

@@ -3,8 +3,10 @@ package org.elm.ide.presentation
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
@@ -34,3 +36,7 @@ private fun presentableName(element: PsiElement): String? =
             else ->
                 null
         }
+
+/** Return the string that should indent an element based on the number of ancestors it has */
+fun guessIndent(element: PsiElement, offset: Int = -1): String =
+        "    ".repeat(element.ancestors.takeWhile { it !is ElmFile }.count() + offset)

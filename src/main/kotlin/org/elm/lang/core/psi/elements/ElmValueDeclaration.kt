@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
@@ -112,7 +113,6 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
                 ?.takeIf { it.text.startsWith("{-|") }
 
-    /** Return true if this declaration is not nested in a let-in expression */
-    val isTopLevel: Boolean
-        get() = parent is ElmFile
+    /** The `=` element. In a well-formed program, this will not be null */
+    val eqElement: PsiElement? get() = findChildByType(ElmTypes.EQ)
 }
