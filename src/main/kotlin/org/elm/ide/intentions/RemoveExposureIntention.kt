@@ -6,12 +6,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmExposedValue
-import org.elm.lang.core.psi.elements.ElmExposingList
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.removeItem
+import org.elm.lang.core.psi.ElmNameIdentifierOwner
+import org.elm.lang.core.psi.elements.*
 
 /**
  * An intention action that removes a function/type from a module's `exposing` list.
@@ -35,15 +31,19 @@ class RemoveExposureIntention : ElmAtCaretIntentionActionBase<RemoveExposureInte
             return null
         }
 
-        val parent = element.parent ?: return null
+        val parent = element.parent as? ElmNameIdentifierOwner ?: return null
 
-        if (element.elementType == ElmTypes.LOWER_CASE_IDENTIFIER
-                && parent is ElmFunctionDeclarationLeft
-                && parent.lowerCaseIdentifier == element) {
-            return exposingList.exposesFunction(parent)?.let { Context(it, exposingList) }
+        if (parent.nameIdentifier != element) return null
+
+        return when (parent) {
+            is ElmFunctionDeclarationLeft,
+            is ElmTypeDeclaration,
+            is ElmTypeAliasDeclaration ->
+                exposingList.allExposedItems
+                        .find { it.reference?.isReferenceTo(parent) ?: false }
+                        ?.let { Context(it, exposingList) }
+            else -> null
         }
-
-        return null
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
@@ -53,10 +53,4 @@ class RemoveExposureIntention : ElmAtCaretIntentionActionBase<RemoveExposureInte
             }
         }.execute()
     }
-}
-
-
-private fun ElmExposingList.exposesFunction(decl: ElmFunctionDeclarationLeft): ElmExposedValue? {
-    if (!decl.isTopLevel) return null
-    return exposedValueList.find { it.reference.isReferenceTo(decl) }
 }

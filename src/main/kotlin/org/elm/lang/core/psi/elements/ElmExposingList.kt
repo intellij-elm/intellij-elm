@@ -23,6 +23,11 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
     val doubleDot: PsiElement?
         get() = findChildByType(DOUBLE_DOT)
 
+
+    /* TODO consider getting rid of the individual [exposedValueList], [exposedTypeList],
+            and [exposedOperatorList] functions in favor of [allExposedItems]
+    */
+
     val exposedValueList: List<ElmExposedValue>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedValue::class.java)
 
@@ -40,6 +45,8 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
      *
      * In the case where the module/import exposes *all* names (e.g. `module Foo exposing (..)`)
      * the returned list will be empty.
+     *
+     * This is the superset of [exposedValueList], [exposedTypeList], and [exposedOperatorList]
      */
     val allExposedItems: List<ElmExposedItemTag>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedItemTag::class.java)
@@ -49,6 +56,8 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
 
 /**
  * Remove the item from the exposing list and make sure that whitespace and commas are correctly preserved.
+ *
+ * TODO does this function really belong here in this file? Or should it be moved closer to intention actions?
  */
 fun ElmExposingList.removeItem(item: ElmExposedItemTag) {
     val nextVisibleLeaf = PsiTreeUtil.nextVisibleLeaf(item) ?: error("incomplete exposing list")
