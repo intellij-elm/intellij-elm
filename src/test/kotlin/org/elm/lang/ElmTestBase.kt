@@ -293,6 +293,16 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         }
 
         @JvmStatic
+        fun checkHtmlStyle(html: String) {
+            // Consistency check for the HTML documentation of intention actions
+            // http://stackoverflow.com/a/1732454
+            val re = "<body>(.*)</body>".toRegex(RegexOption.DOT_MATCHES_ALL)
+            val body = (re.find(html)?.let { it.groups[1]!!.value } ?: html).trim()
+            check(body[0].isUpperCase()) { "Please start description with the capital latter" }
+            check(body.last() == '.') { "Please end description with a period" }
+        }
+
+        @JvmStatic
         fun getResourceAsString(path: String): String? {
             val stream = ElmTestBase::class.java.classLoader.getResourceAsStream(path)
                     ?: return null

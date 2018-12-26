@@ -45,6 +45,7 @@ val PsiElement.ancestorsStrict: Sequence<PsiElement> get() = ancestors.drop(1)
 val PsiElement.prevSiblings: Sequence<PsiElement> get() = generateSequence(prevSibling) { it.prevSibling }
 val PsiElement.nextSiblings: Sequence<PsiElement> get() = generateSequence(nextSibling) { it.nextSibling }
 val PsiElement.prevLeaves: Sequence<PsiElement> get() = generateSequence(PsiTreeUtil.prevLeaf(this)) { PsiTreeUtil.prevLeaf(it) }
+val PsiElement.nextLeaves: Sequence<PsiElement> get() = generateSequence(PsiTreeUtil.nextLeaf(this)) { PsiTreeUtil.nextLeaf(it) }
 val PsiElement.directChildren: Sequence<PsiElement> get() = generateSequence(firstChild) { it.nextSibling }
 val Sequence<PsiElement>.withoutWs get() = filter { it !is PsiWhiteSpace && it.elementType != VIRTUAL_END_DECL }
 val Sequence<PsiElement>.withoutWsOrComments get() = withoutWs.filter { it !is PsiComment }
