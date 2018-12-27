@@ -233,7 +233,7 @@ data class Candidate(
             val (nameForImport, isExposedDirectly) = when (element) {
                 is ElmUnionVariant -> {
                     val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
-                    Pair("$typeName($name)", exposingList.exposesConstructor(name, typeName))
+                    Pair("$typeName(..)", exposingList.exposesConstructor(name, typeName))
                 }
 
                 is ElmInfixDeclaration ->

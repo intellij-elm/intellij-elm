@@ -51,6 +51,21 @@ main = Foo.bar
 """)
 
 
+    // see https://github.com/klazuka/intellij-elm/issues/77
+    fun `test importing a union variant constructor exposes all variants`() = check(
+            """
+--@ main.elm
+main = BarVariant{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = BarVariant ()
+""",
+            """
+import Foo exposing (Bar(..))
+main = BarVariant
+""")
+
+
     fun `test binary infix operator`() = check(
             """
 --@ main.elm
@@ -147,21 +162,6 @@ main = quux + bar
 """)
 
 
-    fun `test merge with existing exposed union constructors`() = check(
-            """
---@ main.elm
-import App exposing (Page(Home))
-main = Settings{-caret-}
---@ App.elm
-module App exposing (Page(..))
-type Page = Home | Settings
-""",
-            """
-import App exposing (Page(Home, Settings))
-main = Settings
-""")
-
-
     fun `test merge with existing exposed union type`() = check(
             """
 --@ main.elm
@@ -172,7 +172,7 @@ module App exposing (Page(..))
 type Page = Home | Settings
 """,
             """
-import App exposing (Page(Settings))
+import App exposing (Page(..))
 main = Settings
 """)
 
