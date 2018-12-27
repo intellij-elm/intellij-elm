@@ -125,6 +125,7 @@
         <codeInsight.lineMarkerProvider language="Elm"
                                         implementationClass="org.elm.ide.lineMarkers.ElmExposureLineMarkerProvider"/>
         <lang.smartEnterProcessor language="Elm" implementationClass="org.elm.ide.typing.ElmSmartEnterProcessor"/>
+        <extendWordSelectionHandler implementation="org.elm.ide.wordSelection.ElmDeclAnnotationSelectionHandler"/>
 
         <!-- Inspections -->
 
