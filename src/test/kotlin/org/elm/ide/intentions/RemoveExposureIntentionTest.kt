@@ -85,4 +85,10 @@ module Foo exposing (bar)
 bar{-caret-} = ()
 """)
 
+
+    fun `test refuse to hide when the module exposes everything`() = doUnavailableTest("""
+module Foo exposing (..)
+bar{-caret-} = ()
+""")
+
 }

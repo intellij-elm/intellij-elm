@@ -147,6 +147,11 @@
         <!-- Intentions -->
 
         <intentionAction>
+            <className>org.elm.ide.intentions.AddExposureIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+
+        <intentionAction>
             <className>org.elm.ide.intentions.RemoveExposureIntention</className>
             <category>Elm</category>
         </intentionAction>

@@ -6,8 +6,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.ElmTypes.DOUBLE_DOT
-import org.elm.lang.core.psi.ElmTypes.RIGHT_PARENTHESIS
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.stubs.ElmExposingListStub
 
 
@@ -20,8 +19,29 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
             super(stub, stubType)
 
 
+    /**
+     * If present, indicates that all names are exposed
+     */
     val doubleDot: PsiElement?
         get() = findChildByType(DOUBLE_DOT)
+
+
+    /**
+     * Returns the opening parenthesis element.
+     *
+     * This will be non-null in a well-formed program.
+     */
+    val openParen: PsiElement?
+        get() = findChildByType(LEFT_PARENTHESIS)
+
+
+    /**
+     * Returns the closing parenthesis element.
+     *
+     * This will be non-null in a well-formed program.
+     */
+    val closeParen: PsiElement?
+        get() = findChildByType(RIGHT_PARENTHESIS)
 
 
     /* TODO consider getting rid of the individual [exposedValueList], [exposedTypeList],
@@ -51,6 +71,20 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
     val allExposedItems: List<ElmExposedItemTag>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedItemTag::class.java)
 
+}
+
+
+/**
+ * Add a function/type to the exposing list, while ensuring that the necessary comma and whitespace are also added.
+ *
+ * TODO does this function really belong here in this file? Or should it be moved closer to intention actions?
+ */
+fun ElmExposingList.addItem(itemName: String) {
+    // create a dummy import with multiple exposed values so that we can also extract the preceding comma and whitespace
+    val import = ElmPsiFactory(project).createImportExposing("FooBar", listOf("foobar", itemName))
+    val item = import.exposingList!!.allExposedItems.single { it.text == itemName }
+    val prevComma = item.prevSiblings.first { it.elementType == ElmTypes.COMMA }
+    addRangeBefore(prevComma, item, closeParen)
 }
 
 
