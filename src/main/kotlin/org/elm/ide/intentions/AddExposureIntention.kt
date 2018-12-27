@@ -35,12 +35,12 @@ class AddExposureIntention : ElmAtCaretIntentionActionBase<AddExposureIntention.
             is ElmFunctionDeclarationLeft,
             is ElmTypeDeclaration,
             is ElmTypeAliasDeclaration ->
-                if (exposingList.allExposedItems.none { it.reference?.isReferenceTo(parent) ?: false }) {
+                if (exposingList.findMatchingItemFor(parent) == null) {
                     Context(parent.name, exposingList)
                 } else {
-                    // already exposed
                     null
                 }
+
             else -> null
         }
     }

@@ -12,34 +12,35 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.findMatchingItemFor
+import java.awt.event.MouseEvent
 
 /**
  * Put an icon in the gutter for top-level declarations (types, functions, values)
  * that are exposed by the containing module.
  */
 class ElmExposureLineMarkerProvider : LineMarkerProvider {
+
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<PsiElement>? {
         if (element.elementType !in listOf(LOWER_CASE_IDENTIFIER, UPPER_CASE_IDENTIFIER)) return null
-        val elmFile = element.containingFile as? ElmFile ?: return null
-        val moduleDecl = elmFile.getModuleDecl() ?: return null
 
         val parent = element.parent
         if (parent !is ElmNameIdentifierOwner || parent.nameIdentifier != element) return null
 
-        when (parent) {
+        return when (parent) {
             is ElmFunctionDeclarationLeft ->
-                if (moduleDecl.exposesFunction(parent))
-                    return makeMarker(element)
+                if (!parent.isTopLevel) null
+                else makeMarkerIfNecessary(element, parent)
 
             is ElmTypeDeclaration,
             is ElmTypeAliasDeclaration ->
-                if (moduleDecl.exposesType(parent))
-                    return makeMarker(element)
+                makeMarkerIfNecessary(element, parent)
+
+            else ->
+                null
         }
-        return null
     }
 
     override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<LineMarkerInfo<PsiElement>>) {
@@ -48,29 +49,26 @@ class ElmExposureLineMarkerProvider : LineMarkerProvider {
 }
 
 
-private fun makeMarker(element: PsiElement): LineMarkerInfo<PsiElement> {
-    return LineMarkerInfo(
-            element,
-            element.textRange,
-            ElmIcons.EXPOSED_GUTTER,
-            Pass.LINE_MARKERS,
-            { "Exposed" },
-            { _, _ -> Unit },
-            GutterIconRenderer.Alignment.RIGHT
-    )
+private fun makeMarkerIfNecessary(element: PsiElement, decl: ElmNameIdentifierOwner): LineMarkerInfo<PsiElement>? {
+    val elmFile = element.containingFile as? ElmFile ?: return null
+    val moduleDecl = elmFile.getModuleDecl() ?: return null
+    val exposingList = moduleDecl.exposingList ?: return null
+    if (moduleDecl.exposesAll) {
+        return makeMarker(element) { _, _ -> Unit }
+    } else {
+        val item = exposingList.findMatchingItemFor(decl) ?: return null
+        return makeMarker(element) { _, _ -> Unit }
+    }
 }
 
 
-private fun ElmModuleDeclaration.exposesFunction(decl: ElmFunctionDeclarationLeft): Boolean {
-    if (!decl.isTopLevel) return false
-    if (exposesAll) return true
-    val exposedValues = exposingList?.exposedValueList ?: return false
-    return exposedValues.any { it.reference.isReferenceTo(decl) }
-}
-
-
-private fun ElmModuleDeclaration.exposesType(decl: PsiElement): Boolean {
-    if (exposesAll) return true
-    val exposedTypes = exposingList?.exposedTypeList ?: return false
-    return exposedTypes.any { it.reference.isReferenceTo(decl) }
-}
+private fun makeMarker(element: PsiElement, navHandler: (MouseEvent, PsiElement) -> Unit) =
+        LineMarkerInfo(
+                element,
+                element.textRange,
+                ElmIcons.EXPOSED_GUTTER,
+                Pass.LINE_MARKERS,
+                { "Exposed" },
+                navHandler,
+                GutterIconRenderer.Alignment.RIGHT
+        )

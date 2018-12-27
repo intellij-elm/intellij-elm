@@ -39,9 +39,7 @@ class RemoveExposureIntention : ElmAtCaretIntentionActionBase<RemoveExposureInte
             is ElmFunctionDeclarationLeft,
             is ElmTypeDeclaration,
             is ElmTypeAliasDeclaration ->
-                exposingList.allExposedItems
-                        .find { it.reference?.isReferenceTo(parent) ?: false }
-                        ?.let { Context(it, exposingList) }
+                exposingList.findMatchingItemFor(parent)?.let { Context(it, exposingList) }
             else -> null
         }
     }

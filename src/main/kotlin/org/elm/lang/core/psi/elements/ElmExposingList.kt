@@ -75,6 +75,13 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
 
 
 /**
+ * Attempt to find an exposed item that refers to [decl]
+ */
+fun ElmExposingList.findMatchingItemFor(decl: ElmNameIdentifierOwner): ElmExposedItemTag? =
+        allExposedItems.find { it.reference?.isReferenceTo(decl) ?: false }
+
+
+/**
  * Add a function/type to the exposing list, while ensuring that the necessary comma and whitespace are also added.
  *
  * TODO does this function really belong here in this file? Or should it be moved closer to intention actions?
