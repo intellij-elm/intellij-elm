@@ -4,7 +4,7 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
-import org.elm.ide.intentions.ElmImportIntentionAction
+import org.elm.ide.intentions.AddImportIntention
 import org.elm.ide.intentions.ElmMakeDeclarationIntentionAction
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmQID
@@ -66,7 +66,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
                 else -> element.textRange
             }
             holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
-                    .also { it.registerFix(ElmImportIntentionAction()) }
+                    .also { it.registerFix(AddImportIntention()) }
         }
     }
 

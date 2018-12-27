@@ -4,7 +4,7 @@ import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
 import org.intellij.lang.annotations.Language
 
-class ElmImportIntentionTest : ElmIntentionTestBase(ElmImportIntentionAction()) {
+class AddImportIntentionTest : ElmIntentionTestBase(AddImportIntention()) {
 
 
     fun `test un-qualified value`() = check(
@@ -20,19 +20,6 @@ import Foo exposing (bar)
 main = bar
 """)
 
-    fun `test annotation`() = check(
-            """
---@ main.elm
-bar{-caret-} : Int -> Int
-bar = ()
---@ Foo.elm
-module Foo exposing (bar)
-bar = 42
-""",
-            """
-bar : Int -> Int
-bar = ()
-""")
 
     fun `test annotation value`() = check(
             """
@@ -79,7 +66,7 @@ main = 2 ** 3
 """)
 
 
-    fun `test import between module decl and value-decl`() = check(
+    fun `test inserts import between module decl and value-decl`() = check(
             """
 --@ main.elm
 module Main exposing (..)
@@ -95,7 +82,7 @@ main = Foo.bar{-caret-}
 """)
 
 
-    fun `test import between module decl and doc-comment`() = check(
+    fun `test inserts import between module decl and doc-comment`() = check(
             """
 --@ main.elm
 module Main exposing (..)
@@ -190,7 +177,7 @@ main = Settings
 """)
 
 
-    fun `test insert import after import`() = check(
+    fun `test inserts import after existing import`() = check(
             """
 --@ main.elm
 import Foo exposing (bar)
@@ -218,6 +205,15 @@ module Foo exposing ()
 bar = 42
 """)
 
+    fun `test verify unavailable on type annotation when local function hides external name`() = verifyUnavailable(
+            """
+--@ main.elm
+bar{-caret-} : Int -> Int
+bar = ()
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""")
 
     fun `test binary infix operator containing dot is never qualified`() = check(
             """

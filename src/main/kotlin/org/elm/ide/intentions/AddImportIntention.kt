@@ -20,7 +20,7 @@ import java.awt.Component
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JList
 
-class ElmImportIntentionAction : ElmAtCaretIntentionActionBase<ElmImportIntentionAction.Context>() {
+class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Context>() {
 
     data class Context(
             val refName: String,
