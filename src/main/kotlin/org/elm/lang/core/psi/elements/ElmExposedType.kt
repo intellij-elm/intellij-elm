@@ -32,6 +32,8 @@ class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElemen
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
 
+    // TODO [drop 0.18] starting with 0.19, only `..` is allowed when exposing a union type
+    //      the individual union variant constructors can no longer be exposed individually.
     val exposedUnionConstructors: ElmExposedUnionConstructors?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmExposedUnionConstructors::class.java)
 

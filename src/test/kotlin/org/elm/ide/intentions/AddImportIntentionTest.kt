@@ -4,7 +4,7 @@ import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
 import org.intellij.lang.annotations.Language
 
-class ElmImportIntentionTest : ElmIntentionTestBase(ElmImportIntentionAction()) {
+class AddImportIntentionTest : ElmIntentionTestBase(AddImportIntention()) {
 
 
     fun `test un-qualified value`() = check(
@@ -20,19 +20,6 @@ import Foo exposing (bar)
 main = bar
 """)
 
-    fun `test annotation`() = check(
-            """
---@ main.elm
-bar{-caret-} : Int -> Int
-bar = ()
---@ Foo.elm
-module Foo exposing (bar)
-bar = 42
-""",
-            """
-bar : Int -> Int
-bar = ()
-""")
 
     fun `test annotation value`() = check(
             """
@@ -64,6 +51,21 @@ main = Foo.bar
 """)
 
 
+    // see https://github.com/klazuka/intellij-elm/issues/77
+    fun `test importing a union variant constructor exposes all variants`() = check(
+            """
+--@ main.elm
+main = BarVariant{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = BarVariant ()
+""",
+            """
+import Foo exposing (Bar(..))
+main = BarVariant
+""")
+
+
     fun `test binary infix operator`() = check(
             """
 --@ main.elm
@@ -79,7 +81,7 @@ main = 2 ** 3
 """)
 
 
-    fun `test import between module decl and value-decl`() = check(
+    fun `test inserts import between module decl and value-decl`() = check(
             """
 --@ main.elm
 module Main exposing (..)
@@ -95,7 +97,7 @@ main = Foo.bar{-caret-}
 """)
 
 
-    fun `test import between module decl and doc-comment`() = check(
+    fun `test inserts import between module decl and doc-comment`() = check(
             """
 --@ main.elm
 module Main exposing (..)
@@ -160,21 +162,6 @@ main = quux + bar
 """)
 
 
-    fun `test merge with existing exposed union constructors`() = check(
-            """
---@ main.elm
-import App exposing (Page(Home))
-main = Settings{-caret-}
---@ App.elm
-module App exposing (Page(..))
-type Page = Home | Settings
-""",
-            """
-import App exposing (Page(Home, Settings))
-main = Settings
-""")
-
-
     fun `test merge with existing exposed union type`() = check(
             """
 --@ main.elm
@@ -185,12 +172,12 @@ module App exposing (Page(..))
 type Page = Home | Settings
 """,
             """
-import App exposing (Page(Settings))
+import App exposing (Page(..))
 main = Settings
 """)
 
 
-    fun `test insert import after import`() = check(
+    fun `test inserts import after existing import`() = check(
             """
 --@ main.elm
 import Foo exposing (bar)
@@ -218,6 +205,15 @@ module Foo exposing ()
 bar = 42
 """)
 
+    fun `test verify unavailable on type annotation when local function hides external name`() = verifyUnavailable(
+            """
+--@ main.elm
+bar{-caret-} : Int -> Int
+bar = ()
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""")
 
     fun `test binary infix operator containing dot is never qualified`() = check(
             """
