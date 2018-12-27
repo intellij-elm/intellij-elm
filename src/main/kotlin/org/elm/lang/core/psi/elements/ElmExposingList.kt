@@ -80,6 +80,15 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
 fun ElmExposingList.findMatchingItemFor(decl: ElmNameIdentifierOwner): ElmExposedItemTag? =
         allExposedItems.find { it.reference?.isReferenceTo(decl) ?: false }
 
+/**
+ * Returns true if [decl] is explicitly exposed by the receiver
+ *
+ * NOTE: This only handles the case where it is exposed directly by name.
+ *       You must check separately to see if the receiver uses Elm's `..` syntax
+ *       to expose *all* names.
+ */
+fun ElmExposingList.explicitlyExposes(decl: ElmNameIdentifierOwner): Boolean =
+        findMatchingItemFor(decl) != null
 
 /**
  * Add a function/type to the exposing list, while ensuring that the necessary comma and whitespace are also added.

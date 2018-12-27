@@ -42,6 +42,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         val name = refElement.referenceName // e.g. `div`
         val scope = GlobalSearchScope.allScope(project)
         val candidates = ElmNamedElementIndex.find(name, project, scope)
+                .filterIsInstance<ElmNameIdentifierOwner>()
                 .mapNotNull { Candidate.fromNamedElement(it) }
                 .toMutableList()
 
@@ -225,10 +226,10 @@ data class Candidate(
         /**
          * Returns a candidate if the named element is exposed by its containing module
          */
-        fun fromNamedElement(element: ElmNamedElement): Candidate? {
+        fun fromNamedElement(element: ElmNameIdentifierOwner): Candidate? {
             val moduleDecl = element.elmFile.getModuleDecl() ?: return null
             val exposingList = moduleDecl.exposingList ?: return null
-            val name = element.name!!
+            val name = element.name
 
             val (nameForImport, isExposedDirectly) = when (element) {
                 is ElmUnionVariant -> {
@@ -237,14 +238,14 @@ data class Candidate(
                 }
 
                 is ElmInfixDeclaration ->
-                    Pair("($name)", exposingList.exposesName(name))
+                    Pair("($name)", exposingList.explicitlyExposes(element))
 
                 // TODO [drop 0.18] remove this clause
                 is ElmOperatorDeclarationLeft ->
-                    Pair("($name)", exposingList.exposesName(name))
+                    Pair("($name)", exposingList.explicitlyExposes(element))
 
                 else ->
-                    Pair(name, exposingList.exposesName(name))
+                    Pair(name, exposingList.explicitlyExposes(element))
             }
 
             return if (moduleDecl.exposesAll || isExposedDirectly)
@@ -259,25 +260,6 @@ data class Candidate(
     }
 }
 
-
-/**
- * Returns true if [name] can be found in the list of exposed values, constructors and types
- *
- * NOTE: this doesn't handle the case where a union type exposes all of its variants.
- * For that case, see [ElmExposingList.exposesConstructor]
- *
- * TODO [kl] cleanup: there's got to be a cleaner way to do this. it also seems like it
- * should be able to share code with how resolving an import reference needs to make sure
- * that the target element is actually exposed by the module. See [ImportScope]
- */
-private fun ElmExposingList.exposesName(name: String): Boolean =
-        sequenceOf<List<ElmReferenceElement>>(
-                exposedValueList,
-                exposedTypeList,
-                exposedOperatorList)
-                .flatten()
-                .map { it.referenceName }
-                .contains(name)
 
 private fun ElmExposingList.exposesConstructor(constructorName: String, typeName: String): Boolean =
         exposedTypeList.any {
