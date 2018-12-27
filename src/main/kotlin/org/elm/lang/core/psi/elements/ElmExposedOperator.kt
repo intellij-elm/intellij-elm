@@ -3,11 +3,8 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmStubbedElement
-import org.elm.lang.core.psi.ElmTypes
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ImportScope
@@ -18,7 +15,7 @@ import org.elm.lang.core.stubs.ElmExposedOperatorStub
 /**
  * Exposes a binary operator
  */
-class ElmExposedOperator : ElmStubbedElement<ElmExposedOperatorStub>, ElmReferenceElement {
+class ElmExposedOperator : ElmStubbedElement<ElmExposedOperatorStub>, ElmReferenceElement, ElmExposedItemTag {
 
     constructor(node: ASTNode) :
             super(node)

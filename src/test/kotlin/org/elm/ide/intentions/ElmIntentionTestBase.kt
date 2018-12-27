@@ -8,13 +8,11 @@
 package org.elm.ide.intentions
 
 import com.intellij.codeInsight.intention.IntentionAction
-import org.elm.ide.inspections.ElmAnnotationTestBase
 import org.elm.lang.ElmTestBase
-import org.elm.replaceCaretMarker
 import org.intellij.lang.annotations.Language
 
 
-abstract class ElmIntentionTestBase(val intention: IntentionAction) : ElmAnnotationTestBase() {
+abstract class ElmIntentionTestBase(val intention: IntentionAction) : ElmTestBase() {
 
     protected fun doAvailableTest(@Language("Elm") before: String, @Language("Elm") after: String) {
         InlineFile(before).withCaret()

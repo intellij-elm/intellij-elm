@@ -53,3 +53,6 @@ interface ElmConstantTag : ElmAtomTag, ElmFunctionParamTag, ElmPatternChildTag, 
 
 /** An element which can be the target of a field access expression. */
 interface ElmFieldAccessTargetTag : ElmPsiElement
+
+/** An element which can occur in a module or import's exposing list */
+interface ElmExposedItemTag : ElmPsiElement

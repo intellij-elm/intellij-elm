@@ -3,6 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
+import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.parentOfType
@@ -18,7 +19,7 @@ import org.elm.lang.core.stubs.ElmExposedValueStub
  *
  * e.g. `bar` in `import Foo exposing (bar)`
  */
-class ElmExposedValue : ElmStubbedElement<ElmExposedValueStub>, ElmReferenceElement {
+class ElmExposedValue : ElmStubbedElement<ElmExposedValueStub>, ElmReferenceElement, ElmExposedItemTag {
 
     constructor(node: ASTNode) :
             super(node)

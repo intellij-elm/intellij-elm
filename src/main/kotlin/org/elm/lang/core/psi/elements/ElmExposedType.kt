@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.parentOfType
@@ -18,7 +19,7 @@ import org.elm.lang.core.stubs.ElmExposedTypeStub
  * 1) a Union Type, in which case [exposedUnionConstructors] may be non-null
  * 2) a Type Alias, in which case [exposedUnionConstructors] will be null
  */
-class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElement {
+class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElement, ElmExposedItemTag {
 
     constructor(node: ASTNode) :
             super(node)

@@ -95,22 +95,26 @@
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ElmDarcula.xml"/>
         <annotator language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlightAnnotator"/>
         <annotator language="Elm" implementationClass="org.elm.ide.annotator.ElmUnresolvedReferenceAnnotator"/>
-        <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage" />
+        <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage"/>
         <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterSmartIndentHandler"/>
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
-        <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor" />
-        <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher" />
+        <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor"/>
+        <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher"/>
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
-        <completion.contributor language="Elm" implementationClass="org.elm.lang.core.completion.ElmCompletionContributor" />
-        <lang.findUsagesProvider language="Elm" implementationClass="org.elm.ide.search.ElmFindUsagesProvider" />
-        <lang.namesValidator language="Elm" implementationClass="org.elm.lang.refactoring.ElmNamesValidator" />
+        <completion.contributor language="Elm"
+                                implementationClass="org.elm.lang.core.completion.ElmCompletionContributor"/>
+        <lang.findUsagesProvider language="Elm" implementationClass="org.elm.ide.search.ElmFindUsagesProvider"/>
+        <lang.namesValidator language="Elm" implementationClass="org.elm.lang.refactoring.ElmNamesValidator"/>
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
-        <lang.psiStructureViewFactory language="Elm" implementationClass="org.elm.ide.structure.ElmStructureViewFactory" />
-        <lang.refactoringSupport language="Elm" implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider" />
-        <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiFileProcessor" />
-        <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiElementProcessor" />
-        <lang.syntaxHighlighterFactory language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
-        <spellchecker.support language="Elm" implementationClass="org.elm.ide.spelling.ElmSpellCheckingStrategy" />
+        <lang.psiStructureViewFactory language="Elm"
+                                      implementationClass="org.elm.ide.structure.ElmStructureViewFactory"/>
+        <lang.refactoringSupport language="Elm"
+                                 implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider"/>
+        <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiFileProcessor"/>
+        <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiElementProcessor"/>
+        <lang.syntaxHighlighterFactory language="Elm"
+                                       implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
+        <spellchecker.support language="Elm" implementationClass="org.elm.ide.spelling.ElmSpellCheckingStrategy"/>
         <lang.documentationProvider language="Elm" implementationClass="org.elm.ide.docs.ElmDocumentationProvider"/>
         <lang.foldingBuilder language="Elm" implementationClass="org.elm.ide.folding.ElmFoldingBuilder"/>
         <importFilteringRule implementation="org.elm.ide.usages.ElmImportFilteringRule"/>
@@ -118,7 +122,8 @@
         <backspaceHandlerDelegate implementation="org.elm.ide.typing.ElmBackspaceHandler"/>
         <codeInsight.parameterInfo language="Elm" implementationClass="org.elm.ide.hints.ElmParameterInfoHandler"/>
         <codeInsight.typeInfo language="Elm" implementationClass="org.elm.ide.hints.ElmExpressionTypeProvider"/>
-        <codeInsight.lineMarkerProvider language="Elm" implementationClass="org.elm.ide.lineMarkers.ElmExposureLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Elm"
+                                        implementationClass="org.elm.ide.lineMarkers.ElmExposureLineMarkerProvider"/>
         <lang.smartEnterProcessor language="Elm" implementationClass="org.elm.ide.typing.ElmSmartEnterProcessor"/>
 
         <!-- Inspections -->
@@ -139,22 +144,37 @@
                          implementationClass="org.elm.ide.inspections.ElmIncompletePatternInspection"/>
 
 
+        <!-- Intentions -->
+
+        <intentionAction>
+            <className>org.elm.ide.intentions.AddExposureIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>org.elm.ide.intentions.RemoveExposureIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+
+
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
-        <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService" serviceImplementation="org.elm.workspace.ElmWorkspaceService" />
-        <additionalLibraryRootsProvider implementation="org.elm.workspace.ElmAdditionalLibraryRootsProvider" />
-        <projectConfigurable instance="org.elm.workspace.ui.ElmWorkspaceConfigurable" displayName="Elm" groupId="language"/>
-        <editorNotificationProvider implementation="org.elm.ide.notifications.ElmNeedsConfigNotificationProvider" />
+        <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService"
+                        serviceImplementation="org.elm.workspace.ElmWorkspaceService"/>
+        <additionalLibraryRootsProvider implementation="org.elm.workspace.ElmAdditionalLibraryRootsProvider"/>
+        <projectConfigurable instance="org.elm.workspace.ui.ElmWorkspaceConfigurable" displayName="Elm"
+                             groupId="language"/>
+        <editorNotificationProvider implementation="org.elm.ide.notifications.ElmNeedsConfigNotificationProvider"/>
         <toolWindow id="Elm" anchor="right" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ElmToolWindowFactory"/>
 
         <!-- STUBS -->
-        <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" />
-        <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex" />
-        <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex" />
+        <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes"/>
+        <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex"/>
+        <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex"/>
 
 
-        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext" />
-        <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider" />
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext"/>
+        <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider"/>
     </extensions>
 
     <project-components>

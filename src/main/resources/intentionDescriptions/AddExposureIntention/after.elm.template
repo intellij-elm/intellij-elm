@@ -1,0 +1,4 @@
+module User exposing (<spot>name, age</spot>)
+
+name = "Bob"
+age = 42
