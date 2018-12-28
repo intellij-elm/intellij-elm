@@ -144,9 +144,9 @@
                          implementationClass="org.elm.ide.inspections.ElmIncompletePatternInspection"/>
 
         <localInspection language="Elm" groupName="Elm"
-                         displayName="Find unused functions"
-                         enabledByDefault="true" level="ERROR"
-                         implementationClass="org.elm.ide.inspections.ElmUnusedFunctionInspection"/>
+                         displayName="Unused symbol"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="org.elm.ide.inspections.ElmUnusedSymbolInspection"/>
 
 
         <!-- Intentions -->
