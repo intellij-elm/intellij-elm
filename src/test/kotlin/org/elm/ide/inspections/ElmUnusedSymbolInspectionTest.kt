@@ -7,7 +7,7 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
     // FUNCTIONS
 
     fun `test detects unused functions`() = checkByText("""
-        <error descr="'f' is never used">f</error> = g
+        <warning descr="'f' is never used">f</warning> = g
         g = ()
         """.trimIndent())
 
@@ -19,13 +19,13 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     fun `test the type annotation does not count as usage`() = checkByText("""
         f : ()
-        <error descr="'f' is never used">f</error> = ()
+        <warning descr="'f' is never used">f</warning> = ()
     """.trimIndent())
 
 
     fun `test exposing a function does not count as usage`() = checkByText("""
         module Foo exposing (f)
-        <error descr="'f' is never used">f</error> = ()
+        <warning descr="'f' is never used">f</warning> = ()
     """.trimIndent())
 
 
@@ -44,13 +44,13 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
     // PARAMETERS
 
     fun `test detects unused function parameters`() = checkByText("""
-        f <error descr="'x' is never used">x</error> = ()
+        f <warning descr="'x' is never used">x</warning> = ()
         main = f
         """.trimIndent())
 
 
     fun `test detects unused lambda parameters`() = checkByText("""
-        main = (\<error descr="'x' is never used">x</error> -> ())
+        main = (\<warning descr="'x' is never used">x</warning> -> ())
         """.trimIndent())
 
 
@@ -74,7 +74,7 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
 
     fun `test detects unused union variant constructor`() = checkByText("""
-        type Foo = Bar | <error descr="'Quux' is never used">Quux</error>
+        type Foo = Bar | <warning descr="'Quux' is never used">Quux</warning>
         main : Foo
         main = Bar
         """.trimIndent())
@@ -84,7 +84,7 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     fun `test detects unused alias when importing a module`() = checkByFileTree("""
         --@ main.elm
-        import FooBar as <error descr="'FB' is never used">FB</error>
+        import FooBar as <warning descr="'FB' is never used">FB</warning>
         --^
 
         --@ FooBar.elm
