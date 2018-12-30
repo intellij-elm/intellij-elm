@@ -144,6 +144,16 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmIncompletePatternInspection"/>
 
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Unused symbol"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="org.elm.ide.inspections.ElmUnusedSymbolInspection"/>
+
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Unused import"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="org.elm.ide.inspections.ElmUnusedImportInspection"/>
+
 
         <!-- Intentions -->
 
