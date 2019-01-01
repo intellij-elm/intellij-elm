@@ -55,7 +55,8 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     override val isInTestsDirectory: Boolean
         get() {
             val elmProj = elmProject ?: return false
-            return virtualFile.pathAsPath.startsWith(elmProj.testsDirPath)
+            val vfile = originalFile.virtualFile ?: return false
+            return vfile.pathAsPath.startsWith(elmProj.testsDirPath)
         }
 
     fun getModuleDecl() =
