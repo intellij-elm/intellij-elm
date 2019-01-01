@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.vfs.LocalFileSystem
+import org.elm.lang.core.psi.ClientLocation
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
 import java.io.FileNotFoundException
@@ -39,9 +40,13 @@ sealed class ElmProject(
      * The path to the directory containing the Elm project JSON file.
      */
     val projectDirPath: Path
-        get() =
-            manifestPath.parent
+        get() = manifestPath.parent
 
+    /**
+     * The path to the directory containing unit tests.
+     */
+    val testsDirPath: Path
+        get() = projectDirPath.resolve("tests")
 
     /**
      * A name which can be shown in the UI. Note that while Elm packages have user-assigned
@@ -65,6 +70,12 @@ sealed class ElmProject(
      */
     val allResolvedDependencies: Sequence<ElmPackageProject>
         get() = sequenceOf(dependencies, testDependencies).flatten()
+
+    /**
+     * Returns the packages which this project depends that are visible from the given [clientLocation].
+     */
+    fun dependenciesVisibleAt(clientLocation: ClientLocation): Sequence<ElmPackageProject> =
+            if (clientLocation.isInTestsDirectory) allResolvedDependencies else dependencies.asSequence()
 
     /**
      * Returns the absolute path of each source directory which is shared between the

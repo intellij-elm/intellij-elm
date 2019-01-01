@@ -1,29 +1,27 @@
 package org.elm.lang.core.resolve.scope
 
-import com.intellij.openapi.project.Project
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.index.ElmModulesIndex
-import org.elm.workspace.ElmProject
 
 
 /**
  * The subset of implicitly exposed values, types and constructors provided by Elm's
  * standard library ("Core").
  */
-class GlobalScope private constructor(val project: Project, val elmProject: ElmProject) {
+class GlobalScope private constructor(val clientFile: ElmFile) {
 
     companion object {
 
         fun forElmFile(elmFile: ElmFile): GlobalScope? {
-            val elmProject = elmFile.elmProject ?: return null
+            if (elmFile.elmProject == null) return null
             if (elmFile.isCore()) {
                 // The `elm/core` standard library does not have an implicit global scope. It must explicitly
                 // import modules like `List`, `String`, etc.
                 return null
             }
-            return GlobalScope(elmFile.project, elmProject)
+            return GlobalScope(elmFile)
         }
 
         /**
@@ -60,14 +58,14 @@ class GlobalScope private constructor(val project: Project, val elmProject: ElmP
 
         val allBuiltInSymbols = builtInValues.union(builtInTypes)
 
-        fun implicitModulesMatching(name: String, elmFile: ElmFile): List<ElmModuleDeclaration> {
+        fun implicitModulesMatching(name: String, clientFile: ElmFile): List<ElmModuleDeclaration> {
             val implicitModuleName = when (name) {
                 in defaultImports -> name
                 in defaultAliases.keys -> defaultAliases[name]
                 else -> null
             } ?: return emptyList()
 
-            return ElmModulesIndex.getAll(listOf(implicitModuleName), elmFile.project, elmFile.elmProject)
+            return ElmModulesIndex.getAll(listOf(implicitModuleName), clientFile)
                     .filter { it.elmFile.isCore() }
         }
     }
@@ -76,7 +74,7 @@ class GlobalScope private constructor(val project: Project, val elmProject: ElmP
         // ModuleScope.getDeclaredValues is cached, so there's no need to cache the results of this
         // function.
         fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, clientFile)
                         ?.let { ModuleScope(it.elmFile).getDeclaredValues() }
                         ?: emptyList()
 
@@ -93,7 +91,7 @@ class GlobalScope private constructor(val project: Project, val elmProject: ElmP
 
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, clientFile)
                         ?.let { ModuleScope(it.elmFile).getDeclaredTypes() }
                         ?: emptyList()
 
@@ -112,7 +110,7 @@ class GlobalScope private constructor(val project: Project, val elmProject: ElmP
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, project, elmProject)
+                ElmModulesIndex.get(moduleName, clientFile)
                         ?.let { ModuleScope(it.elmFile).getDeclaredConstructors() }
                         ?: emptyList()
 

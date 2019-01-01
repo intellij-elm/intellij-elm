@@ -1,6 +1,7 @@
 package org.elm.lang.core.psi
 
 import com.intellij.extapi.psi.PsiFileBase
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
@@ -11,12 +12,13 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.stubs.*
+import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
 
 
-class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage) {
+class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), ClientLocation {
 
     override fun getFileType() =
             ElmFileType
@@ -41,11 +43,20 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         return super.setName(nameWithExtension)
     }
 
-    val elmProject: ElmProject?
+    override val intellijProject: Project
+        get() = project
+
+    override val elmProject: ElmProject?
         // Must use [originalFile] because during code completion the direct [virtualFile] is an
         // in-memory copy of the real file. See:
         // https://intellij-support.jetbrains.com/hc/en-us/community/posts/115000108704/comments/115000123710
         get() = project.elmWorkspace.findProjectForFile(originalFile.virtualFile)
+
+    override val isInTestsDirectory: Boolean
+        get() {
+            val elmProj = elmProject ?: return false
+            return virtualFile.pathAsPath.startsWith(elmProj.testsDirPath)
+        }
 
     fun getModuleDecl() =
             getStubOrPsiChild(ElmModuleDeclarationStub.Type)
@@ -124,3 +135,20 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 
 val VirtualFile.isElmFile
     get() = fileType == ElmFileType
+
+
+/**
+ * Describes the location from which a reference is resolved.
+ *
+ * Reference resolution depends on context. For instance, we need
+ * to know the containing Elm project in order to determine which
+ * `source-directories` are valid roots.
+ *
+ * Starting in Elm 0.19, the Elm project's `test-dependencies`
+ * are only "import-able" from within "$ProjectRoot/tests" directory.
+ */
+interface ClientLocation {
+    val intellijProject: Project
+    val elmProject: ElmProject?
+    val isInTestsDirectory: Boolean
+}
