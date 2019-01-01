@@ -28,23 +28,16 @@
     ]]></description>
 
     <change-notes><![CDATA[
-
-        <p><b>ANNOUNCEMENT</b><br>
-        Version 2.0.0 adds Type Inference and Type Checking!
-        </p>
-
-        <p>The plugin can now perform type inference on arbitrary expressions in your program. Press `ctrl-shift-p` to display the inferred type of the expression under the cursor/caret. The plugin also performs type checking, marking incompatible types in red.</p>
-
-        <p>There are 2 limitations to the type system as currently implemented:</p>
-
-        <ol>
-            <li>it does not work if a function is missing a type annotation (typically not a problem)</li>
-            <li>it does not work if type variables (such as `List a` or `Maybe a`) are involved</li>
-        </ol>
-
-        <p>We hope to remove the type variable limitation in the future.</p>
-
         <ul>
+            <li><b>2.2.0</b> <em>(2019-01-01)</em>
+                <ul>
+                    <li>Add inspections for unused functions, parameters, imports, etc.</li>
+                    <li>New intention actions for adding/removing a function/type from the exposing list</li>
+                    <li>Improve name resolution for test modules and dependencies</li>
+                    <li>Improve 'extend selection' to also grab the function's type annotation</li>
+                    <li>Importing and exposing a custom type variant constructor now exposes all</li>
+                </ul>
+            </li>
             <li><b>2.1.1</b> <em>(2018-12-20)</em>
                 <ul>
                     <li>Add inspection and enter handler to complete case branches</li>
