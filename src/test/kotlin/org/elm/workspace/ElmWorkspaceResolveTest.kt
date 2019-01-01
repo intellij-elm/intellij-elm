@@ -1,6 +1,7 @@
 package org.elm.workspace
 
 import org.elm.FileTreeBuilder
+import org.elm.TestClientLocation
 import org.elm.fileTree
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.stubs.index.ElmModulesIndex
@@ -111,8 +112,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
-            val moduleDeclsForA = ElmModulesIndex.getAll(project, elmProjA)
-            val moduleDeclsForB = ElmModulesIndex.getAll(project, elmProjB)
+            val moduleDeclsForA = ElmModulesIndex.getAll(TestClientLocation(project, elmProjA))
+            val moduleDeclsForB = ElmModulesIndex.getAll(TestClientLocation(project, elmProjB))
             println("module decls for A")
             moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
             println("\n\n")
@@ -269,8 +270,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         if (debug) {
             println("A is $elmProjA, ${elmProjA.manifestPath}")
             println("B is $elmProjB, ${elmProjB.manifestPath}")
-            val moduleDeclsForA = ElmModulesIndex.getAll(project, elmProjA)
-            val moduleDeclsForB = ElmModulesIndex.getAll(project, elmProjB)
+            val moduleDeclsForA = ElmModulesIndex.getAll(TestClientLocation(project, elmProjA))
+            val moduleDeclsForB = ElmModulesIndex.getAll(TestClientLocation(project, elmProjB))
             println("module decls for A")
             moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
             println("\n\n")
@@ -315,6 +316,78 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 """.trimIndent())
             }
         }.checkReferenceIsResolved<ElmImportClause>("tests/MyTests.elm", toPackage = "elm-explorations/test 1.0.0")
+    }
+
+
+    fun `test does not resolve test dependencies when outside of the 'tests' directory`() {
+
+        ensureElmStdlibInstalled(FullElmStdlibVariant)
+
+        buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.19.0",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {
+                        "elm-explorations/test": "1.0.0"
+                    },
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("src") {
+                elm("Main.elm", """
+                    import Test
+                           --^
+                """.trimIndent())
+            }
+        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
+    }
+
+
+    // See https://github.com/klazuka/intellij-elm/issues/189
+    fun `test resolves companion modules inside the 'tests' directory`() {
+
+        ensureElmStdlibInstalled(FullElmStdlibVariant)
+
+        buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.19.0",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {
+                        "elm-explorations/test": "1.0.0"
+                    },
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("tests") {
+                elm("MyTests.elm", """
+                    import Helper
+                           --^
+                """.trimIndent())
+                elm("Helper.elm", """
+                    module Helper exposing (..)
+                """.trimIndent())
+            }
+        }.checkReferenceIsResolved<ElmImportClause>("tests/MyTests.elm")
     }
 
 

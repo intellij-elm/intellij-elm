@@ -50,6 +50,6 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
                         getVariants().find { it.name == element.referenceName }
 
                 override fun getVariants(): Array<ElmNamedElement> =
-                        ElmModulesIndex.getAll(project, element.elmProject).toTypedArray()
+                        ElmModulesIndex.getAll(elmFile).toTypedArray()
             }
 }

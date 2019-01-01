@@ -33,13 +33,12 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
-        val intellijProject = element.project
-        val elmProject = element.elmProject
-        val importDecls = ModuleScope(element.elmFile).getImportDecls()
+        val clientFile = element.elmFile
+        val importDecls = ModuleScope(clientFile).getImportDecls()
         val moduleDecls = importDecls.map { it.moduleQID.text }
-                        .let { ElmModulesIndex.getAll(it, intellijProject, elmProject) }
+                .let { ElmModulesIndex.getAll(it, clientFile) }
 
-        val implicitDecls = ElmModulesIndex.getAll(GlobalScope.defaultImports, intellijProject, elmProject)
+        val implicitDecls = ElmModulesIndex.getAll(GlobalScope.defaultImports, clientFile)
                         .filter { it.elmFile.isCore() }
 
         val aliasDecls = importDecls.mapNotNull { it.asClause } as List<ElmNamedElement>
