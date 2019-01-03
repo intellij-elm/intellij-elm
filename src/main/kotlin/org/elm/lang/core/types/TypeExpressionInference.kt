@@ -1,34 +1,57 @@
 package org.elm.lang.core.types
 
+import com.intellij.openapi.util.Key
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.psi.ElmNameIdentifierOwner
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.modificationTracker
 import org.elm.lang.core.psi.parentOfType
 
 
-// Changes to type expressions aways invalidate the whole project, since they influence inferred
+// Changes to type expressions always invalidate the whole project, since they influence inferred
 // value types (e.g. removing a field from a record causes usages of that field everywhere to be invalid.)
-// These results should be able to be cached, but doing so with the CachedValueManager lead to invalid Psi references.
 
+private val TY_UNION_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<TyUnion>>> = Key.create("TY_UNION_INFERENCE")
+private val TY_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<Ty>>> = Key.create("TY_INFERENCE")
 
 fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> =
-        TypeExpression().beginTypeDeclarationInference(this)
+        CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
+            val inferenceResult = TypeExpression().beginTypeDeclarationInference(this)
+            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        }
 
 fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
-        TypeExpression().beginTypeAliasDeclarationInference(this)
+        CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
+            val inferenceResult = TypeExpression().beginTypeAliasDeclarationInference(this)
+            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        }
+
 
 fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
-        TypeExpression().beginPortAnnotationInference(this)
+        CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
+            val inferenceResult = TypeExpression().beginPortAnnotationInference(this)
+            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        }
 
 fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
-        TypeExpression().beginUnionConstructorInference(this)
+        CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
+            val inferenceResult = TypeExpression().beginUnionConstructorInference(this)
+            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        }
+
 
 /** Get the type of the expression in this annotation, or null if the program is incomplete and no expression exists */
 fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty>? {
     val typeRef = typeExpression ?: return null
-    return TypeExpression().beginTypeRefInference(typeRef)
+    return CachedValuesManager.getCachedValue(typeRef, TY_CACHE_KEY) {
+        val inferenceResult = TypeExpression().beginTypeRefInference(typeRef)
+        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+    }
 }
 
 /**
