@@ -65,15 +65,12 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
 class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor() {
 
     // IMPORTANT! IntelliJ's LocalInspectionTool requires that visitor implementations be thread-safe.
-
-    private val imports = initialImports.toMutableList()
-
-    // for now we are just going to mark exposed values/functions which are unused
-    // TODO expand this to types, union variant constructors, and operators
+    private val imports: ConcurrentHashMap<String, ElmImportClause>
     private val exposing: ConcurrentHashMap<String, ElmExposedValue>
 
     init {
-        exposing = imports.mapNotNull { it.exposingList }
+        imports = ConcurrentHashMap(initialImports.associateBy { it.moduleQID.text })
+        exposing = initialImports.mapNotNull { it.exposingList }
                 .flatMap { it.exposedValueList }
                 .associateBy { it.text }
                 .let { ConcurrentHashMap(it) }
@@ -81,12 +78,13 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
 
     /** Returns the list of unused imports. IMPORTANT: only valid *after* the visitor completes its traversal. */
     val unusedImports: List<ElmImportClause>
-        get() = synchronized(this) { ArrayList(imports) }
+        get() = imports.values.toList()
 
     /** Returns the list of unused exposed items. IMPORTANT: only valid *after* the visitor completes its traversal. */
     val unusedExposedItems: List<ElmExposedItemTag>
         get() = exposing.values.toList().filter {
             val import = it.parentOfType<ElmImportClause>() ?: return@filter false
+            // don't bother reporting things where the entire import is unused
             import !in unusedImports
         }
 
@@ -99,10 +97,10 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
             val resolved = element.reference.resolve() ?: return
             val resolvedModule = resolved.elmFile.getModuleDecl() ?: return
             val resolvedModuleName = resolvedModule.name
-            synchronized(this) {
-                imports.removeIf { it.moduleQID.text == resolvedModuleName }
-            }
+            imports.remove(resolvedModuleName)
 
+            // For now we are just going to mark exposed values/functions which are unused
+            // TODO expand this to types, union variant constructors, and operators
             if (element is ElmValueExpr && element.flavor == BareValue) {
                 exposing.remove(element.referenceName)
             }
