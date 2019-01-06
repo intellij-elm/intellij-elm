@@ -22,14 +22,14 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
     override fun buildDialog(project: Project?, directory: PsiDirectory?, builder: CreateFileFromTemplateDialog.Builder) {
         // TODO add additional "kinds" here (e.g. an `elm-test` skeleton module)
         builder.setTitle(CAPTION)
-                .addKind("Module", ElmFileType.icon, "Elm Module")
+                .addKind("Module", ElmFileType.icon, ELM_MODULE_KIND)
     }
 
     override fun createFile(name: String?, templateName: String, dir: PsiDirectory): PsiFile? {
         if (name == null) return null
         val newFile = super.createFile(name, templateName, dir) ?: return null
 
-        if (templateName == "Elm Module") {
+        if (templateName == ELM_MODULE_KIND) {
             // HACK: I use an empty template to generate the file and then fill in the contents here
             // TODO ask around to find out what's the right way to do this
             newFile.viewProvider.document?.setText("module ${qualifyModuleName(dir, name)} exposing (..)")
@@ -52,8 +52,14 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
         return if (qualifier == "") name else "$qualifier.$name"
     }
 
+    /** A helper utility intended only to be called from test code */
+    fun testHelperCreateFile(name: String, dir: PsiDirectory): PsiFile? =
+            createFile(name, ELM_MODULE_KIND, dir)
+
+
     private companion object {
         private val CAPTION = "New Elm file"
+        private val ELM_MODULE_KIND = "Elm Module" // must match name of internal template stored in JAR resources
     }
 }
 

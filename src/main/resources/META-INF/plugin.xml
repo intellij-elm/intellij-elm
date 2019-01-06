@@ -189,7 +189,7 @@
     </project-components>
 
     <actions>
-        <action id="Elm.NewElmFile"
+        <action id="Elm.NewFile"
                 class="org.elm.ide.actions.ElmCreateFileAction"
                 text="Elm File"
                 description="Create new Elm file">
