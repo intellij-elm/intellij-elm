@@ -91,6 +91,7 @@
         <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage"/>
         <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterSmartIndentHandler"/>
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
+        <internalFileTemplate name="Elm Module"/>
         <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor"/>
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher"/>
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
@@ -188,6 +189,13 @@
     </project-components>
 
     <actions>
+        <action id="Elm.NewElmFile"
+                class="org.elm.ide.actions.ElmCreateFileAction"
+                text="Elm File"
+                description="Create new Elm file">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
+
         <!-- TODO [drop 0.18] change "Attach Elm JSON..." to "Attach elm.json ..."-->
         <action id="Elm.AttachElmProject"
                 class="org.elm.workspace.ElmAttachProjectAction"
