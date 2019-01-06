@@ -1,11 +1,11 @@
-module Mod<fold text='...'> exposing
-  ( foo
+module Mod exposing
+  (<fold text='...'> foo
   , bar
-  )
+  </fold>)
 
 -- some comments
 
 import <fold text='...'>Basics exposing (..)
 import Maybe
 import Maybe exposing ( Maybe(Just,Nothing) )
-import Native.List</fold></fold>
+import Native.List</fold>
