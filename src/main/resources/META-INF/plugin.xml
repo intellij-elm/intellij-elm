@@ -17,11 +17,12 @@
           <li>Find usages</li>
           <li>Type Inference and Type Checking</li>
           <li>Rename refactoring</li>
+          <li>Detect unused code</li>
+          <li>Detect and remove unused imports</li>
+          <li>'Add Import' quick fix for unresolved references</li>
           <li>Code folding</li>
-          <li>Syntax highlighting</li>
-          <li>Mark unresolvable references as errors</li>
-          <li>'Import' quick fix for unresolved references</li>
           <li>Structure view</li>
+          <li>Syntax highlighting</li>
           <li>Spell checking</li>
           <li>etc.</li>
       </ul>
@@ -29,13 +30,16 @@
 
     <change-notes><![CDATA[
         <ul>
-            <li><b>2.2.0</b> <em>(2019-01-01)</em>
+            <li><b>2.2.0</b> <em>(2019-01-06)</em>
                 <ul>
                     <li>Add inspections for unused functions, parameters, imports, etc.</li>
+                    <li>Add 'optimize imports' quick fix</li>
                     <li>New intention actions for adding/removing a function/type from the exposing list</li>
+                    <li>Improved "New Elm File" action</li>
                     <li>Improve name resolution for test modules and dependencies</li>
                     <li>Improve 'extend selection' to also grab the function's type annotation</li>
                     <li>Importing and exposing a custom type variant constructor now exposes all</li>
+                    <li>Performance improvements</li>
                 </ul>
             </li>
             <li><b>2.1.1</b> <em>(2018-12-20)</em>
