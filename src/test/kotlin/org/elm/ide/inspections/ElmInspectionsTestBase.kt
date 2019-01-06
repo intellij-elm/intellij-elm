@@ -71,6 +71,18 @@ abstract class ElmAnnotationTestBase : ElmTestBase() {
         checkAfter(after)
     }
 
+    protected fun checkFixByFileTree(
+            fixName: String,
+            @Language("Elm") treeText: String,
+            @Language("Elm") after: String,
+            checkWarn: Boolean = true,
+            checkInfo: Boolean = false,
+            checkWeakWarn: Boolean = false
+    ) = checkFix(fixName, treeText, after,
+            configure = this::configureByFileTree,
+            checkBefore = { myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn) },
+            checkAfter = this::checkByText)
+
     private fun check(
             @Language("Elm") text: String,
             checkWarn: Boolean,

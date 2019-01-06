@@ -7,6 +7,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import org.elm.ide.inspections.fixes.OptimizeImportsFix
 import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmExposedValue
@@ -49,7 +50,8 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
         holder.registerProblem(
                 importClause,
                 "Unused import",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL
+                ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+                OptimizeImportsFix()
         )
     }
 
