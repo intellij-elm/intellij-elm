@@ -11,7 +11,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.builders.ModuleFixtureBuilder
 import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase
 import org.elm.FileTree
+import org.elm.FileTreeBuilder
 import org.elm.TestProject
+import org.elm.fileTree
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -76,4 +78,7 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
         // IntelliJ will handle this output specially by showing a diff.
         throw AssertionError("\nExpected: $expected\n     but: was $actual")
     }
+
+    fun buildProject(builder: FileTreeBuilder.() -> Unit): TestProject =
+            fileTree(builder).asyncCreateWithAutoDiscover().get()
 }

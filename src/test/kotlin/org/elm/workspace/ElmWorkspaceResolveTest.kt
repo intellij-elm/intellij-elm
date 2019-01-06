@@ -1,6 +1,5 @@
 package org.elm.workspace
 
-import org.elm.FileTreeBuilder
 import org.elm.TestClientLocation
 import org.elm.fileTree
 import org.elm.lang.core.psi.elements.ElmImportClause
@@ -423,6 +422,4 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 //    }
 
 
-    fun buildProject(builder: FileTreeBuilder.() -> Unit) =
-            fileTree(builder).asyncCreateWithAutoDiscover().get()
 }

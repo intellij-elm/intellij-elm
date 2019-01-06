@@ -18,6 +18,7 @@ import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
 
 class ElmFoldingBuilder : FoldingBuilderEx(), DumbAware {
+
     override fun getPlaceholderText(node: ASTNode): String? {
         return when (node.elementType) {
             BLOCK_COMMENT -> {
@@ -34,7 +35,7 @@ class ElmFoldingBuilder : FoldingBuilderEx(), DumbAware {
     override fun isCollapsedByDefault(node: ASTNode): Boolean {
         return with(CodeFoldingSettings.getInstance()) {
             COLLAPSE_DOC_COMMENTS && node.elementType == BLOCK_COMMENT
-            || COLLAPSE_IMPORTS && node.elementType == MODULE_DECLARATION
+                    || COLLAPSE_IMPORTS && node.elementType == IMPORT_CLAUSE
         }
     }
 
@@ -63,9 +64,9 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
                 foldBetween(start, start.moduleQID, imports.last(), true, true)
             }
             is ElmModuleDeclaration -> {
-                val imports = element.elmFile.directChildren.filterIsInstance<ElmImportClause>().toList()
-                val end = imports.lastOrNull() ?: element.lastChild
-                foldBetween(element, element.upperCaseQID, end, false, true)
+                if (element.exposesAll) return
+                val exposingList = element.exposingList ?: return
+                foldBetween(element, exposingList.openParen, exposingList.closeParen, false, false)
             }
             is PsiComment -> {
                 if (element.elementType == BLOCK_COMMENT) fold(element)
