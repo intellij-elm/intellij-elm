@@ -3,6 +3,9 @@ package org.elm.ide.inspections
 
 class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInspection()) {
 
+
+    // TEST UNNECESSARY IMPORTS
+
     fun `test with qualified ref`() = checkByFileTree("""
         --@ Main.elm
         <warning descr="Unused import">import Foo</warning>
@@ -53,6 +56,8 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         bar = ()
     """.trimIndent())
 
+
+    // TEST UNNECESSARY ITEMS IN THE EXPOSING LIST
 
     fun `test unused functions in the exposing list are detected`() = checkByFileTree("""
         --@ Main.elm
@@ -144,5 +149,76 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
+    // TEST OPTIMIZE IMPORTS
+
+    fun `test optimize imports basic`() = checkFixByFileTree("Optimize imports", """
+        --@ Main.elm
+        module Main exposing (..)
+        <warning descr="Unused import">import Foo</warning>{-caret-}
+        import Bar
+        <warning descr="Unused import">import Quux</warning>
+        main = Bar.bar
+        --@ Foo.elm
+        module Foo exposing (..)
+        foo = ()
+        --@ Bar.elm
+        module Bar exposing (..)
+        bar = ()
+        --@ Quux.elm
+        module Quux exposing (..)
+        quux = ()
+    """.trimIndent(), """
+        module Main exposing (..)
+        import Bar
+        main = Bar.bar
+    """.trimIndent())
+
+
+    fun `test optimize imports preserves adjacent line comments`() = checkFixByFileTree("Optimize imports", """
+        --@ Main.elm
+        module Main exposing (..)
+        -- this comment should be preserved
+        <warning descr="Unused import">import Foo</warning>{-caret-}
+        -- this comment should also be preserved
+        import Bar
+        main = Bar.bar
+        --@ Foo.elm
+        module Foo exposing (..)
+        foo = ()
+        --@ Bar.elm
+        module Bar exposing (..)
+        bar = ()
+    """.trimIndent(), """
+        module Main exposing (..)
+        -- this comment should be preserved
+        -- this comment should also be preserved
+        import Bar
+        main = Bar.bar
+    """.trimIndent())
+
+
+    fun `test optimize imports also cleans-up the exposing list`() = checkFixByFileTree("Optimize imports", """
+        --@ Main.elm
+        module Main exposing (..)
+        <warning descr="Unused import">import Foo</warning>{-caret-}
+        import Bar
+        import Quux exposing (<warning descr="'q0' is exposed but unused">q0</warning>, q1)
+        main = Bar.bar q1
+        --@ Foo.elm
+        module Foo exposing (..)
+        foo = ()
+        --@ Bar.elm
+        module Bar exposing (..)
+        bar = ()
+        --@ Quux.elm
+        module Quux exposing (..)
+        q0 = ()
+        q1 = ()
+    """.trimIndent(), """
+        module Main exposing (..)
+        import Bar
+        import Quux exposing (q1)
+        main = Bar.bar q1
+    """.trimIndent())
 
 }
