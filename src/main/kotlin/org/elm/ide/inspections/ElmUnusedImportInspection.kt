@@ -12,10 +12,9 @@ import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.psi.elements.Flavor.BareValue
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 import java.util.concurrent.ConcurrentHashMap
 
@@ -103,7 +102,7 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
 
             // For now we are just going to mark exposed values/functions which are unused
             // TODO expand this to types, union variant constructors, and operators
-            if (element is ElmValueExpr && element.flavor == BareValue) {
+            if (element.reference is LexicalValueReference) {
                 exposing.remove(element.referenceName)
             }
         }

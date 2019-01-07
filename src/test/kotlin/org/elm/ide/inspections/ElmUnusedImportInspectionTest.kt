@@ -57,6 +57,19 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
+    // https://github.com/klazuka/intellij-elm/issues/197
+    fun `test issue 197 record update syntax also counts as usage of an exposed name`() = checkByFileTree("""
+        --@ Main.elm
+        import Foo exposing (defaultFoo)
+        main = { defaultFoo | bar = () }
+        --^
+
+        --@ Foo.elm
+        module Foo exposing (..)
+        defaultFoo = { bar = () }
+    """.trimIndent())
+
+
     // TEST UNNECESSARY ITEMS IN THE EXPOSING LIST
 
     fun `test unused functions in the exposing list are detected`() = checkByFileTree("""
