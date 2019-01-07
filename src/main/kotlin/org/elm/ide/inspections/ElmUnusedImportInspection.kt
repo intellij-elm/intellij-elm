@@ -36,32 +36,21 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
     override fun inspectionFinished(session: LocalInspectionToolSession, problemsHolder: ProblemsHolder) {
         val visitor = session.getUserData(visitorKey) ?: return
 
-        for (unusedImport in visitor.unusedImports) {
-            markAsUnused(problemsHolder, unusedImport)
+        for (import in visitor.unusedImports) {
+            problemsHolder.markUnused(import, "Unused import")
         }
 
-        for (unusedItem in visitor.unusedExposedItems) {
-            markAsUnused(problemsHolder, unusedItem)
+        for (item in visitor.unusedExposedItems) {
+            problemsHolder.markUnused(item, "'${item.text}' is exposed but unused")
         }
-    }
-
-    private fun markAsUnused(holder: ProblemsHolder, importClause: ElmImportClause) {
-        holder.registerProblem(
-                importClause,
-                "Unused import",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-                OptimizeImportsFix()
-        )
-    }
-
-    private fun markAsUnused(holder: ProblemsHolder, exposedItem: ElmExposedItemTag) {
-        holder.registerProblem(
-                exposedItem,
-                "'${exposedItem.text}' is exposed but unused",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL
-        )
     }
 }
+
+
+private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
+    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix())
+}
+
 
 class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor() {
 
