@@ -20,6 +20,13 @@ type alias Alias = { value : Union }
 type Union = TUnion Alias
 """)
 
+    // https://github.com/klazuka/intellij-elm/issues/188
+    fun `test allowed recursion through two aliases`() = checkByText("""
+type Foo = Foo Alias1
+type alias Alias1 = Alias2
+type alias Alias2 = { foo : Foo }
+""")
+
     fun `test too few arguments to type`() = checkByText("""
 type Foo a b = Bar
 main : <error descr="The type expects 2 arguments, but it got 1 instead.">Foo ()</error>
@@ -36,6 +43,11 @@ main = Bar
 type Foo a b = Bar
 main : <error descr="The type expects 2 arguments, but it got 3 instead.">Foo () () ()</error>
 main = Bar
+""")
+
+    fun `test too many arguments to type in union variant`() = checkByText("""
+type Foo a b = Bar
+type Baz = Qux (<error descr="The type expects 2 arguments, but it got 3 instead.">Foo () () ()</error>)
 """)
 
     fun `test no arguments to type`() = checkByText("""
