@@ -12,10 +12,9 @@ import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.psi.elements.Flavor.BareValue
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 import java.util.concurrent.ConcurrentHashMap
 
@@ -37,32 +36,21 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
     override fun inspectionFinished(session: LocalInspectionToolSession, problemsHolder: ProblemsHolder) {
         val visitor = session.getUserData(visitorKey) ?: return
 
-        for (unusedImport in visitor.unusedImports) {
-            markAsUnused(problemsHolder, unusedImport)
+        for (import in visitor.unusedImports) {
+            problemsHolder.markUnused(import, "Unused import")
         }
 
-        for (unusedItem in visitor.unusedExposedItems) {
-            markAsUnused(problemsHolder, unusedItem)
+        for (item in visitor.unusedExposedItems) {
+            problemsHolder.markUnused(item, "'${item.text}' is exposed but unused")
         }
-    }
-
-    private fun markAsUnused(holder: ProblemsHolder, importClause: ElmImportClause) {
-        holder.registerProblem(
-                importClause,
-                "Unused import",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-                OptimizeImportsFix()
-        )
-    }
-
-    private fun markAsUnused(holder: ProblemsHolder, exposedItem: ElmExposedItemTag) {
-        holder.registerProblem(
-                exposedItem,
-                "'${exposedItem.text}' is exposed but unused",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL
-        )
     }
 }
+
+
+private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
+    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix())
+}
+
 
 class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor() {
 
@@ -103,7 +91,7 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
 
             // For now we are just going to mark exposed values/functions which are unused
             // TODO expand this to types, union variant constructors, and operators
-            if (element is ElmValueExpr && element.flavor == BareValue) {
+            if (element.reference is LexicalValueReference) {
                 exposing.remove(element.referenceName)
             }
         }

@@ -57,6 +57,19 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
+    // https://github.com/klazuka/intellij-elm/issues/197
+    fun `test issue 197 record update syntax also counts as usage of an exposed name`() = checkByFileTree("""
+        --@ Main.elm
+        import Foo exposing (defaultFoo)
+        main = { defaultFoo | bar = () }
+        --^
+
+        --@ Foo.elm
+        module Foo exposing (..)
+        defaultFoo = { bar = () }
+    """.trimIndent())
+
+
     // TEST UNNECESSARY ITEMS IN THE EXPOSING LIST
 
     fun `test unused functions in the exposing list are detected`() = checkByFileTree("""
@@ -201,15 +214,16 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         --@ Main.elm
         module Main exposing (..)
         <warning descr="Unused import">import Foo</warning>{-caret-}
-        import Bar
+        import Bar exposing (<warning descr="'b0' is exposed but unused">b0</warning>)
         import Quux exposing (<warning descr="'q0' is exposed but unused">q0</warning>, q1)
-        main = Bar.bar q1
+        main = Bar.b1 q1
         --@ Foo.elm
         module Foo exposing (..)
         foo = ()
         --@ Bar.elm
         module Bar exposing (..)
-        bar = ()
+        b0 = ()
+        b1 = ()
         --@ Quux.elm
         module Quux exposing (..)
         q0 = ()
@@ -218,7 +232,7 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         module Main exposing (..)
         import Bar
         import Quux exposing (q1)
-        main = Bar.bar q1
+        main = Bar.b1 q1
     """.trimIndent())
 
 }

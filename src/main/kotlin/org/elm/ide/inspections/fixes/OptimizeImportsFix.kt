@@ -36,7 +36,9 @@ class OptimizeImportsFix : LocalQuickFix {
         }
 
         for (item in visitor.unusedExposedItems) {
-            item.parentOfType<ElmImportClause>()?.exposingList?.removeItem(item)
+            val exposingList = item.parentOfType<ElmImportClause>()?.exposingList ?: continue
+            if (exposingList.allExposedItems.size <= 1) exposingList.delete()
+            else exposingList.removeItem(item)
         }
     }
 }

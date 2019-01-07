@@ -111,6 +111,7 @@ fun ElmExposingList.addItem(itemName: String) {
  */
 fun ElmExposingList.removeItem(item: ElmExposedItemTag) {
     val nextVisibleLeaf = PsiTreeUtil.nextVisibleLeaf(item) ?: error("incomplete exposing list")
+    require(allExposedItems.size > 1) { "Elm's parser requires that the exposing list between the parens is never empty" }
 
     if (nextVisibleLeaf.elementType == RIGHT_PARENTHESIS) {
         // delete any list junk that precedes the item to remove
