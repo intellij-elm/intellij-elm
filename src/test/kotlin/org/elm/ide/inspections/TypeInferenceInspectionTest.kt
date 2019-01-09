@@ -1041,4 +1041,15 @@ type Bar = BarVariant Bar (Foo Bar)
 main : Foo ()
 main = <error descr="Type mismatch.Required: Foo ()Found: Bar → Foo Bar → Bar">BarVariant</error>
 """)
+
+    // https://github.com/klazuka/intellij-elm/issues/201
+    fun `test returning bound recursive union variant`() = checkByText("""
+type Tree a = Tree a (List (Tree a))
+
+directChildren : Tree a -> ()
+directChildren tree =
+    <error descr="Type mismatch.Required: ()Found: List (Tree a)">case tree of
+        Tree _ children ->
+            children</error>
+""")
 }

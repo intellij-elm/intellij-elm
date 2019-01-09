@@ -59,7 +59,6 @@ class TypeReplacement private constructor(
         is TyUnknown -> TyUnknown(replace(ty.alias))
         is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
-        is TyVariantRecursiveReference -> ty
         is TyUnit, TyInProgressBinding -> ty
     }
 
@@ -78,8 +77,7 @@ class TypeReplacement private constructor(
 
     private fun replaceUnion(ty: TyUnion): TyUnion {
         val parameters = ty.parameters.map { replace(it) }
-        val variants = ty.variants.map { m -> m.copy(parameters = m.parameters.map { replace(it) }) }
-        return TyUnion(ty.module, ty.name, parameters, variants, replace(ty.alias))
+        return TyUnion(ty.module, ty.name, parameters, replace(ty.alias))
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {

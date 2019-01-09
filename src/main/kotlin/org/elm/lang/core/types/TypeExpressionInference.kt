@@ -6,7 +6,6 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
-import org.elm.lang.core.psi.ElmNameIdentifierOwner
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.modificationTracker
@@ -16,8 +15,12 @@ import org.elm.lang.core.psi.parentOfType
 // Changes to type expressions always invalidate the whole project, since they influence inferred
 // value types (e.g. removing a field from a record causes usages of that field everywhere to be invalid.)
 
+/** A map of variant names to variant parameter tys, in declaration order */
+typealias VariantParameters = Map<String, List<Ty>>
+
 private val TY_UNION_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<TyUnion>>> = Key.create("TY_UNION_INFERENCE")
 private val TY_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<Ty>>> = Key.create("TY_INFERENCE")
+private val TY_VARIANT_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<VariantParameters>>> = Key.create("TY_VARIANT_INFERENCE")
 
 fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> =
         CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
@@ -54,6 +57,13 @@ fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty
     }
 }
 
+/** Get the names and parameter tys for all variants of this union */
+fun ElmTypeDeclaration.variantInference(): ParameterizedInferenceResult<VariantParameters> =
+        CachedValuesManager.getCachedValue(this, TY_VARIANT_CACHE_KEY) {
+            val inferenceResult = TypeExpression().beginUnionVariantsInference(this)
+            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        }
+
 /**
  * Inference for type declarations and expressions like function annotations and constructor calls.
  *
@@ -80,8 +90,6 @@ class TypeExpression(
         private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf(),
         private val activeAliases: MutableSet<ElmTypeAliasDeclaration> = mutableSetOf()
 ) {
-    private var activeTypeDeclaration: ElmTypeDeclaration? = null
-
     fun beginPortAnnotationInference(annotation: ElmPortAnnotation): ParameterizedInferenceResult<Ty> {
         val ty = annotation.typeExpression?.let { typeExpresionType(it) } ?: TyUnknown()
         return result(ty)
@@ -95,6 +103,11 @@ class TypeExpression(
     fun beginTypeDeclarationInference(typeDeclaration: ElmTypeDeclaration): ParameterizedInferenceResult<TyUnion> {
         val ty = typeDeclarationType(typeDeclaration)
         return result(ty)
+    }
+
+    fun beginUnionVariantsInference(typeDeclaration: ElmTypeDeclaration): ParameterizedInferenceResult<VariantParameters> {
+        val variants = typeDeclaration.unionVariantList.associate { it.name to unionVariantParamterTypes(it) }
+        return result(variants)
     }
 
     fun beginUnionConstructorInference(variant: ElmUnionVariant): ParameterizedInferenceResult<Ty> {
@@ -135,7 +148,7 @@ class TypeExpression(
         return result(ty.withAlias(aliasInfo))
     }
 
-    private fun <T : Ty> result(ty: T) = ParameterizedInferenceResult(diagnostics, ty)
+    private fun <T> result(value: T) = ParameterizedInferenceResult(diagnostics, value)
 
 
     /** Get the type for an entire type expression */
@@ -172,12 +185,6 @@ class TypeExpression(
         val args = argElements.map { typeSignatureDeclType(it) }
         val ref = typeRef.reference.resolve()
 
-        if (ref != null &&
-                (ref is ElmTypeDeclaration && ref == activeTypeDeclaration
-                        || ref is ElmTypeAliasDeclaration && ref in activeAliases && activeTypeDeclaration != null)) {
-            return TyVariantRecursiveReference(ref.moduleName, (ref as ElmNameIdentifierOwner).name)
-        }
-
         val declaredTy = when {
             ref is ElmTypeAliasDeclaration -> {
                 inferChild { beginTypeAliasDeclarationInference(ref) }
@@ -210,21 +217,21 @@ class TypeExpression(
         val result = TypeReplacement.replaceCall(typeRef, declaredTy, params, args, argElements)
         diagnostics += result.diagnostics
 
-        return result.ty
+        return result.value
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
-        if (activeTypeDeclaration == null) activeTypeDeclaration = declaration
         val params = declaration.lowerTypeNameList.map { getTyVar(it.name) }
-        val variants = declaration.unionVariantList.map { variant ->
-            TyUnion.Variant(variant.name, variant.allParameters.map { typeSignatureDeclType(it) }.toList())
-        }
-        return TyUnion(declaration.moduleName, declaration.name, params, variants)
+        return TyUnion(declaration.moduleName, declaration.name, params)
+    }
+
+    private fun unionVariantParamterTypes(variant: ElmUnionVariant): List<Ty> {
+        return variant.allParameters.map { typeSignatureDeclType(it) }.toList()
     }
 
     private fun getTyVar(name: String) = varsByName.getOrPut(name) { TyVar(name) }
 
     private inline fun <T : Ty> inferChild(block: TypeExpression.() -> ParameterizedInferenceResult<T>) =
-            TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet()).block().ty
+            TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet()).block().value
 }
 

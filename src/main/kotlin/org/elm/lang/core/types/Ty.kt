@@ -60,11 +60,8 @@ data class TyUnion(
         val module: String,
         val name: String,
         val parameters: List<Ty>,
-        val variants: List<Variant>,
         override val alias: AliasInfo? = null
 ) : Ty() {
-    data class Variant(val name: String, val parameters: List<Ty>)
-
     override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
     override fun toString(): String {
@@ -72,19 +69,19 @@ data class TyUnion(
     }
 }
 
-val TyInt = TyUnion("Basics", "Int", emptyList(), listOf(TyUnion.Variant("Int", emptyList())))
-val TyFloat = TyUnion("Basics", "Float", emptyList(), listOf(TyUnion.Variant("Float", emptyList())))
-val TyBool = TyUnion("Basics", "Bool", emptyList(), listOf(TyUnion.Variant("Bool", emptyList())))
-val TyString = TyUnion("String", "String", emptyList(), listOf(TyUnion.Variant("String", emptyList())))
-val TyChar = TyUnion("Char", "Char", emptyList(), listOf(TyUnion.Variant("Char", emptyList())))
+val TyInt = TyUnion("Basics", "Int", emptyList())
+val TyFloat = TyUnion("Basics", "Float", emptyList())
+val TyBool = TyUnion("Basics", "Bool", emptyList())
+val TyString = TyUnion("String", "String", emptyList())
+val TyChar = TyUnion("Char", "Char", emptyList())
 
 /** WebGL GLSL shader */
 // The actual type is `Shader attributes uniforms varyings`, but we would have to parse the
 // GLSL code to infer the type variables, so we just don't report diagnostics on shader types.
-val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnknown()), emptyList())
+val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnknown()))
 
 @Suppress("FunctionName")
-fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy), listOf(TyUnion.Variant("List", listOf(elementTy))))
+fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
 
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 
@@ -132,16 +129,6 @@ object TyInProgressBinding : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyInProgressBinding = this
     override fun toString(): String = javaClass.simpleName
-}
-
-/**
- * A Ty created from a type ref in a union variant parameter list that references the
- * union itself or an alias that references this union (creating a recursive type).
- */
-class TyVariantRecursiveReference(val module: String, val name: String) : Ty() {
-    override val alias: AliasInfo? get() = null
-    override fun withAlias(alias: AliasInfo): TyVariantRecursiveReference = this
-    override fun toString(): String = "<TyVariantRecursiveReference $name>"
 }
 
 /** Information about a type alias. This is not a [Ty]. */

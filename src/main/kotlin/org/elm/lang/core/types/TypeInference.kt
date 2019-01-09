@@ -505,10 +505,10 @@ private class InferenceScope(
         }
 
         return when (ref) {
-            is ElmUnionVariant -> ref.typeExpressionInference().ty
-            is ElmTypeAliasDeclaration -> ref.typeExpressionInference().ty
+            is ElmUnionVariant -> ref.typeExpressionInference().value
+            is ElmTypeAliasDeclaration -> ref.typeExpressionInference().value
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
-            is ElmPortAnnotation -> ref.typeExpressionInference().ty
+            is ElmPortAnnotation -> ref.typeExpressionInference().value
             is ElmLowerPattern -> {
                 // TODO [drop 0.18] remove this check
                 if (elementIsInTopLevelPattern(ref)) return TyUnknown()
@@ -560,7 +560,7 @@ private class InferenceScope(
         val existing = resolvedDeclarations[decl]
         if (existing != null) return existing
         // Use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeExpressionInference()?.ty
+        var ty = decl.typeAnnotation?.typeExpressionInference()?.value
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
             // First we have to find the parent of the declaration so that it has access to the
@@ -627,7 +627,7 @@ private class InferenceScope(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
     ): Pair<Ty, Int> {
-        val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.ty
+        val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.value
         val patterns = decl.patterns.toList()
 
         if (typeRefTy == null) {
@@ -752,7 +752,7 @@ private class InferenceScope(
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
         // If the referenced union variant isn't a constructor (e.g. `Nothing`), then there's nothing
         // to bind.
-        val variantTy = (pat.reference.resolve() as? ElmUnionVariant)?.typeExpressionInference()?.ty
+        val variantTy = (pat.reference.resolve() as? ElmUnionVariant)?.typeExpressionInference()?.value
         val argumentPatterns = pat.argumentPatterns.toList()
 
         fun issueError(actual: Int, expected: Int) {
@@ -851,7 +851,7 @@ private class InferenceScope(
                     && argumentsAssignable(ty1.allTys, ty2.allTys)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
-            TyInProgressBinding, is TyVariantRecursiveReference -> error("should never try to assign $ty1")
+            TyInProgressBinding -> error("should never try to assign $ty1")
         }
     }
 
@@ -897,9 +897,9 @@ data class InferenceResult(val expressionTypes: Map<ElmPsiElement, Ty>,
     fun elementType(element: ElmPsiElement): Ty = expressionTypes[element] ?: TyUnknown()
 }
 
-class ParameterizedInferenceResult<T : Ty>(
+data class ParameterizedInferenceResult<T>(
         val diagnostics: List<ElmDiagnostic>,
-        val ty: T
+        val value: T
 )
 
 val ElmPsiElement.moduleName: String

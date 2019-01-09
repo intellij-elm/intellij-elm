@@ -59,7 +59,7 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
     definition {
         if (typeAnnotation != null) {
             val id = (typeAnnotation.lowerCaseIdentifier ?: typeAnnotation.operatorIdentifier) ?: return null
-            val ty = typeAnnotation.typeExpressionInference()?.ty ?: return null
+            val ty = typeAnnotation.typeExpressionInference()?.value ?: return null
             b { append(id.text) }
             append(" : ")
             append(ty.renderedText(true, false))
@@ -80,7 +80,7 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
 }
 
 private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
-    val ty = decl.typeExpressionInference().ty
+    val ty = decl.typeExpressionInference().value
 
     definition {
         b { append("type") }
@@ -93,18 +93,22 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
 
     renderDocContent(decl)
 
-    sections {
-        section("Variants") {
-            for (variant in ty.variants) {
-                append("\n<p><code>${variant.name}</code>")
-                renderVariantParameters(variant)
+    val variants = decl.variantInference().value
+
+    if (variants.isNotEmpty()) {
+        sections {
+            section("Variants") {
+                for ((name, params) in variants) {
+                    append("\n<p><code>$name</code>")
+                    renderVariantParameters(params)
+                }
             }
         }
     }
 }
 
 private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildString {
-    val ty = decl.typeExpressionInference().ty
+    val ty = decl.typeExpressionInference().value
     val alias = ty.alias ?: return null
 
     definition {
@@ -153,14 +157,15 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
 
 private fun documentationFor(element: ElmUnionVariant): String? = buildString {
     val declaration = element.parentOfType<ElmTypeDeclaration>() ?: return null
-    val declTy = declaration.typeExpressionInference().ty
+    val declTy = declaration.typeExpressionInference().value
     val name = element.name
-    val variant = declTy.variants.find { it.name == name } ?: return null
+    val variants = declaration.variantInference().value
+    val params = variants[name] ?: return null
 
     definition {
         i { append("variant") }
         append(" ", name)
-        renderVariantParameters(variant)
+        renderVariantParameters(params)
         i { append(" of type ") }
         renderLink(declTy.name, declTy.name)
         renderDefinitionLocation(element)
@@ -199,9 +204,9 @@ private fun documentationFor(clause: ElmAsClause): String? = buildString {
 }
 
 
-private fun StringBuilder.renderVariantParameters(variant: TyUnion.Variant) {
-    if (variant.parameters.isNotEmpty()) {
-        variant.parameters.joinTo(this, " ", prefix = " ") {
+private fun StringBuilder.renderVariantParameters(parameters: List<Ty>) {
+    if (parameters.isNotEmpty()) {
+        parameters.joinTo(this, " ", prefix = " ") {
             val renderedText = it.renderedText(true, false)
             if (it is TyUnion && it.parameters.isNotEmpty()) "($renderedText)" else renderedText
         }
