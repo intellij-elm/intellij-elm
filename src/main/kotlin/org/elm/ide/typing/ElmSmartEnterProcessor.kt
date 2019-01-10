@@ -7,7 +7,6 @@ import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import org.elm.ide.inspections.MissingCaseBranchAdder
-import org.elm.ide.presentation.guessIndent
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*

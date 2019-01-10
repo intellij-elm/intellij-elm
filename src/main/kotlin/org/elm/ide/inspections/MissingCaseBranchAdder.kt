@@ -1,6 +1,6 @@
 package org.elm.ide.inspections
 
-import org.elm.ide.presentation.guessIndent
+import org.elm.ide.typing.guessIndent
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
