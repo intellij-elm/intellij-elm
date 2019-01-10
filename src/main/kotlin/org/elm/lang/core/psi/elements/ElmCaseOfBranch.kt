@@ -1,10 +1,12 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmTypes
 
 
 /**
@@ -32,4 +34,7 @@ class ElmCaseOfBranch(node: ASTNode) : ElmPsiElementImpl(node) {
      */
     val destructuredNames: List<ElmNameDeclarationPatternTag>
         get() = PsiTreeUtil.collectElementsOfType(pattern, ElmNameDeclarationPatternTag::class.java).toList()
+
+    /** The `->` element. In a well formed program, this will not return null */
+    val arrow: PsiElement? get() = findChildByType(ElmTypes.ARROW)
 }
