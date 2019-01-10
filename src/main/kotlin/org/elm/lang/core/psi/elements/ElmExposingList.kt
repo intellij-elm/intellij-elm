@@ -86,9 +86,22 @@ fun ElmExposingList.findMatchingItemFor(decl: ElmNameIdentifierOwner): ElmExpose
  * NOTE: This only handles the case where it is exposed directly by name.
  *       You must check separately to see if the receiver uses Elm's `..` syntax
  *       to expose *all* names.
+ *
+ * @see exposes
  */
 fun ElmExposingList.explicitlyExposes(decl: ElmNameIdentifierOwner): Boolean =
         findMatchingItemFor(decl) != null
+
+
+/**
+ * Returns true if [decl] is exposed by the receiver, either directly by name or
+ * indirectly by the `..` (expose-all) syntax.
+ *
+ * @see explicitlyExposes
+ */
+fun ElmExposingList.exposes(decl: ElmNameIdentifierOwner): Boolean =
+        doubleDot != null || findMatchingItemFor(decl) != null
+
 
 /**
  * Add a function/type to the exposing list, while ensuring that the necessary comma and whitespace are also added.

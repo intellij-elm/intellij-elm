@@ -6,13 +6,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.TOO_MANY_OCCURRENCES
 import com.intellij.psi.search.searches.ReferencesSearch
-import org.elm.lang.core.psi.ElmExposedItemTag
-import org.elm.lang.core.psi.ElmNameIdentifierOwner
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.elements.*
 
 /**
  * Find unused functions, parameters, etc.
@@ -26,12 +21,13 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
         val name = element.name
 
         // ignore certain kinds of declarations which we don't want to inspect
-        when (element) {
-            is ElmTypeAliasDeclaration -> return  // TODO revisit: implementation is a little tricky so punting for now
-            is ElmTypeDeclaration -> return       // TODO revisit: implementation is a little tricky so punting for now
-            is ElmFunctionDeclarationLeft ->
-                if (element.name == "main") return // assumed to be the program entry-point
+        if (element is ElmTypeAliasDeclaration || element is ElmTypeDeclaration) {
+            // TODO revisit: implementation for types is a little tricky since
+            //      type annotations are optional; punting for now
+            return
         }
+
+        if (isProgramEntryPoint(element)) return
 
         // to keep inspection/analysis time brief, bail out if 'Find Usages' will be slow
         val searchCost = PsiSearchHelper.SERVICE.getInstance(project).isCheapEnoughToSearch(name, scope, null, null)
@@ -46,6 +42,15 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
         }
     }
 
+    private fun isProgramEntryPoint(element: ElmNameIdentifierOwner): Boolean =
+            when {
+                element is ElmFunctionDeclarationLeft ->
+                    element.name == "main" || element.isElmTestEntryPoint()
+                element is ElmPortAnnotation -> true
+                else -> false
+            }
+
+
     private fun markAsUnused(holder: ProblemsHolder, element: ElmNameIdentifierOwner, name: String) {
         holder.registerProblem(
                 element.nameIdentifier,
@@ -53,4 +58,23 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
                 ProblemHighlightType.LIKE_UNUSED_SYMBOL
         )
     }
+}
+
+
+private fun ElmFunctionDeclarationLeft.isElmTestEntryPoint(): Boolean {
+    val decl = parentOfType<ElmValueDeclaration>() ?: return false
+    if (!decl.isTopLevel) return false
+    val typeAnnotation = decl.typeAnnotation ?: return false
+
+    // HACK: string suffix match is very naive, but it's cheap and easy to test.
+    // The right thing to do would be to verify that the type resolves to
+    // a type declared in the `elm-test` package. But setting that up for
+    // `ElmUnusedSymbolInspectionTest` is a pain.
+    // TODO revisit this later
+    if (!typeAnnotation.text.endsWith(" : Test") && !typeAnnotation.text.endsWith(" : Test.Test"))
+        return false
+
+    // The elm-test runner requires that the entry-point be exposed by the module
+    val exposingList = decl.elmFile.getModuleDecl()?.exposingList ?: return false
+    return exposingList.exposes(this)
 }

@@ -17,6 +17,55 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         """.trimIndent())
 
 
+    // NOTE: This test plays fast-and-loose by simulating elm-test rather than bringing in
+    //       the real package dependency. But this should be good enough.
+    fun `test elm-test entry points are never marked as unused, qualified`() = checkByFileTree("""
+        --@ main.elm
+        module MyTests exposing (fooTest)
+        import Test
+        fooTest : Test.Test{-caret-}
+        fooTest = ()
+
+        --@ Test.elm
+        module Test exposing (Test)
+        type alias Test = ()
+        """.trimIndent())
+
+
+    // same as previous test but referring to the `Test` type without a module qualifier
+    fun `test elm-test entry points are never marked as unused, unqualified`() = checkByFileTree("""
+        --@ main.elm
+        module MyTests exposing (fooTest)
+        import Test exposing (Test)
+        fooTest : Test{-caret-}
+        fooTest = ()
+
+        --@ Test.elm
+        module Test exposing (Test)
+        type alias Test = ()
+        """.trimIndent())
+
+
+    fun `test an elm-test entry point that is not exposed should be checked for usage`() = checkByFileTree("""
+        --@ main.elm
+        module MyTests exposing (main)
+        import Test exposing (Test)
+        fooTest : Test{-caret-}
+        <warning descr="'fooTest' is never used">fooTest</warning> = ()
+        main = ()
+
+        --@ Test.elm
+        module Test exposing (Test)
+        type alias Test = ()
+        """.trimIndent())
+
+
+    fun `test port annotations are never marked as unused`() = checkByText("""
+        port module Foo exposing (foo)
+        port foo : () -> msg
+        """.trimIndent())
+
+
     fun `test the type annotation does not count as usage`() = checkByText("""
         f : ()
         <warning descr="'f' is never used">f</warning> = ()
