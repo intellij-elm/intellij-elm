@@ -532,6 +532,15 @@ main : Bar -> Int
 main {foo} = <error descr="Type mismatch.Required: IntFound: ()">foo</error>
 """)
 
+    fun `test extension record parameter`() = checkByText("""
+type alias Extension base = { base | field : () }
+
+foo : Extension base -> ()
+foo e = ()
+
+main = foo { field = (), field2 = () }
+""")
+
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
 main : ()
 main =
