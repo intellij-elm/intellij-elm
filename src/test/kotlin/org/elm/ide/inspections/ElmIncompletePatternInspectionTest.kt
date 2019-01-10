@@ -4,7 +4,7 @@ import org.intellij.lang.annotations.Language
 
 class ElmIncompletePatternInspectionTest : ElmInspectionsTestBase(ElmIncompletePatternInspection()) {
 
-    fun `test no existing branch`() = checkFixByText("""
+    fun `test no existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
@@ -26,7 +26,7 @@ foo it =
             --EOL
 """)
 
-    fun `test one existing branch`() = checkFixByText("""
+    fun `test one existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
@@ -50,7 +50,7 @@ foo it =
             --EOL
 """)
 
-    fun `test two existing branches`() = checkFixByText("""
+    fun `test two existing branches`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
 foo : Foo -> ()
@@ -77,7 +77,7 @@ foo it =
             --EOL
 """)
 
-    fun `test params`() = checkFixByText("""
+    fun `test params`() = checkFixByText("Add missing case branches", """
 type Foo = Foo
 type alias BarBaz = Foo
 type Maybe a = Just a | Nothing
@@ -145,9 +145,19 @@ foo it =
 
         _ ->
             --EOL
-""".replace("--EOL", ""))
+""")
 
-    fun `test no leading whitespace`() = checkFixByText("""
+    fun `test no branches with non-union, wildcard pattern`() = checkFixByText("Add '_' branch", """
+foo =
+    <error>case{-caret-}</error> 1 of
+""", """
+foo =
+    case 1 of
+        _ ->
+            --EOL
+""")
+
+    fun `test no leading whitespace`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
 foo : Foo -> ()
@@ -161,7 +171,7 @@ foo it =case it of
             --EOL
 """)
 
-    fun `test nesting in let`() = checkFixByText("""
+    fun `test nesting in let`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
 foo : Foo -> ()
@@ -185,7 +195,7 @@ foo it =
         ()
 """)
 
-    fun `test nesting in case`() = checkFixByText("""
+    fun `test nesting in case`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
 foo : Foo -> ()
@@ -205,7 +215,7 @@ foo it =
                     --EOL
 """)
 
-    fun `test qualified import`() = checkFixByFileTree("""
+    fun `test qualified import`() = checkFixByFileTree("Add missing case branches", """
 --@ Data/User.elm
 module Data.User exposing (..)
 type Foo = Bar | Baz | Qux
@@ -230,7 +240,7 @@ foo it =
             --EOL
 """)
 
-    fun `test import with alias`() = checkFixByFileTree("""
+    fun `test import with alias`() = checkFixByFileTree("Add missing case branches", """
 --@ Data/User.elm
 module Data.User exposing (..)
 type Foo = Bar | Baz | Qux
@@ -255,7 +265,7 @@ foo it =
             --EOL
 """)
 
-    fun `test exposed import`() = checkFixByFileTree("""
+    fun `test exposed import`() = checkFixByFileTree("Add missing case branches", """
 --@ Data/User.elm
 module Data.User exposing (..)
 type Foo = Bar | Baz | Qux
@@ -281,18 +291,18 @@ foo it =
 """)
 
     private fun checkFixByText(
+            fixName: String,
             @Language("Elm") before: String,
             @Language("Elm") after: String) {
         // We use the --EOL marker to avoid editors trimming trailing whitespace, which is
         // significant for this test.
-        checkFixByText("Add missing case branches", before, after.replace("--EOL", ""))
+        super.checkFixByText(fixName, before, after.replace("--EOL", ""), true, false, false)
     }
 
     private fun checkFixByFileTree(
+            fixName: String,
             @Language("Elm") before: String,
             @Language("Elm") after: String) {
-        // We use the --EOL marker to avoid editors trimming trailing whitespace, which is
-        // significant for this test.
-        checkFixByFileTree("Add missing case branches", before, after.replace("--EOL", ""))
+        super.checkFixByFileTree(fixName, before, after.replace("--EOL", ""), true, false, false)
     }
 }

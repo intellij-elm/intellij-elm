@@ -8,12 +8,18 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
     override fun visitElement(element: ElmPsiElement, holder: ProblemsHolder, isOnTheFly: Boolean) {
         if (element !is ElmCaseOfExpr) return
         val fixer = MissingCaseBranchAdder(element)
-        if (fixer.missingBranches.isEmpty()) return
+
+        if (fixer.result == MissingCaseBranchAdder.Result.NoMissing) return
+
+        val extraFixes = if (fixer.result is MissingCaseBranchAdder.Result.MissingVariants) {
+            arrayOf(quickFix("Add missing case branches") { _, _ -> fixer.addMissingBranches() })
+        } else emptyArray()
+
+        val fixes = extraFixes + arrayOf(quickFix("Add '_' branch") { _, _ -> fixer.addWildcardBranch() })
 
         holder.registerProblem(element.firstChild,
                 "Case expression is not exhaustive",
-                quickFix("Add missing case branches") { _, _ -> fixer.addMissingBranches() },
-                quickFix("Add '_' branch") { _, _ -> fixer.addWildcardBranch() }
+                *fixes
         )
     }
 }
