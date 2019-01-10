@@ -1,13 +1,14 @@
 package org.elm.ide.inspections
 
+import com.intellij.psi.search.GlobalSearchScope
 import org.elm.ide.typing.guessIndent
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
-import org.elm.lang.core.types.TyUnion
-import org.elm.lang.core.types.findInference
-import org.elm.lang.core.types.renderParam
+import org.elm.lang.core.stubs.index.ElmNamedElementIndex
+import org.elm.lang.core.types.*
 
 /**
  * This class can detect missing branches for case expressions and insert them into the PSI in place.
@@ -15,18 +16,18 @@ import org.elm.lang.core.types.renderParam
 class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     // This should be a lazy {}, but using it causes a compilation error due to conflicting
     // declarations.
-    val missingBranches: List<TyUnion.Variant>
+    val missingBranches: VariantParameters
         get() {
             if (_missingBranches == null) _missingBranches = calcMissingBranches()
             return _missingBranches!!
         }
-    private var _missingBranches: List<TyUnion.Variant>? = null
+    private var _missingBranches: VariantParameters? = null
 
     fun addMissingBranches() {
         if (missingBranches.isEmpty()) return
 
-        val patterns = missingBranches.map { b ->
-            (listOf(b.name) + b.parameters.map { it.renderParam() }).joinToString(" ")
+        val patterns = missingBranches.map { (name, params) ->
+            (listOf(name) + params.map { it.renderParam() }).joinToString(" ")
         }
 
         addPatterns(patterns)
@@ -59,27 +60,32 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         element.addRange(trailingWs.first(), trailingWs.last())
     }
 
-    private fun calcMissingBranches(): List<TyUnion.Variant> {
-        val inference = element.findInference() ?: return emptyList()
+    private fun calcMissingBranches(): VariantParameters {
+        val inference = element.findInference() ?: return emptyMap()
 
         // This only works on case expressions with a union type for now
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
-                ?: return emptyList()
+                ?: return emptyMap()
 
-        val allBranches = exprTy.variants.associateBy { it.name }
+        val project = element.project
+        val declaration = ElmNamedElementIndex.find(exprTy.name, project, GlobalSearchScope.allScope(project))
+                .filterIsInstance<ElmTypeDeclaration>()
+                .find { it.moduleName == exprTy.module }
+                ?: return emptyMap()
+        val allBranches = declaration.variantInference().value
         val missingBranches = allBranches.toMutableMap()
 
         for (branch in element.branches) {
             val pat = branch.pattern.child
             when (pat) {
-                is ElmAnythingPattern -> return emptyList() // covers all cases
+                is ElmAnythingPattern -> return emptyMap() // covers all cases
                 is ElmUnionPattern -> {
                     missingBranches.remove(pat.referenceName)
                 }
-                else -> return emptyList() // invalid pattern
+                else -> return emptyMap() // invalid pattern
             }
         }
 
-        return missingBranches.values.toList()
+        return missingBranches
     }
 }

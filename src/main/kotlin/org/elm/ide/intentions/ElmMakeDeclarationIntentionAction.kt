@@ -63,7 +63,7 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
         val name = typeAnnotation.referenceName
         template.addTextSegment("$name ")
 
-        val ty = typeAnnotation.typeExpressionInference()?.ty
+        val ty = typeAnnotation.typeExpressionInference()?.value
         val args: List<String> = when (ty) {
             is TyFunction -> ty.parameters.map { it.renderParam() }
             else -> emptyList()
