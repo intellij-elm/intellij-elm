@@ -1,12 +1,12 @@
 package org.elm.ide.inspections
 
-import com.intellij.psi.search.GlobalSearchScope
 import org.elm.ide.typing.guessIndent
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
+import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.lang.core.types.*
 
@@ -68,10 +68,9 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
                 ?: return emptyMap()
 
         val project = element.project
-        val declaration = ElmNamedElementIndex.find(exprTy.name, project, GlobalSearchScope.allScope(project))
-                .filterIsInstance<ElmTypeDeclaration>()
-                .find { it.moduleName == exprTy.module }
+        val declaration = ElmNamedElementIndex.findElement<ElmTypeDeclaration>(exprTy.name, exprTy.module, project)
                 ?: return emptyMap()
+
         val allBranches = declaration.variantInference().value
         val missingBranches = allBranches.toMutableMap()
 
@@ -86,6 +85,8 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
             }
         }
 
-        return missingBranches
+        val qualifierPrefix = ModuleScope(element.elmFile).getQualifierForTypeName(exprTy.module, exprTy.name) ?: ""
+
+        return missingBranches.mapKeys { (k, _) -> qualifierPrefix + k }
     }
 }

@@ -64,6 +64,36 @@ class ModuleScope(val elmFile: ElmFile) {
                 qualifierPrefix == it.asClause?.name ?: it.moduleQID.text
             }
 
+    /**
+     * Given a [name] in a [module], return the qualifier prefix necessary to reference the name in this scope.
+     *
+     * Note that this function does not ensure that [name] is actually declared in [module].
+     *
+     * e.g.
+     *
+     * ```
+     * import M exposing(N)
+     * import Q.U exposing(N)
+     * import A exposing(..)
+     * ```
+     *
+     * - `getQualifierForTypeName(M, N)` -> `""`
+     * - `getQualifierForTypeName(M, O)` -> `"M."`
+     * - `getQualifierForTypeName(Q.U, O)` -> `"Q.U."`
+     * - `getQualifierForTypeName(A, B)` -> `""`
+     * - `getQualifierForTypeName(X, Y)` -> `null`
+     */
+    fun getQualifierForTypeName(module: String, name: String): String? =
+            getImportDecls()
+                    .find { it.moduleQID.text == module }
+                    ?.let { importDecl ->
+                        when {
+                            getVisibleImportTypes(importDecl).any { it.name == name } -> ""
+                            importDecl.asClause != null -> importDecl.asClause!!.name + "."
+                            else -> importDecl.moduleQID.text + "."
+                        }
+                    }
+
 
     // VALUES
 

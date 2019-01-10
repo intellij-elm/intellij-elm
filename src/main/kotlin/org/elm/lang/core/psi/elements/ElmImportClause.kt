@@ -9,8 +9,6 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
-private val log = logger<ElmImportClause>()
-
 /**
  * An import declaration at the top of the module.
  *
