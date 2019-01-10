@@ -13,6 +13,8 @@ import org.elm.lang.core.diagnostics.TypeArgumentCountError
  * compare unequal, even if they have the same name.
  */
 class TypeReplacement private constructor(
+        // A map of variables that should be replaced to a pair of the ty to replace them with and
+        // the psi element for the argument, which is used to show errors.
         private val replacements: Map<TyVar, Pair<PsiElement, Ty>>
 ) {
     companion object {
@@ -89,7 +91,13 @@ class TypeReplacement private constructor(
         }
 
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
-        val newBaseTy = (baseTy as? TyRecord)?.baseTy
+
+        val newBaseTy = when(baseTy) {
+            // If the base ty of the argument is a record, use it's base ty, which might be null.
+            is TyRecord -> baseTy.baseTy
+            // If it's another variable, use it as-is
+            else -> baseTy
+        }
         return TyRecord(baseFields + declaredFields, newBaseTy, replace(ty.alias))
     }
 }
