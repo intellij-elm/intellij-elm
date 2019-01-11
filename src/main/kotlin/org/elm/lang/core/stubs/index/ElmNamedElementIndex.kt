@@ -7,6 +7,7 @@ import com.intellij.psi.stubs.StubIndex
 import com.intellij.psi.stubs.StubIndexKey
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.stubs.ElmFileStub
+import org.elm.lang.core.types.moduleName
 
 class ElmNamedElementIndex : StringStubIndexExtension<ElmNamedElement>() {
 
@@ -31,5 +32,15 @@ class ElmNamedElementIndex : StringStubIndexExtension<ElmNamedElement>() {
          */
         fun getAllNames(project: Project): Collection<String> =
                 StubIndex.getInstance().getAllKeys(KEY, project)
+
+        /** Find the named element with [name] declared in [module] */
+        inline fun <reified T : ElmNamedElement> findElement(
+                name: String,
+                module: String,
+                project: Project,
+                scope: GlobalSearchScope = GlobalSearchScope.allScope(project)
+        ): T? = find(name, project, scope)
+                .filterIsInstance<T>()
+                .find { it.moduleName == module }
     }
 }

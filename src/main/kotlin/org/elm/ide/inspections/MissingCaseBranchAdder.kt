@@ -1,12 +1,12 @@
 package org.elm.ide.inspections
 
-import com.intellij.psi.search.GlobalSearchScope
 import org.elm.ide.typing.guessIndent
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
+import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.lang.core.types.*
 
@@ -14,19 +14,28 @@ import org.elm.lang.core.types.*
  * This class can detect missing branches for case expressions and insert them into the PSI in place.
  */
 class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
+    sealed class Result {
+        /** There are missing union variant branches */
+        data class MissingVariants(val variants: VariantParameters): Result()
+        /** There are missing branches, but we can't offer suggestions */
+        object NoSuggestions: Result()
+        /** There are no missing branches that we can detect */
+        object NoMissing: Result()
+    }
+
     // This should be a lazy {}, but using it causes a compilation error due to conflicting
     // declarations.
-    val missingBranches: VariantParameters
+    val result: Result
         get() {
-            if (_missingBranches == null) _missingBranches = calcMissingBranches()
-            return _missingBranches!!
+            if (_result == null) _result = calcMissingBranches()
+            return _result!!
         }
-    private var _missingBranches: VariantParameters? = null
+    private var _result: Result? = null
 
     fun addMissingBranches() {
-        if (missingBranches.isEmpty()) return
+        val result = this.result as? Result.MissingVariants ?: return
 
-        val patterns = missingBranches.map { (name, params) ->
+        val patterns = result.variants.map { (name, params) ->
             (listOf(name) + params.map { it.renderParam() }).joinToString(" ")
         }
 
@@ -34,7 +43,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     }
 
     fun addWildcardBranch() {
-        if (missingBranches.isEmpty()) return
+        if (result is Result.NoMissing) return
         addPatterns(listOf("_"))
     }
 
@@ -60,32 +69,35 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         element.addRange(trailingWs.first(), trailingWs.last())
     }
 
-    private fun calcMissingBranches(): VariantParameters {
-        val inference = element.findInference() ?: return emptyMap()
+    private fun calcMissingBranches(): Result {
+        val defaultResult = if (element.branches.isEmpty()) Result.NoSuggestions else Result.NoMissing
+
+        val inference = element.findInference() ?: return defaultResult
 
         // This only works on case expressions with a union type for now
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
-                ?: return emptyMap()
+                ?: return defaultResult
 
         val project = element.project
-        val declaration = ElmNamedElementIndex.find(exprTy.name, project, GlobalSearchScope.allScope(project))
-                .filterIsInstance<ElmTypeDeclaration>()
-                .find { it.moduleName == exprTy.module }
-                ?: return emptyMap()
+        val declaration = ElmNamedElementIndex.findElement<ElmTypeDeclaration>(exprTy.name, exprTy.module, project)
+                ?: return defaultResult
+
         val allBranches = declaration.variantInference().value
         val missingBranches = allBranches.toMutableMap()
 
         for (branch in element.branches) {
             val pat = branch.pattern.child
             when (pat) {
-                is ElmAnythingPattern -> return emptyMap() // covers all cases
+                is ElmAnythingPattern -> return Result.NoMissing // covers all cases
                 is ElmUnionPattern -> {
                     missingBranches.remove(pat.referenceName)
                 }
-                else -> return emptyMap() // invalid pattern
+                else -> return Result.NoMissing // invalid pattern
             }
         }
 
-        return missingBranches
+        val qualifierPrefix = ModuleScope(element.elmFile).getQualifierForTypeName(exprTy.module, exprTy.name) ?: ""
+
+        return Result.MissingVariants(missingBranches.mapKeys { (k, _) -> qualifierPrefix + k })
     }
 }
