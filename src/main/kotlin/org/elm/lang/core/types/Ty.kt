@@ -23,8 +23,18 @@ sealed class Ty {
 class TyVar(val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
-
     override fun toString(): String = "<TyVar $name>"
+}
+
+/**
+ * An implicit ("flexible") type variable (i.e. the type of parameters in unannotated functions)
+ *
+ * These types must be unified.
+ */
+data class TyInfer(val name: String) : Ty() {
+    override val alias: AliasInfo? get() = null
+    override fun withAlias(alias: AliasInfo): TyInfer = this
+    override fun toString(): String = "<TyInfer $name>"
 }
 
 /** A tuple type like `(Int, String)` */

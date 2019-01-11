@@ -291,7 +291,7 @@ private class InferenceScope(
                 inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
                 else -> return argCountError(0)
             }
-            is TyUnknown, is TyVar -> return TyUnknown() // TODO[unification] infer vars
+            is TyUnknown, is TyInfer -> return TyUnknown() // TODO[unification] infer vars
             else -> return argCountError(0)
         }
 
@@ -325,7 +325,7 @@ private class InferenceScope(
             is ElmListExpr -> inferList(atom)
             is ElmNegateExpr -> inferNegateExpression(atom)
             is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
-            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
+            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyInfer("number") // TODO[unification] handle `number1`,`number2`,...
             is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
             is ElmParenthesizedExpr -> inferExpression(atom.expression)
             is ElmRecordExpr -> inferRecord(atom)
@@ -545,17 +545,16 @@ private class InferenceScope(
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
-        // TODO [unification] neither of these vars should be rigid
-        val tyVar = TyVar("b")
-        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
+        val tyVar = TyInfer("b")
+        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyInfer("a"))), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
         val subExpr = expr.expression
         val subTy = inferExpression(subExpr)
         // TODO [unification] restrict vars to only number
-        return when (subTy) {
-            TyInt, TyFloat, is TyUnknown, is TyVar -> subTy
+        return when {
+            subTy == TyInt || subTy == TyFloat || !isInferable(subTy) -> subTy
             else -> {
                 diagnostics += TypeMismatchError(subExpr!!, subTy, TyVar("number"))
                 TyUnknown()
@@ -854,7 +853,7 @@ private class InferenceScope(
     /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
     private fun assignable(ty1: Ty, ty2: Ty): Boolean {
         return ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
-            is TyVar -> true
+            is TyVar, is TyInfer -> true
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && argumentsAssignable(ty1.types, ty2.types)
@@ -940,11 +939,11 @@ val ElmPsiElement.moduleName: String
     get() = elmFile.getModuleDecl()?.name ?: ""
 
 
-/** Return [count] [TyVar]s named a, b, ... z, a1, b1, ... */
-private fun uniqueVars(count: Int): List<TyVar> {
+/** Return [count] [TyInfer]s named a, b, ... z, a1, b1, ... */
+private fun uniqueVars(count: Int): List<TyInfer> {
     val s = "abcdefghijklmnopqrstuvwxyz"
     return (0 until count).map {
-        TyVar(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
+        TyInfer(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
     }
 }
 
@@ -969,4 +968,4 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 }
 
 // TODO[unification] allow vars
-fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar
+fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar && ty !is TyInfer
