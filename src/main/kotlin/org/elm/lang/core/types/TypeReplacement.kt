@@ -1,10 +1,5 @@
 package org.elm.lang.core.types
 
-import com.intellij.psi.PsiElement
-import org.elm.lang.core.diagnostics.ElmDiagnostic
-import org.elm.lang.core.diagnostics.RecordBaseTypeError
-import org.elm.lang.core.diagnostics.TypeArgumentCountError
-
 /**
  * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
  * which could also be [TyVar]s.
@@ -12,50 +7,23 @@ import org.elm.lang.core.diagnostics.TypeArgumentCountError
  * It relies on the fact that [TyVar]s can be compared by identity. Vars in different scopes must
  * compare unequal, even if they have the same name.
  */
-class TypeReplacement private constructor(
-        // A map of variables that should be replaced to a pair of the ty to replace them with and
-        // the psi element for the argument, which is used to show errors.
-        private val replacements: Map<TyVar, Pair<PsiElement, Ty>>
+class TypeReplacement(
+        // A map of variables that should be replaced to the ty to replace them with
+        private val replacements: Map<TyVar, Ty>
 ) {
     companion object {
-        /**
-         * Replace types in a ty inferred from a type ref with arguments.
-         *
-         * @param element the reference element that [ty] was inferred from
-         * @param ty the type to perform replacement in
-         * @param paramTys the parameters of [ty] that will be replaced
-         * @param argTys the arguments that will replaces the parameters.
-         * @param argElements the PsiElements that [argTys] were inferred from. Must be the same size as [argTys].
-         */
-        fun replaceCall(
-                element: PsiElement,
-                ty: Ty,
-                paramTys: List<TyVar>,
-                argTys: List<Ty>,
-                argElements: List<PsiElement>
-        ): ParameterizedInferenceResult<Ty> {
-            require(argTys.size == argElements.size) { "mismatched arg sizes ${argTys.size} != ${argElements.size}" }
+        fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
+            return TypeReplacement(replacements).replace(ty)
+        }
 
-            if (paramTys.size != argTys.size) {
-                val error = TypeArgumentCountError(element, argTys.size, paramTys.size)
-                return ParameterizedInferenceResult(listOf(error), TyUnknown())
-            }
-
-            if (paramTys.isEmpty()) {
-                return ParameterizedInferenceResult(emptyList(), ty)
-            }
-
-            val replacements = paramTys.indices.associate { i -> paramTys[i] to (argElements[i] to argTys[i]) }
-            val typeReplacement = TypeReplacement(replacements)
-            val newTy = typeReplacement.replace(ty)
-            return ParameterizedInferenceResult(typeReplacement.diagnostics, newTy)
+        fun replace(ty: Ty, params: List<TyVar>, args: List<Ty>): Ty {
+            require(params.size == args.size) { "params and args size differ: ${params.size}, ${args.size}" }
+            return replace(ty, params.zip(args).toMap())
         }
     }
 
-    private val diagnostics = mutableListOf<ElmDiagnostic>()
-
     private fun replace(ty: Ty): Ty = when (ty) {
-        is TyVar -> replacements[ty]?.second ?: ty
+        is TyVar -> replacements[ty] ?: ty
         is TyTuple -> TyTuple(ty.types.map { replace(it) }, replace(ty.alias))
         is TyFunction -> TyFunction(ty.parameters.map { replace(it) }, replace(ty.ret), replace(ty.alias))
         is TyUnknown -> TyUnknown(replace(ty.alias))
@@ -83,16 +51,12 @@ class TypeReplacement private constructor(
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {
-        val baseTy = replacements[ty.baseTy]?.second
+        val baseTy = replacements[ty.baseTy]
         val baseFields = (baseTy as? TyRecord)?.fields.orEmpty()
-
-        if (baseTy != null && isInferable(baseTy) && baseTy !is TyRecord) {
-            diagnostics += RecordBaseTypeError(replacements[ty.baseTy]!!.first, baseTy)
-        }
 
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
 
-        val newBaseTy = when(baseTy) {
+        val newBaseTy = when (baseTy) {
             // If the base ty of the argument is a record, use it's base ty, which might be null.
             is TyRecord -> baseTy.baseTy
             // If it's another variable, use it as-is

@@ -6,6 +6,7 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
+import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.modificationTracker
@@ -216,10 +217,16 @@ class TypeExpression(
             else -> emptyList()
         } as List<TyVar>
 
-        val result = TypeReplacement.replaceCall(typeRef, declaredTy, params, args, argElements)
-        diagnostics += result.diagnostics
+        if (params.size != args.size) {
+            diagnostics += TypeArgumentCountError(typeRef, args.size, params.size)
+            return TyUnknown()
+        }
 
-        return result.value
+        if (params.isEmpty()) {
+            return declaredTy
+        }
+
+        return TypeReplacement.replace(declaredTy, params, args)
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {
