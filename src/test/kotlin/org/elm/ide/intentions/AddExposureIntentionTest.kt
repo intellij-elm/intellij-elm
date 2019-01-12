@@ -24,4 +24,13 @@ f1{-caret-} = ()
 """)
 
 
+    fun `test cannot expose functions defined in a let-in expression`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 =
+    let f1{-caret-} = ()
+    in f1
+""")
+
+
 }

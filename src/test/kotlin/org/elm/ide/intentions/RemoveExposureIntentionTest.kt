@@ -91,4 +91,12 @@ module Foo exposing (..)
 bar{-caret-} = ()
 """)
 
+
+    fun `test refuse to hide functions defined within a let-in expression`() = doUnavailableTest("""
+module Foo exposing (..)
+bar =
+    let foo{-caret-} = ()
+    in foo
+""")
+
 }
