@@ -60,4 +60,13 @@ type alias Foo = () --> Exposed
 type alias Bar = ()
 """
     )
+
+
+    fun `test module that exposes a port`() = doTestByText(
+            """
+port module Main exposing (foo)
+port foo : a -> () --> Exposed
+port bar : a -> ()
+""")
+
 }

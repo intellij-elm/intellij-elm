@@ -12,8 +12,7 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.ElmUnionVariant
 import org.elm.lang.core.psi.elements.findMatchingItemFor
 
 /**
@@ -29,14 +28,14 @@ class ElmExposureLineMarkerProvider : LineMarkerProvider {
         if (parentDecl !is ElmNameIdentifierOwner || parentDecl.nameIdentifier != element) return null
 
         return when (parentDecl) {
+            is ElmUnionVariant ->
+                null
+
             is ElmFunctionDeclarationLeft ->
                 if (!parentDecl.isTopLevel) null
                 else makeMarkerIfExposed(element, parentDecl)
 
-            is ElmTypeDeclaration ->
-                makeMarkerIfExposed(element, parentDecl)
-
-            is ElmTypeAliasDeclaration ->
+            is ElmExposableTag ->
                 makeMarkerIfExposed(element, parentDecl)
 
             else ->
