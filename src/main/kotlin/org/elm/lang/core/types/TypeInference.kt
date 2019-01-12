@@ -276,7 +276,6 @@ private class InferenceScope(
 
     private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
         val inferredTy = inferAtom(callExpr.target)
-
         val arguments = callExpr.arguments.toList()
 
         fun argCountError(expected: Int): TyUnknown {
@@ -302,12 +301,19 @@ private class InferenceScope(
             return argCountError(targetTy.parameters.size)
         }
 
+        // Rigid type variables in function calls are fixed to the first type that's assigned to them
+        val replacements = mutableMapOf<TyVar, Ty>()
         for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
             val argTy = inferAtom(arg)
-            requireAssignable(arg, argTy, paramTy)
+            val finalParamTy = when (paramTy) {
+                is TyVar -> replacements.getOrPut(paramTy) {argTy}
+                else -> paramTy
+            }
+            requireAssignable(arg, argTy, finalParamTy)
         }
 
-        val resultTy = targetTy.partiallyApply(arguments.size)
+        val appliedTy = targetTy.partiallyApply(arguments.size)
+        val resultTy = TypeReplacement.replace(appliedTy, replacements)
         expressionTypes[callExpr] = resultTy
         return resultTy
     }

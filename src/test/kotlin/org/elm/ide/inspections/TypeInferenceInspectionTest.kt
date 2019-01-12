@@ -1116,4 +1116,12 @@ directChildren tree =
         Tree _ children ->
             children</error>
 """)
+
+    fun `test mismatched return value from rigid vars`() = checkByText("""
+foo : a -> a
+foo a = a
+
+main : Int
+main = <error descr="Type mismatch.Required: IntFound: String">foo ""</error>
+""")
 }

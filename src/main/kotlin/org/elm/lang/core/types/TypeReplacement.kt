@@ -13,6 +13,7 @@ class TypeReplacement(
 ) {
     companion object {
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
+            if (replacements.isEmpty()) return ty
             return TypeReplacement(replacements).replace(ty)
         }
 
@@ -51,17 +52,19 @@ class TypeReplacement(
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {
-        val baseTy = replacements[ty.baseTy]
-        val baseFields = (baseTy as? TyRecord)?.fields.orEmpty()
+        val replacedBase = replacements[ty.baseTy]
+        val newBaseTy = when (replacedBase) {
+            // If the base ty of the argument is a record, use it's base ty, which might be null.
+            is TyRecord -> replacedBase.baseTy
+            // If it wasn't substituted, leave it as-is
+            null -> ty.baseTy
+            // If it's another variable, use it
+            else -> replacedBase
+        }
 
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
+        val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
 
-        val newBaseTy = when (baseTy) {
-            // If the base ty of the argument is a record, use it's base ty, which might be null.
-            is TyRecord -> baseTy.baseTy
-            // If it's another variable, use it as-is
-            else -> baseTy
-        }
         return TyRecord(baseFields + declaredFields, newBaseTy, replace(ty.alias))
     }
 }
