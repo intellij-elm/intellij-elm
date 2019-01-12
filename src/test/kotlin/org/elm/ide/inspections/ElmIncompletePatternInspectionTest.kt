@@ -3,6 +3,18 @@ package org.elm.ide.inspections
 import org.intellij.lang.annotations.Language
 
 class ElmIncompletePatternInspectionTest : ElmInspectionsTestBase(ElmIncompletePatternInspection()) {
+    fun `test all branches present`() = checkFixIsUnavailable("Add missing case branches", """
+type Foo = Bar | Baz
+
+foo : Foo -> ()
+foo it =
+    case{-caret-} it of
+        Bar ->
+            ()
+
+        Baz ->
+            ()
+""")
 
     fun `test no existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux

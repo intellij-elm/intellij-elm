@@ -8,7 +8,11 @@ import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
-import org.elm.lang.core.types.*
+import org.elm.lang.core.types.TyUnion
+import org.elm.lang.core.types.VariantParameters
+import org.elm.lang.core.types.findInference
+import org.elm.lang.core.types.renderParam
+import org.elm.lang.core.types.variantInference
 
 /**
  * This class can detect missing branches for case expressions and insert them into the PSI in place.
@@ -16,11 +20,17 @@ import org.elm.lang.core.types.*
 class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     sealed class Result {
         /** There are missing union variant branches */
-        data class MissingVariants(val variants: VariantParameters): Result()
+        data class MissingVariants(val variants: VariantParameters) : Result() {
+            init {
+                require(variants.isNotEmpty()) { "MissingVariants may not be empty" }
+            }
+        }
+
         /** There are missing branches, but we can't offer suggestions */
-        object NoSuggestions: Result()
+        object NoSuggestions : Result()
+
         /** There are no missing branches that we can detect */
-        object NoMissing: Result()
+        object NoMissing : Result()
     }
 
     // This should be a lazy {}, but using it causes a compilation error due to conflicting
@@ -100,7 +110,8 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
             return Result.NoMissing
         }
 
-        val qualifierPrefix = ModuleScope(element.elmFile).getQualifierForTypeName(exprTy.module, exprTy.name) ?: ""
+        val qualifierPrefix = ModuleScope(element.elmFile).getQualifierForTypeName(exprTy.module, exprTy.name)
+                ?: ""
 
         return Result.MissingVariants(missingBranches.mapKeys { (k, _) -> qualifierPrefix + k })
     }
