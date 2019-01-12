@@ -46,7 +46,7 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
             when {
                 element is ElmFunctionDeclarationLeft ->
                     element.name == "main" || element.isElmTestEntryPoint()
-                element is ElmPortAnnotation -> true
+                element is ElmPortAnnotation -> isExposed(element)
                 else -> false
             }
 
@@ -75,6 +75,11 @@ private fun ElmFunctionDeclarationLeft.isElmTestEntryPoint(): Boolean {
         return false
 
     // The elm-test runner requires that the entry-point be exposed by the module
+    return isExposed(this)
+}
+
+
+private fun isExposed(decl: ElmExposableTag): Boolean {
     val exposingList = decl.elmFile.getModuleDecl()?.exposingList ?: return false
-    return exposingList.exposes(this)
+    return exposingList.exposes(decl)
 }

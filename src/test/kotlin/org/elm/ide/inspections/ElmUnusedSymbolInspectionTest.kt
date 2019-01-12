@@ -66,6 +66,13 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         """.trimIndent())
 
 
+    fun `test a port annotation that is not exposed should be checked for usage`() = checkByText("""
+        port module Foo exposing (foo)
+        port foo : () -> msg
+        port <warning descr="'bar' is never used">bar</warning> : () -> msg
+        """.trimIndent())
+
+
     fun `test the type annotation does not count as usage`() = checkByText("""
         f : ()
         <warning descr="'f' is never used">f</warning> = ()
