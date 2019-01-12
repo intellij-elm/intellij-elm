@@ -1124,4 +1124,12 @@ foo a = a
 main : Int
 main = <error descr="Type mismatch.Required: IntFound: String">foo ""</error>
 """)
+
+    fun `test mismatched return value from nested vars`() = checkByText("""
+foo : List a -> List a
+foo a = a
+
+main : List Int
+main = <error descr="Type mismatch.Required: List IntFound: List String">foo [""]</error>
+""")
 }
