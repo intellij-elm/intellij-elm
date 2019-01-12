@@ -83,6 +83,44 @@ abstract class ElmAnnotationTestBase : ElmTestBase() {
             checkBefore = { myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn) },
             checkAfter = this::checkByText)
 
+    protected fun checkFixIsUnavailable(
+            fixName: String,
+            @Language("Elm") text: String,
+            checkWarn: Boolean = true,
+            checkInfo: Boolean = false,
+            checkWeakWarn: Boolean = false
+    ) = checkFixIsUnavailable(fixName, text,
+            checkWarn = checkWarn,
+            checkInfo = checkInfo,
+            checkWeakWarn = checkWeakWarn,
+            configure = this::configureByText)
+
+    protected fun checkFixIsUnavailableByFileTree(
+            fixName: String,
+            @Language("Elm") text: String,
+            checkWarn: Boolean = true,
+            checkInfo: Boolean = false,
+            checkWeakWarn: Boolean = false
+    ) = checkFixIsUnavailable(fixName, text,
+            checkWarn = checkWarn,
+            checkInfo = checkInfo,
+            checkWeakWarn = checkWeakWarn,
+            configure = this::configureByFileTree)
+
+    private fun checkFixIsUnavailable(
+            fixName: String,
+            @Language("Elm") text: String,
+            checkWarn: Boolean,
+            checkInfo: Boolean,
+            checkWeakWarn: Boolean,
+            configure: (String) -> Unit
+    ) {
+        check(text, checkWarn, checkInfo, checkWeakWarn, configure)
+        check(myFixture.filterAvailableIntentions(fixName).isEmpty()) {
+            "Fix $fixName should not be possible to apply."
+        }
+    }
+
     private fun check(
             @Language("Elm") text: String,
             checkWarn: Boolean,
