@@ -71,36 +71,57 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
     val allExposedItems: List<ElmExposedItemTag>
         get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmExposedItemTag::class.java)
 
+
+    /**
+     * Returns the module which the exposing list acts upon.
+     *
+     * An exposing list can occur in 2 different contexts:
+     *  1. as part of an import, in which case the target module is given by the import
+     *  2. as part of a module declaration at the top of a file, in which case the
+     *     target module is the module itself
+     */
+    val targetModule: ElmModuleDeclaration?
+        get() {
+            val importClause = this.parentOfType<ElmImportClause>()
+            return if (importClause != null) {
+                importClause.reference.resolve() as? ElmModuleDeclaration
+            } else {
+                this.parentOfType<ElmModuleDeclaration>()
+            }
+        }
 }
 
 
 /**
- * Attempt to find an exposed item that refers to [decl]
+ * Attempt to find an [exposed item][ElmExposedItemTag] that refers to [decl].
+ *
+ * Note that this will not find [union variants][ElmUnionVariant] since, as of Elm 0.19,
+ * they are no longer exposed individually.
+ *
+ * If this function returns null, it doesn't mean that [decl] is not exposed; it just means
+ * that it is not explicitly exposed by name (as opposed to `..` syntax)
  */
-fun ElmExposingList.findMatchingItemFor(decl: ElmNameIdentifierOwner): ElmExposedItemTag? =
+fun ElmExposingList.findMatchingItemFor(decl: ElmExposableTag): ElmExposedItemTag? =
         allExposedItems.find { it.reference?.isReferenceTo(decl) ?: false }
 
-/**
- * Returns true if [decl] is explicitly exposed by the receiver
- *
- * NOTE: This only handles the case where it is exposed directly by name.
- *       You must check separately to see if the receiver uses Elm's `..` syntax
- *       to expose *all* names.
- *
- * @see exposes
- */
-fun ElmExposingList.explicitlyExposes(decl: ElmNameIdentifierOwner): Boolean =
-        findMatchingItemFor(decl) != null
-
 
 /**
- * Returns true if [decl] is exposed by the receiver, either directly by name or
- * indirectly by the `..` (expose-all) syntax.
- *
- * @see explicitlyExposes
+ * Returns true if [element] is exposed by the receiver, either directly by name or
+ * indirectly by the `..` "expose-all" syntax.
  */
-fun ElmExposingList.exposes(decl: ElmNameIdentifierOwner): Boolean =
-        doubleDot != null || findMatchingItemFor(decl) != null
+fun ElmExposingList.exposes(element: ElmExposableTag): Boolean {
+    val module = targetModule ?: return false
+    if (element.elmFile.getModuleDecl() != module) {
+        // this element does not belong to the target module
+        return false
+    }
+
+    return when {
+        module.exposesAll -> true
+        element is ElmUnionVariant -> exposedTypeList.any { it.exposes(element) }
+        else -> findMatchingItemFor(element) != null
+    }
+}
 
 
 /**

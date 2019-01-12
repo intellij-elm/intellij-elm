@@ -42,8 +42,8 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         val name = refElement.referenceName // e.g. `div`
         val scope = GlobalSearchScope.allScope(project)
         val candidates = ElmNamedElementIndex.find(name, project, scope)
-                .filterIsInstance<ElmNameIdentifierOwner>()
-                .mapNotNull { Candidate.fromNamedElement(it) }
+                .filterIsInstance<ElmExposableTag>()
+                .mapNotNull { Candidate.fromExposableElement(it) }
                 .toMutableList()
 
         val isQualified: Boolean
@@ -224,50 +224,37 @@ data class Candidate(
     companion object {
 
         /**
-         * Returns a candidate if the named element is exposed by its containing module
+         * Returns a candidate if the element is exposed by its containing module
          */
-        fun fromNamedElement(element: ElmNameIdentifierOwner): Candidate? {
+        fun fromExposableElement(element: ElmExposableTag): Candidate? {
             val moduleDecl = element.elmFile.getModuleDecl() ?: return null
             val exposingList = moduleDecl.exposingList ?: return null
-            val name = element.name
 
-            val (nameForImport, isExposedDirectly) = when (element) {
+            if (!exposingList.exposes(element))
+                return null
+
+            val nameForImport = when (element) {
                 is ElmUnionVariant -> {
                     val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
-                    Pair("$typeName(..)", exposingList.exposesConstructor(name, typeName))
+                    "$typeName(..)"
                 }
 
                 is ElmInfixDeclaration ->
-                    Pair("($name)", exposingList.explicitlyExposes(element))
+                    "(${element.name})"
 
                 // TODO [drop 0.18] remove this clause
                 is ElmOperatorDeclarationLeft ->
-                    Pair("($name)", exposingList.explicitlyExposes(element))
+                    "(${element.name})"
 
                 else ->
-                    Pair(name, exposingList.explicitlyExposes(element))
+                    element.name
             }
 
-            return if (moduleDecl.exposesAll || isExposedDirectly)
-                Candidate(
+            return Candidate(
                         moduleName = moduleDecl.name,
-                        name = name,
+                    name = element.name,
                         nameForImport = nameForImport,
                         targetElement = element)
-            else
-                null
         }
     }
 }
-
-
-private fun ElmExposingList.exposesConstructor(constructorName: String, typeName: String): Boolean =
-        exposedTypeList.any {
-            (it.referenceName == typeName && it.exposesAll)
-                    || it.exposesConstructorExplicitly(constructorName)
-        }
-
-private fun ElmExposedType.exposesConstructorExplicitly(name: String): Boolean =
-        exposedUnionConstructors?.exposedUnionConstructors
-                ?.any { it.referenceName == name }
-                ?: false

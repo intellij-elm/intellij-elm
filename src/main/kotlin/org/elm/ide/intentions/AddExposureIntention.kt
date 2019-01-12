@@ -4,9 +4,13 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNameIdentifierOwner
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmExposingList
+import org.elm.lang.core.psi.elements.ElmUnionVariant
+import org.elm.lang.core.psi.elements.addItem
+import org.elm.lang.core.psi.elements.findMatchingItemFor
 
 /**
  * An intention action that adds a function/type to a module's `exposing` list.
@@ -28,20 +32,16 @@ class AddExposureIntention : ElmAtCaretIntentionActionBase<AddExposureIntention.
         }
 
         val parent = element.parent as? ElmNameIdentifierOwner ?: return null
-
         if (parent.nameIdentifier != element) return null
 
-        return when (parent) {
-            is ElmFunctionDeclarationLeft,
-            is ElmTypeDeclaration,
-            is ElmTypeAliasDeclaration ->
-                if (exposingList.findMatchingItemFor(parent) == null) {
-                    Context(parent.name, exposingList)
-                } else {
-                    null
-                }
-
-            else -> null
+        return if (parent is ElmExposableTag && parent !is ElmUnionVariant) {
+            if (exposingList.findMatchingItemFor(parent) == null) {
+                Context(parent.name, exposingList)
+            } else {
+                null
+            }
+        } else {
+            null
         }
     }
 

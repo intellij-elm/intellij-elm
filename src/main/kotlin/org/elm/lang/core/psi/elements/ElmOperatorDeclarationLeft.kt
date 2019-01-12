@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
@@ -19,7 +20,7 @@ import org.elm.lang.core.stubs.ElmOperatorDeclarationLeftStub
  *
  * @see [ElmFunctionDeclarationLeft]
  */
-class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclarationLeftStub> {
+class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclarationLeftStub>, ElmExposableTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.OPERATOR)

@@ -56,3 +56,18 @@ class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElemen
 }
 
 
+fun ElmExposedType.exposes(variant: ElmUnionVariant): Boolean {
+    val targetTypeDecl = reference.resolve()
+    if (variant.parentOfType<ElmTypeDeclaration>() != targetTypeDecl) {
+        // they do not belong to the same union type
+        return false
+    }
+
+    if (exposesAll)
+        return true
+
+    val exposedCtors = exposedUnionConstructors?.exposedUnionConstructors ?: return false
+    return exposedCtors.any { it.name == variant.name }
+}
+
+

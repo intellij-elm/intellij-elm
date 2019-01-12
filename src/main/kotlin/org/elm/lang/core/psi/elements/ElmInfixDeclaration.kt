@@ -3,7 +3,6 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.tree.TokenSet
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmInfixDeclarationStub
 
@@ -16,7 +15,7 @@ import org.elm.lang.core.stubs.ElmInfixDeclarationStub
  *
  * As of Elm 0.19, these are now restricted to packages owned by elm-lang (and elm-explorations?)
  */
-class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub> {
+class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub>, ElmExposableTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.OPERATOR)
