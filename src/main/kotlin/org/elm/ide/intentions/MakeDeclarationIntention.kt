@@ -15,7 +15,7 @@ import org.elm.lang.core.types.TyFunction
 import org.elm.lang.core.types.renderParam
 import org.elm.lang.core.types.typeExpressionInference
 
-class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeDeclarationIntentionAction.Context>() {
+class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIntention.Context>() {
 
     data class Context(val typeAnnotation: ElmTypeAnnotation)
 
@@ -74,7 +74,7 @@ class ElmMakeDeclarationIntentionAction : ElmAtCaretIntentionActionBase<ElmMakeD
             template.addTextSegment(" ")
         }
 
-        template.addTextSegment("= ")
+        template.addTextSegment("=\n    ")
         template.addEndVariable()
         return template
     }

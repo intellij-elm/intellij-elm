@@ -5,7 +5,7 @@ import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import org.elm.ide.intentions.AddImportIntention
-import org.elm.ide.intentions.ElmMakeDeclarationIntentionAction
+import org.elm.ide.intentions.MakeDeclarationIntention
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ancestors
@@ -77,7 +77,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
         if (element !is ElmTypeAnnotation) return false
 
         holder.createWeakWarningAnnotation(element, "'${ref.canonicalText}' does not exist")
-                .also { it.registerFix(ElmMakeDeclarationIntentionAction()) }
+                .also { it.registerFix(MakeDeclarationIntention()) }
 
         return true
     }
