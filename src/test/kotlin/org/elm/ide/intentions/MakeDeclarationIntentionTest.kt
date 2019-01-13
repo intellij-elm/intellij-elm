@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
-class ElmMakeDeclarationIntentionTest : ElmIntentionTestBase(ElmMakeDeclarationIntentionAction()) {
+class MakeDeclarationIntentionTest : ElmIntentionTestBase(MakeDeclarationIntention()) {
+
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
 
@@ -11,7 +12,8 @@ f : Int{-caret-}
 """
                 , """
 f : Int
-f = {-caret-}
+f =
+    {-caret-}
 """)
     }
 
@@ -23,7 +25,8 @@ f : Int -> Int{-caret-}
 """
                 , """
 f : Int -> Int
-f int = {-caret-}
+f int =
+    {-caret-}
 """)
     }
 
@@ -35,7 +38,8 @@ f : (Int -> Int) -> List a -> (Char, String) -> { foo : Int } -> Bool{-caret-}
 """
                 , """
 f : (Int -> Int) -> List a -> (Char, String) -> { foo : Int } -> Bool
-f function list (char, string) record = {-caret-}
+f function list (char, string) record =
+    {-caret-}
 """)
     }
 
@@ -51,7 +55,8 @@ f : FooBar -> QuuxQuuxQuux -> Int{-caret-}
 type FooBar = FooBar
 type QuuxQuuxQuux = QuuxQuuxQuux
 f : FooBar -> QuuxQuuxQuux -> Int
-f fooBar quuxQuuxQuux = {-caret-}
+f fooBar quuxQuuxQuux =
+    {-caret-}
 """)
     }
 
