@@ -30,6 +30,14 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>2.2.1</b> <em>(2019-01-13)</em>
+                <ul>
+                    <li>Add 'complete current statement' support for case/of, let/in, if/else and function declarations</li>
+                    <li>Bug fixes for unused code inspections</li>
+                    <li>Bug fixes for type checker</li>
+                    <li>Reduced memory usage</li>
+                </ul>
+            </li>
             <li><b>2.2.0</b> <em>(2019-01-06)</em>
                 <ul>
                     <li>Add inspections for unused functions, parameters, imports, etc.</li>
