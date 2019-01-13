@@ -85,6 +85,17 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
+    fun `test imports of Elm 19 kernel JS modules are ignored`() = checkByText("""
+        import Elm.Kernel.Dom{-caret-}
+    """.trimIndent())
+
+
+    // TODO [drop 0.18] remove this test
+    fun `test imports of Elm 18 native JS modules are ignored`() = checkByText("""
+        import Native.Dom{-caret-}
+    """.trimIndent())
+
+
     // TODO we should support this eventually; punting for now
     fun `test unused union types in the exposing list are ignored, for now`() = checkByFileTree("""
         --@ Main.elm

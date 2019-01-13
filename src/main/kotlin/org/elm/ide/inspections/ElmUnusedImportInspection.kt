@@ -68,14 +68,14 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
 
     /** Returns the list of unused imports. IMPORTANT: only valid *after* the visitor completes its traversal. */
     val unusedImports: List<ElmImportClause>
-        get() = imports.values.toList()
+        get() = imports.values.toList().filter { !it.safeToIgnore }
 
     /** Returns the list of unused exposed items. IMPORTANT: only valid *after* the visitor completes its traversal. */
     val unusedExposedItems: List<ElmExposedItemTag>
         get() = exposing.values.toList().filter {
             val import = it.parentOfType<ElmImportClause>() ?: return@filter false
-            // don't bother reporting things where the entire import is unused
-            import !in unusedImports
+            val alreadyReported = import in unusedImports
+            !alreadyReported && !import.safeToIgnore
         }
 
     override fun visitElement(element: PsiElement?) {
@@ -97,3 +97,9 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
         }
     }
 }
+
+
+// Elm's Kernel modules are defined in JS, and our PsiReference system does not (currently)
+// cross the boundary from Elm to JS. So we must ignore any warnings for "kernel" imports.
+private val ElmImportClause.safeToIgnore: Boolean
+    get() = moduleQID.isKernelModule
