@@ -21,4 +21,15 @@ interface ElmQID : ElmPsiElement {
                 upperCaseIdentifierList
             return frontParts.joinToString(".") { it.text }
         }
+
+    /** Returns true if the qualified ID refers to Elm's "Kernel" modules,
+     * which are defined in Javascript. This is useful since we don't (currently)
+     * support PsiReferences between JS and Elm
+     */
+    val isKernelModule: Boolean
+        get() {
+            val moduleName = upperCaseIdentifierList.joinToString(".") { it.text }
+            return moduleName.startsWith("Elm.Kernel.")
+                    || moduleName.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
+        }
 }

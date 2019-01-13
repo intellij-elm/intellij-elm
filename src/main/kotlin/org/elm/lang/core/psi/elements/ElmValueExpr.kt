@@ -2,10 +2,7 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmAtomTag
-import org.elm.lang.core.psi.ElmFieldAccessTargetTag
-import org.elm.lang.core.psi.ElmFunctionCallTargetTag
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.*
@@ -35,6 +32,8 @@ class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement
     val upperCaseQID: ElmUpperCaseQID?
         get() = findChildByClass(ElmUpperCaseQID::class.java)
 
+    val qid: ElmQID
+        get() = valueQID ?: upperCaseQID!!
 
     val flavor: Flavor
         get() = when {

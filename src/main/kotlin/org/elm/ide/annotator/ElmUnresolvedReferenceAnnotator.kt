@@ -9,7 +9,10 @@ import org.elm.ide.intentions.ElmMakeDeclarationIntentionAction
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmTypeAnnotation
+import org.elm.lang.core.psi.elements.ElmTypeRef
+import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.resolve.reference.*
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
@@ -85,11 +88,9 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             return true
 
         // Ignore refs to Kernel (JavaScript) modules
-        if (element is ElmValueExpr && element.upperCaseQID?.isQualifiedNativeRef()
-                ?: element.valueQID?.isQualifiedNativeRef() ?: false) {
-            return true
-        } else if (element is ElmImportClause && element.moduleQID.isQualifiedNativeRef()) {
-            return true
+        when {
+            element is ElmValueExpr && element.qid.isKernelModule -> return true
+            element is ElmImportClause && element.moduleQID.isKernelModule -> return true
         }
 
         // Ignore refs to type variables in a type annotation
@@ -137,16 +138,4 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
                 "Module '$moduleName' is imported as '$aliasName' and so you must use the alias here.")
         return true
     }
-}
-
-private fun ElmUpperCaseQID.isQualifiedNativeRef() =
-        isQualified && isKernelModule(upperCaseIdentifierList)
-
-private fun ElmValueQID.isQualifiedNativeRef() =
-        isQualified && isKernelModule(upperCaseIdentifierList)
-
-private fun isKernelModule(identifiers: List<PsiElement>): Boolean {
-    val moduleName = identifiers.joinToString(".") { it.text }
-    return moduleName.startsWith("Elm.Kernel.")
-            || moduleName.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
 }
