@@ -97,7 +97,7 @@ Type mismatches are detected and shown directly within the editor. For instance,
 
 ### Quick Docs
  
-Press Ctrl-J to display the documentation for a function, type, etc. It even works with doc comments within your own code.
+Press Ctrl-J to display the documentation for a function, type, etc. It even works with doc comments within your own code. (Note: depending on your platform, the keyboard shortcut might be Ctrl-Q or F1)
 
 <video controls>
     <source src="assets/quick_docs.mp4" type="video/mp4">
