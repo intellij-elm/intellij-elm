@@ -4,10 +4,13 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNameIdentifierOwner
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmExposingList
+import org.elm.lang.core.psi.elements.ElmUnionVariant
+import org.elm.lang.core.psi.elements.findMatchingItemFor
+import org.elm.lang.core.psi.elements.removeItem
 
 /**
  * An intention action that removes a function/type from a module's `exposing` list.
@@ -31,16 +34,16 @@ class RemoveExposureIntention : ElmAtCaretIntentionActionBase<RemoveExposureInte
             return null
         }
 
-        val parent = element.parent as? ElmNameIdentifierOwner ?: return null
+        // check if the caret is on the identifier that names the exposable declaration
+        val decl = element.parent as? ElmExposableTag ?: return null
+        if (decl.nameIdentifier != element) return null
 
-        if (parent.nameIdentifier != element) return null
-
-        return when (parent) {
-            is ElmFunctionDeclarationLeft,
-            is ElmTypeDeclaration,
-            is ElmTypeAliasDeclaration ->
-                exposingList.findMatchingItemFor(parent)?.let { Context(it, exposingList) }
-            else -> null
+        return if (decl is ElmUnionVariant) {
+            // might be nice to support this in the future (making a union type opaque)
+            null
+        } else {
+            exposingList.findMatchingItemFor(decl)
+                    ?.let { Context(it, exposingList) }
         }
     }
 

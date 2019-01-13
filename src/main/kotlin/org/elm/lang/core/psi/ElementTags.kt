@@ -56,3 +56,6 @@ interface ElmFieldAccessTargetTag : ElmPsiElement
 
 /** An element which can occur in a module or import's exposing list */
 interface ElmExposedItemTag : ElmPsiElement
+
+/** A named declaration which can be exposed by a module */
+interface ElmExposableTag : ElmPsiElement, ElmNameIdentifierOwner

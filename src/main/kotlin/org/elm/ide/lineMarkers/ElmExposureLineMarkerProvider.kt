@@ -5,14 +5,14 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.psi.PsiElement
 import org.elm.ide.icons.ElmIcons
+import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNameIdentifierOwner
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.ElmUnionVariant
 import org.elm.lang.core.psi.elements.findMatchingItemFor
 
 /**
@@ -28,12 +28,14 @@ class ElmExposureLineMarkerProvider : LineMarkerProvider {
         if (parentDecl !is ElmNameIdentifierOwner || parentDecl.nameIdentifier != element) return null
 
         return when (parentDecl) {
+            is ElmUnionVariant ->
+                null
+
             is ElmFunctionDeclarationLeft ->
                 if (!parentDecl.isTopLevel) null
                 else makeMarkerIfExposed(element, parentDecl)
 
-            is ElmTypeDeclaration,
-            is ElmTypeAliasDeclaration ->
+            is ElmExposableTag ->
                 makeMarkerIfExposed(element, parentDecl)
 
             else ->
@@ -47,7 +49,7 @@ class ElmExposureLineMarkerProvider : LineMarkerProvider {
 }
 
 
-private fun makeMarkerIfExposed(element: PsiElement, decl: ElmNameIdentifierOwner): LineMarkerInfo<PsiElement>? {
+private fun makeMarkerIfExposed(element: PsiElement, decl: ElmExposableTag): LineMarkerInfo<PsiElement>? {
     val elmFile = element.containingFile as? ElmFile ?: return null
     val moduleDecl = elmFile.getModuleDecl() ?: return null
     val exposingList = moduleDecl.exposingList ?: return null

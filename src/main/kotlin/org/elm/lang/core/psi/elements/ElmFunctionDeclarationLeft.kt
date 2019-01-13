@@ -25,7 +25,7 @@ import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
  *      foo = 42
  *  in ...`
  */
-class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub> {
+class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub>, ElmExposableTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.LOWER)

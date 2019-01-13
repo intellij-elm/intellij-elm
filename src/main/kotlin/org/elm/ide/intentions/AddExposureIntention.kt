@@ -4,8 +4,8 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNameIdentifierOwner
 import org.elm.lang.core.psi.elements.*
 
 /**
@@ -22,26 +22,24 @@ class AddExposureIntention : ElmAtCaretIntentionActionBase<AddExposureIntention.
         val exposingList = (element.containingFile as? ElmFile)?.getModuleDecl()?.exposingList
                 ?: return null
 
-        if (exposingList.doubleDot != null) {
-            // The module already exposes everything. Nothing to do here.
-            return null
-        }
+        // check if the caret is on the identifier that names the exposable declaration
+        val decl = element.parent as? ElmExposableTag ?: return null
+        if (decl.nameIdentifier != element) return null
 
-        val parent = element.parent as? ElmNameIdentifierOwner ?: return null
+        return when {
+            decl is ElmUnionVariant -> {
+                // might be nice to support this in the future (making a union type fully exposed)
+                null
+            }
 
-        if (parent.nameIdentifier != element) return null
+            decl is ElmFunctionDeclarationLeft && !decl.isTopLevel ->
+                null
 
-        return when (parent) {
-            is ElmFunctionDeclarationLeft,
-            is ElmTypeDeclaration,
-            is ElmTypeAliasDeclaration ->
-                if (exposingList.findMatchingItemFor(parent) == null) {
-                    Context(parent.name, exposingList)
-                } else {
-                    null
-                }
+            !exposingList.exposes(decl) ->
+                Context(decl.name, exposingList)
 
-            else -> null
+            else ->
+                null
         }
     }
 

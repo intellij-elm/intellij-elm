@@ -3,11 +3,8 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.IdentifierCase
-import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.ElmUnionVariantParameterTag
 import org.elm.lang.core.stubs.ElmUnionVariantStub
 
 /**
@@ -20,7 +17,10 @@ import org.elm.lang.core.stubs.ElmUnionVariantStub
  *     | Nothing
  * ```
  */
-class ElmUnionVariant : ElmStubbedNamedElementImpl<ElmUnionVariantStub> {
+// TODO [drop 0.18] in Elm 0.19, a union variant is not exposable directly
+//      so we MIGHT want to stop implementing the `ElmExposableTag` interface
+//      once we remove support for Elm 0.18. Or maybe there's a better way?
+class ElmUnionVariant : ElmStubbedNamedElementImpl<ElmUnionVariantStub>, ElmExposableTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.UPPER)
