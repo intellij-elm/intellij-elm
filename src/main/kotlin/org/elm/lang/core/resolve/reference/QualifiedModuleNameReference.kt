@@ -27,23 +27,32 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
 ) : ElmReferenceCached<T>(elem), ElmReference {
 
     override fun resolveInner(): ElmNamedElement? {
-        return getVariants().find {
-            it.name == refText || it.name == GlobalScope.defaultAliases[refText]
+        val clientFile = element.elmFile
+
+        val importDecls = ModuleScope(clientFile).getImportDecls()
+
+        // First, check to see if it resolves to an aliased import
+        importDecls.mapNotNull { it.asClause }
+                .find { it.name == refText }
+                ?.let { return it }
+
+        // Otherwise, try to resolve the import directly
+        val targetModuleName = GlobalScope.defaultAliases[refText] ?: refText
+        val targetDecl = ElmModulesIndex.get(targetModuleName, clientFile)
+                ?: return null
+
+        // Ensure that it's in scope
+        return when {
+            targetModuleName in GlobalScope.defaultImports -> targetDecl
+            importDecls.any { it.moduleQID.text == refText } -> targetDecl
+            else -> null
         }
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
-        val clientFile = element.elmFile
-        val importDecls = ModuleScope(clientFile).getImportDecls()
-        val moduleDecls = importDecls.map { it.moduleQID.text }
-                .let { ElmModulesIndex.getAll(it, clientFile) }
-
-        val implicitDecls = ElmModulesIndex.getAll(GlobalScope.defaultImports, clientFile)
-                        .filter { it.elmFile.isCore() }
-
-        val aliasDecls = importDecls.mapNotNull { it.asClause } as List<ElmNamedElement>
-
-        return listOf(moduleDecls, implicitDecls, aliasDecls).flatten().toTypedArray()
+        // Code-completion of Elm module names is not done via the PsiReference 'variant' system.
+        // Instead, see `ElmCompletionProvider`
+        return emptyArray()
     }
 
     val refText: String
