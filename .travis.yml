@@ -14,7 +14,7 @@ matrix:
                 - choco install --yes elm-platform
                 - choco install jdk8
                 - ls "/c/Program Files/Java"
-                - export PATH=$PATH:"/c/Program Files/Java/jdk1.8.0_191/bin"
+                - export PATH=$PATH:"/c/Program Files/Java/jdk1.8.0_201/bin"
 
         -   os: linux
             before_install:

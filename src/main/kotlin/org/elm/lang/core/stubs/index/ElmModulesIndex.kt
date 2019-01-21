@@ -11,7 +11,6 @@ import org.elm.lang.core.psi.ClientLocation
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
-import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.findFileByPathTestAware
 import org.elm.workspace.ElmProject
 
@@ -165,6 +164,6 @@ private fun ElmProject.sourceDirectoryContains(moduleDeclaration: ElmModuleDecla
     val extraDirs = if (includeTestDirectory) listOf(testsDirPath) else emptyList()
     val elmModuleRelativePath = moduleDeclaration.name.replace('.', '/') + ".elm"
     return (candidateSrcDirs + extraDirs)
-            .mapNotNull { findFileByPathTestAware(it) }
-            .any { it.findFileByMaybeRelativePath(elmModuleRelativePath) != null }
+            .mapNotNull { findFileByPathTestAware(it.resolve(elmModuleRelativePath)) }
+            .isNotEmpty()
 }

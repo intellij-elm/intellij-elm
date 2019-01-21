@@ -26,7 +26,6 @@ class ExpressionScope(val element: PsiElement) {
                 results.add(it)
             }
 
-            // TODO [kl] might need to de-dupe because an [ElmValueDeclaration] is also a named element
             if (it is ElmValueDeclaration) {
                 results.addAll(it.declaredNames())
             }

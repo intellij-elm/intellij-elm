@@ -14,6 +14,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -85,8 +86,10 @@ sealed class ElmProject(
         val paths = mutableListOf<Path>()
         for (a in absoluteSourceDirectories) {
             for (b in otherProject.absoluteSourceDirectories) {
-                if (Files.exists(a) && Files.exists(b) && Files.isSameFile(a, b)) {
-                    paths.add(a)
+                try {
+                    if (Files.isSameFile(a, b)) paths.add(a)
+                } catch (e: NoSuchFileException) {
+                    // ignore
                 }
             }
         }
