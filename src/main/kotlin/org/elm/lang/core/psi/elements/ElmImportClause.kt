@@ -1,7 +1,6 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
@@ -45,7 +44,7 @@ class ElmImportClause(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
             object : ElmReferenceCached<ElmImportClause>(this) {
 
                 override fun resolveInner(): ElmNamedElement? =
-                        getVariants().find { it.name == element.referenceName }
+                        ElmModulesIndex.get(element.referenceName, elmFile)
 
                 override fun getVariants(): Array<ElmNamedElement> =
                         ElmModulesIndex.getAll(elmFile).toTypedArray()
