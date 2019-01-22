@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.ui.EditorNotificationPanel
@@ -13,6 +14,7 @@ import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
 import org.elm.workspace.*
 
+private val versionCacheKey: Key<CachedValue<Version>> = Key.create("ELM_VERSION_CACHE")
 
 /**
  * Presents actionable notifications at the top of an Elm file whenever the Elm plugin
@@ -60,10 +62,10 @@ class ElmNeedsConfigNotificationProvider(
         }
 
         val elmVersion = CachedValuesManager.getManager(project)
-                .getCachedValue(project) {
-                    val v = toolchain.queryCompilerVersion()
+                .getCachedValue(project, versionCacheKey, {
+                    val v = toolchain.queryCompilerVersion() ?: Version.UNKNOWN
                     CachedValueProvider.Result.create(v, workspaceChangedTracker)
-                } ?: Version.UNKNOWN
+                }, false)
 
         if (elmVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
             return createBadToolchainPanel("Elm $elmVersion is not supported")
