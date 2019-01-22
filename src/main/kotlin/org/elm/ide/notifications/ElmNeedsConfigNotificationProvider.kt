@@ -4,14 +4,14 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
-import org.elm.workspace.ElmToolchain
-import org.elm.workspace.ElmWorkspaceService
-import org.elm.workspace.elmToolchain
-import org.elm.workspace.elmWorkspace
+import org.elm.workspace.*
 
 
 /**
@@ -23,12 +23,14 @@ class ElmNeedsConfigNotificationProvider(
         private val notifications: EditorNotifications
 ) : EditorNotifications.Provider<EditorNotificationPanel>() {
 
+    private val workspaceChangedTracker = SimpleModificationTracker()
 
     init {
         project.messageBus.connect(project).apply {
             subscribe(ElmWorkspaceService.WORKSPACE_TOPIC,
                     object : ElmWorkspaceService.ElmWorkspaceListener {
                         override fun didUpdate() {
+                            workspaceChangedTracker.incModificationCount()
                             notifications.updateAllNotifications()
                         }
                     })
@@ -57,9 +59,14 @@ class ElmNeedsConfigNotificationProvider(
             return createBadToolchainPanel("No Elm toolchain configured")
         }
 
-        val compilerVersion = toolchain.queryCompilerVersion()
-        if (compilerVersion != null && compilerVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
-            return createBadToolchainPanel("Elm $compilerVersion is not supported")
+        val elmVersion = CachedValuesManager.getManager(project)
+                .getCachedValue(project) {
+                    val v = toolchain.queryCompilerVersion()
+                    CachedValueProvider.Result.create(v, workspaceChangedTracker)
+                } ?: Version.UNKNOWN
+
+        if (elmVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
+            return createBadToolchainPanel("Elm $elmVersion is not supported")
         }
 
         val workspace = project.elmWorkspace

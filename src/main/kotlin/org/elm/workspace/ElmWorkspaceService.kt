@@ -387,6 +387,8 @@ class ElmWorkspaceService(
 
 
     companion object {
+        // This topic covers any changes to the projects contained within the Elm workspace as
+        // well as changes to the workspace settings.
         val WORKSPACE_TOPIC = Topic("Elm workspace changes", ElmWorkspaceListener::class.java)
     }
 }
