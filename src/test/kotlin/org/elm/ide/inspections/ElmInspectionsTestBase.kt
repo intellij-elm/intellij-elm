@@ -137,6 +137,13 @@ abstract class ElmInspectionsTestBase(
         val inspection: LocalInspectionTool
 ) : ElmAnnotationTestBase() {
 
+    fun `test inspection has documentation`() {
+        val description = "inspectionDescriptions/${inspection.javaClass.simpleName?.dropLast("Inspection".length)}.html"
+        val text = getResourceAsString(description)
+                ?: error("No inspection description for ${inspection.javaClass} ($description)")
+        checkHtmlStyle(text)
+    }
+
     private fun enableInspection() = myFixture.enableInspections(inspection)
 
     override fun configureByText(text: String) {
