@@ -28,15 +28,20 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
     fun `test file creation outside of a source root uses an empty module qualifier`() =
             doTest("outside", "Quux", "module Quux exposing (..)")
 
+    // https://github.com/klazuka/intellij-elm/issues/231
+    fun `test file creation including file extension`() =
+            doTest("src", "Quux.elm", "module Quux exposing (..)")
 
-    private fun doTest(dirPath: String, newFileName: String, expectedContents: String) {
+
+    private fun doTest(dirPath: String, name: String, expectedContents: String) {
         val testProject = makeTestProjectFixture()
         val action = ElmCreateFileAction()
         val dirVirtualFile = testProject.root.findFileByRelativePath(dirPath)!!
         myFixture.project.runWriteCommandAction {
-            action.testHelperCreateFile(newFileName, myFixture.psiManager.findDirectory(dirVirtualFile)!!)
+            action.testHelperCreateFile(name, myFixture.psiManager.findDirectory(dirVirtualFile)!!)
         }
-        myFixture.checkResult("$dirPath/$newFileName.elm", expectedContents, true)
+        val filename = name.removeSuffix(".elm")
+        myFixture.checkResult("$dirPath/$filename.elm", expectedContents, true)
     }
 
 
