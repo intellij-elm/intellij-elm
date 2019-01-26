@@ -79,6 +79,9 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
         throw AssertionError("\nExpected: $expected\n     but: was $actual")
     }
 
-    fun buildProject(builder: FileTreeBuilder.() -> Unit): TestProject =
-            fileTree(builder).asyncCreateWithAutoDiscover().get()
+    fun buildProject(builder: FileTreeBuilder.() -> Unit): TestProject {
+        val result = fileTree(builder).asyncCreateWithAutoDiscover().get()
+        require(project.elmWorkspace.allProjects.isNotEmpty()) { "no Elm project was loaded" }
+        return result
+    }
 }
