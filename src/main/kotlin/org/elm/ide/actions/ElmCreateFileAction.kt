@@ -27,12 +27,13 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
 
     override fun createFile(name: String?, templateName: String, dir: PsiDirectory): PsiFile? {
         if (name == null) return null
-        val newFile = super.createFile(name, templateName, dir) ?: return null
+        val cleanedName = name.removeSuffix(".elm")
+        val newFile = super.createFile(cleanedName, templateName, dir) ?: return null
 
         if (templateName == ELM_MODULE_KIND) {
             // HACK: I use an empty template to generate the file and then fill in the contents here
             // TODO ask around to find out what's the right way to do this
-            newFile.viewProvider.document?.setText("module ${qualifyModuleName(dir, name)} exposing (..)")
+            newFile.viewProvider.document?.setText("module ${qualifyModuleName(dir, cleanedName)} exposing (..)")
         }
 
         return newFile
