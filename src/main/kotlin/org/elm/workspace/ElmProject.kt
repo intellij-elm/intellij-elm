@@ -63,7 +63,7 @@ sealed class ElmProject(
      * @see sourceDirectories
      */
     val absoluteSourceDirectories: List<Path>
-        get() = sourceDirectories.map { projectDirPath.resolve(it) }
+        get() = sourceDirectories.map { projectDirPath.resolve(it).normalize() }
 
     /**
      * Returns all packages which this project depends on, whether it be for normal,
@@ -196,8 +196,7 @@ sealed class ElmProject(
                             // convert "<absolute_path>/foo/elm-stuff/packages/elm-lang/html/1.0.0/elm-package.json"
                             // to "elm-lang/html"
                             elmStuffPath.relativize(manifestPath).drop(1).take(2).joinToString("/")
-                        }
-                        else {
+                        } else {
                             manifestPath.parent.fileName.toString()
                         },
                         version = dto.version,
