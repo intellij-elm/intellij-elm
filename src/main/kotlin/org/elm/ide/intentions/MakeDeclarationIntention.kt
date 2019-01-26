@@ -10,6 +10,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
+import org.elm.lang.core.psi.nextLeaves
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.types.TyFunction
 import org.elm.lang.core.types.renderParam
@@ -46,10 +47,17 @@ class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIn
         val typeAnnotation = context.typeAnnotation
         val factory = ElmPsiFactory(project)
 
-        typeAnnotation.parent.addAfter(factory.createFreshLine(), typeAnnotation)
+        // Insert a newline at the end of this line
+        val anchor = typeAnnotation.nextLeaves
+                .takeWhile { !it.text.contains('\n') }
+                .lastOrNull() ?: typeAnnotation
+        typeAnnotation.parent.addAfter(factory.createFreshLine(), anchor)
         PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(editor.document)
+
+        // Move the caret down to the line that we just created
         editor.caretModel.moveCaretRelatively(0, 1, false, false, false)
 
+        // Insert the Live Template
         val template = generateTemplate(project, context)
         TemplateManager.getInstance(project).startTemplate(editor, template)
     }

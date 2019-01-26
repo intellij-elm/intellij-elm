@@ -61,4 +61,17 @@ f fooBar quuxQuuxQuux =
     }
 
 
+    // https://github.com/klazuka/intellij-elm/issues/232
+    fun `test trailing whitespace does not mess up the generated code`() {
+        doAvailableTest(
+                """
+f : Int -> Int{-caret-}  --end-of-line
+"""
+                , """
+f : Int -> Int  --end-of-line
+f int =
+    {-caret-}
+""")
+    }
+
 }
