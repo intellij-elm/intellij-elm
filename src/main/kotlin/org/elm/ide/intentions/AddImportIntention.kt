@@ -7,14 +7,13 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBList
+import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.openapiext.toPsiFile
 import java.awt.Component
 import javax.swing.DefaultListCellRenderer
@@ -40,9 +39,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 
         val fullName = refElement.text      // e.g. `Html.div`
         val name = refElement.referenceName // e.g. `div`
-        val scope = GlobalSearchScope.allScope(project)
-        val candidates = ElmNamedElementIndex.find(name, project, scope)
-                .filterIsInstance<ElmExposableTag>()
+        val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
                 .mapNotNull { Candidate.fromExposableElement(it) }
                 .toMutableList()
 
@@ -56,16 +53,10 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
             isQualified = false
         }
 
-        // De-dupe multiple results with the same module-name. Normally you would never
-        // have multiple modules with the same name, but until we start parsing the
-        // source roots out of the `elm-package.json` file, we will have to do this
-        // workaround.
-        val dedupedCandidates = candidates.associateBy { it.moduleName }.values
-
-        if (dedupedCandidates.isEmpty())
+        if (candidates.isEmpty())
             return null
 
-        return Context(name, dedupedCandidates.toList(), isQualified)
+        return Context(name, candidates.toList(), isQualified)
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {

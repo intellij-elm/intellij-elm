@@ -1,7 +1,7 @@
 package org.elm
 
 import com.intellij.openapi.project.Project
-import org.elm.lang.core.psi.ClientLocation
+import org.elm.lang.core.lookup.ClientLocation
 import org.elm.workspace.ElmProject
 
 /**

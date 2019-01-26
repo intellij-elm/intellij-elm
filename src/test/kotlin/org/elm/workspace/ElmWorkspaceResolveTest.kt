@@ -160,6 +160,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
     }
 
+
     fun `test resolves modules provided by packages which are direct dependencies`() {
 
         ensureElmStdlibInstalled(FullElmStdlibVariant)
@@ -192,6 +193,41 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             }
         }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", toPackage = "elm/time 1.0.0")
     }
+
+
+    fun `test does not resolve unexposed modules provided by direct packages dependencies`() {
+
+        ensureElmStdlibInstalled(CustomElmStdlibVariant(mapOf("elm/parser" to Version(1, 0, 0))))
+
+        buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.19.0",
+                "dependencies": {
+                    "direct": {
+                        "elm/parser": "1.0.0"
+                    },
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("src") {
+                elm("Main.elm", """
+                    import Parser.Advanced -- this module is part of elm/parser, but it's not exposed
+                           --^
+                """.trimIndent())
+            }
+        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
+    }
+
 
     fun `test resolves modules to correct version`() {
 
@@ -283,6 +319,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             checkReferenceIsResolved<ElmImportClause>("b/src/Main.elm", toPackage = "elm/parser 1.1.0")
         }
     }
+
 
     fun `test resolves modules provided by packages which are direct test dependencies`() {
 
