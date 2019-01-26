@@ -32,6 +32,9 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
     fun `test file creation including file extension`() =
             doTest("src", "Quux.elm", "module Quux exposing (..)")
 
+    // https://github.com/klazuka/intellij-elm/issues/202
+    fun `test normalization of leading dot-slash in source-directory`() =
+            doTest("foo1/Foo1", "Quux", "module Foo1.Quux exposing (..)")
 
     private fun doTest(dirPath: String, name: String, expectedContents: String) {
         val testProject = makeTestProjectFixture()
@@ -52,7 +55,8 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
                     "type": "application",
                     "source-directories": [
                         "src",
-                        "vendor/elm-foo"
+                        "vendor/elm-foo",
+                        "./foo1"
                     ],
                     "elm-version": "0.19.0",
                     "dependencies":      { "direct": {}, "indirect": {} },
@@ -67,6 +71,9 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
                     dir("elm-foo") {
                         dir("Internals") {}
                     }
+                }
+                dir("foo1") {
+                    dir("Foo1") {}
                 }
                 dir("tests") {
                     dir("Legacy") {}
