@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.LocalSearchScope
 import com.intellij.psi.search.SearchScope
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
 
 
@@ -21,7 +20,7 @@ class ElmLowerPattern(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.
         get() = findNotNullChildByType(ElmTypes.LOWER_CASE_IDENTIFIER)
 
     override fun getUseScope(): SearchScope {
-        /**
+        /*
          * Performance Optimization:
          *
          * Users frequently rename function parameters. And those parameter
@@ -36,9 +35,16 @@ class ElmLowerPattern(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.
          * drastically reduce the number of candidates by returning a narrower
          * `SearchScope` in this case.
          */
-        val owner = PsiTreeUtil.getParentOfType(this, ElmValueDeclaration::class.java)
-                ?: return super.getUseScope()
 
-        return LocalSearchScope(owner)
+
+        /*
+         * We could try and restrict the scope to be as narrow as possible, but
+         * I'd rather err on the side of caution for now and keep this simple.
+         * Restricting it just to the containing file is a huge win over scanning
+         * the entire project.
+         *
+         * TODO make more restrictive, being careful to handle all of the cases
+         */
+        return LocalSearchScope(elmFile)
     }
 }
