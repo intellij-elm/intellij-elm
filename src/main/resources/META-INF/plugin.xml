@@ -30,6 +30,13 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>2.2.2</b> <em>(2019-01-28)</em>
+                <ul>
+                    <li>Improvements to 'create function from type annotation' intention</li>
+                    <li>Bug fixes for 'new Elm file' generator</li>
+                    <li>Performance improvements</li>
+                </ul>
+            </li>
             <li><b>2.2.1</b> <em>(2019-01-13)</em>
                 <ul>
                     <li>Add 'complete current statement' support for case/of, let/in, if/else and function declarations</li>
