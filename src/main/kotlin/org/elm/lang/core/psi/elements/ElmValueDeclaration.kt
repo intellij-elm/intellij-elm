@@ -84,8 +84,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
                 namedElements.addAll(operatorDeclarationLeft!!.namedParameters)
 
         } else if (pattern != null) {
-            // value destructuring (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(pattern!!.descendantsOfType<ElmLowerPattern>())
+            // value destructuring assignment (e.g. `(x,y) = (0,0)` in a let/in declaration)
+            namedElements.addAll(pattern!!.descendantsOfType<ElmNamedElement>())
         }
 
         return namedElements
