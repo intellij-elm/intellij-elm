@@ -119,7 +119,7 @@ foo ((x, y) as point) = point
 """)
 
 
-    fun `test pattern alias in let-in decl`() = checkByCode(
+    fun `test pattern alias in function parameter in let-in expr`() = checkByCode(
             """
 f =
     let
@@ -127,6 +127,18 @@ f =
                      --X      --^
     in
         g (320, 480)
+""")
+
+
+    fun `test pattern alias in let-in destructuring assignment`() = checkByCode(
+            """
+f =
+    let
+        ((x, y) as point) = (320, 480)
+                   --X
+    in
+        point
+        --^
 """)
 
 
