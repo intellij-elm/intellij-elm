@@ -41,7 +41,7 @@ IdentifierChar = [[:letter:][:digit:]_]
 HexChar = [[:digit:]A-Fa-f]
 LowerCaseIdentifier = [:lowercase:]{IdentifierChar}*
 UpperCaseIdentifier = [:uppercase:]{IdentifierChar}*
-NumberLiteral = ("-")?[:digit:]+(\.[:digit:]+)?
+NumberLiteral = ("-")?[:digit:]+(\.[:digit:]+)?(e"-"?[:digit:]+)?
 HexLiteral = 0x{HexChar}+
 Operator = ("!"|"$"|"^"|"|"|"*"|"/"|"?"|"+"|"~"|"."|-|=|@|#|%|&|<|>|:|€|¥|¢|£|¤)+
 ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
