@@ -305,11 +305,7 @@ private class InferenceScope(
         val replacements = mutableMapOf<TyVar, Ty>()
         for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
             val argTy = inferAtom(arg)
-            val finalParamTy = when (paramTy) {
-                is TyVar -> replacements.getOrPut(paramTy) {argTy}
-                else -> paramTy
-            }
-            requireAssignable(arg, argTy, finalParamTy)
+            requireAssignable(arg, argTy, paramTy, replacements = replacements)
         }
 
         val appliedTy = targetTy.partiallyApply(arguments.size)
@@ -428,10 +424,9 @@ private class InferenceScope(
                 continue
             }
 
-            if (assignable(result.ty, ty)) {
+            if (requireAssignable(branchExpression, result.ty, ty)) {
                 ty = result.ty
             } else {
-                diagnostics += TypeMismatchError(branchExpression, result.ty, ty)
                 errorEncountered = true
             }
         }
@@ -848,38 +843,49 @@ private class InferenceScope(
      * of these functions access any scope `InferenceScope` properties.
      */
 
-    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty, endElement: ElmPsiElement? = null): Boolean {
-        val assignable = assignable(ty1, ty2)
+    private fun requireAssignable(
+            element: PsiElement,
+            ty1: Ty,
+            ty2: Ty,
+            endElement: ElmPsiElement? = null,
+            replacements: MutableMap<TyVar, Ty>? = null
+    ): Boolean {
+        val assignable = assignable(ty1, ty2, replacements)
         if (!assignable) {
-            diagnostics += TypeMismatchError(element, ty1, ty2, endElement)
+            val t2 = replacements?.let { TypeReplacement.replace(ty2, it) } ?: ty2
+            diagnostics += TypeMismatchError(element, ty1, t2, endElement)
         }
         return assignable
     }
 
-    /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
-    private fun assignable(ty1: Ty, ty2: Ty): Boolean {
+    /** Return `false` if [ty1] definitely cannot be assigned to [type2] */
+    private fun assignable(ty1: Ty, type2: Ty, replacements: MutableMap<TyVar, Ty>?): Boolean {
+        val ty2 = when (type2) {
+            is TyVar -> replacements?.getOrPut(type2) { ty1 } ?: type2
+            else -> type2
+        }
         return ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
             is TyVar, is TyInfer -> true
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
-                    && argumentsAssignable(ty1.types, ty2.types)
-            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
-                    || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2)
+                    && argumentsAssignable(ty1.types, ty2.types, replacements)
+            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2, replacements)
+                    || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2, replacements)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
-                    && argumentsAssignable(ty1.parameters, ty2.parameters)
+                    && argumentsAssignable(ty1.parameters, ty2.parameters, replacements)
             is TyFunction -> ty2 is TyFunction
-                    && argumentsAssignable(ty1.allTys, ty2.allTys)
+                    && argumentsAssignable(ty1.allTys, ty2.allTys, replacements)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign $ty1")
         }
     }
 
-    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
+    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord, replacements: MutableMap<TyVar, Ty>?): Boolean {
         fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
-            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it) } ?: !strict }
+            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it, replacements) } ?: !strict }
         }
 
         // Subset record tys are created from extension record declarations or field accessor functions
@@ -908,17 +914,17 @@ private class InferenceScope(
         }
     }
 
-    private fun recordAssignableToFunction(record: TyRecord, function: TyFunction): Boolean {
+    private fun recordAssignableToFunction(record: TyRecord, function: TyFunction, replacements: MutableMap<TyVar, Ty>?): Boolean {
         return record.alias != null
-                && assignable(record, function.ret)
-                && argumentsAssignable(record.fields.values.toList(), function.parameters)
+                && assignable(record, function.ret, replacements)
+                && argumentsAssignable(record.fields.values.toList(), function.parameters, replacements)
     }
 
-    private fun argumentsAssignable(ty1: List<Ty>, ty2: List<Ty>): Boolean {
+    private fun argumentsAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {
         // If we can't infer the last parameter, it might be a function type which would have
         // uncurried to allow more parameters than we know about.
         return (ty1.size == ty2.size || !isInferable(ty1.last()) || !isInferable(ty2.last())) &&
-                ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+                ty1.zip(ty2).all { (l, r) -> assignable(l, r, replacements) }
     }
 
     //</editor-fold>

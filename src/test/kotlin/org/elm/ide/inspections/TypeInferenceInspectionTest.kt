@@ -1132,4 +1132,28 @@ foo a = a
 main : List Int
 main = <error descr="Type mismatch.Required: List IntFound: List String">foo [""]</error>
 """)
+
+    fun `test mismatched return value from multiple rigid vars`() = checkByText("""
+foo : List a -> List b -> List b
+foo a b = b
+
+main : List Int
+main = <error descr="Type mismatch.Required: List IntFound: List String">foo [1] [""]</error>
+""")
+
+    fun `test mismatched return value from doubly nested vars`() = checkByText("""
+foo : List (List a) -> List (List a)
+foo a = a
+
+main : List (List Int)
+main = <error descr="Type mismatch.Required: List (List Int)Found: List (List String)">foo [[""]]</error>
+""")
+
+    fun `test mismatched arg to var`() = checkByText("""
+foo : List a -> List a -> List a
+foo a b = a
+
+main : List String
+main = foo [""] <error descr="Type mismatch.Required: List StringFound: List (List a)">[[]]</error>
+""")
 }
