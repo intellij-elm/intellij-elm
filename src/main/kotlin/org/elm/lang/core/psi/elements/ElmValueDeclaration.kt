@@ -48,6 +48,9 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
     val pattern: ElmPattern?
         get() = findChildByClass(ElmPattern::class.java)
 
+    /** The element on the left-hand side of the `=` */
+    val assignee: ElmValueAssigneeTag?
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmValueAssigneeTag::class.java) ?: pattern
 
     /**
      * The 'body' of the declaration. This is the right-hand side which is bound

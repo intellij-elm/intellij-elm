@@ -8,6 +8,7 @@ import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
+import org.elm.lang.core.psi.ElmValueAssigneeTag
 import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.stubs.ElmOperatorDeclarationLeftStub
 
@@ -20,7 +21,7 @@ import org.elm.lang.core.stubs.ElmOperatorDeclarationLeftStub
  *
  * @see [ElmFunctionDeclarationLeft]
  */
-class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclarationLeftStub>, ElmExposableTag {
+class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclarationLeftStub>, ElmExposableTag, ElmValueAssigneeTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.OPERATOR)

@@ -2,7 +2,6 @@ package org.elm.lang.core.types
 
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -87,11 +86,13 @@ private class InferenceScope(
      */
 
     fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
-        // If the declaration has any syntax errors, we don't run inference on it. Trying to resolve
+        val assignee = declaration.assignee
+
+        // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
         // references in expressions that contain syntax errors can result in infinite recursion and
         // surprising bugs.
-        // We don't currently infer recursive functions in order to avoid infinite loop in the inference.
-        if (checkRecursion(declaration) || PsiTreeUtil.hasErrorElements(declaration)) {
+        // We don't currently infer recursive functions in order to avoid infinite loops in the inference.
+        if (checkRecursion(declaration) || assignee == null || PsiTreeUtil.hasErrorElements(assignee)) {
             return InferenceResult(expressionTypes, diagnostics, TyUnknown())
         }
 
@@ -101,7 +102,7 @@ private class InferenceScope(
 
         val expr = declaration.expression
         var bodyTy: Ty = TyUnknown()
-        if (expr != null) {
+        if (expr != null && !PsiTreeUtil.hasErrorElements(expr)) {
             bodyTy = inferExpression(expr)
 
             // If the body is just a let expression, show the diagnostic on its expression rather than the whole body.
@@ -198,7 +199,7 @@ private class InferenceScope(
      */
 
     private fun inferExpression(expr: ElmExpressionTag?): Ty {
-        if (expr == null || elementContainsErrors(expr)) return TyUnknown()
+        if (expr == null || PsiTreeUtil.hasErrorElements(expr)) return TyUnknown()
         return when (expr) {
             is ElmBinOpExpr -> inferBinOpExpr(expr)
             is ElmFunctionCallExpr -> inferFunctionCall(expr)
@@ -287,6 +288,9 @@ private class InferenceScope(
         }
 
         if (arguments.size > targetTy.parameters.size) {
+            // Even if there's too many arguments, we still need to infer the argument types since
+            // they're returned in the subexpression inference
+            arguments.forEach { inferAtom(it) }
             return argCountError(targetTy.parameters.size)
         }
 
@@ -357,7 +361,7 @@ private class InferenceScope(
             return TyUnknown()
         }
 
-        val ty = baseTy.fields[fieldIdentifier.text]!!
+        val ty = baseTy.fields.getValue(fieldIdentifier.text)
         expressionTypes[fieldAccess] = ty
         return ty
     }
@@ -924,10 +928,6 @@ private fun parentPatternDecl(element: ElmPsiElement): ElmValueDeclaration? {
 private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
     // top-level patterns are unsupported after 0.18
     return parentPatternDecl(element)?.parent is ElmFile
-}
-
-private fun elementContainsErrors(element: ElmPsiElement): Boolean {
-    return element.childOfType<PsiErrorElement>() != null
 }
 
 private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {

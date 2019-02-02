@@ -4,8 +4,15 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmExposableTag
+import org.elm.lang.core.psi.ElmFunctionParamTag
+import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
+import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmValueAssigneeTag
+import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.psi.directChildren
+import org.elm.lang.core.psi.isTopLevel
 import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
@@ -25,7 +32,7 @@ import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
  *      foo = 42
  *  in ...`
  */
-class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub>, ElmExposableTag {
+class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclarationLeftStub>, ElmExposableTag, ElmValueAssigneeTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.LOWER)
