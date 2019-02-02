@@ -1,18 +1,14 @@
 package org.elm.ide.inspections
 
 import org.elm.ide.typing.guessIndent
+import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.stubs.index.ElmNamedElementIndex
-import org.elm.lang.core.types.TyUnion
-import org.elm.lang.core.types.VariantParameters
-import org.elm.lang.core.types.findInference
-import org.elm.lang.core.types.renderParam
-import org.elm.lang.core.types.variantInference
+import org.elm.lang.core.types.*
 
 /**
  * This class can detect missing branches for case expressions and insert them into the PSI in place.
@@ -88,8 +84,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
                 ?: return defaultResult
 
-        val project = element.project
-        val declaration = ElmNamedElementIndex.findElement<ElmTypeDeclaration>(exprTy.name, exprTy.module, project)
+        val declaration = ElmLookup.findByNameAndModule<ElmTypeDeclaration>(exprTy.name, exprTy.module, element.elmFile)
                 ?: return defaultResult
 
         val allBranches = declaration.variantInference().value

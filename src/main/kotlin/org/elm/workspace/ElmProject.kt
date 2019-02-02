@@ -8,13 +8,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.vfs.LocalFileSystem
-import org.elm.lang.core.psi.ClientLocation
+import org.elm.lang.core.lookup.ClientLocation
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -65,6 +63,13 @@ sealed class ElmProject(
     val absoluteSourceDirectories: List<Path>
         get() = sourceDirectories.map { projectDirPath.resolve(it).normalize() }
 
+    val allSourceDirs: Sequence<Path>
+        get() = absoluteSourceDirectories.asSequence() + sequenceOf(testsDirPath)
+
+    fun sourceDirsVisibleAt(clientLocation: ClientLocation): Sequence<Path> =
+            if (clientLocation.isInTestsDirectory) allSourceDirs
+            else absoluteSourceDirectories.asSequence()
+
     /**
      * Returns all packages which this project depends on, whether it be for normal,
      * production code or for tests.
@@ -76,25 +81,8 @@ sealed class ElmProject(
      * Returns the packages which this project depends that are visible from the given [clientLocation].
      */
     fun dependenciesVisibleAt(clientLocation: ClientLocation): Sequence<ElmPackageProject> =
-            if (clientLocation.isInTestsDirectory) allResolvedDependencies else dependencies.asSequence()
-
-    /**
-     * Returns the absolute path of each source directory which is shared between the
-     * receiver and [otherProject].
-     */
-    fun sharedSourceDirs(otherProject: ElmProject): List<Path> {
-        val paths = mutableListOf<Path>()
-        for (a in absoluteSourceDirectories) {
-            for (b in otherProject.absoluteSourceDirectories) {
-                try {
-                    if (Files.isSameFile(a, b)) paths.add(a)
-                } catch (e: NoSuchFileException) {
-                    // ignore
-                }
-            }
-        }
-        return paths
-    }
+            if (clientLocation.isInTestsDirectory) allResolvedDependencies
+            else dependencies.asSequence()
 
     val isElm18: Boolean
         get() = when (this) {

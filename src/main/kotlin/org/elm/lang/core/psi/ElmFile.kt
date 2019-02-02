@@ -11,6 +11,7 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
+import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.stubs.*
 import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ElmPackageProject
@@ -136,20 +137,3 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 
 val VirtualFile.isElmFile
     get() = fileType == ElmFileType
-
-
-/**
- * Describes the location from which a reference is resolved.
- *
- * Reference resolution depends on context. For instance, we need
- * to know the containing Elm project in order to determine which
- * `source-directories` are valid roots.
- *
- * Starting in Elm 0.19, the Elm project's `test-dependencies`
- * are only "import-able" from within "$ProjectRoot/tests" directory.
- */
-interface ClientLocation {
-    val intellijProject: Project
-    val elmProject: ElmProject?
-    val isInTestsDirectory: Boolean
-}

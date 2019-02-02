@@ -7,8 +7,15 @@ import com.intellij.psi.stubs.StubIndex
 import com.intellij.psi.stubs.StubIndexKey
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.stubs.ElmFileStub
-import org.elm.lang.core.types.moduleName
 
+/**
+ * An index of all Elm named things across the entire IntelliJ project.
+ *
+ * IMPORTANT: See [ElmLookup] for an alternative API that properly
+ * handles visibility of named things based on the Elm project which
+ * wants to access it.
+ *
+ */
 class ElmNamedElementIndex : StringStubIndexExtension<ElmNamedElement>() {
 
     override fun getVersion() =
@@ -32,15 +39,5 @@ class ElmNamedElementIndex : StringStubIndexExtension<ElmNamedElement>() {
          */
         fun getAllNames(project: Project): Collection<String> =
                 StubIndex.getInstance().getAllKeys(KEY, project)
-
-        /** Find the named element with [name] declared in [module] */
-        inline fun <reified T : ElmNamedElement> findElement(
-                name: String,
-                module: String,
-                project: Project,
-                scope: GlobalSearchScope = GlobalSearchScope.allScope(project)
-        ): T? = find(name, project, scope)
-                .filterIsInstance<T>()
-                .find { it.moduleName == module }
     }
 }
