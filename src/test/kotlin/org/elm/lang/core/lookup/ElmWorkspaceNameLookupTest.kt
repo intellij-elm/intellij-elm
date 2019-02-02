@@ -89,9 +89,9 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
          * elm/parser v1.0.0 includes 2 modules: "Parser" and "Parser.Advanced". However,
          * "Parser.Advanced" is not exposed by the package's `elm.json` manifest. It is important
          * that lookup only returns results belonging to exposed modules. In this case, both
-         * modules define a function named "chompWhile". But lookup should only find the type that is
-         * in the exposed module, "Parser".
-        */
+         * modules define a function named "chompWhile". But lookup should only find the function
+         * that is in the exposed module, "Parser".
+         */
         check(lookup("chompWhile").single().moduleName == "Parser")
     }
 

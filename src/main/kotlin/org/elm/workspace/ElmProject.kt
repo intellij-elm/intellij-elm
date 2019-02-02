@@ -205,9 +205,7 @@ class ElmApplicationProject(
         dependencies: List<ElmPackageProject>,
         testDependencies: List<ElmPackageProject>,
         sourceDirectories: List<Path>
-) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories) {
-
-}
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
 /**
@@ -222,9 +220,7 @@ class ElmPackageProject(
         val name: String,
         val version: Version,
         val exposedModules: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories) {
-
-}
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
 private fun ExactDependenciesDTO.depsToPackages(toolchain: ElmToolchain) =

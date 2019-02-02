@@ -30,15 +30,6 @@ interface ClientLocation {
 
 
     /**
-     * Returns `true` if [moduleDeclaration] can be seen from [this location][ClientLocation].
-     *
-     * @see [searchScope]
-     */
-    fun canSee(moduleDeclaration: ElmModuleDeclaration): Boolean =
-            searchScope().contains(moduleDeclaration.elmFile.originalFile.virtualFile)
-
-
-    /**
      * Returns a [GlobalSearchScope] which includes all Elm files that belong to [elmProject]
      * taking into consideration:
      *
