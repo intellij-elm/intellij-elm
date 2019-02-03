@@ -176,7 +176,6 @@ main r = <error descr="Type mismatch.Required: FooFound: ()">foo r</error>
 """)
 
     fun `test mismatched parameter with base record identifier`() = checkByText("""
-type Foo = Bar
 type alias R = {x: (), y: ()}
 foo : { r | x : ()} -> { r | x : ()}
 foo r = r
@@ -184,6 +183,30 @@ foo r = r
 main : R
 main = foo <error descr="Type mismatch.Required: { r | x : () }Found: { y : () }">{ y = () }</error>
 """)
+
+
+    fun `test extension record argument with more fields than extension parameter`() = checkByText("""
+type alias Large a = { a | field1 : String, field2 : String }
+type alias Small a = { a | field1 : String }
+
+foo : Small a -> String
+foo _ = ""
+
+main : Large a -> String
+main arg = foo arg
+""")
+
+    fun `test extension record argument in function type with more fields than extension parameter`() = checkByText("""
+type alias Large a = { a | field1 : String, field2 : String }
+type alias Small a = { a | field1 : String }
+
+foo : Small a -> String
+foo _ = ""
+
+main : Large a -> String
+main = foo
+""")
+
 
     fun `test field accessor as argument`() = checkByText("""
 type alias R = {x: (), y: ()}
