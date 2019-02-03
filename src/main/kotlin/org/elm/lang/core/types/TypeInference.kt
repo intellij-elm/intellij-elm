@@ -856,17 +856,34 @@ private class InferenceScope(
     }
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
-        fun fieldsAssignable(t1: TyRecord, t2: TyRecord): Boolean {
-            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it) } ?: false }
+        fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
+            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it) } ?: !strict }
         }
-        if (ty2.isSubset) {
-            return fieldsAssignable(ty2, ty1)
+
+        // Subset record tys are created from extension record declarations or field accessor functions
+
+        return when {
+            // e.g. passing an extension record argument to an extension record parameter
+            ty1.isSubset && ty2.isSubset -> {
+                // whatever fields they have in common have to have the same types
+                fieldsAssignable(ty1, ty2, strict = false)
+            }
+            // e.g. invoking a field accessor function with a concrete record
+            // e.g. passing a concrete record into an extension record parameter
+            !ty1.isSubset && ty2.isSubset -> {
+                fieldsAssignable(ty2, ty1, strict = true)
+            }
+            // e.g. passing a field accessor into a parameter requiring a function taking a concrete record
+            // e.g. passing an extension record to a concrete parameter
+            ty1.isSubset && !ty2.isSubset -> {
+                fieldsAssignable(ty1, ty2, strict = true)
+            }
+            // e.g. returning a concrete record from a function declaring it returns a concrete record
+            !ty1.isSubset && !ty2.isSubset -> {
+                ty1.fields.size == ty2.fields.size && fieldsAssignable(ty1, ty2, strict = true)
+            }
+            else -> error("impossible")
         }
-        val correctSize = when {
-            ty1.isSubset -> ty1.fields.size <= ty2.fields.size
-            else -> ty1.fields.size == ty2.fields.size
-        }
-        return correctSize && fieldsAssignable(ty1, ty2)
     }
 
     private fun recordAssignableToFunction(record: TyRecord, function: TyFunction): Boolean {
