@@ -112,7 +112,7 @@ private class InferenceScope(
             requireAssignable(errorExpr, bodyTy, expected)
         }
 
-        val ty = if (declaredTy === TyUnknown()) bodyTy else declaredTy
+        val ty = if (declaredTy is TyUnknown) bodyTy else declaredTy
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 

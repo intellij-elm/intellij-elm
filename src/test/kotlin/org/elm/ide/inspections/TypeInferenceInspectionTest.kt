@@ -94,6 +94,13 @@ main : () -> Foo
 main a = <error descr="Type mismatch.Required: FooFound: Float">1.0</error>
 """)
 
+    fun `test mismatched value type from function without annotation`() = checkByText("""
+foo = ()
+main : String
+main = <error descr="Type mismatch.Required: StringFound: ()">foo</error>
+""")
+
+
     fun `test correct value type from record`() = checkByText("""
 main : {x: (), y: ()}
 main = {x = (), y = ()}
