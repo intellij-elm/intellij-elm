@@ -100,6 +100,14 @@ private class InferenceScope(
 
         val (declaredTy, paramCount) = bindParameters(declaration)
 
+        // The body of pattern declarations is inferred as part of parameter binding, so there's no
+        // more to do here.
+        if (declaration.pattern != null) {
+            return InferenceResult(expressionTypes, diagnostics, declaredTy)
+        }
+
+        // For function declarations, we need to infer the body and check that it matches the
+        // annotation, if there is one.
         val expr = declaration.expression
         var bodyTy: Ty = TyUnknown()
         if (expr != null && !PsiTreeUtil.hasErrorElements(expr)) {
@@ -520,7 +528,12 @@ private class InferenceScope(
                 // Pattern declarations might not have been inferred yet
                 val parentPatternDecl = parentPatternDecl(ref)
                 if (parentPatternDecl != null) {
-                    return inferReferencedValueDeclaration(parentPatternDecl)
+                    inferReferencedValueDeclaration(parentPatternDecl)
+                    // Now that the pattern's declaration has been inferred, the pattern has been
+                    // added to bindings
+                    return getBinding(ref)
+                            ?: error("failed to destructure pattern for expr of type " +
+                                    "${expr.elementType}: '${expr.text}'")
                 }
 
                 // All patterns should now be bound

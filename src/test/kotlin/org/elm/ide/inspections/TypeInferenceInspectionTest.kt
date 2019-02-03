@@ -537,7 +537,7 @@ main : Foo -> ()
 main {bar} = <error descr="Type mismatch.Required: ()Found: Int">bar</error>
 """)
 
-    // issue #122
+    // https://github.com/klazuka/intellij-elm/issues/122
     fun `test matched record pattern from extension alias`() = checkByText("""
 type alias Foo a = { a | foo : ()}
 type alias Bar = { bar : () }
@@ -581,7 +581,7 @@ main =
         foo
 """)
 
-    // issue #153
+    // https://github.com/klazuka/intellij-elm/issues/153
     fun `test let-in with tuple with too small arity`() = checkByText("""
 main : ()
 main =
@@ -754,7 +754,7 @@ main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
-    // Issue #142
+    // #https://github.com/klazuka/intellij-elm/issues/142
     // this tests for infinite recursion; the diagnostic is tested in TypeDeclarationInspectionTest
     fun `test bad self-recursion in type alias`() = checkByText("""
 type alias A = A
@@ -828,7 +828,7 @@ main =
         _ -> ()
 """)
 
-    // issue #113
+    // https://github.com/klazuka/intellij-elm/issues/113
     fun `test case branches with union value call`() = checkByText("""
 foo : Maybe (List a)
 foo = Nothing
@@ -839,7 +839,7 @@ main =
        _ -> ()
 """)
 
-    // issue #113
+    // https://github.com/klazuka/intellij-elm/issues/113
     fun `test field access on field subset`() = checkByText("""
 type alias Subset a =
     { a | extra : () }
@@ -967,6 +967,31 @@ foo = b
 bar : ()
 bar = x
 """)
+
+    // https://github.com/klazuka/intellij-elm/issues/247
+    fun `test nested destructuring`() = checkByText("""
+main : ()
+main =
+    let
+        (a, b) =
+            let
+                (c, d) = ("", "")
+            in
+                (c, d)
+    in
+        <error descr="Type mismatch.Required: ()Found: String">a</error>
+""")
+
+    fun `test forward reference to destructured pattern`() = checkByText("""
+main : ()
+main =
+    let
+        a = b
+        (b, c) = ("", "")
+    in
+       <error descr="Type mismatch.Required: ()Found: String">a</error>
+""")
+
 
     fun `test nested forward references`() = checkByText("""
 main : () -> ()
