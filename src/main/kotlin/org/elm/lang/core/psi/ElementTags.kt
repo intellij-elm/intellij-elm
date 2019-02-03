@@ -59,3 +59,6 @@ interface ElmExposedItemTag : ElmPsiElement
 
 /** A named declaration which can be exposed by a module */
 interface ElmExposableTag : ElmPsiElement, ElmNameIdentifierOwner
+
+/** The element on the left side of the `=` in a value declaration */
+interface ElmValueAssigneeTag : ElmPsiElement
