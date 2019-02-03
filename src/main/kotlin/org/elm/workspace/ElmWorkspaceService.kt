@@ -19,6 +19,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
 import com.intellij.openapi.util.EmptyRunnable
+import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.util.Consumer
@@ -69,8 +70,17 @@ class ElmWorkspaceService(
         }
     }
 
+    /**
+     * Increments whenever the workspace and/or settings change.
+     *
+     * This is provided as an alternative to listening to the message bus for changes.
+     * You should use either one or the other, depending on your situation.
+     */
+    val changeTracker = SimpleModificationTracker()
+
 
     // SETTINGS AND TOOLCHAIN
+
 
     /* A nice view of the settings to the outside world */
     data class Settings(val toolchain: ElmToolchain?)
@@ -370,6 +380,7 @@ class ElmWorkspaceService(
 
     private fun notifyDidChangeWorkspace() {
         if (intellijProject.isDisposed) return
+        changeTracker.incModificationCount()
         ApplicationManager.getApplication().invokeAndWait {
             runWriteAction {
                 ProjectRootManagerEx.getInstanceEx(intellijProject)
