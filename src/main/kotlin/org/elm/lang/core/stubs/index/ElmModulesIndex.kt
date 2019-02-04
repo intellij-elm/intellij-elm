@@ -8,6 +8,7 @@ import com.intellij.psi.stubs.StringStubIndexExtension
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.psi.stubs.StubIndexKey
 import org.elm.lang.core.lookup.ClientLocation
+import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
@@ -36,7 +37,7 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
          * Returns an Elm module named [moduleName] which is visible to [clientLocation], if any
          */
         fun get(moduleName: String, clientLocation: ClientLocation): ElmModuleDeclaration? =
-                rawGet(moduleName, clientLocation.intellijProject, clientLocation.searchScope())
+                rawGet(moduleName, clientLocation.intellijProject, ElmLookup.searchScopeAt(clientLocation))
                         .firstOrNull()
 
 
@@ -44,14 +45,14 @@ class ElmModulesIndex : StringStubIndexExtension<ElmModuleDeclaration>() {
          * Returns all Elm modules which are visible to [clientLocation]
          */
         fun getAll(clientLocation: ClientLocation): List<ElmModuleDeclaration> =
-                rawGetAll(clientLocation.intellijProject, clientLocation.searchScope())
+                rawGetAll(clientLocation.intellijProject, ElmLookup.searchScopeAt(clientLocation))
 
 
         /**
          * Returns all Elm modules whose names match an element in [moduleNames] and which are visible to [clientLocation]
          */
         fun getAll(moduleNames: Collection<String>, clientLocation: ClientLocation): List<ElmModuleDeclaration> =
-                rawGetAll(moduleNames, clientLocation.intellijProject, clientLocation.searchScope())
+                rawGetAll(moduleNames, clientLocation.intellijProject, ElmLookup.searchScopeAt(clientLocation))
 
 
         // INTERNALS

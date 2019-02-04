@@ -7,8 +7,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
+import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.LocalFileSystem
-import org.elm.lang.core.lookup.ClientLocation
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
 import java.io.FileNotFoundException
@@ -33,56 +33,43 @@ sealed class ElmProject(
         val dependencies: List<ElmPackageProject>,
         val testDependencies: List<ElmPackageProject>,
         val sourceDirectories: List<Path>
-) {
+) : UserDataHolderBase() {
 
     /**
      * The path to the directory containing the Elm project JSON file.
      */
-    val projectDirPath: Path
-        get() = manifestPath.parent
+    val projectDirPath: Path = manifestPath.parent
 
     /**
      * The path to the directory containing unit tests.
      */
-    val testsDirPath: Path
-        get() = projectDirPath.resolve("tests")
+    val testsDirPath: Path = projectDirPath.resolve("tests")
 
     /**
      * A name which can be shown in the UI. Note that while Elm packages have user-assigned
      * names, applications do not. Thus, in order to cover both cases, we use the name
      * of the parent directory.
      */
-    val presentableName: String
-        get() = projectDirPath.fileName.toString()
+    val presentableName: String =
+            projectDirPath.fileName?.toString() ?: "UNKNOWN"
 
     /**
      * Returns the absolute paths for each source directory.
      *
      * @see sourceDirectories
      */
-    val absoluteSourceDirectories: List<Path>
-        get() = sourceDirectories.map { projectDirPath.resolve(it).normalize() }
+    val absoluteSourceDirectories: List<Path> =
+            sourceDirectories.map { projectDirPath.resolve(it).normalize() }
 
-    val allSourceDirs: Sequence<Path>
-        get() = absoluteSourceDirectories.asSequence() + sequenceOf(testsDirPath)
-
-    fun sourceDirsVisibleAt(clientLocation: ClientLocation): Sequence<Path> =
-            if (clientLocation.isInTestsDirectory) allSourceDirs
-            else absoluteSourceDirectories.asSequence()
+    val allSourceDirs: Sequence<Path> =
+            absoluteSourceDirectories.asSequence() + sequenceOf(testsDirPath)
 
     /**
      * Returns all packages which this project depends on, whether it be for normal,
      * production code or for tests.
      */
-    val allResolvedDependencies: Sequence<ElmPackageProject>
-        get() = sequenceOf(dependencies, testDependencies).flatten()
-
-    /**
-     * Returns the packages which this project depends that are visible from the given [clientLocation].
-     */
-    fun dependenciesVisibleAt(clientLocation: ClientLocation): Sequence<ElmPackageProject> =
-            if (clientLocation.isInTestsDirectory) allResolvedDependencies
-            else dependencies.asSequence()
+    val allResolvedDependencies: Sequence<ElmPackageProject> =
+            sequenceOf(dependencies, testDependencies).flatten()
 
     val isElm18: Boolean
         get() = when (this) {

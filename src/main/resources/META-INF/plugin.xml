@@ -182,8 +182,7 @@
 
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
-        <projectService serviceInterface="org.elm.workspace.ElmWorkspaceService"
-                        serviceImplementation="org.elm.workspace.ElmWorkspaceService"/>
+        <projectService serviceImplementation="org.elm.workspace.ElmWorkspaceService"/>
         <additionalLibraryRootsProvider implementation="org.elm.workspace.ElmAdditionalLibraryRootsProvider"/>
         <projectConfigurable instance="org.elm.workspace.ui.ElmWorkspaceConfigurable" displayName="Elm"
                              groupId="language"/>
