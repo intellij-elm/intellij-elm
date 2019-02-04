@@ -255,9 +255,11 @@ private class InferenceScope(
                     val l = validateTree(tree.left)
                     val r = validateTree(tree.right)
                     val func = operatorTys[tree.operator]!!
-                    requireAssignable(l.start, l.ty, func.parameters[0], l.end)
-                    requireAssignable(r.start, r.ty, func.parameters[1], r.end)
-                    RangeTy(l.start, r.end, func.ret)
+                    val replacements = mutableMapOf<TyVar, Ty>()
+                    requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
+                    requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
+                    val ty = TypeReplacement.replace(func.ret, replacements)
+                    RangeTy(l.start, r.end, ty)
                 }
             }
         }
@@ -885,7 +887,9 @@ private class InferenceScope(
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord, replacements: MutableMap<TyVar, Ty>?): Boolean {
         fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
-            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it, replacements) } ?: !strict }
+            return t1.fields.all { (k, v) ->
+                t2.fields[k]?.let { assignable(v, it, replacements) } ?: !strict
+            }
         }
 
         // Subset record tys are created from extension record declarations or field accessor functions

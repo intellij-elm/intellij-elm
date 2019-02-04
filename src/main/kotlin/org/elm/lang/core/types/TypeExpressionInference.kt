@@ -226,7 +226,7 @@ class TypeExpression(
             return declaredTy
         }
 
-        return TypeReplacement.replace(declaredTy, params, args)
+        return TypeReplacement.replace(declaredTy, params.zip(args).toMap())
     }
 
     private fun typeDeclarationType(declaration: ElmTypeDeclaration): TyUnion {

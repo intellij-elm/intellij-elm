@@ -1149,11 +1149,17 @@ main : List (List Int)
 main = <error descr="Type mismatch.Required: List (List Int)Found: List (List String)">foo [[""]]</error>
 """)
 
-    fun `test mismatched arg to var`() = checkByText("""
+    fun `test fixing var value at first occurrence`() = checkByText("""
 foo : List a -> List a -> List a
 foo a b = a
 
 main : List String
 main = foo [""] <error descr="Type mismatch.Required: List StringFound: List (List a)">[[]]</error>
+""")
+
+    fun `test passing vars through operator`() = checkByText("""
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">List.head [""] |> Maybe.withDefault ""</error>
 """)
 }

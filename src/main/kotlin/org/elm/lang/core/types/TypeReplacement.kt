@@ -16,11 +16,6 @@ class TypeReplacement(
             if (replacements.isEmpty()) return ty
             return TypeReplacement(replacements).replace(ty)
         }
-
-        fun replace(ty: Ty, params: List<TyVar>, args: List<Ty>): Ty {
-            require(params.size == args.size) { "params and args size differ: ${params.size}, ${args.size}" }
-            return replace(ty, params.zip(args).toMap())
-        }
     }
 
     private fun replace(ty: Ty): Ty = when (ty) {
