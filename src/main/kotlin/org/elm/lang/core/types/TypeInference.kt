@@ -245,21 +245,24 @@ private class InferenceScope(
         }
 
         // Parse the tree and walk it, validating all the operator calls.
-        fun validateTree(tree: BinaryExprTree<ElmBinOpPartTag>): RangeTy {
+        fun validateTree(tree: BinaryExprTree<ElmBinOpPartTag>): TyAndRange {
             return when (tree) {
                 is BinaryExprTree.Operand -> {
                     val ty = inferOperand(tree.operand as ElmOperandTag)
-                    RangeTy(tree.operand, ty)
+                    TyAndRange(tree.operand, ty)
                 }
                 is BinaryExprTree.Binary -> {
                     val l = validateTree(tree.left)
                     val r = validateTree(tree.right)
                     val func = operatorTys[tree.operator]!!
                     val replacements = mutableMapOf<TyVar, Ty>()
-                    requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
-                    requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
-                    val ty = TypeReplacement.replace(func.ret, replacements)
-                    RangeTy(l.start, r.end, ty)
+                    val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
+                    val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
+                    val ty = when {
+                        lAssignable && rAssignable -> TypeReplacement.replace(func.ret, replacements)
+                        else -> TyUnknown()
+                    }
+                    TyAndRange(l.start, r.end, ty)
                 }
             }
         }
@@ -303,15 +306,13 @@ private class InferenceScope(
             return argCountError(targetTy.parameters.size)
         }
 
-        // Rigid type variables in function calls are fixed to the first type that's assigned to them
         val replacements = mutableMapOf<TyVar, Ty>()
-        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
-            val argTy = inferAtom(arg)
-            requireAssignable(arg, argTy, paramTy, replacements = replacements)
+        val ok = arguments.zip(targetTy.parameters).all { (arg, paramTy) ->
+            requireAssignable(arg, inferAtom(arg), paramTy, replacements = replacements)
         }
 
         val appliedTy = targetTy.partiallyApply(arguments.size)
-        val resultTy = TypeReplacement.replace(appliedTy, replacements)
+        val resultTy = if (ok) TypeReplacement.replace(appliedTy, replacements) else TyUnknown()
         expressionTypes[callExpr] = resultTy
         return resultTy
     }
@@ -831,7 +832,7 @@ private class InferenceScope(
         }
 
         for (id in lowerPatternList) {
-            val fieldTy = ty.fields[id.name]!!
+            val fieldTy = ty.fields.getValue(id.name)
             bindPattern(id, fieldTy, isParameter)
         }
     }
@@ -870,15 +871,14 @@ private class InferenceScope(
             is TyVar, is TyInfer -> true
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
-                    && argumentsAssignable(ty1.types, ty2.types, replacements)
+                    && allAssignable(ty1.types, ty2.types, replacements)
             is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2, replacements)
                     || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2, replacements)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
-                    && argumentsAssignable(ty1.parameters, ty2.parameters, replacements)
-            is TyFunction -> ty2 is TyFunction
-                    && argumentsAssignable(ty1.allTys, ty2.allTys, replacements)
+                    && allAssignable(ty1.parameters, ty2.parameters, replacements)
+            is TyFunction -> ty2 is TyFunction && funcsAssignable(ty1, ty2, replacements)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign $ty1")
@@ -921,14 +921,31 @@ private class InferenceScope(
     private fun recordAssignableToFunction(record: TyRecord, function: TyFunction, replacements: MutableMap<TyVar, Ty>?): Boolean {
         return record.alias != null
                 && assignable(record, function.ret, replacements)
-                && argumentsAssignable(record.fields.values.toList(), function.parameters, replacements)
+                && allAssignable(record.fields.values.toList(), function.parameters, replacements)
     }
 
-    private fun argumentsAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {
-        // If we can't infer the last parameter, it might be a function type which would have
-        // uncurried to allow more parameters than we know about.
-        return (ty1.size == ty2.size || !isInferable(ty1.last()) || !isInferable(ty2.last())) &&
-                ty1.zip(ty2).all { (l, r) -> assignable(l, r, replacements) }
+    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {
+        // don't short circuit so that all types get applied
+        return ty1.size == ty2.size && ty1.zip(ty2).map { (l, r) -> assignable(l, r, replacements) }.all { it }
+    }
+
+    private fun funcsAssignable(ty1: TyFunction, ty2: TyFunction, replacements: MutableMap<TyVar, Ty>?): Boolean {
+        // We need to handle currying. If ty1 has fewer parameters than ty2, it's an error. If ty1
+        // has more parameters than ty2, all extra parameters are curried into a function that is
+        // assigned to the last parameter of ty2.
+        val tys1 = ty1.allTys
+        val tys2 = ty2.allTys
+
+        fun makeFunc(tys: List<Ty>) = when {
+            tys.size == 1 -> tys.single()
+            else -> TyFunction(tys.dropLast(1), tys.last())
+        }
+
+        val sharedSize = minOf(tys1.size, tys2.size) - 1
+        val sharedAssignable = allAssignable(tys1.take(sharedSize), tys2.take(sharedSize), replacements)
+        val tailAssignable = assignable(makeFunc(tys1.drop(sharedSize)), makeFunc(tys2.drop(sharedSize)), replacements)
+
+        return sharedAssignable && tailAssignable
     }
 
     //</editor-fold>
@@ -975,7 +992,8 @@ private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
     return parentPatternDecl(element)?.parent is ElmFile
 }
 
-private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
+/** A [ty] and the [start] and [end] elements of the expression that created it */
+private data class TyAndRange(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
     constructor(element: ElmPsiElement, ty: Ty) : this(element, element, ty)
 }
 

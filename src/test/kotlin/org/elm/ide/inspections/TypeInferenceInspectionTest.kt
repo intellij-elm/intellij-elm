@@ -1162,4 +1162,17 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: String">List.head [""] |> Maybe.withDefault ""</error>
 """)
+
+    fun `test passing function type with vars`() = checkByText("""
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+foo : String -> String
+foo s = s
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">map foo</error>
+""")
+
 }
