@@ -46,12 +46,8 @@ The plugin can perform type inference on arbitrary expressions in your program. 
 
 The plugin also performs type checking, marking incompatible types in red.
 
-There are 2 limitations to the type system as currently implemented:
-
-1. it does not work if a function is missing a type annotation (typically not a problem)
-2. it does not work if type variables (such as `List a` or `Maybe a` are involved)
-
-We hope to remove the type variable limitation in the future.
+The current implementation of the type system does not infer the types of parameters of unannotated
+functions, but this limitation will be removed in the future.
 
 
 # Creating a new Elm project
