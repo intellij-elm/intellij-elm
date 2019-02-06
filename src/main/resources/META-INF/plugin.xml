@@ -30,6 +30,14 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>2.2.3</b> <em>(2019-02-06)</em>
+                <ul>
+                    <li>Record field completion now works even in the presence of parse errors</li>
+                    <li>More performance improvements</li>
+                    <li>Bug fixes for type checker</li>
+                    <li>Added support for exponential notation on number literals</li>
+                </ul>
+            </li>
             <li><b>2.2.2</b> <em>(2019-01-28)</em>
                 <ul>
                     <li>Improvements to 'create function from type annotation' intention</li>
