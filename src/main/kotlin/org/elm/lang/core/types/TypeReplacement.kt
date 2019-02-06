@@ -12,9 +12,24 @@ class TypeReplacement(
         private val replacements: Map<TyVar, Ty>
 ) {
     companion object {
+        /**
+         * Replace vars in [ty] according to [replacements].
+         */
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
             if (replacements.isEmpty()) return ty
             return TypeReplacement(replacements).replace(ty)
+        }
+
+        /**
+         * Replace vars in [ty] according to [replacements].
+         *
+         * If the values of [replacements] can contain [TyVar]s that occur in the keys, use this
+         * rather than [replace].
+         */
+        fun deepReplace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
+            if (replacements.isEmpty()) return ty
+            val tr = TypeReplacement(replacements)
+            return tr.replace(tr.replace(ty))
         }
     }
 

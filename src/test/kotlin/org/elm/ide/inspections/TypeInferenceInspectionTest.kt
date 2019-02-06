@@ -1175,4 +1175,34 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">map foo</error>
 """)
 
+    fun `test passing function type with vars to function`() = checkByText("""
+appL : (a -> b) -> a -> b
+appL f x = f x
+
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+foo : String -> String
+foo s = s
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">appL map foo</error>
+""")
+
+    fun `test passing function type with vars to operator`() = checkByText("""
+appL : (a -> b) -> a -> b
+appL f x = f x
+infix right 0 (<:) = appL
+
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+foo : String -> String
+foo s = s
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">map <: foo</error>
+""")
 }

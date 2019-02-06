@@ -259,7 +259,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.replace(func.ret, replacements)
+                        lAssignable && rAssignable -> TypeReplacement.deepReplace(func.ret, replacements)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -312,7 +312,7 @@ private class InferenceScope(
         }
 
         val appliedTy = targetTy.partiallyApply(arguments.size)
-        val resultTy = if (ok) TypeReplacement.replace(appliedTy, replacements) else TyUnknown()
+        val resultTy = if (ok) TypeReplacement.deepReplace(appliedTy, replacements) else TyUnknown()
         expressionTypes[callExpr] = resultTy
         return resultTy
     }
@@ -838,7 +838,7 @@ private class InferenceScope(
     }
 
     //</editor-fold>
-    //<editor-fold desc="coercion">
+    //<editor-fold desc="unification">
 
     /*
      * These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
@@ -855,7 +855,7 @@ private class InferenceScope(
     ): Boolean {
         val assignable = assignable(ty1, ty2, replacements)
         if (!assignable) {
-            val t2 = replacements?.let { TypeReplacement.replace(ty2, it) } ?: ty2
+            val t2 = replacements?.let { TypeReplacement.deepReplace(ty2, it) } ?: ty2
             diagnostics += TypeMismatchError(element, ty1, t2, endElement)
         }
         return assignable
