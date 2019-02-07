@@ -43,7 +43,7 @@ class TypeReplacement(
         is TyUnknown -> TyUnknown(replace(ty.alias))
         is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
-        is TyUnit, TyInProgressBinding, is TyInfer -> ty
+        is TyUnit, TyInProgressBinding -> ty
     }
 
     /*

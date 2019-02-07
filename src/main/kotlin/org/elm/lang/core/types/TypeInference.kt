@@ -295,7 +295,7 @@ private class InferenceScope(
                 inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
                 else -> return argCountError(0)
             }
-            is TyUnknown, is TyInfer -> return TyUnknown() // TODO[unification] infer vars
+            is TyUnknown -> return TyUnknown()
             else -> return argCountError(0)
         }
 
@@ -330,7 +330,7 @@ private class InferenceScope(
             is ElmListExpr -> inferList(atom)
             is ElmNegateExpr -> inferNegateExpression(atom)
             is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
-            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyInfer("number") // TODO[unification] handle `number1`,`number2`,...
+            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number")
             is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
             is ElmParenthesizedExpr -> inferExpression(atom.expression)
             is ElmRecordExpr -> inferRecord(atom)
@@ -549,8 +549,8 @@ private class InferenceScope(
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
-        val tyVar = TyInfer("b")
-        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyInfer("a"))), tyVar)
+        val tyVar = TyVar("b")
+        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
@@ -863,8 +863,10 @@ private class InferenceScope(
             is TyVar -> replacements?.get(type2) ?: type2
             else -> type2
         }
-        val result = ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
-            is TyVar, is TyInfer -> true
+        val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
+            varAssignable(ty2, ty1)
+        } else when (ty1) {
+            is TyVar -> varAssignable(ty1, ty2)
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types, replacements)
@@ -958,9 +960,67 @@ private class InferenceScope(
         return sharedAssignable && tailAssignable
     }
 
+    /** Check if a [ty] can that compares unequal to a [tyVar] can be unified with it */
+    private fun varAssignable(tyVar: TyVar, ty: Ty): Boolean {
+        // Vars with certain names are treated as typeclasses that only unify with a limited set of
+        // types.
+        //
+        //  From the elm guide:
+        //
+        //  - `number` permits `Int` and `Float`
+        //  - `appendable` permits `String` and `List a`
+        //  - `comparable` permits `Int`, `Float`, `Char`, `String`, and lists/tuples of `comparable` values
+        //  - `compappend` permits `String` and `List comparable`
+
+        fun List<Ty>.allComparable(): Boolean = all { assignable(it, TyVar("comparable"), null) }
+
+        return when {
+            tyVar.name.startsWith("number") -> when (ty) {
+                is TyUnion -> ty.isTyFloat || ty.isTyInt
+                is TyVar -> typeclassCompatable("number", tyVar.name, ty.name)
+                else -> false
+            }
+            tyVar.name.startsWith("appendable") -> when (ty) {
+                is TyUnion -> ty.isTyString || ty.isTyList
+                is TyVar -> typeclassCompatable("appendable", tyVar.name, ty.name)
+                else -> false
+            }
+            tyVar.name.startsWith("comparable") -> when (ty) {
+                is TyTuple -> ty.types.allComparable()
+                is TyUnion -> ty.isTyFloat
+                        || ty.isTyInt
+                        || ty.isTyChar
+                        || ty.isTyString
+                        || ty.isTyList && ty.parameters.allComparable()
+                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("appendable", tyVar.name, ty.name)
+                else -> false
+            }
+            tyVar.name.startsWith("compappend") -> when (ty) {
+                is TyUnion -> ty.isTyString || ty.isTyList && ty.parameters.allComparable()
+                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("appendable", tyVar.name, ty.name)
+                else -> false
+            }
+            else -> true
+        }
+    }
+
+    /**
+     * Check if a var with [name1] of a var in [typeclass] is compatible with the typeclass of a var with [name2]
+     *
+     * Specifics of each typeclass are checked outside this function.
+     */
+    private fun typeclassCompatable(typeclass: String, name1: String, name2: String): Boolean {
+        // all unconstrained vars can unify with constrained vars, so if there's no typeclass, we
+        // always return true
+        val otherTypclassName = TYPECLASS_REGEX.matchEntire(name2)?.value ?: return true
+        // any numbered var can be unify with an unnumbered var in the same typeclass. If they're
+        // both numbered, they have to match exactly.
+        return otherTypclassName == typeclass &&
+                (name1 == name2 || otherTypclassName == typeclass || name1 == typeclass)
+    }
+
     //</editor-fold>
 }
-
 
 /**
  * @property expressionTypes the types for any psi elements inferred that should be available to inspections
@@ -982,11 +1042,11 @@ val ElmPsiElement.moduleName: String
     get() = elmFile.getModuleDecl()?.name ?: ""
 
 
-/** Return [count] [TyInfer]s named a, b, ... z, a1, b1, ... */
-private fun uniqueVars(count: Int): List<TyInfer> {
+/** Return [count] [TyVar]s named a, b, ... z, a1, b1, ... */
+private fun uniqueVars(count: Int): List<TyVar> {
     val s = "abcdefghijklmnopqrstuvwxyz"
     return (0 until count).map {
-        TyInfer(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
+        TyVar(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
     }
 }
 
@@ -1012,4 +1072,7 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 }
 
 // TODO[unification] allow vars
-fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar && ty !is TyInfer
+fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar
+
+/** extracts the typeclass from a [TyVar] name if it is a typeclass */
+private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")

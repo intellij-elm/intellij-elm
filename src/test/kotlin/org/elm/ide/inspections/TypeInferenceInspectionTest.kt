@@ -1266,4 +1266,180 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">foo listStr listA listA</error>
 """)
+
+    fun `test constraint number int literals`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: number">foo 1 2</error>
+""")
+
+    fun `test constraint number float literals`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1.1 2.2</error>
+""")
+
+    fun `test constraint number int and float literal`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1 2.2</error>
+""")
+
+    fun `test constraint number mismatched`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main =
+    foo 1 <error descr="Type mismatch.Required: numberFound: ()">()</error>
+""")
+
+    fun `test constraint appendable string`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test constraint appendable list`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List a">foo [] []</error>
+""")
+
+    fun `test constraint appendable string and list mismatch`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main =
+    foo "" <error descr="Type mismatch.Required: StringFound: List a">[]</error>
+""")
+
+    fun `test constraint appendable list mismatch`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main =
+    foo [""] <error descr="Type mismatch.Required: List StringFound: List ()">[()]</error>
+""")
+
+    fun `test constraint appendable number mismatch`() = checkByText("""
+foo : appendable -> appendable
+foo a = a
+
+main =
+    foo <error descr="Type mismatch.Required: appendableFound: number">1</error>
+""")
+
+    fun `test constraint comparable int`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : Int -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: Int">foo a a</error>
+""")
+
+    fun `test constraint comparable float`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1.1 2.2</error>
+""")
+
+    fun `test constraint comparable char`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Char">foo 'a' 'b'</error>
+""")
+
+    fun `test constraint comparable string`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo "a" "b"</error>
+""")
+
+    fun `test constraint comparable list string`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo ["a"] []</error>
+""")
+
+    fun `test constraint comparable tuple float`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: (Float, Float)">foo (1.1, 2.2) (3.3, 4.4)</error>
+""")
+
+    fun `test constraint comparable tuple mismatch`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    foo ("", "") <error descr="Type mismatch.Required: (String, String)Found: (String, Float)">("", 1.1)</error>
+""")
+
+    fun `test constraint compappend string`() = checkByText("""
+foo : comappend -> comappend -> comappend
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test constraint compappend list string`() = checkByText("""
+foo : comappend -> comappend -> comappend
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo [""] []</error>
+""")
+
+    fun `test numbered constraint appendable`() = checkByText("""
+foo : appendable1 -> appendable2 -> appendable3 -> appendable2
+foo a b c = b
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo "" [""] [()]</error>
+""")
+
+    fun `test numbered constraint appendable mismatch`() = checkByText("""
+foo : appendable1 -> appendable2 -> appendable1 -> appendable2
+foo a b c = b
+
+main : ()
+main =
+    foo "" [""] <error descr="Type mismatch.Required: StringFound: List String">[""]</error>
+""")
 }

@@ -9,7 +9,6 @@ fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String {
         is TyRecord -> renderedText(linkify, withModule)
         is TyTuple -> renderedText(linkify, withModule)
         is TyVar -> name
-        is TyInfer -> name
         is TyUnit -> "()"
         is TyUnknown, TyInProgressBinding -> "unknown"
         TyShader -> "shader"
@@ -65,7 +64,6 @@ fun Ty.renderParam(): String {
         is TyRecord -> "record"
         is TyTuple -> renderParam()
         is TyVar -> name
-        is TyInfer -> name
         is TyUnit -> "()"
         is TyUnknown, TyInProgressBinding -> "unknown"
         TyShader -> "shader"

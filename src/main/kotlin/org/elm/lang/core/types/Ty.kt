@@ -19,22 +19,11 @@ sealed class Ty {
 }
 
 // vars are not a data class because they need to be compared by identity
-/** A declared ("rigid") type variable (e.g. `a` in `Maybe a`) */
+/** A type variable (e.g. `a` in `Maybe a`) */
 class TyVar(val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
     override fun toString(): String = "<TyVar $name>"
-}
-
-/**
- * An implicit ("flexible") type variable (i.e. the type of parameters in unannotated functions)
- *
- * These types must be unified.
- */
-data class TyInfer(val name: String) : Ty() {
-    override val alias: AliasInfo? get() = null
-    override fun withAlias(alias: AliasInfo): TyInfer = this
-    override fun toString(): String = "<TyInfer $name>"
 }
 
 /** A tuple type like `(Int, String)` */
@@ -94,6 +83,10 @@ val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnk
 fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
 
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
+val TyUnion.isTyInt: Boolean get() = module == TyInt.module && name == TyInt.name
+val TyUnion.isTyFloat: Boolean get() = module == TyFloat.module && name == TyFloat.name
+val TyUnion.isTyString: Boolean get() = module == TyString.module && name == TyString.name
+val TyUnion.isTyChar: Boolean get() = module == TyChar.module && name == TyChar.name
 
 data class TyFunction(
         val parameters: List<Ty>,
