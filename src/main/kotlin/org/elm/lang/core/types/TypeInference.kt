@@ -554,15 +554,11 @@ private class InferenceScope(
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
-        val subExpr = expr.expression
+        val subExpr = expr.expression ?: return TyUnknown()
         val subTy = inferExpression(subExpr)
-        // TODO [unification] restrict vars to only number
         return when {
-            subTy == TyInt || subTy == TyFloat || !isInferable(subTy) -> subTy
-            else -> {
-                diagnostics += TypeMismatchError(subExpr!!, subTy, TyVar("number"))
-                TyUnknown()
-            }
+            requireAssignable(subExpr, subTy, TyVar("number")) -> subTy
+            else -> TyUnknown()
         }
     }
 

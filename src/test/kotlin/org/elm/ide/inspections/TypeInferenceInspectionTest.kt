@@ -53,6 +53,16 @@ main = -1.0
 main = -<error descr="Type mismatch.Required: numberFound: String">""</error>
 """)
 
+    fun `test negate from pattern match`() = checkByText("""
+type alias N = Float
+type Foo = Bar N
+
+main : Foo -> ()
+main foo =
+    <error descr="Type mismatch.Required: ()Found: N">case foo of
+        Bar n -> -n</error>
+""")
+
     fun `test mismatched tuple value type from missing field`() = checkByText("""
 main : ((), (), ())
 main = <error descr="Type mismatch.Required: ((), (), ())Found: ((), ())">((), ())</error>
@@ -1256,6 +1266,4 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">foo listStr listA listA</error>
 """)
-
-
 }
