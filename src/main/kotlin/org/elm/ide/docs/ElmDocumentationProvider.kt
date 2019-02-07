@@ -32,6 +32,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmModuleDeclaration -> documentationFor(element)
         is ElmAsClause -> documentationFor(element)
         is ElmPatternAs -> documentationFor(element)
+        is ElmInfixDeclaration -> documentationFor(element)
         else -> null
     }
 
@@ -203,6 +204,11 @@ private fun documentationFor(clause: ElmAsClause): String? = buildString {
     return documentationFor(decl)
 }
 
+private fun documentationFor(element: ElmInfixDeclaration): String? {
+    val decl = element.valueExpr?.reference?.resolve()?.parentOfType<ElmValueDeclaration>() ?: return null
+    val func = decl.functionDeclarationLeft ?: return null
+    return documentationFor(func)
+}
 
 private fun StringBuilder.renderVariantParameters(parameters: List<Ty>) {
     if (parameters.isNotEmpty()) {
