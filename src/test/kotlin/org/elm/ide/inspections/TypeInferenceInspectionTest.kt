@@ -40,10 +40,12 @@ main = <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
 """)
 
     fun `test matched int negation`() = checkByText("""
+main : Int
 main = -1
 """)
 
     fun `test matched float negation`() = checkByText("""
+main : Float
 main = -1.0
 """)
 
@@ -1205,4 +1207,55 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">map <: foo</error>
 """)
+
+
+    fun `test multiple empty lists`() = checkByText("""
+foo : z -> z -> z -> z
+foo a b c = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo [] [] [""]</error>
+""")
+
+    fun `test multiple mismatched lists`() = checkByText("""
+foo : z -> z -> z -> z -> z
+foo a b c d = a
+
+main : ()
+main =
+    foo [] [] [""] <error descr="Type mismatch.Required: List StringFound: List ()">[()]</error>
+""")
+
+    fun `test multiple empty list functions ending with concrete type`() = checkByText("""
+foo : z -> z -> z -> z
+foo a b c = a
+
+listA : List b -> List b
+listA a = a
+
+listStr : List String -> List String
+listStr a = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">foo listA listA listStr</error>
+""")
+
+    fun `test multiple empty list functions starting with concrete type`() = checkByText("""
+foo : z -> z -> z -> z
+foo a b c = a
+
+listA : List b -> List b
+listA a = a
+
+listStr : List String -> List String
+listStr a = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">foo listStr listA listA</error>
+""")
+
+
 }

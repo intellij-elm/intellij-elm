@@ -29,7 +29,10 @@ class TypeReplacement(
         fun deepReplace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
             if (replacements.isEmpty()) return ty
             val tr = TypeReplacement(replacements)
-            return tr.replace(tr.replace(ty))
+            val ty1 = tr.replace(ty)
+            val ty2 = tr.replace(ty1)
+            val replace = tr.replace(ty2)
+            return replace
         }
     }
 

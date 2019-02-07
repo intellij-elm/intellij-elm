@@ -864,10 +864,10 @@ private class InferenceScope(
     /** Return `false` if [ty1] definitely cannot be assigned to [type2] */
     private fun assignable(ty1: Ty, type2: Ty, replacements: MutableMap<TyVar, Ty>?): Boolean {
         val ty2 = when (type2) {
-            is TyVar -> replacements?.getOrPut(type2) { ty1 } ?: type2
+            is TyVar -> replacements?.get(type2) ?: type2
             else -> type2
         }
-        return ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
+        val result = ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
             is TyVar, is TyInfer -> true
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
@@ -883,6 +883,20 @@ private class InferenceScope(
             is TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign $ty1")
         }
+
+        if (result && replacements != null) {
+            // assigning anything to a variable fixes the type of that variable (we later do replacements
+            // for vars that are assigned to other vars)
+            if (type2 is TyVar && (type2 !in replacements || ty1 !is TyVar)) {
+                replacements[type2] = ty1
+            }
+            // unification: assigning a var to a type also restricts the vars type, but only if not
+            // assigning it to another var.
+            if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
+                replacements[ty1] = type2
+            }
+        }
+        return result
     }
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord, replacements: MutableMap<TyVar, Ty>?): Boolean {
