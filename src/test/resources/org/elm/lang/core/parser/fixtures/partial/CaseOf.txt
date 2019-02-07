@@ -7,8 +7,7 @@ Elm File
     PsiWhiteSpace(' ')
     ElmCaseOfExpr(CASE_OF_EXPR)
       PsiElement(CASE)('case')
-      PsiErrorElement:<expression> expected, got '
-'
+      PsiErrorElement:<expression> expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -24,8 +23,7 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
-      PsiErrorElement:<expr>, OF or OPERATOR_IDENTIFIER expected, got '
-'
+      PsiErrorElement:<expr>, OF or OPERATOR_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -71,6 +69,8 @@ Elm File
       PsiElement(EQ)('=')
       PsiWhiteSpace(' ')
       PsiElement(UPPER_CASE_IDENTIFIER)('String')
+      PsiErrorElement:unmatched input
+        <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -97,7 +97,7 @@ Elm File
             PsiWhiteSpace(' ')
             ElmLowerPattern(LOWER_PATTERN)
               PsiElement(LOWER_CASE_IDENTIFIER)('y')
-        PsiErrorElement:'::', ARROW, AS, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE, UNDERSCORE or UPPER_CASE_IDENTIFIER expected, got ''
+        PsiErrorElement:'::', ARROW, AS, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE, UNDERSCORE or UPPER_CASE_IDENTIFIER expected
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')

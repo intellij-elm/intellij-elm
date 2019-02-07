@@ -56,7 +56,7 @@ fun pathToDirectoryTextField(
             TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT
     )
     component.childComponent.document.addDocumentListener(object : DocumentAdapter() {
-        override fun textChanged(e: DocumentEvent?) {
+        override fun textChanged(e: DocumentEvent) {
             onTextChanged()
         }
     })

@@ -9,8 +9,7 @@ Elm File
       PsiElement(EXPOSING)('exposing')
       PsiWhiteSpace(' ')
       PsiElement(LEFT_PARENTHESIS)('(')
-      PsiErrorElement:DOUBLE_DOT, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:DOUBLE_DOT, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)

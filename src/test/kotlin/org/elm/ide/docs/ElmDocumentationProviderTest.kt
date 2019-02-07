@@ -21,7 +21,7 @@ abstract class ElmDocumentationProviderTest : ElmTestBase() {
         val element = DocumentationManager.getInstance(project)
                 .findTargetElement(myFixture.editor, offset, myFixture.file, originalElement)!!
 
-        val actual = ElmDocumentationProvider().block(element, originalElement)?.trim()
+        val actual = ElmDocumentationProvider().block(element, originalElement)?.trim()!!
         assertSameLines(expected.trimIndent(), actual)
     }
 }

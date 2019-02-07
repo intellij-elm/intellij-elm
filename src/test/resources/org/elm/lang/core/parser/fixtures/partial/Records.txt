@@ -11,8 +11,7 @@ Elm File
     ElmTypeExpression(TYPE_EXPRESSION)
       ElmRecordType(RECORD_TYPE)
         PsiElement(LEFT_BRACE)('{')
-        PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got '
-'
+        PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmTypeAliasDeclaration(TYPE_ALIAS_DECLARATION)
@@ -27,13 +26,12 @@ Elm File
     ElmTypeExpression(TYPE_EXPRESSION)
       ElmRecordType(RECORD_TYPE)
         PsiElement(LEFT_BRACE)('{')
+        PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got 'x'
+          <empty list>
   PsiWhiteSpace(' ')
   PsiElement(LOWER_CASE_IDENTIFIER)('x')
   PsiWhiteSpace(' ')
   PsiElement(COLON)(':')
-  PsiErrorElement:<type expression> expected, got '
-'
-    <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmTypeAliasDeclaration(TYPE_ALIAS_DECLARATION)
     PsiElement(TYPE)('type')
@@ -57,8 +55,7 @@ Elm File
             ElmTypeRef(TYPE_REF)
               ElmUpperCaseQID(UPPER_CASE_QID)
                 PsiElement(UPPER_CASE_IDENTIFIER)('Int')
-        PsiErrorElement:ARROW, COMMA, LEFT_BRACE, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER, RIGHT_BRACE or UPPER_CASE_IDENTIFIER expected, got '
-'
+        PsiErrorElement:ARROW, COMMA, LEFT_BRACE, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER, RIGHT_BRACE or UPPER_CASE_IDENTIFIER expected
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmTypeAliasDeclaration(TYPE_ALIAS_DECLARATION)
@@ -84,8 +81,7 @@ Elm File
               ElmUpperCaseQID(UPPER_CASE_QID)
                 PsiElement(UPPER_CASE_IDENTIFIER)('Int')
         PsiElement(COMMA)(',')
-        PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got '
-'
+        PsiErrorElement:LOWER_CASE_IDENTIFIER expected
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -97,8 +93,7 @@ Elm File
     PsiWhiteSpace(' ')
     ElmRecordExpr(RECORD_EXPR)
       PsiElement(LEFT_BRACE)('{')
-      PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got '
-'
+      PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -111,8 +106,7 @@ Elm File
       PsiElement(LEFT_BRACE)('{')
       PsiWhiteSpace(' ')
       PsiElement(LOWER_CASE_IDENTIFIER)('x')
-      PsiErrorElement:EQ, PIPE or RIGHT_BRACE expected, got '
-'
+      PsiErrorElement:EQ, PIPE or RIGHT_BRACE expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -128,8 +122,7 @@ Elm File
         PsiElement(LOWER_CASE_IDENTIFIER)('x')
         PsiWhiteSpace(' ')
         PsiElement(EQ)('=')
-        PsiErrorElement:<expression> or RIGHT_BRACE expected, got '
-'
+        PsiErrorElement:<expression> or RIGHT_BRACE expected
           <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -150,8 +143,7 @@ Elm File
           PsiElement(NUMBER_LITERAL)('0')
       PsiWhiteSpace(' ')
       PsiElement(COMMA)(',')
-      PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected, got '
-'
+      PsiErrorElement:LOWER_CASE_IDENTIFIER or RIGHT_BRACE expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -172,11 +164,10 @@ Elm File
           PsiElement(NUMBER_LITERAL)('0')
       PsiWhiteSpace(' ')
       PsiElement(COMMA)(',')
+      PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got 'y'
+        <empty list>
       PsiWhiteSpace(' ')
       PsiElement(LOWER_CASE_IDENTIFIER)('y')
-      PsiErrorElement:EQ or RIGHT_BRACE expected, got '
-'
-        <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)

@@ -43,7 +43,7 @@ class ElmPartialParsingTestCase : ElmParsingTestCaseBase("partial") {
     fun testLetIn() = doTest(true)
 
 
-    override fun checkResult(targetDataName: String?, file: PsiFile) {
+    override fun checkResult(targetDataName: String, file: PsiFile) {
         check(hasError(file)) {
             "Invalid file was parsed successfully: ${file.name}"
         }

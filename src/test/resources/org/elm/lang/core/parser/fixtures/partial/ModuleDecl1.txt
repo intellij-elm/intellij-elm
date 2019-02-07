@@ -7,8 +7,7 @@ Elm File
     PsiWhiteSpace(' ')
     ElmExposingList(EXPOSING_LIST)
       PsiElement(EXPOSING)('exposing')
-      PsiErrorElement:LEFT_PARENTHESIS expected, got '
-'
+      PsiErrorElement:LEFT_PARENTHESIS expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
