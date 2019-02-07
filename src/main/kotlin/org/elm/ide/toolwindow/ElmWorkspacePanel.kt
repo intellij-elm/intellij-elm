@@ -98,8 +98,7 @@ class ElmWorkspacePanel(private val project: Project) : SimpleToolWindowPanel(tr
         return toolbar.component
     }
 
-
-    override fun getData(dataId: String?): Any? {
+    override fun getData(dataId: String): Any? {
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) ->
                 selectedProject?.manifestPath

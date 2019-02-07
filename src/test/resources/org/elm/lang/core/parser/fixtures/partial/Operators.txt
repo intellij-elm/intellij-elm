@@ -12,8 +12,7 @@ Elm File
       PsiWhiteSpace(' ')
       ElmOperator(OPERATOR)
         PsiElement(OPERATOR_IDENTIFIER)('++')
-      PsiErrorElement:<expr> or <function call expr> expected, got '
-'
+      PsiErrorElement:<expr> or <function call expr> expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -36,5 +35,5 @@ Elm File
       PsiWhiteSpace(' ')
       ElmOperator(OPERATOR)
         PsiElement(OPERATOR_IDENTIFIER)('++')
-      PsiErrorElement:<expr> or <function call expr> expected, unexpected end of file
+      PsiErrorElement:<expr> or <function call expr> expected
         <empty list>

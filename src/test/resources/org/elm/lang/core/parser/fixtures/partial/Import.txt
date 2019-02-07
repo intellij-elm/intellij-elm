@@ -16,8 +16,7 @@ Elm File
     PsiWhiteSpace(' ')
     ElmExposingList(EXPOSING_LIST)
       PsiElement(EXPOSING)('exposing')
-      PsiErrorElement:LEFT_PARENTHESIS expected, got '
-'
+      PsiErrorElement:LEFT_PARENTHESIS expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmImportClause(IMPORT_CLAUSE)
@@ -30,8 +29,7 @@ Elm File
       PsiElement(EXPOSING)('exposing')
       PsiWhiteSpace(' ')
       PsiElement(LEFT_PARENTHESIS)('(')
-      PsiErrorElement:DOUBLE_DOT, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:DOUBLE_DOT, LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmImportClause(IMPORT_CLAUSE)
@@ -46,8 +44,7 @@ Elm File
       PsiElement(LEFT_PARENTHESIS)('(')
       ElmExposedValue(EXPOSED_VALUE)
         PsiElement(LOWER_CASE_IDENTIFIER)('blah')
-      PsiErrorElement:COMMA or RIGHT_PARENTHESIS expected, got '
-'
+      PsiErrorElement:COMMA or RIGHT_PARENTHESIS expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmImportClause(IMPORT_CLAUSE)
@@ -63,8 +60,7 @@ Elm File
       ElmExposedValue(EXPOSED_VALUE)
         PsiElement(LOWER_CASE_IDENTIFIER)('blah')
       PsiElement(COMMA)(',')
-      PsiErrorElement:LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:LEFT_PARENTHESIS, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmImportClause(IMPORT_CLAUSE)
@@ -83,8 +79,7 @@ Elm File
       PsiWhiteSpace(' ')
       ElmExposedValue(EXPOSED_VALUE)
         PsiElement(LOWER_CASE_IDENTIFIER)('quux')
-      PsiErrorElement:COMMA or RIGHT_PARENTHESIS expected, got '
-'
+      PsiErrorElement:COMMA or RIGHT_PARENTHESIS expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')

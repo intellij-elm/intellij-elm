@@ -19,8 +19,7 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('mag')
-      PsiErrorElement:<expr>, COMMA, OPERATOR_IDENTIFIER or RIGHT_PARENTHESIS expected, got '
-'
+      PsiErrorElement:<expr>, COMMA, OPERATOR_IDENTIFIER or RIGHT_PARENTHESIS expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -35,8 +34,7 @@ Elm File
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('magicNumber')
   PsiElement(COMMA)(',')
-  PsiErrorElement:<expression> expected, got '
-'
+  PsiErrorElement:<expression> expected
     <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -55,8 +53,7 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('m')
-      PsiErrorElement:<expr>, COMMA, OPERATOR_IDENTIFIER or RIGHT_PARENTHESIS expected, got '
-'
+      PsiErrorElement:<expr>, COMMA, OPERATOR_IDENTIFIER or RIGHT_PARENTHESIS expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)

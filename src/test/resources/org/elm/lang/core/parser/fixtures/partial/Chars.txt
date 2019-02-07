@@ -26,8 +26,7 @@ Elm File
     ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
       PsiElement(OPEN_CHAR)(''')
       PsiElement(REGULAR_STRING_PART)('d')
-      PsiErrorElement:CLOSE_CHAR expected, got '
-'
+      PsiErrorElement:CLOSE_CHAR expected
         <empty list>
   PsiElement(BAD_CHARACTER)('\n')
   PsiElement(VIRTUAL_END_DECL)('\n')
@@ -40,8 +39,7 @@ Elm File
       ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
         PsiElement(OPEN_CHAR)(''')
         PsiElement(REGULAR_STRING_PART)('1')
-        PsiErrorElement:CLOSE_CHAR expected, got '
-'
+        PsiErrorElement:CLOSE_CHAR expected
           <empty list>
   PsiElement(BAD_CHARACTER)('\n')
   PsiWhiteSpace('  ')
@@ -61,5 +59,5 @@ Elm File
     ElmCharConstantExpr(CHAR_CONSTANT_EXPR)
       PsiElement(OPEN_CHAR)(''')
       PsiElement(REGULAR_STRING_PART)('3')
-      PsiErrorElement:CLOSE_CHAR expected, unexpected end of file
+      PsiErrorElement:CLOSE_CHAR expected
         <empty list>

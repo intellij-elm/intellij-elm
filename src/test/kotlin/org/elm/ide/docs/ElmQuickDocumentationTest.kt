@@ -179,7 +179,7 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td valign='top'><p>
 <p><code>Bar</code></td></table>
 """)
 
@@ -192,7 +192,7 @@ type Foo = Bar
 """,
             """
 <div class='definition'><pre><b>type</b> Foo<i> defined in </i>Foo.Bar</pre></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td valign='top'><p>
 <p><code>Bar</code></td></table>
 """)
 
@@ -205,7 +205,7 @@ type Foo = Bar
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
 <div class='content'><p>included <em>docs</em></p></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td valign='top'><p>
 <p><code>Bar</code></td></table>
 """)
 
@@ -222,7 +222,7 @@ type Foo
             """
 <div class='definition'><pre><b>type</b> Foo</pre></div>
 <div class='content'><p>included <em>docs</em></p></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Variants:</td><td valign='top'><p>
 <p><code>Bar</code>
 <p><code>Baz</code> <a href="psi_element://Foo">Foo</a>
 <p><code>Qux</code> (<a href="psi_element://List">List</a> a) a
@@ -294,7 +294,7 @@ type alias Foo = { a: Int, b: String }
 """,
             """
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
-<table class='sections'><tr><td valign='top' class='section'><p>Fields:</td><td><p>
+<table class='sections'><tr><td valign='top' class='section'><p>Fields:</td><td valign='top'><p>
 <p><code>a</code> : <a href="psi_element://Int">Int</a>
 <p><code>b</code> : <a href="psi_element://String">String</a></td></table>
 """)

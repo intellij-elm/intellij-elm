@@ -13,8 +13,7 @@ Elm File
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
       PsiElement(DOT)('.')
-      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -34,8 +33,7 @@ Elm File
         PsiElement(DOT)('.')
         PsiElement(LOWER_CASE_IDENTIFIER)('bar')
       PsiElement(DOT)('.')
-      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -54,8 +52,7 @@ Elm File
           PsiElement(DOT)('.')
           PsiElement(LOWER_CASE_IDENTIFIER)('bar')
       PsiElement(DOT)('.')
-      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -81,8 +78,7 @@ Elm File
               PsiElement(LOWER_CASE_IDENTIFIER)('x')
         PsiElement(RIGHT_PARENTHESIS)(')')
       PsiElement(DOT)('.')
-      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -110,8 +106,7 @@ Elm File
         PsiElement(DOT)('.')
         PsiElement(LOWER_CASE_IDENTIFIER)('bar')
       PsiElement(DOT)('.')
-      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:<expr> or LOWER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -131,8 +126,7 @@ Elm File
             PsiElement(NUMBER_LITERAL)('2')
         PsiElement(RIGHT_BRACE)('}')
       PsiElement(DOT)('.')
-      PsiErrorElement:LOWER_CASE_IDENTIFIER expected, got '
-'
+      PsiErrorElement:LOWER_CASE_IDENTIFIER expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
@@ -160,5 +154,5 @@ Elm File
         PsiElement(DOT)('.')
         PsiElement(LOWER_CASE_IDENTIFIER)('x')
       PsiElement(DOT)('.')
-      PsiErrorElement:LOWER_CASE_IDENTIFIER expected, unexpected end of file
+      PsiErrorElement:LOWER_CASE_IDENTIFIER expected
         <empty list>

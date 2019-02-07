@@ -4,8 +4,7 @@ Elm File
       PsiElement(LOWER_CASE_IDENTIFIER)('f1')
     PsiWhiteSpace(' ')
     PsiElement(EQ)('=')
-    PsiErrorElement:<expression> expected, got '
-'
+    PsiErrorElement:<expression> expected
       <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
