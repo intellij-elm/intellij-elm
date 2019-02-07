@@ -1218,6 +1218,18 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">map <: foo</error>
 """)
 
+    fun `test non function to composition operator`() = checkByText("""
+compo : (b -> c) -> (a -> b) -> (a -> c)
+compo g f x = g (f x)
+infix left  9 (<<<) = compo
+
+foo : d -> d
+foo a = a
+
+main =
+    foo <<< <error descr="Type mismatch.Required: a → dFound: String">""</error>
+""")
+
 
     fun `test multiple empty lists`() = checkByText("""
 foo : z -> z -> z -> z

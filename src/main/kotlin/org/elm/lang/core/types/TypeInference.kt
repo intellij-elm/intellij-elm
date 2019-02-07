@@ -228,7 +228,7 @@ private class InferenceScope(
             if (part is ElmOperator) {
                 val (ty, precedence) = inferOperatorAndPrecedence(part)
                 when {
-                    precedence == null || ty !is TyFunction || ty.parameters.size != 2 -> return TyUnknown()
+                    precedence == null || ty !is TyFunction || ty.parameters.size < 2 -> return TyUnknown()
                     precedence.associativity == NON && lastPrecedence?.associativity == NON -> {
                         // Non-associative operators can't be chained directly with other non-associative
                         // operators.
