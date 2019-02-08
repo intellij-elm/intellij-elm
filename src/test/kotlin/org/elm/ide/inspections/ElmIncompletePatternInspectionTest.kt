@@ -207,6 +207,29 @@ foo it =
         ()
 """)
 
+    fun `test nesting in let-in`() = checkFixByText("Add missing case branches", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =
+    let
+        bar = ()
+    in
+    <error>case{-caret-}</error> it of
+""", """
+type Foo = Bar
+
+foo : Foo -> ()
+foo it =
+    let
+        bar = ()
+    in
+    case it of
+        Bar ->
+            --EOL
+""")
+
+
     fun `test nesting in case`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
