@@ -23,6 +23,7 @@ class ElmExternalFormatAction : AnAction() {
         e.presentation.isEnabled = getContext(e) != null
     }
 
+
     private fun getContext(e: AnActionEvent): Context? {
         val project = e.project ?: return null
         val toolchain = project.elmToolchain ?: return null
@@ -36,6 +37,7 @@ class ElmExternalFormatAction : AnAction() {
         }
         return Context(project, toolchain, file, elmVersion)
     }
+
 
     override fun actionPerformed(e: AnActionEvent) {
         val ctx = getContext(e) ?: return
@@ -61,6 +63,7 @@ class ElmExternalFormatAction : AnAction() {
             project.showBalloon(message, NotificationType.ERROR)
         }
     }
+
 
     private data class Context(
             val project: Project,

@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture
 abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBuilder<*>>() {
 
 
-    private var toolchain: ElmToolchain? = null
+    protected var toolchain: ElmToolchain? = null
     private var originalToolchain: ElmToolchain? = null
 
 
