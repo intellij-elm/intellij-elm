@@ -10,7 +10,7 @@ import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.withWorkDirectory
 import java.nio.file.Path
 
-class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
+class ElmFormatCLI(val elmFormatExecutablePath: Path) {
 
     fun reformatFile(project: Project, elmVersion: Version, file: VirtualFile, owner: Disposable = project): ProcessOutput {
         val arguments = listOf(
