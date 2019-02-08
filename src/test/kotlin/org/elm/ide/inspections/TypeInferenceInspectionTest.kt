@@ -1294,6 +1294,11 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">foo listStr listA listA</error>
 """)
 
+    fun `test function composition`() = checkByText("""
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String → Bool">String.isEmpty >> not</error>
+""")
+
     fun `test constraint number int literals`() = checkByText("""
 foo : number -> number -> number
 foo a b = a

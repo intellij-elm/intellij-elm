@@ -259,7 +259,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.deepReplace(func.ret, replacements)
+                        lAssignable && rAssignable -> TypeReplacement.deepReplace(func.partiallyApply(2), replacements)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
