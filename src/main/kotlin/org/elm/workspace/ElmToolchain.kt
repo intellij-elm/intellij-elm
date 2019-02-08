@@ -101,22 +101,18 @@ data class ElmToolchain(val binDirPath: Path) {
     fun queryCompilerVersion(): Result<Version> {
         val elm = elmCompilerPath ?: return Result.Err("Elm compiler not found")
 
-        // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
-        // such as the Elm compiler. So we will try to detect the wrapper and notify the user.
-        // See https://github.com/klazuka/intellij-elm/issues/252
-        try {
-            val firstChars = ByteArray(2)
-            elm.toFile().inputStream().read(firstChars, 0, 2)
-            if (firstChars.toString(Charsets.US_ASCII) == "#!") {
-                return Result.Err("path points to a wrapper script; please use the path to the actual Elm compiler")
-            }
-        } catch (e: IOException) {
-            return Result.Err("could not peek at the first bytes in the Elm compiler")
-        }
-
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
         val versionString = GeneralCommandLine(elm).withParameters("--version").runExecutable()?.firstOrNull()
-                ?: return Result.Err("failed to run the Elm compiler")
+        if (versionString == null) {
+            // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
+            // such as the Elm compiler. So we will try to detect if the wrapper may have been the problem
+            // and notify the user. See https://github.com/klazuka/intellij-elm/issues/252
+            return if (elm.toFile().isWrapperScript()) {
+                Result.Err("the 'elm' file here is a wrapper script; please use the path to the actual Elm compiler")
+            } else {
+                Result.Err("failed to run the Elm compiler")
+            }
+        }
 
         return try {
             Result.Ok(Version.parse(versionString))
@@ -225,4 +221,22 @@ private fun GeneralCommandLine.runExecutable(): List<String>? {
         return null
 
     return procOut.stdoutLines
+}
+
+
+/** Returns true if the file looks like a wrapper script created by NodeJS tools like npm */
+private fun File.isWrapperScript(): Boolean {
+    val firstChars = try {
+        val bytes = ByteArray(3)
+        inputStream().use { it.read(bytes, 0, 3) }
+        bytes.toString(Charsets.US_ASCII)
+    } catch (e: IOException) {
+        return false
+    }
+
+    return when (firstChars) {
+        "#!/" -> true // hash-bang used by Unix scripts
+        "IF@" -> true // npm Windows batch script starts with `@IF EXIST "%~dp0\node.exe"`
+        else -> false
+    }
 }
