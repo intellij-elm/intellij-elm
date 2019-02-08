@@ -23,7 +23,7 @@ sealed class Ty {
 class TyVar(val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
-    override fun toString(): String = "<TyVar $name>"
+    override fun toString(): String = "<$name>"
 }
 
 /** A tuple type like `(Int, String)` */
@@ -52,6 +52,9 @@ data class TyRecord(
     val isSubset: Boolean get() = baseTy != null
 
     override fun withAlias(alias: AliasInfo): TyRecord = copy(alias = alias)
+    override fun toString(): String {
+        return alias?.let { "{${it.name}}" } ?: baseTy?.let { "{$baseTy | $fields}" } ?: "{$fields}"
+    }
 }
 
 /** A type like `String` or `Maybe a` */
@@ -64,7 +67,7 @@ data class TyUnion(
     override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
     override fun toString(): String {
-        return "<TyUnion ${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")}>"
+        return "(${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")})"
     }
 }
 
@@ -107,7 +110,7 @@ data class TyFunction(
     override fun withAlias(alias: AliasInfo): TyFunction = copy(alias = alias)
 
     override fun toString(): String {
-        return allTys.joinToString(" → ", prefix = "<TyFunction ", postfix = ">")
+        return allTys.joinToString(" → ", prefix = "(", postfix = ")")
     }
 }
 

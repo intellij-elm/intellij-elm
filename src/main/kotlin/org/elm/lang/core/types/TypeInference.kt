@@ -280,39 +280,33 @@ private class InferenceScope(
             }
 
     private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
-        val inferredTy = inferAtom(callExpr.target)
+        val targetTy = inferAtom(callExpr.target)
         val arguments = callExpr.arguments.toList()
+
+        // always infer the arguments so that they're added to expressionTypes
+        val argTys = arguments.map { inferAtom(it) }
 
         fun argCountError(expected: Int): TyUnknown {
             diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
             return TyUnknown()
         }
 
-        val targetTy = when (inferredTy) {
-            is TyFunction -> inferredTy
-            is TyRecord -> when {
-                // Record constructor
-                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
-                else -> return argCountError(0)
-            }
-            is TyUnknown -> return TyUnknown()
-            else -> return argCountError(0)
-        }
-
-        if (arguments.size > targetTy.parameters.size) {
-            // Even if there's too many arguments, we still need to infer the argument types since
-            // they're returned in the subexpression inference
-            arguments.forEach { inferAtom(it) }
-            return argCountError(targetTy.parameters.size)
-        }
+        if (!isInferable(targetTy)) return TyUnknown()
+        if (targetTy !is TyFunction) return argCountError(0)
+        if (arguments.size > targetTy.parameters.size) return argCountError(targetTy.parameters.size)
 
         val replacements = mutableMapOf<TyVar, Ty>()
-        val ok = arguments.zip(targetTy.parameters).all { (arg, paramTy) ->
-            requireAssignable(arg, inferAtom(arg), paramTy, replacements = replacements)
+
+        val ok = (0..arguments.lastIndex).all { i ->
+            requireAssignable(arguments[i], argTys[i], targetTy.parameters[i], replacements = replacements)
         }
 
-        val appliedTy = targetTy.partiallyApply(arguments.size)
-        val resultTy = if (ok) TypeReplacement.deepReplace(appliedTy, replacements) else TyUnknown()
+        val resultTy = if (ok) {
+            val appliedTy = targetTy.partiallyApply(arguments.size)
+            TypeReplacement.deepReplace(appliedTy, replacements)
+        } else {
+            TyUnknown()
+        }
         expressionTypes[callExpr] = resultTy
         return resultTy
     }
@@ -522,7 +516,12 @@ private class InferenceScope(
 
         return when (ref) {
             is ElmUnionVariant -> ref.typeExpressionInference().value
-            is ElmTypeAliasDeclaration -> ref.typeExpressionInference().value
+            is ElmTypeAliasDeclaration -> {
+                val ty = ref.typeExpressionInference().value
+                // Record aliases in expressions are constructor functions
+                if (ty is TyRecord) TyFunction(ty.fields.values.toList(), ty)
+                else ty
+            }
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> ref.typeExpressionInference().value
             is ElmLowerPattern -> {
@@ -871,7 +870,6 @@ private class InferenceScope(
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types, replacements)
             is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2, replacements)
-                    || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2, replacements)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
@@ -928,12 +926,6 @@ private class InferenceScope(
             }
             else -> error("impossible")
         }
-    }
-
-    private fun recordAssignableToFunction(record: TyRecord, function: TyFunction, replacements: MutableMap<TyVar, Ty>?): Boolean {
-        return record.alias != null
-                && assignable(record, function.ret, replacements)
-                && allAssignable(record.fields.values.toList(), function.parameters, replacements)
     }
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {

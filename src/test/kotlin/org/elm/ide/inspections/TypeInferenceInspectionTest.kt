@@ -1218,6 +1218,21 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">map <: foo</error>
 """)
 
+    fun `test passing record constructor to operator`() = checkByText("""
+appR : a -> (a -> b) -> b
+appR x f = f x
+infix left 0 (:>) = appR
+
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+type alias Rec = { field : () }
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List () → List Rec">Rec :> map</error>
+""")
+
     fun `test non function to composition operator`() = checkByText("""
 compo : (b -> c) -> (a -> b) -> (a -> c)
 compo g f x = g (f x)
