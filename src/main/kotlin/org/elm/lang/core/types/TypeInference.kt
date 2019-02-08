@@ -984,12 +984,12 @@ private class InferenceScope(
                         || ty.isTyChar
                         || ty.isTyString
                         || ty.isTyList && ty.parameters.allComparable()
-                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("appendable", tyVar.name, ty.name)
+                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("comparable", tyVar.name, ty.name)
                 else -> false
             }
             tyVar.name.startsWith("compappend") -> when (ty) {
                 is TyUnion -> ty.isTyString || ty.isTyList && ty.parameters.allComparable()
-                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("appendable", tyVar.name, ty.name)
+                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("compappend", tyVar.name, ty.name)
                 else -> false
             }
             else -> true

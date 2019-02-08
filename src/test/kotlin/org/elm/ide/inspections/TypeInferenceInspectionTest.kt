@@ -1326,6 +1326,15 @@ main =
     <error descr="Type mismatch.Required: ()Found: Float">foo 1 2.2</error>
 """)
 
+    fun `test constraint number number`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : number -> number -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: number">foo a b</error>
+""")
+
     fun `test constraint number mismatched`() = checkByText("""
 foo : number -> number -> number
 foo a b = a
@@ -1350,6 +1359,15 @@ foo a b = a
 main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: List a">foo [] []</error>
+""")
+
+    fun `test constraint appendable appendable`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main : appendable -> appendable -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: appendable">foo a b</error>
 """)
 
     fun `test constraint appendable string and list mismatch`() = checkByText("""
@@ -1439,6 +1457,15 @@ main =
     foo ("", "") <error descr="Type mismatch.Required: (String, String)Found: (String, Float)">("", 1.1)</error>
 """)
 
+    fun `test constraint comparable comparable`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : comparable -> comparable -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: comparable">foo a b</error>
+""")
+
     fun `test constraint compappend string`() = checkByText("""
 foo : comappend -> comappend -> comappend
 foo a b = a
@@ -1455,6 +1482,15 @@ foo a b = a
 main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: List String">foo [""] []</error>
+""")
+
+    fun `test constraint compappend compappend`() = checkByText("""
+foo : compappend -> compappend -> compappend
+foo a b = a
+
+main : compappend -> compappend -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: compappend">foo a b</error>
 """)
 
     fun `test numbered constraint appendable`() = checkByText("""
