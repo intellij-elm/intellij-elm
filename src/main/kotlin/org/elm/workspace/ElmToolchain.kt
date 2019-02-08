@@ -59,10 +59,16 @@ data class ElmToolchain(val binDirPath: Path) {
         }
 
     val elmCompilerPath: Path? get() {
-        return elmCompilerNameSuggestions()
+        return executableNameSuggestionsFor("elm")
                 .map { binDirPath.resolve(it) }
                 .firstOrNull { Files.isExecutable(it) }
     }
+
+    val elmFormat: ElmFormatCLI?
+        get() = executableNameSuggestionsFor("elm-format")
+                .map { binDirPath.resolve(it) }
+                .firstOrNull { Files.isExecutable(it) }
+                ?.let { ElmFormatCLI(it) }
 
     fun looksLikeValidToolchain(): Boolean = elmCompilerPath != null
 
@@ -141,9 +147,9 @@ data class ElmToolchain(val binDirPath: Path) {
 }
 
 // Look for both installed and npm versions of the binary
-private fun elmCompilerNameSuggestions() =
-        if (SystemInfo.isWindows) sequenceOf("elm.exe", "elm.cmd", "elm")
-        else sequenceOf("elm")
+private fun executableNameSuggestionsFor(name: String) =
+        if (SystemInfo.isWindows) sequenceOf("$name.exe", "$name.cmd", name)
+        else sequenceOf(name)
 
 private fun binDirSuggestions(project: Project) =
         sequenceOf(

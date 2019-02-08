@@ -24,11 +24,13 @@ class ElmWorkspaceConfigurable(
             "Select directory containing the 'elm' binary") { update() }
 
     private val elmVersionLabel = JLabel()
+    private val elmFormatLabel = JLabel()
 
     override fun createComponent(): JComponent =
             panel {
                 row("Directory containing 'elm' binary:") { pathToToolchainField(CCFlags.pushX) }
                 row("Elm version:") { elmVersionLabel() }
+                row("elm-format:") { elmFormatLabel() }
             }
 
     private fun update() {
@@ -57,6 +59,16 @@ class ElmWorkspaceConfigurable(
                     }
                 }
         )
+        when (val fmt = ElmToolchain(pathToToolchain).elmFormat) {
+            null -> {
+                elmFormatLabel.text = "not found"
+                elmFormatLabel.foreground = JBColor.RED
+            }
+            else -> {
+                elmFormatLabel.text = fmt.elmFormatExecutablePath.toString()
+                elmFormatLabel.foreground = JBColor.foreground()
+            }
+        }
     }
 
     override fun dispose() {
