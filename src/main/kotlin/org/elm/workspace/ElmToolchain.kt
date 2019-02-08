@@ -236,7 +236,7 @@ private fun File.isWrapperScript(): Boolean {
 
     return when (firstChars) {
         "#!/" -> true // hash-bang used by Unix scripts
-        "IF@" -> true // npm Windows batch script starts with `@IF EXIST "%~dp0\node.exe"`
+        "@IF" -> true // npm Windows batch script starts with `@IF EXIST "%~dp0\node.exe"`
         else -> false
     }
 }
