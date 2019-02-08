@@ -28,7 +28,8 @@ interface ElmStdlibVariant {
      * @return An application Elm project which depends on the specified Stdlib packages
      */
     fun ensureElmStdlibInstalled(project: Project, toolchain: ElmToolchain): ElmProject {
-        val compilerVersion = toolchain.queryCompilerVersion()
+        val compilerVersion = toolchain.queryCompilerVersion().orNull()
+                ?: error("Could not query the Elm compiler version")
         require(compilerVersion != Version(0, 18, 0))
 
         val elm = toolchain.elmCompilerPath?.let { ElmCLI(it) }
