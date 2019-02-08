@@ -247,6 +247,11 @@
                 icon="AllIcons.Toolwindows.ToolWindowBuild"/>
         -->
 
+        <action id="Elm.RunExternalElmFormat"
+                class="org.elm.ide.actions.ElmExternalFormatAction"
+                text="Run elm-format on current file">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+        </action>
 
         <group id="Elm.WorkspaceToolsGroup" text="Elm" popup="true">
             <reference id="Elm.RefreshElmProjects"/>
