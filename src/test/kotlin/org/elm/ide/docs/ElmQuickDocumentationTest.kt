@@ -445,6 +445,22 @@ foo a = a
 <b>foo</b> a</pre></div>
 """)
 
+    fun `test operator`() = doTest(
+            """
+{-| included *docs* -}
+foo : number -> number -> number
+foo a b = a
+infix left  6 (~~)  = foo
+
+bar = 11 ~~ 11
+        --^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : number → number → number
+<b>foo</b> a b</pre></div>
+<div class='content'><p>included <em>docs</em></p></div>
+""")
+
     private fun doTest(@Language("Elm") code: String, @Language("Html") expected: String) =
             doTest(code, expected, ElmDocumentationProvider::generateDoc)
 }
