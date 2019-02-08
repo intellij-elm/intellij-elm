@@ -132,8 +132,8 @@ private class IfElseFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEnterPro
         // chained `if` expressions aren't parsed as a group if they're missing anything before the final else
         val elementPrev = element.prevSiblings.withoutWs.firstOrNull()
         val indentOffset = when {
-            elementPrev?.elementType == ElmTypes.ELSE -> -2
-            else -> -1
+            elementPrev?.elementType == ElmTypes.ELSE -> -1
+            else -> 0
         }
 
         val indent = guessIndent(element, indentOffset)
