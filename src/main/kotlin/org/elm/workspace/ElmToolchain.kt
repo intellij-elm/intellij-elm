@@ -11,8 +11,10 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
 import org.elm.openapiext.GeneralCommandLine
+import org.elm.openapiext.Result
 import org.elm.openapiext.modules
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -96,14 +98,27 @@ data class ElmToolchain(val binDirPath: Path) {
         return files.mapNotNull { Version.parseOrNull(it.name) }
     }
 
-    fun queryCompilerVersion(): Version? {
-        val elm = elmCompilerPath ?: return null
+    fun queryCompilerVersion(): Result<Version> {
+        val elm = elmCompilerPath ?: return Result.Err("Elm compiler not found")
+
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
-        return GeneralCommandLine(elm)
-                .withParameters("--version")
-                .runExecutable()
-                ?.firstOrNull()
-                ?.let { Version.parseOrNull(it) }
+        val versionString = GeneralCommandLine(elm).withParameters("--version").runExecutable()?.firstOrNull()
+        if (versionString == null) {
+            // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
+            // such as the Elm compiler. So we will try to detect if the wrapper may have been the problem
+            // and notify the user. See https://github.com/klazuka/intellij-elm/issues/252
+            return if (elm.toFile().isWrapperScript()) {
+                Result.Err("the 'elm' file here is a wrapper script; please use the path to the actual Elm compiler")
+            } else {
+                Result.Err("failed to run the Elm compiler")
+            }
+        }
+
+        return try {
+            Result.Ok(Version.parse(versionString))
+        } catch (e: ParseException) {
+            Result.Err("invalid Elm version: ${e.message}")
+        }
     }
 
     companion object {
@@ -136,7 +151,8 @@ private fun binDirSuggestions(project: Project) =
                 suggestionsFromPath(),
                 suggestionsForMac(),
                 suggestionsForWindows(),
-                suggestionsForUnix()
+                suggestionsForUnix(),
+                suggestionsFromNVM()
         ).flatten()
 
 
@@ -150,6 +166,13 @@ private fun suggestionsFromNPM(project: Project): Sequence<Path> {
                         .bfsTraversal()
                         .asSequence()
             }.map { Paths.get(it.absolutePath, ".bin") }
+}
+
+private fun suggestionsFromNVM(): Sequence<Path> {
+    // nvm (Node Version Manager): see https://github.com/klazuka/intellij-elm/issues/252
+    // nvm is not available on Windows
+    if (SystemInfo.isWindows) return emptySequence()
+    return sequenceOf(Paths.get(FileUtil.expandUserHome("~/.config/yarn/global/node_modules/elm/unpacked_bin")))
 }
 
 private fun suggestionsFromPath(): Sequence<Path> {
@@ -198,4 +221,22 @@ private fun GeneralCommandLine.runExecutable(): List<String>? {
         return null
 
     return procOut.stdoutLines
+}
+
+
+/** Returns true if the file looks like a wrapper script created by NodeJS tools like npm */
+private fun File.isWrapperScript(): Boolean {
+    val firstChars = try {
+        val bytes = ByteArray(3)
+        inputStream().use { it.read(bytes, 0, 3) }
+        bytes.toString(Charsets.US_ASCII)
+    } catch (e: IOException) {
+        return false
+    }
+
+    return when (firstChars) {
+        "#!/" -> true // hash-bang used by Unix scripts
+        "@IF" -> true // npm Windows batch script starts with `@IF EXIST "%~dp0\node.exe"`
+        else -> false
+    }
 }
