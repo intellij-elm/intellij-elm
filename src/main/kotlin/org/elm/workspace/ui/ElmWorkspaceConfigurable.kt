@@ -6,11 +6,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.layout.CCFlags
 import com.intellij.ui.layout.panel
+import org.elm.openapiext.Result
 import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.pathToDirectoryTextField
 import org.elm.workspace.ElmToolchain
 import org.elm.workspace.elmWorkspace
-import java.nio.file.Paths
 import javax.swing.JComponent
 import javax.swing.JLabel
 
@@ -37,19 +37,22 @@ class ElmWorkspaceConfigurable(
                 onPooledThread = {
                     ElmToolchain(pathToToolchain).queryCompilerVersion()
                 },
-                onUiThread = { elmCompilerVersion ->
-                    when {
-                        elmCompilerVersion == null -> {
-                            elmVersionLabel.text = "not available"
+                onUiThread = { versionResult ->
+                    when (versionResult) {
+                        is Result.Ok ->
+                            when {
+                                versionResult.value < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION -> {
+                                    elmVersionLabel.text = "$versionResult.value (not supported)"
+                                    elmVersionLabel.foreground = JBColor.RED
+                                }
+                                else -> {
+                                    elmVersionLabel.text = versionResult.value.toString()
+                                    elmVersionLabel.foreground = JBColor.foreground()
+                                }
+                            }
+                        is Result.Err -> {
+                            elmVersionLabel.text = "error: ${versionResult.reason}"
                             elmVersionLabel.foreground = JBColor.RED
-                        }
-                        elmCompilerVersion < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION -> {
-                            elmVersionLabel.text = "$elmCompilerVersion (not supported)"
-                            elmVersionLabel.foreground = JBColor.RED
-                        }
-                        else -> {
-                            elmVersionLabel.text = elmCompilerVersion.toString()
-                            elmVersionLabel.foreground = JBColor.foreground()
                         }
                     }
                 }

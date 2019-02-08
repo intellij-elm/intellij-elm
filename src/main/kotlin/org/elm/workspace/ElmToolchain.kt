@@ -11,8 +11,10 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
 import org.elm.openapiext.GeneralCommandLine
+import org.elm.openapiext.Result
 import org.elm.openapiext.modules
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -96,14 +98,31 @@ data class ElmToolchain(val binDirPath: Path) {
         return files.mapNotNull { Version.parseOrNull(it.name) }
     }
 
-    fun queryCompilerVersion(): Version? {
-        val elm = elmCompilerPath ?: return null
+    fun queryCompilerVersion(): Result<Version> {
+        val elm = elmCompilerPath ?: return Result.Err("Elm compiler not found")
+
+        // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
+        // such as the Elm compiler. So we will try to detect the wrapper and notify the user.
+        // See https://github.com/klazuka/intellij-elm/issues/252
+        try {
+            val firstChars = ByteArray(2)
+            elm.toFile().inputStream().read(firstChars, 0, 2)
+            if (firstChars.toString(Charsets.US_ASCII) == "#!") {
+                return Result.Err("path points to a wrapper script; please use the path to the actual Elm compiler")
+            }
+        } catch (e: IOException) {
+            return Result.Err("could not peek at the first bytes in the Elm compiler")
+        }
+
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
-        return GeneralCommandLine(elm)
-                .withParameters("--version")
-                .runExecutable()
-                ?.firstOrNull()
-                ?.let { Version.parseOrNull(it) }
+        val versionString = GeneralCommandLine(elm).withParameters("--version").runExecutable()?.firstOrNull()
+                ?: return Result.Err("failed to run the Elm compiler")
+
+        return try {
+            Result.Ok(Version.parse(versionString))
+        } catch (e: ParseException) {
+            Result.Err("invalid Elm version: ${e.message}")
+        }
     }
 
     companion object {
@@ -136,7 +155,8 @@ private fun binDirSuggestions(project: Project) =
                 suggestionsFromPath(),
                 suggestionsForMac(),
                 suggestionsForWindows(),
-                suggestionsForUnix()
+                suggestionsForUnix(),
+                suggestionsFromNVM()
         ).flatten()
 
 
@@ -150,6 +170,13 @@ private fun suggestionsFromNPM(project: Project): Sequence<Path> {
                         .bfsTraversal()
                         .asSequence()
             }.map { Paths.get(it.absolutePath, ".bin") }
+}
+
+private fun suggestionsFromNVM(): Sequence<Path> {
+    // nvm (Node Version Manager): see https://github.com/klazuka/intellij-elm/issues/252
+    // nvm is not available on Windows
+    if (SystemInfo.isWindows) return emptySequence()
+    return sequenceOf(Paths.get(FileUtil.expandUserHome("~/.config/yarn/global/node_modules/elm/unpacked_bin")))
 }
 
 private fun suggestionsFromPath(): Sequence<Path> {
