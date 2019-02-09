@@ -119,6 +119,8 @@
         <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterSmartIndentHandler"/>
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
         <internalFileTemplate name="Elm Module"/>
+        <moduleType id="ELM_MODULE" implementationClass="org.elm.ide.project.ElmModuleType"/>
+        <moduleBuilder builderClass="org.elm.ide.project.ElmModuleBuilder"/>
         <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor"/>
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher"/>
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
