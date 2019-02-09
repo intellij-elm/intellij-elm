@@ -1,13 +1,12 @@
 package org.elm.ide.intentions
 
 import com.intellij.lang.ASTNode
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
-import com.intellij.ui.components.JBList
+import com.intellij.ui.ColoredListCellRenderer
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
@@ -15,9 +14,8 @@ import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.QualifiedReference
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.openapiext.runWriteCommandAction
 import org.elm.openapiext.toPsiFile
-import java.awt.Component
-import javax.swing.DefaultListCellRenderer
 import javax.swing.JList
 
 class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Context>() {
@@ -122,12 +120,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     }
 
     private fun getSortedInsertPosition(moduleName: String, existingImportClauses: List<ElmImportClause>): ASTNode {
-        // NOTE: we *assume* that the imports are already sorted and we
-        // do not make any distinction between import groups/sections
-        // (e.g. the practice of putting core libs in the first group,
-        // 3rd party libs in a second group, and project files in the
-        // final group).
-
+        // NOTE: we *assume* that the imports are already sorted.
         val firstImport = existingImportClauses.first()
         val lastImport = existingImportClauses.last()
 
@@ -161,37 +154,25 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
-        /* TODO [kl] this code was ported from Java. Check the Rust plugin
-           to see if they have a nicer way to build these picker UIs. */
+        val candidates = context.candidates.sortedBy { it.moduleName }
         val project = file.project
-        val list = JBList(context.candidates.sortedBy { it.moduleName })
-        list.cellRenderer = object : DefaultListCellRenderer() {
-            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int,
-                                                      isSelected: Boolean, cellHasFocus: Boolean): Component {
-                val result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-                text = (value as? Candidate)?.moduleName
-                return result
-            }
-        }
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        JBPopupFactory.getInstance().createListPopupBuilder(list)
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
+        JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
                 .setTitle("Import '${context.refName}' from module:")
-                .setItemChoosenCallback {
-                    val value = list.getSelectedValue()
-                    if (value is Candidate) {
-                        runWriteActionToImportCandidate(value, file, context)
-                    }
+                .setItemChosenCallback {
+                    project.runWriteCommandAction { addImportForCandidate(it, file, context) }
                 }
-                .setFilteringEnabled { value -> (value as Candidate).moduleName }
-                .createPopup().showInBestPositionFor(editor!!)
+                .setNamerForFiltering { it.moduleName }
+                .setRenderer(CandidateRenderer())
+                .createPopup().showInBestPositionFor(editor)
     }
+}
 
-    private fun runWriteActionToImportCandidate(candidate: Candidate, file: ElmFile, context: Context) {
-        object : WriteCommandAction.Simple<Unit>(file.project) {
-            override fun run() {
-                addImportForCandidate(candidate, file, context)
-            }
-        }.execute()
+
+private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
+    override fun customizeCellRenderer(list: JList<out Candidate>, value: Candidate, index: Int, selected: Boolean, hasFocus: Boolean) {
+        // TODO set the background color based on project vs tests vs library
+        append(value.moduleName)
     }
 }
 
@@ -241,10 +222,10 @@ data class Candidate(
             }
 
             return Candidate(
-                        moduleName = moduleDecl.name,
+                    moduleName = moduleDecl.name,
                     name = element.name,
-                        nameForImport = nameForImport,
-                        targetElement = element)
+                    nameForImport = nameForImport,
+                    targetElement = element)
         }
     }
 }
