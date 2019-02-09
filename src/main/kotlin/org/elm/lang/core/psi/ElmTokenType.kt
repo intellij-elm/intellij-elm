@@ -46,6 +46,16 @@ val ELM_IDENTIFIERS = tokenSetOf(
         LOWER_CASE_IDENTIFIER
 )
 
+/**
+ * The tokens corresponding to top-level code declarations.
+ *
+ * NOTE: this **excludes** module declarations and import statements
+ */
+val ELM_TOP_LEVEL_DECLARATIONS = tokenSetOf(
+        TYPE_DECLARATION, TYPE_ALIAS_DECLARATION, VALUE_DECLARATION,
+        TYPE_ANNOTATION, PORT_ANNOTATION
+)
+
 /** the virtual tokens which can be synthesized by [ElmLayoutLexer] */
 val ELM_VIRTUAL_TOKENS = tokenSetOf(
         VIRTUAL_OPEN_SECTION,

@@ -9,7 +9,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.ui.ColoredListCellRenderer
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.QualifiedReference
@@ -105,14 +104,9 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         }
     }
 
-    private val topLevelDeclarationTypes = tokenSetOf(
-            TYPE_DECLARATION, TYPE_ALIAS_DECLARATION, VALUE_DECLARATION,
-            TYPE_ANNOTATION, PORT_ANNOTATION
-    )
-
     private fun prepareInsertInNewSection(sourceFile: ElmFile): ASTNode {
         // prepare for insert immediately before the first top-level declaration
-        return sourceFile.node.findChildByType(topLevelDeclarationTypes)!!
+        return sourceFile.node.findChildByType(ELM_TOP_LEVEL_DECLARATIONS)!!
     }
 
     private fun getSortedInsertPosition(moduleName: String, existingImports: List<ElmImportClause>): ASTNode {
