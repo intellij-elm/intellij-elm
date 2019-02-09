@@ -44,7 +44,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
         // one for the module name and the other for the value/type name. If the former reference cannot be resolved,
         // then the latter is guaranteed not to resolve. And we don't want to double-report the error, so we will
         // instead filter them out.
-        if (refs.any { it is QualifiedModuleNameReference<*> && it.resolve() == null }) {
+        if (refs.any { it is ModuleNameQualifierReference<*> && it.resolve() == null }) {
             refs = refs.filterNot { it is QualifiedTypeReference || it is QualifiedValueReference || it is QualifiedConstructorReference }
         }
 
