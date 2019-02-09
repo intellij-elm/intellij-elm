@@ -13,6 +13,7 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.QualifiedReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.openapiext.toPsiFile
 import java.awt.Component
@@ -33,22 +34,20 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         if (element.parentOfType<ElmImportClause>() != null) return null
         val refElement = element.parentOfType<ElmReferenceElement>() ?: return null
+        val ref = refElement.reference
 
         // we can't import the function we're annotating
         if (refElement is ElmTypeAnnotation) return null
 
-        val fullName = refElement.text      // e.g. `Html.div`
-        val name = refElement.referenceName // e.g. `div`
+        val name = refElement.referenceName
         val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
                 .mapNotNull { Candidate.fromExposableElement(it) }
                 .toMutableList()
 
         val isQualified: Boolean
-        if (fullName.contains(".") && refElement !is ElmOperator) {
+        if (ref is QualifiedReference) {
             isQualified = true
-            // exclude any modules that don't match the qualifier prefix
-            val qualifierPrefix = fullName.split(".").dropLast(1).joinToString(".")
-            candidates.removeIf { it.moduleName != qualifierPrefix }
+            candidates.removeIf { it.moduleName != ref.qualifierPrefix }
         } else {
             isQualified = false
         }

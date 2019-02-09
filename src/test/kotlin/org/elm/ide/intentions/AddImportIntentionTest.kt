@@ -51,6 +51,36 @@ main = Foo.bar
 """)
 
 
+    fun `test qualified type`() = check(
+            """
+--@ main.elm
+f : Foo.Bar{-caret-} -> ()
+f bar = ()
+--@ Foo.elm
+module Foo exposing (Bar)
+type Bar = BarVariant
+""",
+            """
+import Foo
+f : Foo.Bar -> ()
+f bar = ()
+""")
+
+
+    fun `test qualified union constructor`() = check(
+            """
+--@ main.elm
+main = Foo.BarVariant{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = BarVariant
+""",
+            """
+import Foo
+main = Foo.BarVariant
+""")
+
+
     // see https://github.com/klazuka/intellij-elm/issues/77
     fun `test importing a union variant constructor exposes all variants`() = check(
             """
