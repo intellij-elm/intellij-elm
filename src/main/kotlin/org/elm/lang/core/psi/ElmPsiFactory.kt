@@ -118,24 +118,16 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("foo = x $text y", OPERATOR_IDENTIFIER)
                     ?: error("Failed to create operator identifier: `$text`")
 
-    fun createImport(moduleName: String) =
-            "import $moduleName"
-                    .let { createFromText<ElmImportClause>(it) }
-                    ?: error("Failed to create import of $moduleName")
+    fun createImport(moduleName: String, alias: String?): ElmImportClause {
+        val asClause = if (alias != null) " as $alias" else ""
+        return createFromText<ElmImportClause>("import $moduleName$asClause")
+                ?: error("Failed to create import of $moduleName")
+    }
 
     fun createImportExposing(moduleName: String, exposedNames: List<String>) =
             "import $moduleName exposing (${exposedNames.joinToString(", ")})"
                     .let { createFromText<ElmImportClause>(it) }
                     ?: error("Failed to create import of $moduleName exposing $exposedNames")
-
-    fun createValueDeclaration(name: String, argNames: List<String>): ElmValueDeclaration {
-        val s = if (argNames.isEmpty())
-            "$name = "
-        else
-            "$name ${argNames.joinToString(" ")} = "
-        return createFromText(s)
-                ?: error("Failed to create value declaration named $name")
-    }
 
     fun createCaseOfBranches(indent: String, patterns: List<String>): List<ElmCaseOfBranch> =
             patterns.joinToString("\n\n$indent", prefix = "foo = case 1 of\n\n$indent") { "$it ->\n$indent    " }

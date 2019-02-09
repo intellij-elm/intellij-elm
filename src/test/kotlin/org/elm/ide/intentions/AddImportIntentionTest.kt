@@ -96,6 +96,20 @@ main = BarVariant
 """)
 
 
+    fun `test qualified value using an import alias`() = check(
+            """
+--@ main.elm
+main = Foo.bar{-caret-}
+--@ FooTooLongToType.elm
+module FooTooLongToType exposing (bar)
+bar = 42
+""",
+            """
+import FooTooLongToType as Foo
+main = Foo.bar
+""")
+
+
     fun `test binary infix operator`() = check(
             """
 --@ main.elm
@@ -231,8 +245,28 @@ main = bar + quux
 --@ main.elm
 main = bar{-caret-}
 --@ Foo.elm
-module Foo exposing ()
+module Foo exposing (quux)
 bar = 42
+quux = 0
+""")
+
+    fun `test verify unavailable when value not exposed (qualified ref)`() = verifyUnavailable(
+            """
+--@ main.elm
+main = Foo.bar{-caret-}
+--@ Foo.elm
+module Foo exposing (quux)
+bar = 42
+quux = 0
+""")
+
+    fun `test verify unavailable when qualified ref alias is not possible`() = verifyUnavailable(
+            """
+--@ main.elm
+main = Foo.Bogus.bar{-caret-}
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 0
 """)
 
     fun `test verify unavailable on type annotation when local function hides external name`() = verifyUnavailable(

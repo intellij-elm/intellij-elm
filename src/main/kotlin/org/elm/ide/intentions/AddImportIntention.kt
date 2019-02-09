@@ -7,10 +7,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import com.intellij.ui.ColoredListCellRenderer
+import com.intellij.ui.SimpleTextAttributes
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.openapiext.runWriteCommandAction
@@ -38,21 +40,13 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 
         val name = refElement.referenceName
         val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
-                .mapNotNull { Candidate.fromExposableElement(it) }
+                .mapNotNull { Candidate.fromExposableElement(it, ref) }
                 .toMutableList()
-
-        val isQualified: Boolean
-        if (ref is QualifiedReference) {
-            isQualified = true
-            candidates.removeIf { it.moduleName != ref.qualifierPrefix }
-        } else {
-            isQualified = false
-        }
 
         if (candidates.isEmpty())
             return null
 
-        return Context(name, candidates.toList(), isQualified)
+        return Context(name, candidates, ref is QualifiedReference)
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
@@ -67,9 +61,9 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     private fun addImportForCandidate(candidate: Candidate, file: ElmFile, context: Context) {
         val factory = ElmPsiFactory(file.project)
         val newImport = if (context.isQualified)
-            factory.createImport(candidate.moduleName)
+            factory.createImport(candidate.moduleName, alias = candidate.moduleAlias)
         else
-            factory.createImportExposing(candidate.moduleName, listOf(candidate.nameForImport))
+            factory.createImportExposing(candidate.moduleName, listOf(candidate.nameToBeExposed))
 
         val existingImport = ModuleScope(file).getImportDecls()
                 .find { it.moduleQID.text == candidate.moduleName }
@@ -145,14 +139,22 @@ private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
     override fun customizeCellRenderer(list: JList<out Candidate>, value: Candidate, index: Int, selected: Boolean, hasFocus: Boolean) {
         // TODO set the background color based on project vs tests vs library
         append(value.moduleName)
+        if (value.moduleAlias != null) {
+            val attr = when {
+                selected -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                else -> SimpleTextAttributes.GRAYED_ATTRIBUTES
+            }
+            append(" as ${value.moduleAlias}", attr)
+        }
     }
 }
 
 
 /**
  * @param moduleName    the module where this value/type lives
+ * @param moduleAlias   if present, the alias to use when importing [moduleName]
  * @param name          the name of the value/type
- * @param nameForImport the name suitable for insert into an exposing clause.
+ * @param nameToBeExposed the name suitable for insert into an exposing clause.
  *                      Typically this is the same as `name`, but when importing
  *                      a bare union type variant, it will be the parenthesized
  *                      form: "TypeName(VariantName)"
@@ -160,8 +162,9 @@ private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
  */
 data class Candidate(
         val moduleName: String,
+        val moduleAlias: String?,
         val name: String,
-        val nameForImport: String,
+        val nameToBeExposed: String,
         val targetElement: ElmNamedElement) {
 
     companion object {
@@ -169,14 +172,14 @@ data class Candidate(
         /**
          * Returns a candidate if the element is exposed by its containing module
          */
-        fun fromExposableElement(element: ElmExposableTag): Candidate? {
+        fun fromExposableElement(element: ElmExposableTag, ref: ElmReference): Candidate? {
             val moduleDecl = element.elmFile.getModuleDecl() ?: return null
             val exposingList = moduleDecl.exposingList ?: return null
 
             if (!exposingList.exposes(element))
                 return null
 
-            val nameForImport = when (element) {
+            val nameToBeExposed = when (element) {
                 is ElmUnionVariant -> {
                     val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
                     "$typeName(..)"
@@ -193,11 +196,27 @@ data class Candidate(
                     element.name
             }
 
+            val alias = inferModuleAlias(ref, moduleDecl)
+            if (alias != null && alias.contains('.')) {
+                // invalid candidate because the alias would violate Elm syntax
+                return null
+            }
+
             return Candidate(
                     moduleName = moduleDecl.name,
+                    moduleAlias = alias,
                     name = element.name,
-                    nameForImport = nameForImport,
+                    nameToBeExposed = nameToBeExposed,
                     targetElement = element)
         }
+
+        /**
+         * Attempt to infer an alias to be used when importing this module.
+         */
+        private fun inferModuleAlias(ref: ElmReference, moduleDecl: ElmModuleDeclaration): String? =
+                if (ref is QualifiedReference && ref.qualifierPrefix != moduleDecl.name)
+                    ref.qualifierPrefix
+                else
+                    null
     }
 }
