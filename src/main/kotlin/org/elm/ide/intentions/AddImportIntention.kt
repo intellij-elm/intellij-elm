@@ -98,11 +98,11 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
      * Returns the node which will *follow* the new import clause
      */
     private fun getInsertPosition(file: ElmFile, moduleName: String): ASTNode {
-        val existingImportClauses = ModuleScope(file).getImportDecls()
-        return if (existingImportClauses.isEmpty())
-            prepareInsertInNewSection(file)
-        else
-            getSortedInsertPosition(moduleName, existingImportClauses.toList())
+        val existingImports = ModuleScope(file).getImportDecls()
+        return when {
+            existingImports.isEmpty() -> prepareInsertInNewSection(file)
+            else -> getSortedInsertPosition(moduleName, existingImports)
+        }
     }
 
     private val topLevelDeclarationTypes = tokenSetOf(
@@ -115,41 +115,19 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         return sourceFile.node.findChildByType(topLevelDeclarationTypes)!!
     }
 
-    private fun compareImportAndModule(importClause: ElmImportClause, moduleName: String): Int {
-        return importClause.moduleQID.text.compareTo(moduleName)
-    }
-
-    private fun getSortedInsertPosition(moduleName: String, existingImportClauses: List<ElmImportClause>): ASTNode {
-        // NOTE: we *assume* that the imports are already sorted.
-        val firstImport = existingImportClauses.first()
-        val lastImport = existingImportClauses.last()
-
-        return when {
-            compareImportAndModule(firstImport, moduleName) >= 0 ->
-                firstImport.node
-
-            compareImportAndModule(lastImport, moduleName) < 0 -> {
-                // go past the last import and its newline
-                var node = lastImport.node.treeNext
-                while (!node.textContains('\n')) {
-                    node = node.treeNext
-                }
-                return node.treeNext
-            }
-
-            else ->
-                // find the correct position somewhere in the middle
-                // TODO [kl] simplify this ordering logic (code was ported from Java 8)
-                existingImportClauses
-                        .zip(existingImportClauses.subList(1, existingImportClauses.size))
-                        .filter({ pair ->
-                            compareImportAndModule(pair.first, moduleName) < 0
-                                    && compareImportAndModule(pair.second, moduleName) >= 0
-                        })
-                        .map({ pair -> pair.second.node })
-                        .firstOrNull()
-                        ?: error("should not happen: import not found in the middle")
+    private fun getSortedInsertPosition(moduleName: String, existingImports: List<ElmImportClause>): ASTNode {
+        // NOTE: assumes that they are already sorted
+        for (import in existingImports) {
+            if (moduleName < import.moduleQID.text)
+                return import.node
         }
+
+        // It belongs at the end: go past the last import and its newline
+        var node = existingImports.last().node.treeNext
+        while (!node.textContains('\n')) {
+            node = node.treeNext
+        }
+        return node.treeNext
     }
 
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
