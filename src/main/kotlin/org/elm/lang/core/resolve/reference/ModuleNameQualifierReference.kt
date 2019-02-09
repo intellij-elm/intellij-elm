@@ -14,21 +14,28 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
- * Qualified module-name reference from the value or type namespaces.
+ * A module-name (or alias) reference which qualifies a name from the value or type namespaces.
  *
  * e.g. `Data.User` in the expression `Data.User.name defaultUser`
+ *
+ * e.g. the `DU` alias in the expression `DU.name` in the program:
+ * ```
+ * import Data.User as DU
+ * f x = DU.name x
+ * ```
  *
  * @param elem the Psi element which owns the reference
  * @param elementQID the QID (qualified ID) element within `elem`
  */
-class QualifiedModuleNameReference<T : ElmReferenceElement>(
+class ModuleNameQualifierReference<T : ElmReferenceElement>(
         elem: T,
-        val elementQID: ElmQID
+        private val elementQID: ElmQID
 ) : ElmReferenceCached<T>(elem), ElmReference {
+
+    private val refText: String = elementQID.qualifierPrefix
 
     override fun resolveInner(): ElmNamedElement? {
         val clientFile = element.elmFile
-
         val importDecls = ModuleScope(clientFile).getImportDecls()
 
         // First, check to see if it resolves to an aliased import
@@ -54,9 +61,6 @@ class QualifiedModuleNameReference<T : ElmReferenceElement>(
         // Instead, see `ElmCompletionProvider`
         return emptyArray()
     }
-
-    val refText: String
-        get() = elementQID.text.split(".").dropLast(1).joinToString(".")
 
     override fun calculateDefaultRangeInElement(): TextRange {
         val startOffset = elementQID.offsetIn(element)

@@ -7,7 +7,6 @@ import com.intellij.psi.PsiReference
 import org.elm.ide.intentions.AddImportIntention
 import org.elm.ide.intentions.MakeDeclarationIntention
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
@@ -37,15 +36,15 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     )
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
-        var refs = element.references.asSequence()
+        var refs = element.references.toMutableList()
 
         // Pre-processing: ignore any qualified value/type refs where the module qualifier could not be resolved.
         // This is necessary because a single Psi element like ElmValueExpr can return multiple references:
         // one for the module name and the other for the value/type name. If the former reference cannot be resolved,
         // then the latter is guaranteed not to resolve. And we don't want to double-report the error, so we will
         // instead filter them out.
-        if (refs.any { it is QualifiedModuleNameReference<*> && it.resolve() == null }) {
-            refs = refs.filterNot { it is QualifiedTypeReference || it is QualifiedValueReference || it is QualifiedConstructorReference }
+        if (refs.any { it is ModuleNameQualifierReference<*> && it.resolve() == null }) {
+            refs.removeIf { it is QualifiedReference }
         }
 
         // Give each handler a chance to deal with the unresolved ref before falling back on an error
@@ -105,20 +104,12 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     // Elm prohibits the use of the original module name in qualified references.
     // So we will try to detect this condition and present a helpful error.
     private fun handleModuleHiddenByAlias(ref: PsiReference, element: PsiElement, holder: AnnotationHolder): Boolean {
+        if (ref !is QualifiedReference) return false
         if (element !is ElmValueExpr && element !is ElmTypeRef) return false
         val elmFile = element.containingFile as? ElmFile ?: return false
 
-        val qid: ElmQID = when (ref) {
-            is QualifiedValueReference -> ref.valueQID
-            is QualifiedConstructorReference -> ref.upperCaseQID
-            is QualifiedTypeReference -> ref.upperCaseQID
-            else -> return false
-        }
-
-        if (qid.qualifierPrefix.isEmpty()) return false
-
-        val moduleName = qid.qualifierPrefix
-        val importDecl = ModuleScope(elmFile).getImportDecls().find { it.moduleQID.text == moduleName } ?: return false
+        val importDecl = ModuleScope(elmFile).getImportDecls().find { it.moduleQID.text == ref.qualifierPrefix }
+                ?: return false
         val aliasName = importDecl.asClause?.upperCaseIdentifier?.text ?: return false
 
         val importScope = ImportScope.fromImportDecl(importDecl) ?: return false
@@ -127,15 +118,15 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             is QualifiedValueReference -> importScope.getExposedValues()
             is QualifiedConstructorReference -> importScope.getExposedConstructors()
             is QualifiedTypeReference -> importScope.getExposedTypes()
-            else -> return false
+            else -> error("Unexpected qualified ref type: $ref")
         }
 
-        if (exposedNames.none { it.name == ref.canonicalText })
+        if (exposedNames.none { it.name == ref.nameWithoutQualifier })
             return false
 
         // Success! The reference would have succeeded were it not for the alias.
-        holder.createErrorAnnotation(element, "Unresolved reference '${ref.canonicalText}'. " +
-                "Module '$moduleName' is imported as '$aliasName' and so you must use the alias here.")
+        holder.createErrorAnnotation(element, "Unresolved reference '${ref.nameWithoutQualifier}'. " +
+                "Module '${ref.qualifierPrefix}' is imported as '$aliasName' and so you must use the alias here.")
         return true
     }
 }

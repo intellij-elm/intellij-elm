@@ -10,16 +10,18 @@ import org.elm.lang.core.resolve.scope.ImportScope
  * Qualified reference to a value in an expression scope
  */
 class QualifiedValueReference(element: ElmReferenceElement, val valueQID: ElmValueQID
-) : ElmReferenceCached<ElmReferenceElement>(element) {
+) : ElmReferenceCached<ElmReferenceElement>(element), QualifiedReference {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
     override fun resolveInner(): ElmNamedElement? =
-            getCandidates().find { it.name == element.referenceName }
+            getCandidates().find { it.name == nameWithoutQualifier }
+
+    override val qualifierPrefix = valueQID.qualifierPrefix
+    override val nameWithoutQualifier = element.referenceName
 
     private fun getCandidates(): Array<ElmNamedElement> {
-        val qualifierPrefix = valueQID.qualifierPrefix
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 .flatMap { it.getExposedValues() }
                 .toTypedArray()

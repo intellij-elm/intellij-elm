@@ -51,6 +51,36 @@ main = Foo.bar
 """)
 
 
+    fun `test qualified type`() = check(
+            """
+--@ main.elm
+f : Foo.Bar{-caret-} -> ()
+f bar = ()
+--@ Foo.elm
+module Foo exposing (Bar)
+type Bar = BarVariant
+""",
+            """
+import Foo
+f : Foo.Bar -> ()
+f bar = ()
+""")
+
+
+    fun `test qualified union constructor`() = check(
+            """
+--@ main.elm
+main = Foo.BarVariant{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = BarVariant
+""",
+            """
+import Foo
+main = Foo.BarVariant
+""")
+
+
     // see https://github.com/klazuka/intellij-elm/issues/77
     fun `test importing a union variant constructor exposes all variants`() = check(
             """
@@ -63,6 +93,20 @@ type Bar = BarVariant ()
             """
 import Foo exposing (Bar(..))
 main = BarVariant
+""")
+
+
+    fun `test qualified value using an import alias`() = check(
+            """
+--@ main.elm
+main = Foo.bar{-caret-}
+--@ FooTooLongToType.elm
+module FooTooLongToType exposing (bar)
+bar = 42
+""",
+            """
+import FooTooLongToType as Foo
+main = Foo.bar
 """)
 
 
@@ -201,8 +245,28 @@ main = bar + quux
 --@ main.elm
 main = bar{-caret-}
 --@ Foo.elm
-module Foo exposing ()
+module Foo exposing (quux)
 bar = 42
+quux = 0
+""")
+
+    fun `test verify unavailable when value not exposed (qualified ref)`() = verifyUnavailable(
+            """
+--@ main.elm
+main = Foo.bar{-caret-}
+--@ Foo.elm
+module Foo exposing (quux)
+bar = 42
+quux = 0
+""")
+
+    fun `test verify unavailable when qualified ref alias is not possible`() = verifyUnavailable(
+            """
+--@ main.elm
+main = Foo.Bogus.bar{-caret-}
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 0
 """)
 
     fun `test verify unavailable on type annotation when local function hides external name`() = verifyUnavailable(

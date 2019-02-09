@@ -1,22 +1,22 @@
 package org.elm.ide.intentions
 
 import com.intellij.lang.ASTNode
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
-import com.intellij.ui.components.JBList
+import com.intellij.ui.ColoredListCellRenderer
+import com.intellij.ui.SimpleTextAttributes
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
+import org.elm.lang.core.resolve.reference.QualifiedReference
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.openapiext.runWriteCommandAction
 import org.elm.openapiext.toPsiFile
-import java.awt.Component
-import javax.swing.DefaultListCellRenderer
 import javax.swing.JList
 
 class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Context>() {
@@ -33,30 +33,20 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         if (element.parentOfType<ElmImportClause>() != null) return null
         val refElement = element.parentOfType<ElmReferenceElement>() ?: return null
+        val ref = refElement.reference
 
         // we can't import the function we're annotating
         if (refElement is ElmTypeAnnotation) return null
 
-        val fullName = refElement.text      // e.g. `Html.div`
-        val name = refElement.referenceName // e.g. `div`
+        val name = refElement.referenceName
         val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
-                .mapNotNull { Candidate.fromExposableElement(it) }
+                .mapNotNull { Candidate.fromExposableElement(it, ref) }
                 .toMutableList()
-
-        val isQualified: Boolean
-        if (fullName.contains(".") && refElement !is ElmOperator) {
-            isQualified = true
-            // exclude any modules that don't match the qualifier prefix
-            val qualifierPrefix = fullName.split(".").dropLast(1).joinToString(".")
-            candidates.removeIf { it.moduleName != qualifierPrefix }
-        } else {
-            isQualified = false
-        }
 
         if (candidates.isEmpty())
             return null
 
-        return Context(name, candidates.toList(), isQualified)
+        return Context(name, candidates, ref is QualifiedReference)
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
@@ -71,9 +61,9 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     private fun addImportForCandidate(candidate: Candidate, file: ElmFile, context: Context) {
         val factory = ElmPsiFactory(file.project)
         val newImport = if (context.isQualified)
-            factory.createImport(candidate.moduleName)
+            factory.createImport(candidate.moduleName, alias = candidate.moduleAlias)
         else
-            factory.createImportExposing(candidate.moduleName, listOf(candidate.nameForImport))
+            factory.createImportExposing(candidate.moduleName, listOf(candidate.nameToBeExposed))
 
         val existingImport = ModuleScope(file).getImportDecls()
                 .find { it.moduleQID.text == candidate.moduleName }
@@ -101,106 +91,70 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
      * Returns the node which will *follow* the new import clause
      */
     private fun getInsertPosition(file: ElmFile, moduleName: String): ASTNode {
-        val existingImportClauses = ModuleScope(file).getImportDecls()
-        return if (existingImportClauses.isEmpty())
-            prepareInsertInNewSection(file)
-        else
-            getSortedInsertPosition(moduleName, existingImportClauses.toList())
+        val existingImports = ModuleScope(file).getImportDecls()
+        return when {
+            existingImports.isEmpty() -> prepareInsertInNewSection(file)
+            else -> getSortedInsertPosition(moduleName, existingImports)
+        }
     }
-
-    private val topLevelDeclarationTypes = tokenSetOf(
-            TYPE_DECLARATION, TYPE_ALIAS_DECLARATION, VALUE_DECLARATION,
-            TYPE_ANNOTATION, PORT_ANNOTATION
-    )
 
     private fun prepareInsertInNewSection(sourceFile: ElmFile): ASTNode {
         // prepare for insert immediately before the first top-level declaration
-        return sourceFile.node.findChildByType(topLevelDeclarationTypes)!!
+        return sourceFile.node.findChildByType(ELM_TOP_LEVEL_DECLARATIONS)!!
     }
 
-    private fun compareImportAndModule(importClause: ElmImportClause, moduleName: String): Int {
-        return importClause.moduleQID.text.compareTo(moduleName)
-    }
-
-    private fun getSortedInsertPosition(moduleName: String, existingImportClauses: List<ElmImportClause>): ASTNode {
-        // NOTE: we *assume* that the imports are already sorted and we
-        // do not make any distinction between import groups/sections
-        // (e.g. the practice of putting core libs in the first group,
-        // 3rd party libs in a second group, and project files in the
-        // final group).
-
-        val firstImport = existingImportClauses.first()
-        val lastImport = existingImportClauses.last()
-
-        return when {
-            compareImportAndModule(firstImport, moduleName) >= 0 ->
-                firstImport.node
-
-            compareImportAndModule(lastImport, moduleName) < 0 -> {
-                // go past the last import and its newline
-                var node = lastImport.node.treeNext
-                while (!node.textContains('\n')) {
-                    node = node.treeNext
-                }
-                return node.treeNext
-            }
-
-            else ->
-                // find the correct position somewhere in the middle
-                // TODO [kl] simplify this ordering logic (code was ported from Java 8)
-                existingImportClauses
-                        .zip(existingImportClauses.subList(1, existingImportClauses.size))
-                        .filter({ pair ->
-                            compareImportAndModule(pair.first, moduleName) < 0
-                                    && compareImportAndModule(pair.second, moduleName) >= 0
-                        })
-                        .map({ pair -> pair.second.node })
-                        .firstOrNull()
-                        ?: error("should not happen: import not found in the middle")
+    private fun getSortedInsertPosition(moduleName: String, existingImports: List<ElmImportClause>): ASTNode {
+        // NOTE: assumes that they are already sorted
+        for (import in existingImports) {
+            if (moduleName < import.moduleQID.text)
+                return import.node
         }
+
+        // It belongs at the end: go past the last import and its newline
+        var node = existingImports.last().node.treeNext
+        while (!node.textContains('\n')) {
+            node = node.treeNext
+        }
+        return node.treeNext
     }
 
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
-        /* TODO [kl] this code was ported from Java. Check the Rust plugin
-           to see if they have a nicer way to build these picker UIs. */
+        val candidates = context.candidates.sortedBy { it.moduleName }
         val project = file.project
-        val list = JBList(context.candidates.sortedBy { it.moduleName })
-        list.cellRenderer = object : DefaultListCellRenderer() {
-            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int,
-                                                      isSelected: Boolean, cellHasFocus: Boolean): Component {
-                val result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-                text = (value as? Candidate)?.moduleName
-                return result
-            }
-        }
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        JBPopupFactory.getInstance().createListPopupBuilder(list)
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
+        JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
                 .setTitle("Import '${context.refName}' from module:")
-                .setItemChoosenCallback {
-                    val value = list.getSelectedValue()
-                    if (value is Candidate) {
-                        runWriteActionToImportCandidate(value, file, context)
-                    }
+                .setItemChosenCallback {
+                    project.runWriteCommandAction { addImportForCandidate(it, file, context) }
                 }
-                .setFilteringEnabled { value -> (value as Candidate).moduleName }
-                .createPopup().showInBestPositionFor(editor!!)
+                .setNamerForFiltering { it.moduleName }
+                .setRenderer(CandidateRenderer())
+                .createPopup().showInBestPositionFor(editor)
     }
+}
 
-    private fun runWriteActionToImportCandidate(candidate: Candidate, file: ElmFile, context: Context) {
-        object : WriteCommandAction.Simple<Unit>(file.project) {
-            override fun run() {
-                addImportForCandidate(candidate, file, context)
+
+private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
+    override fun customizeCellRenderer(list: JList<out Candidate>, value: Candidate, index: Int, selected: Boolean, hasFocus: Boolean) {
+        // TODO set the background color based on project vs tests vs library
+        append(value.moduleName)
+        if (value.moduleAlias != null) {
+            val attr = when {
+                selected -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                else -> SimpleTextAttributes.GRAYED_ATTRIBUTES
             }
-        }.execute()
+            append(" as ${value.moduleAlias}", attr)
+        }
     }
 }
 
 
 /**
  * @param moduleName    the module where this value/type lives
+ * @param moduleAlias   if present, the alias to use when importing [moduleName]
  * @param name          the name of the value/type
- * @param nameForImport the name suitable for insert into an exposing clause.
+ * @param nameToBeExposed the name suitable for insert into an exposing clause.
  *                      Typically this is the same as `name`, but when importing
  *                      a bare union type variant, it will be the parenthesized
  *                      form: "TypeName(VariantName)"
@@ -208,8 +162,9 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
  */
 data class Candidate(
         val moduleName: String,
+        val moduleAlias: String?,
         val name: String,
-        val nameForImport: String,
+        val nameToBeExposed: String,
         val targetElement: ElmNamedElement) {
 
     companion object {
@@ -217,14 +172,14 @@ data class Candidate(
         /**
          * Returns a candidate if the element is exposed by its containing module
          */
-        fun fromExposableElement(element: ElmExposableTag): Candidate? {
+        fun fromExposableElement(element: ElmExposableTag, ref: ElmReference): Candidate? {
             val moduleDecl = element.elmFile.getModuleDecl() ?: return null
             val exposingList = moduleDecl.exposingList ?: return null
 
             if (!exposingList.exposes(element))
                 return null
 
-            val nameForImport = when (element) {
+            val nameToBeExposed = when (element) {
                 is ElmUnionVariant -> {
                     val typeName = element.parentOfType<ElmTypeDeclaration>()!!.name
                     "$typeName(..)"
@@ -241,11 +196,27 @@ data class Candidate(
                     element.name
             }
 
+            val alias = inferModuleAlias(ref, moduleDecl)
+            if (alias != null && alias.contains('.')) {
+                // invalid candidate because the alias would violate Elm syntax
+                return null
+            }
+
             return Candidate(
-                        moduleName = moduleDecl.name,
+                    moduleName = moduleDecl.name,
+                    moduleAlias = alias,
                     name = element.name,
-                        nameForImport = nameForImport,
-                        targetElement = element)
+                    nameToBeExposed = nameToBeExposed,
+                    targetElement = element)
         }
+
+        /**
+         * Attempt to infer an alias to be used when importing this module.
+         */
+        private fun inferModuleAlias(ref: ElmReference, moduleDecl: ElmModuleDeclaration): String? =
+                if (ref is QualifiedReference && ref.qualifierPrefix != moduleDecl.name)
+                    ref.qualifierPrefix
+                else
+                    null
     }
 }

@@ -10,17 +10,19 @@ import org.elm.lang.core.resolve.scope.ImportScope
  */
 class QualifiedTypeReference(
         element: ElmReferenceElement,
-        val upperCaseQID: ElmUpperCaseQID)
-    : ElmReferenceCached<ElmReferenceElement>(element) {
+        val upperCaseQID: ElmUpperCaseQID
+) : ElmReferenceCached<ElmReferenceElement>(element), QualifiedReference {
 
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
     override fun resolveInner(): ElmNamedElement? =
-            getCandidates().find { it.name == element.referenceName }
+            getCandidates().find { it.name == nameWithoutQualifier }
+
+    override val qualifierPrefix = upperCaseQID.qualifierPrefix
+    override val nameWithoutQualifier = element.referenceName
 
     private fun getCandidates(): List<ElmNamedElement> {
-        val qualifierPrefix = upperCaseQID.qualifierPrefix
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 .flatMap { it.getExposedTypes() }
     }

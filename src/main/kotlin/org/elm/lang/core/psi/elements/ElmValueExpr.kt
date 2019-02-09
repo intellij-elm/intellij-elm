@@ -75,11 +75,11 @@ class ElmValueExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement
             when (flavor) {
                 QualifiedValue -> arrayOf(
                         QualifiedValueReference(this, valueQID!!),
-                        QualifiedModuleNameReference(this, valueQID!!)
+                        ModuleNameQualifierReference(this, valueQID!!)
                 )
                 QualifiedConstructor -> arrayOf(
                         QualifiedConstructorReference(this, upperCaseQID!!),
-                        QualifiedModuleNameReference(this, upperCaseQID!!)
+                        ModuleNameQualifierReference(this, upperCaseQID!!)
                 )
                 BareValue -> arrayOf(LexicalValueReference(this))
                 BareConstructor -> arrayOf(SimpleUnionOrRecordConstructorReference(this))
