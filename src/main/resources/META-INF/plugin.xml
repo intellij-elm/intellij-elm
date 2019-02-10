@@ -262,6 +262,7 @@
                 class="org.elm.ide.actions.ElmExternalFormatAction"
                 text="Run elm-format on current file">
             <add-to-group group-id="CodeMenu" anchor="last"/>
+            <keyboard-shortcut first-keystroke="shift ctrl L" keymap="$default"/>
         </action>
 
         <group id="Elm.WorkspaceToolsGroup" text="Elm" popup="true">

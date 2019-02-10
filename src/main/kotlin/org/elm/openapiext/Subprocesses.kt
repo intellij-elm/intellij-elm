@@ -35,6 +35,9 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.io.systemIndependentPath
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
+import java.nio.charset.Charset
 import java.nio.file.Path
 
 private val log = Logger.getInstance("org.elm.openapiext.Subprocesses")
@@ -46,27 +49,6 @@ fun GeneralCommandLine(path: Path, vararg args: String) =
 fun GeneralCommandLine.withWorkDirectory(path: Path?) =
         withWorkDirectory(path?.systemIndependentPath)
 
-
-fun GeneralCommandLine.execute(timeoutInMilliseconds: Int? = 1000): ProcessOutput? {
-    val output = try {
-        val handler = CapturingProcessHandler(this)
-
-        log.debug("Executing `$commandLineString`")
-        if (timeoutInMilliseconds != null)
-            handler.runProcess(timeoutInMilliseconds)
-        else
-            handler.runProcess()
-    } catch (e: ExecutionException) {
-        log.warn("Failed to run executable", e)
-        return null
-    }
-
-    if (!output.isSuccess) {
-        log.warn(errorMessage(this, output))
-    }
-
-    return output
-}
 
 @Throws(ExecutionException::class)
 fun GeneralCommandLine.execute(
@@ -100,6 +82,40 @@ fun GeneralCommandLine.execute(
         handler.runProcess()
     } finally {
         Disposer.dispose(processKiller)
+    }
+
+    if (!ignoreExitCode && output.exitCode != 0) {
+        throw ExecutionException(errorMessage(this, output))
+    }
+    return output
+}
+
+@Throws(ExecutionException::class)
+fun GeneralCommandLine.execute(
+        stdIn: String? = null,
+        timeoutInMilliseconds: Int? = 2000,
+        ignoreExitCode: Boolean = false
+): ProcessOutput {
+
+    val handler = if (stdIn == null) {
+        CapturingProcessHandler(this)
+    } else {
+        val process = createProcess()
+
+        val stdInStream = process.outputStream
+        val writer = BufferedWriter(OutputStreamWriter(stdInStream))
+
+        writer.append(stdIn)
+        writer.flush()
+        writer.close()
+
+        CapturingProcessHandler(process, Charset.forName("UTF-8"), commandLineString)
+    }
+
+    val output = if(timeoutInMilliseconds == null) {
+        handler.runProcess()
+    } else {
+        handler.runProcess(timeoutInMilliseconds, true)
     }
 
     if (!ignoreExitCode && output.exitCode != 0) {

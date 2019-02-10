@@ -111,6 +111,51 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
+    fun `test elm-format action shouldn't be active on non-elm files`() {
+        val fileWithCaret = buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.18.0",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("src") {
+                elm("Main.scala", """
+                    module Main exposing (f)
+
+
+                    f x = x{-caret-}
+
+                """.trimIndent())
+            }
+        }.fileWithCaret
+
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val psiFile = PsiManager.getInstance(project).findFile(file)!!
+
+        val dataContext = MapDataContext(mapOf(
+                CommonDataKeys.PROJECT to project,
+                CommonDataKeys.PSI_FILE to psiFile
+        ))
+        val action = ElmExternalFormatAction()
+        val e = TestActionEvent(dataContext, action)
+        action.beforeActionPerformedUpdate(e)
+        check(!e.presentation.isEnabledAndVisible) {
+            "The elm-format action shouldn't be enabled in this context"
+        }
+    }
+
     private fun reformat(file: PsiFile) {
         val dataContext = MapDataContext(mapOf(
                 CommonDataKeys.PROJECT to project,
