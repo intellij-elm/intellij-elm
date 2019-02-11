@@ -107,6 +107,7 @@ data class TyFunction(
         else -> ret
     }
 
+
     override fun withAlias(alias: AliasInfo): TyFunction = copy(alias = alias)
 
     override fun toString(): String {

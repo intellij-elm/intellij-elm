@@ -279,15 +279,15 @@ private class InferenceScope(
                 else -> error("unexpected operand type $operand")
             }
 
-    private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
-        val targetTy = inferAtom(callExpr.target)
-        val arguments = callExpr.arguments.toList()
+    private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
+        val targetTy = inferAtom(expr.target)
+        val arguments = expr.arguments.toList()
 
         // always infer the arguments so that they're added to expressionTypes
         val argTys = arguments.map { inferAtom(it) }
 
         fun argCountError(expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
+            diagnostics += ArgumentCountError(expr, arguments.size, expected)
             return TyUnknown()
         }
 
@@ -307,7 +307,7 @@ private class InferenceScope(
         } else {
             TyUnknown()
         }
-        expressionTypes[callExpr] = resultTy
+        expressionTypes[expr] = resultTy
         return resultTy
     }
 

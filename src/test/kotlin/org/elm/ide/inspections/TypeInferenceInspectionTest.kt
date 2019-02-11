@@ -1510,4 +1510,25 @@ main : ()
 main =
     foo "" [""] <error descr="Type mismatch.Required: StringFound: List String">[""]</error>
 """)
+
+    fun `test calling function with its own return value`() = checkByText("""
+type Foo a b = Foo
+type Bar c = Bar
+
+foo : Foo d (e -> f) -> Bar e -> Foo d f
+foo a = Debug.todo ""
+
+bar : Foo g g
+bar = Foo
+
+baz : Bar String
+baz = Bar
+
+qux : Bar Float
+qux = Bar
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Foo (String → (Float → f)) f">(foo (foo bar baz) qux)</error>
+""")
 }

@@ -116,19 +116,6 @@ class TypeMismatchError(
     }
 }
 
-class RecordBaseTypeError(
-        element: PsiElement,
-        private val actual: Ty
-) : ElmDiagnostic(element, null) {
-    override val message: String
-        get() {
-            return "Type mismatch." +
-                    "<br>Required: record" +
-                    "<br>Found: ${actual.renderedText(false, false)}"
-        }
-
-}
-
 class TypeArgumentCountError(
         element: PsiElement,
         private val actual: Int,
