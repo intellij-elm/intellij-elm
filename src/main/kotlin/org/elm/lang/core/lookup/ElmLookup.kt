@@ -46,15 +46,24 @@ object ElmLookup {
                 .filterIsInstance<T>()
     }
 
-
-    /** Find the named element with [name] declared in [module] and visible to [clientLocation] */
+    /**
+     * Find the named element with [name] in [module] which is visible to [clientLocation].
+     *
+     * Q) Why does this function return a list? Shouldn't module + name uniquely identify
+     *    an entity in Elm?
+     *
+     * A) No, it's not sufficient. Depending on how narrowly you restrict the return type,
+     *    your query could match things in both the value and type namespaces. Plus, a user
+     *    might have multiple files in their project each with the same module name. Sure,
+     *    their app won't compile if they try to import the module, but we still need
+     *    to deal with it.
+     */
     inline fun <reified T : ElmNamedElement> findByNameAndModule(
             name: String,
             module: String,
             clientLocation: ClientLocation
-    ): T? =
-            findByName<T>(name, clientLocation)
-                    .find { it.moduleName == module }
+    ): List<T> =
+            findByName<T>(name, clientLocation).filter { it.moduleName == module }
 
 
     /**
