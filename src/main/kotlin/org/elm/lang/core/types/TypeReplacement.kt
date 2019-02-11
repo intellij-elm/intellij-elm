@@ -59,7 +59,7 @@ class TypeReplacement(
             }
             val ret = replace(ty.ret)
             val alias = replace(ty.alias)
-            TyFunction(parameters, ret, alias)
+            TyFunction(parameters, ret, alias).uncurry()
         }
         is TyUnknown -> TyUnknown(replace(ty.alias))
         is TyUnion -> replaceUnion(ty)

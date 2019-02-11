@@ -103,7 +103,7 @@ private class InferenceScope(
         // The body of pattern declarations is inferred as part of parameter binding, so there's no
         // more to do here.
         if (declaration.pattern != null) {
-            return InferenceResult(expressionTypes, diagnostics, declaredTy)
+            return InferenceResult(expressionTypes, diagnostics, TyUnknown())
         }
 
         // For function declarations, we need to infer the body and check that it matches the
@@ -113,24 +113,30 @@ private class InferenceScope(
         if (expr != null && !PsiTreeUtil.hasErrorElements(expr)) {
             bodyTy = inferExpression(expr)
 
-            // If the body is just a let expression, show the diagnostic on its expression rather than the whole body.
-            val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
+            if (declaredTy != null) {
+                // If the body is just a let expression, show the diagnostic on its expression
+                // rather than the whole body.
+                val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
 
-            val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
-            requireAssignable(errorExpr, bodyTy, expected)
+                val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
+                requireAssignable(errorExpr, bodyTy, expected)
+            }
         }
 
-        val ty = if (declaredTy is TyUnknown) bodyTy else declaredTy
+        val ty = when {
+            declaredTy == null && paramCount < 1 -> bodyTy
+            declaredTy == null -> TyFunction((1..paramCount).map { TyUnknown() }, bodyTy).uncurry()
+            else -> declaredTy
+        }
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
-        // TODO [unification] infer param types
         val patternList = lambda.patternList
         val paramVars = uniqueVars(patternList.size)
         patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
-        val ty = TyFunction(paramVars, bodyTy)
+        val ty = TyFunction(paramVars, bodyTy).uncurry()
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
@@ -620,43 +626,41 @@ private class InferenceScope(
      * @return a pair of the entire declared type (or [TyUnknown] if no annotation exists), and the
      *   number of parameters in the declaration
      */
-    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Pair<Ty, Int> {
+    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Pair<Ty?, Int> {
         return when {
             valueDeclaration.functionDeclarationLeft != null -> {
                 bindFunctionDeclarationParameters(valueDeclaration, valueDeclaration.functionDeclarationLeft!!)
             }
             valueDeclaration.pattern != null -> {
                 bindPatternDeclarationParameters(valueDeclaration, valueDeclaration.pattern!!)
+                null to 0
             }
             valueDeclaration.operatorDeclarationLeft != null -> {
                 // TODO [drop 0.18] remove this case
                 // this is 0.18 only, so we aren't going to bother implementing it
                 valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown() }
-                TyUnknown() to 2
+                null to 2
             }
-            else -> TyUnknown() to 0
+            else -> null to 0
         }
     }
 
     private fun bindFunctionDeclarationParameters(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
-    ): Pair<Ty, Int> {
+    ): Pair<Ty?, Int> {
         val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.value
         val patterns = decl.patterns.toList()
 
         if (typeRefTy == null) {
             patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
-            return when {
-                patterns.isEmpty() -> TyUnknown() to 0
-                else -> TyFunction(patterns.map { TyUnknown() }, TyUnknown()) to patterns.size
-            }
+            return null to patterns.size
         }
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
             patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
-            return TyUnknown() to maxParams
+            return null to maxParams
         }
 
         if (typeRefTy is TyFunction) {
@@ -665,10 +669,7 @@ private class InferenceScope(
         return typeRefTy to patterns.size
     }
 
-    private fun bindPatternDeclarationParameters(
-            valueDeclaration: ElmValueDeclaration,
-            pattern: ElmPattern
-    ): Pair<Ty, Int> {
+    private fun bindPatternDeclarationParameters(valueDeclaration: ElmValueDeclaration, pattern: ElmPattern) {
         // For case branches and pattern declarations like `(x,y) = (1,2)`, we need to finish
         // inferring the expression before we can bind the parameters. In these cases, it's an error
         // to use a name from the pattern in its expression (e.g. `{x} = {x=x}`). We need to know
@@ -688,7 +689,6 @@ private class InferenceScope(
                 error("failed to bind element of type ${name.elementType} with name '${name.text}'")
             }
         }
-        return bodyTy to 1
     }
 
     private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {

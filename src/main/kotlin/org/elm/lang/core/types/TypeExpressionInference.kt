@@ -160,8 +160,7 @@ class TypeExpression(
         val last = segments.last()
         return when {
             segments.size == 1 -> last
-            last is TyFunction -> TyFunction(segments.dropLast(1) + last.parameters, last.ret)
-            else -> TyFunction(segments.dropLast(1), last)
+            else -> TyFunction(segments.dropLast(1), last).uncurry()
         }
     }
 

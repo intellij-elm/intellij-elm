@@ -107,6 +107,10 @@ data class TyFunction(
         else -> ret
     }
 
+    fun uncurry(): TyFunction = when (ret) {
+        is TyFunction -> TyFunction(parameters + ret.parameters, ret.ret)
+        else -> this
+    }
 
     override fun withAlias(alias: AliasInfo): TyFunction = copy(alias = alias)
 

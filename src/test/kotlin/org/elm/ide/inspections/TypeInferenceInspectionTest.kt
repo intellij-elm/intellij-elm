@@ -489,6 +489,27 @@ main : () -> ()
 main = (\a -> a)
 """)
 
+    fun `test function with arguments returning lambda`() = checkByText("""
+foo a = \b -> b
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test lambda returning lambda`() = checkByText("""
+foo = \a -> (\b -> b)
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test lambda returning lambda returning lambda`() = checkByText("""
+foo = \a -> (\b -> (\c -> c))
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo "" "" ""</error>
+""")
+
     fun `test record update in lambda`() = checkByText("""
 type alias R = {x : ()}
 main : R -> R
@@ -1529,6 +1550,6 @@ qux = Bar
 
 main : ()
 main =
-    <error descr="Type mismatch.Required: ()Found: Foo (String → (Float → f)) f">(foo (foo bar baz) qux)</error>
+    <error descr="Type mismatch.Required: ()Found: Foo (String → Float → f) f">(foo (foo bar baz) qux)</error>
 """)
 }
