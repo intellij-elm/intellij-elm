@@ -3,6 +3,7 @@ package org.elm.ide.inspections
 import org.intellij.lang.annotations.Language
 
 class ElmIncompletePatternInspectionTest : ElmInspectionsTestBase(ElmIncompletePatternInspection()) {
+
     fun `test all branches present`() = checkFixIsUnavailable("Add missing case branches", """
 type Foo = Bar | Baz
 
@@ -323,6 +324,52 @@ foo it =
 
         Qux ->
             --EOL
+""")
+
+    /*
+    https://github.com/klazuka/intellij-elm/issues/260
+
+    A project with multiple Elm files each with the same module name and each defining
+    a union type by the same name. This causes trouble for the 'missing case branch adder'
+    because it needs to lookup Psi based on just a `TyUnion`, which only has a type name
+    and module name. These tests ensure that the ambiguity is resolved correctly.
+    */
+
+    fun `test issue 260 - needs branches`() = checkFixByFileTree("Add missing case branches", """
+--@ File1.elm
+type Msg = Qux
+
+foo : Msg -> ()
+foo it =
+    <error>case{-caret-}</error> it of
+--@ File2.elm
+type Msg = Foo | Bar
+--@ File3.elm
+type Msg = Bar | Baz
+""", """
+type Msg = Qux
+
+foo : Msg -> ()
+foo it =
+    case it of
+        Qux ->
+            --EOL
+
+""".trimIndent())
+
+    fun `test issue 260 - ok`() = checkFixIsUnavailableByFileTree("Add missing case branches", """
+--@ File1.elm
+type Msg = Qux
+
+foo : Msg -> ()
+foo it =
+    case{-caret-} it of
+        Qux ->
+            ()
+--@ File2.elm
+type Msg = Foo | Bar
+--@ File3.elm
+type Msg = Bar | Baz
 """)
 
     private fun checkFixByText(

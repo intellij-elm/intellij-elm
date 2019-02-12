@@ -84,8 +84,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
                 ?: return defaultResult
 
-        val declaration = ElmLookup.findByNameAndModule<ElmTypeDeclaration>(exprTy.name, exprTy.module, element.elmFile)
-                ?: return defaultResult
+        val declaration = findTypeDeclaration(exprTy) ?: return defaultResult
 
         val allBranches = declaration.variantInference().value
         val missingBranches = allBranches.toMutableMap()
@@ -109,5 +108,19 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
                 ?: ""
 
         return Result.MissingVariants(missingBranches.mapKeys { (k, _) -> qualifierPrefix + k })
+    }
+
+    private fun findTypeDeclaration(exprTy: TyUnion): ElmTypeDeclaration? {
+        val candidates = ElmLookup.findByNameAndModule<ElmTypeDeclaration>(exprTy.name, exprTy.module, element.elmFile)
+        return when {
+            candidates.size < 2 -> candidates.firstOrNull()
+            else -> {
+                // Multiple modules have the same name and define a type of the same name.
+                // Since the Elm compiler forbids you from importing a module whose name
+                // is ambiguous, the only way for this to be valid is if they are actually
+                // the *same* module.
+                candidates.firstOrNull { it.elmFile == element.elmFile }
+            }
+        }
     }
 }
