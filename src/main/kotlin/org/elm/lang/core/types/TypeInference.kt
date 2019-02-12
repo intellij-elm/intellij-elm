@@ -716,7 +716,7 @@ private class InferenceScope(
             }
             is ElmPattern -> {
                 bindPattern(pat.child, ty, isParameter)
-                bindPatternAs(pat.patternAs, ty)
+                pat.patternAs?.let { bindPattern(it, ty, isParameter) }
             }
             is ElmLowerPattern -> setBinding(pat, ty)
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
@@ -757,11 +757,6 @@ private class InferenceScope(
             // it binds to the element type.
             bindPattern(parts.last(), if (isCons) ty else innerTy, false)
         }
-    }
-
-
-    private fun bindPatternAs(pat: ElmPatternAs?, ty: Ty) {
-        if (pat != null) setBinding(pat, ty)
     }
 
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {

@@ -1025,7 +1025,6 @@ main =
        <error descr="Type mismatch.Required: ()Found: String">a</error>
 """)
 
-
     fun `test nested forward references`() = checkByText("""
 main : () -> ()
 main m =
@@ -1037,6 +1036,16 @@ main m =
   in
   x ()
 """)
+
+    fun `test referenced pattern as`() = checkByText("""
+main : { field : String } -> ()
+main r =
+    let
+        ({field} as record) = r
+    in
+    <error descr="Type mismatch.Required: ()Found: String">record.field</error>
+""")
+
 
     fun `test mismatched left operand to non-associative operator`() = checkByText("""
 foo : () -> () -> ()

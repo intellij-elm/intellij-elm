@@ -1,11 +1,8 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.ElmFunctionParamTag
-import org.elm.lang.core.psi.ElmPatternChildTag
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmUnionPatternChildTag
-import org.elm.lang.core.psi.ElmValueAssigneeTag
+import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.*
 
 
 class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag, ElmValueAssigneeTag {
@@ -18,6 +15,14 @@ class ElmPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmFunctionParamTag, 
     val child: ElmPatternChildTag
         get() = findNotNullChildByClass(ElmPatternChildTag::class.java)
 
-    val patternAs: ElmPatternAs?
-        get() = findChildByClass(ElmPatternAs::class.java)
+    /**
+     * The name after the `as` that this pattern is bound to.
+     *
+     * e.g. `record` in `({field} as record)`
+     */
+    val patternAs: ElmLowerPattern?
+        get() {
+            val asToken = findChildByType<PsiElement>(ElmTypes.AS) ?: return null
+            return asToken.nextSiblings.filterIsInstance<ElmLowerPattern>().firstOrNull()
+        }
 }
