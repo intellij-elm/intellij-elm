@@ -226,6 +226,20 @@ main : Large a -> String
 main = foo
 """)
 
+    fun `test modifying extended record through extension alias`() = checkByText("""
+type alias Small a = { a | field1 : String }
+type alias Large = Small { field2 : String }
+
+foo : Small a -> Small a
+foo a = a
+
+main : Large -> ()
+main r =
+    let
+        rr = foo r
+    in
+    <error descr="Type mismatch.Required: ()Found: { field2 : String, field1 : String }">{ rr | field2 = "" }</error>
+""")
 
     fun `test field accessor as argument`() = checkByText("""
 type alias R = {x: (), y: ()}
