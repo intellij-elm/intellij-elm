@@ -28,6 +28,7 @@ class ElmLayoutLexerTest: ElmLexerTestCaseBase() {
     fun testLetIn() = doTest()
     fun testLetInPartial() = doTest()
     fun testLetInSingleLineBug() = doTest()
+    fun testLetInSingleLineBug2() = doTest()
     fun testCaseOf() = doTest()
     fun testCaseFollowedByTopLevelDecl() = doTest()
     fun testCaseOfPartial() = doTest()

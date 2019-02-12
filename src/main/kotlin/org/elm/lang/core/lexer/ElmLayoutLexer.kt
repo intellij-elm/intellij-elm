@@ -214,7 +214,7 @@ private fun isSingleLineLetIn(index: Int, tokens: List<Token>): Boolean {
         val t = tokens[i--]
         if (t.elementType == ElmTypes.LET)
             return true
-    } while (t.line == thisLine && i < tokens.size)
+    } while (t.line == thisLine && i in 0 until tokens.size)
 
     return false
 }
