@@ -103,7 +103,7 @@ private class InferenceScope(
         // The body of pattern declarations is inferred as part of parameter binding, so there's no
         // more to do here.
         if (declaration.pattern != null) {
-            return InferenceResult(expressionTypes, diagnostics, declaredTy)
+            return InferenceResult(expressionTypes, diagnostics, TyUnknown())
         }
 
         // For function declarations, we need to infer the body and check that it matches the
@@ -113,24 +113,30 @@ private class InferenceScope(
         if (expr != null && !PsiTreeUtil.hasErrorElements(expr)) {
             bodyTy = inferExpression(expr)
 
-            // If the body is just a let expression, show the diagnostic on its expression rather than the whole body.
-            val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
+            if (declaredTy != null) {
+                // If the body is just a let expression, show the diagnostic on its expression
+                // rather than the whole body.
+                val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
 
-            val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
-            requireAssignable(errorExpr, bodyTy, expected)
+                val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
+                requireAssignable(errorExpr, bodyTy, expected)
+            }
         }
 
-        val ty = if (declaredTy is TyUnknown) bodyTy else declaredTy
+        val ty = when {
+            declaredTy == null && paramCount < 1 -> bodyTy
+            declaredTy == null -> TyFunction((1..paramCount).map { TyUnknown() }, bodyTy).uncurry()
+            else -> declaredTy
+        }
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
-        // TODO [unification] infer param types
         val patternList = lambda.patternList
         val paramVars = uniqueVars(patternList.size)
         patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
-        val ty = TyFunction(paramVars, bodyTy)
+        val ty = TyFunction(paramVars, bodyTy).uncurry()
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
@@ -228,7 +234,7 @@ private class InferenceScope(
             if (part is ElmOperator) {
                 val (ty, precedence) = inferOperatorAndPrecedence(part)
                 when {
-                    precedence == null || ty !is TyFunction || ty.parameters.size != 2 -> return TyUnknown()
+                    precedence == null || ty !is TyFunction || ty.parameters.size < 2 -> return TyUnknown()
                     precedence.associativity == NON && lastPrecedence?.associativity == NON -> {
                         // Non-associative operators can't be chained directly with other non-associative
                         // operators.
@@ -245,19 +251,24 @@ private class InferenceScope(
         }
 
         // Parse the tree and walk it, validating all the operator calls.
-        fun validateTree(tree: BinaryExprTree<ElmBinOpPartTag>): RangeTy {
+        fun validateTree(tree: BinaryExprTree<ElmBinOpPartTag>): TyAndRange {
             return when (tree) {
                 is BinaryExprTree.Operand -> {
                     val ty = inferOperand(tree.operand as ElmOperandTag)
-                    RangeTy(tree.operand, ty)
+                    TyAndRange(tree.operand, ty)
                 }
                 is BinaryExprTree.Binary -> {
                     val l = validateTree(tree.left)
                     val r = validateTree(tree.right)
                     val func = operatorTys[tree.operator]!!
-                    requireAssignable(l.start, l.ty, func.parameters[0], l.end)
-                    requireAssignable(r.start, r.ty, func.parameters[1], r.end)
-                    RangeTy(l.start, r.end, func.ret)
+                    val replacements = mutableMapOf<TyVar, Ty>()
+                    val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
+                    val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
+                    val ty = when {
+                        lAssignable && rAssignable -> TypeReplacement.deepReplace(func.partiallyApply(2), replacements)
+                        else -> TyUnknown()
+                    }
+                    TyAndRange(l.start, r.end, ty)
                 }
             }
         }
@@ -274,41 +285,35 @@ private class InferenceScope(
                 else -> error("unexpected operand type $operand")
             }
 
-    private fun inferFunctionCall(callExpr: ElmFunctionCallExpr): Ty {
-        val inferredTy = inferAtom(callExpr.target)
+    private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
+        val targetTy = inferAtom(expr.target)
+        val arguments = expr.arguments.toList()
 
-        val arguments = callExpr.arguments.toList()
+        // always infer the arguments so that they're added to expressionTypes
+        val argTys = arguments.map { inferAtom(it) }
 
         fun argCountError(expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(callExpr, arguments.size, expected)
+            diagnostics += ArgumentCountError(expr, arguments.size, expected)
             return TyUnknown()
         }
 
-        val targetTy = when (inferredTy) {
-            is TyFunction -> inferredTy
-            is TyRecord -> when {
-                // Record constructor
-                inferredTy.alias != null -> TyFunction(inferredTy.fields.values.toList(), inferredTy)
-                else -> return argCountError(0)
-            }
-            is TyUnknown, is TyVar -> return TyUnknown() // TODO[unification] infer vars
-            else -> return argCountError(0)
+        if (!isInferable(targetTy)) return TyUnknown()
+        if (targetTy !is TyFunction) return argCountError(0)
+        if (arguments.size > targetTy.parameters.size) return argCountError(targetTy.parameters.size)
+
+        val replacements = mutableMapOf<TyVar, Ty>()
+
+        val ok = (0..arguments.lastIndex).all { i ->
+            requireAssignable(arguments[i], argTys[i], targetTy.parameters[i], replacements = replacements)
         }
 
-        if (arguments.size > targetTy.parameters.size) {
-            // Even if there's too many arguments, we still need to infer the argument types since
-            // they're returned in the subexpression inference
-            arguments.forEach { inferAtom(it) }
-            return argCountError(targetTy.parameters.size)
+        val resultTy = if (ok) {
+            val appliedTy = targetTy.partiallyApply(arguments.size)
+            TypeReplacement.deepReplace(appliedTy, replacements)
+        } else {
+            TyUnknown()
         }
-
-        for ((arg, paramTy) in arguments.zip(targetTy.parameters)) {
-            val argTy = inferAtom(arg)
-            requireAssignable(arg, argTy, paramTy)
-        }
-
-        val resultTy = targetTy.partiallyApply(arguments.size)
-        expressionTypes[callExpr] = resultTy
+        expressionTypes[expr] = resultTy
         return resultTy
     }
 
@@ -325,7 +330,7 @@ private class InferenceScope(
             is ElmListExpr -> inferList(atom)
             is ElmNegateExpr -> inferNegateExpression(atom)
             is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
-            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number") // TODO[unification] handle `number1`,`number2`,...
+            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number")
             is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
             is ElmParenthesizedExpr -> inferExpression(atom.expression)
             is ElmRecordExpr -> inferRecord(atom)
@@ -422,10 +427,9 @@ private class InferenceScope(
                 continue
             }
 
-            if (assignable(result.ty, ty)) {
+            if (requireAssignable(branchExpression, result.ty, ty)) {
                 ty = result.ty
             } else {
-                diagnostics += TypeMismatchError(branchExpression, result.ty, ty)
                 errorEncountered = true
             }
         }
@@ -518,7 +522,12 @@ private class InferenceScope(
 
         return when (ref) {
             is ElmUnionVariant -> ref.typeExpressionInference().value
-            is ElmTypeAliasDeclaration -> ref.typeExpressionInference().value
+            is ElmTypeAliasDeclaration -> {
+                val ty = ref.typeExpressionInference().value
+                // Record aliases in expressions are constructor functions
+                if (ty is TyRecord) TyFunction(ty.fields.values.toList(), ty)
+                else ty
+            }
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> ref.typeExpressionInference().value
             is ElmLowerPattern -> {
@@ -545,21 +554,16 @@ private class InferenceScope(
 
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
-        // TODO [unification] neither of these vars should be rigid
         val tyVar = TyVar("b")
         return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
-        val subExpr = expr.expression
+        val subExpr = expr.expression ?: return TyUnknown()
         val subTy = inferExpression(subExpr)
-        // TODO [unification] restrict vars to only number
-        return when (subTy) {
-            TyInt, TyFloat, is TyUnknown, is TyVar -> subTy
-            else -> {
-                diagnostics += TypeMismatchError(subExpr!!, subTy, TyVar("number"))
-                TyUnknown()
-            }
+        return when {
+            requireAssignable(subExpr, subTy, TyVar("number")) -> subTy
+            else -> TyUnknown()
         }
     }
 
@@ -622,43 +626,41 @@ private class InferenceScope(
      * @return a pair of the entire declared type (or [TyUnknown] if no annotation exists), and the
      *   number of parameters in the declaration
      */
-    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Pair<Ty, Int> {
+    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Pair<Ty?, Int> {
         return when {
             valueDeclaration.functionDeclarationLeft != null -> {
                 bindFunctionDeclarationParameters(valueDeclaration, valueDeclaration.functionDeclarationLeft!!)
             }
             valueDeclaration.pattern != null -> {
                 bindPatternDeclarationParameters(valueDeclaration, valueDeclaration.pattern!!)
+                null to 0
             }
             valueDeclaration.operatorDeclarationLeft != null -> {
                 // TODO [drop 0.18] remove this case
                 // this is 0.18 only, so we aren't going to bother implementing it
                 valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown() }
-                TyUnknown() to 2
+                null to 2
             }
-            else -> TyUnknown() to 0
+            else -> null to 0
         }
     }
 
     private fun bindFunctionDeclarationParameters(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
-    ): Pair<Ty, Int> {
+    ): Pair<Ty?, Int> {
         val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.value
         val patterns = decl.patterns.toList()
 
         if (typeRefTy == null) {
             patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
-            return when {
-                patterns.isEmpty() -> TyUnknown() to 0
-                else -> TyFunction(patterns.map { TyUnknown() }, TyUnknown()) to patterns.size
-            }
+            return null to patterns.size
         }
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
             patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
-            return TyUnknown() to maxParams
+            return null to maxParams
         }
 
         if (typeRefTy is TyFunction) {
@@ -667,10 +669,7 @@ private class InferenceScope(
         return typeRefTy to patterns.size
     }
 
-    private fun bindPatternDeclarationParameters(
-            valueDeclaration: ElmValueDeclaration,
-            pattern: ElmPattern
-    ): Pair<Ty, Int> {
+    private fun bindPatternDeclarationParameters(valueDeclaration: ElmValueDeclaration, pattern: ElmPattern) {
         // For case branches and pattern declarations like `(x,y) = (1,2)`, we need to finish
         // inferring the expression before we can bind the parameters. In these cases, it's an error
         // to use a name from the pattern in its expression (e.g. `{x} = {x=x}`). We need to know
@@ -690,7 +689,6 @@ private class InferenceScope(
                 error("failed to bind element of type ${name.elementType} with name '${name.text}'")
             }
         }
-        return bodyTy to 1
     }
 
     private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {
@@ -829,13 +827,13 @@ private class InferenceScope(
         }
 
         for (id in lowerPatternList) {
-            val fieldTy = ty.fields[id.name]!!
+            val fieldTy = ty.fields.getValue(id.name)
             bindPattern(id, fieldTy, isParameter)
         }
     }
 
     //</editor-fold>
-    //<editor-fold desc="coercion">
+    //<editor-fold desc="unification">
 
     /*
      * These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
@@ -843,38 +841,65 @@ private class InferenceScope(
      * of these functions access any scope `InferenceScope` properties.
      */
 
-    private fun requireAssignable(element: PsiElement, ty1: Ty, ty2: Ty, endElement: ElmPsiElement? = null): Boolean {
-        val assignable = assignable(ty1, ty2)
+    private fun requireAssignable(
+            element: PsiElement,
+            ty1: Ty,
+            ty2: Ty,
+            endElement: ElmPsiElement? = null,
+            replacements: MutableMap<TyVar, Ty>? = null
+    ): Boolean {
+        val assignable = assignable(ty1, ty2, replacements)
         if (!assignable) {
-            diagnostics += TypeMismatchError(element, ty1, ty2, endElement)
+            val t2 = replacements?.let { TypeReplacement.deepReplace(ty2, it) } ?: ty2
+            diagnostics += TypeMismatchError(element, ty1, t2, endElement)
         }
         return assignable
     }
 
-    /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
-    private fun assignable(ty1: Ty, ty2: Ty): Boolean {
-        return ty1 === ty2 || !isInferable(ty1) || !isInferable(ty2) || when (ty1) {
-            is TyVar -> true
+    /** Return `false` if [ty1] definitely cannot be assigned to [type2] */
+    private fun assignable(ty1: Ty, type2: Ty, replacements: MutableMap<TyVar, Ty>?): Boolean {
+        val ty2 = when (type2) {
+            is TyVar -> replacements?.get(type2) ?: type2
+            else -> type2
+        }
+        val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
+            varAssignable(ty2, ty1)
+        } else when (ty1) {
+            is TyVar -> varAssignable(ty1, ty2)
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
-                    && argumentsAssignable(ty1.types, ty2.types)
-            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
-                    || ty2 is TyFunction && recordAssignableToFunction(ty1, ty2)
+                    && allAssignable(ty1.types, ty2.types, replacements)
+            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2, replacements)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
-                    && argumentsAssignable(ty1.parameters, ty2.parameters)
-            is TyFunction -> ty2 is TyFunction
-                    && argumentsAssignable(ty1.allTys, ty2.allTys)
+                    && allAssignable(ty1.parameters, ty2.parameters, replacements)
+            is TyFunction -> ty2 is TyFunction && funcsAssignable(ty1, ty2, replacements)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign $ty1")
         }
+
+        if (result && replacements != null) {
+            // assigning anything to a variable fixes the type of that variable (we later do replacements
+            // for vars that are assigned to other vars)
+            if (type2 is TyVar && (type2 !in replacements || ty1 !is TyVar)) {
+                replacements[type2] = ty1
+            }
+            // unification: assigning a var to a type also restricts the vars type, but only if not
+            // assigning it to another var.
+            if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
+                replacements[ty1] = type2
+            }
+        }
+        return result
     }
 
-    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
+    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord, replacements: MutableMap<TyVar, Ty>?): Boolean {
         fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
-            return t1.fields.all { (k, v) -> t2.fields[k]?.let { assignable(v, it) } ?: !strict }
+            return t1.fields.all { (k, v) ->
+                t2.fields[k]?.let { assignable(v, it, replacements) } ?: !strict
+            }
         }
 
         // Subset record tys are created from extension record declarations or field accessor functions
@@ -903,22 +928,91 @@ private class InferenceScope(
         }
     }
 
-    private fun recordAssignableToFunction(record: TyRecord, function: TyFunction): Boolean {
-        return record.alias != null
-                && assignable(record, function.ret)
-                && argumentsAssignable(record.fields.values.toList(), function.parameters)
+    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {
+        // don't short circuit so that all types get applied
+        return ty1.size == ty2.size && ty1.zip(ty2).map { (l, r) -> assignable(l, r, replacements) }.all { it }
     }
 
-    private fun argumentsAssignable(ty1: List<Ty>, ty2: List<Ty>): Boolean {
-        // If we can't infer the last parameter, it might be a function type which would have
-        // uncurried to allow more parameters than we know about.
-        return (ty1.size == ty2.size || !isInferable(ty1.last()) || !isInferable(ty2.last())) &&
-                ty1.zip(ty2).all { (l, r) -> assignable(l, r) }
+    private fun funcsAssignable(ty1: TyFunction, ty2: TyFunction, replacements: MutableMap<TyVar, Ty>?): Boolean {
+        // We need to handle currying. If ty1 has fewer parameters than ty2, it's an error. If ty1
+        // has more parameters than ty2, all extra parameters are curried into a function that is
+        // assigned to the last parameter of ty2.
+        val tys1 = ty1.allTys
+        val tys2 = ty2.allTys
+
+        fun makeFunc(tys: List<Ty>) = when {
+            tys.size == 1 -> tys.single()
+            else -> TyFunction(tys.dropLast(1), tys.last())
+        }
+
+        val sharedSize = minOf(tys1.size, tys2.size) - 1
+        val sharedAssignable = allAssignable(tys1.take(sharedSize), tys2.take(sharedSize), replacements)
+        val tailAssignable = assignable(makeFunc(tys1.drop(sharedSize)), makeFunc(tys2.drop(sharedSize)), replacements)
+
+        return sharedAssignable && tailAssignable
+    }
+
+    /** Check if a [ty] can that compares unequal to a [tyVar] can be unified with it */
+    private fun varAssignable(tyVar: TyVar, ty: Ty): Boolean {
+        // Vars with certain names are treated as typeclasses that only unify with a limited set of
+        // types.
+        //
+        //  From the elm guide:
+        //
+        //  - `number` permits `Int` and `Float`
+        //  - `appendable` permits `String` and `List a`
+        //  - `comparable` permits `Int`, `Float`, `Char`, `String`, and lists/tuples of `comparable` values
+        //  - `compappend` permits `String` and `List comparable`
+
+        fun List<Ty>.allComparable(): Boolean = all { assignable(it, TyVar("comparable"), null) }
+
+        return when {
+            tyVar.name.startsWith("number") -> when (ty) {
+                is TyUnion -> ty.isTyFloat || ty.isTyInt
+                is TyVar -> typeclassCompatable("number", tyVar.name, ty.name)
+                else -> false
+            }
+            tyVar.name.startsWith("appendable") -> when (ty) {
+                is TyUnion -> ty.isTyString || ty.isTyList
+                is TyVar -> typeclassCompatable("appendable", tyVar.name, ty.name)
+                else -> false
+            }
+            tyVar.name.startsWith("comparable") -> when (ty) {
+                is TyTuple -> ty.types.allComparable()
+                is TyUnion -> ty.isTyFloat
+                        || ty.isTyInt
+                        || ty.isTyChar
+                        || ty.isTyString
+                        || ty.isTyList && ty.parameters.allComparable()
+                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("comparable", tyVar.name, ty.name)
+                else -> false
+            }
+            tyVar.name.startsWith("compappend") -> when (ty) {
+                is TyUnion -> ty.isTyString || ty.isTyList && ty.parameters.allComparable()
+                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("compappend", tyVar.name, ty.name)
+                else -> false
+            }
+            else -> true
+        }
+    }
+
+    /**
+     * Check if a var with [name1] of a var in [typeclass] is compatible with the typeclass of a var with [name2]
+     *
+     * Specifics of each typeclass are checked outside this function.
+     */
+    private fun typeclassCompatable(typeclass: String, name1: String, name2: String): Boolean {
+        // all unconstrained vars can unify with constrained vars, so if there's no typeclass, we
+        // always return true
+        val otherTypclassName = TYPECLASS_REGEX.matchEntire(name2)?.value ?: return true
+        // any numbered var can be unify with an unnumbered var in the same typeclass. If they're
+        // both numbered, they have to match exactly.
+        return otherTypclassName == typeclass &&
+                (name1 == name2 || otherTypclassName == typeclass || name1 == typeclass)
     }
 
     //</editor-fold>
 }
-
 
 /**
  * @property expressionTypes the types for any psi elements inferred that should be available to inspections
@@ -960,7 +1054,8 @@ private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
     return parentPatternDecl(element)?.parent is ElmFile
 }
 
-private data class RangeTy(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
+/** A [ty] and the [start] and [end] elements of the expression that created it */
+private data class TyAndRange(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
     constructor(element: ElmPsiElement, ty: Ty) : this(element, element, ty)
 }
 
@@ -970,3 +1065,6 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 
 // TODO[unification] allow vars
 fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar
+
+/** extracts the typeclass from a [TyVar] name if it is a typeclass */
+private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")

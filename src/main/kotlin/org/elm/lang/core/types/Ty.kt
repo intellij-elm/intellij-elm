@@ -19,12 +19,11 @@ sealed class Ty {
 }
 
 // vars are not a data class because they need to be compared by identity
-/** A declared ("rigid") type variable (e.g. `a` in `Maybe a`) */
+/** A type variable (e.g. `a` in `Maybe a`) */
 class TyVar(val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
-
-    override fun toString(): String = "<TyVar $name>"
+    override fun toString(): String = "<$name>"
 }
 
 /** A tuple type like `(Int, String)` */
@@ -53,6 +52,9 @@ data class TyRecord(
     val isSubset: Boolean get() = baseTy != null
 
     override fun withAlias(alias: AliasInfo): TyRecord = copy(alias = alias)
+    override fun toString(): String {
+        return alias?.let { "{${it.name}}" } ?: baseTy?.let { "{$baseTy | $fields}" } ?: "{$fields}"
+    }
 }
 
 /** A type like `String` or `Maybe a` */
@@ -65,7 +67,7 @@ data class TyUnion(
     override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
     override fun toString(): String {
-        return "<TyUnion ${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")}>"
+        return "(${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")})"
     }
 }
 
@@ -84,6 +86,10 @@ val TyShader = TyUnion("WebGL", "Shader", listOf(TyUnknown(), TyUnknown(), TyUnk
 fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
 
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
+val TyUnion.isTyInt: Boolean get() = module == TyInt.module && name == TyInt.name
+val TyUnion.isTyFloat: Boolean get() = module == TyFloat.module && name == TyFloat.name
+val TyUnion.isTyString: Boolean get() = module == TyString.module && name == TyString.name
+val TyUnion.isTyChar: Boolean get() = module == TyChar.module && name == TyChar.name
 
 data class TyFunction(
         val parameters: List<Ty>,
@@ -101,10 +107,15 @@ data class TyFunction(
         else -> ret
     }
 
+    fun uncurry(): TyFunction = when (ret) {
+        is TyFunction -> TyFunction(parameters + ret.parameters, ret.ret)
+        else -> this
+    }
+
     override fun withAlias(alias: AliasInfo): TyFunction = copy(alias = alias)
 
     override fun toString(): String {
-        return allTys.joinToString(" → ", prefix = "<TyFunction ", postfix = ">")
+        return allTys.joinToString(" → ", prefix = "(", postfix = ")")
     }
 }
 

@@ -1,11 +1,6 @@
 package org.elm.ide.inspections
 
 class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationInspection()) {
-    fun `test bad argument to aliased record extension`() = checkByText("""
-type alias R a = { a | foo : () }
-type alias S = R <error descr="Type mismatch.Required: recordFound: ()">()</error>
-""")
-
     fun `test bad self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = A</error>
 """)
@@ -17,7 +12,7 @@ type alias S = R <error descr="Type mismatch.Required: recordFound: ()">()</erro
 
     fun `test good recursion in through union`() = checkByText("""
 type alias Alias = { value : Union }
-type Union = TUnion Alias
+type Union = Variant Alias
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/188

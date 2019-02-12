@@ -40,15 +40,27 @@ main = <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
 """)
 
     fun `test matched int negation`() = checkByText("""
+main : Int
 main = -1
 """)
 
     fun `test matched float negation`() = checkByText("""
+main : Float
 main = -1.0
 """)
 
     fun `test mismatched negation`() = checkByText("""
 main = -<error descr="Type mismatch.Required: numberFound: String">""</error>
+""")
+
+    fun `test negate from pattern match`() = checkByText("""
+type alias N = Float
+type Foo = Bar N
+
+main : Foo -> ()
+main foo =
+    <error descr="Type mismatch.Required: ()Found: N">case foo of
+        Bar n -> -n</error>
 """)
 
     fun `test mismatched tuple value type from missing field`() = checkByText("""
@@ -475,6 +487,27 @@ main a = (\_ -> a)
     fun `test returning lambda`() = checkByText("""
 main : () -> ()
 main = (\a -> a)
+""")
+
+    fun `test function with arguments returning lambda`() = checkByText("""
+foo a = \b -> b
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test lambda returning lambda`() = checkByText("""
+foo = \a -> (\b -> b)
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test lambda returning lambda returning lambda`() = checkByText("""
+foo = \a -> (\b -> (\c -> c))
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo "" "" ""</error>
 """)
 
     fun `test record update in lambda`() = checkByText("""
@@ -1115,5 +1148,408 @@ directChildren tree =
     <error descr="Type mismatch.Required: ()Found: List (Tree a)">case tree of
         Tree _ children ->
             children</error>
+""")
+
+    fun `test mismatched return value from rigid vars`() = checkByText("""
+foo : a -> a
+foo a = a
+
+main : Int
+main = <error descr="Type mismatch.Required: IntFound: String">foo ""</error>
+""")
+
+    fun `test mismatched return value from nested vars`() = checkByText("""
+foo : List a -> List a
+foo a = a
+
+main : List Int
+main = <error descr="Type mismatch.Required: List IntFound: List String">foo [""]</error>
+""")
+
+    fun `test mismatched return value from multiple rigid vars`() = checkByText("""
+foo : List a -> List b -> List b
+foo a b = b
+
+main : List Int
+main = <error descr="Type mismatch.Required: List IntFound: List String">foo [1] [""]</error>
+""")
+
+    fun `test mismatched return value from doubly nested vars`() = checkByText("""
+foo : List (List a) -> List (List a)
+foo a = a
+
+main : List (List Int)
+main = <error descr="Type mismatch.Required: List (List Int)Found: List (List String)">foo [[""]]</error>
+""")
+
+    fun `test fixing var value at first occurrence`() = checkByText("""
+foo : List a -> List a -> List a
+foo a b = a
+
+main : List String
+main = foo [""] <error descr="Type mismatch.Required: List StringFound: List (List a)">[[]]</error>
+""")
+
+    fun `test passing vars through operator`() = checkByText("""
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">List.head [""] |> Maybe.withDefault ""</error>
+""")
+
+    fun `test passing function type with vars`() = checkByText("""
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+foo : String -> String
+foo s = s
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">map foo</error>
+""")
+
+    fun `test passing function type with vars to function`() = checkByText("""
+appL : (a -> b) -> a -> b
+appL f x = f x
+
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+foo : String -> String
+foo s = s
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">appL map foo</error>
+""")
+
+    fun `test passing function type with vars to operator`() = checkByText("""
+appL : (a -> b) -> a -> b
+appL f x = f x
+infix right 0 (<:) = appL
+
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+foo : String -> String
+foo s = s
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">map <: foo</error>
+""")
+
+    fun `test passing record constructor to operator`() = checkByText("""
+appR : a -> (a -> b) -> b
+appR x f = f x
+infix left 0 (:>) = appR
+
+map : (c -> d) -> List c -> List d
+map f xs = []
+
+type alias Rec = { field : () }
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List () → List Rec">Rec :> map</error>
+""")
+
+    fun `test non function to composition operator`() = checkByText("""
+compo : (b -> c) -> (a -> b) -> (a -> c)
+compo g f x = g (f x)
+infix left  9 (<<<) = compo
+
+foo : d -> d
+foo a = a
+
+main =
+    foo <<< <error descr="Type mismatch.Required: a → dFound: String">""</error>
+""")
+
+
+    fun `test multiple empty lists`() = checkByText("""
+foo : z -> z -> z -> z
+foo a b c = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo [] [] [""]</error>
+""")
+
+    fun `test multiple mismatched lists`() = checkByText("""
+foo : z -> z -> z -> z -> z
+foo a b c d = a
+
+main : ()
+main =
+    foo [] [] [""] <error descr="Type mismatch.Required: List StringFound: List ()">[()]</error>
+""")
+
+    fun `test multiple empty list functions ending with concrete type`() = checkByText("""
+foo : z -> z -> z -> z
+foo a b c = a
+
+listA : List b -> List b
+listA a = a
+
+listStr : List String -> List String
+listStr a = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">foo listA listA listStr</error>
+""")
+
+    fun `test multiple empty list functions starting with concrete type`() = checkByText("""
+foo : z -> z -> z -> z
+foo a b c = a
+
+listA : List b -> List b
+listA a = a
+
+listStr : List String -> List String
+listStr a = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String → List String">foo listStr listA listA</error>
+""")
+
+    fun `test function composition`() = checkByText("""
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String → Bool">String.isEmpty >> not</error>
+""")
+
+    fun `test constraint number int literals`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: number">foo 1 2</error>
+""")
+
+    fun `test constraint number float literals`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1.1 2.2</error>
+""")
+
+    fun `test constraint number int and float literal`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1 2.2</error>
+""")
+
+    fun `test constraint number number`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main : number -> number -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: number">foo a b</error>
+""")
+
+    fun `test constraint number mismatched`() = checkByText("""
+foo : number -> number -> number
+foo a b = a
+
+main =
+    foo 1 <error descr="Type mismatch.Required: numberFound: ()">()</error>
+""")
+
+    fun `test constraint appendable string`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test constraint appendable list`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List a">foo [] []</error>
+""")
+
+    fun `test constraint appendable appendable`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main : appendable -> appendable -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: appendable">foo a b</error>
+""")
+
+    fun `test constraint appendable string and list mismatch`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main =
+    foo "" <error descr="Type mismatch.Required: StringFound: List a">[]</error>
+""")
+
+    fun `test constraint appendable list mismatch`() = checkByText("""
+foo : appendable -> appendable -> appendable
+foo a b = a
+
+main =
+    foo [""] <error descr="Type mismatch.Required: List StringFound: List ()">[()]</error>
+""")
+
+    fun `test constraint appendable number mismatch`() = checkByText("""
+foo : appendable -> appendable
+foo a = a
+
+main =
+    foo <error descr="Type mismatch.Required: appendableFound: number">1</error>
+""")
+
+    fun `test constraint comparable int`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : Int -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: Int">foo a a</error>
+""")
+
+    fun `test constraint comparable float`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1.1 2.2</error>
+""")
+
+    fun `test constraint comparable char`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Char">foo 'a' 'b'</error>
+""")
+
+    fun `test constraint comparable string`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo "a" "b"</error>
+""")
+
+    fun `test constraint comparable list string`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo ["a"] []</error>
+""")
+
+    fun `test constraint comparable tuple float`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: (Float, Float)">foo (1.1, 2.2) (3.3, 4.4)</error>
+""")
+
+    fun `test constraint comparable tuple mismatch`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    foo ("", "") <error descr="Type mismatch.Required: (String, String)Found: (String, Float)">("", 1.1)</error>
+""")
+
+    fun `test constraint comparable comparable`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : comparable -> comparable -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: comparable">foo a b</error>
+""")
+
+    fun `test constraint compappend string`() = checkByText("""
+foo : comappend -> comappend -> comappend
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo "" ""</error>
+""")
+
+    fun `test constraint compappend list string`() = checkByText("""
+foo : comappend -> comappend -> comappend
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo [""] []</error>
+""")
+
+    fun `test constraint compappend compappend`() = checkByText("""
+foo : compappend -> compappend -> compappend
+foo a b = a
+
+main : compappend -> compappend -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: compappend">foo a b</error>
+""")
+
+    fun `test numbered constraint appendable`() = checkByText("""
+foo : appendable1 -> appendable2 -> appendable3 -> appendable2
+foo a b c = b
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo "" [""] [()]</error>
+""")
+
+    fun `test numbered constraint appendable mismatch`() = checkByText("""
+foo : appendable1 -> appendable2 -> appendable1 -> appendable2
+foo a b c = b
+
+main : ()
+main =
+    foo "" [""] <error descr="Type mismatch.Required: StringFound: List String">[""]</error>
+""")
+
+    fun `test calling function with its own return value`() = checkByText("""
+type Foo a b = Foo
+type Bar c = Bar
+
+foo : Foo d (e -> f) -> Bar e -> Foo d f
+foo a = Debug.todo ""
+
+bar : Foo g g
+bar = Foo
+
+baz : Bar String
+baz = Bar
+
+qux : Bar Float
+qux = Bar
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Foo (String → Float → f) f">(foo (foo bar baz) qux)</error>
 """)
 }
