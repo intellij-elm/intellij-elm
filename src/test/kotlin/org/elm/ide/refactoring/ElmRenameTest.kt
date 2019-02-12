@@ -117,6 +117,8 @@ foo quux = quux.b
 """)
 
 
+    // disabled until https://github.com/klazuka/intellij-elm/issues/240 is fixed
+/*
     fun `test file rename from Data_User to Data_Quux`() = checkByDirectory("""
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -137,6 +139,7 @@ g = Data.Quux.User "joe"
         val file = myFixture.configureFromTempProjectFile("Data/User.elm")
         myFixture.renameElement(file, "Quux")
     }
+*/
 
 
     fun `test module decl rename from Data_User to Data_Quux`() = checkByDirectory("""
