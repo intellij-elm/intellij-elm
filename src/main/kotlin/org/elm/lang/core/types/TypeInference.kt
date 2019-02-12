@@ -413,16 +413,10 @@ private class InferenceScope(
             val pat = branch.pattern
             val branchExpression = branch.expression ?: break
 
-            if (errorEncountered) {
-                // just check for internal errors
-                bindPattern(pat, TyUnknown(), false)
-                inferExpression(branchExpression)
-                continue
-            }
+            val childTy = if (errorEncountered) TyUnknown() else caseOfExprTy
+            val result = inferChild { beginCaseBranchInference(pat, childTy, branchExpression) }
 
-            val result = inferChild { beginCaseBranchInference(pat, caseOfExprTy, branchExpression) }
-
-            if (result.diagnostics.isNotEmpty()) {
+            if (result.diagnostics.isNotEmpty() || errorEncountered) {
                 errorEncountered = true
                 continue
             }

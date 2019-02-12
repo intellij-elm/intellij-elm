@@ -86,7 +86,7 @@ class TypeReplacement(
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {
-        val replacedBase = if (ty.baseTy == null) null else replacements[ty.baseTy]
+        val replacedBase = if (ty.baseTy == null || ty.baseTy !is TyVar) null else replacements[ty.baseTy]
         val newBaseTy = when (replacedBase) {
             // If the base ty of the argument is a record, use it's base ty, which might be null.
             is TyRecord -> replacedBase.baseTy
@@ -99,11 +99,7 @@ class TypeReplacement(
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
         val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
 
-        // If we just expanded an extension record into a concrete record, there no alias we can
-        // show any more
-        val newAlias = if (replacedBase is TyRecord) null else replace(ty.alias)
-
-        return TyRecord(baseFields + declaredFields, newBaseTy, newAlias)
+        return TyRecord(baseFields + declaredFields, newBaseTy, replace(ty.alias))
     }
 }
 

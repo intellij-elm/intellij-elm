@@ -238,7 +238,7 @@ main r =
     let
         rr = foo r
     in
-    <error descr="Type mismatch.Required: ()Found: { field2 : String, field1 : String }">{ rr | field2 = "" }</error>
+    <error descr="Type mismatch.Required: ()Found: Small Large">{ rr | field2 = "" }</error>
 """)
 
     fun `test field accessor as argument`() = checkByText("""
@@ -995,6 +995,22 @@ main =
     case [()] of
         z :: [x, y] -> y
         _ -> ()
+""")
+
+    fun `test case branches binding the same names`() = checkByText("""
+type Foo a = Foo () | Bar String | Baz ()  | Qux () | Quz ()
+
+bar : () -> ()
+bar a = a
+
+foo : Foo a -> ()
+foo f =
+    case f of
+       Foo x -> bar x
+       Bar x -> bar <error descr="Type mismatch.Required: ()Found: String">x</error>
+       Baz x -> bar x
+       Qux x -> bar x
+       Quz x -> bar x
 """)
 
     fun `test invalid return value from cons pattern`() = checkByText("""
