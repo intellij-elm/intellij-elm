@@ -31,7 +31,6 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmLowerPattern -> documentationFor(element)
         is ElmModuleDeclaration -> documentationFor(element)
         is ElmAsClause -> documentationFor(element)
-        is ElmPatternAs -> documentationFor(element)
         is ElmInfixDeclaration -> documentationFor(element)
         else -> null
     }
@@ -136,7 +135,6 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
 }
 
 private fun documentationFor(pattern: ElmLowerPattern): String? = documentationForParameter(pattern)
-private fun documentationFor(patternAs: ElmPatternAs): String? = documentationForParameter(patternAs)
 private fun documentationForParameter(element: ElmNamedElement): String? = buildString {
     val function = element.parentOfType<ElmFunctionDeclarationLeft>() ?: return null
     val ty = element.findTy()

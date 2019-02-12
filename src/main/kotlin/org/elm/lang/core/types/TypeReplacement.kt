@@ -86,7 +86,7 @@ class TypeReplacement(
     }
 
     private fun replaceRecord(ty: TyRecord): Ty {
-        val replacedBase = if (ty.baseTy == null) null else replacements[ty.baseTy]
+        val replacedBase = if (ty.baseTy == null || ty.baseTy !is TyVar) null else replacements[ty.baseTy]
         val newBaseTy = when (replacedBase) {
             // If the base ty of the argument is a record, use it's base ty, which might be null.
             is TyRecord -> replacedBase.baseTy

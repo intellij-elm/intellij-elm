@@ -67,7 +67,6 @@ class ElmPsiFactory(private val project: Project) {
                     TYPE_REF -> ElmTypeRef(node)
                     PARENTHESIZED_EXPR -> ElmParenthesizedExpr(node)
                     PATTERN -> ElmPattern(node)
-                    PATTERN_AS -> ElmPatternAs(node)
                     PORT_ANNOTATION -> ElmPortAnnotation(node)
                     RECORD_EXPR -> ElmRecordExpr(node)
                     RECORD_BASE_IDENTIFIER -> ElmRecordBaseIdentifier(node)

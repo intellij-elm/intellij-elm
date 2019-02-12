@@ -226,6 +226,20 @@ main : Large a -> String
 main = foo
 """)
 
+    fun `test modifying extended record through extension alias`() = checkByText("""
+type alias Small a = { a | field1 : String }
+type alias Large = Small { field2 : String }
+
+foo : Small a -> Small a
+foo a = a
+
+main : Large -> ()
+main r =
+    let
+        rr = foo r
+    in
+    <error descr="Type mismatch.Required: ()Found: Small Large">{ rr | field2 = "" }</error>
+""")
 
     fun `test field accessor as argument`() = checkByText("""
 type alias R = {x: (), y: ()}
@@ -983,6 +997,22 @@ main =
         _ -> ()
 """)
 
+    fun `test case branches binding the same names`() = checkByText("""
+type Foo a = Foo () | Bar String | Baz ()  | Qux () | Quz ()
+
+bar : () -> ()
+bar a = a
+
+foo : Foo a -> ()
+foo f =
+    case f of
+       Foo x -> bar x
+       Bar x -> bar <error descr="Type mismatch.Required: ()Found: String">x</error>
+       Baz x -> bar x
+       Qux x -> bar x
+       Quz x -> bar x
+""")
+
     fun `test invalid return value from cons pattern`() = checkByText("""
 main : ()
 main =
@@ -1025,7 +1055,6 @@ main =
        <error descr="Type mismatch.Required: ()Found: String">a</error>
 """)
 
-
     fun `test nested forward references`() = checkByText("""
 main : () -> ()
 main m =
@@ -1037,6 +1066,16 @@ main m =
   in
   x ()
 """)
+
+    fun `test referenced pattern as`() = checkByText("""
+main : { field : String } -> ()
+main r =
+    let
+        ({field} as record) = r
+    in
+    <error descr="Type mismatch.Required: ()Found: String">record.field</error>
+""")
+
 
     fun `test mismatched left operand to non-associative operator`() = checkByText("""
 foo : () -> () -> ()

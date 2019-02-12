@@ -475,9 +475,7 @@ private MoreInnerDeclarations ::= (VIRTUAL_END_DECL InnerDeclaration)+
 
 
 Pattern ::=
-    (ConsPattern | SinglePattern) [PatternAs]
-
-PatternAs ::= AS LOWER_CASE_IDENTIFIER
+    (ConsPattern | SinglePattern) [AS LowerPattern]
 
 ConsPattern ::= SinglePattern ('::' SinglePattern)+
 

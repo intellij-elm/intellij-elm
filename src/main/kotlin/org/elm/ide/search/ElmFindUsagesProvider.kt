@@ -44,7 +44,6 @@ class ElmFindUsagesProvider : FindUsagesProvider {
             is ElmTypeDeclaration -> "Union Type"
             is ElmUnionVariant -> "Union Variant"
             is ElmLowerPattern -> "Value Binding"
-            is ElmPatternAs -> "Destructured Pattern Alias"
             is ElmPortAnnotation -> "Port Annotation"
             else -> "unknown type for $element"
         }

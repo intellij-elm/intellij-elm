@@ -413,16 +413,10 @@ private class InferenceScope(
             val pat = branch.pattern
             val branchExpression = branch.expression ?: break
 
-            if (errorEncountered) {
-                // just check for internal errors
-                bindPattern(pat, TyUnknown(), false)
-                inferExpression(branchExpression)
-                continue
-            }
+            val childTy = if (errorEncountered) TyUnknown() else caseOfExprTy
+            val result = inferChild { beginCaseBranchInference(pat, childTy, branchExpression) }
 
-            val result = inferChild { beginCaseBranchInference(pat, caseOfExprTy, branchExpression) }
-
-            if (result.diagnostics.isNotEmpty()) {
+            if (result.diagnostics.isNotEmpty() || errorEncountered) {
                 errorEncountered = true
                 continue
             }
@@ -459,7 +453,7 @@ private class InferenceScope(
         for ((name, ty) in fields) {
             val expected = baseTy.fields[name.text]
             if (expected == null) {
-                diagnostics += RecordFieldError(name, name.text)
+                if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
             } else {
                 requireAssignable(name, ty, expected)
             }
@@ -716,7 +710,7 @@ private class InferenceScope(
             }
             is ElmPattern -> {
                 bindPattern(pat.child, ty, isParameter)
-                bindPatternAs(pat.patternAs, ty)
+                pat.patternAs?.let { bindPattern(it, ty, isParameter) }
             }
             is ElmLowerPattern -> setBinding(pat, ty)
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
@@ -757,11 +751,6 @@ private class InferenceScope(
             // it binds to the element type.
             bindPattern(parts.last(), if (isCons) ty else innerTy, false)
         }
-    }
-
-
-    private fun bindPatternAs(pat: ElmPatternAs?, ty: Ty) {
-        if (pat != null) setBinding(pat, ty)
     }
 
     private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
@@ -880,20 +869,10 @@ private class InferenceScope(
             TyInProgressBinding -> error("should never try to assign $ty1")
         }
 
-        if (result && replacements != null) {
-            // assigning anything to a variable fixes the type of that variable (we later do replacements
-            // for vars that are assigned to other vars)
-            if (type2 is TyVar && (type2 !in replacements || ty1 !is TyVar)) {
-                replacements[type2] = ty1
-            }
-            // unification: assigning a var to a type also restricts the vars type, but only if not
-            // assigning it to another var.
-            if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
-                replacements[ty1] = type2
-            }
-        }
+        if (result) trackReplacement(ty1, type2, replacements)
         return result
     }
+
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord, replacements: MutableMap<TyVar, Ty>?): Boolean {
         fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
@@ -904,7 +883,7 @@ private class InferenceScope(
 
         // Subset record tys are created from extension record declarations or field accessor functions
 
-        return when {
+        val result = when {
             // e.g. passing an extension record argument to an extension record parameter
             ty1.isSubset && ty2.isSubset -> {
                 // whatever fields they have in common have to have the same types
@@ -926,6 +905,10 @@ private class InferenceScope(
             }
             else -> error("impossible")
         }
+        if (result && ty2.baseTy is TyVar) {
+            trackReplacement(ty1, ty2.baseTy, replacements)
+        }
+        return result
     }
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {
@@ -1009,6 +992,20 @@ private class InferenceScope(
         // both numbered, they have to match exactly.
         return otherTypclassName == typeclass &&
                 (name1 == name2 || otherTypclassName == typeclass || name1 == typeclass)
+    }
+
+    private fun trackReplacement(ty1: Ty, ty2: Ty, replacements: MutableMap<TyVar, Ty>?) {
+        if (replacements == null) return
+        // assigning anything to a variable fixes the type of that variable (we later do replacements
+        // for vars that are assigned to other vars)
+        if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar)) {
+            replacements[ty2] = ty1
+        }
+        // unification: assigning a var to a type also restricts the vars type, but only if not
+        // assigning it to another var.
+        if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
+            replacements[ty1] = ty2
+        }
     }
 
     //</editor-fold>
