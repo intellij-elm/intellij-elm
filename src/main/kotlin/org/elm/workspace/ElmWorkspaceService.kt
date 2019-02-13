@@ -22,6 +22,7 @@ import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.impl.source.resolve.ResolveCache
 import com.intellij.util.Consumer
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
@@ -381,6 +382,7 @@ class ElmWorkspaceService(
     private fun notifyDidChangeWorkspace() {
         if (intellijProject.isDisposed) return
         changeTracker.incModificationCount()
+        ResolveCache.getInstance(intellijProject).clearCache(true)
         ApplicationManager.getApplication().invokeAndWait {
             runWriteAction {
                 ProjectRootManagerEx.getInstanceEx(intellijProject)
