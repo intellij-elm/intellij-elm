@@ -28,6 +28,7 @@ import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
+import org.elm.lang.core.psi.modificationTracker
 import org.elm.openapiext.findFileBreadthFirst
 import org.elm.openapiext.findFileByPathTestAware
 import org.elm.openapiext.modules
@@ -381,10 +382,14 @@ class ElmWorkspaceService(
 
     private fun notifyDidChangeWorkspace() {
         if (intellijProject.isDisposed) return
-        changeTracker.incModificationCount()
-        ResolveCache.getInstance(intellijProject).clearCache(true)
         ApplicationManager.getApplication().invokeAndWait {
             runWriteAction {
+                // Invalidate caches
+                ResolveCache.getInstance(intellijProject).clearCache(true) // PsiReference resolve
+                intellijProject.modificationTracker.incModificationCount() // CachedValuesManager: Elm Psi content
+                changeTracker.incModificationCount()                       // CachedValuesManager: Elm workspace/settings
+
+                // Refresh library roots
                 ProjectRootManagerEx.getInstanceEx(intellijProject)
                         .makeRootsChange(EmptyRunnable.getInstance(), false, true)
             }
