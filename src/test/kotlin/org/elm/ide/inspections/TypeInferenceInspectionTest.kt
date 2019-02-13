@@ -141,6 +141,12 @@ main : () -> (() -> () -> A)
 main _ = A
 """)
 
+    fun `test record constructor with no fields`() = checkByText("""
+type alias R = {}
+foo : ()
+foo = <error descr="Type mismatch.Required: ()Found: R">R</error>
+""")
+
     fun `test correct value from field accessor`() = checkByText("""
 main : ()
 main = .x {x=()}

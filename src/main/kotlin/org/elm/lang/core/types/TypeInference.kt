@@ -519,8 +519,11 @@ private class InferenceScope(
             is ElmTypeAliasDeclaration -> {
                 val ty = ref.typeExpressionInference().value
                 // Record aliases in expressions are constructor functions
-                if (ty is TyRecord) TyFunction(ty.fields.values.toList(), ty)
-                else ty
+                if (ty is TyRecord && ty.fields.isNotEmpty()) {
+                    TyFunction(ty.fields.values.toList(), ty)
+                } else {
+                    ty
+                }
             }
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> ref.typeExpressionInference().value
