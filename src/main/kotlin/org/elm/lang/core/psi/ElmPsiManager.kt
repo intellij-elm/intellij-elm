@@ -9,7 +9,6 @@ package org.elm.lang.core.psi
 
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.ModificationTracker
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.*
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
@@ -70,5 +69,5 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
 private val Project.elmPsiManager: ElmPsiManager
     get() = getComponent(ElmPsiManager::class.java)
 
-val Project.modificationTracker: ModificationTracker
+val Project.modificationTracker: SimpleModificationTracker
     get() = elmPsiManager.modificationTracker
