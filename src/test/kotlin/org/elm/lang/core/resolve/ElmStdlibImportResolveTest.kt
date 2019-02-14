@@ -57,6 +57,24 @@ f = 2 + 2
 """)
 
 
+    fun `test Basics can be shadowed by local definitions`() = stubOnlyResolve(
+            """
+--@ main.elm
+and a b = 0
+f = and 1 1
+    --^...main.elm
+""")
+
+
+    fun `test Basics can be shadowed by explicit imports`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Bitwise exposing (and)
+f = and 1 1
+    --^...Bitwise.elm
+""")
+
+
     // LIST MODULE
 
 
