@@ -5,6 +5,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
+import org.intellij.lang.annotations.Language
 
 class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
@@ -39,25 +40,12 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
     fun `test ElmFormatOnFileSaveComponent should work with elm 18`() {
 
         val fileWithCaret: String = buildProject {
-            project("elm.json", """
-            {
-                "type": "application",
-                "source-directories": [
-                    "src"
-                ],
-                "elm-version": "0.18.0",
-                "dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                },
-                "test-dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                }
-            }
-            """.trimIndent())
+            project("elm-package.json", manifestElm18)
             dir("src") {
                 elm("Main.elm", unformatted)
+            }
+            dir("elm-stuff") {
+                file("exact-dependencies.json", "{}")
             }
         }.fileWithCaret
 
@@ -68,23 +56,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
     fun `test ElmFormatOnFileSaveComponent should work with elm 19`() {
 
         val fileWithCaret: String = buildProject {
-            project("elm.json", """
-            {
-                "type": "application",
-                "source-directories": [
-                    "src"
-                ],
-                "elm-version": "0.19.0",
-                "dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                },
-                "test-dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                }
-            }
-            """.trimIndent())
+            project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", unformatted)
             }
@@ -95,23 +67,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
     fun `test ElmFormatOnFileSaveComponent should not touch a file with the wrong ending like 'scala'`() {
         val fileWithCaret = buildProject {
-            project("elm.json", """
-            {
-                "type": "application",
-                "source-directories": [
-                    "src"
-                ],
-                "elm-version": "0.19.0",
-                "dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                },
-                "test-dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                }
-            }
-            """.trimIndent())
+            project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.scala", """
                     module Main exposing (f)
@@ -132,23 +88,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
     fun `test ElmFormatOnFileSaveComponent should not touch a file if the save-hook is deactivated`() {
         val fileWithCaret = buildProject {
-            project("elm.json", """
-            {
-                "type": "application",
-                "source-directories": [
-                    "src"
-                ],
-                "elm-version": "0.19.0",
-                "dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                },
-                "test-dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                }
-            }
-            """.trimIndent())
+            project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", """
                     module Main exposing (f)
@@ -187,4 +127,41 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
         TestCase.assertEquals(expected, document.text)
     }
+
 }
+
+
+@Language("JSON")
+private val manifestElm19 = """
+        {
+            "type": "application",
+            "source-directories": [
+                "src"
+            ],
+            "elm-version": "0.19.0",
+            "dependencies": {
+                "direct": {},
+                "indirect": {}
+            },
+            "test-dependencies": {
+                "direct": {},
+                "indirect": {}
+            }
+        }
+        """.trimIndent()
+
+
+// TODO [drop 0.18]
+@Language("JSON")
+private val manifestElm18 = """
+        {
+          "elm-version": "0.18.0 <= v < 0.19.0",
+          "version": "1.0.0",
+          "summary": "",
+          "repository": "",
+          "license": "",
+          "source-directories": [ "src" ],
+          "exposed-modules": [],
+          "dependencies": {}
+        }
+        """.trimIndent()
