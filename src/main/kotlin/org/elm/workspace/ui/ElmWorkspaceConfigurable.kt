@@ -11,6 +11,7 @@ import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.pathToDirectoryTextField
 import org.elm.workspace.ElmToolchain
 import org.elm.workspace.elmWorkspace
+import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JLabel
 
@@ -25,19 +26,25 @@ class ElmWorkspaceConfigurable(
 
     private val elmVersionLabel = JLabel()
     private val elmFormatLabel = JLabel()
+    private val elmFormatOnSaveCheckbox = JCheckBox()
 
-    override fun createComponent(): JComponent =
-            panel {
-                row("Directory containing 'elm' binary:") { pathToToolchainField(CCFlags.pushX) }
-                row("Elm version:") { elmVersionLabel() }
-                row("elm-format:") { elmFormatLabel() }
-            }
+    override fun createComponent(): JComponent {
+        elmFormatOnSaveCheckbox.addChangeListener { _ -> update() }
+
+        return panel {
+            row("Directory containing 'elm' binary:") { pathToToolchainField(CCFlags.pushX) }
+            row("Elm version:") { elmVersionLabel() }
+            row("Elm-format:") { elmFormatLabel() }
+            row("Run elm-format when file saved?") { elmFormatOnSaveCheckbox() }
+        }
+    }
 
     private fun update() {
         val pathToToolchain = pathToToolchainField.text
+        val activateOnSaveHook = isOnSaveHookEnabledAndSelected()
         versionUpdateDebouncer.run(
                 onPooledThread = {
-                    ElmToolchain(pathToToolchain).queryCompilerVersion()
+                    ElmToolchain(pathToToolchain, activateOnSaveHook).queryCompilerVersion()
                 },
                 onUiThread = { versionResult ->
                     when (versionResult) {
@@ -59,14 +66,16 @@ class ElmWorkspaceConfigurable(
                     }
                 }
         )
-        when (val fmt = ElmToolchain(pathToToolchain).elmFormat) {
+        when (val fmt = ElmToolchain(pathToToolchain, activateOnSaveHook).elmFormat) {
             null -> {
                 elmFormatLabel.text = "not found"
                 elmFormatLabel.foreground = JBColor.RED
+                elmFormatOnSaveCheckbox.isEnabled = false
             }
             else -> {
                 elmFormatLabel.text = fmt.elmFormatExecutablePath.toString()
                 elmFormatLabel.foreground = JBColor.foreground()
+                elmFormatOnSaveCheckbox.isEnabled = true
             }
         }
     }
@@ -82,21 +91,29 @@ class ElmWorkspaceConfigurable(
     override fun reset() {
         val settings = project.elmWorkspace.rawSettings
         val binDirPath = settings.binDirPath ?: ElmToolchain.suggest(project)?.binDirPath
+        val isElmFormatOnSaveEnabled = settings.isElmFormatOnSaveEnabled
 
         pathToToolchainField.text = binDirPath?.toString() ?: ""
+        elmFormatOnSaveCheckbox.isSelected = isElmFormatOnSaveEnabled
 
         update()
     }
 
     override fun apply() {
         project.elmWorkspace.modifySettings {
-            it.copy(binDirPath = pathToToolchainField.text)
+            it.copy(binDirPath = pathToToolchainField.text,
+                    isElmFormatOnSaveEnabled = isOnSaveHookEnabledAndSelected()
+            )
         }
     }
+
+    private fun isOnSaveHookEnabledAndSelected() =
+            elmFormatOnSaveCheckbox.isEnabled && elmFormatOnSaveCheckbox.isSelected
 
     override fun isModified(): Boolean {
         val settings = project.elmWorkspace.rawSettings
         return pathToToolchainField.text != settings.binDirPath
+                || isOnSaveHookEnabledAndSelected() != settings.isElmFormatOnSaveEnabled
     }
 
     override fun getDisplayName() = "Elm"

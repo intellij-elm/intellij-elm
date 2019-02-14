@@ -36,6 +36,7 @@ import org.elm.openapiext.pathAsPath
 import org.elm.utils.MyDirectoryIndex
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
+import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
 import org.elm.workspace.ElmToolchain.Companion.ELM_MANIFEST_FILE_NAMES
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
@@ -88,13 +89,13 @@ class ElmWorkspaceService(
     data class Settings(val toolchain: ElmToolchain?)
 
     /* Representation of settings suitable for editor UI and serialization */
-    data class RawSettings(val binDirPath: String? = null)
+    data class RawSettings(val binDirPath: String? = null, val isElmFormatOnSaveEnabled: Boolean = DEFAULT_FORMAT_ON_SAVE)
 
 
     val settings: Settings
         get() {
             val raw = rawSettingsRef.get()
-            return Settings(toolchain = raw.binDirPath?.let { ElmToolchain(it) })
+            return Settings(toolchain = raw.binDirPath?.let { ElmToolchain(it, raw.isElmFormatOnSaveEnabled) })
         }
 
 
@@ -115,7 +116,10 @@ class ElmWorkspaceService(
 
 
     fun useToolchain(toolchain: ElmToolchain?) {
-        modifySettings { it.copy(binDirPath = toolchain?.binDirPath.toString()) }
+        modifySettings {
+            it.copy(binDirPath = toolchain?.binDirPath.toString(),
+                    isElmFormatOnSaveEnabled = toolchain?.isElmFormatOnSaveEnabled ?: ElmToolchain.DEFAULT_FORMAT_ON_SAVE)
+        }
     }
 
 
@@ -334,6 +338,7 @@ class ElmWorkspaceService(
         state.addContent(settingsElement)
         val raw = rawSettingsRef.get()
         settingsElement.setAttribute("binDirPath", raw.binDirPath ?: "")
+        settingsElement.setAttribute("isElmFormatOnSaveEnabled", raw.isElmFormatOnSaveEnabled.toString())
 
         return state
     }
@@ -351,7 +356,12 @@ class ElmWorkspaceService(
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")
         val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
-        modifySettings(notify = false) { RawSettings(binDirPath = binDirPath) }
+        val isElmFormatOnSaveEnabled = settingsElement
+                .getAttributeValue("isElmFormatOnSaveEnabled")
+                .takeIf { it != null && it.isNotBlank() }?.toBoolean()
+                ?: ElmToolchain.DEFAULT_FORMAT_ON_SAVE
+
+        modifySettings(notify = false) { RawSettings(binDirPath = binDirPath, isElmFormatOnSaveEnabled = isElmFormatOnSaveEnabled) }
 
         // Ensure that `elm-stuff` directories are always excluded so that they don't pollute open-by-filename, etc.
         intellijProject.modules

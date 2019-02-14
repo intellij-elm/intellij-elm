@@ -531,7 +531,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
               <elmProjects>
                 <project path="$projectPathString" />
               </elmProjects>
-              <settings binDirPath="/usr/local/bin" />
+              <settings binDirPath="/usr/local/bin" isElmFormatOnSaveEnabled="false" />
             </state>
             """.trimIndent()
 
@@ -547,6 +547,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
 
+
     fun `test persistence with empty toolchain binDirPath`() {
         val workspace = project.elmWorkspace
 
@@ -554,16 +555,24 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         val xml = """
             <state>
               <elmProjects />
-              <settings binDirPath="" />
+              <settings binDirPath=""/>
             </state>
             """.trimIndent()
+
+        val expected = """
+            <state>
+              <elmProjects />
+              <settings binDirPath="" isElmFormatOnSaveEnabled="false" />
+            </state>
+            """.trimIndent()
+
 
         // ... must be able to load from serialized state ...
         workspace.loadState(elementFromXmlString(xml))
 
         // ... and serialize the resulting state ...
         val actualXml = workspace.state.toXmlString()
-        checkEquals(xml, actualXml)
+        checkEquals(expected, actualXml)
     }
 }
 

@@ -223,6 +223,9 @@
         <component>
             <implementation-class>org.elm.lang.core.psi.ElmPsiManager</implementation-class>
         </component>
+        <component>
+            <implementation-class>org.elm.ide.components.ElmFormatOnFileSaveComponent</implementation-class>
+        </component>
     </project-components>
 
     <actions>
@@ -274,6 +277,5 @@
         </group>
 
     </actions>
-
 
 </idea-plugin>

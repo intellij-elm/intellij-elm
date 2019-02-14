@@ -22,8 +22,8 @@ import java.nio.file.Paths
 private val log = Logger.getInstance(ElmToolchain::class.java)
 
 
-data class ElmToolchain(val binDirPath: Path) {
-    constructor(binDirPath: String) : this(Paths.get(binDirPath))
+data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Boolean) {
+    constructor(binDirPath: String, isElmFormatOnSaveEnabled: Boolean) : this(Paths.get(binDirPath), isElmFormatOnSaveEnabled)
 
     val presentableLocation: String
         get() = (elmCompilerPath ?: binDirPath.resolve("elm")).toString()
@@ -130,6 +130,7 @@ data class ElmToolchain(val binDirPath: Path) {
     companion object {
         const val ELM_JSON = "elm.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
+        const val DEFAULT_FORMAT_ON_SAVE = false
 
         // TODO [drop 0.18] this list will no longer be necessary once the migration to 0.19 is complete
         val ELM_MANIFEST_FILE_NAMES = listOf(ElmToolchain.ELM_JSON, ElmToolchain.ELM_LEGACY_JSON)
@@ -140,7 +141,7 @@ data class ElmToolchain(val binDirPath: Path) {
         /** Suggest a toolchain that exists in in any standard location */
         fun suggest(project: Project): ElmToolchain? {
             return binDirSuggestions(project)
-                    .map { ElmToolchain(it.toAbsolutePath()) }
+                    .map { ElmToolchain(it.toAbsolutePath(), DEFAULT_FORMAT_ON_SAVE) }
                     .firstOrNull { it.looksLikeValidToolchain() }
         }
     }
