@@ -7,9 +7,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.roots.ProjectRootManager
-import com.intellij.openapi.vfs.VirtualFile
 import org.elm.lang.core.psi.isElmFile
 import org.elm.workspace.ElmFormatCLI
 import org.elm.workspace.elmSettings
@@ -21,7 +18,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
         val application = ApplicationManager.getApplication()
         val bus = application.messageBus
 
-        bus.connect().subscribe(
+        bus.connect(project).subscribe(
                 AppTopics.FILE_DOCUMENT_SYNC,
                 object : FileDocumentManagerListener {
                     override fun beforeDocumentSaving(document: Document) {
