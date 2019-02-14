@@ -23,7 +23,16 @@ data class VisibleNames(
         val topLevel: List<ElmNamedElement>,
         val imported: List<ElmNamedElement>
 ) {
-    val all: List<ElmNamedElement> get() = listOf(global, topLevel, imported).flatten()
+    /**
+     * Returns the list of all visible names ordered by precedence.
+     *
+     * Elm resolves name ambiguity as follows:
+     *
+     * 1. check to see if it's defined within the current file
+     * 2. if not found, check if it has been exposed by an import
+     * 3. if you still haven't found it, check the implicit, global imports
+     */
+    val all: List<ElmNamedElement> get() = listOf(topLevel, imported, global).flatten()
 }
 
 /**
