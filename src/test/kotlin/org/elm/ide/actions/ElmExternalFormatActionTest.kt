@@ -2,8 +2,7 @@ package org.elm.ide.actions
 
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
 import junit.framework.TestCase
@@ -53,7 +52,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
         val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
         val document = FileDocumentManager.getInstance().getDocument(file)!!
-        reformat(PsiManager.getInstance(project).findFile(file)!!)
+        reformat(file)
         val expected = """
                     module Main exposing (f)
 
@@ -99,7 +98,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
         val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
         val document = FileDocumentManager.getInstance().getDocument(file)!!
-        reformat(PsiManager.getInstance(project).findFile(file)!!)
+        reformat(file)
         val expected = """
                     module Main exposing (f)
 
@@ -111,17 +110,60 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
-    private fun reformat(file: PsiFile) {
-        val dataContext = MapDataContext(mapOf(
-                CommonDataKeys.PROJECT to project,
-                CommonDataKeys.PSI_FILE to file
-        ))
-        val action = ElmExternalFormatAction()
-        val e = TestActionEvent(dataContext, action)
-        action.beforeActionPerformedUpdate(e)
-        check(e.presentation.isEnabledAndVisible) {
+    fun `test elm-format action shouldn't be active on non-elm files`() {
+        val fileWithCaret = buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.18.0",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                }
+            }
+            """.trimIndent())
+            dir("src") {
+                elm("Main.scala", """
+                    module Main exposing (f)
+
+
+                    f x = x{-caret-}
+
+                """.trimIndent())
+            }
+        }.fileWithCaret
+
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val (_, e) = makeTestAction(file)
+        check(!e.presentation.isEnabledAndVisible) {
+            "The elm-format action shouldn't be enabled in this context"
+        }
+    }
+
+    private fun reformat(file: VirtualFile) {
+        val (action, event) = makeTestAction(file)
+        action.beforeActionPerformedUpdate(event)
+        check(event.presentation.isEnabledAndVisible) {
             "The elm-format action should be enabled in this context"
         }
-        action.actionPerformed(e)
+        action.actionPerformed(event)
+    }
+
+    private fun makeTestAction(file: VirtualFile): Pair<ElmExternalFormatAction, TestActionEvent> {
+        val dataContext = MapDataContext(mapOf(
+                CommonDataKeys.PROJECT to project,
+                CommonDataKeys.VIRTUAL_FILE to file
+        ))
+        val action = ElmExternalFormatAction()
+        val event = TestActionEvent(dataContext, action)
+        action.beforeActionPerformedUpdate(event)
+        return Pair(action, event)
     }
 }
