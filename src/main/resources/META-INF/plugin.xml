@@ -30,6 +30,15 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>2.2.4</b> <em>(2019-02-13)</em>
+                <ul>
+                    <li>The type checker now detects problems with type variables</li>
+                    <li>Added support for introducing an aliased import from an unresolved qualified ref</li>
+                    <li>Added a template for creating a new Elm project</li>
+                    <li>Added quick docs for infix operators</li>
+                    <li>Lots of bug fixes</li>
+                </ul>
+            </li>
             <li><b>2.2.3</b> <em>(2019-02-06)</em>
                 <ul>
                     <li>Record field completion now works even in the presence of parse errors</li>
