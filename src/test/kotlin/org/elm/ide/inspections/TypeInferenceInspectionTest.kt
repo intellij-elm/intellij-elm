@@ -829,6 +829,10 @@ main : ()
 main = (\_ -> main) 1
 """)
 
+    fun `test allowed self-recursion in lambda in unannotated function`() = checkByText("""
+main = (\_ -> main) 1
+""")
+
     fun `test bad mutual recursion`() = checkByText("""
 <error descr="Infinite recursion">foo = bar</error>
 bar = foo

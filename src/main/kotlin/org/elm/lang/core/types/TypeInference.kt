@@ -33,7 +33,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // Elm lets you shadow imported names, including auto-imported names, so only count names
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope(elmFile).getVisibleValues().topLevel.mapNotNullTo(mutableSetOf()) { it.name }
-        val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), null).beginDeclarationInference(this)
+        val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), false, null).beginDeclarationInference(this)
         CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
     }
 }
@@ -47,10 +47,12 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
  *
  * @property shadowableNames names of declared elements that will cause a shadowing error if redeclared
  * @property activeScopes scopes that are currently being inferred, to detect invalid recursion; copied from parent
+ * @property recursionAllowed if true, diagnostics about self-recursion won't be reported
  */
 private class InferenceScope(
         private val shadowableNames: MutableSet<String>,
         private val activeScopes: MutableSet<ElmValueDeclaration>,
+        private val recursionAllowed: Boolean,
         private val parent: InferenceScope?
 ) {
     /**
@@ -163,8 +165,9 @@ private class InferenceScope(
     }
 
     private inline fun inferChild(activeScopes: MutableSet<ElmValueDeclaration> = this.activeScopes.toMutableSet(),
+                                  recursionAllowed: Boolean = this.recursionAllowed,
                                   block: InferenceScope.() -> InferenceResult): InferenceResult {
-        val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, this).block()
+        val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, recursionAllowed, this).block()
         diagnostics += result.diagnostics
         expressionTypes += result.expressionTypes
         return result
@@ -196,8 +199,7 @@ private class InferenceScope(
         val isRecursive = declaration in activeScopes
         // Recursion is a compile-time error if the function doesn't have any parameters
         val fdl = declaration.functionDeclarationLeft
-        val isBad = isRecursive && (fdl == null || fdl.patterns.firstOrNull() == null)
-        if (isBad) {
+        if (isRecursive && !recursionAllowed && (fdl == null || fdl.patterns.firstOrNull() == null)) {
             diagnostics += BadRecursionError(declaration)
         }
 
@@ -394,7 +396,7 @@ private class InferenceScope(
 
     private fun inferLambda(lambda: ElmAnonymousFunctionExpr): Ty {
         // Self-recursion is allowed inside lambdas, so don't copy the active scopes when inferring them
-        return inferChild(activeScopes = mutableSetOf()) { beginLambdaInference(lambda) }.ty
+        return inferChild(recursionAllowed = true) { beginLambdaInference(lambda) }.ty
     }
 
     private fun inferCase(caseOf: ElmCaseOfExpr): Ty {
