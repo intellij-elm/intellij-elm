@@ -49,6 +49,29 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
+    fun `test elm-format action should be disabled, when the elm-file has errors`() {
+        val fileWithCaret = buildProject {
+            project("elm.json", manifestElm19)
+            dir("src") {
+                elm("Main.elm", """
+                    m0dule Main exposing (f)
+
+
+                    f x = x{-caret-}
+
+                """.trimIndent())
+            }
+        }.fileWithCaret
+
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+
+        val (action, event) = makeTestAction(file)
+        action.beforeActionPerformedUpdate(event)
+        check(!event.presentation.isEnabledAndVisible) {
+            "The elm-format action should be disabled in this context"
+        }
+    }
+
 
     // TODO [drop 0.18] remove this test
     fun `test elm-format action with elm 18`() {

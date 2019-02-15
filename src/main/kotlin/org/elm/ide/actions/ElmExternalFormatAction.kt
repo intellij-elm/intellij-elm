@@ -9,6 +9,8 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
@@ -53,6 +55,8 @@ class ElmExternalFormatAction : AnAction() {
         if (!file.isInLocalFileSystem) return null
         if (!file.isElmFile) return null
         val document = FileDocumentManager.getInstance().getDocument(file) ?: return null
+        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return null
+        if (PsiTreeUtil.hasErrorElements(psiFile)) return null
         val elmVersion = ElmFormatCLI.getElmVersion(project, file) ?: return null
         return Context(project, file, document, elmVersion)
     }
