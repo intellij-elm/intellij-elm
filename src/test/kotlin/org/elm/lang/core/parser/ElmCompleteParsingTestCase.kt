@@ -33,6 +33,7 @@ class ElmCompleteParsingTestCase : ElmParsingTestCaseBase("complete") {
     fun testTypeAnnotation() = doTest(true)
     fun testUnionTypeDeclaration() = doTest(true)
     fun testValueQID() = doTest(true)
+    fun testShaders() = doTest(true)
 
 
     override fun checkResult(targetDataName: String, file: PsiFile) {

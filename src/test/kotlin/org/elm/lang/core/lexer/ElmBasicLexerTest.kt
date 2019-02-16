@@ -23,6 +23,7 @@ class ElmBasicLexerTest: ElmLexerTestCaseBase() {
     fun testDocComments() = doTest()
     fun testStrings() = doTest()
     fun testNumbers() = doTest()
+    fun testShaders() = doTest()
     fun testPartialSingleQuoteStrings() = doTest()
     fun testPartialTripleQuoteString() = doTest()
 }
