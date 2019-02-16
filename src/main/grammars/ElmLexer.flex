@@ -114,6 +114,9 @@ ThreeQuotes = \"\"\"
         yybegin(YYINITIAL);
         return END_GLSL_CODE;
     }
+    [|]+ {
+        return GLSL_CODE_CONTENT;
+    }
     [^|]+ {
         return GLSL_CODE_CONTENT;
     }
