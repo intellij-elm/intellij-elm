@@ -26,6 +26,9 @@ SOFTWARE.
 
 package org.elm.ide.refactoring
 
+import com.intellij.testFramework.UsefulTestCase
+import com.intellij.testFramework.exceptionCases.IncorrectOperationExceptionCase
+import com.intellij.util.IncorrectOperationException
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.psi.elements.ElmImportClause
@@ -46,6 +49,13 @@ quux = 42
 bar = quux + 2
 """)
 
+    fun `test value decl invalid rename`() = doInvalidNameTest("Bar", """
+foo{-caret-} = 42
+""")
+
+    fun `test type decl invalid rename`() = doInvalidNameTest("bar", """
+type Foo{-caret-} = Foo
+""")
 
     fun `test function parameter rename`() = doTest("z", """
 f x{-caret-} y = x + y
@@ -200,5 +210,17 @@ g = f (U.User "joe")
         InlineFile(before).withCaret()
         myFixture.renameElementAtCaret(newName)
         myFixture.checkResult(after)
+    }
+
+    fun doInvalidNameTest(newName: String, @Language("Elm") before: String) {
+        InlineFile(before).withCaret()
+        try {
+            myFixture.renameElementAtCaret(newName)
+        } catch (e: RuntimeException) {
+            UsefulTestCase.assertInstanceOf(e.cause, IncorrectOperationException::class.java)
+            myFixture.checkResult(before.replace("{-caret-}", ""))
+            return
+        }
+        throw AssertionError("exception not thrown")
     }
 }
