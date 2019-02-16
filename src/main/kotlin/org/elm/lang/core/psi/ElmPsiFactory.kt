@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.tree.IElementType
+import com.intellij.util.IncorrectOperationException
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
@@ -95,35 +96,35 @@ class ElmPsiFactory(private val project: Project) {
 
     fun createLowerCaseIdentifier(text: String): PsiElement =
             createFromText("$text = 42", LOWER_CASE_IDENTIFIER)
-                    ?: error("Failed to create lower-case identifier: `$text`")
+                    ?: error("Invalid lower-case identifier: `$text`")
 
     fun createUpperCaseIdentifier(text: String): PsiElement =
             createFromText<ElmTypeAliasDeclaration>("type alias $text = Int")
                     ?.upperCaseIdentifier
-                    ?: error("Failed to create upper-case identifier: `$text`")
+                    ?: error("Invalid upper-case identifier: `$text`")
 
     fun createUpperCaseQID(text: String): ElmUpperCaseQID =
             createFromText<ElmModuleDeclaration>("module $text exposing (..)")
                     ?.upperCaseQID
-                    ?: error("Failed to create upper-case QID: `$text`")
+                    ?: error("Invalid upper-case QID: `$text`")
 
     fun createValueQID(text: String): ElmValueQID =
             createFromText<ElmValueDeclaration>("f = $text")
                     ?.expression
                     ?.childOfType()
-                    ?: error("Failed to create value QID: `$text`")
+                    ?: error("Invalid value QID: `$text`")
 
     fun createOperatorIdentifier(text: String): PsiElement =
             createFromText("foo = x $text y", OPERATOR_IDENTIFIER)
-                    ?: error("Failed to create operator identifier: `$text`")
+                    ?: error("Invalid operator identifier: `$text`")
 
     fun createImport(moduleName: String, alias: String?): ElmImportClause {
         val asClause = if (alias != null) " as $alias" else ""
-        return createFromText<ElmImportClause>("import $moduleName$asClause")
+        return createFromText("import $moduleName$asClause")
                 ?: error("Failed to create import of $moduleName")
     }
 
-    fun createImportExposing(moduleName: String, exposedNames: List<String>) =
+    fun createImportExposing(moduleName: String, exposedNames: List<String>): ElmImportClause =
             "import $moduleName exposing (${exposedNames.joinToString(", ")})"
                     .let { createFromText<ElmImportClause>(it) }
                     ?: error("Failed to create import of $moduleName exposing $exposedNames")
@@ -151,4 +152,6 @@ class ElmPsiFactory(private val project: Project) {
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)
                     .descendants.find { it.elementType == elementType }
+
+    private fun error(msg: String): Nothing = throw IncorrectOperationException(msg)
 }
