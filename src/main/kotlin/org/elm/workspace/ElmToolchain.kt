@@ -1,8 +1,6 @@
 package org.elm.workspace
 
 import com.intellij.execution.ExecutionException
-import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
@@ -12,6 +10,7 @@ import com.intellij.util.io.exists
 import com.intellij.util.io.isDirectory
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
+import org.elm.openapiext.execute
 import org.elm.openapiext.modules
 import java.io.File
 import java.io.IOException
@@ -108,7 +107,15 @@ data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Bool
         val elm = elmCompilerPath ?: return Result.Err("Elm compiler not found")
 
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
-        val versionString = GeneralCommandLine(elm).withParameters("--version").runExecutable()?.firstOrNull()
+        val versionString = try {
+            GeneralCommandLine(elm).withParameters("--version")
+                    .execute(timeoutInMilliseconds = 1500)
+                    .stdoutLines
+                    .firstOrNull()
+        } catch (e: ExecutionException) {
+            log.debug("Failed to run `elm --version`", e)
+            null
+        }
         if (versionString == null) {
             // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
             // such as the Elm compiler. So we will try to detect if the wrapper may have been the problem
@@ -212,22 +219,6 @@ private fun suggestionsForWindows(): Sequence<Path> {
             Paths.get("C:/Program Files (x86)/Elm/0.18/bin"), // TODO [drop 0.18]
             Paths.get("C:/Program Files/Elm/0.18/bin")
     )
-}
-
-
-private fun GeneralCommandLine.runExecutable(): List<String>? {
-    val procOut = try {
-        val timeoutMs = 1000
-        CapturingProcessHandler(this).runProcess(timeoutMs)
-    } catch (e: ExecutionException) {
-        log.warn("Failed to run executable!", e)
-        return null
-    }
-
-    if (procOut.exitCode != 0 || procOut.isCancelled || procOut.isTimeout)
-        return null
-
-    return procOut.stdoutLines
 }
 
 

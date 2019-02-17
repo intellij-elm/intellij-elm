@@ -87,7 +87,7 @@ class ElmWorkspaceConfigurable(
                         is Result.Ok ->
                             when {
                                 versionResult.value < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION -> {
-                                    elmVersionLabel.text = "$versionResult.value (not supported)"
+                                    elmVersionLabel.text = "${versionResult.value} (not supported)"
                                     elmVersionLabel.foreground = JBColor.RED
                                 }
                                 else -> {

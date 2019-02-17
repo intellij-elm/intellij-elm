@@ -1,6 +1,5 @@
 package org.elm.ide.notifications
 
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -45,17 +44,8 @@ class ElmNeedsConfigNotificationProvider(
 
 
     override fun createNotificationPanel(file: VirtualFile, fileEditor: FileEditor): EditorNotificationPanel? {
-        if (!file.isElmFile || isNotificationDisabled())
+        if (!file.isElmFile)
             return null
-
-        val elmProject = project.elmWorkspace.findProjectForFile(file)
-
-        if (false) {
-            // simple debugging for issues with associating Elm files with Elm projects
-            return EditorNotificationPanel().apply {
-                setText(elmProject?.projectDirPath?.toString() ?: "No Elm project associated with this file")
-            }
-        }
 
         val toolchain = project.elmToolchain
         if (toolchain == null || !toolchain.looksLikeValidToolchain()) {
@@ -80,7 +70,11 @@ class ElmNeedsConfigNotificationProvider(
 
         val workspace = project.elmWorkspace
         if (!workspace.hasAtLeastOneValidProject()) {
-            return createNoElmProjectsPanel()
+            return createNoElmProjectPanel("No Elm projects found")
+        }
+
+        if (project.elmWorkspace.findProjectForFile(file) == null) {
+            return createNoElmProjectPanel("Could not find Elm project for this file")
         }
 
         return null
@@ -93,37 +87,18 @@ class ElmNeedsConfigNotificationProvider(
                 createActionLabel("Setup toolchain") {
                     project.elmWorkspace.showConfigureToolchainUI()
                 }
-                createActionLabel("Do not show again") {
-                    disableNotification()
-                    notifications.updateAllNotifications()
-                }
             }
 
 
-    private fun createNoElmProjectsPanel() =
+    private fun createNoElmProjectPanel(message: String) =
             EditorNotificationPanel().apply {
-                setText("No Elm projects found")
+                setText(message)
                 // TODO [drop 0.18] remove the `(or elm-package.json)` part
                 createActionLabel("Attach elm.json (or elm-package.json)", "Elm.AttachElmProject")
-                createActionLabel("Do not show again") {
-                    disableNotification()
-                    notifications.updateAllNotifications()
-                }
             }
-
-
-    private fun disableNotification() {
-        PropertiesComponent.getInstance(project).setValue(NOTIFICATION_STATUS_KEY, true)
-    }
-
-
-    private fun isNotificationDisabled() =
-            PropertiesComponent.getInstance(project).getBoolean(NOTIFICATION_STATUS_KEY)
 
 
     companion object {
-        private val NOTIFICATION_STATUS_KEY = "org.elm.hideConfigNotifications"
-
         private val PROVIDER_KEY: Key<EditorNotificationPanel> = Key.create("Setup Elm toolchain")
     }
 
