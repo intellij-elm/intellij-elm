@@ -68,4 +68,8 @@ class ElmExternalFormatAction : AnAction() {
             val document: Document,
             val elmVersion: Version
     )
+
+    companion object {
+        val ID = "Elm.RunExternalElmFormat" // must stay in-sync with `plugin.xml`
+    }
 }

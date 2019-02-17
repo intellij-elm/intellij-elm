@@ -1,11 +1,21 @@
 package org.elm.workspace.ui
 
+import com.intellij.ide.DataManager
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.keymap.KeymapUtil
+import com.intellij.openapi.keymap.impl.ui.KeymapPanel
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.options.ex.Settings
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.VerticalFlowLayout
+import com.intellij.openapi.util.Disposer
+import com.intellij.ui.HyperlinkLabel
 import com.intellij.ui.JBColor
 import com.intellij.ui.layout.CCFlags
 import com.intellij.ui.layout.panel
+import com.intellij.util.ui.update.Activatable
+import com.intellij.util.ui.update.UiNotifyConnector
+import org.elm.ide.actions.ElmExternalFormatAction
 import org.elm.openapiext.Result
 import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.pathToDirectoryTextField
@@ -14,6 +24,7 @@ import org.elm.workspace.elmWorkspace
 import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JLabel
+import javax.swing.JPanel
 
 class ElmWorkspaceConfigurable(
         private val project: Project
@@ -27,15 +38,40 @@ class ElmWorkspaceConfigurable(
     private val elmVersionLabel = JLabel()
     private val elmFormatLabel = JLabel()
     private val elmFormatOnSaveCheckbox = JCheckBox()
+    private val elmFormatShortcutLabel = HyperlinkLabel()
 
     override fun createComponent(): JComponent {
-        elmFormatOnSaveCheckbox.addChangeListener { _ -> update() }
+        elmFormatOnSaveCheckbox.addChangeListener { update() }
+        elmFormatShortcutLabel.addHyperlinkListener {
+            showActionShortcut(ElmExternalFormatAction.ID)
+        }
 
-        return panel {
-            row("Directory containing 'elm' binary:") { pathToToolchainField(CCFlags.pushX) }
-            row("Elm version:") { elmVersionLabel() }
-            row("Elm-format:") { elmFormatLabel() }
-            row("Run elm-format when file saved?") { elmFormatOnSaveCheckbox() }
+        val panel = JPanel(VerticalFlowLayout()).apply {
+            add(panel(title = "Elm Compiler") {
+                row("Directory containing 'elm' binary:") { pathToToolchainField(CCFlags.pushX) }
+                row("Elm version:") { elmVersionLabel() }
+            })
+            add(panel(title = "elm-format") {
+                row("Location:") { elmFormatLabel() }
+                row("Keyboard shortcut:") { elmFormatShortcutLabel() }
+                row("Run automatically when file saved?") { elmFormatOnSaveCheckbox() }
+            })
+        }
+
+        // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
+        UiNotifyConnector(panel, object : Activatable.Adapter() {
+            override fun showNotify() = update()
+        }).also { Disposer.register(this, it) }
+
+        return panel
+    }
+
+    private fun showActionShortcut(actionId: String) {
+        val dataContext = DataManager.getInstance().getDataContext(elmFormatShortcutLabel)
+        val allSettings = Settings.KEY.getData(dataContext) ?: return
+        val keymapPanel = allSettings.find(KeymapPanel::class.java) ?: return
+        allSettings.select(keymapPanel).doWhenDone {
+            keymapPanel.selectAction(actionId)
         }
     }
 
@@ -71,13 +107,22 @@ class ElmWorkspaceConfigurable(
                 elmFormatLabel.text = "not found"
                 elmFormatLabel.foreground = JBColor.RED
                 elmFormatOnSaveCheckbox.isEnabled = false
+                elmFormatShortcutLabel.isEnabled = false
             }
             else -> {
                 elmFormatLabel.text = fmt.elmFormatExecutablePath.toString()
                 elmFormatLabel.foreground = JBColor.foreground()
                 elmFormatOnSaveCheckbox.isEnabled = true
+                elmFormatShortcutLabel.isEnabled = true
             }
         }
+
+        val shortcuts = KeymapUtil.getActiveKeymapShortcuts(ElmExternalFormatAction.ID).shortcuts
+        val shortcutStatus = when {
+            shortcuts.isEmpty() -> "No Shortcut"
+            else -> shortcuts.joinToString(", ") { KeymapUtil.getShortcutText(it) }
+        }
+        elmFormatShortcutLabel.setHyperlinkText(shortcutStatus + " ", "Change", "")
     }
 
     override fun dispose() {
