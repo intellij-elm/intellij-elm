@@ -10,8 +10,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.ide.notifications.showBalloon
-import org.elm.lang.core.ElmFileType
-import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
 import org.elm.workspace.ElmFormatCLI
@@ -28,17 +26,15 @@ class ElmExternalFormatAction : AnAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-
-        val elmFormat = e.project?.elmToolchain?.elmFormat
-        if (elmFormat == null) {
-            e.project?.showBalloon("could not find elm-format", NotificationType.ERROR)
+        val ctx = getContext(e)
+        if (ctx == null) {
+            if (isUnitTestMode) error("should not happen: context is null!")
             return
         }
 
-        val ctx = getContext(e)
-
-        if (ctx == null) {
-            if (isUnitTestMode) error("something went wrong initializing the context for elm-format")
+        val elmFormat = ctx.project.elmToolchain?.elmFormat
+        if (elmFormat == null) {
+            ctx.project.showBalloon("could not find elm-format", NotificationType.ERROR)
             return
         }
 
@@ -47,8 +43,7 @@ class ElmExternalFormatAction : AnAction() {
         } catch (ex: ExecutionException) {
             if (isUnitTestMode) throw ex
             val message = ex.message ?: "something went wrong running elm-format"
-            e.project?.showBalloon(message, NotificationType.ERROR)
-
+            ctx.project.showBalloon(message, NotificationType.ERROR)
         }
     }
 
