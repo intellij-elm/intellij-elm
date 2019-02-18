@@ -14,7 +14,7 @@ public class ElmTestConfigurationFactory extends ConfigurationFactory {
 
     private static final String FACTORY_NAME = "Elm Test configuration factory";
 
-    static final Icon RUN_ICON = IconLoader.getIcon("/elm-logo.svg");
+    static final Icon RUN_ICON = IconLoader.getIcon("/icons/elm-colorful-original.svg");
 
     ElmTestConfigurationFactory(ConfigurationType type) {
         super(type);
