@@ -44,7 +44,6 @@ UpperCaseIdentifier = [:uppercase:]{IdentifierChar}*
 NumberLiteral = ("-")?[:digit:]+(\.[:digit:]+)?(e"-"?[:digit:]+)?
 HexLiteral = 0x{HexChar}+
 Operator = ("!"|"$"|"^"|"|"|"*"|"/"|"?"|"+"|"~"|"."|-|=|@|#|%|&|<|>|:|€|¥|¢|£|¤)+
-ReservedKeyword = ("hiding" | "export" | "foreign" | "deriving")
 
 ValidEscapeSequence = \\(u\{{HexChar}{4,6}\}|[nrt\"'\\])
 InvalidEscapeSequence = \\(u\{[^}]*\}|[^nrt\"'\\])
@@ -141,7 +140,6 @@ ThreeQuotes = \"\"\"
     "infix"                     { return INFIX; }
     "infixl"                    { return INFIXL; } // TODO [drop 0.18] remove infixl entirely
     "infixr"                    { return INFIXR; } // TODO [drop 0.18] remove infixr entirely
-    {ReservedKeyword}           { return RESERVED; }
     "("                         { return LEFT_PARENTHESIS; }
     ")"                         { return RIGHT_PARENTHESIS; }
     "["                         { return LEFT_SQUARE_BRACKET; }
