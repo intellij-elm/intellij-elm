@@ -25,10 +25,6 @@ class TypeReplacement(
          *
          * If the values of [replacements] can contain [TyVar]s that occur in the keys, use this
          * rather than [replace].
-         *
-         * This will perform replacement several times until there is nothing left to replace. Then
-         * all remaining [TyVar]s in the type are replaced with new vars with the same name to
-         * enforce scoping.
          */
         fun deepReplace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
             if (replacements.isEmpty()) return ty
@@ -37,7 +33,7 @@ class TypeReplacement(
             repeat(5) {
                 val next = tr.replace(newTy)
                 if (next == newTy) {
-                    return freshenVars(newTy)
+                    return newTy
                 }
                 newTy = next
             }
@@ -45,7 +41,15 @@ class TypeReplacement(
             return ty
         }
 
-        private fun freshenVars(ty: Ty): Ty {
+        /**
+         * Replace all [TyVar]s in a [ty] with new copies with the same names.
+         *
+         * This is important because tys are cached, and compared [TyVar]s are compared by instance
+         * to be able to scope them. Each time you call a function or reference a type, its vars are
+         * distinct, even though they share a name with vars from the previous reference. If we use
+         * the cached tys, there's no way to distinguish between vars in one call from another.
+         */
+        fun freshenVars(ty: Ty): Ty {
             return TypeReplacement(MutableMapWithDefault { TyVar(it.name) }).replace(ty)
         }
     }

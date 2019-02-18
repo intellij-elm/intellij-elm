@@ -23,39 +23,49 @@ private val TY_UNION_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<TyU
 private val TY_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<Ty>>> = Key.create("TY_INFERENCE")
 private val TY_VARIANT_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<VariantParameters>>> = Key.create("TY_VARIANT_INFERENCE")
 
-fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> =
-        CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
-            val inferenceResult = TypeExpression().beginTypeDeclarationInference(this)
-            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
-        }
+fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> {
+    val cachedValue = CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
+        val inferenceResult = TypeExpression().beginTypeDeclarationInference(this)
+        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+    }
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value) as TyUnion)
+}
 
-fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
-        CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-            val inferenceResult = TypeExpression().beginTypeAliasDeclarationInference(this)
-            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
-        }
+fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
+    val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
+        val inferenceResult = TypeExpression().beginTypeAliasDeclarationInference(this)
+        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+    }
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
+}
 
 
-fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
-        CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-            val inferenceResult = TypeExpression().beginPortAnnotationInference(this)
-            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
-        }
+fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
+    val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
+        val inferenceResult = TypeExpression().beginPortAnnotationInference(this)
+        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+    }
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 
-fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> =
-        CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-            val inferenceResult = TypeExpression().beginUnionConstructorInference(this)
-            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
-        }
+}
+
+fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
+    val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
+        val inferenceResult = TypeExpression().beginUnionConstructorInference(this)
+        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+    }
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
+}
 
 
 /** Get the type of the expression in this annotation, or null if the program is incomplete and no expression exists */
 fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty>? {
     val typeRef = typeExpression ?: return null
-    return CachedValuesManager.getCachedValue(typeRef, TY_CACHE_KEY) {
+    val cachedValue = CachedValuesManager.getCachedValue(typeRef, TY_CACHE_KEY) {
         val inferenceResult = TypeExpression().beginTypeRefInference(typeRef)
         CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
     }
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
 
 /** Get the names and parameter tys for all variants of this union */

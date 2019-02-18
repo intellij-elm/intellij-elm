@@ -578,7 +578,7 @@ private class InferenceScope(
     private fun inferReferencedValueDeclaration(decl: ElmValueDeclaration?): Ty {
         if (decl == null || checkRecursion(decl)) return TyUnknown()
         val existing = resolvedDeclarations[decl]
-        if (existing != null) return existing
+        if (existing != null) return TypeReplacement.freshenVars(existing)
         // Use the type annotation if there is one
         var ty = decl.typeAnnotation?.typeExpressionInference()?.value
         // If there's no annotation, do full inference on the function.
@@ -1001,9 +1001,8 @@ private class InferenceScope(
 
     private fun trackReplacement(ty1: Ty, ty2: Ty, replacements: MutableMap<TyVar, Ty>?) {
         if (replacements == null) return
-        // assigning anything to a variable fixes the type of that variable (we later do replacements
-        // for vars that are assigned to other vars)
-        if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar)) {
+        // assigning anything to a variable fixes the type of that variable
+        if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             replacements[ty2] = ty1
         }
         // unification: assigning a var to a type also restricts the vars type, but only if not

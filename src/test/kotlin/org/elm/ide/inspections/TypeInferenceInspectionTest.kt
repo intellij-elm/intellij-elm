@@ -1601,4 +1601,15 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: Foo (String → Float → f) f">(foo (foo bar baz) qux)</error>
 """)
+
+    // https://github.com/klazuka/intellij-elm/issues/296
+    fun `test tuple with repeated unfixed vars`() = checkByText("""
+type alias Example = ( Maybe String, Maybe Int )
+
+foo : Example -> Example
+foo model = model
+
+main : Example
+main = ( Nothing, Nothing ) |> foo
+""")
 }
