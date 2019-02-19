@@ -1,7 +1,11 @@
 package org.elm.ide.actions
 
+import com.intellij.notification.Notification
+import com.intellij.notification.Notifications
+import com.intellij.notification.NotificationsAdapter
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
@@ -49,6 +53,32 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
+    fun `test elm-format action should not run, when the elm-file has errors and display notification to the user`() {
+        val unformatted = """
+                    m0dule Main exposing (f)
+
+
+                    f x = x{-caret-}
+
+                """.trimIndent()
+
+        val fileWithCaret = buildProject {
+            project("elm.json", manifestElm19)
+            dir("src") {
+                elm("Main.elm", unformatted)
+            }
+        }.fileWithCaret
+
+        val notificationRef = connectToBusAndGetNotificationRef()
+
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val document = FileDocumentManager.getInstance().getDocument(file)!!
+
+        reformat(file)
+
+        TestCase.assertEquals(unformatted.replace("{-caret-}", "").trimIndent(), document.text.trimIndent())
+        TestCase.assertEquals(org.elm.ide.actions.ElmExternalFormatAction.FileHasErrorsNotificationMsg, notificationRef.get().content)
+    }
 
     // TODO [drop 0.18] remove this test
     fun `test elm-format action with elm 18`() {
@@ -122,6 +152,17 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         action.beforeActionPerformedUpdate(event)
         return Pair(action, event)
     }
+
+    private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
+        val notificationRef = Ref<Notification>()
+        project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
+                object : NotificationsAdapter() {
+                    override fun notify(notification: Notification) =
+                            notificationRef.set(notification)
+                })
+        return notificationRef
+    }
+
 }
 
 

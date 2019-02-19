@@ -108,6 +108,28 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         )
     }
 
+    fun `test ElmFormatOnFileSaveComponent should not touch a file syntax errors`() {
+        val brokenElmCode = """
+                    m0dule Main exposing (f)
+
+
+                    f x = x{-caret-}
+
+                """.trimIndent()
+        val fileWithCaret = buildProject {
+            project("elm.json", manifestElm19)
+            dir("src") {
+                elm("Main.scala", brokenElmCode)
+            }
+        }.fileWithCaret
+
+        testCorrectFormatting(
+                fileWithCaret,
+                brokenElmCode,
+                expected = brokenElmCode.replace("{-caret-}", "")
+        )
+    }
+
     private fun testCorrectFormatting(fileWithCaret: String, unformatted: String, expected: String, activateOnSaveHook: Boolean = true) {
 
         project.elmWorkspace.useToolchain(toolchain?.copy(isElmFormatOnSaveEnabled = activateOnSaveHook))
@@ -127,7 +149,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
         TestCase.assertEquals(expected, document.text)
     }
-
 }
 
 
