@@ -29,7 +29,7 @@ class ElmFormatCLI(val elmFormatExecutablePath: Path) {
                 .execute(document.text)
     }
 
-    fun formatDocumentAndSetText(project: Project, document: Document, version: Version) {
+    fun formatDocumentAndSetText(project: Project, document: Document, version: Version, addToUndoStack: Boolean) {
 
         val result = ProgressManager.getInstance().runProcessWithProgressSynchronously<ProcessOutput, ExecutionException>({
             getFormattedContentOfDocument(version, document)
@@ -40,11 +40,18 @@ class ElmFormatCLI(val elmFormatExecutablePath: Path) {
             val source = document.text
 
             if (source != formatted) {
-                CommandProcessor.getInstance().executeCommand(project, {
+
+                val writeAction = {
                     ApplicationManager.getApplication().runWriteAction {
                         document.setText(formatted)
                     }
-                }, "Run elm-format on current file", null, document)
+                }
+
+                if (addToUndoStack) {
+                    CommandProcessor.getInstance().executeCommand(project, writeAction, "Run elm-format on current file", null, document)
+                } else {
+                    CommandProcessor.getInstance().runUndoTransparentAction(writeAction)
+                }
             }
         }
     }
