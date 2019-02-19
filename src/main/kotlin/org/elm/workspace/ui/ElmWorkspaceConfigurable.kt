@@ -37,6 +37,7 @@ class ElmWorkspaceConfigurable(
 
     private val elmVersionLabel = JLabel()
     private val elmFormatLabel = JLabel()
+    private val elmFormatVersionLabel = JLabel()
     private val elmFormatOnSaveCheckbox = JCheckBox()
     private val elmFormatShortcutLabel = HyperlinkLabel()
 
@@ -53,6 +54,7 @@ class ElmWorkspaceConfigurable(
             })
             add(panel(title = "elm-format") {
                 row("Location:") { elmFormatLabel() }
+                row("Version:") { elmFormatVersionLabel() }
                 row("Keyboard shortcut:") { elmFormatShortcutLabel() }
                 row("Run automatically when file saved?") { elmFormatOnSaveCheckbox() }
             })
@@ -78,31 +80,50 @@ class ElmWorkspaceConfigurable(
     private fun update() {
         val pathToToolchain = pathToToolchainField.text
         val activateOnSaveHook = isOnSaveHookEnabledAndSelected()
+        val elmToolchain = ElmToolchain(pathToToolchain, activateOnSaveHook)
+
         versionUpdateDebouncer.run(
                 onPooledThread = {
-                    ElmToolchain(pathToToolchain, activateOnSaveHook).queryCompilerVersion()
+                    Pair(
+                            elmToolchain.queryCompilerVersion(),
+                            elmToolchain.queryElmFormatVersion()
+                    )
                 },
-                onUiThread = { versionResult ->
-                    when (versionResult) {
+                onUiThread = { versions ->
+                    val (elmVersionResult, elmFormatVersionResult) = versions
+
+                    when (elmVersionResult) {
                         is Result.Ok ->
                             when {
-                                versionResult.value < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION -> {
-                                    elmVersionLabel.text = "${versionResult.value} (not supported)"
+                                elmVersionResult.value < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION -> {
+                                    elmVersionLabel.text = "${elmVersionResult.value} (not supported)"
                                     elmVersionLabel.foreground = JBColor.RED
                                 }
                                 else -> {
-                                    elmVersionLabel.text = versionResult.value.toString()
+                                    elmVersionLabel.text = elmVersionResult.value.toString()
                                     elmVersionLabel.foreground = JBColor.foreground()
                                 }
                             }
                         is Result.Err -> {
-                            elmVersionLabel.text = "error: ${versionResult.reason}"
+                            elmVersionLabel.text = "error: ${elmVersionResult.reason}"
                             elmVersionLabel.foreground = JBColor.RED
+                        }
+                    }
+
+                    when (elmFormatVersionResult) {
+                        is Result.Ok -> {
+                            elmFormatVersionLabel.text = elmFormatVersionResult.value.toString()
+                            elmFormatVersionLabel.foreground = JBColor.foreground()
+                        }
+
+                        is Result.Err -> {
+                            elmFormatVersionLabel.text = "error: ${elmFormatVersionResult.reason}"
+                            elmFormatVersionLabel.foreground = JBColor.RED
                         }
                     }
                 }
         )
-        when (val fmt = ElmToolchain(pathToToolchain, activateOnSaveHook).elmFormat) {
+        when (val fmt = elmToolchain.elmFormat) {
             null -> {
                 elmFormatLabel.text = "not found"
                 elmFormatLabel.foreground = JBColor.RED

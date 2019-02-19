@@ -134,6 +134,45 @@ data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Bool
         }
     }
 
+    fun queryElmFormatVersion(): Result<Version> {
+        val elmFormat = elmFormat ?: return Result.Err("elm-format not found")
+
+        // Output of `elm-format` is multiple lines where the first line is 'elm-format 0.8.1'
+
+        val elmFormatRegex = Regex("elm-format (\\d+(?:\\.\\d+){2})")
+
+        val versionString = try {
+            GeneralCommandLine(elmFormat.elmFormatExecutablePath)
+                    .execute(timeoutInMilliseconds = 1500)
+                    .stdoutLines
+                    .firstOrNull()
+        } catch (e: ExecutionException) {
+            log.debug("Failed to run `elm-format`", e)
+            null
+        }
+        if (versionString == null) {
+            // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
+            // such as the Elm compiler. So we will try to detect if the wrapper may have been the problem
+            // and notify the user. See https://github.com/klazuka/intellij-elm/issues/252
+            return if (elmFormat.elmFormatExecutablePath.toFile().isWrapperScript()) {
+                Result.Err("the 'elm-format' file here is a wrapper script; please use the path to the actual executable")
+            } else {
+                Result.Err("failed to run the elm-format")
+            }
+        }
+
+        return try {
+            val matchResult = elmFormatRegex.matchEntire(versionString)
+
+            if(matchResult == null) return Result.Err("invalid elm-format version string: ${versionString}")
+
+            val (elmVersionString) = matchResult.destructured
+            Result.Ok(Version.parse(elmVersionString))
+        } catch (e: ParseException) {
+            Result.Err("invalid elm-format version: ${e.message}")
+        }
+    }
+
     companion object {
         const val ELM_JSON = "elm.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
