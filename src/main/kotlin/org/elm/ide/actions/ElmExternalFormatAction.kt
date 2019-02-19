@@ -40,6 +40,12 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
+        val psiFile = PsiDocumentManager.getInstance(ctx.project).getPsiFile(ctx.document) ?: return
+        if (PsiTreeUtil.hasErrorElements(psiFile)) {
+            ctx.project.showBalloon(FileHasErrorsNotificationMsg, NotificationType.WARNING)
+            return
+        }
+
         try {
             elmFormat.formatDocumentAndSetText(ctx.project, ctx.document, ctx.elmVersion)
         } catch (ex: ExecutionException) {
@@ -55,8 +61,6 @@ class ElmExternalFormatAction : AnAction() {
         if (!file.isInLocalFileSystem) return null
         if (!file.isElmFile) return null
         val document = FileDocumentManager.getInstance().getDocument(file) ?: return null
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return null
-        if (PsiTreeUtil.hasErrorElements(psiFile)) return null
         val elmVersion = ElmFormatCLI.getElmVersion(project, file) ?: return null
         return Context(project, file, document, elmVersion)
     }
@@ -69,6 +73,7 @@ class ElmExternalFormatAction : AnAction() {
     )
 
     companion object {
-        val ID = "Elm.RunExternalElmFormat" // must stay in-sync with `plugin.xml`
+        const val ID = "Elm.RunExternalElmFormat" // must stay in-sync with `plugin.xml`
+        const val FileHasErrorsNotificationMsg = "Please fix the errors in this file before running elm-format."
     }
 }
