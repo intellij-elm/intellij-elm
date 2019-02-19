@@ -1,9 +1,10 @@
 package org.elm.ide.actions
 
-import com.intellij.notification.*
+import com.intellij.notification.Notification
+import com.intellij.notification.Notifications
+import com.intellij.notification.NotificationsAdapter
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
@@ -154,20 +155,11 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
     private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
         val notificationRef = Ref<Notification>()
-
-        project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC, object : Notifications {
-
-            override fun register(groupDisplayName: String, defaultDisplayType: NotificationDisplayType, shouldLog: Boolean) {}
-
-            override fun register(groupDisplayName: String, defaultDisplayType: NotificationDisplayType, shouldLog: Boolean, shouldReadAloud: Boolean) {}
-
-            override fun register(groupDisplayName: String, defaultDisplayType: NotificationDisplayType) {}
-
-            override fun notify(notification: Notification) {
-                notificationRef.set(notification)
-            }
-        })
-
+        project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
+                object : NotificationsAdapter() {
+                    override fun notify(notification: Notification) =
+                            notificationRef.set(notification)
+                })
         return notificationRef
     }
 
