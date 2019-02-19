@@ -9,6 +9,8 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
@@ -35,6 +37,12 @@ class ElmExternalFormatAction : AnAction() {
         val elmFormat = ctx.project.elmToolchain?.elmFormat
         if (elmFormat == null) {
             ctx.project.showBalloon("could not find elm-format", NotificationType.ERROR)
+            return
+        }
+
+        val psiFile = PsiDocumentManager.getInstance(ctx.project).getPsiFile(ctx.document) ?: return
+        if (PsiTreeUtil.hasErrorElements(psiFile)) {
+            ctx.project.showBalloon(FileHasErrorsNotificationMsg, NotificationType.WARNING)
             return
         }
 
@@ -65,6 +73,7 @@ class ElmExternalFormatAction : AnAction() {
     )
 
     companion object {
-        val ID = "Elm.RunExternalElmFormat" // must stay in-sync with `plugin.xml`
+        const val ID = "Elm.RunExternalElmFormat" // must stay in-sync with `plugin.xml`
+        const val FileHasErrorsNotificationMsg = "Please fix the errors in this file before running elm-format."
     }
 }

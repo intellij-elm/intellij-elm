@@ -7,6 +7,8 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.isElmFile
 import org.elm.workspace.ElmFormatCLI
 import org.elm.workspace.elmSettings
@@ -24,6 +26,9 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
                     override fun beforeDocumentSaving(document: Document) {
 
                         if (project.elmSettings.toolchain?.isElmFormatOnSaveEnabled != true) return
+
+                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return
+                        if (PsiTreeUtil.hasErrorElements(psiFile)) return
 
                         val vFile = FileDocumentManager.getInstance().getFile(document) ?: return
                         if (!vFile.isElmFile) return
