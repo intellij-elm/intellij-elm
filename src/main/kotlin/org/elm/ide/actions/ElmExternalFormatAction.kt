@@ -39,7 +39,7 @@ class ElmExternalFormatAction : AnAction() {
         }
 
         try {
-            elmFormat.formatDocumentAndSetText(ctx.project, ctx.document, ctx.elmVersion)
+            elmFormat.formatDocumentAndSetText(ctx.project, ctx.document, ctx.elmVersion, addToUndoStack = true)
         } catch (ex: ExecutionException) {
             if (isUnitTestMode) throw ex
             val message = ex.message ?: "something went wrong running elm-format"

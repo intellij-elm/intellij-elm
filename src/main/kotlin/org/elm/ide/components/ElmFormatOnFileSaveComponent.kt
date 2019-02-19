@@ -31,7 +31,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
                         val elmVersion = ElmFormatCLI.getElmVersion(project, vFile) ?: return
                         val elmFormat = project.elmToolchain?.elmFormat ?: return
 
-                        elmFormat.formatDocumentAndSetText(project, document, elmVersion)
+                        elmFormat.formatDocumentAndSetText(project, document, elmVersion, addToUndoStack = false)
                     }
                 }
         )

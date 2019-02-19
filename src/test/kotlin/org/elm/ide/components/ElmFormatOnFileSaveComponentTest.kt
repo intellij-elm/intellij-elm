@@ -1,7 +1,9 @@
 package org.elm.ide.components
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
@@ -63,6 +65,24 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         }.fileWithCaret
 
         testCorrectFormatting(fileWithCaret, unformatted, expectedFormatted)
+    }
+
+    fun `test ElmFormatOnFileSaveComponent should not add to the undo stack`() {
+
+        val fileWithCaret: String = buildProject {
+            project("elm.json", manifestElm19)
+            dir("src") {
+                elm("Main.elm", unformatted)
+            }
+        }.fileWithCaret
+
+        testCorrectFormatting(fileWithCaret, unformatted, expectedFormatted)
+
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(file)
+
+        val undoManager = UndoManager.getInstance(project)
+        TestCase.assertFalse(undoManager.isUndoAvailable(fileEditor))
     }
 
     fun `test ElmFormatOnFileSaveComponent should not touch a file with the wrong ending like 'scala'`() {
@@ -127,7 +147,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
         TestCase.assertEquals(expected, document.text)
     }
-
 }
 
 

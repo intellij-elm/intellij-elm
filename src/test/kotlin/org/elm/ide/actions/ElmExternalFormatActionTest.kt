@@ -1,7 +1,9 @@
 package org.elm.ide.actions
 
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
@@ -101,6 +103,29 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         check(!e.presentation.isEnabledAndVisible) {
             "The elm-format action shouldn't be enabled in this context"
         }
+    }
+
+    fun `test elm-format action should add to the undo stack`() {
+        val fileWithCaret = buildProject {
+            project("elm.json", manifestElm19)
+            dir("src") {
+                elm("Main.elm", """
+                    module Main exposing (f)
+
+
+                    f x = x{-caret-}
+
+                """.trimIndent())
+            }
+        }.fileWithCaret
+
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        reformat(file)
+
+        val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(file)
+
+        val undoManager = UndoManager.getInstance(project)
+        TestCase.assertTrue(undoManager.isUndoAvailable(fileEditor))
     }
 
     private fun reformat(file: VirtualFile) {
