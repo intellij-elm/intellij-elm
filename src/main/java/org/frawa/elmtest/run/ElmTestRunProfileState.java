@@ -17,22 +17,23 @@ import com.intellij.execution.testframework.sm.runner.SMTestLocator;
 import com.intellij.execution.testframework.sm.runner.events.*;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.ui.ConsoleView;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
+import org.elm.workspace.ElmToolchain;
+import org.elm.workspace.ElmWorkspaceService;
 import org.frawa.elmtest.core.ElmTestJsonProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.SystemIndependent;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
 
     private final ElmTestRunConfiguration configuration;
 
-    protected ElmTestRunProfileState(ExecutionEnvironment environment, ElmTestRunConfiguration configuration) {
+    ElmTestRunProfileState(ExecutionEnvironment environment, ElmTestRunConfiguration configuration) {
         super(environment);
         this.configuration = configuration;
     }
@@ -40,9 +41,12 @@ public class ElmTestRunProfileState extends CommandLineState {
     @NotNull
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
+        ElmWorkspaceService workspaceService = ServiceManager.getService(getEnvironment().getProject(), ElmWorkspaceService.class);
+        ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
+
         String elmFolder = getElmFolder();
-        String elmTestBinary = getElmTestBinary(elmFolder);
-        String elmBinary = getElmBinary(elmTestBinary);
+        String elmTestBinary = toolchain.getBinDirPath().resolve("elm-test").toString();
+        String elmBinary = toolchain.getElmCompilerPath().toString();
 
         GeneralCommandLine commandLine = elmTestBinary != null
                 ? new GeneralCommandLine(elmTestBinary, "--report=json")
@@ -67,48 +71,19 @@ public class ElmTestRunProfileState extends CommandLineState {
                 : configuration.options.elmFolder;
     }
 
-    private String getElmTestBinary(String elmFolder) {
-        if (configuration.options.elmTestBinary == null || configuration.options.elmTestBinary.isEmpty()) {
-            return getLocalElmTestBinary(elmFolder);
-        }
-        return configuration.options.elmTestBinary;
-    }
-
-    private String getLocalElmTestBinary(String elmFolder) {
-        if (elmFolder != null) {
-            Path elmFolderPath = Paths.get(elmFolder);
-            Path elmTestPath = elmFolderPath.resolve("node_modules/.bin/elm-test");
-            if (elmTestPath.toFile().exists()) {
-                return elmTestPath.toString();
-            }
-        }
-        return null;
-    }
-
-    private String getElmBinary(String elmTestBinary) {
-        if (elmTestBinary != null) {
-            Path elmTestPath = Paths.get(elmTestBinary);
-            Path elmPath = elmTestPath.resolveSibling("elm");
-            if (elmPath.toFile().exists()) {
-                return elmPath.toString();
-            }
-        }
-        return null;
-    }
-
     @Nullable
     @Override
     protected ConsoleView createConsole(@NotNull Executor executor) {
         RunConfiguration runConfiguration = (RunConfiguration) this.getEnvironment().getRunProfile();
-        TestConsoleProperties properties = new ConsoleProperties(runConfiguration, executor);
+        SMTRunnerConsoleProperties properties = new ConsoleProperties(runConfiguration, executor);
         SMTRunnerConsoleView consoleView = new SMTRunnerConsoleView(properties);
-        SMTestRunnerConnectionUtil.initConsoleView(consoleView, ((SMTRunnerConsoleProperties) properties).getTestFrameworkName());
+        SMTestRunnerConnectionUtil.initConsoleView(consoleView, properties.getTestFrameworkName());
         return consoleView;
     }
 
     private static class ConsoleProperties extends SMTRunnerConsoleProperties implements SMCustomMessagesParsing {
 
-        public ConsoleProperties(@NotNull RunConfiguration config, @NotNull Executor executor) {
+        ConsoleProperties(@NotNull RunConfiguration config, @NotNull Executor executor) {
             super(config, "elm-test", executor);
 
             setIfUndefined(TestConsoleProperties.TRACK_RUNNING_TEST, true);
