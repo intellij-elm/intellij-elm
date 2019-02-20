@@ -22,7 +22,7 @@ public class LabelUtils {
     final static Path EMPTY_PATH = Paths.get("");
 
     private static String getModuleName(Path path) {
-        return path.getName(0).toString();
+        return pathString(path.getName(0));
     }
 
     private static String encodeLabel(String label) {
@@ -35,7 +35,7 @@ public class LabelUtils {
 
     static String decodeLabel(Path encoded) {
         try {
-            return URLDecoder.decode(encoded.toString(), "utf8");
+            return URLDecoder.decode(pathString(encoded), "utf8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +71,7 @@ public class LabelUtils {
     }
 
     private static String toLocationUrl(String protocol, Path path) {
-        return String.format("%s://%s", protocol, FileUtil.toSystemIndependentName(path.toString()));
+        return String.format("%s://%s", protocol, pathString(path));
     }
 
     public static Pair<String, String> fromLocationUrlPath(String path) {
