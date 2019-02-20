@@ -13,29 +13,23 @@
 // limitations under the License.
 package org.frawa.elmtest.run;
 
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import org.elm.workspace.ElmProject;
-import org.elm.workspace.ElmWorkspaceService;
+import org.frawa.elmtest.core.ElmProjectHelper;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.util.List;
-import java.util.Optional;
 
 public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguration> {
-    private final List<ElmProject> elmProjects;
+    private final ElmProjectHelper helper;
     private JPanel myPanel;
     private ComboBox<String> projectChooser;
 
     ElmTestSettingsEditor(Project project) {
-        ElmWorkspaceService workspaceService = ServiceManager.getService(project, ElmWorkspaceService.class);
-        elmProjects = workspaceService.getAllProjects();
-
-        elmProjects.stream()
-                .map(ElmProject::getPresentableName)
+        helper = new ElmProjectHelper(project);
+        helper
+                .allNames()
                 .forEach(projectChooser::addItem);
     }
 
@@ -47,18 +41,16 @@ public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguratio
 
     @Override
     protected void resetEditorFrom(@NotNull ElmTestRunConfiguration configuration) {
-        Optional<String> name = elmProjects.stream()
-                .filter(p -> p.getProjectDirPath().toString().equals(configuration.options.elmFolder))
-                .map(ElmProject::getPresentableName)
-                .findFirst();
-        name.ifPresent(projectChooser::setSelectedItem);
+        helper
+                .nameByProjectDirPath(configuration.options.elmFolder)
+                .ifPresent(projectChooser::setSelectedItem);
     }
 
     @Override
     protected void applyEditorTo(@NotNull ElmTestRunConfiguration configuration) {
         int index = projectChooser.getSelectedIndex();
         if (index >= 0) {
-            configuration.options.elmFolder = elmProjects.get(index).getProjectDirPath().toString();
+            configuration.options.elmFolder = helper.projectDirPathByIndex(index).orElse(null);
         }
     }
 }
