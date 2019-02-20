@@ -63,6 +63,11 @@ data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Bool
                 .firstOrNull { Files.isExecutable(it) }
     }
 
+    val elmTestPath: Path? get() {
+        return executableNameSuggestionsFor("elm-test")
+                .map { binDirPath.resolve(it) }
+                .firstOrNull { Files.isExecutable(it) }
+    }
     val elmFormat: ElmFormatCLI?
         get() = executableNameSuggestionsFor("elm-format")
                 .map { binDirPath.resolve(it) }

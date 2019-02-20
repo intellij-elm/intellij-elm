@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.SystemIndependent;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 public class ElmTestRunProfileState extends CommandLineState {
 
@@ -45,11 +47,11 @@ public class ElmTestRunProfileState extends CommandLineState {
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
 
         String elmFolder = getElmFolder();
-        String elmTestBinary = toolchain.getBinDirPath().resolve("elm-test").toString();
-        String elmBinary = toolchain.getElmCompilerPath().toString();
+        Path elmTestBinary = Objects.requireNonNull(toolchain).getElmTestPath();
+        Path elmCompilerBinary = toolchain.getElmCompilerPath();
 
         GeneralCommandLine commandLine = elmTestBinary != null
-                ? new GeneralCommandLine(elmTestBinary, "--report=json")
+                ? new GeneralCommandLine(elmTestBinary.toString(), "--report=json")
                 : new GeneralCommandLine("/bin/sh", "-i", "-c", "elm-test --report=json");
 
         commandLine
@@ -57,8 +59,8 @@ public class ElmTestRunProfileState extends CommandLineState {
                 .withRedirectErrorStream(true)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE);
 
-        if (elmTestBinary != null && elmBinary != null) {
-            commandLine.withParameters("--compiler", elmBinary);
+        if (elmTestBinary != null && elmCompilerBinary != null) {
+            commandLine.withParameters("--compiler", elmCompilerBinary.toString());
         }
 
         return new ColoredProcessHandler(commandLine);
