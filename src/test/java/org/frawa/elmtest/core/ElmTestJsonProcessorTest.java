@@ -11,12 +11,13 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.frawa.elmtest.core.ElmTestJsonProcessor.*;
-import static org.frawa.elmtest.core.LabelUtils.EMPTY_PATH;
 import static org.frawa.elmtest.core.LabelUtils.toPath;
+import static org.frawa.elmtest.core.LabelUtils.*;
 import static org.junit.Assert.*;
 
 public class ElmTestJsonProcessorTest {
@@ -70,8 +71,8 @@ public class ElmTestJsonProcessorTest {
         JsonObject obj = new Gson().fromJson("{\"labels\":[\"Module\",\"test\"]}", JsonObject.class);
         Path path = ElmTestJsonProcessor.toPath(obj);
         assertEquals(2, path.getNameCount());
-        assertEquals("Module", path.getName(0).toString());
-        assertEquals("test", path.getName(1).toString());
+        assertEquals("Module", pathString(path.getName(0)));
+        assertEquals("test", pathString(path.getName(1)));
     }
 
     @Test
@@ -79,8 +80,8 @@ public class ElmTestJsonProcessorTest {
         JsonObject obj = new Gson().fromJson("{\"labels\":[\"Module\",\"test / stuff\"]}", JsonObject.class);
         Path path = ElmTestJsonProcessor.toPath(obj);
         assertEquals(2, path.getNameCount());
-        assertEquals("Module", path.getName(0).toString());
-        assertEquals("test+%2F+stuff", path.getName(1).toString());
+        assertEquals("Module", pathString(path.getName(0)));
+        assertEquals("test+%2F+stuff", pathString(path.getName(1)));
     }
 
     @Test
@@ -88,71 +89,85 @@ public class ElmTestJsonProcessorTest {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite", "test2"));
         List<Path> paths = closeSuitePaths(from, to).collect(Collectors.toList());
-        assertEquals(Arrays.asList(), paths);
+        assertEquals(Collections.emptyList(), paths);
     }
 
     @Test
     public void closeOneSuite() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        List<String> paths = closeSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
-        assertEquals(Arrays.asList("Module/suite"), paths);
+        List<String> paths = closeSuitePaths(from, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
+        assertEquals(Collections.singletonList("Module/suite"), paths);
     }
 
     @Test
     public void closeTwoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "deep", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        List<String> paths = closeSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        List<String> paths = closeSuitePaths(from, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
         assertEquals(Arrays.asList("Module/suite/deep", "Module/suite"), paths);
     }
 
     @Test
     public void closeInitialSuite() {
-        Path from = EMPTY_PATH;
         Path to = toPath(Arrays.asList("Module", "suite", "test"));
-        List<String> paths = closeSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
-        assertEquals(Arrays.asList(), paths);
+        List<String> paths = closeSuitePaths(EMPTY_PATH, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
+        assertEquals(Collections.emptyList(), paths);
     }
 
     @Test
     public void openNoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite", "test2"));
-        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
-        assertEquals(Arrays.asList(), paths);
+        List<String> paths = openSuitePaths(from, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
+        assertEquals(Collections.emptyList(), paths);
     }
 
     @Test
     public void openOneSuite() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
-        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
-        assertEquals(Arrays.asList("Module/suite2"), paths);
+        List<String> paths = openSuitePaths(from, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
+        assertEquals(Collections.singletonList("Module/suite2"), paths);
     }
 
     @Test
     public void openTwoSuites() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite2", "deep2", "test2"));
-        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        List<String> paths = openSuitePaths(from, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
         assertEquals(Arrays.asList("Module/suite2", "Module/suite2/deep2"), paths);
     }
 
     @Test
     public void openInitialSuites() {
-        Path from = EMPTY_PATH;
         Path to = toPath(Arrays.asList("Module", "suite", "test"));
-        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
+        List<String> paths = openSuitePaths(EMPTY_PATH, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
         assertEquals(Arrays.asList("Module", "Module/suite"), paths);
     }
 
     @Test
     public void openSuiteWithSlash() {
-        Path from = toPath(Arrays.asList("Module"));
+        Path from = toPath(Collections.singletonList("Module"));
         Path to = toPath(Arrays.asList("Module", "suite / stuff", "test"));
-        List<String> paths = openSuitePaths(from, to).map(Path::toString).collect(Collectors.toList());
-        assertEquals(Arrays.asList("Module/suite+%2F+stuff"), paths);
+        List<String> paths = openSuitePaths(from, to)
+                .map(LabelUtils::pathString)
+                .collect(Collectors.toList());
+        assertEquals(Collections.singletonList("Module/suite+%2F+stuff"), paths);
     }
 
     @Test
@@ -160,26 +175,26 @@ public class ElmTestJsonProcessorTest {
         String text = "{\"event\":\"testCompleted\",\"status\":\"todo\",\"labels\":[\"Exploratory\",\"describe\"],\"failures\":[\"TODO comment\"],\"duration\":\"2\"}";
         JsonObject obj = getObject(text);
         assertEquals("TODO comment", getComment(obj));
-        assertEquals(null, getMessage(obj));
-        assertEquals(null, getExpected(obj));
-        assertEquals(null, getActual(obj));
+        assertNull(getMessage(obj));
+        assertNull(getExpected(obj));
+        assertNull(getActual(obj));
     }
 
     @Test
     public void fail() {
         String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"describe\",\"fail\"],\"failures\":[{\"given\":null,\"message\":\"boom\",\"reason\":{\"type\":\"custom\",\"data\":\"boom\"}}],\"duration\":\"1\"}";
         JsonObject obj = getObject(text);
-        assertEquals(null, getComment(obj));
+        assertNull(getComment(obj));
         assertEquals("boom", getMessage(obj));
-        assertEquals(null, getExpected(obj));
-        assertEquals(null, getActual(obj));
+        assertNull(getExpected(obj));
+        assertNull(getActual(obj));
     }
 
     @Test
     public void failEqual() {
         String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"describe\",\"duplicate nested\",\"ok1\"],\"failures\":[{\"given\":null,\"message\":\"Expect.equal\",\"reason\":{\"type\":\"custom\",\"data\":{\"expected\":\"\\\"value\\\"\",\"actual\":\"\\\"value2\\\"\",\"comparison\":\"Expect.equal\"}}}],\"duration\":\"2\"}";
         JsonObject obj = getObject(text);
-        assertEquals(null, getComment(obj));
+        assertNull(getComment(obj));
         assertEquals("Expect.equal", getMessage(obj));
         assertEquals("\"value\"", getExpected(obj));
         assertEquals("\"value2\"", getActual(obj));
@@ -189,17 +204,22 @@ public class ElmTestJsonProcessorTest {
     public void failHtml() {
         String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Exploratory\",\"Html tests 1\",\"... fails\"],\"failures\":[{\"given\":null,\"message\":\"▼ Query.fromHtml\\n\\n    <div class=\\\"container\\\">\\n        <button>\\n            I'm a button!\\n        </button>\\n    </div>\\n\\n\\n▼ Query.find [ tag \\\"button1\\\" ]\\n\\n0 matches found for this query.\\n\\n\\n✗ Query.find always expects to find 1 element, but it found 0 instead.\",\"reason\":{\"type\":\"custom\",\"data\":\"▼ Query.fromHtml\\n\\n    <div class=\\\"container\\\">\\n        <button>\\n            I'm a button!\\n        </button>\\n    </div>\\n\\n\\n▼ Query.find [ tag \\\"button1\\\" ]\\n\\n0 matches found for this query.\\n\\n\\n✗ Query.find always expects to find 1 element, but it found 0 instead.\"}}],\"duration\":\"15\"}";
         JsonObject obj = getObject(text);
-        assertEquals(null, getComment(obj));
-        assertTrue(getMessage(obj).contains("I'm a button!"));
-        assertEquals(null, getExpected(obj));
-        assertEquals(null, getActual(obj));
+        assertNull(getComment(obj));
+
+        String message = getMessage(obj);
+        assertNotNull(message);
+        assertTrue(message.contains("I'm a button!"));
+
+        assertNull(getExpected(obj));
+        assertNull(getActual(obj));
     }
 
     @Test
     public void failEqualLists() {
         String text = "{\"event\":\"testCompleted\",\"status\":\"fail\",\"labels\":[\"Deep.Exploratory\",\"Variuous Fails\",\"equalLists\"],\"failures\":[{\"given\":null,\"message\":\"Expect.equalLists\",\"reason\":{\"type\":\"custom\",\"data\":{\"expected\":[\"\\\"one\\\"\",\"\\\"expected\\\"\"],\"actual\":[\"\\\"one\\\"\",\"\\\"actual\\\"\"]}}}],\"duration\":\"1\"}\n";
         JsonObject obj = getObject(text);
-        assertEquals(null, getComment(obj));
+        assertNull(getComment(obj));
+        assertNull(getComment(obj));
         assertEquals("Expect.equalLists", getMessage(obj));
         assertEquals("[\n" +
                 "  \"\\\"one\\\"\",\n" +

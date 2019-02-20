@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,7 @@ public class LabelUtilsTest {
         Path to = toPath(Arrays.asList("Module", "suite", "test2"));
 
         Path parent = commonParent(from, to);
-        assertEquals("Module/suite", parent.toString());
+        assertEquals("Module/suite", pathString(parent));
     }
 
     @Test
@@ -77,10 +78,10 @@ public class LabelUtilsTest {
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
 
         Path parent = commonParent(from, to);
-        assertEquals("Module", parent.toString());
+        assertEquals("Module", pathString(parent));
 
         Path parent2 = commonParent(to, from);
-        assertEquals("Module", parent2.toString());
+        assertEquals("Module", pathString(parent2));
     }
 
     @Test
@@ -89,10 +90,10 @@ public class LabelUtilsTest {
         Path to = toPath(Arrays.asList("Module", "suite2", "test2"));
 
         Path parent = commonParent(from, to);
-        assertEquals("Module", parent.toString());
+        assertEquals("Module", pathString(parent));
 
         Path parent2 = commonParent(to, from);
-        assertEquals("Module", parent2.toString());
+        assertEquals("Module", pathString(parent2));
     }
 
     @Test
@@ -101,18 +102,18 @@ public class LabelUtilsTest {
         Path to = toPath(Arrays.asList("Module2", "suite2", "test2"));
 
         Path parent = commonParent(from, to);
-        assertEquals("", parent.toString());
+        assertEquals("", pathString(parent));
     }
 
     @Test
     public void parentPaths() {
         Path path = toPath(Arrays.asList("Module", "suite", "test"));
-        Path parent = toPath(Arrays.asList("Module"));
+        Path parent = toPath(Collections.singletonList("Module"));
 
         List<String> parents = subParents(path, parent)
-                .map(Path::toString)
+                .map(LabelUtils::pathString)
                 .collect(Collectors.toList());
-        assertEquals(Arrays.asList("Module/suite"), parents);
+        assertEquals(Collections.singletonList("Module/suite"), parents);
     }
 
     @Test

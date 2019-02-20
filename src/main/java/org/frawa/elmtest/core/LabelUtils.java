@@ -54,6 +54,10 @@ public class LabelUtils {
         );
     }
 
+    static String pathString(Path path) {
+        return FileUtil.toSystemIndependentName(path.toString());
+    }
+
     public static String getName(Path path) {
         return decodeLabel(path.getFileName());
     }
