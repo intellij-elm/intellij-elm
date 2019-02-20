@@ -1,6 +1,7 @@
 package org.frawa.elmtest.core;
 
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.io.FileUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -15,16 +16,16 @@ import java.util.stream.Stream;
 public class LabelUtils {
     public static final String ELM_TEST_PROTOCOL = "elmTest";
     public static final String DESCRIBE_PROTOCOL = ELM_TEST_PROTOCOL + "Describe";
-    public static final String TEST_PROTOCOL = ELM_TEST_PROTOCOL + "Test";
+    private static final String TEST_PROTOCOL = ELM_TEST_PROTOCOL + "Test";
     public static final String ERROR_PROTOCOL = ELM_TEST_PROTOCOL + "Error";
 
     final static Path EMPTY_PATH = Paths.get("");
 
-    static String getModuleName(Path path) {
+    private static String getModuleName(Path path) {
         return path.getName(0).toString();
     }
 
-    static String encodeLabel(String label) {
+    private static String encodeLabel(String label) {
         try {
             return URLEncoder.encode(label, "utf8");
         } catch (UnsupportedEncodingException e) {
@@ -40,7 +41,7 @@ public class LabelUtils {
         }
     }
 
-    public static Path toPath(List<String> labels) {
+    static Path toPath(List<String> labels) {
         List<String> encoded = labels.stream()
                 .map(LabelUtils::encodeLabel)
                 .collect(Collectors.toList());
@@ -57,16 +58,16 @@ public class LabelUtils {
         return decodeLabel(path.getFileName());
     }
 
-    public static String toSuiteLocationUrl(Path path) {
+    static String toSuiteLocationUrl(Path path) {
         return toLocationUrl(DESCRIBE_PROTOCOL, path);
     }
 
-    public static String toTestLocationUrl(Path path) {
+    static String toTestLocationUrl(Path path) {
         return toLocationUrl(TEST_PROTOCOL, path);
     }
 
     private static String toLocationUrl(String protocol, Path path) {
-        return String.format("%s://%s", protocol, path.toString());
+        return String.format("%s://%s", protocol, FileUtil.toSystemIndependentName(path.toString()));
     }
 
     public static Pair<String, String> fromLocationUrlPath(String path) {
@@ -120,7 +121,7 @@ public class LabelUtils {
 //                .takeWile(current -> !current.equals(excludeParent));
     }
 
-    public static String toErrorLocationUrl(String path, int line, int column) {
+    static String toErrorLocationUrl(String path, int line, int column) {
         return String.format("%s://%s::%d::%d", ERROR_PROTOCOL, path, line, column);
     }
 
