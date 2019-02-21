@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import org.elm.workspace.ElmProject;
 import org.elm.workspace.ElmWorkspaceService;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,7 @@ public class ElmProjectHelper {
 
     public Stream<String> allNames() {
         return workspaceService.getAllProjects().stream()
+                .filter(p -> Files.exists(p.getProjectDirPath().resolve("tests")))
                 .map(ElmProject::getPresentableName);
     }
 

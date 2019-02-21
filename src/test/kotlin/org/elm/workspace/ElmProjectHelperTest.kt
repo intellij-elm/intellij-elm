@@ -16,6 +16,12 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         checkEquals(Arrays.asList("a", "b"), ElmProjectHelper(project).allNames().toList())
     }
 
+    fun `test all names, with tests`() {
+        testProjectWithoutTests()
+
+        checkEquals(Arrays.asList("a"), ElmProjectHelper(project).allNames().toList())
+    }
+
     fun `test by index`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
@@ -35,64 +41,21 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
     }
 
     private fun testProject(): TestProject {
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         val testProject = fileTree {
             dir("a") {
-                project("elm.json", """
-                        {
-                            "type": "application",
-                            "source-directories": [ "src", "vendor" ],
-                            "elm-version": "0.19.0",
-                            "dependencies": {
-                                "direct": {
-                                    "elm/core": "1.0.0",
-                                    "elm/html": "1.0.0"
-                                },
-                                "indirect": {
-                                    "elm/virtual-dom": "1.0.2"
-                                }
-                             },
-                            "test-dependencies": {
-                                "direct": {
-                                    "elm-explorations/test": "1.0.0"
-                                },
-                                "indirect": {
-                                    "elm/random": "1.0.0"
-                                }
-                            }
-                        }
-                        """)
+                project("elm.json", elmJson)
                 dir("src") {
                     elm("Main.elm", "")
                 }
+                dir("tests") {
+                }
             }
             dir("b") {
-                project("elm.json", """
-                        {
-                            "type": "application",
-                            "source-directories": [ "src", "vendor" ],
-                            "elm-version": "0.19.0",
-                            "dependencies": {
-                                "direct": {
-                                    "elm/core": "1.0.0",
-                                    "elm/html": "1.0.0"
-                                },
-                                "indirect": {
-                                    "elm/virtual-dom": "1.0.2"
-                                }
-                             },
-                            "test-dependencies": {
-                                "direct": {
-                                    "elm-explorations/test": "1.0.0"
-                                },
-                                "indirect": {
-                                    "elm/random": "1.0.0"
-                                }
-                            }
-                        }
-                        """)
+                project("elm.json", elmJson)
                 dir("src") {
                     elm("MainB.elm", "")
+                }
+                dir("tests") {
                 }
             }
         }.create(project, elmWorkspaceDirectory)
@@ -106,5 +69,54 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         return testProject
     }
 
+    private fun testProjectWithoutTests(): TestProject {
+        val testProject = fileTree {
+            dir("a") {
+                project("elm.json", elmJson)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+                dir("tests") {
+                }
+            }
+            dir("c-without") {
+                project("elm.json", elmJson)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
+            asyncAttachElmProject(rootPath.resolve("c-without/elm.json")).get()
+        }
+
+        return testProject
+    }
+
+    val elmJson = """
+                        {
+                            "type": "application",
+                            "source-directories": [ "src" ],
+                            "elm-version": "0.19.0",
+                            "dependencies": {
+                                "direct": {
+                                    "elm/core": "1.0.0",
+                                    "elm/html": "1.0.0"
+                                },
+                                "indirect": {
+                                    "elm/virtual-dom": "1.0.2"
+                                }
+                             },
+                            "test-dependencies": {
+                                "direct": {
+                                },
+                                "indirect": {
+                                }
+                            }
+                        }
+                        """
 
 }
