@@ -49,6 +49,10 @@ The plugin also performs type checking, marking incompatible types in red.
 The current implementation of the type system does not infer the types of parameters of unannotated
 functions, but this limitation will be removed in the future.
 
+# GLSL integration
+
+If you install the [GLSL language plugin](https://plugins.jetbrains.com/plugin/6993-glsl-support),
+all of its features will be available in GLSL code blocks in your Elm files.
 
 # Creating a new Elm project
 

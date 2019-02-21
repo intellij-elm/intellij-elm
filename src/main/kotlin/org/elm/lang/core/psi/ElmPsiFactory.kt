@@ -118,6 +118,10 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("foo = x $text y", OPERATOR_IDENTIFIER)
                     ?: error("Invalid operator identifier: `$text`")
 
+    fun createGlslExpr(text: String): ElmGlslCodeExpr =
+            createFromText("foo = x $text y")
+                    ?: error("Invalid glsl expression: `$text`")
+
     fun createImport(moduleName: String, alias: String?): ElmImportClause {
         val asClause = if (alias != null) " as $alias" else ""
         return createFromText("import $moduleName$asClause")
