@@ -30,7 +30,6 @@ import org.jetbrains.annotations.SystemIndependent;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
 public class ElmTestRunProfileState extends CommandLineState {
 
@@ -45,24 +44,22 @@ public class ElmTestRunProfileState extends CommandLineState {
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
         ElmWorkspaceService workspaceService = ServiceManager.getService(getEnvironment().getProject(), ElmWorkspaceService.class);
+
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
+        Path elmTestBinary = toolchain != null ? toolchain.getElmTestPath() : null;
+        Path elmCompilerBinary = toolchain != null ? toolchain.getElmCompilerPath() : null;
+        if (toolchain == null || elmTestBinary == null || elmCompilerBinary == null) {
+            throw new ExecutionException("could not find elm-test");
+        }
 
         String elmFolder = getElmFolder();
-        Path elmTestBinary = Objects.requireNonNull(toolchain).getElmTestPath();
-        Path elmCompilerBinary = toolchain.getElmCompilerPath();
-
-        GeneralCommandLine commandLine = elmTestBinary != null
-                ? new GeneralCommandLine(elmTestBinary.toString(), "--report=json")
-                : new GeneralCommandLine("/bin/sh", "-i", "-c", "elm-test --report=json");
+        GeneralCommandLine commandLine = new GeneralCommandLine(elmTestBinary.toString(), "--report=json");
 
         commandLine
                 .withWorkDirectory(elmFolder)
+                .withParameters("--compiler", elmCompilerBinary.toString())
                 .withRedirectErrorStream(true)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE);
-
-        if (elmTestBinary != null && elmCompilerBinary != null) {
-            commandLine.withParameters("--compiler", elmCompilerBinary.toString());
-        }
 
         FileDocumentManager.getInstance().saveAllDocuments();
         return new ColoredProcessHandler(commandLine);
