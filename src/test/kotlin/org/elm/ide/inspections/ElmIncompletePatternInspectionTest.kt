@@ -99,7 +99,7 @@ type Msg a b
     | MsgTwo (Maybe (Maybe Foo))
     | MsgThree b a
     | MsgFour {x: ()}
-    | MsgFive (x, y)
+    | MsgFive (a, b)
     | MsgSix (Msg () ())
 
 foo : Msg a b -> ()
@@ -114,7 +114,7 @@ type Msg a b
     | MsgTwo (Maybe (Maybe Foo))
     | MsgThree b a
     | MsgFour {x: ()}
-    | MsgFive (x, y)
+    | MsgFive (a, b)
     | MsgSix (Msg () ())
 
 foo : Msg a b -> ()
@@ -132,7 +132,7 @@ foo it =
         MsgFour record ->
             --EOL
 
-        MsgFive (x, y) ->
+        MsgFive (a, b) ->
             --EOL
 
         MsgSix msg ->
