@@ -25,6 +25,9 @@ public class ElmTestJsonProcessor {
     public List<TreeNodeEvent> accept(String text) {
         try {
             JsonObject obj = gson.fromJson(text, JsonObject.class);
+            if (obj == null) {
+                return null;
+            }
             JsonElement type = obj.get("type");
             if (type != null && "compile-errors".equals(type.getAsString())) {
                 return accept(toCompileErrors(obj));
@@ -159,10 +162,11 @@ public class ElmTestJsonProcessor {
     }
 
     static private JsonObject getData(JsonObject obj) {
-        return getReason(obj) != null
-                ? getReason(obj).get("data") != null
-                ? getReason(obj).get("data").isJsonObject()
-                ? getReason(obj).get("data").getAsJsonObject()
+        JsonObject reason = getReason(obj);
+        return reason != null
+                ? reason.get("data") != null
+                ? reason.get("data").isJsonObject()
+                ? reason.get("data").getAsJsonObject()
                 : null
                 : null
                 : null;
@@ -177,8 +181,9 @@ public class ElmTestJsonProcessor {
     }
 
     private static JsonElement getDataMember(JsonObject obj, String name) {
-        return getData(obj) != null
-                ? getData(obj).get(name)
+        JsonObject data = getData(obj);
+        return data != null
+                ? data.get(name)
                 : null;
     }
 
@@ -219,7 +224,7 @@ public class ElmTestJsonProcessor {
 
     private List<TreeNodeEvent> accept(CompileErrors compileErrors) {
         return compileErrors.errors.stream()
-                .flatMap(error -> toErrorEvents(error))
+                .flatMap(this::toErrorEvents)
                 .collect(Collectors.toList());
     }
 
