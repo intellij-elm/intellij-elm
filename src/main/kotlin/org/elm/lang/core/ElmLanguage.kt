@@ -7,7 +7,7 @@ import com.intellij.openapi.fileTypes.LanguageFileType
 import org.elm.ide.icons.ElmIcons
 
 
-object ElmLanguage : Language("Elm")
+object ElmLanguage : Language("Elm", "text/elm", "text/x-elm", "application/x-elm")
 
 
 object ElmFileType : LanguageFileType(ElmLanguage) {
