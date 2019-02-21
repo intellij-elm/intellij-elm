@@ -103,11 +103,8 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
                             "elm-version": "0.19.0",
                             "dependencies": {
                                 "direct": {
-                                    "elm/core": "1.0.0",
-                                    "elm/html": "1.0.0"
                                 },
                                 "indirect": {
-                                    "elm/virtual-dom": "1.0.2"
                                 }
                              },
                             "test-dependencies": {
