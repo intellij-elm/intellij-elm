@@ -18,6 +18,7 @@ import com.intellij.execution.testframework.sm.runner.events.*;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.elm.workspace.ElmToolchain;
@@ -63,6 +64,7 @@ public class ElmTestRunProfileState extends CommandLineState {
             commandLine.withParameters("--compiler", elmCompilerBinary.toString());
         }
 
+        FileDocumentManager.getInstance().saveAllDocuments();
         return new ColoredProcessHandler(commandLine);
     }
 
