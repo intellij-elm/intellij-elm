@@ -394,4 +394,10 @@ public class ElmTestJsonProcessorTest {
         assertEquals("TOO FEW ARGS", list.get(0).getName());
         assertEquals("TOO FEW ARGS", list.get(1).getName());
     }
+
+    @Test
+    public void acceptEmptyText() {
+        List<TreeNodeEvent> list = processor.accept("");
+        assertNull(list);
+    }
 }
