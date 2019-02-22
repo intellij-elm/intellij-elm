@@ -226,6 +226,7 @@
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex"/>
 
         <multiHostInjector implementation="org.elm.ide.injection.ElmGlslInjector"/>
+        <multiHostInjector implementation="org.elm.ide.injection.ElmRegexInjector"/>
 
         <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext"/>
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider"/>
