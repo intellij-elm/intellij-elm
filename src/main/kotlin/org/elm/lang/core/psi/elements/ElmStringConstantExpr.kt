@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
 import org.elm.ide.injection.ElmStringEscaper
 import org.elm.lang.core.psi.*
+import org.intellij.lang.annotations.Language
 
 
 /** A literal string. e.g. `""` or `"""a"b"""` */
