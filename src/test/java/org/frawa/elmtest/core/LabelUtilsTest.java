@@ -64,6 +64,16 @@ public class LabelUtilsTest {
     }
 
     @Test
+    public void useLocationModuleOnly() {
+        String url = toTestLocationUrl(toPath(Collections.singletonList("Module")));
+        String urlPath = url.substring(url.indexOf("://") + 3);
+
+        Pair<String, String> pair = fromLocationUrlPath(urlPath);
+        assertEquals("tests/Module.elm", pair.first);
+        assertEquals("", pair.second);
+    }
+
+    @Test
     public void commonParentSameSuite() {
         Path from = toPath(Arrays.asList("Module", "suite", "test"));
         Path to = toPath(Arrays.asList("Module", "suite", "test2"));
