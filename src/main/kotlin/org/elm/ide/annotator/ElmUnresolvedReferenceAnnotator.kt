@@ -97,6 +97,11 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             return true
         }
 
+        // Ignore soft refs
+        if (ref.isSoft) {
+            return true
+        }
+
         return false
     }
 

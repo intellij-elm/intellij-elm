@@ -119,4 +119,17 @@ foo user =
         --^unresolved
 """)
 
+
+    fun `test variable in union type`() = checkByCode(
+            """
+type Page a = Home a
+        --X      --^
+""")
+
+
+    fun `test variable in a record type alias`() = checkByCode(
+            """
+type alias User details = { name : String, extra : details }
+                --X                                --^
+""")
 }
