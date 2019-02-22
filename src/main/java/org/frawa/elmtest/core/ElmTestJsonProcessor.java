@@ -67,6 +67,9 @@ public class ElmTestJsonProcessor {
             if (text.contains("Compilation failed")) {
                 String json = text.substring(0, text.lastIndexOf("Compilation failed"));
                 JsonObject obj = gson.fromJson(json, JsonObject.class);
+                if (obj == null) {
+                    return null;
+                }
                 JsonElement type = obj.get("type");
                 if (type != null && "compile-errors".equals(type.getAsString())) {
                     return accept(toCompileErrors(obj));

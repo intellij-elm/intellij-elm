@@ -400,4 +400,10 @@ public class ElmTestJsonProcessorTest {
         List<TreeNodeEvent> list = processor.accept("");
         assertNull(list);
     }
+
+    @Test
+    public void acceptCompileErrorWithoutJson() {
+        List<TreeNodeEvent> list = processor.accept("Compilation failed BLA");
+        assertNull(list);
+    }
 }
