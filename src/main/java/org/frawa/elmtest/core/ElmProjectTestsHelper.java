@@ -4,39 +4,44 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import org.elm.workspace.ElmProject;
 import org.elm.workspace.ElmWorkspaceService;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class ElmProjectHelper {
+public class ElmProjectTestsHelper {
 
     private final ElmWorkspaceService workspaceService;
 
-    public ElmProjectHelper(Project project) {
+    public ElmProjectTestsHelper(Project project) {
         workspaceService = ServiceManager.getService(project, ElmWorkspaceService.class);
     }
 
     public Stream<String> allNames() {
-        return workspaceService.getAllProjects().stream()
-                .filter(p -> Files.exists(p.getProjectDirPath().resolve("tests")))
+        return getTestableProjects()
                 .map(ElmProject::getPresentableName);
     }
 
-    public Optional<String> nameByProjectDirPath(String path) {
+    @NotNull
+    private Stream<ElmProject> getTestableProjects() {
         return workspaceService.getAllProjects().stream()
+                .filter(p -> Files.exists(p.getProjectDirPath().resolve("tests")));
+    }
+
+    public Optional<String> nameByProjectDirPath(String path) {
+        return getTestableProjects()
                 .filter(p -> p.getProjectDirPath().toString().equals(path))
                 .map(ElmProject::getPresentableName)
                 .findFirst();
     }
 
-    public Optional<String> projectDirPathByIndex(int index) {
-        List<ElmProject> allProjects = workspaceService.getAllProjects();
-        ElmProject project = 0 <= index && index < allProjects.size() ? allProjects.get(index) : null;
-        return Optional.ofNullable(project)
+    public Optional<String> projectDirPathByName(String name) {
+        return getTestableProjects()
+                .filter(p -> p.getPresentableName().equals(name))
                 .map(ElmProject::getProjectDirPath)
-                .map(Path::toString);
+                .map(Path::toString)
+                .findFirst();
     }
 }

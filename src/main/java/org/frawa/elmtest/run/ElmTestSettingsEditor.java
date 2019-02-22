@@ -16,18 +16,18 @@ package org.frawa.elmtest.run;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import org.frawa.elmtest.core.ElmProjectHelper;
+import org.frawa.elmtest.core.ElmProjectTestsHelper;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguration> {
-    private final ElmProjectHelper helper;
+    private final ElmProjectTestsHelper helper;
     private JPanel myPanel;
     private ComboBox<String> projectChooser;
 
     ElmTestSettingsEditor(Project project) {
-        helper = new ElmProjectHelper(project);
+        helper = new ElmProjectTestsHelper(project);
         helper
                 .allNames()
                 .forEach(projectChooser::addItem);
@@ -48,9 +48,9 @@ public class ElmTestSettingsEditor extends SettingsEditor<ElmTestRunConfiguratio
 
     @Override
     protected void applyEditorTo(@NotNull ElmTestRunConfiguration configuration) {
-        int index = projectChooser.getSelectedIndex();
-        if (index >= 0) {
-            configuration.options.elmFolder = helper.projectDirPathByIndex(index).orElse(null);
+        String name = (String) projectChooser.getSelectedItem();
+        if (name != null) {
+            configuration.options.elmFolder = helper.projectDirPathByName(name).orElse(null);
         }
     }
 }
