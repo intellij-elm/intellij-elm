@@ -45,7 +45,6 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
 
     static class Options {
         String elmFolder;
-        String elmTestBinary;
     }
 
     @Nullable
@@ -62,9 +61,6 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
         if (options.elmFolder != null) {
             e.setAttribute("elm-folder", options.elmFolder);
         }
-        if (options.elmTestBinary != null) {
-            e.setAttribute("elm-test-binary", options.elmTestBinary);
-        }
         element.addContent(e);
     }
 
@@ -79,12 +75,6 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
             result.elmFolder = null;
             if (elmFolderAttr != null) {
                 result.elmFolder = elmFolderAttr.getValue();
-            }
-
-            Attribute elmTestBinAttr = optionsElement.getAttribute("elm-test-binary");
-            result.elmTestBinary = null;
-            if (elmTestBinAttr != null) {
-                result.elmTestBinary = elmTestBinAttr.getValue();
             }
         }
         return result;
