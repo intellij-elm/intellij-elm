@@ -218,6 +218,9 @@
 
         <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext"/>
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider"/>
+
+        <configurationType implementation="org.frawa.elmtest.run.ElmTestRunConfigurationType"/>
+        <programRunner implementation="org.frawa.elmtest.run.ElmTestProgramRunner"/>
     </extensions>
 
     <project-components>
