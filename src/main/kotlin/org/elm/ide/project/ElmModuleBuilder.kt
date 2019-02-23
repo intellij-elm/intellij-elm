@@ -125,7 +125,7 @@ private class ElmProjectWizardStep(val context: WizardContext) : ModuleWizardSte
             // prompted later to complete configuration.
 
             val project = module.project
-            if (project.elmToolchain == null) {
+            if (!project.elmToolchain.looksLikeValidToolchain()) {
                 log.debug("Begin auto-discover the toolchain")
                 try {
                     asyncAutoDiscoverWorkspace(project, explicitRequest = true).get()
@@ -135,19 +135,17 @@ private class ElmProjectWizardStep(val context: WizardContext) : ModuleWizardSte
                 log.debug("Finished auto-discover: toolchain=${project.elmToolchain}")
             }
 
-            if (project.elmToolchain != null) {
-                log.debug("Attempting to attach the Elm project")
-                // `asyncAutoDiscoverWorkspace` *should* find and attach any `elm.json` files,
-                // but at this point in the "new project" lifecycle, the IntelliJ Module has not
-                // yet been added to the IntelliJ project. And since the auto-discover workspace
-                // feature uses the content roots of each module in the project to recursively
-                // search for `elm.json` files, it will not have found anything.
-                //
-                // TODO check if there's a better lifecycle hook so that we don't need to do this here.
-                //
-                // IMPORTANT: do *not* block on completion of the future (deadlock risk).
-                project.elmWorkspace.asyncAttachElmProject(root.pathAsPath.resolve("elm.json"))
-            }
+            log.debug("Attempting to attach the Elm project")
+            // `asyncAutoDiscoverWorkspace` *should* find and attach any `elm.json` files,
+            // but at this point in the "new project" lifecycle, the IntelliJ Module has not
+            // yet been added to the IntelliJ project. And since the auto-discover workspace
+            // feature uses the content roots of each module in the project to recursively
+            // search for `elm.json` files, it will not have found anything.
+            //
+            // TODO check if there's a better lifecycle hook so that we don't need to do this here.
+            //
+            // IMPORTANT: do *not* block on completion of the future (deadlock risk).
+            project.elmWorkspace.asyncAttachElmProject(root.pathAsPath.resolve("elm.json"))
         }
     }
 

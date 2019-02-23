@@ -86,16 +86,24 @@ class ElmWorkspaceService(
 
 
     /* A nice view of the settings to the outside world */
-    data class Settings(val toolchain: ElmToolchain?)
+    data class Settings(val toolchain: ElmToolchain)
 
     /* Representation of settings suitable for editor UI and serialization */
-    data class RawSettings(val binDirPath: String? = null, val isElmFormatOnSaveEnabled: Boolean = DEFAULT_FORMAT_ON_SAVE)
+    data class RawSettings(
+            val elmCompilerPath: String = "",
+            val elmFormatPath: String = "",
+            val isElmFormatOnSaveEnabled: Boolean = DEFAULT_FORMAT_ON_SAVE
+    )
 
 
     val settings: Settings
         get() {
             val raw = rawSettingsRef.get()
-            return Settings(toolchain = raw.binDirPath?.let { ElmToolchain(it, raw.isElmFormatOnSaveEnabled) })
+            val toolchain = ElmToolchain(
+                    elmCompilerPath = raw.elmCompilerPath,
+                    elmFormatPath = raw.elmFormatPath,
+                    isElmFormatOnSaveEnabled = raw.isElmFormatOnSaveEnabled)
+            return Settings(toolchain = toolchain)
         }
 
 
@@ -115,10 +123,11 @@ class ElmWorkspaceService(
     }
 
 
-    fun useToolchain(toolchain: ElmToolchain?) {
+    fun useToolchain(toolchain: ElmToolchain) {
         modifySettings {
-            it.copy(binDirPath = toolchain?.binDirPath.toString(),
-                    isElmFormatOnSaveEnabled = toolchain?.isElmFormatOnSaveEnabled ?: ElmToolchain.DEFAULT_FORMAT_ON_SAVE)
+            it.copy(elmCompilerPath = toolchain.elmCompilerPath.toString(),
+                    elmFormatPath = toolchain.elmFormatPath.toString(),
+                    isElmFormatOnSaveEnabled = toolchain.isElmFormatOnSaveEnabled)
         }
     }
 
@@ -177,10 +186,7 @@ class ElmWorkspaceService(
      */
     private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val toolchain = settings.toolchain
-                        ?: throw ProjectLoadException("Elm toolchain not configured")
-
-                ElmProject.parse(manifestPath, toolchain)
+                ElmProject.parse(manifestPath, settings.toolchain)
             }.whenComplete { _, error ->
                 // log the result
                 if (error == null) {
@@ -337,7 +343,8 @@ class ElmWorkspaceService(
         val settingsElement = Element("settings")
         state.addContent(settingsElement)
         val raw = rawSettingsRef.get()
-        settingsElement.setAttribute("binDirPath", raw.binDirPath ?: "")
+        settingsElement.setAttribute("elmCompilerPath", raw.elmCompilerPath)
+        settingsElement.setAttribute("elmFormatPath", raw.elmFormatPath)
         settingsElement.setAttribute("isElmFormatOnSaveEnabled", raw.isElmFormatOnSaveEnabled.toString())
 
         return state
@@ -355,13 +362,20 @@ class ElmWorkspaceService(
     fun asyncLoadState(state: Element): CompletableFuture<Unit> {
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")
-        val binDirPath = settingsElement.getAttributeValue("binDirPath").takeIf { it.isNotBlank() }
+        val elmCompilerPath = settingsElement.getAttributeValue("elmCompilerPath") ?: ""
+        val elmFormatPath = settingsElement.getAttributeValue("elmFormatPath") ?: ""
         val isElmFormatOnSaveEnabled = settingsElement
                 .getAttributeValue("isElmFormatOnSaveEnabled")
                 .takeIf { it != null && it.isNotBlank() }?.toBoolean()
                 ?: ElmToolchain.DEFAULT_FORMAT_ON_SAVE
 
-        modifySettings(notify = false) { RawSettings(binDirPath = binDirPath, isElmFormatOnSaveEnabled = isElmFormatOnSaveEnabled) }
+        modifySettings(notify = false) {
+            RawSettings(
+                    elmCompilerPath = elmCompilerPath,
+                    elmFormatPath = elmFormatPath,
+                    isElmFormatOnSaveEnabled = isElmFormatOnSaveEnabled
+            )
+        }
 
         // Ensure that `elm-stuff` directories are always excluded so that they don't pollute open-by-filename, etc.
         intellijProject.modules
@@ -439,13 +453,11 @@ fun asyncAutoDiscoverWorkspace(project: Project, explicitRequest: Boolean = fals
         if (alreadyTried) return CompletableFuture.completedFuture(Unit)
     }
 
-    val toolchain = project.elmToolchain?.takeIf { it.looksLikeValidToolchain() }
-    if (toolchain == null) {
-        ElmToolchain.suggest(project)
-                ?.let {
-                    project.elmWorkspace.useToolchain(it)
-                    project.showBalloon("Using Elm at ${it.presentableLocation}", NotificationType.INFORMATION)
-                }
+    val toolchain = project.elmToolchain
+    val suggestedToolchain = toolchain.autoDiscoverAll(project)
+    if (suggestedToolchain != toolchain) {
+        project.elmWorkspace.useToolchain(suggestedToolchain)
+        project.showBalloon("Using Elm at ${suggestedToolchain.presentableLocation}", NotificationType.INFORMATION)
     }
 
     return if (!project.elmWorkspace.hasAtLeastOneValidProject()) {
@@ -467,5 +479,5 @@ val Project.elmSettings
     get() = elmWorkspace.settings
 
 
-val Project.elmToolchain: ElmToolchain?
+val Project.elmToolchain: ElmToolchain
     get() = elmSettings.toolchain

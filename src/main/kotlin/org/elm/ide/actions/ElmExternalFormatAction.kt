@@ -34,7 +34,7 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
-        val elmFormat = ctx.project.elmToolchain?.elmFormat
+        val elmFormat = ctx.project.elmToolchain.elmFormatCLI
         if (elmFormat == null) {
             ctx.project.showBalloon("could not find elm-format", NotificationType.ERROR)
             return

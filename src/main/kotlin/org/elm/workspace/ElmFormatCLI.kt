@@ -4,18 +4,19 @@ import com.intellij.execution.ExecutionException
 import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.lang.core.psi.ElmFile
-import org.elm.openapiext.GeneralCommandLine
-import org.elm.openapiext.execute
-import org.elm.openapiext.isSuccess
-import org.elm.openapiext.toPsiFile
+import org.elm.openapiext.*
 import java.nio.file.Path
 
-class ElmFormatCLI(val elmFormatExecutablePath: Path) {
+private val log = logger<ElmFormatCLI>()
+
+
+class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
 
     private fun getFormattedContentOfDocument(elmVersion: Version, document: Document): ProcessOutput {
         val arguments = listOf(
@@ -28,6 +29,7 @@ class ElmFormatCLI(val elmFormatExecutablePath: Path) {
                 .withParameters(arguments)
                 .execute(document.text)
     }
+
 
     fun formatDocumentAndSetText(project: Project, document: Document, version: Version, addToUndoStack: Boolean) {
 
@@ -57,8 +59,36 @@ class ElmFormatCLI(val elmFormatExecutablePath: Path) {
     }
 
 
-    companion object {
+    fun queryVersion(): Result<Version> {
+        // Output of `elm-format` is multiple lines where the first line is 'elm-format 0.8.1'
+        val versionRegex = Regex("elm-format (\\d+(?:\\.\\d+){2})")
 
+        val firstLine = try {
+            GeneralCommandLine(elmFormatExecutablePath)
+                    .execute(timeoutInMilliseconds = 1500)
+                    .stdoutLines
+                    .firstOrNull()
+        } catch (e: ExecutionException) {
+            return Result.Err("failed to run elm-format: ${e.message}")
+        }
+
+        if (firstLine == null) {
+            return Result.Err("no output from elm-format")
+        }
+
+        val matchResult = versionRegex.matchEntire(firstLine)
+                ?: return Result.Err("could not find version in first line of elm-format output: ${firstLine}")
+
+        val (elmVersionString) = matchResult.destructured
+
+        return try {
+            Result.Ok(Version.parse(elmVersionString))
+        } catch (e: ParseException) {
+            Result.Err("invalid elm-format version: ${e.message}")
+        }
+    }
+
+    companion object {
         fun getElmVersion(project: Project, file: VirtualFile): Version? {
             val psiFile = (file.toPsiFile(project) as? ElmFile) ?: return null
 
