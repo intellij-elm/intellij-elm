@@ -19,6 +19,10 @@ public class ElmProjectTestsHelper {
         workspaceService = ServiceManager.getService(project, ElmWorkspaceService.class);
     }
 
+    public static boolean isElmProject(String candidate, Project project) {
+        return new ElmProjectTestsHelper(project).nameByProjectDirPath(candidate).isPresent();
+    }
+
     public Stream<String> allNames() {
         return getTestableProjects()
                 .map(ElmProject::getPresentableName);

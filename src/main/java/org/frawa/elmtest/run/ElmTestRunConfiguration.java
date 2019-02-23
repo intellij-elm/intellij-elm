@@ -2,9 +2,8 @@ package org.frawa.elmtest.run;
 
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.execution.configurations.LocatableConfigurationBase;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.execution.configurations.RunConfigurationBase;
-import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
@@ -16,10 +15,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.frawa.elmtest.run.ElmTestConfigurationFactory.RUN_ICON;
 
-public class ElmTestRunConfiguration extends RunConfigurationBase {
+public class ElmTestRunConfiguration extends LocatableConfigurationBase<ElmTestRunProfileState> {
 
     Options options = new Options();
 
@@ -39,7 +40,7 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
 
     @Nullable
     @Override
-    public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment executionEnvironment) {
+    public ElmTestRunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment executionEnvironment) {
         return new ElmTestRunProfileState(executionEnvironment, this);
     }
 
@@ -88,5 +89,15 @@ public class ElmTestRunConfiguration extends RunConfigurationBase {
     @Override
     public void writeExternal(@NotNull Element element) throws WriteExternalException {
         writeOptions(this.options, element);
+    }
+
+    @Nullable
+    @Override
+    public String suggestedName() {
+        if (options.elmFolder == null) {
+            return null;
+        }
+        Path elmProjectName = Paths.get(options.elmFolder).getFileName();
+        return elmProjectName != null ? "Tests in " + elmProjectName.toString() : null;
     }
 }
