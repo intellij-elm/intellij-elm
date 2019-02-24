@@ -2,7 +2,7 @@ package org.frawa.elmtest.run;
 
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
-import com.intellij.openapi.module.Module;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -43,8 +43,10 @@ public class ElmTestRunConfigurationProducer extends RunConfigurationProducer<El
         return Optional
                 .ofNullable(context)
                 .map(ConfigurationContext::getModule)
-                .map(Module::getModuleFile)
-                .map(VirtualFile::getParent)
+                .map(ModuleRootManager::getInstance)
+                .map(ModuleRootManager::getContentRoots)
+                .filter(roots -> roots.length == 1)
+                .map(roots -> roots[0])
                 .map(VirtualFile::getPath)
                 .filter(candidate -> ElmProjectTestsHelper.isElmProject(candidate, context.getProject()));
     }
