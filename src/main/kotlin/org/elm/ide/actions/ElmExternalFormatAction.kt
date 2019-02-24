@@ -14,8 +14,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
-import org.elm.workspace.ElmFormatCLI
 import org.elm.workspace.Version
+import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.elmToolchain
 
 

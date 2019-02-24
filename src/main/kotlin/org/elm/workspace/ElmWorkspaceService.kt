@@ -92,6 +92,7 @@ class ElmWorkspaceService(
     data class RawSettings(
             val elmCompilerPath: String = "",
             val elmFormatPath: String = "",
+            val elmTestPath: String = "",
             val isElmFormatOnSaveEnabled: Boolean = DEFAULT_FORMAT_ON_SAVE
     )
 
@@ -102,6 +103,7 @@ class ElmWorkspaceService(
             val toolchain = ElmToolchain(
                     elmCompilerPath = raw.elmCompilerPath,
                     elmFormatPath = raw.elmFormatPath,
+                    elmTestPath = raw.elmTestPath,
                     isElmFormatOnSaveEnabled = raw.isElmFormatOnSaveEnabled)
             return Settings(toolchain = toolchain)
         }
@@ -127,6 +129,7 @@ class ElmWorkspaceService(
         modifySettings {
             it.copy(elmCompilerPath = toolchain.elmCompilerPath.toString(),
                     elmFormatPath = toolchain.elmFormatPath.toString(),
+                    elmTestPath = toolchain.elmTestPath.toString(),
                     isElmFormatOnSaveEnabled = toolchain.isElmFormatOnSaveEnabled)
         }
     }
@@ -345,6 +348,7 @@ class ElmWorkspaceService(
         val raw = rawSettingsRef.get()
         settingsElement.setAttribute("elmCompilerPath", raw.elmCompilerPath)
         settingsElement.setAttribute("elmFormatPath", raw.elmFormatPath)
+        settingsElement.setAttribute("elmTestPath", raw.elmTestPath)
         settingsElement.setAttribute("isElmFormatOnSaveEnabled", raw.isElmFormatOnSaveEnabled.toString())
 
         return state
@@ -364,6 +368,7 @@ class ElmWorkspaceService(
         val settingsElement = state.getChild("settings")
         val elmCompilerPath = settingsElement.getAttributeValue("elmCompilerPath") ?: ""
         val elmFormatPath = settingsElement.getAttributeValue("elmFormatPath") ?: ""
+        val elmTestPath = settingsElement.getAttributeValue("elmTestPath") ?: ""
         val isElmFormatOnSaveEnabled = settingsElement
                 .getAttributeValue("isElmFormatOnSaveEnabled")
                 .takeIf { it != null && it.isNotBlank() }?.toBoolean()
@@ -373,6 +378,7 @@ class ElmWorkspaceService(
             RawSettings(
                     elmCompilerPath = elmCompilerPath,
                     elmFormatPath = elmFormatPath,
+                    elmTestPath = elmTestPath,
                     isElmFormatOnSaveEnabled = isElmFormatOnSaveEnabled
             )
         }

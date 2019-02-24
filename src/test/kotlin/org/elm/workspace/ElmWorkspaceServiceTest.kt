@@ -531,7 +531,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
               <elmProjects>
                 <project path="$projectPathString" />
               </elmProjects>
-              <settings elmCompilerPath="/usr/local/bin/elm" elmFormatPath="/usr/local/bin/elm-format" isElmFormatOnSaveEnabled="true" />
+              <settings elmCompilerPath="/usr/local/bin/elm" elmFormatPath="/usr/local/bin/elm-format" elmTestPath="/usr/local/bin/elm-test" isElmFormatOnSaveEnabled="true" />
             </state>
             """.trimIndent()
 

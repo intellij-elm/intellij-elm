@@ -229,7 +229,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
                 return
 
             val toolchain = ElmToolchain.suggest(module.project)
-            require(toolchain != null) { "failed to find Elm toolchain: cannot setup workspace for tests" }
+            require(toolchain.looksLikeValidToolchain()) { "failed to find Elm toolchain: cannot setup workspace for tests" }
 
             val elmProject = if (enableStdlib) {
                 log.debug("Configuring Elm Stdlib")

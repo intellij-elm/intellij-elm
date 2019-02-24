@@ -1,4 +1,4 @@
-package org.elm.workspace
+package org.elm.workspace.commandLineTools
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.process.ProcessOutput
@@ -7,8 +7,14 @@ import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
 import org.elm.openapiext.withWorkDirectory
+import org.elm.workspace.ElmProject
+import org.elm.workspace.ParseException
+import org.elm.workspace.Version
 import java.nio.file.Path
 
+/**
+ * Interact with external `elm` process (the compiler, package manager, etc.)
+ */
 class ElmCLI(private val elmExecutablePath: Path) {
 
     // TODO [kl] allow the caller to specify the main entry point Elm file

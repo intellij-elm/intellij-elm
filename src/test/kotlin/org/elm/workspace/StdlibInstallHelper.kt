@@ -45,13 +45,7 @@ interface ElmStdlibVariant {
             file("Main.elm", elmHeadlessWorkerCode)
         }.create(project, onDiskTmpDir)
 
-//        println("-----------------------------")
-//        println("Installing Deps for $this")
-        val output = elmCLI.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
-//        println("STDOUT: ${output.stdout}")
-//        println("\n")
-//        println("STDERR: ${output.stderr}")
-//        println("-----------------------------")
+        elmCLI.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
 
         // Now return an `ElmProject` with a manifest path suitable for IntelliJ's "light"
         // integration tests which put everything at `/src` using the in-memory VFS.

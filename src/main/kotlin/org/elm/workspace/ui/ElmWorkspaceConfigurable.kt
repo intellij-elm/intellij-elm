@@ -8,6 +8,7 @@ import com.intellij.openapi.keymap.impl.ui.KeymapPanel
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ex.Settings
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.HyperlinkLabel
@@ -20,7 +21,12 @@ import org.elm.ide.actions.ElmExternalFormatAction
 import org.elm.openapiext.Result
 import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.fileSystemPathTextField
-import org.elm.workspace.*
+import org.elm.workspace.ElmSuggest
+import org.elm.workspace.ElmToolchain
+import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmTestCLI
+import org.elm.workspace.elmWorkspace
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.JCheckBox
@@ -34,24 +40,23 @@ class ElmWorkspaceConfigurable(
 
     private val uiDebouncer = UiDebouncer(this)
 
-    private val elmPathField =
-            fileSystemPathTextField(this, "Select 'elm'",
-                    FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
-                            .withFileFilter { it.name in ElmSuggest.executableNamesFor("elm") }
-                            .also { it.isForcedToUseIdeaFileChooser = true })
-            { update() }
+    private fun toolPathTextField(programName: String): TextFieldWithBrowseButton {
+        return fileSystemPathTextField(this, "Select '$programName'",
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
+                        .withFileFilter { it.name in ElmSuggest.executableNamesFor(programName) }
+                        .also { it.isForcedToUseIdeaFileChooser = true })
+        { update() }
+    }
 
-    private val elmFormatPathField =
-            fileSystemPathTextField(this, "Select 'elm-format'",
-                    FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
-                            .withFileFilter { it.name in ElmSuggest.executableNamesFor("elm-format") }
-                            .also { it.isForcedToUseIdeaFileChooser = true })
-            { update() }
+    private val elmPathField = toolPathTextField("elm")
+    private val elmFormatPathField = toolPathTextField("elm-format")
+    private val elmTestPathField = toolPathTextField("elm-test")
 
     private val elmVersionLabel = JLabel()
     private val elmFormatVersionLabel = JLabel()
     private val elmFormatOnSaveCheckbox = JCheckBox()
     private val elmFormatShortcutLabel = HyperlinkLabel()
+    private val elmTestVersionLabel = JLabel()
 
     override fun createComponent(): JComponent {
         elmFormatOnSaveCheckbox.addChangeListener { update() }
@@ -80,6 +85,15 @@ class ElmWorkspaceConfigurable(
                 row("Keyboard shortcut:") { elmFormatShortcutLabel() }
                 row("Run when file saved?") { elmFormatOnSaveCheckbox() }
             })
+            add(panel(title = "elm-test") {
+                row("Location:") {
+                    cell {
+                        elmTestPathField(CCFlags.growX)
+                        button("Auto Discover", CCFlags.pushX) { elmTestPathField.text = autoDiscoverPathTo("elm-test") }
+                    }
+                }
+                row("Version:") { elmTestVersionLabel() }
+            })
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
@@ -105,11 +119,19 @@ class ElmWorkspaceConfigurable(
     private fun update() {
         val elmCompilerPath = Paths.get(elmPathField.text)
         val elmFormatPath = Paths.get(elmFormatPathField.text)
+        val elmTestPath = Paths.get(elmTestPathField.text)
         val elmCLI = ElmCLI(elmCompilerPath)
         val elmFormatCLI = ElmFormatCLI(elmFormatPath)
+        val elmTestCLI = ElmTestCLI(elmTestPath)
         uiDebouncer.run(
-                onPooledThread = { Pair(elmCLI.queryVersion(), elmFormatCLI.queryVersion()) },
-                onUiThread = { (compilerResult, elmFormatResult) ->
+                onPooledThread = {
+                    Triple(
+                            elmCLI.queryVersion(),
+                            elmFormatCLI.queryVersion(),
+                            elmTestCLI.queryVersion()
+                    )
+                },
+                onUiThread = { (compilerResult, elmFormatResult, elmTestResult) ->
                     with(elmVersionLabel) {
                         when (compilerResult) {
                             is Result.Ok ->
@@ -158,6 +180,27 @@ class ElmWorkspaceConfigurable(
                             }
                         }
                     }
+
+                    with(elmTestVersionLabel) {
+                        when (elmTestResult) {
+                            is Result.Ok -> {
+                                text = elmTestResult.value.toString()
+                                foreground = JBColor.foreground()
+                            }
+                            is Result.Err -> {
+                                when {
+                                    !elmTestPath.isValidFor("elm-test") -> {
+                                        text = ""
+                                        foreground = JBColor.foreground()
+                                    }
+                                    else -> {
+                                        text = elmTestResult.reason
+                                        foreground = JBColor.RED
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
         )
 
@@ -183,10 +226,12 @@ class ElmWorkspaceConfigurable(
         val elmCompilerPath = settings.elmCompilerPath
         val elmFormatPath = settings.elmFormatPath
         val isElmFormatOnSaveEnabled = settings.isElmFormatOnSaveEnabled
+        val elmTestPath = settings.elmTestPath
 
         elmPathField.text = elmCompilerPath
         elmFormatPathField.text = elmFormatPath
         elmFormatOnSaveCheckbox.isSelected = isElmFormatOnSaveEnabled
+        elmTestPathField.text = elmTestPath
 
         update()
     }
@@ -195,6 +240,7 @@ class ElmWorkspaceConfigurable(
         project.elmWorkspace.modifySettings {
             it.copy(elmCompilerPath = elmPathField.text,
                     elmFormatPath = elmFormatPathField.text,
+                    elmTestPath = elmTestPathField.text,
                     isElmFormatOnSaveEnabled = isOnSaveHookEnabledAndSelected()
             )
         }
@@ -207,6 +253,7 @@ class ElmWorkspaceConfigurable(
         val settings = project.elmWorkspace.rawSettings
         return elmPathField.text != settings.elmCompilerPath
                 || elmFormatPathField.text != settings.elmFormatPath
+                || elmTestPathField.text != settings.elmTestPath
                 || isOnSaveHookEnabledAndSelected() != settings.isElmFormatOnSaveEnabled
     }
 

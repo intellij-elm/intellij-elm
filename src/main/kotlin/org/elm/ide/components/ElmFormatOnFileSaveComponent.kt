@@ -10,7 +10,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.isElmFile
-import org.elm.workspace.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.elmSettings
 import org.elm.workspace.elmToolchain
 

@@ -1,4 +1,4 @@
-package org.elm.workspace
+package org.elm.workspace.commandLineTools
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.process.ProcessOutput
@@ -11,11 +11,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.lang.core.psi.ElmFile
 import org.elm.openapiext.*
+import org.elm.workspace.ElmApplicationProject
+import org.elm.workspace.ElmPackageProject
+import org.elm.workspace.ParseException
+import org.elm.workspace.Version
 import java.nio.file.Path
 
 private val log = logger<ElmFormatCLI>()
 
 
+/**
+ * Interact with external `elm-format` process.
+ */
 class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
 
     private fun getFormattedContentOfDocument(elmVersion: Version, document: Document): ProcessOutput {

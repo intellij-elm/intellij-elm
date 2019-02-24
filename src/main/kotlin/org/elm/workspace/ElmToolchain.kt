@@ -5,6 +5,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.exists
+import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmTestCLI
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -16,20 +19,22 @@ private val log = Logger.getInstance(ElmToolchain::class.java)
 data class ElmToolchain(
         val elmCompilerPath: Path?,
         val elmFormatPath: Path?,
+        val elmTestPath: Path?,
         val isElmFormatOnSaveEnabled: Boolean
 ) {
-    constructor(elmCompilerPath: String, elmFormatPath: String, isElmFormatOnSaveEnabled: Boolean) :
+    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, isElmFormatOnSaveEnabled: Boolean) :
             this(
                     if (elmCompilerPath.isNotBlank()) Paths.get(elmCompilerPath) else null,
                     if (elmFormatPath.isNotBlank()) Paths.get(elmFormatPath) else null,
+                    if (elmTestPath.isNotBlank()) Paths.get(elmTestPath) else null,
                     isElmFormatOnSaveEnabled
             )
 
-    val elmCLI: ElmCLI? =
-            elmCompilerPath?.let { ElmCLI(it) }
+    val elmCLI: ElmCLI? = elmCompilerPath?.let { ElmCLI(it) }
 
-    val elmFormatCLI: ElmFormatCLI? =
-            elmFormatPath?.let { ElmFormatCLI(it) }
+    val elmFormatCLI: ElmFormatCLI? = elmFormatPath?.let { ElmFormatCLI(it) }
+
+    val elmTestCLI: ElmTestCLI? = elmTestPath?.let { ElmTestCLI(it) }
 
     val presentableLocation: String =
             elmCompilerPath?.toString() ?: "unknown location"
@@ -107,7 +112,8 @@ data class ElmToolchain(
         val suggestions = ElmSuggest.suggestTools(project)
         return copy(
                 elmCompilerPath = elmCompilerPath ?: suggestions["elm"],
-                elmFormatPath = elmFormatPath ?: suggestions["elm-format"]
+                elmFormatPath = elmFormatPath ?: suggestions["elm-format"],
+                elmTestPath = elmTestPath ?: suggestions["elm-test"]
         )
     }
 
@@ -122,6 +128,7 @@ data class ElmToolchain(
         val BLANK = ElmToolchain(
                 elmCompilerPath = null,
                 elmFormatPath = null,
+                elmTestPath = null,
                 isElmFormatOnSaveEnabled = ElmToolchain.DEFAULT_FORMAT_ON_SAVE
         )
 
