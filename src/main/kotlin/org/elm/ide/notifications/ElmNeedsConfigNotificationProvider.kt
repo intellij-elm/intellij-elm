@@ -5,16 +5,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
-import org.elm.openapiext.Result
-import org.elm.workspace.*
+import org.elm.workspace.ElmWorkspaceService
+import org.elm.workspace.elmToolchain
+import org.elm.workspace.elmWorkspace
 
-private val versionCacheKey: Key<CachedValue<Result<Version>>> = Key.create("ELM_VERSION_CACHE")
 
 /**
  * Presents actionable notifications at the top of an Elm file whenever the Elm plugin
@@ -50,25 +47,6 @@ class ElmNeedsConfigNotificationProvider(
         val toolchain = project.elmToolchain
         if (!toolchain.looksLikeValidToolchain()) {
             return createBadToolchainPanel("Elm toolchain needs configuration")
-        }
-
-        val elmCLI = toolchain.elmCLI
-                ?: return createBadToolchainPanel("Need path to Elm compiler")
-
-        val elmVersionResult = CachedValuesManager.getManager(project)
-                .getCachedValue(project, versionCacheKey, {
-                    val v = elmCLI.queryVersion()
-                    CachedValueProvider.Result.create(v, workspaceChangedTracker)
-                }, false)
-
-        when (elmVersionResult) {
-            is Result.Ok -> {
-                if (elmVersionResult.value < ElmToolchain.MIN_SUPPORTED_COMPILER_VERSION) {
-                    return createBadToolchainPanel("Elm ${elmVersionResult.value} is not supported")
-                }
-            }
-            is Result.Err ->
-                return createBadToolchainPanel("Invalid Elm toolchain: ${elmVersionResult.reason}")
         }
 
         val workspace = project.elmWorkspace
