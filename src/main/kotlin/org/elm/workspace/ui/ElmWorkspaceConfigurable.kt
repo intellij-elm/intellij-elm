@@ -36,7 +36,7 @@ import javax.swing.JPanel
 
 class ElmWorkspaceConfigurable(
         private val project: Project
-) : Configurable, Configurable.NoScroll, Disposable {
+) : Configurable, Disposable {
 
     private val uiDebouncer = UiDebouncer(this)
 
