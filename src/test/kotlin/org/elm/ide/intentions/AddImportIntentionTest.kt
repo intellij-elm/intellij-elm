@@ -96,7 +96,31 @@ main = BarVariant
 """)
 
 
-    fun `test qualified value using an import alias`() = check(
+    fun `test multiple import candidates`() = checkAutoImportFixByTextWithMultipleChoice(
+            """
+--@ main.elm
+main = quux{-caret-}
+--@ Foo.elm
+module Foo exposing (quux)
+quux = ()
+--@ Bar.elm
+module Bar exposing (quux)
+quux = ()
+--@ Baz.elm
+module Baz exposing (somethingElse)
+somethingElse = ()
+""",
+            setOf("Foo", "Bar"),
+            "Foo",
+            """
+import Foo exposing (quux)
+main = quux
+""")
+
+
+    // NOTE: must use the "multiple choice" test because in order to give the user more visibility
+    // about what's going on, I've decided to always show the picker when importing using an alias.
+    fun `test qualified value using an import alias`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
 main = Foo.bar{-caret-}
@@ -104,6 +128,8 @@ main = Foo.bar{-caret-}
 module FooTooLongToType exposing (bar)
 bar = 42
 """,
+            setOf("FooTooLongToType"),
+            "FooTooLongToType",
             """
 import FooTooLongToType as Foo
 main = Foo.bar
@@ -306,6 +332,27 @@ main = 2 |. 3
         myFixture.checkResult(replaceCaretMarker(after).trim())
     }
 
+    protected fun checkAutoImportFixByTextWithMultipleChoice(
+            @Language("Elm") before: String,
+            expectedElements: Set<String>,
+            choice: String,
+            @Language("Elm") after: String
+    ) {
+        var chooseItemWasCalled = false
+
+        withMockUI(object : ImportPickerUI {
+            override fun choose(candidates: List<Candidate>, callback: (Candidate) -> Unit) {
+                chooseItemWasCalled = true
+                val actualItems = candidates.map { it.moduleName }.toSet()
+                assertEquals(expectedElements, actualItems)
+                val selectedValue = candidates.find { it.moduleName == choice }
+                        ?: error("Can't find `$choice` in `$actualItems`")
+                callback(selectedValue)
+            }
+        }) { check(before, after) }
+
+        check(chooseItemWasCalled) { "`chooseItem` was not called" }
+    }
 
     protected fun verifyUnavailable(@Language("Elm") before: String) {
         fileTreeFromText(before).createAndOpenFileWithCaretMarker()
