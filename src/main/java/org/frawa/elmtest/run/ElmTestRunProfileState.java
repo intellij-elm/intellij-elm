@@ -3,9 +3,7 @@ package org.frawa.elmtest.run;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.execution.process.ColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.testframework.TestConsoleProperties;
@@ -23,6 +21,7 @@ import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.elm.workspace.ElmToolchain;
 import org.elm.workspace.ElmWorkspaceService;
+import org.elm.workspace.commandLineTools.ElmTestCLI;
 import org.frawa.elmtest.core.ElmTestJsonProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,26 +42,16 @@ public class ElmTestRunProfileState extends CommandLineState {
     @NotNull
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
+        FileDocumentManager.getInstance().saveAllDocuments();
         ElmWorkspaceService workspaceService = ServiceManager.getService(getEnvironment().getProject(), ElmWorkspaceService.class);
 
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
-        Path elmTestBinary = toolchain != null ? toolchain.getElmTestPath() : null;
-        Path elmCompilerBinary = toolchain != null ? toolchain.getElmCompilerPath() : null;
-        if (toolchain == null || elmTestBinary == null || elmCompilerBinary == null) {
-            throw new ExecutionException("could not find elm-test");
-        }
+        ElmTestCLI elmTestCLI = toolchain.getElmTestCLI();
+        Path elmCompilerBinary = toolchain.getElmCompilerPath();
+        if (elmTestCLI == null) throw new ExecutionException("could not find elm-test");
+        if (elmCompilerBinary == null) throw new ExecutionException("could not find the Elm compiler");
 
-        String elmFolder = getElmFolder();
-        GeneralCommandLine commandLine = new GeneralCommandLine(elmTestBinary.toString(), "--report=json");
-
-        commandLine
-                .withWorkDirectory(elmFolder)
-                .withParameters("--compiler", elmCompilerBinary.toString())
-                .withRedirectErrorStream(true)
-                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE);
-
-        FileDocumentManager.getInstance().saveAllDocuments();
-        return new ColoredProcessHandler(commandLine);
+        return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, getElmFolder());
     }
 
     @SystemIndependent

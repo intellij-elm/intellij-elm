@@ -495,7 +495,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         check(elmProjects.isEmpty()) { "Should have found zero Elm projects but found ${elmProjects.size}" }
     }
 
-    fun `test persistence`() {
+    fun `test persistence roundtrip`() {
         // setup real files on disk
         val testProject = fileTree {
             dir("a") {
@@ -531,7 +531,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
               <elmProjects>
                 <project path="$projectPathString" />
               </elmProjects>
-              <settings binDirPath="/usr/local/bin" isElmFormatOnSaveEnabled="false" />
+              <settings elmCompilerPath="/usr/local/bin/elm" elmFormatPath="/usr/local/bin/elm-format" elmTestPath="/usr/local/bin/elm-test" isElmFormatOnSaveEnabled="true" />
             </state>
             """.trimIndent()
 
@@ -544,35 +544,6 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         // ... and serialize the resulting state ...
         val actualXml = workspace.state.toXmlString()
         checkEquals(xml, actualXml)
-    }
-
-
-
-    fun `test persistence with empty toolchain binDirPath`() {
-        val workspace = project.elmWorkspace
-
-        // The missing binDirPath is treated as the empty string
-        val xml = """
-            <state>
-              <elmProjects />
-              <settings binDirPath=""/>
-            </state>
-            """.trimIndent()
-
-        val expected = """
-            <state>
-              <elmProjects />
-              <settings binDirPath="" isElmFormatOnSaveEnabled="false" />
-            </state>
-            """.trimIndent()
-
-
-        // ... must be able to load from serialized state ...
-        workspace.loadState(elementFromXmlString(xml))
-
-        // ... and serialize the resulting state ...
-        val actualXml = workspace.state.toXmlString()
-        checkEquals(expected, actualXml)
     }
 }
 

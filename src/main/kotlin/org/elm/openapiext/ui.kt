@@ -10,7 +10,7 @@ package org.elm.openapiext
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.ui.TextComponentAccessor
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.util.Disposer
@@ -44,17 +44,16 @@ class UiDebouncer(
     }
 }
 
-fun pathToDirectoryTextField(
+
+fun fileSystemPathTextField(
         disposable: Disposable,
         title: String,
+        fileDescriptor: FileChooserDescriptor,
         onTextChanged: () -> Unit = {}
 ): TextFieldWithBrowseButton {
 
     val component = TextFieldWithBrowseButton(null, disposable)
-    component.addBrowseFolderListener(title, null, null,
-            FileChooserDescriptorFactory.createSingleFolderDescriptor(),
-            TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT
-    )
+    component.addBrowseFolderListener(title, null, null, fileDescriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT)
     component.childComponent.document.addDocumentListener(object : DocumentAdapter() {
         override fun textChanged(e: DocumentEvent) {
             onTextChanged()

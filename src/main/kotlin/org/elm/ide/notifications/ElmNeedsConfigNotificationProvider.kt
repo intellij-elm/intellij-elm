@@ -48,13 +48,16 @@ class ElmNeedsConfigNotificationProvider(
             return null
 
         val toolchain = project.elmToolchain
-        if (toolchain == null || !toolchain.looksLikeValidToolchain()) {
-            return createBadToolchainPanel("No Elm toolchain configured")
+        if (!toolchain.looksLikeValidToolchain()) {
+            return createBadToolchainPanel("Elm toolchain needs configuration")
         }
+
+        val elmCLI = toolchain.elmCLI
+                ?: return createBadToolchainPanel("Need path to Elm compiler")
 
         val elmVersionResult = CachedValuesManager.getManager(project)
                 .getCachedValue(project, versionCacheKey, {
-                    val v = toolchain.queryCompilerVersion()
+                    val v = elmCLI.queryVersion()
                     CachedValueProvider.Result.create(v, workspaceChangedTracker)
                 }, false)
 

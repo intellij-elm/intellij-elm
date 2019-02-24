@@ -25,8 +25,8 @@ import java.util.concurrent.CompletableFuture
 abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBuilder<*>>() {
 
 
-    protected var toolchain: ElmToolchain? = null
-    private var originalToolchain: ElmToolchain? = null
+    protected var toolchain = ElmToolchain.BLANK
+    private var originalToolchain = ElmToolchain.BLANK
 
 
     protected val elmWorkspaceDirectory: VirtualFile
@@ -40,21 +40,19 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
     protected fun ensureElmStdlibInstalled(variant: ElmStdlibVariant) {
         // IMPORTANT: do not use the returned `ElmProject` from [ensureElmStdlibInstalled] as it
         // uses paths designed for IntelliJ's "light" tests (in-memory VFS).
-        variant.ensureElmStdlibInstalled(project, toolchain!!)
+        variant.ensureElmStdlibInstalled(project, toolchain)
     }
 
     override fun setUp() {
         super.setUp()
         originalToolchain = project.elmToolchain
         toolchain = ElmToolchain.suggest(project)
-        if (toolchain != null) {
-            project.elmWorkspace.useToolchain(toolchain)
-        }
+        project.elmWorkspace.useToolchain(toolchain)
     }
 
 
     override fun runTest() {
-        if (toolchain == null) {
+        if (!toolchain.looksLikeValidToolchain()) {
             System.err.println("SKIP $name: no Elm toolchain found")
             return
         }

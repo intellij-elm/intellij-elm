@@ -14,7 +14,7 @@ class ElmRefreshProjectsAction : AnAction() {
                 ?: return
         saveAllDocuments()
 
-        if (project.elmToolchain == null || !project.elmWorkspace.hasAtLeastOneValidProject()) {
+        if (!(project.elmToolchain.looksLikeValidToolchain() && project.elmWorkspace.hasAtLeastOneValidProject())) {
             asyncAutoDiscoverWorkspace(project, explicitRequest = true)
         } else {
             project.elmWorkspace.asyncRefreshAllProjects()

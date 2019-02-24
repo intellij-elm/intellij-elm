@@ -12,7 +12,7 @@ import org.intellij.lang.annotations.Language
 class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
     override fun runTest() {
-        if (toolchain?.elmFormat == null) {
+        if (toolchain.elmFormatCLI == null) {
             // TODO in the future maybe we should install elm-format in the CI build environment
             System.err.println("SKIP $name: elm-format not found")
             return
@@ -152,7 +152,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
     private fun testCorrectFormatting(fileWithCaret: String, unformatted: String, expected: String, activateOnSaveHook: Boolean = true) {
 
-        project.elmWorkspace.useToolchain(toolchain?.copy(isElmFormatOnSaveEnabled = activateOnSaveHook))
+        project.elmWorkspace.useToolchain(toolchain.copy(isElmFormatOnSaveEnabled = activateOnSaveHook))
 
         val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
         val fileDocumentManager = FileDocumentManager.getInstance()
