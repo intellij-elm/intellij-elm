@@ -15,6 +15,7 @@ import com.intellij.execution.testframework.sm.runner.SMTestLocator;
 import com.intellij.execution.testframework.sm.runner.events.*;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.ui.ConsoleView;
+import com.intellij.notification.*;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.Key;
@@ -48,10 +49,26 @@ public class ElmTestRunProfileState extends CommandLineState {
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
         ElmTestCLI elmTestCLI = toolchain.getElmTestCLI();
         Path elmCompilerBinary = toolchain.getElmCompilerPath();
-        if (elmTestCLI == null) throw new ExecutionException("could not find elm-test");
-        if (elmCompilerBinary == null) throw new ExecutionException("could not find the Elm compiler");
-
+        if (elmTestCLI == null) {
+            return handleBadConfiguration(workspaceService, "Could not find elm-test");
+        }
+        if (elmCompilerBinary == null) {
+            return handleBadConfiguration(workspaceService, "Could not find the Elm compiler");
+        }
         return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, getElmFolder());
+    }
+
+    private ProcessHandler handleBadConfiguration(ElmWorkspaceService workspaceService, String errorMessage) throws ExecutionException {
+        // TODO when this code gets ported to Kotlin, use org.elm.ide.notifications.UtilsKt.showBalloon
+        NotificationGroup group = NotificationGroup.balloonGroup("Elm Plugin");
+        Notification notification = group.createNotification(errorMessage, NotificationType.ERROR);
+        notification.addAction(NotificationAction.createSimple("Fix",
+                () -> {
+                    notification.hideBalloon();
+                    workspaceService.showConfigureToolchainUI();
+                }));
+        Notifications.Bus.notify(notification, getEnvironment().getProject());
+        throw new ExecutionException(errorMessage);
     }
 
     @SystemIndependent
