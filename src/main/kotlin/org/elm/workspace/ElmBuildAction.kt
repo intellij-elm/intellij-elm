@@ -17,8 +17,8 @@ class ElmBuildAction : AnAction() {
                 ?: return
         saveAllDocuments()
 
-        val compilerPath = project.elmToolchain?.elmCompilerPath
-        if (compilerPath == null) {
+        val elmCLI = project.elmToolchain.elmCLI
+        if (elmCLI == null) {
             Messages.showErrorDialog("No path to the Elm compiler", "Build Error")
             return
         }
@@ -37,7 +37,7 @@ class ElmBuildAction : AnAction() {
         toolWindow.contentManager.addContent(content)
 
         val elmProject = project.elmWorkspace.allProjects.first()
-        val processOutput = ElmCLI(compilerPath).make(project, elmProject)
+        val processOutput = elmCLI.make(project, elmProject)
 
         consoleView.clear()
         consoleView.print(processOutput.stdout, ConsoleViewContentType.NORMAL_OUTPUT)

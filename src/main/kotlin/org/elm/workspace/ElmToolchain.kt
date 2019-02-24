@@ -1,19 +1,14 @@
 package org.elm.workspace
 
-import com.intellij.execution.ExecutionException
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.exists
-import com.intellij.util.io.isDirectory
-import org.elm.openapiext.GeneralCommandLine
-import org.elm.openapiext.Result
-import org.elm.openapiext.execute
-import org.elm.openapiext.modules
+import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmTestCLI
 import java.io.File
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -21,11 +16,28 @@ import java.nio.file.Paths
 private val log = Logger.getInstance(ElmToolchain::class.java)
 
 
-data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Boolean) {
-    constructor(binDirPath: String, isElmFormatOnSaveEnabled: Boolean) : this(Paths.get(binDirPath), isElmFormatOnSaveEnabled)
+data class ElmToolchain(
+        val elmCompilerPath: Path?,
+        val elmFormatPath: Path?,
+        val elmTestPath: Path?,
+        val isElmFormatOnSaveEnabled: Boolean
+) {
+    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, isElmFormatOnSaveEnabled: Boolean) :
+            this(
+                    if (elmCompilerPath.isNotBlank()) Paths.get(elmCompilerPath) else null,
+                    if (elmFormatPath.isNotBlank()) Paths.get(elmFormatPath) else null,
+                    if (elmTestPath.isNotBlank()) Paths.get(elmTestPath) else null,
+                    isElmFormatOnSaveEnabled
+            )
 
-    val presentableLocation: String
-        get() = (elmCompilerPath ?: binDirPath.resolve("elm")).toString()
+    val elmCLI: ElmCLI? = elmCompilerPath?.let { ElmCLI(it) }
+
+    val elmFormatCLI: ElmFormatCLI? = elmFormatPath?.let { ElmFormatCLI(it) }
+
+    val elmTestCLI: ElmTestCLI? = elmTestPath?.let { ElmTestCLI(it) }
+
+    val presentableLocation: String =
+            elmCompilerPath?.toString() ?: "unknown location"
 
     val elmHomePath: String
         get() {
@@ -57,24 +69,8 @@ data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Bool
             }
         }
 
-    val elmCompilerPath: Path? get() {
-        return executableNameSuggestionsFor("elm")
-                .map { binDirPath.resolve(it) }
-                .firstOrNull { Files.isExecutable(it) }
-    }
-
-    val elmTestPath: Path? get() {
-        return executableNameSuggestionsFor("elm-test")
-                .map { binDirPath.resolve(it) }
-                .firstOrNull { Files.isExecutable(it) }
-    }
-    val elmFormat: ElmFormatCLI?
-        get() = executableNameSuggestionsFor("elm-format")
-                .map { binDirPath.resolve(it) }
-                .firstOrNull { Files.isExecutable(it) }
-                ?.let { ElmFormatCLI(it) }
-
-    fun looksLikeValidToolchain(): Boolean = elmCompilerPath != null
+    fun looksLikeValidToolchain(): Boolean =
+            elmCompilerPath != null && Files.isExecutable(elmCompilerPath)
 
     /**
      * Path to directory for a package at a specific version, containing `elm.json`
@@ -108,74 +104,17 @@ data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Bool
         return files.mapNotNull { Version.parseOrNull(it.name) }
     }
 
-    fun queryCompilerVersion(): Result<Version> {
-        val elm = elmCompilerPath ?: return Result.Err("Elm compiler not found")
-
-        // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
-        val versionString = try {
-            GeneralCommandLine(elm).withParameters("--version")
-                    .execute(timeoutInMilliseconds = 1500)
-                    .stdoutLines
-                    .firstOrNull()
-        } catch (e: ExecutionException) {
-            log.debug("Failed to run `elm --version`", e)
-            null
-        }
-        if (versionString == null) {
-            // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
-            // such as the Elm compiler. So we will try to detect if the wrapper may have been the problem
-            // and notify the user. See https://github.com/klazuka/intellij-elm/issues/252
-            return if (elm.toFile().isWrapperScript()) {
-                Result.Err("the 'elm' file here is a wrapper script; please use the path to the actual Elm compiler")
-            } else {
-                Result.Err("failed to run the Elm compiler")
-            }
-        }
-
-        return try {
-            Result.Ok(Version.parse(versionString))
-        } catch (e: ParseException) {
-            Result.Err("invalid Elm version: ${e.message}")
-        }
-    }
-
-    fun queryElmFormatVersion(): Result<Version> {
-        val elmFormat = elmFormat ?: return Result.Err("elm-format not found")
-
-        // Output of `elm-format` is multiple lines where the first line is 'elm-format 0.8.1'
-
-        val elmFormatRegex = Regex("elm-format (\\d+(?:\\.\\d+){2})")
-
-        val versionString = try {
-            GeneralCommandLine(elmFormat.elmFormatExecutablePath)
-                    .execute(timeoutInMilliseconds = 1500)
-                    .stdoutLines
-                    .firstOrNull()
-        } catch (e: ExecutionException) {
-            log.debug("Failed to run `elm-format`", e)
-            null
-        }
-        if (versionString == null) {
-            // NodeJS tools like npm and nvm like to play games with wrapper scripts around native binaries
-            // such as the Elm compiler. So we will try to detect if the wrapper may have been the problem
-            // and notify the user. See https://github.com/klazuka/intellij-elm/issues/252
-            return if (elmFormat.elmFormatExecutablePath.toFile().isWrapperScript()) {
-                Result.Err("the 'elm-format' file here is a wrapper script; please use the path to the actual executable")
-            } else {
-                Result.Err("failed to run the elm-format")
-            }
-        }
-
-        return try {
-            val matchResult = elmFormatRegex.matchEntire(versionString)
-
-            if(matchResult == null) return Result.Err("invalid elm-format version string: ${versionString}")
-
-            val (elmVersionString) = matchResult.destructured
-            Result.Ok(Version.parse(elmVersionString))
-        } catch (e: ParseException) {
-            Result.Err("invalid elm-format version: ${e.message}")
-        }
+    /**
+     * Attempts to locate Elm tool paths for all tools which are un-configured.
+     * Returns a copy of the receiver. Performs file I/O.
+     */
+    fun autoDiscoverAll(project: Project): ElmToolchain {
+        val suggestions = ElmSuggest.suggestTools(project)
+        return copy(
+                elmCompilerPath = elmCompilerPath ?: suggestions["elm"],
+                elmFormatPath = elmFormatPath ?: suggestions["elm-format"],
+                elmTestPath = elmTestPath ?: suggestions["elm-test"]
+        )
     }
 
     companion object {
@@ -183,102 +122,28 @@ data class ElmToolchain(val binDirPath: Path, val isElmFormatOnSaveEnabled: Bool
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
         const val DEFAULT_FORMAT_ON_SAVE = false
 
+        /**
+         * A blank, default [ElmToolchain].
+         */
+        val BLANK = ElmToolchain(
+                elmCompilerPath = null,
+                elmFormatPath = null,
+                elmTestPath = null,
+                isElmFormatOnSaveEnabled = ElmToolchain.DEFAULT_FORMAT_ON_SAVE
+        )
+
+
         // TODO [drop 0.18] this list will no longer be necessary once the migration to 0.19 is complete
         val ELM_MANIFEST_FILE_NAMES = listOf(ElmToolchain.ELM_JSON, ElmToolchain.ELM_LEGACY_JSON)
 
         // TODO [drop 0.18] set the min compiler version to 0.19
         val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 18, 0)
 
-        /** Suggest a toolchain that exists in in any standard location */
-        fun suggest(project: Project): ElmToolchain? {
-            return binDirSuggestions(project)
-                    .map { ElmToolchain(it.toAbsolutePath(), DEFAULT_FORMAT_ON_SAVE) }
-                    .firstOrNull { it.looksLikeValidToolchain() }
-        }
-    }
-}
-
-// Look for both installed and npm versions of the binary
-private fun executableNameSuggestionsFor(name: String) =
-        if (SystemInfo.isWindows) sequenceOf("$name.exe", "$name.cmd", name)
-        else sequenceOf(name)
-
-private fun binDirSuggestions(project: Project) =
-        sequenceOf(
-                suggestionsFromNPM(project),
-                suggestionsFromPath(),
-                suggestionsForMac(),
-                suggestionsForWindows(),
-                suggestionsForUnix(),
-                suggestionsFromNVM()
-        ).flatten()
-
-
-private fun suggestionsFromNPM(project: Project): Sequence<Path> {
-    return project.modules
-            .asSequence()
-            .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
-            .flatMap {
-                FileUtil.fileTraverser(File(it.path))
-                        .filter { it.name == "node_modules" && it.isDirectory }
-                        .bfsTraversal()
-                        .asSequence()
-            }.map { Paths.get(it.absolutePath, ".bin") }
-}
-
-private fun suggestionsFromNVM(): Sequence<Path> {
-    // nvm (Node Version Manager): see https://github.com/klazuka/intellij-elm/issues/252
-    // nvm is not available on Windows
-    if (SystemInfo.isWindows) return emptySequence()
-    return sequenceOf(Paths.get(FileUtil.expandUserHome("~/.config/yarn/global/node_modules/elm/unpacked_bin")))
-}
-
-private fun suggestionsFromPath(): Sequence<Path> {
-    return System.getenv("PATH").orEmpty()
-            .splitToSequence(File.pathSeparator)
-            .filter { !it.isEmpty() }
-            .map { Paths.get(it) }
-            .filter { it.isDirectory() }
-}
-
-private fun suggestionsForMac(): Sequence<Path> {
-    if (!SystemInfo.isMac) return emptySequence()
-    return sequenceOf(Paths.get("/usr/local/bin"))
-}
-
-private fun suggestionsForUnix(): Sequence<Path> {
-    if (!SystemInfo.isUnix) return emptySequence()
-    return sequenceOf(Paths.get("/usr/local/bin"))
-}
-
-private fun suggestionsForWindows(): Sequence<Path> {
-    if (!SystemInfo.isWindows) return emptySequence()
-    return sequenceOf(
-            Paths.get("C:/Program Files (x86)/Elm Platform/0.19/bin"), // npm install -g elm
-            Paths.get("C:/Program Files/Elm Platform/0.19/bin"),
-            Paths.get("C:/Program Files (x86)/Elm/0.19/bin"), // choco install elm-platform
-            Paths.get("C:/Program Files/Elm/0.19/bin"),
-            Paths.get("C:/Program Files (x86)/Elm Platform/0.18/bin"), // TODO [drop 0.18]
-            Paths.get("C:/Program Files/Elm Platform/0.18/bin"),
-            Paths.get("C:/Program Files (x86)/Elm/0.18/bin"), // TODO [drop 0.18]
-            Paths.get("C:/Program Files/Elm/0.18/bin")
-    )
-}
-
-
-/** Returns true if the file looks like a wrapper script created by NodeJS tools like npm */
-private fun File.isWrapperScript(): Boolean {
-    val firstChars = try {
-        val bytes = ByteArray(3)
-        inputStream().use { it.read(bytes, 0, 3) }
-        bytes.toString(Charsets.US_ASCII)
-    } catch (e: IOException) {
-        return false
-    }
-
-    return when (firstChars) {
-        "#!/" -> true // hash-bang used by Unix scripts
-        "@IF" -> true // npm Windows batch script starts with `@IF EXIST "%~dp0\node.exe"`
-        else -> false
+        /**
+         * Suggest a default toolchain based on common locations where Elm tools are frequently installed.
+         * This performs file I/O.
+         */
+        fun suggest(project: Project): ElmToolchain =
+                BLANK.autoDiscoverAll(project)
     }
 }

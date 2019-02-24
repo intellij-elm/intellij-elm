@@ -14,8 +14,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
-import org.elm.workspace.ElmFormatCLI
 import org.elm.workspace.Version
+import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.elmToolchain
 
 
@@ -34,7 +34,7 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
-        val elmFormat = ctx.project.elmToolchain?.elmFormat
+        val elmFormat = ctx.project.elmToolchain.elmFormatCLI
         if (elmFormat == null) {
             ctx.project.showBalloon("could not find elm-format", NotificationType.ERROR)
             return

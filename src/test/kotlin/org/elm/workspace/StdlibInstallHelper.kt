@@ -28,12 +28,12 @@ interface ElmStdlibVariant {
      * @return An application Elm project which depends on the specified Stdlib packages
      */
     fun ensureElmStdlibInstalled(project: Project, toolchain: ElmToolchain): ElmProject {
-        val compilerVersion = toolchain.queryCompilerVersion().orNull()
+        val elmCLI = toolchain.elmCLI
+                ?: error("Must have a path to the Elm compiler to install Elm stdlib")
+
+        val compilerVersion = elmCLI.queryVersion().orNull()
                 ?: error("Could not query the Elm compiler version")
         require(compilerVersion != Version(0, 18, 0))
-
-        val elm = toolchain.elmCompilerPath?.let { ElmCLI(it) }
-                ?: error("Must have a path to the Elm compiler to install Elm stdlib")
 
         // Create the dummy Elm project on-disk (real file system) and invoke the Elm compiler on it.
         val onDiskTmpDir = LocalFileSystem.getInstance()
@@ -45,13 +45,7 @@ interface ElmStdlibVariant {
             file("Main.elm", elmHeadlessWorkerCode)
         }.create(project, onDiskTmpDir)
 
-//        println("-----------------------------")
-//        println("Installing Deps for $this")
-        val output = elm.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
-//        println("STDOUT: ${output.stdout}")
-//        println("\n")
-//        println("STDERR: ${output.stderr}")
-//        println("-----------------------------")
+        elmCLI.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
 
         // Now return an `ElmProject` with a manifest path suitable for IntelliJ's "light"
         // integration tests which put everything at `/src` using the in-memory VFS.
