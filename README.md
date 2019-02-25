@@ -42,7 +42,7 @@ Ready to start a new Elm project in IntelliJ? First, make sure that you have the
 1. Click 'Create New Project'
 2. Select 'Elm' from the panel on the left.
 3. Click the 'Next' button
-4. Give you project a name and a location on disk
+4. Give your project a name and a location on disk
 
 
 ## Opening an existing Elm project
