@@ -11,33 +11,79 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * Find usages
 * Type Inference and Type Checking (see below for more info)
 * Rename refactoring
+* Graphical UI for running elm-test
+* Re-format code using elm-format
+* Cleanup unused imports
+* Detect unused code
 * Code folding
 * Syntax highlighting
 * Mark unresolvable references as errors
 * 'Import' quick fix for unresolved references
 * Structure view
+* WebGL/GLSL support
 * and more...
 
 Watch the [feature demo videos](https://klazuka.github.io/intellij-elm/) to learn more.
 
 
-# Installation
+# Getting Started
+
+## Installation
 
 You can install the plugin from within the JetBrains IDE by going to `Settings -> Plugins` and then searching for "Elm". Then click the `Search in repositories` link.
 
 If, however, you need to install a specific version of the plugin, you can get it from [the releases page](https://github.com/klazuka/intellij-elm/releases).
 
 
-# Attaching Elm JSON files
+## Creating a new Elm project
 
-One major change since earlier versions of this plugin is that you must now attach your Elm project's JSON manifest
-file (either `elm.json` for Elm 0.19 or `elm-package.json` for 0.18). The plugin will try to find this JSON file 
-on its own, but you may need to manually attach it if the magic fails.
+Ready to start a new Elm project in IntelliJ? First, make sure that you have the Elm plugin installed (see above). When you open IntelliJ, you'll see a launch screen.
+
+1. Click 'Create New Project'
+2. Select 'Elm' from the panel on the left.
+3. Click the 'Next' button
+4. Give you project a name and a location on disk
 
 
-# Integrating with elm-format
+## Opening an existing Elm project
 
-See the elm-format [integration instructions](https://github.com/klazuka/intellij-elm/blob/master/docs/elm-format/setup.md).
+Already have some Elm code that you want to edit in IntelliJ? First, make sure that you have the Elm plugin installed (see above). When you open IntelliJ, you'll see a launch screen.
+
+You might be tempted to click "Import Project" but there's a simpler way. Instead, click the "Open" button and select your existing project directory.
+
+Once your project loads and you open a `.elm` file, you will be prompted to setup the toolchain (paths to things like the Elm compiler as well as elm-format and elm-test). After that's configured, you'll be prompted to attach an `elm.json` file. Use the file picker to locate the `elm.json` file for your project.
+
+
+# Integrations
+
+## elm-format
+
+With a tiny bit of configuration, the Elm plugin can re-format your code using [elm-format](https://github.com/avh4/elm-format). You can choose whether you want it to run when a keyboard shortcut is invoked or run automatically whenever an Elm file is saved.
+
+If you haven't already installed elm-format, do it now. Then configure it:
+
+1. Open IntelliJ settings.
+2. Select 'Languages & Frameworks' from the left-side pane
+3. Select 'Elm'
+4. Fill out the section titled 'elm-format' (use the 'Auto Discover' button to search for elm-format in common locations) 
+
+
+## elm-test
+
+[elm-test](https://github.com/elm-explorations/test) provides a way to write tests and run them from the command line. The Elm plugin for IntelliJ takes that a step further. You can run your tests directly from within IntelliJ and the test results will be shown with green and red lights for each test, indicating success and failure respectively.
+
+If you haven't already installed elm-test, do it now. Then configure it:
+
+1. Open IntelliJ settings.
+2. Select 'Languages & Frameworks' from the left-side pane
+3. Select 'Elm'
+4. Fill out the section titled 'elm-test' (use the 'Auto Discover' button to search for elm-test in common locations) 
+
+
+## WebGL/GLSL
+
+Does your project use WebGL/GLSL? If you install the [GLSL language plugin](https://plugins.jetbrains.com/plugin/6993-glsl-support), all of its features will be available in GLSL code blocks in your Elm files. This includes syntax highlighting, code completion and rename support.
+
 
 
 # Type Inference and Type Checking
@@ -48,28 +94,6 @@ The plugin also performs type checking, marking incompatible types in red.
 
 The current implementation of the type system does not infer the types of parameters of unannotated
 functions, but this limitation will be removed in the future.
-
-# GLSL integration
-
-If you install the [GLSL language plugin](https://plugins.jetbrains.com/plugin/6993-glsl-support),
-all of its features will be available in GLSL code blocks in your Elm files.
-
-# Creating a new Elm project
-
-The plugin does not currently provide any new-project templates. Until that work is done, the easiest way to create a new
-Elm project is to do everything from the command line using the standard Elm tools. If you're using Elm 0.19, this means:
-
-1. create a new directory for your project
-1. run `elm init`
-1. open that directory in IntelliJ (or WebStorm, etc.)
-1. select the `src` directory in the IntelliJ project window
-1. select `File -> New -> Elm Module`, call the new file `Main`
-1. follow the prompt to setup the Elm toolchain by specifying the path to the directory which contains the Elm compiler
-1. follow the prompt to attach your project's `elm.json` file.
-1. you're all set to write some code
-
-Please note that the IntelliJ plugin does not install any of your project dependencies for you. It assumes that you have
-already installed them via the standard Elm command line tools.
 
 
 # Attribution
