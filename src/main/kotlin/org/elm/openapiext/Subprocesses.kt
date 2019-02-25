@@ -101,15 +101,12 @@ fun GeneralCommandLine.execute(
         CapturingProcessHandler(this)
     } else {
         val process = createProcess()
-
         val stdInStream = process.outputStream
-        val writer = BufferedWriter(OutputStreamWriter(stdInStream))
-
-        writer.append(stdIn)
+        val writer = OutputStreamWriter(stdInStream, Charsets.UTF_8)
+        writer.write(stdIn)
         writer.flush()
         writer.close()
-
-        CapturingProcessHandler(process, Charset.forName("UTF-8"), commandLineString)
+        CapturingProcessHandler(process, Charsets.UTF_8, commandLineString)
     }
 
     val output = if(timeoutInMilliseconds == null) {
