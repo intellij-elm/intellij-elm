@@ -225,6 +225,8 @@
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex"/>
 
+        <lang.elementManipulator forClass="org.elm.lang.core.psi.elements.ElmStringConstantExpr"
+                                 implementationClass="org.elm.ide.injection.ElmStringLiteralManipulator"/>
         <multiHostInjector implementation="org.elm.ide.injection.ElmGlslInjector"/>
         <multiHostInjector implementation="org.elm.ide.injection.ElmRegexInjector"/>
 

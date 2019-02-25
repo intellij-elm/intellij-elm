@@ -82,6 +82,7 @@ intellij {
     version intellijPlatformVersion
     pluginName 'intellij-elm'
     updateSinceUntilBuild false
+    plugins = ["IntelliLang"]
 }
 
 // ------------------------------------------------

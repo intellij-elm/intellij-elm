@@ -2,7 +2,6 @@ package org.elm.ide.injection
 
 import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
-import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
@@ -25,10 +24,7 @@ class ElmRegexInjector : MultiHostInjector {
         if (!context.isValid || context !is ElmStringConstantExpr || !shouldInject(context)) return
 
         val text = context.text
-        val range = when {
-            text.startsWith("\"\"\"") -> TextRange(3, text.length - 3)
-            else -> TextRange(1, text.length - 1)
-        }
+        val range = context.contentOffsets
 
         registrar.startInjecting(RegExpLanguage.INSTANCE)
                 .addPlace(null, null, context, range)
