@@ -221,6 +221,7 @@
 
         <configurationType implementation="org.frawa.elmtest.run.ElmTestRunConfigurationType"/>
         <programRunner implementation="org.frawa.elmtest.run.ElmTestProgramRunner"/>
+        <runConfigurationProducer implementation="org.frawa.elmtest.run.ElmTestRunConfigurationProducer"/>
     </extensions>
 
     <project-components>
