@@ -4,7 +4,7 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.IconLoader;
+import org.elm.ide.icons.ElmIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +14,7 @@ public class ElmTestConfigurationFactory extends ConfigurationFactory {
 
     private static final String FACTORY_NAME = "Elm Test configuration factory";
 
-    static final Icon RUN_ICON = IconLoader.getIcon("/icons/elm-colorful-original.svg");
+    static final Icon RUN_ICON = ElmIcons.INSTANCE.getCOLORFUL();
 
     ElmTestConfigurationFactory(ConfigurationType type) {
         super(type);
