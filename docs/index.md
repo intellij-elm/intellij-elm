@@ -8,6 +8,8 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 * Find usages
 * Type Inference and Type Checking
 * Rename refactoring
+* Graphical UI for running elm-test
+* Re-format code using elm-format
 * Cleanup unused imports
 * Detect unused code
 * Code folding
@@ -15,6 +17,7 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 * Mark unresolvable references as errors
 * 'Import' quick fix for unresolved references
 * Structure view
+* WebGL/GLSL support
 * and more...
 
 
@@ -23,6 +26,13 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 IntelliJ is a powerful and free IDE built on a unique architecture. Rather than working with source code in its text form, IntelliJ parses the source code into an abstract syntax tree (AST). All functionality and refactorings are built on this AST, allowing for much more sophisticated features than normally possible in a text editor that relies on regex and find/replace.
 
 Here are a few of the advanced features provided by [intellij-elm](https://github.com/klazuka/intellij-elm): 
+
+
+## UI for elm-test
+
+Run elm-test directly from within IntelliJ. Test results are shown using green and red lights for success and failure respectively. Differences between actual- and expected-output are shown using IntelliJ's side-by-side comparison view.
+
+![](assets/elm_test_runner.jpg)
 
 
 ### Add Import Quick Fix
@@ -150,6 +160,12 @@ When writing new code, it's often helpful to write the type annotations first. O
     <source src="assets/generate_func_decl.mp4" type="video/mp4">
 </video>
 
+### WebGL / GLSL Support
+
+Does your project use WebGL/GLSL? If you install the [GLSL language plugin](https://plugins.jetbrains.com/plugin/6993-glsl-support), all of its features will be available in GLSL code blocks in your Elm files. This includes syntax highlighting, code completion and rename support.
+
+![](assets/elm_glsl.jpg)
+
 
 ------------------------------------------------------------
 
@@ -160,10 +176,6 @@ You can install the plugin from within the JetBrains IDE by going to `Settings -
 
 If, however, you need to install a specific version of the plugin, you can get it from [the releases page](https://github.com/klazuka/intellij-elm/releases).
 
-
-# Integrating with elm-format
-
-See the elm-format [integration instructions](https://klazuka.github.io/intellij-elm/elm-format/setup.html).
 
 
 # FAQ
