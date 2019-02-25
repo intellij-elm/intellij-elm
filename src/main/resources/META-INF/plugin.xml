@@ -17,12 +17,15 @@
           <li>Find usages</li>
           <li>Type Inference and Type Checking</li>
           <li>Rename refactoring</li>
+          <li>Graphical UI for running elm-test</li>
+          <li>Re-format code using elm-format</li>
           <li>Detect unused code</li>
           <li>Detect and remove unused imports</li>
           <li>'Add Import' quick fix for unresolved references</li>
           <li>Code folding</li>
           <li>Structure view</li>
           <li>Syntax highlighting</li>
+          <li>WebGL/GLSL support</li>
           <li>Spell checking</li>
           <li>etc.</li>
       </ul>
@@ -30,6 +33,14 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.0.0</b> <em>(2019-02-25)</em>
+                <ul>
+                    <li>Added support for elm-format: via keybinding or automatically-on-save</li>
+                    <li>Added UI for running elm-test and viewing test results</li>
+                    <li>Added support for WebGL/GLSL</li>
+                    <li>Various bug fixes</li>
+                </ul>
+            </li>
             <li><b>2.2.4</b> <em>(2019-02-13)</em>
                 <ul>
                     <li>The type checker now detects problems with type variables</li>

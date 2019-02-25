@@ -12,7 +12,7 @@ Provides support for the [Elm](http://elm-lang.org) programming language in Inte
 * Type Inference and Type Checking (see below for more info)
 * Rename refactoring
 * Graphical UI for running elm-test
-* Re-format code using elm-format
+* Reformat code using elm-format
 * Cleanup unused imports
 * Detect unused code
 * Code folding
@@ -60,7 +60,7 @@ Once your project loads and you open a `.elm` file, you will be prompted to setu
 
 With a tiny bit of configuration, the Elm plugin can re-format your code using [elm-format](https://github.com/avh4/elm-format). You can choose whether you want it to run when a keyboard shortcut is invoked or run automatically whenever an Elm file is saved.
 
-If you haven't already installed elm-format, do it now. Then configure it:
+Once elm-format has been installed, configure intellij-elm as follows:
 
 1. Open IntelliJ settings.
 2. Select 'Languages & Frameworks' from the left-side pane
@@ -72,7 +72,7 @@ If you haven't already installed elm-format, do it now. Then configure it:
 
 [elm-test](https://github.com/elm-explorations/test) provides a way to write tests and run them from the command line. The Elm plugin for IntelliJ takes that a step further. You can run your tests directly from within IntelliJ and the test results will be shown with green and red lights for each test, indicating success and failure respectively.
 
-If you haven't already installed elm-test, do it now. Then configure it:
+Once elm-test has been installed, configure intellij-elm as follows:
 
 1. Open IntelliJ settings.
 2. Select 'Languages & Frameworks' from the left-side pane
