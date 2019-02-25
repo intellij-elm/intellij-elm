@@ -72,7 +72,7 @@ class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
 
         val firstLine = try {
             GeneralCommandLine(elmFormatExecutablePath)
-                    .execute(timeoutInMilliseconds = 1500)
+                    .execute(timeoutInMilliseconds = 3000)
                     .stdoutLines
                     .firstOrNull()
         } catch (e: ExecutionException) {
