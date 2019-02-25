@@ -18,6 +18,7 @@ plugins {
 }
 
 repositories {
+    jcenter()
     mavenLocal()
     mavenCentral()
     maven {
@@ -141,8 +142,10 @@ dependencies {
         exclude module: "kotlin-runtime"
         exclude module: "kotlin-stdlib"
     }
+    compile "com.beust:klaxon:5.0.1"
     testCompile "junit:junit:$junitVersion"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
+    testCompile "com.beust:klaxon:5.0.1"
 }
 
 compileKotlin {

@@ -219,6 +219,9 @@
         <editorNotificationProvider implementation="org.elm.ide.notifications.ElmNeedsConfigNotificationProvider"/>
         <toolWindow id="Elm" anchor="right" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ElmToolWindowFactory"/>
+        <toolWindow id="Elm Compiler" anchor="bottom" icon="/icons/elm-toolwindow.png"
+                    factoryClass="org.elm.ide.toolwindow.ElmCompilerToolWindowFactory"/>
+
 
         <!-- STUBS -->
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes"/>
@@ -270,13 +273,6 @@
                 text="Refresh Elm projects"
                 icon="AllIcons.Actions.Refresh"/>
 
-        <!-- re-enable when this feature is ready
-        <action id="Elm.Build"
-                class="org.elm.workspace.ElmBuildAction"
-                text="Build Elm Project"
-                icon="AllIcons.Toolwindows.ToolWindowBuild"/>
-        -->
-
         <action id="Elm.RunExternalElmFormat"
                 class="org.elm.ide.actions.ElmExternalFormatAction"
                 text="Run elm-format on current file">
@@ -288,6 +284,30 @@
             <separator/>
             <reference id="Elm.AttachElmProject"/>
             <reference id="Elm.DetachElmProject"/>
+
+            <add-to-group group-id="ToolsMenu"/>
+        </group>
+
+        <action id="Elm.Build"
+                class="org.elm.workspace.compiler.ElmBuildAction"
+                text="Build Elm Project"
+                icon="AllIcons.Toolwindows.ToolWindowBuild"/>
+
+        <action id="Elm.MessageNext"
+                class="org.elm.workspace.compiler.ElmForwardAction"
+                text="Forward"
+                icon="AllIcons.Actions.Forward"/>
+
+        <action id="Elm.MessagePrev"
+                class="org.elm.workspace.compiler.ElmBackAction"
+                text="Back"
+                icon="AllIcons.Actions.Back"/>
+
+        <group id="Elm.CompilerToolsGroup" text="Elm Compiler" popup="true">
+            <reference id="Elm.Build"/>
+            <separator/>
+            <reference id="Elm.MessageNext"/>
+            <reference id="Elm.MessagePrev"/>
 
             <add-to-group group-id="ToolsMenu"/>
         </group>

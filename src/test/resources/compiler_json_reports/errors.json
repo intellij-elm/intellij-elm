@@ -1,0 +1,98 @@
+{
+  "type": "compile-errors",
+  "errors": [
+    {
+      "path": "src/Main.elm",
+      "name": "Main",
+      "problems": [
+        {
+          "title": "PARSE ERROR",
+          "region": {
+            "start": {
+              "line": 10,
+              "column": 21
+            },
+            "end": {
+              "line": 10,
+              "column": 21
+            }
+          },
+          "message": [
+            "I was not expecting this vertical bar while parsing ype's definition.\n\n10| ype Msg = Increment | Decrement\n                        ",
+            {
+              "bold": false,
+              "underline": false,
+              "color": "red",
+              "string": "^"
+            },
+            "\nA vertical bar should only appear in type declarations. Maybe you want ||\ninstead?"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/Helper.elm",
+      "name": "Helper",
+      "problems": [
+        {
+          "title": "NAMING ERROR",
+          "region": {
+            "start": {
+              "line": 6,
+              "column": 8
+            },
+            "end": {
+              "line": 6,
+              "column": 21
+            }
+          },
+          "message": [
+            "I cannot find a `Dict.fromLast` variable:\n\n6| test = Dict.fromLast []\n          ",
+            {
+              "bold": false,
+              "underline": false,
+              "color": "red",
+              "string": "^^^^^^^^^^^^^"
+            },
+            "\nI cannot find a `Dict` import. These names seem close though:\n\n    ",
+            {
+              "bold": false,
+              "underline": false,
+              "color": "yellow",
+              "string": "String.fromList"
+            },
+            "\n    ",
+            {
+              "bold": false,
+              "underline": false,
+              "color": "yellow",
+              "string": "List.concat"
+            },
+            "\n    ",
+            {
+              "bold": false,
+              "underline": false,
+              "color": "yellow",
+              "string": "List.foldl"
+            },
+            "\n    ",
+            {
+              "bold": false,
+              "underline": false,
+              "color": "yellow",
+              "string": "List.foldr"
+            },
+            "\n\n",
+            {
+              "bold": false,
+              "underline": true,
+              "color": null,
+              "string": "Hint"
+            },
+            ": Read <https://elm-lang.org/0.19.0/imports> to see how `import`\ndeclarations work in Elm."
+          ]
+        }
+      ]
+    }
+  ]
+}

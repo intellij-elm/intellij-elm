@@ -23,7 +23,7 @@ class ElmCLI(private val elmExecutablePath: Path) {
         val workDir = elmProject.manifestPath.parent
         return GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
-                .withParameters("make", "src/Main.elm", "--output=/dev/null")
+                .withParameters("make", "src/Main.elm", "--output=/dev/null", "--report=json")
                 .execute(owner, ignoreExitCode = true)
     }
 
