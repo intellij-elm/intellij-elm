@@ -41,7 +41,7 @@ class ElmCLI(private val elmExecutablePath: Path) {
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
         val firstLine = try {
             GeneralCommandLine(elmExecutablePath).withParameters("--version")
-                    .execute(timeoutInMilliseconds = 1500)
+                    .execute(timeoutInMilliseconds = 3000)
                     .stdoutLines
                     .firstOrNull()
         } catch (e: ExecutionException) {

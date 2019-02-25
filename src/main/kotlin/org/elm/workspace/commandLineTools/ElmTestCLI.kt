@@ -36,7 +36,7 @@ class ElmTestCLI(private val executablePath: Path) {
         // e.g. `0.19.0-beta9\n`, trimming off the "-betaN" suffix, if present.
         val firstLine = try {
             GeneralCommandLine(executablePath).withParameters("--version")
-                    .execute(timeoutInMilliseconds = 1500)
+                    .execute(timeoutInMilliseconds = 3000)
                     .stdoutLines
                     .firstOrNull()
         } catch (e: ExecutionException) {
