@@ -35,15 +35,6 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         checkEquals(empty<String>(), ElmProjectTestsHelper(project).nameByProjectDirPath(root.resolve("Toto").toString()))
     }
 
-    fun `test is elm project`() {
-        val testProject = testProject()
-        val root = testProject.root.pathAsPath
-
-        check(ElmProjectTestsHelper.isElmProject(root.resolve("a").toString(),project))
-        check(ElmProjectTestsHelper.isElmProject(root.resolve("b").toString(),project))
-        check(!ElmProjectTestsHelper.isElmProject(root.resolve("Toto").toString(),project))
-    }
-
     private fun testProject(): TestProject {
         val testProject = fileTree {
             dir("a") {

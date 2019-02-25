@@ -1,14 +1,16 @@
 package org.frawa.elmtest.run;
 
+import com.intellij.execution.Location;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
-import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.util.Ref;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
-import org.frawa.elmtest.core.ElmProjectTestsHelper;
+import org.elm.workspace.ElmProject;
+import org.elm.workspace.ElmWorkspaceService;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class ElmTestRunConfigurationProducer extends RunConfigurationProducer<ElmTestRunConfiguration> {
@@ -40,14 +42,16 @@ public class ElmTestRunConfigurationProducer extends RunConfigurationProducer<El
     }
 
     private Optional<String> getCandidateElmFolder(ConfigurationContext context) {
-        return Optional
-                .ofNullable(context)
-                .map(ConfigurationContext::getModule)
-                .map(ModuleRootManager::getInstance)
-                .map(ModuleRootManager::getContentRoots)
-                .filter(roots -> roots.length == 1)
-                .map(roots -> roots[0])
-                .map(VirtualFile::getPath)
-                .filter(candidate -> ElmProjectTestsHelper.isElmProject(candidate, context.getProject()));
+        if (context == null) return Optional.empty();
+
+        ElmWorkspaceService elmWorkspace = ServiceManager.getService(
+                context.getProject(), ElmWorkspaceService.class);
+
+        return Optional.of(context)
+                .map(ConfigurationContext::getLocation)
+                .map(Location::getVirtualFile)
+                .map(elmWorkspace::findProjectForFile)
+                .map(ElmProject::getProjectDirPath)
+                .map(Path::toString);
     }
 }
