@@ -1,12 +1,17 @@
 package org.frawa.elmtest.run;
 
+import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.TestConsoleProperties;
+import com.intellij.execution.testframework.autotest.AbstractAutoTestManager;
+import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
@@ -18,6 +23,7 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.notification.*;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.elm.workspace.ElmToolchain;
@@ -56,6 +62,21 @@ public class ElmTestRunProfileState extends CommandLineState {
             return handleBadConfiguration(workspaceService, "Could not find the Elm compiler");
         }
         return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, getElmFolder());
+    }
+
+    @NotNull
+    @Override
+    public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
+        ExecutionResult result = super.execute(executor, runner);
+        if ( result instanceof DefaultExecutionResult) {
+            ((DefaultExecutionResult) result).setRestartActions(new ToggleAutoTestAction() {
+                @Override
+                public AbstractAutoTestManager getAutoTestManager(Project project) {
+                    return ElmTestAutoTestManager.getInstance(project);
+                }
+            });
+        }
+        return result;
     }
 
     private ProcessHandler handleBadConfiguration(ElmWorkspaceService workspaceService, String errorMessage) throws ExecutionException {
