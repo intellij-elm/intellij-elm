@@ -17,7 +17,7 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
     override fun visitElement(element: ElmPsiElement, holder: ProblemsHolder, isOnTheFly: Boolean) {
         if (element !is ElmNameIdentifierOwner) return
         val project = element.project
-        val scope = GlobalSearchScope.projectScope(project)
+        val scope = element.useScope
         val name = element.name
 
         // ignore certain kinds of declarations which we don't want to inspect
@@ -29,9 +29,11 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
 
         if (isProgramEntryPoint(element)) return
 
-        // to keep inspection/analysis time brief, bail out if 'Find Usages' will be slow
-        val searchCost = PsiSearchHelper.SERVICE.getInstance(project).isCheapEnoughToSearch(name, scope, null, null)
-        if (searchCost == TOO_MANY_OCCURRENCES) return
+        if (scope is GlobalSearchScope) {
+            // to keep inspection/analysis time brief, bail out if 'Find Usages' will be slow
+            val searchCost = PsiSearchHelper.SERVICE.getInstance(project).isCheapEnoughToSearch(name, scope, null, null)
+            if (searchCost == TOO_MANY_OCCURRENCES) return
+        }
 
         // perform Find Usages
         val usages = ReferencesSearch.search(element).findAll()
