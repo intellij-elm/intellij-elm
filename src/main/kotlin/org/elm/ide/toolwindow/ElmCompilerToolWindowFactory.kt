@@ -11,7 +11,7 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         with(toolWindow.contentManager) {
-            addContent(factory.createContent(ElmCompilerPanel(project), "Compiler Output", true))
+            addContent(factory.createContent(ElmCompilerPanel(project, toolWindow.contentManager), "", true))
         }
     }
 }

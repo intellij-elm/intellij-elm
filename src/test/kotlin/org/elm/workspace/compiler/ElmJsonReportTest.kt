@@ -1,19 +1,12 @@
 package org.elm.workspace.compiler
 
 import org.junit.Test
-import java.util.regex.Pattern
 import kotlin.test.assertEquals
 
 
 class ElmJsonReportTest {
 
     private val elmJsonReport = ElmJsonReport()
-
-    /* TODO :
-        val jTextPane = JTextPane()
-        jTextPane.contentType = "text/html"
-        jTextPane.text = "<html>"
-    */
 
     @Test
     fun test() {
@@ -28,6 +21,8 @@ class ElmJsonReportTest {
     }
 
 }
+
+/* for explorations...
 
 fun main() {
     val txt = "s<askdfhg g <https://elm-lang.org/0.19.0/imports> weorty"
@@ -44,3 +39,4 @@ fun main() {
         }
     }
 }
+*/

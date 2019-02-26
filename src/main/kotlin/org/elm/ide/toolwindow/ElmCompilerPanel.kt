@@ -12,6 +12,7 @@ import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.content.ContentManager
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
 import org.elm.utils.CircularList
@@ -23,7 +24,10 @@ import javax.swing.JTextPane
 import javax.swing.ListSelectionModel
 
 
-class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(true, false) {
+class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false) {
+
+    private val actionIdForward: String = "Elm.MessageForward"
+    private val actionIdBack: String = "Elm.MessageBack"
 
     private val errorListUI = JBList<String>(emptyList()).apply {
         emptyText.text = ""
@@ -33,7 +37,7 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
             override fun setAutoScrollMode(state: Boolean) {}
         }.install(this)
         addListSelectionListener {
-            if (!it.valueIsAdjusting) {
+            if (!it.valueIsAdjusting && selectedIndex >= 0) {
                 compilerMessages.set(selectedIndex)
                 messageUI.text = compilerMessages.get().messageWithRegion.message
             }
@@ -45,7 +49,7 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
         // background = Color(200, 200, 200) // TODO color themes
     }
 
-    private var compilerMessages: CircularList<CompilerMessage> = CircularList(emptyList())
+    var compilerMessages: CircularList<CompilerMessage> = CircularList(emptyList())
         set(value) {
             checkIsEventDispatchThread()
             field = value
@@ -76,6 +80,8 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
                 override fun update(messages: List<CompilerMessage>) {
                     ApplicationManager.getApplication().invokeLater {
                         compilerMessages = CircularList(messages)
+                        contentManager.getContent(0)?.displayName = "${compilerMessages.list.size} errors"
+                        errorListUI.selectedIndex = 0
                     }
                 }
             })
@@ -84,6 +90,7 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
                     if (!compilerMessages.isEmpty())
                         ApplicationManager.getApplication().invokeLater {
                             messageUI.text = compilerMessages.next().messageWithRegion.message
+                            errorListUI.selectedIndex = compilerMessages.getIndex()
                         }
                 }
             })
@@ -92,6 +99,7 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
                     if (!compilerMessages.isEmpty())
                         ApplicationManager.getApplication().invokeLater {
                             messageUI.text = compilerMessages.prev().messageWithRegion.message
+                            errorListUI.selectedIndex = compilerMessages.getIndex()
                         }
                 }
             })
@@ -100,7 +108,27 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
 
 
     private fun createToolbar(): JComponent {
+        val compilerPanel = this
         val toolbar = with(ActionManager.getInstance()) {
+            // TODO alternative management of actions ? test with closing the project, then reopen it!
+            val defaultActionGroup = getAction("Elm.CompilerToolsGroup") as DefaultActionGroup
+            val action = getAction(actionIdForward)
+            if (action != null) {
+                defaultActionGroup.remove(action)
+                unregisterAction(actionIdForward)
+                defaultActionGroup.remove(getAction(actionIdBack))
+                unregisterAction(actionIdBack)
+            }
+            // TODO is this safe ?
+            val elmBackAction = ElmBackAction(compilerPanel)
+            registerAction(actionIdBack, elmBackAction)
+            val elmForwardAction = ElmForwardAction(compilerPanel)
+            registerAction(actionIdForward, elmForwardAction)
+
+            defaultActionGroup.addSeparator()
+            defaultActionGroup.add(elmBackAction)
+            defaultActionGroup.add(elmForwardAction)
+
             createActionToolbar(
                     "Elm Compiler Toolbar", // the value here doesn't matter, as far as I can tell
                     getAction("Elm.CompilerToolsGroup") as DefaultActionGroup, // defined in plugin.xml
@@ -111,13 +139,16 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
         return toolbar.component
     }
 
-    // todo: F4 to source calls twice here ?
     override fun getData(dataId: String): Any? {
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
-                val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(project.basePath + "/" + compilerMessages.get().path))
-                val start = compilerMessages.get().messageWithRegion.region.start
-                OpenFileDescriptor(project, file!!, start.line - 1, start.column - 1)
+                if (!compilerMessages.isEmpty()) {
+                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(project.basePath + "/" + compilerMessages.get().path))
+                    val start = compilerMessages.get().messageWithRegion.region.start
+                    OpenFileDescriptor(project, file!!, start.line - 1, start.column - 1)
+                } else {
+                    super.getData(dataId)
+                }
             }
             else ->
                 super.getData(dataId)

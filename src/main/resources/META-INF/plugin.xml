@@ -294,22 +294,8 @@
                 text="Build Elm Project"
                 icon="AllIcons.Toolwindows.ToolWindowBuild"/>
 
-        <action id="Elm.MessageNext"
-                class="org.elm.workspace.compiler.ElmForwardAction"
-                text="Forward"
-                icon="AllIcons.Actions.Forward"/>
-
-        <action id="Elm.MessagePrev"
-                class="org.elm.workspace.compiler.ElmBackAction"
-                text="Back"
-                icon="AllIcons.Actions.Back"/>
-
         <group id="Elm.CompilerToolsGroup" text="Elm Compiler" popup="true">
             <reference id="Elm.Build"/>
-            <separator/>
-            <reference id="Elm.MessageNext"/>
-            <reference id="Elm.MessagePrev"/>
-
             <add-to-group group-id="ToolsMenu"/>
         </group>
 
