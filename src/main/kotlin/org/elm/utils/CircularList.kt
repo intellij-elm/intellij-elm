@@ -8,6 +8,10 @@ class CircularList<out T>(val list: List<T>) {
 
     fun get(): T = list[index]
 
+    fun set(i: Int) {
+        index = i
+    }
+
     fun next(): T {
         safelyAdd(1)
         return get()

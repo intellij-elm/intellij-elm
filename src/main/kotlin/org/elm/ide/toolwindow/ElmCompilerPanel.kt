@@ -11,21 +11,19 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.components.panels.HorizontalLayout
+import com.intellij.ui.components.JBScrollPane
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
 import org.elm.utils.CircularList
 import org.elm.workspace.compiler.*
+import java.awt.GridLayout
 import java.nio.file.Paths
 import javax.swing.JComponent
 import javax.swing.JTextPane
 import javax.swing.ListSelectionModel
-import javax.swing.SwingConstants
 
 
 class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(true, false) {
-
-    // TODO for errorListUI: F4 to source + sync messageUI
 
     private val errorListUI = JBList<String>(emptyList()).apply {
         emptyText.text = ""
@@ -34,6 +32,12 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
             override fun isAutoScrollMode() = true
             override fun setAutoScrollMode(state: Boolean) {}
         }.install(this)
+        addListSelectionListener {
+            if (!it.valueIsAdjusting) {
+                compilerMessages.set(selectedIndex)
+                messageUI.text = compilerMessages.get().messageWithRegion.message
+            }
+        }
     }
 
     private val messageUI = JTextPane().apply {
@@ -62,8 +66,8 @@ class ElmCompilerPanel(private val project: Project) : SimpleToolWindowPanel(tru
     init {
         setToolbar(createToolbar())
 
-        val jbPanel = JBPanel<JBPanel<*>>(HorizontalLayout(3, SwingConstants.TOP))
-        jbPanel.add(errorListUI)
+        val jbPanel = JBPanel<JBPanel<*>>(GridLayout(1, 2))
+        jbPanel.add(JBScrollPane(errorListUI))
         jbPanel.add(messageUI)
         setContent(jbPanel)
 
