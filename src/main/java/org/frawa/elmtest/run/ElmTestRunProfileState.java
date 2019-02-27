@@ -30,6 +30,7 @@ import org.elm.workspace.ElmProject;
 import org.elm.workspace.ElmToolchain;
 import org.elm.workspace.ElmWorkspaceService;
 import org.elm.workspace.commandLineTools.ElmTestCLI;
+import org.frawa.elmtest.core.ElmProjectTestsHelper;
 import org.frawa.elmtest.core.ElmTestJsonProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +38,6 @@ import org.jetbrains.annotations.SystemIndependent;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
@@ -66,10 +66,8 @@ public class ElmTestRunProfileState extends CommandLineState {
             return handleBadConfiguration(workspaceService, "Could not find the Elm compiler");
         }
 
-        Path elmFolderPath = Paths.get(getElmFolder());
-        boolean isElm18 = workspaceService.getAllProjects().stream()
-                .filter(p -> p.getProjectDirPath().equals(elmFolderPath))
-                .findFirst()
+        boolean isElm18 = new ElmProjectTestsHelper(getEnvironment().getProject())
+                .elmProjectByProjectDirPath(getElmFolder())
                 .map(ElmProject::isElm18)
                 .orElse(false);
         if (isElm18) {

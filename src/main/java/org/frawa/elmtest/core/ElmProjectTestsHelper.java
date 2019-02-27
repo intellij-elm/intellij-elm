@@ -44,4 +44,11 @@ public class ElmProjectTestsHelper {
                 .map(Path::toString)
                 .findFirst();
     }
+
+    public Optional<ElmProject> elmProjectByProjectDirPath(String path) {
+        return getTestableProjects()
+                .filter(p -> p.getProjectDirPath().toString().equals(path))
+                .findFirst();
+    }
+
 }
