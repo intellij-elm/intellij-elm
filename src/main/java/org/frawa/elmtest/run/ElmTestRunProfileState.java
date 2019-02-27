@@ -26,6 +26,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
+import org.elm.workspace.ElmProject;
 import org.elm.workspace.ElmToolchain;
 import org.elm.workspace.ElmWorkspaceService;
 import org.elm.workspace.commandLineTools.ElmTestCLI;
@@ -34,7 +35,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.SystemIndependent;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
@@ -55,12 +58,29 @@ public class ElmTestRunProfileState extends CommandLineState {
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
         ElmTestCLI elmTestCLI = toolchain.getElmTestCLI();
         Path elmCompilerBinary = toolchain.getElmCompilerPath();
+
         if (elmTestCLI == null) {
             return handleBadConfiguration(workspaceService, "Could not find elm-test");
         }
         if (elmCompilerBinary == null) {
             return handleBadConfiguration(workspaceService, "Could not find the Elm compiler");
         }
+
+        Path elmFolderPath = Paths.get(getElmFolder());
+        boolean isElm18 = workspaceService.getAllProjects().stream()
+                .filter(p -> p.getProjectDirPath().equals(elmFolderPath))
+                .findFirst()
+                .map(ElmProject::isElm18)
+                .orElse(false);
+        if (isElm18) {
+            Path elmMakePath = elmCompilerBinary.resolveSibling("elm-make");
+            if (Files.exists(elmMakePath)) {
+                elmCompilerBinary = elmMakePath;
+            } else {
+                return handleBadConfiguration(workspaceService, "Could not find the Elm compiler (elm-make)");
+            }
+        }
+
         return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, getElmFolder());
     }
 
@@ -68,7 +88,7 @@ public class ElmTestRunProfileState extends CommandLineState {
     @Override
     public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
         ExecutionResult result = super.execute(executor, runner);
-        if ( result instanceof DefaultExecutionResult) {
+        if (result instanceof DefaultExecutionResult) {
             ((DefaultExecutionResult) result).setRestartActions(new ToggleAutoTestAction() {
                 @Override
                 public AbstractAutoTestManager getAutoTestManager(Project project) {
