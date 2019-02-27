@@ -17,13 +17,11 @@ import java.nio.file.Path
  */
 class ElmCLI(private val elmExecutablePath: Path) {
 
-    // TODO [kl] allow the caller to specify the main entry point Elm file
-
-    fun make(owner: Disposable, elmProject: ElmProject): ProcessOutput {
+    fun make(owner: Disposable, elmProject: ElmProject, path: String): ProcessOutput {
         val workDir = elmProject.manifestPath.parent
         return GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
-                .withParameters("make", "src/Main.elm", "--output=/dev/null", "--report=json")
+                .withParameters("make", path, "--output=/dev/null", "--report=json")
                 .execute(owner, ignoreExitCode = true)
     }
 

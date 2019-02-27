@@ -1,5 +1,6 @@
 package org.elm.ide.toolwindow
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -9,17 +10,19 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.AutoScrollToSourceHandler
+import com.intellij.ui.ColoredListCellRenderer
+import com.intellij.ui.JBSplitter
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.components.JBList
-import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
 import org.elm.utils.CircularList
 import org.elm.workspace.compiler.*
-import java.awt.GridLayout
 import java.nio.file.Paths
 import javax.swing.JComponent
+import javax.swing.JList
 import javax.swing.JTextPane
 import javax.swing.ListSelectionModel
 
@@ -27,11 +30,20 @@ import javax.swing.ListSelectionModel
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false) {
 
     private val actionIdForward: String = "Elm.MessageForward"
+
     private val actionIdBack: String = "Elm.MessageBack"
 
     private val errorListUI = JBList<String>(emptyList()).apply {
         emptyText.text = ""
         selectionMode = ListSelectionModel.SINGLE_SELECTION
+        cellRenderer = object : ColoredListCellRenderer<String>() {
+            override fun customizeCellRenderer(list: JList<out String>, value: String, index: Int,
+                                               selected: Boolean, hasFocus: Boolean) {
+                icon = AllIcons.General.Error
+                val attributes = SimpleTextAttributes.ERROR_ATTRIBUTES
+                append(value, attributes)
+            }
+        }
         object : AutoScrollToSourceHandler() {
             override fun isAutoScrollMode() = true
             override fun setAutoScrollMode(state: Boolean) {}
@@ -55,9 +67,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             field = value
             if (compilerMessages.isEmpty()) {
                 errorListUI.setListData(emptyArray())
-                messageUI.text = "No Errors"
+                messageUI.text = ""
             } else {
-                val titles = compilerMessages.list.map { it.path + prettyRegion(it.messageWithRegion.region) + "    " + it.messageWithRegion.title }
+                val titles = compilerMessages.list.map { it.name + prettyRegion(it.messageWithRegion.region) + "    " + it.messageWithRegion.title }
                 errorListUI.setListData(titles.toTypedArray())
                 messageUI.text = compilerMessages.get().messageWithRegion.message
             }
@@ -70,10 +82,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     init {
         setToolbar(createToolbar())
 
-        val jbPanel = JBPanel<JBPanel<*>>(GridLayout(1, 2))
-        jbPanel.add(JBScrollPane(errorListUI))
-        jbPanel.add(messageUI)
-        setContent(jbPanel)
+        val splitPane = JBSplitter()
+        splitPane.firstComponent = JBScrollPane(errorListUI)
+        splitPane.secondComponent = messageUI
+        setContent(splitPane)
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
@@ -143,7 +155,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(project.basePath + "/" + compilerMessages.get().path))
+                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(compilerMessages.get().path))
                     val start = compilerMessages.get().messageWithRegion.region.start
                     OpenFileDescriptor(project, file!!, start.line - 1, start.column - 1)
                 } else {

@@ -2,9 +2,14 @@ package org.elm.workspace.compiler
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import com.intellij.util.messages.Topic
+import org.elm.lang.core.lookup.ClientLocation
+import org.elm.lang.core.lookup.ElmLookup
+import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.openapiext.saveAllDocuments
+import org.elm.workspace.ElmProject
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
@@ -24,17 +29,30 @@ class ElmBuildAction : AnAction() {
         }
 
         val elmProject = project.elmWorkspace.allProjects.first()
-        val json = elmCLI.make(project, elmProject).stderr
 
-        if (json.isNotEmpty()) {
+        // find "main" function
+        val clientLocation = LookupClientLocation(project, elmProject)
+        val elements = ElmLookup.findByName<ElmNamedElement>("main", clientLocation)
+/*
+        for (element in elements) {
+            val inference = element.findInference()
+            // TODO verify types
+        }
+*/
+        if (elements.isNotEmpty()) {
+            val path = elements.get(0).containingFile.virtualFile.path
+            val json = elmCLI.make(project, elmProject, path).stderr
 
-            // TODO list of errors only, if _independent_ modules (with errors) are compiled
+            if (json.isNotEmpty()) {
 
-            val messages = elmJsonReport.elmToCompilerMessages(json)
-            project.messageBus.syncPublisher(ERRORS_TOPIC).update(messages)
+                // TODO list of errors only, if multiple independent modules (with errors) are compiled
 
-        } else {
-            project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
+                val messages = elmJsonReport.elmToCompilerMessages(json)
+                project.messageBus.syncPublisher(ERRORS_TOPIC).update(messages)
+
+            } else {
+                project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
+            }
         }
     }
 
@@ -45,4 +63,10 @@ class ElmBuildAction : AnAction() {
     companion object {
         val ERRORS_TOPIC = Topic("Elm compiler-messages", ElmErrorsListener::class.java)
     }
+
+    data class LookupClientLocation(
+            override val intellijProject: Project,
+            override val elmProject: ElmProject?,
+            override val isInTestsDirectory: Boolean = false
+    ) : ClientLocation
 }

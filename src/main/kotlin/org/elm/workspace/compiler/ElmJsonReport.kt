@@ -22,7 +22,8 @@ class ElmJsonReport {
         errors?.forEach { error ->
             run {
                 val path = error.string("path") ?: "-no path-"
-                val list = problemsMessageAndRegion(error).map { CompilerMessage(path, it) }
+                val name = error.string("name") ?: "-no name-"
+                val list = problemsMessageAndRegion(error).map { CompilerMessage(name, path, it) }
                 result.addAll(list)
             }
         }

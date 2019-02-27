@@ -17,6 +17,6 @@ data class End(
 
 data class MessageAndRegion(val message: String, val region: Region, val title: String)
 
-data class CompilerMessage(val path: String, val messageWithRegion: MessageAndRegion)
+data class CompilerMessage(val name: String, val path: String, val messageWithRegion: MessageAndRegion)
 
 
