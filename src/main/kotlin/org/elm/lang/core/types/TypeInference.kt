@@ -220,7 +220,7 @@ private class InferenceScope(
             is ElmBinOpExpr -> inferBinOpExpr(expr)
             is ElmFunctionCallExpr -> inferFunctionCall(expr)
             is ElmAtomTag -> inferAtom(expr)
-            else -> error("unexpected expression type: $expr")
+            else -> error(expr, "unexpected expression type: $expr")
         }
     }
 
@@ -284,7 +284,7 @@ private class InferenceScope(
             when (operand) {
                 is ElmFunctionCallExpr -> inferFunctionCall(operand)
                 is ElmAtomTag -> inferAtom(operand)
-                else -> error("unexpected operand type $operand")
+                else -> error(operand, "unexpected operand type $operand")
             }
 
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
@@ -340,7 +340,7 @@ private class InferenceScope(
             is ElmTupleConstructorExpr -> TyUnknown()// TODO [drop 0.18] remove this case
             is ElmUnitExpr -> TyUnit()
             is ElmValueExpr -> inferReferenceElement(atom)
-            else -> error("unexpected atom type $atom")
+            else -> error(atom, "unexpected atom type $atom")
         }
         expressionTypes[atom] = ty
         return ty
@@ -387,7 +387,7 @@ private class InferenceScope(
             is ElmParenthesizedExpr -> inferExpression(target.expression)
             is ElmRecordExpr -> inferRecord(target)
             is ElmFieldAccessExpr -> inferFieldAccess(target)
-            else -> error("unexpected field access target expression $target")
+            else -> error(target, "unexpected field access target expression")
         }
 
         expressionTypes[target] = ty
@@ -540,14 +540,13 @@ private class InferenceScope(
                     // Now that the pattern's declaration has been inferred, the pattern has been
                     // added to bindings
                     return getBinding(ref)
-                            ?: error("failed to destructure pattern for expr of type " +
-                                    "${expr.elementType}: '${expr.text}'")
+                            ?: error(expr, "failed to destructure pattern")
                 }
 
                 // All patterns should now be bound
-                error("failed to bind pattern for expr of type ${expr.elementType}: '${expr.text}'")
+                error(expr, "failed to bind pattern")
             }
-            else -> error("Unexpected reference type ${ref.elementType}")
+            else -> error(ref, "Unexpected reference type")
         }
     }
 
@@ -685,7 +684,7 @@ private class InferenceScope(
         // overwritten, so do a sanity check here.
         for (name in declaredNames) {
             if (getBinding(name) == TyInProgressBinding) {
-                error("failed to bind element of type ${name.elementType} with name '${name.text}'")
+                error(name, "failed to bind parameter")
             }
         }
     }
@@ -723,7 +722,7 @@ private class InferenceScope(
             is ElmUnionPattern -> bindUnionPattern(pat, isParameter)
             is ElmUnitExpr -> {
             }
-            else -> error("unexpected type $pat")
+            else -> error(pat, "unexpected pattern type")
         }
     }
 
@@ -1069,3 +1068,21 @@ fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar
 
 /** extracts the typeclass from a [TyVar] name if it is a typeclass */
 private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")
+
+/** Throw an [IllegalStateException] with [message] augmented with information about [element] */
+private fun error(element: ElmPsiElement, message: String): Nothing {
+    val file = element.containingFile
+    val location = if (file == null) "" else {
+        val fileText = file.text
+        val textRange = element.textRange
+        val startOffset = textRange.startOffset
+        val lineNum = fileText.asSequence().take(startOffset).count { it == '\n' } + 1
+        val lineStart = fileText.lastIndexOf('\n', startIndex = startOffset)
+        val start = startOffset - lineStart
+        val end = textRange.endOffset - lineStart
+        " [${file.name}:$lineNum:$start-$end]"
+    }
+
+    val text = element.text.let { if (it.length > 25) "${it.take(25)}…" else it }.replace("\n", "↵")
+    error("$message$location <${element.elementType}: '$text'>")
+}
