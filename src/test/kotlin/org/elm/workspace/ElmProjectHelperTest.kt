@@ -13,55 +13,60 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
     fun `test all names`() {
         testProject()
 
-        checkEquals(Arrays.asList("a", "b"), ElmProjectTestsHelper(project).allNames().toList())
+        val helper = ElmProjectTestsHelper(project)
+        checkEquals(Arrays.asList("a", "b"), helper.allNames().toList())
     }
 
     fun `test by name`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
 
-        checkEquals(Optional.of(root.resolve("a").toString()), ElmProjectTestsHelper(project).projectDirPathByName("a"))
-        checkEquals(Optional.of(root.resolve("b").toString()), ElmProjectTestsHelper(project).projectDirPathByName("b"))
-        checkEquals(empty<String>(), ElmProjectTestsHelper(project).projectDirPathByName("gnu"))
-        checkEquals(empty<String>(), ElmProjectTestsHelper(project).projectDirPathByName("without-tests"))
+        val helper = ElmProjectTestsHelper(project)
+        checkEquals(Optional.of(root.resolve("a").toString()), helper.projectDirPathByName("a"))
+        checkEquals(Optional.of(root.resolve("b").toString()), helper.projectDirPathByName("b"))
+        checkEquals(empty<String>(), helper.projectDirPathByName("gnu"))
+        checkEquals(empty<String>(), helper.projectDirPathByName("without-tests"))
     }
 
     fun `test by path`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
 
-        checkEquals(Optional.of("a"), ElmProjectTestsHelper(project).nameByProjectDirPath(root.resolve("a").toString()))
-        checkEquals(Optional.of("b"), ElmProjectTestsHelper(project).nameByProjectDirPath(root.resolve("b").toString()))
-        checkEquals(empty<String>(), ElmProjectTestsHelper(project).nameByProjectDirPath(root.resolve("Toto").toString()))
+        val helper = ElmProjectTestsHelper(project)
+        checkEquals(Optional.of("a"), helper.nameByProjectDirPath(root.resolve("a").toString()))
+        checkEquals(Optional.of("b"), helper.nameByProjectDirPath(root.resolve("b").toString()))
+        checkEquals(empty<String>(), helper.nameByProjectDirPath(root.resolve("Toto").toString()))
     }
 
     fun `test elm project by path`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
 
+        val helper = ElmProjectTestsHelper(project)
         checkEquals(
                 Optional.of("a"),
-                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("a").toString())
+                helper.elmProjectByProjectDirPath(root.resolve("a").toString())
                         .map(ElmProject::presentableName)
         )
         checkEquals(Optional.of("b"),
-                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("b").toString())
+                helper.elmProjectByProjectDirPath(root.resolve("b").toString())
                         .map(ElmProject::presentableName)
         )
-        checkEquals(empty<ElmProject>(), ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("Toto").toString()))
+        checkEquals(empty<ElmProject>(), helper.elmProjectByProjectDirPath(root.resolve("Toto").toString()))
     }
 
     fun `test elm18 project`() {
         val testProject = testProject18()
         val root = testProject.root.pathAsPath
 
+        val helper = ElmProjectTestsHelper(project)
         checkEquals(
                 Optional.of(true),
-                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("z").toString())
+                helper.elmProjectByProjectDirPath(root.resolve("z").toString())
                         .map(ElmProject::isElm18)
         )
         checkEquals(empty<ElmProject>(),
-                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("z/tests").toString())
+                helper.elmProjectByProjectDirPath(root.resolve("z/tests").toString())
                         .map(ElmProject::isElm18)
         )
     }
@@ -70,10 +75,11 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
 
+        val helper = ElmProjectTestsHelper(project)
         val compilerPath = root.resolve("bin/elm")
         checkEquals(
                 compilerPath,
-                ElmProjectTestsHelper(project).adjustElmCompilerProjectDirPath(root.resolve("a").toString(), compilerPath)
+                helper.adjustElmCompilerProjectDirPath(root.resolve("a").toString(), compilerPath)
         )
     }
 
@@ -81,10 +87,11 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         val testProject = testProject18()
         val root = testProject.root.pathAsPath
 
+        val helper = ElmProjectTestsHelper(project)
         val compilerPath = root.resolve("bin/elm")
         checkEquals(
                 compilerPath.resolveSibling("elm-make"),
-                ElmProjectTestsHelper(project).adjustElmCompilerProjectDirPath(root.resolve("z").toString(), compilerPath)
+                helper.adjustElmCompilerProjectDirPath(root.resolve("z").toString(), compilerPath)
         )
     }
 
@@ -105,17 +112,18 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         val root = testProject.root.pathAsPath
 
         val helper = ElmProjectTestsHelper(project)
-        val elmProjectZ = helper.elmProjectByProjectDirPath(root.resolve("z").toString())
+        val rootZ = root.resolve("z")
+        val elmProjectZ = helper.elmProjectByProjectDirPath(rootZ.toString())
 
         val testFile = testProject.root.findFileByRelativePath("z/tests/Test.elm")!!
         val elmProjectZtest = project.elmWorkspace.findProjectForFile(testFile)!!
 
         checkEquals(
-                Optional.of(root.resolve("z")),
+                Optional.of(rootZ),
                 elmProjectZ.map(ElmProjectTestsHelper::elmFolderForTesting)
         )
         checkEquals(
-                root.resolve("z"),
+                rootZ,
                 ElmProjectTestsHelper.elmFolderForTesting(elmProjectZtest)
         )
         checkEquals(
