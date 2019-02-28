@@ -35,6 +35,22 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         checkEquals(empty<String>(), ElmProjectTestsHelper(project).nameByProjectDirPath(root.resolve("Toto").toString()))
     }
 
+    fun `test elm project by path`() {
+        val testProject = testProject()
+        val root = testProject.root.pathAsPath
+
+        checkEquals(
+                Optional.of("a"),
+                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("a").toString())
+                        .map(ElmProject::presentableName)
+        )
+        checkEquals(Optional.of("b"),
+                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("b").toString())
+                        .map(ElmProject::presentableName)
+        )
+        checkEquals(empty<ElmProject>(), ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("Toto").toString()))
+    }
+
     private fun testProject(): TestProject {
         val testProject = fileTree {
             dir("a") {
