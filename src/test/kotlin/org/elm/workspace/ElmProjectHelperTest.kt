@@ -66,6 +66,28 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         )
     }
 
+    fun `test adjust elm compiler path`() {
+        val testProject = testProject()
+        val root = testProject.root.pathAsPath
+
+        val compilerPath = root.resolve("bin/elm")
+        checkEquals(
+                compilerPath,
+                ElmProjectTestsHelper(project).adjustElmCompilerProjectDirPath(root.resolve("a").toString(), compilerPath)
+        )
+    }
+
+    fun `test adjust elm18 compiler path`() {
+        val testProject = testProject18()
+        val root = testProject.root.pathAsPath
+
+        val compilerPath = root.resolve("bin/elm")
+        checkEquals(
+                compilerPath.resolveSibling("elm-make"),
+                ElmProjectTestsHelper(project).adjustElmCompilerProjectDirPath(root.resolve("z").toString(), compilerPath)
+        )
+    }
+
     private fun testProject(): TestProject {
         val testProject = fileTree {
             dir("a") {

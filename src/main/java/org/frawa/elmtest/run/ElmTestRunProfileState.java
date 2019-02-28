@@ -26,7 +26,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
-import org.elm.workspace.ElmProject;
 import org.elm.workspace.ElmToolchain;
 import org.elm.workspace.ElmWorkspaceService;
 import org.elm.workspace.commandLineTools.ElmTestCLI;
@@ -53,7 +52,8 @@ public class ElmTestRunProfileState extends CommandLineState {
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
         FileDocumentManager.getInstance().saveAllDocuments();
-        ElmWorkspaceService workspaceService = ServiceManager.getService(getEnvironment().getProject(), ElmWorkspaceService.class);
+        Project project = getEnvironment().getProject();
+        ElmWorkspaceService workspaceService = ServiceManager.getService(project, ElmWorkspaceService.class);
 
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
         ElmTestCLI elmTestCLI = toolchain.getElmTestCLI();
@@ -66,20 +66,17 @@ public class ElmTestRunProfileState extends CommandLineState {
             return handleBadConfiguration(workspaceService, "Could not find the Elm compiler");
         }
 
-        boolean isElm18 = new ElmProjectTestsHelper(getEnvironment().getProject())
-                .elmProjectByProjectDirPath(getElmFolder())
-                .map(ElmProject::isElm18)
-                .orElse(false);
-        if (isElm18) {
-            Path elmMakePath = elmCompilerBinary.resolveSibling("elm-make");
-            if (Files.exists(elmMakePath)) {
-                elmCompilerBinary = elmMakePath;
-            } else {
-                return handleBadConfiguration(workspaceService, "Could not find the Elm compiler (elm-make)");
-            }
+        @SystemIndependent
+        String elmFolder = getElmFolder();
+
+        Path adjusted = new ElmProjectTestsHelper(project)
+                .adjustElmCompilerProjectDirPath(elmFolder, elmCompilerBinary);
+
+        if (!Files.exists(adjusted)) {
+            return handleBadConfiguration(workspaceService, "Could not find the Elm compiler (elm-make)");
         }
 
-        return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, getElmFolder());
+        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolder);
     }
 
     @NotNull

@@ -51,4 +51,12 @@ public class ElmProjectTestsHelper {
                 .findFirst();
     }
 
+    public Path adjustElmCompilerProjectDirPath(String elmFolder, Path compilerPath) {
+        return elmProjectByProjectDirPath(elmFolder)
+                .filter(ElmProject::isElm18)
+                .map(_1 -> compilerPath.resolveSibling("elm-make"))
+                .orElse(compilerPath);
+    }
+
+
 }
