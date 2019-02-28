@@ -88,6 +88,42 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         )
     }
 
+    fun `test elm folder for testing`() {
+        val testProject = testProject()
+        val root = testProject.root.pathAsPath
+
+        val helper = ElmProjectTestsHelper(project)
+        val elmProjectA = helper.elmProjectByProjectDirPath(root.resolve("a").toString())
+        checkEquals(
+                Optional.of(root.resolve("a")),
+                elmProjectA.map(ElmProjectTestsHelper::elmFolderForTesting)
+        )
+    }
+
+    fun `test elm18 folder for testing`() {
+        val testProject = testProject18()
+        val root = testProject.root.pathAsPath
+
+        val helper = ElmProjectTestsHelper(project)
+        val elmProjectZ = helper.elmProjectByProjectDirPath(root.resolve("z").toString())
+
+        val testFile = testProject.root.findFileByRelativePath("z/tests/Test.elm")!!
+        val elmProjectZtest = project.elmWorkspace.findProjectForFile(testFile)!!
+
+        checkEquals(
+                Optional.of(root.resolve("z")),
+                elmProjectZ.map(ElmProjectTestsHelper::elmFolderForTesting)
+        )
+        checkEquals(
+                root.resolve("z"),
+                ElmProjectTestsHelper.elmFolderForTesting(elmProjectZtest)
+        )
+        checkEquals(
+                root.resolve("z/tests"),
+                elmProjectZtest.projectDirPath
+        )
+    }
+
     private fun testProject(): TestProject {
         val testProject = fileTree {
             dir("a") {

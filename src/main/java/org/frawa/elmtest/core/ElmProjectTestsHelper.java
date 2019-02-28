@@ -58,5 +58,10 @@ public class ElmProjectTestsHelper {
                 .orElse(compilerPath);
     }
 
+    public static Path elmFolderForTesting(ElmProject elmProject) {
+        return elmProject.isElm18() && elmProject.getPresentableName().equals("tests")
+                ? elmProject.getProjectDirPath().getParent()
+                : elmProject.getProjectDirPath();
+    }
 
 }
