@@ -51,6 +51,21 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         checkEquals(empty<ElmProject>(), ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("Toto").toString()))
     }
 
+    fun `test elm18 project`() {
+        val testProject = testProject18()
+        val root = testProject.root.pathAsPath
+
+        checkEquals(
+                Optional.of(true),
+                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("z").toString())
+                        .map(ElmProject::isElm18)
+        )
+        checkEquals(empty<ElmProject>(),
+                ElmProjectTestsHelper(project).elmProjectByProjectDirPath(root.resolve("z/tests").toString())
+                        .map(ElmProject::isElm18)
+        )
+    }
+
     private fun testProject(): TestProject {
         val testProject = fileTree {
             dir("a") {
@@ -87,24 +102,79 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         return testProject
     }
 
-    val elmJson = """
-                        {
-                            "type": "application",
-                            "source-directories": [ "src" ],
-                            "elm-version": "0.19.0",
-                            "dependencies": {
-                                "direct": {
-                                },
-                                "indirect": {
-                                }
-                             },
-                            "test-dependencies": {
-                                "direct": {
-                                },
-                                "indirect": {
-                                }
-                            }
-                        }
-                        """
+    val elmJson = """{
+        "type": "application",
+        "source-directories": [ "src" ],
+        "elm-version": "0.19.0",
+        "dependencies": {
+            "direct": {
+            },
+            "indirect": {
+            }
+         },
+        "test-dependencies": {
+            "direct": {
+            },
+            "indirect": {
+            }
+        }
+    }
+    """
 
+    private fun testProject18(): TestProject {
+        val testProject = fileTree {
+            dir("z") {
+                project("elm-package.json", elmJson18)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+                dir("elm-stuff") {
+                    file("exact-dependencies.json", "{}")
+                }
+                dir("tests") {
+                    project("elm-package.json", elmJson18test)
+                    elm("Test.elm", "")
+                    dir("elm-stuff") {
+                        file("exact-dependencies.json", "{}")
+                    }
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("z/elm-package.json")).get()
+            asyncAttachElmProject(rootPath.resolve("z/tests/elm-package.json")).get()
+        }
+
+        return testProject
+    }
+
+    val elmJson18 = """{
+        "version": "4.0.0",
+        "repository": "https://github.com/user/project.git",
+        "license": "BSD-3-Clause",
+        "source-directories": [
+            "src"
+        ],
+        "exposed-modules": [],
+        "dependencies": {
+        },
+        "elm-version": "0.18.0 <= v < 0.19.0"
+    }
+    """
+
+    val elmJson18test = """{
+        "version": "4.0.0",
+        "repository": "https://github.com/user/project.git",
+        "license": "BSD-3-Clause",
+        "source-directories": [
+            "."
+        ],
+        "exposed-modules": [],
+        "dependencies": {
+        },
+        "elm-version": "0.18.0 <= v < 0.19.0"
+    }
+    """
 }
