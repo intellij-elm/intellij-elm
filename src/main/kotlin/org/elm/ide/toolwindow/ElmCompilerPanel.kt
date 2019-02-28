@@ -20,6 +20,7 @@ import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
 import org.elm.utils.CircularList
 import org.elm.workspace.compiler.*
+import java.awt.Color
 import java.nio.file.Paths
 import javax.swing.JComponent
 import javax.swing.JList
@@ -58,7 +59,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private val messageUI = JTextPane().apply {
         contentType = "text/html"
-        // background = Color(200, 200, 200) // TODO color themes
+        background = Color.GRAY // TODO intelligenty determine color ?
     }
 
     var compilerMessages: CircularList<CompilerMessage> = CircularList(emptyList())

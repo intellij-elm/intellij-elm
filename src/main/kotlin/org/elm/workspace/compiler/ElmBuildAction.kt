@@ -8,12 +8,16 @@ import com.intellij.util.messages.Topic
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.types.TyUnion
+import org.elm.lang.core.types.findInference
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
 class ElmBuildAction : AnAction() {
+
+    private val elmMainTypes: Set<Pair<String, String>> = hashSetOf(Pair("Platform", "Program"), Pair("Html", "Html"))
 
     private val elmJsonReport = ElmJsonReport()
 
@@ -33,14 +37,12 @@ class ElmBuildAction : AnAction() {
         // find "main" function
         val clientLocation = LookupClientLocation(project, elmProject)
         val elements = ElmLookup.findByName<ElmNamedElement>("main", clientLocation)
-/*
-        for (element in elements) {
-            val inference = element.findInference()
-            // TODO verify types
-        }
-*/
-        if (elements.isNotEmpty()) {
-            val path = elements.get(0).containingFile.virtualFile.path
+        val mainElements = elements
+                .filter { element -> element.findInference() != null && element.findInference()?.ty is TyUnion }
+                .filter { element -> elmMainTypes.contains(Pair((element.findInference()?.ty as TyUnion).module, (element.findInference()?.ty as TyUnion).name)) }
+
+        if (mainElements.isNotEmpty()) {
+            val path = mainElements[0].containingFile.virtualFile.path
             val json = elmCLI.make(project, elmProject, path).stderr
 
             if (json.isNotEmpty()) {
@@ -53,7 +55,14 @@ class ElmBuildAction : AnAction() {
             } else {
                 project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
             }
+        } else {
+            showDialog(project)
         }
+
+    }
+
+    private fun showDialog(project: Project) {
+        Messages.showDialog(project, "No Type Signature found. Please specify one, so that Elm Build works.", "Info", arrayOf("Ok"), 0, Messages.getErrorIcon())
     }
 
     interface ElmErrorsListener {
