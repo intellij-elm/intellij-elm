@@ -1,11 +1,20 @@
 package org.elm.workspace.compiler
 
+import org.junit.Test
+
 
 class ElmJsonReportTest {
 
-    // private val elmJsonReport = ElmJsonReport()
+    private val elmJsonReport = ElmJsonReport()
 
-/*
+    @Test
+    fun test_gson() {
+        val json = this.javaClass.getResource("/compiler_json_reports/errors.json").readText()
+        val result = elmJsonReport.elmToCompilerMessages(json)
+        println(result)
+    }
+
+    /*
     @Test
     fun test() {
         val json = this.javaClass.getResource("/compiler_json_reports/errors.json").readText()

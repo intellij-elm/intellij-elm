@@ -156,7 +156,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(compilerMessages.get().path))
+                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(project.basePath + "/" + compilerMessages.get().path))
                     val start = compilerMessages.get().messageWithRegion.region.start
                     OpenFileDescriptor(project, file!!, start.line - 1, start.column - 1)
                 } else {
