@@ -44,4 +44,24 @@ public class ElmProjectTestsHelper {
                 .map(Path::toString)
                 .findFirst();
     }
+
+    public Optional<ElmProject> elmProjectByProjectDirPath(String path) {
+        return getTestableProjects()
+                .filter(p -> p.getProjectDirPath().toString().equals(path))
+                .findFirst();
+    }
+
+    public Path adjustElmCompilerProjectDirPath(String elmFolder, Path compilerPath) {
+        return elmProjectByProjectDirPath(elmFolder)
+                .filter(ElmProject::isElm18)
+                .map(_1 -> compilerPath.resolveSibling("elm-make"))
+                .orElse(compilerPath);
+    }
+
+    public static Path elmFolderForTesting(ElmProject elmProject) {
+        return elmProject.isElm18() && elmProject.getPresentableName().equals("tests")
+                ? elmProject.getProjectDirPath().getParent()
+                : elmProject.getProjectDirPath();
+    }
+
 }
