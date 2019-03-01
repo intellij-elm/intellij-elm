@@ -29,11 +29,13 @@ import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.elm.workspace.ElmToolchain;
 import org.elm.workspace.ElmWorkspaceService;
 import org.elm.workspace.commandLineTools.ElmTestCLI;
+import org.frawa.elmtest.core.ElmProjectTestsHelper;
 import org.frawa.elmtest.core.ElmTestJsonProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.SystemIndependent;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -50,25 +52,38 @@ public class ElmTestRunProfileState extends CommandLineState {
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
         FileDocumentManager.getInstance().saveAllDocuments();
-        ElmWorkspaceService workspaceService = ServiceManager.getService(getEnvironment().getProject(), ElmWorkspaceService.class);
+        Project project = getEnvironment().getProject();
+        ElmWorkspaceService workspaceService = ServiceManager.getService(project, ElmWorkspaceService.class);
 
         ElmToolchain toolchain = workspaceService.getSettings().getToolchain();
         ElmTestCLI elmTestCLI = toolchain.getElmTestCLI();
         Path elmCompilerBinary = toolchain.getElmCompilerPath();
+
         if (elmTestCLI == null) {
             return handleBadConfiguration(workspaceService, "Could not find elm-test");
         }
         if (elmCompilerBinary == null) {
             return handleBadConfiguration(workspaceService, "Could not find the Elm compiler");
         }
-        return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, getElmFolder());
+
+        @SystemIndependent
+        String elmFolder = getElmFolder();
+
+        Path adjusted = new ElmProjectTestsHelper(project)
+                .adjustElmCompilerProjectDirPath(elmFolder, elmCompilerBinary);
+
+        if (!Files.exists(adjusted)) {
+            return handleBadConfiguration(workspaceService, "Could not find the Elm compiler (elm-make)");
+        }
+
+        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolder);
     }
 
     @NotNull
     @Override
     public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
         ExecutionResult result = super.execute(executor, runner);
-        if ( result instanceof DefaultExecutionResult) {
+        if (result instanceof DefaultExecutionResult) {
             ((DefaultExecutionResult) result).setRestartActions(new ToggleAutoTestAction() {
                 @Override
                 public AbstractAutoTestManager getAutoTestManager(Project project) {

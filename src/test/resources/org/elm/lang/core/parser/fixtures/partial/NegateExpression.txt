@@ -7,5 +7,5 @@ Elm File
     PsiWhiteSpace(' ')
     ElmNegateExpr(NEGATE_EXPR)
       PsiElement(OPERATOR_IDENTIFIER)('-')
-      PsiErrorElement:<expression> expected
+      PsiErrorElement:<expr> expected
         <empty list>

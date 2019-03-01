@@ -6,8 +6,8 @@ import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
-import org.elm.workspace.ElmProject;
 import org.elm.workspace.ElmWorkspaceService;
+import org.frawa.elmtest.core.ElmProjectTestsHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -51,7 +51,8 @@ public class ElmTestRunConfigurationProducer extends RunConfigurationProducer<El
                 .map(ConfigurationContext::getLocation)
                 .map(Location::getVirtualFile)
                 .map(elmWorkspace::findProjectForFile)
-                .map(ElmProject::getProjectDirPath)
+                .flatMap(Optional::ofNullable)
+                .map(ElmProjectTestsHelper::elmFolderForTesting)
                 .map(Path::toString);
     }
 }

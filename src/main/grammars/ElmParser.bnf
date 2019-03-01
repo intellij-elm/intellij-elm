@@ -353,7 +353,7 @@ left FieldAccessSegment ::=
     }
 
 
-NegateExpr ::= MinusWithoutTrailingWhitespace Expression
+NegateExpr ::= MinusWithoutTrailingWhitespace Atom
     { pin = 1 }
 
 ParenthesizedExpr ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
