@@ -3,8 +3,13 @@ package org.elm.workspace.compiler
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.ui.popup.Balloon
+import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.WindowManager
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.Topic
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
@@ -15,6 +20,7 @@ import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
+
 
 class ElmBuildAction : AnAction() {
 
@@ -65,7 +71,8 @@ class ElmBuildAction : AnAction() {
     }
 
     private fun showDialog(project: Project) {
-        Messages.showDialog(project, "No Type Signature found. Please specify one, so that Elm Build works.", "Info", arrayOf("Ok"), 0, Messages.getErrorIcon())
+        val statusBar = WindowManager.getInstance().getStatusBar(project)
+        JBPopupFactory.getInstance().createHtmlTextBalloonBuilder("No Type Signature found. Please specify one, so that Elm Build works.", MessageType.ERROR, null).setFadeoutTime(5000).createBalloon().show(RelativePoint.getNorthEastOf(statusBar.component), Balloon.Position.atRight)
     }
 
     interface ElmErrorsListener {
