@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.SimpleTextAttributes
+import com.intellij.ui.SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
@@ -38,11 +38,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         emptyText.text = ""
         selectionMode = ListSelectionModel.SINGLE_SELECTION
         cellRenderer = object : ColoredListCellRenderer<String>() {
-            override fun customizeCellRenderer(list: JList<out String>, value: String, index: Int,
-                                               selected: Boolean, hasFocus: Boolean) {
+            override fun customizeCellRenderer(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
                 icon = AllIcons.General.Error
-                val attributes = SimpleTextAttributes.ERROR_ATTRIBUTES
-                append(value, attributes)
+                append(value, REGULAR_BOLD_ATTRIBUTES)
             }
         }
         object : AutoScrollToSourceHandler() {
@@ -59,7 +57,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private val messageUI = JTextPane().apply {
         contentType = "text/html"
-        background = Color.GRAY // TODO intelligenty determine color ?
+        background = Color(34, 34, 34)
     }
 
     var compilerMessages: CircularList<CompilerMessage> = CircularList(emptyList())
@@ -156,7 +154,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(project.basePath + "/" + compilerMessages.get().path))
+                    var filePath = compilerMessages.get().path
+                    if (!filePath.startsWith("/")) filePath = project.basePath + "/" + filePath
+                    System.err.println(filePath)
+                    val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(filePath)) // TODO differently ?
                     val start = compilerMessages.get().messageWithRegion.region.start
                     OpenFileDescriptor(project, file!!, start.line - 1, start.column - 1)
                 } else {

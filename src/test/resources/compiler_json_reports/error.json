@@ -1,0 +1,22 @@
+{
+  "type": "error",
+  "path": "src/Helper.elm",
+  "title": "UNNAMED MODULE",
+  "message": [
+    "The `Helper` module must start with a line like this:\n\n    ",
+    {
+      "bold": false,
+      "underline": false,
+      "color": "yellow",
+      "string": "module Helper exposing (..)"
+    },
+    "\n\nTry adding that as the first line of your file!\n\n",
+    {
+      "bold": false,
+      "underline": true,
+      "color": null,
+      "string": "Note"
+    },
+    ": It is best to replace (..) with an explicit list of types and functions\nyou want to expose. If you know a value is only used WITHIN this module, it is\nextra easy to refactor. This kind of information is great, especially as your\nproject grows!"
+  ]
+}
