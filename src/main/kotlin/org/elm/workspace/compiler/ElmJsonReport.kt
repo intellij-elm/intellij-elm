@@ -16,7 +16,8 @@ class ElmJsonReport {
         val type = obj.get("type").asString
         if (type == "error") {
             val path = obj.get("path").asString ?: "-no path-"
-            return listOf(CompilerMessage("", path, createHtmlMessage(obj.get("message").asJsonArray, obj.get("title").asString)))
+            val title = obj.get("title").asString
+            return listOf(CompilerMessage(title, path, createHtmlMessage(obj.get("message").asJsonArray, title)))
         } else {
             val errors = obj.get("errors").asJsonArray
             val result: MutableList<CompilerMessage> = mutableListOf()

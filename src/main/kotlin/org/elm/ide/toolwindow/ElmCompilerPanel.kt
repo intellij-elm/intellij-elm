@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES
+import com.intellij.ui.SimpleTextAttributes.REGULAR_ATTRIBUTES
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
@@ -40,7 +40,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         cellRenderer = object : ColoredListCellRenderer<String>() {
             override fun customizeCellRenderer(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
                 icon = AllIcons.General.Error
-                append(value, REGULAR_BOLD_ATTRIBUTES)
+                append(value, REGULAR_ATTRIBUTES)
             }
         }
         object : AutoScrollToSourceHandler() {
@@ -75,7 +75,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
 
     private fun prettyRegion(region: Region): String {
-        return ": line ${region.start.line} column ${region.start.column}"
+        return " @ line ${region.start.line} column ${region.start.column}"
     }
 
     init {
