@@ -9,8 +9,9 @@ import org.elm.ide.toolwindow.ElmCompilerPanel
 class ElmBackAction(private val elmCompilerPanel: ElmCompilerPanel) : AnAction() {
 
     override fun update(e: AnActionEvent) {
+        e.presentation.text = "Previous Error"
         e.presentation.icon = AllIcons.Actions.Back
-        e.presentation.isEnabled = !elmCompilerPanel.compilerMessages.isEmpty()
+        e.presentation.isEnabled = !elmCompilerPanel.compilerMessages.isEmpty() && elmCompilerPanel.canBack
     }
 
     override fun actionPerformed(e: AnActionEvent) {

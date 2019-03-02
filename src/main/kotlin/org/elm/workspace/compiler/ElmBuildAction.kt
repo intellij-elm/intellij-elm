@@ -4,6 +4,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
@@ -55,6 +56,8 @@ class ElmBuildAction : AnAction() {
             } else {
                 project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
             }
+            // show toolwindow
+            ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
         } else {
             showDialog(project)
         }

@@ -9,8 +9,9 @@ import org.elm.ide.toolwindow.ElmCompilerPanel
 class ElmForwardAction(private val elmCompilerPanel: ElmCompilerPanel) : AnAction() {
 
     override fun update(e: AnActionEvent) {
+        e.presentation.text = "Next Error"
         e.presentation.icon = AllIcons.Actions.Forward
-        e.presentation.isEnabled = !elmCompilerPanel.compilerMessages.isEmpty()
+        e.presentation.isEnabled = !elmCompilerPanel.compilerMessages.isEmpty() && elmCompilerPanel.canForward
     }
 
     override fun actionPerformed(e: AnActionEvent) {

@@ -18,7 +18,6 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
-import org.elm.utils.CircularList
 import org.elm.workspace.compiler.*
 import java.awt.Color
 import java.nio.file.Paths
@@ -49,8 +48,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }.install(this)
         addListSelectionListener {
             if (!it.valueIsAdjusting && selectedIndex >= 0) {
-                compilerMessages.set(selectedIndex)
-                messageUI.text = compilerMessages.get().messageWithRegion.message
+                index = selectedIndex
+                canForward = index < compilerMessages.size - 1
+                canBack = index > 0
+                messageUI.text = compilerMessages[index].messageWithRegion.message
             }
         }
     }
@@ -60,17 +61,23 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         background = Color(34, 34, 34)
     }
 
-    var compilerMessages: CircularList<CompilerMessage> = CircularList(emptyList())
+    var index: Int = 0
+
+    var compilerMessages: List<CompilerMessage> = emptyList()
         set(value) {
             checkIsEventDispatchThread()
             field = value
             if (compilerMessages.isEmpty()) {
                 errorListUI.setListData(emptyArray())
                 messageUI.text = ""
+                canForward = false
+                canBack = false
             } else {
-                val titles = compilerMessages.list.map { it.name + prettyRegion(it.messageWithRegion.region) + "    " + it.messageWithRegion.title }
+                val titles = compilerMessages.map { it.name + prettyRegion(it.messageWithRegion.region) + "    " + it.messageWithRegion.title }
                 errorListUI.setListData(titles.toTypedArray())
-                messageUI.text = compilerMessages.get().messageWithRegion.message
+                messageUI.text = compilerMessages[0].messageWithRegion.message
+                canForward = true
+                canBack = false
             }
         }
 
@@ -90,8 +97,8 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(messages: List<CompilerMessage>) {
                     ApplicationManager.getApplication().invokeLater {
-                        compilerMessages = CircularList(messages)
-                        contentManager.getContent(0)?.displayName = "${compilerMessages.list.size} errors"
+                        compilerMessages = messages
+                        contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                         errorListUI.selectedIndex = 0
                     }
                 }
@@ -100,8 +107,14 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 override fun forward() {
                     if (!compilerMessages.isEmpty())
                         ApplicationManager.getApplication().invokeLater {
-                            messageUI.text = compilerMessages.next().messageWithRegion.message
-                            errorListUI.selectedIndex = compilerMessages.getIndex()
+                            val maxIndex = compilerMessages.size - 1
+                            if (index < maxIndex) {
+                                canBack = true
+                                index += 1
+                                canForward = index < maxIndex
+                            }
+                            messageUI.text = compilerMessages[index].messageWithRegion.message
+                            errorListUI.selectedIndex = index
                         }
                 }
             })
@@ -109,14 +122,21 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 override fun back() {
                     if (!compilerMessages.isEmpty())
                         ApplicationManager.getApplication().invokeLater {
-                            messageUI.text = compilerMessages.prev().messageWithRegion.message
-                            errorListUI.selectedIndex = compilerMessages.getIndex()
+                            if (index > 0) {
+                                canForward = true
+                                index -= 1
+                                canBack = index > 0
+                            }
+                            messageUI.text = compilerMessages[index].messageWithRegion.message
+                            errorListUI.selectedIndex = index
                         }
                 }
             })
         }
     }
 
+    var canForward: Boolean = false
+    var canBack: Boolean = false
 
     private fun createToolbar(): JComponent {
         val compilerPanel = this
@@ -154,11 +174,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    var filePath = compilerMessages.get().path
+                    var filePath = compilerMessages[index].path
                     if (!filePath.startsWith("/")) filePath = project.basePath + "/" + filePath
-                    System.err.println(filePath)
                     val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(filePath)) // TODO differently ?
-                    val start = compilerMessages.get().messageWithRegion.region.start
+                    val start = compilerMessages[index].messageWithRegion.region.start
                     OpenFileDescriptor(project, file!!, start.line - 1, start.column - 1)
                 } else {
                     super.getData(dataId)

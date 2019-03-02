@@ -296,7 +296,7 @@
 
         <group id="Elm.CompilerToolsGroup" text="Elm Compiler" popup="true">
             <reference id="Elm.Build"/>
-            <add-to-group group-id="ToolsMenu"/>
+            <add-to-group group-id="Elm.WorkspaceToolsGroup"/>
         </group>
 
     </actions>
