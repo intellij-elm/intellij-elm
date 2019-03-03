@@ -4,14 +4,15 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.util.messages.Topic
-import org.elm.ide.toolwindow.ElmCompilerPanel
 
-class ElmBackAction(private val elmCompilerPanel: ElmCompilerPanel) : AnAction() {
+class ElmBackAction : AnAction() {
+
+    var enabled: Boolean = false
 
     override fun update(e: AnActionEvent) {
         e.presentation.text = "Previous Error"
         e.presentation.icon = AllIcons.Actions.Back
-        e.presentation.isEnabled = !elmCompilerPanel.compilerMessages.isEmpty() && elmCompilerPanel.canBack
+        e.presentation.isEnabled = enabled
     }
 
     override fun actionPerformed(e: AnActionEvent) {

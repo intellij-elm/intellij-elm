@@ -4,14 +4,15 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.util.messages.Topic
-import org.elm.ide.toolwindow.ElmCompilerPanel
 
-class ElmForwardAction(private val elmCompilerPanel: ElmCompilerPanel) : AnAction() {
+class ElmForwardAction : AnAction() {
+
+    var enabled: Boolean = false
 
     override fun update(e: AnActionEvent) {
         e.presentation.text = "Next Error"
         e.presentation.icon = AllIcons.Actions.Forward
-        e.presentation.isEnabled = !elmCompilerPanel.compilerMessages.isEmpty() && elmCompilerPanel.canForward
+        e.presentation.isEnabled = enabled
     }
 
     override fun actionPerformed(e: AnActionEvent) {

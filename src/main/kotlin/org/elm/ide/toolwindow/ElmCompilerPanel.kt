@@ -51,6 +51,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 index = selectedIndex
                 canForward = index < compilerMessages.size - 1
                 canBack = index > 0
+                updateActions()
                 messageUI.text = compilerMessages[index].messageWithRegion.message
             }
         }
@@ -78,6 +79,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 messageUI.text = compilerMessages[0].messageWithRegion.message
                 canForward = true
                 canBack = false
+                updateActions()
             }
         }
 
@@ -100,6 +102,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                         compilerMessages = messages
                         contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                         errorListUI.selectedIndex = 0
+                        updateActions()
                     }
                 }
             })
@@ -135,11 +138,19 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
+    private fun updateActions() {
+        elmBackAction.enabled = !compilerMessages.isEmpty() && canBack
+        elmForwardAction.enabled = !compilerMessages.isEmpty() && canForward
+    }
+
     var canForward: Boolean = false
     var canBack: Boolean = false
 
+    private lateinit var elmBackAction: ElmBackAction
+
+    private lateinit var elmForwardAction: ElmForwardAction
+
     private fun createToolbar(): JComponent {
-        val compilerPanel = this
         val toolbar = with(ActionManager.getInstance()) {
             // TODO alternative management of actions ? test with closing the project, then reopen it!
             val defaultActionGroup = getAction("Elm.CompilerToolsGroup") as DefaultActionGroup
@@ -151,9 +162,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 unregisterAction(actionIdBack)
             }
             // TODO is this safe ?
-            val elmBackAction = ElmBackAction(compilerPanel)
+            elmBackAction = ElmBackAction()
             registerAction(actionIdBack, elmBackAction)
-            val elmForwardAction = ElmForwardAction(compilerPanel)
+            elmForwardAction = ElmForwardAction()
             registerAction(actionIdForward, elmForwardAction)
 
             defaultActionGroup.addSeparator()
