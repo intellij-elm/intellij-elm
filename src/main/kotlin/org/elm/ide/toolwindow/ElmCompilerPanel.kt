@@ -15,7 +15,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiManager
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.JBSplitter
@@ -24,7 +23,9 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
 import org.elm.openapiext.checkIsEventDispatchThread
+import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.findFileByPath
+import org.elm.openapiext.toPsiFile
 import org.elm.workspace.compiler.CompilerMessage
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.Region
@@ -39,14 +40,13 @@ import javax.swing.ListSelectionModel
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
     private fun occurenceInfo(): OccurenceNavigator.OccurenceInfo {
-        var filePath = compilerMessages[indexCompilerMessages].path
-        if (!filePath.startsWith("/")) filePath = project.basePath + "/" + filePath // TODO any simpler way for this ?
-        val file = LocalFileSystem.getInstance().findFileByPath(Paths.get(filePath))
-        val psiFile = PsiManager.getInstance(project).findFile(file!!)
+        val filePath = compilerMessages[indexCompilerMessages].path
+        val virtualFile = project.projectFile?.findFileByMaybeRelativePath(filePath)
+        val psiFile = virtualFile?.toPsiFile(project)
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile!!)
         val start = compilerMessages[indexCompilerMessages].messageWithRegion.region.start
         val lineStartOffset = document!!.getLineStartOffset(start.line - 1)
-        return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, file, lineStartOffset), -1, -1)
+        return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, lineStartOffset), -1, -1)
     }
 
     override fun getNextOccurenceActionName(): String {
