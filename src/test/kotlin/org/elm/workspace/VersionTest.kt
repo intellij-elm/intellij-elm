@@ -64,6 +64,11 @@ class VersionTest {
     }
 
     @Test
+    fun `parse ignores junk around the version number`() {
+        assertEquals(Version.parse("foo 1.2.3 bar"), Version(1, 2, 3))
+    }
+
+    @Test
     fun `parses pre-release version info`() {
         assertEquals(
                 Version.parse("1.2.3-alpha"),

@@ -67,9 +67,8 @@ class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
 
 
     fun queryVersion(): Result<Version> {
-        // Output of `elm-format` is multiple lines where the first line is 'elm-format 0.8.1'
-        val versionRegex = Regex("elm-format (\\d+(?:\\.\\d+){2})")
-
+        // Output of `elm-format` is multiple lines where the first line is something like 'elm-format 0.8.1'.
+        // NOTE: `elm-format` does not currently support a `--version` argument, so this is going to be brittle.
         val firstLine = try {
             GeneralCommandLine(elmFormatExecutablePath)
                     .execute(timeoutInMilliseconds = 3000)
@@ -77,19 +76,10 @@ class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
                     .firstOrNull()
         } catch (e: ExecutionException) {
             return Result.Err("failed to run elm-format: ${e.message}")
-        }
-
-        if (firstLine == null) {
-            return Result.Err("no output from elm-format")
-        }
-
-        val matchResult = versionRegex.matchEntire(firstLine)
-                ?: return Result.Err("could not find version in first line of elm-format output: ${firstLine}")
-
-        val (elmVersionString) = matchResult.destructured
+        } ?: return Result.Err("no output from elm-format")
 
         return try {
-            Result.Ok(Version.parse(elmVersionString))
+            Result.Ok(Version.parse(firstLine))
         } catch (e: ParseException) {
             Result.Err("invalid elm-format version: ${e.message}")
         }
