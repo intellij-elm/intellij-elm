@@ -6,19 +6,31 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 
 
-// VERSION
-
+/**
+ * A version number according to the [SemVer spec](https://semver.org)
+ */
 @JsonDeserialize(using = VersionDeserializer::class)
-data class Version(val x: Int, val y: Int, val z: Int) : Comparable<Version> {
+data class Version(
+        val x: Int,
+        val y: Int,
+        val z: Int,
+        val preReleaseFields: List<String> = emptyList(),
+        val buildFields: List<String> = emptyList()
+) : Comparable<Version> {
 
-    override fun toString() =
-            "$x.$y.$z"
+    override fun toString(): String {
+        val str = StringBuilder("$x.$y.$z")
+        if (preReleaseFields.isNotEmpty()) str.append(preReleaseFields.joinToString(".", prefix = "-"))
+        if (buildFields.isNotEmpty()) str.append(buildFields.joinToString(".", prefix = "+"))
+        return str.toString()
+    }
 
     override fun compareTo(other: Version) =
             when {
                 x != other.x -> x.compareTo(other.x)
                 y != other.y -> y.compareTo(other.y)
                 z != other.z -> z.compareTo(other.z)
+                preReleaseFields != other.preReleaseFields -> compareSemVerFields(preReleaseFields, other.preReleaseFields)
                 else -> 0
             }
 
@@ -26,15 +38,20 @@ data class Version(val x: Int, val y: Int, val z: Int) : Comparable<Version> {
         val UNKNOWN: Version = Version(0, 0, 0)
         val ELM_18: Version = Version(0, 18, 0) // TODO [drop 0.18]
 
+        /** A weak definition of the version format defined in [the SemVer spec](https://semver.org) */
+        private val PATTERN = Regex("""(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z\-.]+)?(\+[0-9A-Za-z\-.]+)?""")
+
         fun parse(text: String): Version {
-            val parts = text.split(".")
-            if (parts.size != 3) throw ParseException("expected a version number like '1.0.0', got '$text'")
-            try {
-                return Version(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
-            } catch (e: NumberFormatException) {
-                throw ParseException("expected a version number like '1.0.0', got '$text'")
-            }
+            val result = PATTERN.find(text) ?: throw ParseException("expected a version number, got '$text'")
+            val (x, y, z, preReleaseInfo, buildInfo) = result.destructured
+            return Version(x.toInt(), y.toInt(), z.toInt(),
+                    preReleaseFields = preReleaseInfo.parseExtraParts(),
+                    buildFields = buildInfo.parseExtraParts()
+            )
         }
+
+        private fun String.parseExtraParts(): List<String> =
+                takeIf { it.isNotEmpty() }?.drop(1)?.split(".") ?: emptyList()
 
         fun parseOrNull(text: String): Version? =
                 try {
@@ -44,6 +61,36 @@ data class Version(val x: Int, val y: Int, val z: Int) : Comparable<Version> {
                 }
     }
 }
+
+private fun compareSemVerFields(leftFields: List<String>, rightFields: List<String>): Int {
+    // First, handle differences between normal versions and pre-release versions.
+    // A normal version always has higher precedence than its pre-release versions.
+    if (leftFields.isEmpty()) return 1
+    if (rightFields.isEmpty()) return -1
+
+    // Compare fields pair-wise
+    for ((a, b) in leftFields.zip(rightFields)) {
+        val result = compareSemVerField(a, b)
+        if (result != 0) return result
+    }
+
+    // All pair-wise fields are the same: tie-breaker on number of fields
+    return leftFields.size.compareTo(rightFields.size)
+}
+
+
+private fun compareSemVerField(a: String, b: String): Int {
+    val a2 = a.toIntOrNull()
+    val b2 = b.toIntOrNull()
+    return when {
+        a2 == null && b2 == null -> a.compareTo(b)   // both fields are strings
+        a2 == null && b2 != null -> 1                // numeric field has lower precedence than non-numeric field
+        a2 != null && b2 == null -> -1               // ditto
+        a2 != null && b2 != null -> a2.compareTo(b2) // both fields are integers
+        else -> error("cannot happen")
+    }
+}
+
 
 private class VersionDeserializer : StdDeserializer<Version>(Version::class.java) {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext) =
