@@ -21,9 +21,13 @@ class ElmRegexInjector : MultiHostInjector {
     }
 
     override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
-        if (!context.isValid || context !is ElmStringConstantExpr || !shouldInject(context)) return
+        if (context !is ElmStringConstantExpr ||
+                !context.isValid ||
+                !context.isValidHost ||
+                !shouldInject(context)) {
+            return
+        }
 
-        val text = context.text
         val range = context.contentOffsets
 
         registrar.startInjecting(RegExpLanguage.INSTANCE)

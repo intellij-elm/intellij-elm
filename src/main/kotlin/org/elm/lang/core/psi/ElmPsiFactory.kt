@@ -123,7 +123,7 @@ class ElmPsiFactory(private val project: Project) {
                     ?: error("Invalid glsl expression: `$text`")
 
     fun createStringConstant(text: String): ElmStringConstantExpr =
-            createFromText("foo = x $text y")
+            createFromText("foo = x \"$text\" y")
                     ?: error("Invalid string constant: `$text`")
 
     fun createImport(moduleName: String, alias: String?): ElmImportClause {

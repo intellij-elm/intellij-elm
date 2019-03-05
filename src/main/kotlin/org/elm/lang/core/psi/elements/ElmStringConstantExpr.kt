@@ -33,7 +33,9 @@ class ElmStringConstantExpr(node: ASTNode) : ElmPsiElementImpl(node), PsiLanguag
         else -> TextRange(1, text.length - 1)
     }
 
-    override fun isValidHost(): Boolean = true
+    override fun isValidHost(): Boolean {
+        return findChildByType<PsiElement>(ElmTypes.CLOSE_QUOTE) != null
+    }
 
     override fun updateText(text: String): PsiLanguageInjectionHost {
         val expr = ElmPsiFactory(project).createStringConstant(text)
