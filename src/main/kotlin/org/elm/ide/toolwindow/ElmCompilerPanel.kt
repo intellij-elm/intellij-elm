@@ -13,7 +13,11 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
@@ -23,8 +27,8 @@ import com.intellij.ui.SimpleTextAttributes.REGULAR_ATTRIBUTES
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
+import com.intellij.util.ui.JBUI
 import org.elm.openapiext.checkIsEventDispatchThread
-import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.toPsiFile
 import org.elm.workspace.compiler.CompilerMessage
 import org.elm.workspace.compiler.ElmBuildAction
@@ -40,9 +44,14 @@ import javax.swing.ListSelectionModel
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
     private fun occurenceInfo(): OccurenceNavigator.OccurenceInfo {
-        val (virtualFile, document, start) = startFromErrorMessage()
-        val offset = document!!.getLineStartOffset(start.line - 1) + start.column - 1
-        return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile!!, offset), -1, -1)
+        val (virtualFile, document, start) = startFromErrorMessage(project.guessProjectDir())
+        document?.let {
+            val offset = it.getLineStartOffset(start.line) + start.column - 1
+            virtualFile?.let {
+                return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
+            }
+        }
+        throw RuntimeException("The impossible happened...")
     }
 
     override fun getNextOccurenceActionName(): String {
@@ -94,6 +103,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     }
 
     private val errorListUI = JBList<String>(emptyList()).apply {
+        font = JBUI.Fonts.create("Droid Sans Mono", 12)
         emptyText.text = ""
         selectionMode = ListSelectionModel.SINGLE_SELECTION
         cellRenderer = object : ColoredListCellRenderer<String>() {
@@ -191,8 +201,11 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    val (virtualFile, _, start) = startFromErrorMessage()
-                    OpenFileDescriptor(project, virtualFile!!, start.line - 1, start.column - 1)
+                    val (virtualFile, _, start) = startFromErrorMessage(project.guessProjectDir())
+                    virtualFile?.let {
+                        return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
+                    }
+                    throw RuntimeException("The impossible happened...")
                 } else {
                     null
                 }
@@ -202,12 +215,21 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
-    private fun startFromErrorMessage(): Triple<VirtualFile?, Document?, Start> {
-        val filePath = compilerMessages[indexCompilerMessages].path
-        val virtualFile = project.projectFile?.findFileByMaybeRelativePath(filePath)
+    private fun startFromErrorMessage(baseDir: VirtualFile?): Triple<VirtualFile?, Document?, Start> {
+        val path = compilerMessages[indexCompilerMessages].path
+        val virtualFile: VirtualFile?
+        if (FileUtil.isAbsolute(path))
+            virtualFile = LocalFileSystem.getInstance().findFileByPath(path)
+        else {
+            virtualFile = VfsUtil.findRelativeFile(path, baseDir)
+        }
         val psiFile = virtualFile?.toPsiFile(project)
-        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile!!)
-        val start = compilerMessages[indexCompilerMessages].messageWithRegion.region.start
-        return Triple(virtualFile, document, start)
+        psiFile?.let {
+            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+            val start = compilerMessages[indexCompilerMessages].messageWithRegion.region.start
+            return Triple(virtualFile, document, start)
+        }
+        throw RuntimeException("The impossible happened...")
     }
+
 }
