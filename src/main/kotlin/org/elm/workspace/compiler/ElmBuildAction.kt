@@ -1,16 +1,17 @@
 package org.elm.workspace.compiler
 
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.Topic
+import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmNamedElement
@@ -35,7 +36,8 @@ class ElmBuildAction : AnAction() {
 
         val elmCLI = project.elmToolchain.elmCLI
         if (elmCLI == null) {
-            Messages.showErrorDialog("No path to the Elm compiler", "Build Error")
+            val fixAction = "Fix" to { project.elmWorkspace.showConfigureToolchainUI() }
+            project.showBalloon("Could not find elm", NotificationType.ERROR, fixAction)
             return
         }
 

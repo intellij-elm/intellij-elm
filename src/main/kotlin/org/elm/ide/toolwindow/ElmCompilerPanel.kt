@@ -23,7 +23,9 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.SimpleTextAttributes.REGULAR_ATTRIBUTES
+import com.intellij.ui.SimpleTextAttributes
+import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
@@ -103,13 +105,14 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     }
 
     private val errorListUI = JBList<String>(emptyList()).apply {
+        background = Color(34, 34, 34)
         font = JBUI.Fonts.create("Droid Sans Mono", 12)
         emptyText.text = ""
         selectionMode = ListSelectionModel.SINGLE_SELECTION
         cellRenderer = object : ColoredListCellRenderer<String>() {
             override fun customizeCellRenderer(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
                 icon = AllIcons.General.Error
-                append(value, REGULAR_ATTRIBUTES)
+                append(value, SimpleTextAttributes(STYLE_PLAIN, Color.LIGHT_GRAY))
             }
         }
         object : AutoScrollToSourceHandler() {
@@ -131,14 +134,20 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private var indexCompilerMessages: Int = 0
 
+    private val noErrorContent = JBLabel()
+
     var compilerMessages: List<CompilerMessage> = emptyList()
         set(value) {
             checkIsEventDispatchThread()
             field = value
             if (compilerMessages.isEmpty()) {
+                setContent(noErrorContent)
+
                 errorListUI.setListData(emptyArray())
                 messageUI.text = ""
             } else {
+                setContent(errorContent)
+
                 val titles = compilerMessages.map { it.name + prettyRegion(it.messageWithRegion.region) + "    " + it.messageWithRegion.title }
                 errorListUI.setListData(titles.toTypedArray())
                 messageUI.text = compilerMessages[0].messageWithRegion.message
@@ -150,13 +159,15 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return " @ line ${region.start.line} column ${region.start.column}"
     }
 
+    private var errorContent: JBSplitter
+
     init {
         setToolbar(createToolbar())
 
-        val splitPane = JBSplitter()
-        splitPane.firstComponent = JBScrollPane(errorListUI)
-        splitPane.secondComponent = messageUI
-        setContent(splitPane)
+        errorContent = JBSplitter()
+        errorContent.firstComponent = JBScrollPane(errorListUI)
+        errorContent.secondComponent = messageUI
+        setContent(noErrorContent)
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
@@ -218,11 +229,12 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     private fun startFromErrorMessage(baseDir: VirtualFile?): Triple<VirtualFile?, Document?, Start> {
         val path = compilerMessages[indexCompilerMessages].path
         val virtualFile: VirtualFile?
-        if (FileUtil.isAbsolute(path))
-            virtualFile = LocalFileSystem.getInstance().findFileByPath(path)
-        else {
-            virtualFile = VfsUtil.findRelativeFile(path, baseDir)
-        }
+        virtualFile =
+                if (FileUtil.isAbsolute(path))
+                    LocalFileSystem.getInstance().findFileByPath(path)
+                else {
+                    VfsUtil.findRelativeFile(path, baseDir)
+                }
         val psiFile = virtualFile?.toPsiFile(project)
         psiFile?.let {
             val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
