@@ -58,7 +58,7 @@ class ElmBuildAction : AnAction() {
 
                 // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled)
 
-                val messages = elmJsonReport.elmToCompilerMessages(json).sortedBy { it.name }.sortedBy { it.messageWithRegion.region.start.line }.sortedBy { it.messageWithRegion.region.start.column }
+                val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({it.name}, {it.messageWithRegion.region.start.line}, {it.messageWithRegion.region.start.column}))
                 project.messageBus.syncPublisher(ERRORS_TOPIC).update(messages)
 
             } else {
