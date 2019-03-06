@@ -1,6 +1,9 @@
 package org.elm.ide.components
 
 import com.intellij.AppTopics
+import com.intellij.execution.ExecutionException
+import com.intellij.execution.process.ProcessNotCreatedException
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.editor.Document
@@ -9,10 +12,13 @@ import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
+import org.elm.openapiext.isUnitTestMode
 import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.elmSettings
 import org.elm.workspace.elmToolchain
+import org.elm.workspace.elmWorkspace
 
 class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
 
@@ -36,7 +42,18 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
                         val elmVersion = ElmFormatCLI.getElmVersion(project, vFile) ?: return
                         val elmFormat = project.elmToolchain.elmFormatCLI ?: return
 
-                        elmFormat.formatDocumentAndSetText(project, document, elmVersion, addToUndoStack = false)
+                        try {
+                            elmFormat.formatDocumentAndSetText(project, document, elmVersion, addToUndoStack = false)
+                        } catch (e: ExecutionException) {
+                            if (isUnitTestMode) throw e
+                            val message = e.message ?: "Something went wrong running elm-format"
+                            val actions = when (e) {
+                                is ProcessNotCreatedException ->
+                                    arrayOf("Fix Path" to { project.elmWorkspace.showConfigureToolchainUI() })
+                                else -> emptyArray()
+                            }
+                            project.showBalloon(message, NotificationType.ERROR, *actions)
+                        }
                     }
                 }
         )

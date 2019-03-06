@@ -15,10 +15,29 @@ import com.intellij.openapi.project.Project
 
 private val pluginNotifications = NotificationGroup.balloonGroup("Elm Plugin")
 
-fun Project.showBalloon(content: String, type: NotificationType, action: NotificationAction? = null) {
+
+/**
+ * Show a balloon notification along with action(s). The notification will be automatically dismissed
+ * when an action is invoked.
+ *
+ * @param content The main content to be shown in the notification
+ * @param type The notification type
+ * @param actions Optional list of actions to be included in the notification
+ */
+fun Project.showBalloon(
+        content: String,
+        type: NotificationType,
+        vararg actions: Pair<String, (() -> Unit)>
+) {
     val notification = pluginNotifications.createNotification(content, type)
-    if (action != null) {
-        notification.addAction(action)
+    for ((actionTitle, actionCallback) in actions) {
+        notification.addAction(
+                NotificationAction.create(actionTitle)
+                { _, notif ->
+                    notif.hideBalloon()
+                    actionCallback()
+                }
+        )
     }
     Notifications.Bus.notify(notification, this)
 }
