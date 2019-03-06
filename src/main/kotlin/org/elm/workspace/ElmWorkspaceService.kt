@@ -137,7 +137,7 @@ class ElmWorkspaceService(
 
     fun showConfigureToolchainUI() {
         ShowSettingsUtil.getInstance()
-                .editConfigurable(intellijProject, ElmWorkspaceConfigurable(intellijProject))
+                .showSettingsDialog(intellijProject, ElmWorkspaceConfigurable::class.java)
     }
 
 
