@@ -33,6 +33,15 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.0.1</b> <em>(2019-03-06)</em>
+                <ul>
+                    <li>Added "auto test" support in the elm-test runner</li>
+                    <li>Fixed elm-test runner on Elm 0.18 projects</li>
+                    <li>Reduced false negatives in the unused code inspection</li>
+                    <li>Fixed a parse error for arithmetic negation</li>
+                    <li>Fixed a variety of minor bugs related to elm-format</li>
+                </ul>
+            </li>
             <li><b>3.0.0</b> <em>(2019-02-25)</em>
                 <ul>
                     <li>Added support for elm-format: via keybinding or automatically-on-save</li>
