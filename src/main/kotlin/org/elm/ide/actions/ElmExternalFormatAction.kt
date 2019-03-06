@@ -1,7 +1,6 @@
 package org.elm.ide.actions
 
 import com.intellij.execution.ExecutionException
-import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -36,13 +35,11 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
+        val fixAction = "Fix" to { ctx.project.elmWorkspace.showConfigureToolchainUI() }
+
         val elmFormat = ctx.project.elmToolchain.elmFormatCLI
         if (elmFormat == null) {
-            ctx.project.showBalloon("Could not find elm-format", NotificationType.ERROR,
-                    action = NotificationAction.create("Fix") { _, notification ->
-                        notification.hideBalloon()
-                        ctx.project.elmWorkspace.showConfigureToolchainUI()
-                    })
+            ctx.project.showBalloon("Could not find elm-format", NotificationType.ERROR, fixAction)
             return
         }
 
@@ -57,7 +54,7 @@ class ElmExternalFormatAction : AnAction() {
         } catch (ex: ExecutionException) {
             if (isUnitTestMode) throw ex
             val message = ex.message ?: "something went wrong running elm-format"
-            ctx.project.showBalloon(message, NotificationType.ERROR)
+            ctx.project.showBalloon(message, NotificationType.ERROR, fixAction)
         }
     }
 
