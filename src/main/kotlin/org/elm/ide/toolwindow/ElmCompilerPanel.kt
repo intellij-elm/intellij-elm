@@ -41,6 +41,7 @@ import javax.swing.JComponent
 import javax.swing.JList
 import javax.swing.JTextPane
 import javax.swing.ListSelectionModel
+import javax.swing.border.EmptyBorder
 
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
@@ -104,8 +105,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
+    private val backgroundColorUI = Color(34, 34, 34)
+
     private val errorListUI = JBList<String>(emptyList()).apply {
-        background = Color(34, 34, 34)
+        background = backgroundColorUI
         font = JBUI.Fonts.create("Droid Sans Mono", 12)
         emptyText.text = ""
         selectionMode = ListSelectionModel.SINGLE_SELECTION
@@ -129,7 +132,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private val messageUI = JTextPane().apply {
         contentType = "text/html"
-        background = Color(34, 34, 34)
+        background = backgroundColorUI
     }
 
     private var indexCompilerMessages: Int = 0
@@ -161,12 +164,16 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private var errorContent: JBSplitter
 
+    private val emptyBorder = EmptyBorder(10, 10, 10, 10)
+
     init {
         setToolbar(createToolbar())
 
         errorContent = JBSplitter()
         errorContent.firstComponent = JBScrollPane(errorListUI)
+        errorContent.firstComponent.border = emptyBorder
         errorContent.secondComponent = messageUI
+        errorContent.secondComponent.border = emptyBorder
         setContent(noErrorContent)
 
         with(project.messageBus.connect()) {
