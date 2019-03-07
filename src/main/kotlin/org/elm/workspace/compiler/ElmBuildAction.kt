@@ -1,5 +1,6 @@
 package org.elm.workspace.compiler
 
+import com.intellij.execution.ExecutionException
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -35,8 +36,8 @@ class ElmBuildAction : AnAction() {
         saveAllDocuments()
 
         val elmCLI = project.elmToolchain.elmCLI
+        val fixAction = "Fix" to { project.elmWorkspace.showConfigureToolchainUI() }
         if (elmCLI == null) {
-            val fixAction = "Fix" to { project.elmWorkspace.showConfigureToolchainUI() }
             project.showBalloon("Could not find elm", NotificationType.ERROR, fixAction)
             return
         }
@@ -52,24 +53,25 @@ class ElmBuildAction : AnAction() {
 
         if (mainElements.isNotEmpty()) {
             val path = mainElements[0].containingFile.virtualFile.path
-            val json = elmCLI.make(project, elmProject, path).stderr
+            try {
+                val json = elmCLI.make(project, elmProject, path).stderr
+                if (json.isNotEmpty()) {
+                    // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
+                    val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({it.name}, {it.messageWithRegion.region.start.line}, {it.messageWithRegion.region.start.column}))
+                    project.messageBus.syncPublisher(ERRORS_TOPIC).update(messages)
 
-            if (json.isNotEmpty()) {
-
-                // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled)
-
-                val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({it.name}, {it.messageWithRegion.region.start.line}, {it.messageWithRegion.region.start.column}))
-                project.messageBus.syncPublisher(ERRORS_TOPIC).update(messages)
-
-            } else {
-                project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
+                } else {
+                    project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
+                }
+                // show toolwindow
+                ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
+            } catch (e: ExecutionException) {
+                project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
+                return
             }
-            // show toolwindow
-            ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
         } else {
             showDialog(project)
         }
-
     }
 
     private fun showDialog(project: Project) {
