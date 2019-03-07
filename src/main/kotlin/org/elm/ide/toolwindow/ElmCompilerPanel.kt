@@ -1,6 +1,5 @@
 package org.elm.ide.toolwindow
 
-import com.intellij.icons.AllIcons
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.OccurenceNavigator
 import com.intellij.ide.util.PsiNavigationSupport
@@ -21,15 +20,11 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
-import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.SimpleTextAttributes
-import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
-import com.intellij.util.ui.JBUI
+import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.toPsiFile
 import org.elm.workspace.compiler.CompilerMessage
@@ -37,19 +32,30 @@ import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.Region
 import org.elm.workspace.compiler.Start
 import java.awt.Color
+import java.awt.Component
+import java.awt.Dimension
 import javax.swing.JComponent
-import javax.swing.JList
+import javax.swing.JTable
 import javax.swing.JTextPane
 import javax.swing.ListSelectionModel
+import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
+import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.DefaultTableModel
 
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
-    private fun occurenceInfo(): OccurenceNavigator.OccurenceInfo {
+    private fun updateSelectionAndCreateOccurenceInfo(): OccurenceNavigator.OccurenceInfo {
+        // update selection
+        messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
+        errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
+
+        // create occurence info
         val (virtualFile, document, start) = startFromErrorMessage(project.guessProjectDir())
         document?.let {
-            val offset = it.getLineStartOffset(start.line) + start.column - 1
+            val offset = it.getLineStartOffset(start.line - 1) + start.column - 1
             virtualFile?.let {
                 return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
             }
@@ -66,13 +72,11 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     }
 
     override fun goNextOccurence(): OccurenceNavigator.OccurenceInfo {
-        if (!compilerMessages.isEmpty()) {
+        if (compilerMessages.isNotEmpty()) {
             if (indexCompilerMessages < compilerMessages.lastIndex) {
                 indexCompilerMessages += 1
             }
-            messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
-            errorListUI.selectedIndex = indexCompilerMessages
-            return occurenceInfo()
+            return updateSelectionAndCreateOccurenceInfo()
         }
         return OccurenceNavigator.OccurenceInfo.position(0, 0)
     }
@@ -86,13 +90,11 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     }
 
     override fun goPreviousOccurence(): OccurenceNavigator.OccurenceInfo {
-        if (!compilerMessages.isEmpty()) {
+        if (compilerMessages.isNotEmpty()) {
             if (indexCompilerMessages > 0) {
                 indexCompilerMessages -= 1
             }
-            messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
-            errorListUI.selectedIndex = indexCompilerMessages
-            return occurenceInfo()
+            return updateSelectionAndCreateOccurenceInfo()
         }
         return OccurenceNavigator.OccurenceInfo.position(0, 0)
     }
@@ -107,24 +109,46 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private val backgroundColorUI = Color(34, 34, 34)
 
-    private val errorListUI = JBList<String>(emptyList()).apply {
-        background = backgroundColorUI
-        font = JBUI.Fonts.create("Droid Sans Mono", 12)
-        emptyText.text = ""
-        selectionMode = ListSelectionModel.SINGLE_SELECTION
-        cellRenderer = object : ColoredListCellRenderer<String>() {
-            override fun customizeCellRenderer(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
-                icon = AllIcons.General.Error
-                append(value, SimpleTextAttributes(STYLE_PLAIN, Color.LIGHT_GRAY))
-            }
+    private val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
+
+    private class ErrorTabelHeaderRenderer: DefaultTableCellRenderer() {
+        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            rendererComponent.foreground = Color.WHITE
+            return rendererComponent
         }
+    }
+    private class ErrorTableCellRenderer: DefaultTableCellRenderer() {
+        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            rendererComponent.foreground = Color.LIGHT_GRAY
+            border = EmptyBorder(2, 2, 2, 2)
+            return rendererComponent
+        }
+    }
+
+    private val errorTableHeaderRenderer = ErrorTabelHeaderRenderer()
+    private val errorTableCellRenderer = ErrorTableCellRenderer()
+
+    private val errorTableUI = JBTable().apply {
+        setShowGrid(false)
+        intercellSpacing = Dimension(2, 2)
+        border = emptyBorder
+        background = backgroundColorUI
+        emptyText.text = ""
+        model = emptyErrorTable
         object : AutoScrollToSourceHandler() {
             override fun isAutoScrollMode() = true
             override fun setAutoScrollMode(state: Boolean) {}
         }.install(this)
-        addListSelectionListener {
-            if (!it.valueIsAdjusting && selectedIndex >= 0) {
-                indexCompilerMessages = selectedIndex
+        selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
+        selectionModel.addListSelectionListener {
+            if (!it.valueIsAdjusting && selectedRow >= 0) {
+                val cellRect = getCellRect(it.firstIndex, 0, true)
+                cellRect.y += cellRect.y
+                scrollRectToVisible(cellRect)
+
+                indexCompilerMessages = selectedRow
                 messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
             }
         }
@@ -146,15 +170,21 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             if (compilerMessages.isEmpty()) {
                 setContent(noErrorContent)
 
-                errorListUI.setListData(emptyArray())
+                errorTableUI.model = emptyErrorTable
                 messageUI.text = ""
             } else {
                 setContent(errorContent)
 
-                val titles = compilerMessages.map { it.name + prettyRegion(it.messageWithRegion.region) + "    " + it.messageWithRegion.title }
-                errorListUI.setListData(titles.toTypedArray())
-                messageUI.text = compilerMessages[0].messageWithRegion.message
                 indexCompilerMessages = 0
+                messageUI.text = compilerMessages[0].messageWithRegion.message
+
+                val locations: List<String> = compilerMessages.map { it.name + prettyRegion(it.messageWithRegion.region) }
+                val titles: List<String> = compilerMessages.map { it.messageWithRegion.title }
+                val zipped = locations.zip(titles).map { arrayOf(it.first, it.second) }.toTypedArray()
+                errorTableUI.model = DefaultTableModel(zipped, arrayOf("Location", "Type"))
+                errorTableUI.tableHeader.defaultRenderer = errorTableHeaderRenderer
+                errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(0), errorTableCellRenderer)
+                errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(1), errorTableCellRenderer)
             }
         }
 
@@ -170,7 +200,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         setToolbar(createToolbar())
 
         errorContent = JBSplitter()
-        errorContent.firstComponent = JBScrollPane(errorListUI)
+        errorContent.firstComponent = JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
         errorContent.firstComponent.border = emptyBorder
         errorContent.secondComponent = messageUI
         errorContent.secondComponent.border = emptyBorder
@@ -182,7 +212,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                     ApplicationManager.getApplication().invokeLater {
                         compilerMessages = messages
                         contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
-                        errorListUI.selectedIndex = 0
+                        errorTableUI.setRowSelectionInterval(0, 0)
                         indexCompilerMessages = 0
                     }
                 }
