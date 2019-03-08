@@ -112,6 +112,11 @@ main : String
 main = <error descr="Type mismatch.Required: StringFound: ()">foo</error>
 """)
 
+    fun `test calling function without annotation with unconstrained parameters`() = checkByText("""
+foo a = a
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo ""</error>
+""")
 
     fun `test correct value type from record`() = checkByText("""
 main : {x: (), y: ()}
