@@ -267,7 +267,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.deepReplace(func.partiallyApply(2), replacements)
+                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -311,7 +311,7 @@ private class InferenceScope(
 
         val resultTy = if (ok) {
             val appliedTy = targetTy.partiallyApply(arguments.size)
-            TypeReplacement.deepReplace(appliedTy, replacements)
+            TypeReplacement.replace(appliedTy, replacements)
         } else {
             TyUnknown()
         }
@@ -843,7 +843,7 @@ private class InferenceScope(
     ): Boolean {
         val assignable = assignable(ty1, ty2, replacements)
         if (!assignable) {
-            val t2 = replacements?.let { TypeReplacement.deepReplace(ty2, it) } ?: ty2
+            val t2 = replacements?.let { TypeReplacement.replace(ty2, it) } ?: ty2
             diagnostics += TypeMismatchError(element, ty1, t2, endElement)
         }
         return assignable
@@ -1003,7 +1003,7 @@ private class InferenceScope(
     }
 
     private fun trackReplacement(ty1: Ty, ty2: Ty, replacements: MutableMap<TyVar, Ty>?) {
-        if (replacements == null) return
+        if (replacements == null || ty1 == ty2) return
         // assigning anything to a variable fixes the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             replacements[ty2] = ty1
