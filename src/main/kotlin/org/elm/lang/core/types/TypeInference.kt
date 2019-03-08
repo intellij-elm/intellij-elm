@@ -72,6 +72,9 @@ private class InferenceScope(
     /** The inferred types of elements that should be exposed through documentation. */
     private val expressionTypes: MutableMap<ElmPsiElement, Ty> = mutableMapOf()
 
+    /** The unification table used for unannotated parameters */
+    private val replacements: MutableMap<TyVar, Ty> = parent?.replacements ?: mutableMapOf()
+
     private val ancestors: Sequence<InferenceScope> get() = generateSequence(this) { it.parent }
 
     private fun getBinding(e: ElmNamedElement): Ty? = ancestors.mapNotNull { it.bindings[e] }.firstOrNull()
@@ -126,7 +129,7 @@ private class InferenceScope(
             is ParameterBindingResult.Annotated -> binding.ty
             is ParameterBindingResult.Unannotated -> {
                 if (binding.count == 0) bodyTy
-                else TyFunction(binding.params, bodyTy).uncurry()
+                else TypeReplacement.replace(TyFunction(binding.params, bodyTy).uncurry(), replacements)
             }
             is ParameterBindingResult.Other -> bodyTy
         }
@@ -138,7 +141,7 @@ private class InferenceScope(
         val paramVars = uniqueVars(patternList.size)
         patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
-        val ty = TyFunction(paramVars, bodyTy).uncurry()
+        val ty = TypeReplacement.replace(TyFunction(paramVars, bodyTy).uncurry(), replacements)
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
@@ -263,9 +266,8 @@ private class InferenceScope(
                     val l = validateTree(tree.left)
                     val r = validateTree(tree.right)
                     val func = operatorTys[tree.operator]!!
-                    val replacements = mutableMapOf<TyVar, Ty>()
-                    val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
-                    val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
+                    val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end)
+                    val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end)
                     val ty = when {
                         lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
                         else -> TyUnknown()
@@ -303,10 +305,8 @@ private class InferenceScope(
         if (targetTy !is TyFunction) return argCountError(0)
         if (arguments.size > targetTy.parameters.size) return argCountError(targetTy.parameters.size)
 
-        val replacements = mutableMapOf<TyVar, Ty>()
-
         val ok = (0..arguments.lastIndex).all { i ->
-            requireAssignable(arguments[i], argTys[i], targetTy.parameters[i], replacements = replacements)
+            requireAssignable(arguments[i], argTys[i], targetTy.parameters[i])
         }
 
         val resultTy = if (ok) {
@@ -840,50 +840,48 @@ private class InferenceScope(
             element: PsiElement,
             ty1: Ty,
             ty2: Ty,
-            endElement: ElmPsiElement? = null,
-            replacements: MutableMap<TyVar, Ty>? = null
+            endElement: ElmPsiElement? = null
     ): Boolean {
-        val assignable = assignable(ty1, ty2, replacements)
+        val assignable = assignable(ty1, ty2)
         if (!assignable) {
-            val t2 = replacements?.let { TypeReplacement.replace(ty2, it) } ?: ty2
-            diagnostics += TypeMismatchError(element, ty1, t2, endElement)
+            val t1 =TypeReplacement.replace(ty1, replacements)
+            val t2 =TypeReplacement.replace(ty2, replacements)
+            diagnostics += TypeMismatchError(element, t1, t2, endElement)
         }
         return assignable
     }
 
-    /** Return `false` if [ty1] definitely cannot be assigned to [type2] */
-    private fun assignable(ty1: Ty, type2: Ty, replacements: MutableMap<TyVar, Ty>?): Boolean {
-        val ty2 = when (type2) {
-            is TyVar -> replacements?.get(type2) ?: type2
-            else -> type2
-        }
+    /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
+    private fun assignable(ty1: Ty, ty2: Ty): Boolean {
+        if (ty1 is TyVar && ty1 in replacements) return assignable(replacements[ty1]!!, ty2)
+        if (ty2 is TyVar && ty2 in replacements) return assignable(ty1, replacements[ty2]!!)
+
         val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
             varAssignable(ty2, ty1)
         } else when (ty1) {
             is TyVar -> varAssignable(ty1, ty2)
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
-                    && allAssignable(ty1.types, ty2.types, replacements)
-            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2, replacements)
+                    && allAssignable(ty1.types, ty2.types)
+            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
-                    && allAssignable(ty1.parameters, ty2.parameters, replacements)
-            is TyFunction -> ty2 is TyFunction && funcsAssignable(ty1, ty2, replacements)
+                    && allAssignable(ty1.parameters, ty2.parameters)
+            is TyFunction -> ty2 is TyFunction && funcsAssignable(ty1, ty2)
             is TyUnit -> ty2 is TyUnit
             is TyUnknown -> true
             TyInProgressBinding -> error("should never try to assign $ty1")
         }
 
-        if (result) trackReplacement(ty1, type2, replacements)
+        if (result) trackReplacement(ty1, ty2)
         return result
     }
 
-
-    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord, replacements: MutableMap<TyVar, Ty>?): Boolean {
+    private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
         fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
             return t1.fields.all { (k, v) ->
-                t2.fields[k]?.let { assignable(v, it, replacements) } ?: !strict
+                t2.fields[k]?.let { assignable(v, it) } ?: !strict
             }
         }
 
@@ -916,17 +914,17 @@ private class InferenceScope(
         // an alias to an extension record constructor. We only do this if the records are
         // different, since that would incorrectly create a recursive type.
         if (result && ty2.baseTy is TyVar && ty1.fields != ty2.fields) {
-            trackReplacement(ty1, ty2.baseTy, replacements)
+            trackReplacement(ty1, ty2.baseTy)
         }
         return result
     }
 
-    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>, replacements: MutableMap<TyVar, Ty>?): Boolean {
+    private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>): Boolean {
         // don't short circuit so that all types get applied
-        return ty1.size == ty2.size && ty1.zip(ty2).map { (l, r) -> assignable(l, r, replacements) }.all { it }
+        return ty1.size == ty2.size && ty1.zip(ty2).map { (l, r) -> assignable(l, r) }.all { it }
     }
 
-    private fun funcsAssignable(ty1: TyFunction, ty2: TyFunction, replacements: MutableMap<TyVar, Ty>?): Boolean {
+    private fun funcsAssignable(ty1: TyFunction, ty2: TyFunction): Boolean {
         // We need to handle currying. If ty1 has fewer parameters than ty2, it's an error. If ty1
         // has more parameters than ty2, all extra parameters are curried into a function that is
         // assigned to the last parameter of ty2.
@@ -939,8 +937,8 @@ private class InferenceScope(
         }
 
         val sharedSize = minOf(tys1.size, tys2.size) - 1
-        val sharedAssignable = allAssignable(tys1.take(sharedSize), tys2.take(sharedSize), replacements)
-        val tailAssignable = assignable(makeFunc(tys1.drop(sharedSize)), makeFunc(tys2.drop(sharedSize)), replacements)
+        val sharedAssignable = allAssignable(tys1.take(sharedSize), tys2.take(sharedSize))
+        val tailAssignable = assignable(makeFunc(tys1.drop(sharedSize)), makeFunc(tys2.drop(sharedSize)))
 
         return sharedAssignable && tailAssignable
     }
@@ -957,7 +955,7 @@ private class InferenceScope(
         //  - `comparable` permits `Int`, `Float`, `Char`, `String`, and lists/tuples of `comparable` values
         //  - `compappend` permits `String` and `List comparable`
 
-        fun List<Ty>.allComparable(): Boolean = all { assignable(it, TyVar("comparable"), null) }
+        fun List<Ty>.allComparable(): Boolean = all { assignable(it, TyVar("comparable")) }
 
         return when {
             tyVar.name.startsWith("number") -> when (ty) {
@@ -1004,8 +1002,8 @@ private class InferenceScope(
                 (name1 == name2 || otherTypclassName == typeclass || name1 == typeclass)
     }
 
-    private fun trackReplacement(ty1: Ty, ty2: Ty, replacements: MutableMap<TyVar, Ty>?) {
-        if (replacements == null || ty1 == ty2) return
+    private fun trackReplacement(ty1: Ty, ty2: Ty) {
+        if (ty1 == ty2) return
         // assigning anything to a variable fixes the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             replacements[ty2] = ty1

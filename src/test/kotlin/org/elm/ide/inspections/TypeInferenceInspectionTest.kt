@@ -561,8 +561,8 @@ main a = (\(_, b) -> b)
 
     fun `test mismatched lambda type with closure`() = checkByText("""
 type Foo = Bar
-main : () -> (Foo -> Foo)
-main a = <error descr="Type mismatch.Required: Foo → FooFound: a → ()">(\_ -> a)</error>
+main : () -> Foo -> Foo
+main a = <error descr="Type mismatch.Required: Foo → FooFound: Foo → ()">(\_ -> a)</error>
 """)
 
     fun `test mismatched tuple pattern in parameter`() = checkByText("""
@@ -1633,5 +1633,29 @@ foo model = model
 
 main : Example
 main = ( Nothing, Nothing ) |> foo
+""")
+
+    fun `test constraining param via function call`() = checkByText("""
+foo : Int -> Int
+foo a = a
+
+bar a = foo a
+
+main : Int
+main = bar <error descr="Type mismatch.Required: IntFound: String">""</error>
+""")
+
+    fun `test using constrained var in let`() = checkByText("""
+foo : Int -> Int
+foo a = a
+
+bar : String -> String
+bar a = a
+
+main a =
+    let
+        x = foo a
+    in
+        bar <error descr="Type mismatch.Required: StringFound: Int">a</error>
 """)
 }
