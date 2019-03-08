@@ -144,8 +144,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
         selectionModel.addListSelectionListener {
             if (!it.valueIsAdjusting && selectedRow >= 0) {
-                val cellRect = getCellRect(it.firstIndex, 0, true)
-                cellRect.y += cellRect.y
+                val cellRect = getCellRect(selectedRow, 0, true)
                 scrollRectToVisible(cellRect)
 
                 indexCompilerMessages = selectedRow
