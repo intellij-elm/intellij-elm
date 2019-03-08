@@ -247,6 +247,18 @@ main r =
     <error descr="Type mismatch.Required: ()Found: Small Large">{ rr | field2 = "" }</error>
 """)
 
+    fun `test alias to extension record`() = checkByText("""
+type alias Record a = { a | field : () }
+type alias Alias a = Record a
+
+foo : Alias a  -> Alias a
+foo it = it
+
+main : Alias a  -> ()
+main model =
+    <error descr="Type mismatch.Required: ()Found: Alias a">foo model</error>
+""")
+
     fun `test field accessor as argument`() = checkByText("""
 type alias R = {x: (), y: ()}
 foo : (R -> ()) -> ()

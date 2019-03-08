@@ -909,7 +909,11 @@ private class InferenceScope(
             }
             else -> error("impossible")
         }
-        if (result && ty2.baseTy is TyVar) {
+
+        // We need to unify the base var with the record being assigned for the case where we have
+        // an alias to an extension record constructor. We only do this if the records are
+        // different, since that would incorrectly create a recursive type.
+        if (result && ty2.baseTy is TyVar && ty1.fields != ty2.fields) {
             trackReplacement(ty1, ty2.baseTy, replacements)
         }
         return result
