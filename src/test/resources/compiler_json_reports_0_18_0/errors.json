@@ -1,0 +1,44 @@
+[
+  {
+    "tag": "NAMING ERROR",
+    "overview": "Cannot find variable `Dict.fomList`.",
+    "subregion": null,
+    "suggestions": [
+      "List"
+    ],
+    "details": "No module called `Dict` has been imported. Maybe you want one of the following?\n\n    List.fomList",
+    "region": {
+      "start": {
+        "line": 29,
+        "column": 9
+      },
+      "end": {
+        "line": 29,
+        "column": 21
+      }
+    },
+    "type": "error",
+    "file": "src/Main.elm"
+  },
+  {
+    "tag": "NAMING ERROR",
+    "overview": "Cannot find variable `Dict.fomList`.",
+    "subregion": null,
+    "suggestions": [
+      "List"
+    ],
+    "details": "No module called `Dict` has been imported. Maybe you want one of the following?\n\n    List.fomList",
+    "region": {
+      "start": {
+        "line": 30,
+        "column": 9
+      },
+      "end": {
+        "line": 30,
+        "column": 21
+      }
+    },
+    "type": "error",
+    "file": "src/Main.elm"
+  }
+]
