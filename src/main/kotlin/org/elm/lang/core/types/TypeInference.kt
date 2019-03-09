@@ -296,6 +296,14 @@ private class InferenceScope(
         // always infer the arguments so that they're added to expressionTypes
         val argTys = arguments.map { inferAtom(it) }
 
+        if (targetTy is TyVar) {
+            val ty = TyFunction(argTys, TyVar("a"))
+            return when {
+                requireAssignable(expr.target, targetTy, ty) -> ty.ret
+                else -> TyUnknown()
+            }
+        }
+
         fun argCountError(expected: Int): TyUnknown {
             diagnostics += ArgumentCountError(expr, arguments.size, expected)
             return TyUnknown()
@@ -844,8 +852,8 @@ private class InferenceScope(
     ): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
-            val t1 =TypeReplacement.replace(ty1, replacements)
-            val t2 =TypeReplacement.replace(ty2, replacements)
+            val t1 = TypeReplacement.replace(ty1, replacements)
+            val t2 = TypeReplacement.replace(ty2, replacements)
             diagnostics += TypeMismatchError(element, t1, t2, endElement)
         }
         return assignable
@@ -1067,8 +1075,7 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
     return elementIsInTopLevelPattern(element) || (element.elmProject?.isElm18 ?: false)
 }
 
-// TODO[unification] allow vars
-fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar
+fun isInferable(ty: Ty): Boolean = ty !is TyUnknown
 
 /** extracts the typeclass from a [TyVar] name if it is a typeclass */
 private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")

@@ -1658,4 +1658,20 @@ main a =
     in
         bar <error descr="Type mismatch.Required: StringFound: Int">a</error>
 """)
+
+    fun `test using constrained var in lambda`() = checkByText("""
+foo f = (\t -> f t)
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: (a → b) → a → b">foo</error>
+""")
+
+    fun `test using constrained var in multiple lambdas`() = checkByText("""
+foo f x = if x then (\t -> f t) else (\_ -> f x)
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: (Bool → a) → Bool → Bool → a">foo</error>
+""")
 }
