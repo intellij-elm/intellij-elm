@@ -116,6 +116,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         intercellSpacing = Dimension(2, 2)
         border = emptyBorder
         background = backgroundColorUI
+        selectionBackground = Color(0x11, 0x51, 0x73)
         emptyText.text = ""
         model = emptyErrorTable
         object : AutoScrollToSourceHandler() {
