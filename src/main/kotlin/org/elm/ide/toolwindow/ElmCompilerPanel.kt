@@ -189,14 +189,14 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
 
     private fun toNiceName(title: String): String {
-        when (title) {
-            "NAMING ERROR" -> return "Naming Error"
-            "TYPE MISMATCH" -> return "Type Mismatch"
-            "PARSE ERROR" -> return "Parse Error"
-            "UNNAMED MODULE" -> return "Unnamed Module"
-            "MODULE NAME MISMATCH" -> return "Module Name Mismatch"
+        return when (title) {
+            "NAMING ERROR" -> "Naming Error"
+            "TYPE MISMATCH" -> "Type Mismatch"
+            "PARSE ERROR" -> "Parse Error"
+            "UNNAMED MODULE" -> "Unnamed Module"
+            "MODULE NAME MISMATCH" -> "Module Name Mismatch"
+            else -> title
         }
-        return title;
     }
 
     private fun prettyRegion(region: Region): String {
