@@ -112,6 +112,11 @@ main : String
 main = <error descr="Type mismatch.Required: StringFound: ()">foo</error>
 """)
 
+    fun `test calling function without annotation with unconstrained parameters`() = checkByText("""
+foo a = a
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: String">foo ""</error>
+""")
 
     fun `test correct value type from record`() = checkByText("""
 main : {x: (), y: ()}
@@ -245,6 +250,18 @@ main r =
         rr = foo r
     in
     <error descr="Type mismatch.Required: ()Found: Small Large">{ rr | field2 = "" }</error>
+""")
+
+    fun `test alias to extension record`() = checkByText("""
+type alias Record a = { a | field : () }
+type alias Alias a = Record a
+
+foo : Alias a  -> Alias a
+foo it = it
+
+main : Alias a  -> ()
+main model =
+    <error descr="Type mismatch.Required: ()Found: Alias a">foo model</error>
 """)
 
     fun `test field accessor as argument`() = checkByText("""

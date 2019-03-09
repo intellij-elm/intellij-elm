@@ -53,7 +53,9 @@ data class TyRecord(
 
     override fun withAlias(alias: AliasInfo): TyRecord = copy(alias = alias)
     override fun toString(): String {
-        return alias?.let { "{${it.name}}" } ?: baseTy?.let { "{$baseTy | $fields}" } ?: "{$fields}"
+        return alias?.let {
+            "{${it.name}${if (it.parameters.isEmpty()) "" else " ${it.parameters.joinToString(" ")}"}}"
+        } ?: baseTy?.let { "{$baseTy | $fields}" } ?: "{$fields}"
     }
 }
 
