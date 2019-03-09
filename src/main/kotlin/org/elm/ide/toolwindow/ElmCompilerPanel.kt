@@ -58,9 +58,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         val (virtualFile, document, start) = startFromErrorMessage(project.guessProjectDir())
         document?.let {
             val offset = it.getLineStartOffset(start.line - 1) + start.column - 1
-            virtualFile?.let {
-                return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
-            }
+            return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
         }
         throw RuntimeException("The impossible happened...")
     }
@@ -112,9 +110,6 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     private val backgroundColorUI = Color(0x23, 0x31, 0x42)
 
     private val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
-
-    private val errorTableHeaderRenderer = ErrorTabelHeaderRenderer()
-    private val errorTableCellRenderer = ErrorTableCellRenderer()
 
     private val errorTableUI = JBTable().apply {
         setShowGrid(false)
@@ -240,10 +235,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
                     val (virtualFile, _, start) = startFromErrorMessage(project.guessProjectDir())
-                    virtualFile?.let {
-                        return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
-                    }
-                    throw RuntimeException("The impossible happened...")
+                    return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
                 } else {
                     null
                 }
@@ -253,10 +245,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
-    private fun startFromErrorMessage(baseDir: VirtualFile?): Triple<VirtualFile?, Document?, Start> {
+    private fun startFromErrorMessage(baseDir: VirtualFile?): Triple<VirtualFile, Document?, Start> {
         val path = compilerMessages[indexCompilerMessages].path
-        val virtualFile: VirtualFile?
-        virtualFile =
+        val virtualFile =
                 if (FileUtil.isAbsolute(path))
                     LocalFileSystem.getInstance().findFileByPath(path)
                 else {
@@ -268,11 +259,12 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             val start = compilerMessages[indexCompilerMessages].messageWithRegion.region.start
             return Triple(virtualFile, document, start)
         }
-        throw RuntimeException("The impossible happened...")
+        throw RuntimeException("The impossible happened... virtualFile is null for '$path'")
     }
 
     companion object {
-        private class ErrorTabelHeaderRenderer: DefaultTableCellRenderer() {
+
+        val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
             override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
                 val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
                 rendererComponent.foreground = Color.WHITE
@@ -280,7 +272,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             }
         }
 
-        private class ErrorTableCellRenderer: DefaultTableCellRenderer() {
+        val errorTableCellRenderer = object : DefaultTableCellRenderer() {
             override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
                 val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
                 rendererComponent.foreground = Color.LIGHT_GRAY
