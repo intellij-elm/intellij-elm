@@ -12,7 +12,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -27,10 +26,12 @@ import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.toPsiFile
+import org.elm.workspace.ElmProject
 import org.elm.workspace.compiler.CompilerMessage
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.Region
 import org.elm.workspace.compiler.Start
+import org.elm.workspace.elmWorkspace
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
@@ -49,13 +50,16 @@ import javax.swing.table.DefaultTableModel
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
+    // TODO: support multiple projects ? how is 'elm make' supported for multiple projects anyway ?
+    lateinit var elmProjects: List<ElmProject>
+
     private fun updateSelectionAndCreateOccurenceInfo(): OccurenceNavigator.OccurenceInfo {
         // update selection
         messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
         errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
 
         // create occurence info
-        val (virtualFile, document, start) = startFromErrorMessage(project.guessProjectDir())
+        val (virtualFile, document, start) = startFromErrorMessage(VfsUtil.findFile(elmProjects[0].manifestPath, true))
         document?.let {
             val offset = it.getLineStartOffset(start.line - 1) + start.column - 1
             return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
@@ -184,6 +188,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     private val emptyBorder = EmptyBorder(10, 10, 10, 10)
 
     init {
+        ApplicationManager.getApplication().invokeLater {
+            elmProjects = project.elmWorkspace.allProjects
+        }
+
         setToolbar(createToolbar())
 
         errorContent = JBSplitter("ElmCompilerErrorPanel", 0.4F)
@@ -236,7 +244,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    val (virtualFile, _, start) = startFromErrorMessage(project.guessProjectDir())
+                    val (virtualFile, _, start) = startFromErrorMessage(VfsUtil.findFile(elmProjects[0].manifestPath, true))
                     return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
                 } else {
                     null
