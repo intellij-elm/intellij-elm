@@ -127,9 +127,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             if (!it.valueIsAdjusting && selectedRow >= 0) {
                 val cellRect = getCellRect(selectedRow, 0, true)
                 scrollRectToVisible(cellRect)
-
-                indexCompilerMessages = selectedRow
-                messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
+                if (compilerMessages.isNotEmpty()) {
+                    indexCompilerMessages = selectedRow
+                    messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
+                }
             }
         }
     }
