@@ -341,7 +341,8 @@ foo bar = ()
   --^
 """,
             """
-<div class='definition'><pre><i>parameter</i> bar <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
+<div class='definition'><pre><i>parameter</i> bar : a
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
     fun `test function parameter with primitive type annotation`() = doTest(

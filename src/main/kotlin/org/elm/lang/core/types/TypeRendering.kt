@@ -26,7 +26,9 @@ fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
     val type = when {
         parameters.isEmpty() -> name
         else -> parameters.joinToString(" ", prefix = "$name ") {
-            if (it is TyFunction || it is TyUnion && it.parameters.isNotEmpty()) {
+            if (it is TyFunction
+                    || it is TyUnion && it.parameters.isNotEmpty()
+                    || it.alias?.parameters?.isNotEmpty() == true) {
                 "(${it.renderedText(linkify, withModule)})"
             } else {
                 it.renderedText(linkify, withModule)

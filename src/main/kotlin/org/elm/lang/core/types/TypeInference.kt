@@ -100,7 +100,9 @@ private class InferenceScope(
 
         activeScopes += declaration
 
-        val (declaredTy, paramCount) = bindParameters(declaration)
+        // We need to bind parameters before we infer the body since the body can reference the
+        // params in functions
+        val binding = bindParameters(declaration)
 
         // The body of pattern declarations is inferred as part of parameter binding, so there's no
         // more to do here.
@@ -115,20 +117,23 @@ private class InferenceScope(
         if (expr != null && !PsiTreeUtil.hasErrorElements(expr)) {
             bodyTy = inferExpression(expr)
 
-            if (declaredTy != null) {
+            if (binding is ParameterBindingResult.Annotated) {
                 // If the body is just a let expression, show the diagnostic on its expression
                 // rather than the whole body.
                 val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
 
-                val expected = (declaredTy as? TyFunction)?.partiallyApply(paramCount) ?: declaredTy
+                val expected = (binding.ty as? TyFunction)?.partiallyApply(binding.count) ?: binding.ty
                 requireAssignable(errorExpr, bodyTy, expected)
             }
         }
 
-        val ty = when {
-            declaredTy == null && paramCount < 1 -> bodyTy
-            declaredTy == null -> TyFunction((1..paramCount).map { TyUnknown() }, bodyTy).uncurry()
-            else -> declaredTy
+        val ty = when (binding) {
+            is ParameterBindingResult.Annotated -> binding.ty
+            is ParameterBindingResult.Unannotated -> {
+                if (binding.count == 0) bodyTy
+                else TyFunction(binding.params, bodyTy).uncurry()
+            }
+            is ParameterBindingResult.Other -> bodyTy
         }
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
@@ -267,7 +272,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end, replacements)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end, replacements)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.deepReplace(func.partiallyApply(2), replacements)
+                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -311,7 +316,7 @@ private class InferenceScope(
 
         val resultTy = if (ok) {
             val appliedTy = targetTy.partiallyApply(arguments.size)
-            TypeReplacement.deepReplace(appliedTy, replacements)
+            TypeReplacement.replace(appliedTy, replacements)
         } else {
             TyUnknown()
         }
@@ -624,47 +629,49 @@ private class InferenceScope(
      * @return a pair of the entire declared type (or [TyUnknown] if no annotation exists), and the
      *   number of parameters in the declaration
      */
-    private fun bindParameters(valueDeclaration: ElmValueDeclaration): Pair<Ty?, Int> {
+    private fun bindParameters(valueDeclaration: ElmValueDeclaration): ParameterBindingResult {
         return when {
             valueDeclaration.functionDeclarationLeft != null -> {
                 bindFunctionDeclarationParameters(valueDeclaration, valueDeclaration.functionDeclarationLeft!!)
             }
             valueDeclaration.pattern != null -> {
                 bindPatternDeclarationParameters(valueDeclaration, valueDeclaration.pattern!!)
-                null to 0
+                ParameterBindingResult.Other(0)
             }
             valueDeclaration.operatorDeclarationLeft != null -> {
                 // TODO [drop 0.18] remove this case
                 // this is 0.18 only, so we aren't going to bother implementing it
                 valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown() }
-                null to 2
+                ParameterBindingResult.Other(2)
             }
-            else -> null to 0
+            else -> ParameterBindingResult.Other(0)
         }
     }
+
 
     private fun bindFunctionDeclarationParameters(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
-    ): Pair<Ty?, Int> {
+    ): ParameterBindingResult {
         val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.value
         val patterns = decl.patterns.toList()
 
         if (typeRefTy == null) {
-            patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
-            return null to patterns.size
+            val params = uniqueVars(patterns.size)
+            patterns.zip(params).forEach { (pat, param) -> bindPattern(pat, param, true) }
+            return ParameterBindingResult.Unannotated(params, params.size)
         }
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
         if (patterns.size > maxParams) {
             diagnostics += ParameterCountError(patterns.first(), patterns.last(), patterns.size, maxParams)
             patterns.forEach { pat -> bindPattern(pat, TyUnknown(), true) }
-            return null to maxParams
+            return ParameterBindingResult.Other(maxParams)
         }
 
         if (typeRefTy is TyFunction) {
             patterns.zip(typeRefTy.parameters).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
         }
-        return typeRefTy to patterns.size
+        return ParameterBindingResult.Annotated(typeRefTy, patterns.size)
     }
 
     private fun bindPatternDeclarationParameters(valueDeclaration: ElmValueDeclaration, pattern: ElmPattern) {
@@ -843,7 +850,7 @@ private class InferenceScope(
     ): Boolean {
         val assignable = assignable(ty1, ty2, replacements)
         if (!assignable) {
-            val t2 = replacements?.let { TypeReplacement.deepReplace(ty2, it) } ?: ty2
+            val t2 = replacements?.let { TypeReplacement.replace(ty2, it) } ?: ty2
             diagnostics += TypeMismatchError(element, ty1, t2, endElement)
         }
         return assignable
@@ -909,7 +916,11 @@ private class InferenceScope(
             }
             else -> error("impossible")
         }
-        if (result && ty2.baseTy is TyVar) {
+
+        // We need to unify the base var with the record being assigned for the case where we have
+        // an alias to an extension record constructor. We only do this if the records are
+        // different, since that would incorrectly create a recursive type.
+        if (result && ty2.baseTy is TyVar && ty1.fields != ty2.fields) {
             trackReplacement(ty1, ty2.baseTy, replacements)
         }
         return result
@@ -999,7 +1010,7 @@ private class InferenceScope(
     }
 
     private fun trackReplacement(ty1: Ty, ty2: Ty, replacements: MutableMap<TyVar, Ty>?) {
-        if (replacements == null) return
+        if (replacements == null || ty1 == ty2) return
         // assigning anything to a variable fixes the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             replacements[ty2] = ty1
@@ -1085,4 +1096,13 @@ private fun error(element: ElmPsiElement, message: String): Nothing {
 
     val text = element.text.let { if (it.length > 25) "${it.take(25)}…" else it }.replace("\n", "↵")
     error("$message$location <${element.elementType}: '$text'>")
+}
+
+
+private sealed class ParameterBindingResult {
+    abstract val count: Int
+
+    data class Annotated(val ty: Ty, override val count: Int) : ParameterBindingResult()
+    data class Unannotated(val params: List<Ty>, override val count: Int) : ParameterBindingResult()
+    data class Other(override val count: Int) : ParameterBindingResult()
 }
