@@ -177,15 +177,27 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 indexCompilerMessages = 0
                 messageUI.text = compilerMessages[0].messageWithRegion.message
 
-                val locations: List<String> = compilerMessages.map { it.name + prettyRegion(it.messageWithRegion.region) }
-                val titles: List<String> = compilerMessages.map { it.messageWithRegion.title }
-                val zipped = locations.zip(titles).map { arrayOf(it.first, it.second) }.toTypedArray()
-                errorTableUI.model = DefaultTableModel(zipped, arrayOf("Location", "Type"))
+                val locationsAndType: Array<Array<String>> = compilerMessages.map {
+                    val moduleAndLocation = it.name + prettyRegion(it.messageWithRegion.region)
+                    arrayOf(moduleAndLocation, toNiceName(it.messageWithRegion.title))
+                }.toTypedArray()
+                errorTableUI.model = DefaultTableModel(locationsAndType, arrayOf("Location", "Type"))
                 errorTableUI.tableHeader.defaultRenderer = errorTableHeaderRenderer
                 errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(0), errorTableCellRenderer)
                 errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(1), errorTableCellRenderer)
             }
         }
+
+    private fun toNiceName(title: String): String {
+        when (title) {
+            "NAMING ERROR" -> return "Naming Error"
+            "TYPE MISMATCH" -> return "Type Mismatch"
+            "PARSE ERROR" -> return "Parse Error"
+            "UNNAMED MODULE" -> return "Unnamed Module"
+            "MODULE NAME MISMATCH" -> return "Module Name Mismatch"
+        }
+        return title;
+    }
 
     private fun prettyRegion(region: Region): String {
         return " @ line ${region.start.line} column ${region.start.column}"
