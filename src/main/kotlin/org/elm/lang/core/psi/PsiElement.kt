@@ -35,6 +35,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
 import org.elm.lang.core.lexer.ElmLayoutLexer
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import kotlin.reflect.KClass
 
@@ -97,3 +98,10 @@ fun PsiElement.isVirtualLayoutToken(): Boolean =
 /** Return true if this element is a direct child of an [ElmFile] */
 val PsiElement.isTopLevel: Boolean
     get() = parent is ElmFile
+
+/** Return the top level value declaration from this element's ancestors */
+fun PsiElement.outermostDeclaration(strict: Boolean): ElmValueDeclaration? =
+        ancestors.drop(if (strict) 1 else 0)
+                .takeWhile { it !is ElmFile }
+                .filterIsInstance<ElmValueDeclaration>()
+                .firstOrNull { it.isTopLevel }

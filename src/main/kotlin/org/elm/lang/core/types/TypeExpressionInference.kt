@@ -1,16 +1,15 @@
 package org.elm.lang.core.types
 
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
-import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.modificationTracker
-import org.elm.lang.core.psi.parentOfType
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -61,9 +60,21 @@ fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> 
 /** Get the type of the expression in this annotation, or null if the program is incomplete and no expression exists */
 fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty>? {
     val typeRef = typeExpression ?: return null
+
+    // PSI changes inside a value declaration only invalidate the modification tracker for the
+    // outer-most declaration, not the entire project. If this is a nested annotation, we need to
+    // find that tracker.
+    val parentModificationTracker = outermostDeclaration(strict = true)?.modificationTracker
+
     val cachedValue = CachedValuesManager.getCachedValue(typeRef, TY_CACHE_KEY) {
         val inferenceResult = TypeExpression().beginTypeRefInference(typeRef)
-        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+
+        val trackers = when (parentModificationTracker) {
+            null -> arrayOf(project.modificationTracker)
+            else -> arrayOf(project.modificationTracker, parentModificationTracker)
+        }
+
+        CachedValueProvider.Result.create(inferenceResult, *trackers)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
