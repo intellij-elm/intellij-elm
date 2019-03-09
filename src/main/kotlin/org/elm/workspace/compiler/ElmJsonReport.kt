@@ -3,11 +3,13 @@ package org.elm.workspace.compiler
 import com.google.gson.*
 import java.util.regex.Pattern
 
+private const val nonbreakingSpace = "&nbsp;"
+
 class ElmJsonReport {
 
     val gson = GsonBuilder().setPrettyPrinting().create()
 
-    private val p = Pattern.compile(".*<((http|https)(://.*))>.*", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
+    private val urlPattern = Pattern.compile(".*<((http|https)(://.*))>.*", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
 
     private val tempAnchorReplacement = "##TEMP##"
 
@@ -49,18 +51,18 @@ class ElmJsonReport {
         val reg = Gson().fromJson(region.toString(), Region::class.java)
         val lines = message.map { (::itemToString)(it) }
         val body = lines.joinToString("")
-        return MessageAndRegion("<html><body style=\"font-family: monospace\">$body</body></html>", reg, title)
+        return MessageAndRegion("<html><body style=\"font-family: monospace; font-weight: bold\">$body</body></html>", reg, title)
     }
 
     private fun itemToString(jsonElement: JsonElement): String {
         if (jsonElement.isJsonPrimitive) {
-            val m = p.matcher(jsonElement.asString)
-            if (m.find()) {
-                val httpurl = m.group(1)
+            val urlMatcher = urlPattern.matcher(jsonElement.asString)
+            if (urlMatcher.find()) {
+                val httpurl = urlMatcher.group(1)
                 val anchor = "<a href=\"$httpurl\">$httpurl</a>"
-                return asTextSpan(jsonElement.asString.replace("<$httpurl>", tempAnchorReplacement).replace(" ", "&nbsp;").replace("\n", "<br>").replace(tempAnchorReplacement, anchor))
+                return asTextSpan(jsonElement.asString.replace("<$httpurl>", tempAnchorReplacement).replace(" ", nonbreakingSpace).replace("\n", "<br>").replace(tempAnchorReplacement, anchor))
             }
-            return asTextSpan(jsonElement.asString.replace(" ", "&nbsp;").replace("\n", "<br>"))
+            return asTextSpan(jsonElement.asString.replace(" ", nonbreakingSpace).replace("\n", "<br>"))
         } else
             return markupToString(jsonElement.asJsonObject)
     }
@@ -74,7 +76,7 @@ class ElmJsonReport {
             get("underline").asBoolean.let { if (it) styleBuilder.append("text-decoration: underline;") }
             get("color").let { if (!it.isJsonNull) styleBuilder.append("color: ${mapColor(it.asString)};") else styleBuilder.append("color: #A1A8B3;") }
         }
-        return "<span style=\"$styleBuilder\">${jsonObject.get("string").asString.replace(" ", "&nbsp;")}</span>"
+        return "<span style=\"$styleBuilder\">${jsonObject.get("string").asString.replace(" ", nonbreakingSpace)}</span>"
     }
 
     private fun mapColor(color: String): String {
