@@ -1,0 +1,53 @@
+[
+  {
+    "tag": "missing type annotation",
+    "overview": "Top-level value `feed` does not have a type annotation.",
+    "details": "I inferred the type annotation so you can copy it into your code:\n\nfeed : Html msg",
+    "region": {
+      "start": {
+        "line": 39,
+        "column": 1
+      },
+      "end": {
+        "line": 39,
+        "column": 5
+      }
+    },
+    "type": "warning",
+    "file": "./src/Page/Home.elm"
+  },
+  {
+    "tag": "missing type annotation",
+    "overview": "Top-level value `banner` does not have a type annotation.",
+    "details": "I inferred the type annotation so you can copy it into your code:\n\nbanner : Html msg",
+    "region": {
+      "start": {
+        "line": 19,
+        "column": 1
+      },
+      "end": {
+        "line": 19,
+        "column": 7
+      }
+    },
+    "type": "warning",
+    "file": "./src/Page/Home.elm"
+  },
+  {
+    "tag": "missing type annotation",
+    "overview": "Top-level value `page` does not have a type annotation.",
+    "details": "I inferred the type annotation so you can copy it into your code:\n\npage : Html msg",
+    "region": {
+      "start": {
+        "line": 7,
+        "column": 1
+      },
+      "end": {
+        "line": 7,
+        "column": 5
+      }
+    },
+    "type": "warning",
+    "file": "./src/Page/Home.elm"
+  }
+]
