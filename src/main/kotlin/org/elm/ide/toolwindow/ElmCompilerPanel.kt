@@ -34,6 +34,8 @@ import org.elm.workspace.compiler.Start
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.font.TextAttribute
+import java.util.*
 import javax.swing.JComponent
 import javax.swing.JTable
 import javax.swing.JTextPane
@@ -107,25 +109,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
-    private val backgroundColorUI = Color(34, 34, 34)
+    private val backgroundColorUI = Color(0x23, 0x31, 0x42)
 
     private val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
-
-    private class ErrorTabelHeaderRenderer: DefaultTableCellRenderer() {
-        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-            rendererComponent.foreground = Color.WHITE
-            return rendererComponent
-        }
-    }
-    private class ErrorTableCellRenderer: DefaultTableCellRenderer() {
-        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-            rendererComponent.foreground = Color.LIGHT_GRAY
-            border = EmptyBorder(2, 2, 2, 2)
-            return rendererComponent
-        }
-    }
 
     private val errorTableHeaderRenderer = ErrorTabelHeaderRenderer()
     private val errorTableCellRenderer = ErrorTableCellRenderer()
@@ -178,13 +164,13 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 messageUI.text = compilerMessages[0].messageWithRegion.message
 
                 val locationsAndType: Array<Array<String>> = compilerMessages.map {
-                    val moduleAndLocation = it.name + prettyRegion(it.messageWithRegion.region)
-                    arrayOf(moduleAndLocation, toNiceName(it.messageWithRegion.title))
+                    arrayOf(it.name, prettyRegion(it.messageWithRegion.region), toNiceName(it.messageWithRegion.title))
                 }.toTypedArray()
-                errorTableUI.model = DefaultTableModel(locationsAndType, arrayOf("Location", "Type"))
+                errorTableUI.model = DefaultTableModel(locationsAndType, arrayOf("Module", "Location", "Type"))
                 errorTableUI.tableHeader.defaultRenderer = errorTableHeaderRenderer
                 errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(0), errorTableCellRenderer)
                 errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(1), errorTableCellRenderer)
+                errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(2), errorTableCellRenderer)
             }
         }
 
@@ -193,7 +179,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     }
 
     private fun prettyRegion(region: Region): String {
-        return " @ line ${region.start.line} column ${region.start.column}"
+        return " line ${region.start.line} column ${region.start.column}"
     }
 
     private var errorContent: JBSplitter
@@ -203,7 +189,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     init {
         setToolbar(createToolbar())
 
-        errorContent = JBSplitter()
+        errorContent = JBSplitter("ElmCompilerErrorPanel", 0.4F)
         errorContent.firstComponent = JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
         errorContent.firstComponent.border = emptyBorder
         errorContent.secondComponent = messageUI
@@ -283,6 +269,28 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             return Triple(virtualFile, document, start)
         }
         throw RuntimeException("The impossible happened...")
+    }
+
+    companion object {
+        private class ErrorTabelHeaderRenderer: DefaultTableCellRenderer() {
+            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+                val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                rendererComponent.foreground = Color.WHITE
+                return rendererComponent
+            }
+        }
+
+        private class ErrorTableCellRenderer: DefaultTableCellRenderer() {
+            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+                val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                rendererComponent.foreground = Color.LIGHT_GRAY
+                border = EmptyBorder(2, 2, 2, 2)
+                if (column == 2) {
+                    rendererComponent.font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD))
+                }
+                return rendererComponent
+            }
+        }
     }
 
 }
