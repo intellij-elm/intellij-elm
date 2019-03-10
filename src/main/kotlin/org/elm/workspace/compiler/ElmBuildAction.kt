@@ -46,6 +46,10 @@ class ElmBuildAction : AnAction() {
         }
 
         val elmProject = findElmProject(e)
+        if (elmProject == null) {
+            project.showBalloon("Could not Elm project", NotificationType.ERROR)
+            return
+        }
 
         // find "main" function
         val mainFuncDecl = ElmLookup
@@ -63,7 +67,7 @@ class ElmBuildAction : AnAction() {
         val manifestBaseDir = findElmManifestBaseDir(elmProject)
         manifestBaseDir?.let {
             val json = try {
-                elmCLI.make(project, elmProject!!, mainFuncDecl.containingFile.virtualFile.path).stderr
+                elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
             } catch (e: ExecutionException) {
                 project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
                 return
