@@ -64,22 +64,22 @@ class ElmBuildAction : AnAction() {
 
         val manifestBaseDir = findElmManifestBaseDir(e)
         manifestBaseDir?.let {
-            try {
-                val json = elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
-                if (json.isNotEmpty()) {
-                    // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
-                    val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({ it.name }, { it.messageWithRegion.region.start.line }, { it.messageWithRegion.region.start.column }))
-                    project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
-
-                } else {
-                    project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, emptyList())
-                }
-                // show toolwindow
-                ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
+            val json = try {
+                elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
             } catch (e: ExecutionException) {
                 project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
                 return
             }
+            if (json.isNotEmpty()) {
+                // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
+                val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({ it.name }, { it.messageWithRegion.region.start.line }, { it.messageWithRegion.region.start.column }))
+                project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
+
+            } else {
+                project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, emptyList())
+            }
+            // show toolwindow
+            ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
         } ?: showDialog(project, "Could not find Elm-Project base directory")
     }
 
