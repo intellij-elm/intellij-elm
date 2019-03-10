@@ -4,10 +4,14 @@ import com.intellij.execution.ExecutionException
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.awt.RelativePoint
@@ -20,6 +24,7 @@ import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.findInference
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.ElmProject
+import org.elm.workspace.ElmWorkspaceService
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
@@ -52,35 +57,48 @@ class ElmBuildAction : AnAction() {
                 .filter { element -> elmMainTypes.contains(Pair((element.findInference()?.ty as TyUnion).module, (element.findInference()?.ty as TyUnion).name)) }
 
         if (mainElements.isNotEmpty()) {
-            val path = mainElements[0].containingFile.virtualFile.path
-            try {
-                val json = elmCLI.make(project, elmProject, path).stderr
-                if (json.isNotEmpty()) {
-                    // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
-                    val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({it.name}, {it.messageWithRegion.region.start.line}, {it.messageWithRegion.region.start.column}))
-                    project.messageBus.syncPublisher(ERRORS_TOPIC).update(messages)
+            val manifestBaseDir = findElmManifestBaseDir(e)
+            manifestBaseDir?.let {
+                try {
+                    val json = elmCLI.make(project, elmProject, mainElements[0].containingFile.virtualFile).stderr
+                    if (json.isNotEmpty()) {
+                        // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
+                        val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({it.name}, {it.messageWithRegion.region.start.line}, {it.messageWithRegion.region.start.column}))
+                        project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
 
-                } else {
-                    project.messageBus.syncPublisher(ERRORS_TOPIC).update(emptyList())
+                    } else {
+                        project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, emptyList())
+                    }
+                    // show toolwindow
+                    ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
+                } catch (e: ExecutionException) {
+                    project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
+                    return
                 }
-                // show toolwindow
-                ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
-            } catch (e: ExecutionException) {
-                project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
-                return
-            }
+            } ?: showDialog(project, "Could not find Elm-Project base directory")
         } else {
-            showDialog(project)
+            showDialog(project, "No Type Signature found. Please specify one, so that Elm Build works.")
         }
     }
 
-    private fun showDialog(project: Project) {
+    private fun findElmManifestBaseDir(e: AnActionEvent): VirtualFile? {
+        val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
+        e.project?.let {
+            val elmWorkspaceService = ServiceManager.getService(it, ElmWorkspaceService::class.java)
+            val manifestPath = elmWorkspaceService.findProjectForFile(file)
+            return manifestPath?.let { VfsUtil.findFile(manifestPath.manifestPath, true) }
+        }
+        return null
+    }
+
+
+    private fun showDialog(project: Project, message: String) {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
-        JBPopupFactory.getInstance().createHtmlTextBalloonBuilder("No Type Signature found. Please specify one, so that Elm Build works.", MessageType.ERROR, null).setFadeoutTime(5000).createBalloon().show(RelativePoint.getNorthEastOf(statusBar.component), Balloon.Position.atRight)
+        JBPopupFactory.getInstance().createHtmlTextBalloonBuilder(message, MessageType.ERROR, null).setFadeoutTime(5000).createBalloon().show(RelativePoint.getNorthEastOf(statusBar.component), Balloon.Position.atRight)
     }
 
     interface ElmErrorsListener {
-        fun update(messages: List<CompilerMessage>)
+        fun update(baseDir: VirtualFile, messages: List<CompilerMessage>)
     }
 
     companion object {

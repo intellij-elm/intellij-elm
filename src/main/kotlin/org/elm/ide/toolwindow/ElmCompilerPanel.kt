@@ -26,12 +26,10 @@ import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.toPsiFile
-import org.elm.workspace.ElmProject
 import org.elm.workspace.compiler.CompilerMessage
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.Region
 import org.elm.workspace.compiler.Start
-import org.elm.workspace.elmWorkspace
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
@@ -50,8 +48,7 @@ import javax.swing.table.DefaultTableModel
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
-    // TODO: support multiple projects ? how is 'elm make' supported for multiple projects anyway ?
-    lateinit var elmProjects: List<ElmProject>
+    var elmBaseDir: VirtualFile? = null
 
     private fun updateSelectionAndCreateOccurenceInfo(): OccurenceNavigator.OccurenceInfo {
         // update selection
@@ -59,7 +56,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
 
         // create occurence info
-        val (virtualFile, document, start) = startFromErrorMessage(VfsUtil.findFile(elmProjects[0].manifestPath, true))
+        val (virtualFile, document, start) = startFromErrorMessage()
         document?.let {
             val offset = it.getLineStartOffset(start.line - 1) + start.column - 1
             return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
@@ -188,10 +185,6 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     private val emptyBorder = EmptyBorder(10, 10, 10, 10)
 
     init {
-        ApplicationManager.getApplication().invokeLater {
-            elmProjects = project.elmWorkspace.allProjects
-        }
-
         setToolbar(createToolbar())
 
         errorContent = JBSplitter("ElmCompilerErrorPanel", 0.4F)
@@ -203,8 +196,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(messages: List<CompilerMessage>) {
+                override fun update(baseDir: VirtualFile, messages: List<CompilerMessage>) {
                     ApplicationManager.getApplication().invokeLater {
+                        elmBaseDir = baseDir
                         compilerMessages = messages
                         contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                         errorTableUI.setRowSelectionInterval(0, 0)
@@ -244,7 +238,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
                 if (!compilerMessages.isEmpty()) {
-                    val (virtualFile, _, start) = startFromErrorMessage(VfsUtil.findFile(elmProjects[0].manifestPath, true))
+                    val (virtualFile, _, start) = startFromErrorMessage()
                     return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
                 } else {
                     null
@@ -255,13 +249,13 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
-    private fun startFromErrorMessage(baseDir: VirtualFile?): Triple<VirtualFile, Document?, Start> {
+    private fun startFromErrorMessage(): Triple<VirtualFile, Document?, Start> {
         val path = compilerMessages[indexCompilerMessages].path
         val virtualFile =
                 if (FileUtil.isAbsolute(path))
                     LocalFileSystem.getInstance().findFileByPath(path)
                 else {
-                    VfsUtil.findRelativeFile(path, baseDir)
+                    VfsUtil.findRelativeFile(path, elmBaseDir)
                 }
         val psiFile = virtualFile?.toPsiFile(project)
         psiFile?.let {
