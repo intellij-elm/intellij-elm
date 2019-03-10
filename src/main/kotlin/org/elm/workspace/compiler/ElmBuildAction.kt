@@ -58,14 +58,14 @@ class ElmBuildAction : AnAction() {
                 }
 
         if (mainFuncDecl == null) {
-            showDialog(project, "No Type Signature found. Please specify one, so that Elm Build works.")
+            showDialog(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
             return
         }
 
         val manifestBaseDir = findElmManifestBaseDir(e)
         manifestBaseDir?.let {
             try {
-                val json = elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile).stderr
+                val json = elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
                 if (json.isNotEmpty()) {
                     // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
                     val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({ it.name }, { it.messageWithRegion.region.start.line }, { it.messageWithRegion.region.start.column }))
