@@ -61,7 +61,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             val offset = it.getLineStartOffset(start.line - 1) + start.column - 1
             return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
         }
-        throw RuntimeException("The impossible happened...")
+        throw RuntimeException("The impossible happened... document is null for ${compilerMessages[indexCompilerMessages].path}")
     }
 
     override fun getNextOccurenceActionName(): String {
