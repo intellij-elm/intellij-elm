@@ -23,7 +23,7 @@ sealed class Ty {
 class TyVar(val name: String) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
-    override fun toString(): String = "<$name>"
+    override fun toString(): String = "<$name@${(System.identityHashCode(this)).toString(16).take(3)}>"
 }
 
 /** A tuple type like `(Int, String)` */

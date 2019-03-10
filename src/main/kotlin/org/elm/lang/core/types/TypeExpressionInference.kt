@@ -115,12 +115,12 @@ class TypeExpression(
         private val activeAliases: MutableSet<ElmTypeAliasDeclaration> = mutableSetOf()
 ) {
     fun beginPortAnnotationInference(annotation: ElmPortAnnotation): ParameterizedInferenceResult<Ty> {
-        val ty = annotation.typeExpression?.let { typeExpresionType(it) } ?: TyUnknown()
+        val ty = annotation.typeExpression?.let { typeExpressionType(it) } ?: TyUnknown()
         return result(ty)
     }
 
     fun beginTypeRefInference(typeExpr: ElmTypeExpression): ParameterizedInferenceResult<Ty> {
-        val ty = typeExpresionType(typeExpr)
+        val ty = typeExpressionType(typeExpr)
         return result(ty)
     }
 
@@ -163,7 +163,7 @@ class TypeExpression(
         activeAliases += decl
 
         val ty = if (record == null) {
-            decl.typeExpression?.let { typeExpresionType(it) } ?: TyUnknown()
+            decl.typeExpression?.let { typeExpressionType(it) } ?: TyUnknown()
         } else {
             recordTypeDeclType(record)
         }
@@ -176,7 +176,7 @@ class TypeExpression(
 
 
     /** Get the type for an entire type expression */
-    private fun typeExpresionType(typeExpr: ElmTypeExpression): Ty {
+    private fun typeExpressionType(typeExpr: ElmTypeExpression): Ty {
         val segments = typeExpr.allSegments.map {
             typeSignatureDeclType(it)
         }.toList()
@@ -192,22 +192,24 @@ class TypeExpression(
         return when (decl) {
             is ElmTypeVariable -> getTyVar(decl.identifier.text)
             is ElmRecordType -> recordTypeDeclType(decl)
-            is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeExpressionList.map { typeExpresionType(it) })
+            is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeExpressionList.map { typeExpressionType(it) })
             is ElmTypeRef -> typeRefType(decl)
-            is ElmTypeExpression -> typeExpresionType(decl)
+            is ElmTypeExpression -> typeExpressionType(decl)
             else -> error("unimplemented type $decl")
         }
     }
 
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
-        val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeExpresionType(it.typeExpression) }
+        val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeExpressionType(it.typeExpression) }
         val baseTy = record.baseTypeIdentifier?.referenceName?.let { getTyVar(it) }
         return TyRecord(declaredFields, baseTy)
     }
 
     private fun typeRefType(typeRef: ElmTypeRef): Ty {
         val argElements = typeRef.allArguments.toList()
-        val args = argElements.map { typeSignatureDeclType(it) }
+        val args = argElements.map {
+            typeSignatureDeclType(it)
+        }
         val ref = typeRef.reference.resolve()
 
         val declaredTy = when (ref) {
@@ -237,9 +239,9 @@ class TypeExpression(
             else -> error(typeRef, "Unexpected type reference")
         }
 
-        if (!isInferable(declaredTy)) {
-            return declaredTy
-        }
+//        if (!isInferable(declaredTy)) {
+//            return declaredTy
+//        }
 
         // This cast is safe, since parameters of type declarations are always inferred as TyVar.
         // We know the parameters haven't been replaced yet, since we just created the ty ourselves.
@@ -250,7 +252,7 @@ class TypeExpression(
             else -> emptyList()
         } as List<TyVar>
 
-        if (params.size != args.size) {
+        if (isInferable(declaredTy) && params.size != args.size) {
             diagnostics += TypeArgumentCountError(typeRef, args.size, params.size)
             return TyUnknown()
         }

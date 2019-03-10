@@ -118,6 +118,13 @@ main : ()
 main = <error descr="Type mismatch.Required: ()Found: String">foo ""</error>
 """)
 
+    fun `test parameterized function type`() = checkByText("""
+type Foo a = Bar
+main : (Foo ty -> Foo ty) -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: Foo ty → Foo ty">a</error>
+""")
+
     fun `test correct value type from record`() = checkByText("""
 main : {x: (), y: ()}
 main = {x = (), y = ()}
@@ -1646,17 +1653,14 @@ main = bar <error descr="Type mismatch.Required: IntFound: String">""</error>
 """)
 
     fun `test using constrained var in let`() = checkByText("""
-foo : Int -> Int
-foo a = a
-
 bar : String -> String
 bar a = a
 
 main a =
     let
-        x = foo a
+        x = a + 1
     in
-        bar <error descr="Type mismatch.Required: StringFound: Int">a</error>
+        bar <error descr="Type mismatch.Required: StringFound: number">a</error>
 """)
 
     fun `test using constrained var in lambda`() = checkByText("""

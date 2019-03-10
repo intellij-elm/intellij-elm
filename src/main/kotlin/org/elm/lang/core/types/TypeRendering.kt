@@ -2,60 +2,93 @@ package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 
+/**
+ * Render a [Ty] to a strign that can be shown tot he user.
+ *
+ * @param linkify If true, add hyperlinks to union names
+ * @param withModule If true, qualify union names with their module
+ */
 fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return alias?.renderedText(linkify, withModule) ?: when (this) {
-        is TyFunction -> renderedText(linkify, withModule)
-        is TyUnion -> renderedText(linkify, withModule)
-        is TyRecord -> renderedText(linkify, withModule)
-        is TyTuple -> renderedText(linkify, withModule)
-        is TyVar -> name
-        is TyUnit -> "()"
-        is TyUnknown, TyInProgressBinding -> "unknown"
-        TyShader -> "shader"
-    }
+    return TypeRenderer(linkify, withModule).render(this)
 }
 
-fun TyFunction.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return (parameters + ret).joinToString(" → ") {
-        if (it is TyFunction) "(${it.renderedText(linkify, withModule)})" else it.renderedText(linkify, withModule)
-    }
-}
+private class TypeRenderer(private val linkify: Boolean, private val withModule: Boolean) {
+    private val varDisplayNames = mutableMapOf<TyVar, String>()
+    private val possibleNames = varNames()
 
-fun TyUnion.renderedText(linkify: Boolean, withModule: Boolean): String {
-    val name = buildString { renderLink(name, name, linkify) }
-    val type = when {
-        parameters.isEmpty() -> name
-        else -> parameters.joinToString(" ", prefix = "$name ") {
-            if (it is TyFunction
-                    || it is TyUnion && it.parameters.isNotEmpty()
-                    || it.alias?.parameters?.isNotEmpty() == true) {
-                "(${it.renderedText(linkify, withModule)})"
-            } else {
-                it.renderedText(linkify, withModule)
-            }
+    fun render(ty: Ty): String {
+        return ty.alias?.renderedText() ?: when (ty) {
+            is TyFunction -> renderFunc(ty)
+            is TyUnion -> renderUnion(ty)
+            is TyRecord -> renderRecord(ty)
+            is TyTuple -> renderTuple(ty)
+            is TyVar -> renderVar(ty)
+            is TyUnit -> "()"
+            is TyUnknown, TyInProgressBinding -> "unknown"
+            TyShader -> "shader"
         }
     }
-    return if (withModule && module.isNotBlank()) "$module.$type" else type
-}
 
-fun TyRecord.renderedText(linkify: Boolean, withModule: Boolean): String {
-    val prefix = if (baseTy != null) "{ ${baseTy.renderedText(linkify, withModule)} | " else "{ "
-    return fields.entries.joinToString(", ", prefix = prefix, postfix = " }") { (name, ty) ->
-        "$name : ${ty.renderedText(linkify, withModule)}"
+    private fun renderVar(ty: TyVar): String {
+        if (ty in varDisplayNames) return varDisplayNames[ty]!!
+
+        // If two different normal vars in this ty have the same name, show a unique name instead to
+        // avoid confusion. Typeclasses are identified by their name rather than their id, so we
+        // leave these as-is.
+        val takenNames = varDisplayNames.values
+        if (getTypeclassName(ty.name) == null && ty.name in takenNames) {
+            val displayName = possibleNames.first { it !in takenNames }
+            varDisplayNames[ty] = displayName
+            return displayName
+        }
+
+        varDisplayNames[ty] = ty.name
+        return ty.name
     }
-}
 
-fun TyTuple.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderedText(linkify, withModule) }
-}
 
-fun AliasInfo.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return TyUnion(module, name, parameters).renderedText(linkify, withModule)
-}
+    private fun renderFunc(ty: TyFunction): String {
+        return (ty.parameters + ty.ret).joinToString(" → ") {
+            if (it is TyFunction) "(${renderFunc(it)})" else render(it)
+        }
+    }
 
-private fun StringBuilder.renderLink(refText: String, text: String, linkify: Boolean) {
-    if (linkify) DocumentationManagerUtil.createHyperlink(this, refText, text, true)
-    else append(text)
+    private fun renderUnion(ty: TyUnion): String {
+        val name = buildString { renderLink(ty.name, ty.name) }
+        val type = when {
+            ty.parameters.isEmpty() -> name
+            else -> ty.parameters.joinToString(" ", prefix = "$name ") {
+                if (it is TyFunction
+                        || it is TyUnion && it.parameters.isNotEmpty()
+                        || it.alias?.parameters?.isNotEmpty() == true) {
+                    "(${render(it)})"
+                } else {
+                    render(it)
+                }
+            }
+        }
+        return if (withModule && ty.module.isNotBlank()) "${ty.module}.$type" else type
+    }
+
+    private fun renderRecord(ty: TyRecord): String {
+        val prefix = if (ty.baseTy != null) "{ ${render(ty.baseTy)} | " else "{ "
+        return ty.fields.entries.joinToString(", ", prefix = prefix, postfix = " }") { (name, ty) ->
+            "$name : ${render(ty)}"
+        }
+    }
+
+    private fun renderTuple(ty: TyTuple): String {
+        return ty.types.joinToString(", ", prefix = "(", postfix = ")") { render(it) }
+    }
+
+    private fun AliasInfo.renderedText(): String {
+        return renderUnion(TyUnion(module, name, parameters))
+    }
+
+    private fun StringBuilder.renderLink(refText: String, text: String) {
+        if (linkify) DocumentationManagerUtil.createHyperlink(this, refText, text, true)
+        else append(text)
+    }
 }
 
 /** Render a name or destructuring pattern to use as a parameter for a function or case branch */
@@ -79,3 +112,11 @@ fun TyTuple.renderParam(): String {
 private fun String.toFirstCharLowerCased(): String =
         if (isEmpty()) ""
         else first().toLowerCase() + substring(1)
+
+/** An infinite sequence of possible type variable names: (a, b, ... z, a1, b1, ...) */
+fun varNames(): Sequence<String> {
+    val s = "abcdefghijklmnopqrstuvwxyz"
+    return (0..Int.MAX_VALUE).asSequence().map {
+        s[it % s.length] + if (it >= s.length) (it / s.length).toString() else ""
+    }
+}

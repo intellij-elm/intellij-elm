@@ -1003,7 +1003,7 @@ private class InferenceScope(
     private fun typeclassCompatable(typeclass: String, name1: String, name2: String): Boolean {
         // all unconstrained vars can unify with constrained vars, so if there's no typeclass, we
         // always return true
-        val otherTypclassName = TYPECLASS_REGEX.matchEntire(name2)?.value ?: return true
+        val otherTypclassName = getTypeclassName(name2) ?: return true
         // any numbered var can be unify with an unnumbered var in the same typeclass. If they're
         // both numbered, they have to match exactly.
         return otherTypclassName == typeclass &&
@@ -1048,10 +1048,7 @@ val ElmPsiElement.moduleName: String
 
 /** Return [count] [TyVar]s named a, b, ... z, a1, b1, ... */
 private fun uniqueVars(count: Int): List<TyVar> {
-    val s = "abcdefghijklmnopqrstuvwxyz"
-    return (0 until count).map {
-        TyVar(s[it % s.length] + if (it >= s.length) (it / s.length).toString() else "")
-    }
+    return varNames().take(count).map { TyVar(it) }.toList()
 }
 
 /** Return the nearest [ElmValueDeclaration] if it declares a pattern, or `null` otherwise */
@@ -1079,6 +1076,9 @@ fun isInferable(ty: Ty): Boolean = ty !is TyUnknown
 
 /** extracts the typeclass from a [TyVar] name if it is a typeclass */
 private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")
+
+/** Extract the typeclass for a var name if it is one, or null if it's a normal var*/
+fun getTypeclassName(name: String): String? = TYPECLASS_REGEX.matchEntire(name)?.value
 
 /** Throw an [IllegalStateException] with [message] augmented with information about [element] */
 fun error(element: ElmPsiElement, message: String): Nothing {
