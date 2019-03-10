@@ -31,8 +31,6 @@ import org.elm.workspace.elmWorkspace
 
 class ElmBuildAction : AnAction() {
 
-    private val elmMainTypes: Set<Pair<String, String>> = hashSetOf(Pair("Platform", "Program"), Pair("Html", "Html"))
-
     private val elmJsonReport = ElmJsonReport()
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -47,7 +45,7 @@ class ElmBuildAction : AnAction() {
             return
         }
 
-        val elmProject = project.elmWorkspace.allProjects.first()
+        val elmProject = findElmProject(e)
 
         // find "main" function
         val mainFuncDecl = ElmLookup
@@ -62,10 +60,10 @@ class ElmBuildAction : AnAction() {
             return
         }
 
-        val manifestBaseDir = findElmManifestBaseDir(e)
+        val manifestBaseDir = findElmManifestBaseDir(elmProject)
         manifestBaseDir?.let {
             val json = try {
-                elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
+                elmCLI.make(project, elmProject!!, mainFuncDecl.containingFile.virtualFile.path).stderr
             } catch (e: ExecutionException) {
                 project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
                 return
@@ -83,16 +81,18 @@ class ElmBuildAction : AnAction() {
         } ?: showDialog(project, "Could not find Elm-Project base directory")
     }
 
-    private fun findElmManifestBaseDir(e: AnActionEvent): VirtualFile? {
+    private fun findElmProject(e: AnActionEvent): ElmProject? {
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
         e.project?.let {
             val elmWorkspaceService = ServiceManager.getService(it, ElmWorkspaceService::class.java)
-            val manifestPath = elmWorkspaceService.findProjectForFile(file)
-            return manifestPath?.let { VfsUtil.findFile(manifestPath.manifestPath, true) }
+            return elmWorkspaceService.findProjectForFile(file)
         }
         return null
     }
 
+    private fun findElmManifestBaseDir(elmProject: ElmProject?): VirtualFile? {
+        return elmProject?.let { VfsUtil.findFile(elmProject.manifestPath, true) }
+    }
 
     private fun showDialog(project: Project, message: String) {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
@@ -105,6 +105,7 @@ class ElmBuildAction : AnAction() {
 
     companion object {
         val ERRORS_TOPIC = Topic("Elm compiler-messages", ElmErrorsListener::class.java)
+        private val elmMainTypes: Set<Pair<String, String>> = hashSetOf(Pair("Platform", "Program"), Pair("Html", "Html"))
     }
 
     data class LookupClientLocation(
