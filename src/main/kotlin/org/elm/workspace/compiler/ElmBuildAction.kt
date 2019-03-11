@@ -21,6 +21,7 @@ import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.types.TyUnion
+import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findInference
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.ElmProject
@@ -54,13 +55,18 @@ class ElmBuildAction : AnAction() {
         // find "main" function
         val mainFuncDecl = ElmLookup
                 .findByName<ElmFunctionDeclarationLeft>("main", LookupClientLocation(project, elmProject))
-                .find {
-                    val ty = (it.findInference()?.ty as? TyUnion) ?: return@find false
-                    elmMainTypes.contains(ty.module to ty.name)
+                .find { decl ->
+                    val ty = decl.findInference()?.ty
+                    val key = when (ty) {
+                        is TyUnion -> ty.module to ty.name
+                        is TyUnknown -> ty.alias?.let { it.module to it.name }
+                        else -> null
+                    }
+                    key != null && key in elmMainTypes
                 }
 
         if (mainFuncDecl == null) {
-            showDialog(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation. 'Html.Html' is currently not a supported type for 'main'")
+            showDialog(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
             return
         }
 
@@ -111,7 +117,7 @@ class ElmBuildAction : AnAction() {
 
     companion object {
         val ERRORS_TOPIC = Topic("Elm compiler-messages", ElmErrorsListener::class.java)
-        private val elmMainTypes: Set<Pair<String, String>> = hashSetOf(Pair("Platform", "Program"), Pair("Html", "Html"))
+        private val elmMainTypes = setOf("Platform" to "Program", "Html" to "Html")
     }
 
     data class LookupClientLocation(
