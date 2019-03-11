@@ -60,7 +60,7 @@ class ElmBuildAction : AnAction() {
                 }
 
         if (mainFuncDecl == null) {
-            showDialog(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
+            showDialog(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation. 'Html.Html' is currently not a supported type for 'main'")
             return
         }
 
