@@ -1078,7 +1078,7 @@ fun isInferable(ty: Ty): Boolean = ty !is TyUnknown && ty !is TyVar
 private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")
 
 /** Throw an [IllegalStateException] with [message] augmented with information about [element] */
-private fun error(element: ElmPsiElement, message: String): Nothing {
+fun error(element: ElmPsiElement, message: String): Nothing {
     val file = element.containingFile
     val location = if (file == null) "" else {
         val fileText = file.text

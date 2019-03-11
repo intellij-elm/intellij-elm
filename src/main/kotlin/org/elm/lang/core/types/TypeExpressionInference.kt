@@ -1,15 +1,17 @@
 package org.elm.lang.core.types
 
 import com.intellij.openapi.util.Key
-import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.modificationTracker
+import org.elm.lang.core.psi.outermostDeclaration
+import org.elm.lang.core.psi.parentOfType
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -208,20 +210,31 @@ class TypeExpression(
         val args = argElements.map { typeSignatureDeclType(it) }
         val ref = typeRef.reference.resolve()
 
-        val declaredTy = when {
-            ref is ElmTypeAliasDeclaration -> {
+        val declaredTy = when (ref) {
+            is ElmTypeAliasDeclaration -> {
                 inferChild { beginTypeAliasDeclarationInference(ref) }
             }
-            ref is ElmTypeDeclaration -> {
+            is ElmTypeDeclaration -> {
                 inferChild { beginTypeDeclarationInference(ref) }
             }
-            // Unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
+            // In 0.19, unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
             // reference won't resolve. So we check for a reference to that type here. Note that users can
             // create their own List types that shadow the built-in, so we only want to do this check if the
             // reference is null.
-            ref == null && typeRef.referenceName == "List" -> TyList(TyVar("a"))
-            // We only get here if the reference doesn't resolve.
-            else -> TyUnknown()
+            // In 0.18, all the other basic types fail to resolve as well.
+            // TODO [drop 0.18] remove the checks for everything except List
+            null -> {
+                when (typeRef.referenceName) {
+                    "List" -> TyList(TyVar("a"))
+                    "String" -> TyString
+                    "Char" -> TyChar
+                    "Bool" -> TyBool
+                    "Int" -> TyInt
+                    "Float" -> TyFloat
+                    else -> TyUnknown()
+                }
+            }
+            else -> error(typeRef, "Unexpected type reference")
         }
 
         if (!isInferable(declaredTy)) {
