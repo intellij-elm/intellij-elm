@@ -64,25 +64,31 @@ class ElmBuildAction : AnAction() {
             return
         }
 
-        val manifestBaseDir = findElmManifestBaseDir(elmProject)
-        manifestBaseDir?.let {
-            val json = try {
-                elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
-            } catch (e: ExecutionException) {
-                project.showBalloon("Invalid path for 'elm' executable", NotificationType.ERROR, fixAction)
-                return
-            }
-            if (json.isNotEmpty()) {
-                // TODO test _list_ of errors (only produced, if multiple independent erroneous modules are compiled.. examples for this ?)
-                val messages = elmJsonReport.elmToCompilerMessages(json).sortedWith(compareBy({ it.name }, { it.messageWithRegion.region.start.line }, { it.messageWithRegion.region.start.column }))
-                project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
+        val manifestBaseDir = elmProject.let { VfsUtil.findFile(elmProject.manifestPath.parent, /*refresh*/ true) }
+        if (manifestBaseDir == null) {
+            showDialog(project, "Could not find Elm-Project base directory")
+            return
+        }
 
-            } else {
-                project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, emptyList())
-            }
-            // show toolwindow
-            ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
-        } ?: showDialog(project, "Could not find Elm-Project base directory")
+        val json = try {
+            elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
+        } catch (e: ExecutionException) {
+            project.showBalloon("Invalid path for 'elm' executable. Only Elm >= 0.19 is supported in for Build action.", NotificationType.ERROR, fixAction)
+            return
+        }
+
+        val messages = if (json.isEmpty()) emptyList() else {
+            elmJsonReport.elmToCompilerMessages(json).sortedWith(
+                    compareBy(
+                            { it.name },
+                            { it.messageWithRegion.region.start.line },
+                            { it.messageWithRegion.region.start.column }
+                    ))
+        }
+        project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
+
+        // show toolwindow
+        ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
     }
 
     private fun findElmProject(e: AnActionEvent): ElmProject? {
@@ -92,10 +98,6 @@ class ElmBuildAction : AnAction() {
             return elmWorkspaceService.findProjectForFile(file)
         }
         return null
-    }
-
-    private fun findElmManifestBaseDir(elmProject: ElmProject?): VirtualFile? {
-        return elmProject?.let { VfsUtil.findFile(elmProject.manifestPath, true) }
     }
 
     private fun showDialog(project: Project, message: String) {

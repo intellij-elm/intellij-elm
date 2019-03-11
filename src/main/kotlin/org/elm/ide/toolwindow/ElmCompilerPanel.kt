@@ -48,7 +48,7 @@ import javax.swing.table.DefaultTableModel
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
-    var elmBaseDir: VirtualFile? = null
+    var elmManifestDir: VirtualFile? = null
 
     private fun updateSelectionAndCreateOccurenceInfo(): OccurenceNavigator.OccurenceInfo {
         // update selection
@@ -198,7 +198,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(baseDir: VirtualFile, messages: List<CompilerMessage>) {
                     ApplicationManager.getApplication().invokeLater {
-                        elmBaseDir = baseDir
+                        elmManifestDir = baseDir
                         compilerMessages = messages
                         contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                         errorTableUI.setRowSelectionInterval(0, 0)
@@ -255,7 +255,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 if (FileUtil.isAbsolute(path))
                     LocalFileSystem.getInstance().findFileByPath(path)
                 else {
-                    VfsUtil.findRelativeFile(path, elmBaseDir)
+                    VfsUtil.findRelativeFile(path, elmManifestDir)
                 }
         val psiFile = virtualFile?.toPsiFile(project)
         psiFile?.let {
