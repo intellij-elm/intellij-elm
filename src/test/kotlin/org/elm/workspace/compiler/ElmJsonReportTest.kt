@@ -5,12 +5,10 @@ import org.junit.Test
 
 class ElmJsonReportTest {
 
-    private val elmJsonReport = ElmJsonReport()
-
     @Test
     fun test_gson() {
         val json = this.javaClass.getResource("/compiler_json_reports/errors.json").readText()
-        val result = elmJsonReport.elmToCompilerMessages(json)
+        val result = elmJsonToCompilerMessages(json)
         println(result)
     }
 
@@ -22,7 +20,7 @@ class ElmJsonReportTest {
                 CompilerMessage("Main", "src/Main.elm", MessageAndRegion("<html><body style=\"font-family: monospace\">I&nbsp;was&nbsp;not&nbsp;expecting&nbsp;this&nbsp;vertical&nbsp;bar&nbsp;while&nbsp;parsing&nbsp;ype's&nbsp;definition.<br><br>10|&nbsp;ype&nbsp;Msg&nbsp;=&nbsp;Increment&nbsp;|&nbsp;Decrement<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color: red;\">^</span><br>A&nbsp;vertical&nbsp;bar&nbsp;should&nbsp;only&nbsp;appear&nbsp;in&nbsp;type&nbsp;declarations.&nbsp;Maybe&nbsp;you&nbsp;want&nbsp;||<br>instead?</body></html>", Region(End(21,10), Start(21,10)),"PARSE ERROR"))
                 , CompilerMessage("Main", "src/Helper.elm", MessageAndRegion("<html><body style=\"font-family: monospace\">I&nbsp;cannot&nbsp;find&nbsp;a&nbsp;`Dict.fromLast`&nbsp;variable:<br><br>6|&nbsp;test&nbsp;=&nbsp;Dict.fromLast&nbsp;[]<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color: red;\">^^^^^^^^^^^^^</span><br>I&nbsp;cannot&nbsp;find&nbsp;a&nbsp;`Dict`&nbsp;import.&nbsp;These&nbsp;names&nbsp;seem&nbsp;close&nbsp;though:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color: yellow;\">String.fromList</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color: yellow;\">List.concat</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color: yellow;\">List.foldl</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color: yellow;\">List.foldr</span><br><br><span style=\"text-decoration: underline;\">Hint</span>:&nbsp;Read&nbsp;<a href=\"https://elm-lang.org/0.19.0/imports\">https://elm-lang.org/0.19.0/imports</a>&nbsp;to&nbsp;see&nbsp;how&nbsp;`import`<br>declarations&nbsp;work&nbsp;in&nbsp;Elm.</body></html>", Region(End(21,6), Start(8,6)), "NAMING ERROR")))
 
-        val actual = elmJsonReport.elmToCompilerMessages(json)
+        val actual = elmJsonReport.elmJsonToCompilerMessages(json)
 
         assertEquals(expected, actual)
     }

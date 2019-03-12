@@ -25,8 +25,6 @@ import org.elm.workspace.elmWorkspace
 
 class ElmBuildAction : AnAction() {
 
-    private val elmJsonReport = ElmJsonReport()
-
     override fun actionPerformed(e: AnActionEvent) {
         saveAllDocuments()
         val project = e.project ?: return
@@ -50,7 +48,7 @@ class ElmBuildAction : AnAction() {
         }
 
         val messages = if (json.isEmpty()) emptyList() else {
-            elmJsonReport.elmToCompilerMessages(json).sortedWith(
+            elmJsonToCompilerMessages(json).sortedWith(
                     compareBy(
                             { it.name },
                             { it.messageWithRegion.region.start.line },
