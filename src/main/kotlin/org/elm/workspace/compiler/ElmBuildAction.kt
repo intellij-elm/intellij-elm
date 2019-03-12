@@ -35,6 +35,9 @@ class ElmBuildAction : AnAction() {
         val elmProject = findElmProject(e, project)
                 ?: return showError(project, "Could not determine which Elm project to compile")
 
+        if (elmProject.isElm18)
+            return showError(project, "The Elm 0.18 compiler is not supported.")
+
         val mainFuncDecl = findMainEntryPoint(project, elmProject)
                 ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
 

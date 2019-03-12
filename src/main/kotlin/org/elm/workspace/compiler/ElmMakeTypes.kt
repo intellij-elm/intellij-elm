@@ -61,7 +61,7 @@ sealed class Chunk {
 
 class ChunkDeserializer : JsonDeserializer<Chunk> {
     override fun deserialize(element: JsonElement, typeOf: Type, context: JsonDeserializationContext): Chunk {
-        val gson = Gson()
+        val gson = newGson()
         return when {
             element.isJsonObject -> gson.fromJson(element, Chunk.Styled::class.java)
             element.isJsonPrimitive -> Chunk.Unstyled(element.asString)
