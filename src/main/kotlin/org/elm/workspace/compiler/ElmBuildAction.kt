@@ -4,7 +4,6 @@ import com.intellij.execution.ExecutionException
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
@@ -48,7 +47,7 @@ class ElmBuildAction : AnAction() {
 
         val elmProject = findElmProject(e)
         if (elmProject == null) {
-            project.showBalloon("Could not Elm project", NotificationType.ERROR)
+            project.showBalloon("Could not find Elm project", NotificationType.ERROR)
             return
         }
 
@@ -98,10 +97,10 @@ class ElmBuildAction : AnAction() {
     }
 
     private fun findElmProject(e: AnActionEvent): ElmProject? {
-        val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
+        // val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
         e.project?.let {
             val elmWorkspaceService = ServiceManager.getService(it, ElmWorkspaceService::class.java)
-            return elmWorkspaceService.findProjectForFile(file)
+            return elmWorkspaceService.allProjects[0]
         }
         return null
     }
