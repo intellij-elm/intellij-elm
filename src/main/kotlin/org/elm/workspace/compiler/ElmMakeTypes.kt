@@ -51,8 +51,8 @@ data class Problem(
 )
 
 data class Region(val start: Start, val end: End)
-data class Start(val column: Int, val line: Int)
-data class End(val column: Int, val line: Int)
+data class Start(val line: Int, val column: Int)
+data class End(val line: Int, val column: Int)
 
 sealed class Chunk {
     data class Unstyled(val string: String) : Chunk()
