@@ -442,24 +442,35 @@ private class InferenceScope(
 
 
     private fun inferRecord(record: ElmRecordExpr): Ty {
-        val recordIdentifier = record.baseRecordIdentifier
-        if (recordIdentifier == null) {
-            val fields = record.fieldList.associate { f ->
-                f.lowerCaseIdentifier.text to inferExpression(f.expression)
-            }
-            return TyRecord(fields)
+        val fields = record.fieldList.associate { f ->
+            f.lowerCaseIdentifier to inferExpression(f.expression)
         }
 
+        // If there's no base id, then we the record is just the type of the fields
+        val recordIdentifier = record.baseRecordIdentifier
+                ?: return TyRecord(fields.mapKeys { (k, _) -> k.text })
+
+        // If there is a base id, we need to combine it with the fields
+
         val baseTy = inferReferenceElement(recordIdentifier)
+
         if (!isInferable(baseTy)) return TyUnknown()
+
+        if (baseTy is TyVar) {
+            val extRecord = TyRecord(fields.mapKeys { (k, _) -> k.text }, TyVar(baseTy.name))
+            return if (requireAssignable(recordIdentifier, baseTy, extRecord)) {
+                extRecord.copy(baseTy = baseTy)
+            } else {
+                diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
+                TyUnknown()
+            }
+        }
+
         if (baseTy !is TyRecord) {
             diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
             return TyUnknown()
         }
 
-        val fields = record.fieldList.associate { f ->
-            f.lowerCaseIdentifier to inferExpression(f.expression)
-        }
         for ((name, ty) in fields) {
             val expected = baseTy.fields[name.text]
             if (expected == null) {
@@ -921,7 +932,7 @@ private class InferenceScope(
         // We need to unify the base var with the record being assigned for the case where we have
         // an alias to an extension record constructor. We only do this if the records are
         // different, since that would incorrectly create a recursive type.
-        if (result && ty2.baseTy is TyVar && ty1.fields != ty2.fields) {
+        if (result && ty2.baseTy is TyVar && (ty1.baseTy == null || ty1.fields != ty2.fields)) {
             trackReplacement(ty1, ty2.baseTy)
         }
         return result

@@ -1678,4 +1678,12 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: (Bool → a) → Bool → Bool → a">foo</error>
 """)
+
+    fun `test using unconstrained var in record extension`() = checkByText("""
+foo r = { r | field = () }
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: { field : () }">foo { field = () }</error>
+""")
 }
