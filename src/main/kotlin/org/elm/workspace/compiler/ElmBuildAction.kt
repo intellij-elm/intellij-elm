@@ -5,16 +5,10 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.ui.popup.Balloon
-import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.openapi.wm.WindowManager
-import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.lookup.ClientLocation
@@ -25,7 +19,6 @@ import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findInference
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.ElmProject
-import org.elm.workspace.ElmWorkspaceService
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
@@ -35,52 +28,25 @@ class ElmBuildAction : AnAction() {
     private val elmJsonReport = ElmJsonReport()
 
     override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project
-                ?: return
         saveAllDocuments()
+        val project = e.project ?: return
 
         val elmCLI = project.elmToolchain.elmCLI
-        val fixAction = "Fix" to { project.elmWorkspace.showConfigureToolchainUI() }
-        if (elmCLI == null) {
-            project.showBalloon("Could not find elm", NotificationType.ERROR, fixAction)
-            return
-        }
+                ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
 
-        val elmProject = findElmProject(e)
-        if (elmProject == null) {
-            project.showBalloon("Could not Elm project", NotificationType.ERROR)
-            return
-        }
+        val elmProject = findElmProject(e, project)
+                ?: return showError(project, "Could not determine which Elm project to compile")
 
-        // find "main" function
-        val mainFuncDecl = ElmLookup
-                .findByName<ElmFunctionDeclarationLeft>("main", LookupClientLocation(project, elmProject))
-                .find { decl ->
-                    val ty = decl.findInference()?.ty
-                    val key = when (ty) {
-                        is TyUnion -> ty.module to ty.name
-                        is TyUnknown -> ty.alias?.let { it.module to it.name }
-                        else -> null
-                    }
-                    key != null && key in elmMainTypes
-                }
-
-        if (mainFuncDecl == null) {
-            showDialog(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
-            return
-        }
+        val mainFuncDecl = findMainEntryPoint(project, elmProject)
+                ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
 
         val manifestBaseDir = elmProject.let { VfsUtil.findFile(elmProject.manifestPath.parent, /*refresh*/ true) }
-        if (manifestBaseDir == null) {
-            showDialog(project, "Could not find Elm-Project base directory")
-            return
-        }
+                ?: return showError(project, "Could not find Elm-Project base directory")
 
         val json = try {
             elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
         } catch (e: ExecutionException) {
-            project.showBalloon("Invalid path for 'elm' executable. Only Elm >= 0.19 is supported in for Build action.", NotificationType.ERROR, fixAction)
-            return
+            return showError(project, "Failed to run the 'elm' executable. Is the path correct?", includeFixAction = true)
         }
 
         val messages = if (json.isEmpty()) emptyList() else {
@@ -92,23 +58,35 @@ class ElmBuildAction : AnAction() {
                     ))
         }
         project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
-
-        // show toolwindow
         ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
     }
 
-    private fun findElmProject(e: AnActionEvent): ElmProject? {
-        val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
-        e.project?.let {
-            val elmWorkspaceService = ServiceManager.getService(it, ElmWorkspaceService::class.java)
-            return elmWorkspaceService.findProjectForFile(file)
-        }
-        return null
+    private fun findMainEntryPoint(project: Project, elmProject: ElmProject): ElmFunctionDeclarationLeft? =
+            ElmLookup.findByName<ElmFunctionDeclarationLeft>("main", LookupClientLocation(project, elmProject))
+                    .find { decl ->
+                        val ty = decl.findInference()?.ty
+                        val key = when (ty) {
+                            is TyUnion -> ty.module to ty.name
+                            is TyUnknown -> ty.alias?.let { it.module to it.name }
+                            else -> null
+                        }
+                        key != null && key in elmMainTypes
+                    }
+
+    private fun findElmProject(e: AnActionEvent, project: Project): ElmProject? {
+        // Use the currently selected file to determine the ElmProject, or, if that fails,
+        // and there is only a single ElmProject in the workspace, use that project.
+        return e.getData(CommonDataKeys.VIRTUAL_FILE)
+                ?.let { project.elmWorkspace.findProjectForFile(it) }
+                ?: project.elmWorkspace.allProjects.singleOrNull()
     }
 
-    private fun showDialog(project: Project, message: String) {
-        val statusBar = WindowManager.getInstance().getStatusBar(project)
-        JBPopupFactory.getInstance().createHtmlTextBalloonBuilder(message, MessageType.ERROR, null).setFadeoutTime(5000).createBalloon().show(RelativePoint.getNorthEastOf(statusBar.component), Balloon.Position.atRight)
+    private fun showError(project: Project, message: String, includeFixAction: Boolean = false) {
+        val actions = if (includeFixAction)
+            arrayOf("Fix" to { project.elmWorkspace.showConfigureToolchainUI() })
+        else
+            emptyArray()
+        project.showBalloon(message, NotificationType.ERROR, *actions)
     }
 
     interface ElmErrorsListener {
