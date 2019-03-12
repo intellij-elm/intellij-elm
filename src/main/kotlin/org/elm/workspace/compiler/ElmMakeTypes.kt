@@ -56,7 +56,7 @@ data class End(val column: Int, val line: Int)
 
 sealed class Chunk {
     data class Unstyled(val string: String) : Chunk()
-    data class Styled(val bold: Boolean, val underline: Boolean, val color: String, val string: String) : Chunk()
+    data class Styled(val bold: Boolean, val underline: Boolean, val color: String?, val string: String) : Chunk()
 }
 
 class ChunkDeserializer : JsonDeserializer<Chunk> {

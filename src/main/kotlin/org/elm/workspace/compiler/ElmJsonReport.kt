@@ -52,7 +52,8 @@ private fun chunkToHtml(chunk: Chunk): String =
                 val styleBuilder = StringBuilder()
                 if (chunk.bold) styleBuilder.append("font-weight: bold;")
                 if (chunk.underline) styleBuilder.append("text-decoration: underline;")
-                styleBuilder.append("color: ${mapColor(chunk.color)};")
+                val toolwindowColor = chunk.color?.let { mapColor(it) } ?: "#FFFFFF"
+                styleBuilder.append("color: $toolwindowColor;")
                 "<span style=\"$styleBuilder\">${chunk.string.replace(" ", nonBreakingSpace)}</span>"
             }
         }
