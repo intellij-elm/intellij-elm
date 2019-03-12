@@ -100,7 +100,8 @@ class ElmBuildAction : AnAction() {
         // val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
         e.project?.let {
             val elmWorkspaceService = ServiceManager.getService(it, ElmWorkspaceService::class.java)
-            return elmWorkspaceService.allProjects[0]
+            if (elmWorkspaceService.allProjects.isNotEmpty())
+                return elmWorkspaceService.allProjects[0]
         }
         return null
     }
