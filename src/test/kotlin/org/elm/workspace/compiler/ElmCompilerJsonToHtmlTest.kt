@@ -80,7 +80,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                 ))
     }
 
-    fun `test generic error with a path`() {
+    fun `test generic error with a path and a null color, crazy`() {
         @Language("JSON")
         val json = """
             {
@@ -99,14 +99,14 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                 {
                   "bold": false,
                   "underline": true,
-                  "color": "yellow",
+                  "color": null,
                   "string": "Note"
                 },
                 ": It is best to replace (..) with an explicit list of types and functions\nyou want to expose. If you know a value is only used WITHIN this module, it is\nextra easy to refactor. This kind of information is great, especially as your\nproject grows!"
               ]
             }""".trimIndent()
 
-        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style='color: #4F9DA6'>The&nbsp;`Helper`&nbsp;module&nbsp;must&nbsp;start&nbsp;with&nbsp;a&nbsp;line&nbsp;like&nbsp;this:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">module&nbsp;Helper&nbsp;exposing&nbsp;(..)</span><span style='color: #4F9DA6'><br><br>Try&nbsp;adding&nbsp;that&nbsp;as&nbsp;the&nbsp;first&nbsp;line&nbsp;of&nbsp;your&nbsp;file!<br><br></span><span style="text-decoration: underline;color: #FACF5A;">Note</span><span style='color: #4F9DA6'>:&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;replace&nbsp;(..)&nbsp;with&nbsp;an&nbsp;explicit&nbsp;list&nbsp;of&nbsp;types&nbsp;and&nbsp;functions<br>you&nbsp;want&nbsp;to&nbsp;expose.&nbsp;If&nbsp;you&nbsp;know&nbsp;a&nbsp;value&nbsp;is&nbsp;only&nbsp;used&nbsp;WITHIN&nbsp;this&nbsp;module,&nbsp;it&nbsp;is<br>extra&nbsp;easy&nbsp;to&nbsp;refactor.&nbsp;This&nbsp;kind&nbsp;of&nbsp;information&nbsp;is&nbsp;great,&nbsp;especially&nbsp;as&nbsp;your<br>project&nbsp;grows!</span></body></html>"""
+        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style='color: #4F9DA6'>The&nbsp;`Helper`&nbsp;module&nbsp;must&nbsp;start&nbsp;with&nbsp;a&nbsp;line&nbsp;like&nbsp;this:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">module&nbsp;Helper&nbsp;exposing&nbsp;(..)</span><span style='color: #4F9DA6'><br><br>Try&nbsp;adding&nbsp;that&nbsp;as&nbsp;the&nbsp;first&nbsp;line&nbsp;of&nbsp;your&nbsp;file!<br><br></span><span style="text-decoration: underline;color: white;">Note</span><span style='color: #4F9DA6'>:&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;replace&nbsp;(..)&nbsp;with&nbsp;an&nbsp;explicit&nbsp;list&nbsp;of&nbsp;types&nbsp;and&nbsp;functions<br>you&nbsp;want&nbsp;to&nbsp;expose.&nbsp;If&nbsp;you&nbsp;know&nbsp;a&nbsp;value&nbsp;is&nbsp;only&nbsp;used&nbsp;WITHIN&nbsp;this&nbsp;module,&nbsp;it&nbsp;is<br>extra&nbsp;easy&nbsp;to&nbsp;refactor.&nbsp;This&nbsp;kind&nbsp;of&nbsp;information&nbsp;is&nbsp;great,&nbsp;especially&nbsp;as&nbsp;your<br>project&nbsp;grows!</span></body></html>"""
 
         TestCase.assertEquals(elmJsonToCompilerMessages(json),
                 listOf(

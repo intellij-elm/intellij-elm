@@ -59,9 +59,10 @@ private fun chunkToHtml(chunk: Chunk): String =
 
 private fun asTextSpan(text: String) = "<span style='color: #4F9DA6'>$text</span>"
 
-private fun mapColor(color: String): String =
+private fun mapColor(color: String?): String =
         when (color) {
             "yellow" -> "#FACF5A"
             "red" -> "#FF5959"
+            null -> "white" // Elm compiler uses null to indicate default foreground color? who knows!
             else -> color
         }
