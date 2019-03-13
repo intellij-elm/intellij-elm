@@ -5,12 +5,14 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
+import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
@@ -77,9 +79,10 @@ class ElmBuildAction : AnAction() {
                     }
 
     private fun findElmProject(e: AnActionEvent, project: Project): ElmProject? {
-        // Use the currently selected file to determine the ElmProject, or, if that fails,
-        // and there is only a single ElmProject in the workspace, use that project.
-        return e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
+                ?: FileEditorManager.getInstance(project).selectedFiles.firstOrNull { it.fileType == ElmFileType }
+
+        return file
                 ?.let { project.elmWorkspace.findProjectForFile(it) }
                 ?: project.elmWorkspace.allProjects.singleOrNull()
     }
