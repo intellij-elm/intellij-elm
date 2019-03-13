@@ -43,6 +43,7 @@ import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
+import kotlin.math.sign
 
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
@@ -53,15 +54,10 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     // OCCURRENCE NAVIGATOR
 
 
-    private fun calcNextOccurrence(delta: Int, go: Boolean = false): OccurenceInfo? {
+    private fun calcNextOccurrence(direction: Int, go: Boolean = false): OccurenceInfo? {
         if (compilerMessages.isEmpty()) return null
 
-        val nextIndex = when {
-            delta > 0 -> indexCompilerMessages++
-            delta < 0 -> indexCompilerMessages--
-            else -> indexCompilerMessages
-        }
-
+        val nextIndex = indexCompilerMessages + direction.sign
         val elmError = compilerMessages.getOrNull(nextIndex) ?: return null
 
         if (go) {
