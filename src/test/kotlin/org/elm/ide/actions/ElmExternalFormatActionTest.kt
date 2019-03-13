@@ -160,7 +160,6 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
     private fun reformat(file: VirtualFile) {
         val (action, event) = makeTestAction(file)
-        action.beforeActionPerformedUpdate(event)
         check(event.presentation.isEnabledAndVisible) {
             "The elm-format action should be enabled in this context"
         }

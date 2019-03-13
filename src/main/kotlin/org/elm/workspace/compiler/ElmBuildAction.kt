@@ -17,6 +17,7 @@ import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findInference
+import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmToolchain
@@ -59,6 +60,7 @@ class ElmBuildAction : AnAction() {
                     ))
         }
         project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
+        if (isUnitTestMode) return
         ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
     }
 
