@@ -5,21 +5,26 @@ import java.util.regex.Pattern
 private val urlPattern = Pattern.compile(".*<((http|https)(://.*))>.*", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
 private const val nonBreakingSpace = "&nbsp;"
 private const val tempAnchorReplacement = "##TEMP##"
-private val dummyRegion = Region(Start(0, 0), End(0, 0))
 
 
-fun elmJsonToCompilerMessages(json: String): List<CompilerMessage> {
+fun elmJsonToCompilerMessages(json: String): List<ElmError> {
     val report = newGson().fromJson(json, Report::class.java) ?: error("failed to parse JSON report from elm")
     return when (report) {
         is Report.General -> {
-            listOf(CompilerMessage(report.title, report.path ?: "",
-                    MessageAndRegion(chunksToHtml(report.message), dummyRegion, report.title)))
+            listOf(ElmError(
+                    title = report.title,
+                    html = chunksToHtml(report.message),
+                    location = report.path?.let { ElmLocation(path = it, moduleName = null, region = null) })
+            )
         }
         is Report.Specific -> {
             report.errors.flatMap { error ->
                 error.problems.map { problem ->
-                    CompilerMessage(error.name, error.path,
-                            MessageAndRegion(chunksToHtml(problem.message), problem.region, problem.title))
+                    ElmError(
+                            title = problem.title,
+                            html = chunksToHtml(problem.message),
+                            location = ElmLocation(path = error.path, moduleName = error.name, region = problem.region)
+                    )
                 }
             }
         }

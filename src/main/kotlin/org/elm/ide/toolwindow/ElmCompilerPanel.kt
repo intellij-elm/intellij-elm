@@ -2,6 +2,7 @@ package org.elm.ide.toolwindow
 
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.OccurenceNavigator
+import com.intellij.ide.OccurenceNavigator.OccurenceInfo
 import com.intellij.ide.util.PsiNavigationSupport
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
@@ -13,9 +14,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
@@ -25,9 +23,10 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
+import org.elm.openapiext.findFileByMaybeRelativePath
 import org.elm.openapiext.toPsiFile
-import org.elm.workspace.compiler.CompilerMessage
 import org.elm.workspace.compiler.ElmBuildAction
+import org.elm.workspace.compiler.ElmError
 import org.elm.workspace.compiler.Region
 import org.elm.workspace.compiler.Start
 import java.awt.Color
@@ -50,57 +49,48 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     var elmManifestDir: VirtualFile? = null
 
-    private fun updateSelectionAndCreateOccurenceInfo(): OccurenceNavigator.OccurenceInfo {
-        // update selection
-        messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
-        errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
 
-        // create occurence info
-        val (virtualFile, document, start) = startFromErrorMessage()
-        document?.let {
-            val offset = it.getLineStartOffset(start.line - 1) + start.column - 1
-            return OccurenceNavigator.OccurenceInfo(PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset), -1, -1)
+    // OCCURRENCE NAVIGATOR
+
+
+    private fun calcNextOccurrence(delta: Int, go: Boolean = false): OccurenceInfo? {
+        if (compilerMessages.isEmpty()) return null
+
+        val nextIndex = when {
+            delta > 0 -> indexCompilerMessages++
+            delta < 0 -> indexCompilerMessages--
+            else -> indexCompilerMessages
         }
-        throw RuntimeException("The impossible happened... document is null for ${compilerMessages[indexCompilerMessages].path}")
-    }
 
-    override fun getNextOccurenceActionName(): String {
-        return "Next Error"
-    }
+        val elmError = compilerMessages.getOrNull(nextIndex) ?: return null
 
-    override fun hasNextOccurence(): Boolean {
-        return !compilerMessages.isEmpty() && indexCompilerMessages < compilerMessages.lastIndex
-    }
-
-    override fun goNextOccurence(): OccurenceNavigator.OccurenceInfo {
-        if (compilerMessages.isNotEmpty()) {
-            if (indexCompilerMessages < compilerMessages.lastIndex) {
-                indexCompilerMessages += 1
-            }
-            return updateSelectionAndCreateOccurenceInfo()
+        if (go) {
+            // update selection
+            indexCompilerMessages = nextIndex
+            messageUI.text = elmError.html
+            errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
         }
-        return OccurenceNavigator.OccurenceInfo.position(0, 0)
+
+        // create occurrence info
+        val (virtualFile, document, start) = startFromErrorMessage() ?: return null
+        val offset = document.getLineStartOffset(start.line - 1) + start.column - 1
+        val navigatable = PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset)
+        return OccurenceInfo(navigatable, -1, -1)
     }
 
-    override fun getPreviousOccurenceActionName(): String {
-        return "Previous Error"
-    }
+    override fun getNextOccurenceActionName() = "Next Error"
+    override fun hasNextOccurence() = calcNextOccurrence(1) != null
+    override fun goNextOccurence(): OccurenceInfo? = calcNextOccurrence(1, go = true)
 
-    override fun hasPreviousOccurence(): Boolean {
-        return !compilerMessages.isEmpty() && indexCompilerMessages > 0
-    }
+    override fun getPreviousOccurenceActionName() = "Previous Error"
+    override fun hasPreviousOccurence() = calcNextOccurrence(-1) != null
+    override fun goPreviousOccurence(): OccurenceInfo? = calcNextOccurrence(-1, go = true)
 
-    override fun goPreviousOccurence(): OccurenceNavigator.OccurenceInfo {
-        if (compilerMessages.isNotEmpty()) {
-            if (indexCompilerMessages > 0) {
-                indexCompilerMessages -= 1
-            }
-            return updateSelectionAndCreateOccurenceInfo()
-        }
-        return OccurenceNavigator.OccurenceInfo.position(0, 0)
-    }
+
+    // UI
 
     override fun dispose() {
+        // TODO [kl] why is this here?
         with(ActionManager.getInstance()) {
             val defaultActionGroup = getAction("Elm.CompilerToolsGroup") as DefaultActionGroup
             defaultActionGroup.remove(nextOccurenceAction)
@@ -131,7 +121,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 scrollRectToVisible(cellRect)
                 if (compilerMessages.isNotEmpty()) {
                     indexCompilerMessages = selectedRow
-                    messageUI.text = compilerMessages[indexCompilerMessages].messageWithRegion.message
+                    messageUI.text = compilerMessages[indexCompilerMessages].html
                 }
             }
         }
@@ -146,7 +136,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private val noErrorContent = JBLabel()
 
-    var compilerMessages: List<CompilerMessage> = emptyList()
+    var compilerMessages: List<ElmError> = emptyList()
         set(value) {
             checkIsEventDispatchThread()
             field = value
@@ -159,10 +149,12 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 setContent(errorContent)
 
                 indexCompilerMessages = 0
-                messageUI.text = compilerMessages[0].messageWithRegion.message
+                messageUI.text = compilerMessages[0].html
 
                 val locationsAndType: Array<Array<String>> = compilerMessages.map {
-                    arrayOf(it.name, prettyRegion(it.messageWithRegion.region), toNiceName(it.messageWithRegion.title))
+                    arrayOf(it.location?.moduleName ?: "n/a",
+                            it.location?.region?.pretty() ?: "n/a",
+                            toNiceName(it.title))
                 }.toTypedArray()
                 errorTableUI.model = DefaultTableModel(locationsAndType, arrayOf("Module", "Location", "Type"))
                 errorTableUI.tableHeader.defaultRenderer = errorTableHeaderRenderer
@@ -176,8 +168,8 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         return title.split(" ").joinToString(" ") { it.first() + it.substring(1).toLowerCase() }
     }
 
-    private fun prettyRegion(region: Region): String {
-        return " line ${region.start.line} column ${region.start.column}"
+    private fun Region.pretty(): String {
+        return " line ${start.line}, column ${start.column}"
     }
 
     private var errorContent: JBSplitter
@@ -196,7 +188,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDir: VirtualFile, messages: List<CompilerMessage>) {
+                override fun update(baseDir: VirtualFile, messages: List<ElmError>) {
                     ApplicationManager.getApplication().invokeLater {
                         elmManifestDir = baseDir
                         compilerMessages = messages
@@ -237,33 +229,22 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     override fun getData(dataId: String): Any? {
         return when {
             CommonDataKeys.NAVIGATABLE.`is`(dataId) -> {
-                if (!compilerMessages.isEmpty()) {
-                    val (virtualFile, _, start) = startFromErrorMessage()
-                    return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
-                } else {
-                    null
-                }
+                val (virtualFile, _, start) = startFromErrorMessage() ?: return null
+                return OpenFileDescriptor(project, virtualFile, start.line - 1, start.column - 1)
             }
             else ->
                 super.getData(dataId)
         }
     }
 
-    private fun startFromErrorMessage(): Triple<VirtualFile, Document?, Start> {
-        val path = compilerMessages[indexCompilerMessages].path
-        val virtualFile =
-                if (FileUtil.isAbsolute(path))
-                    LocalFileSystem.getInstance().findFileByPath(path)
-                else {
-                    VfsUtil.findRelativeFile(path, elmManifestDir)
-                }
-        val psiFile = virtualFile?.toPsiFile(project)
-        psiFile?.let {
-            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
-            val start = compilerMessages[indexCompilerMessages].messageWithRegion.region.start
-            return Triple(virtualFile, document, start)
-        }
-        throw RuntimeException("The impossible happened... virtualFile is null for '$path'")
+    private fun startFromErrorMessage(): Triple<VirtualFile, Document, Start>? {
+        val elmError = compilerMessages.getOrNull(indexCompilerMessages) ?: return null
+        val elmLocation = elmError.location ?: return null
+        val virtualFile = elmManifestDir?.findFileByMaybeRelativePath(elmLocation.path) ?: return null
+        val psiFile = virtualFile.toPsiFile(project) ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val start = elmLocation.region?.start ?: return null
+        return Triple(virtualFile, document, start)
     }
 
     companion object {

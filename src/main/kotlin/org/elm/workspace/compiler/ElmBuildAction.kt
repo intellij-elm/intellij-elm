@@ -54,9 +54,9 @@ class ElmBuildAction : AnAction() {
         val messages = if (json.isEmpty()) emptyList() else {
             elmJsonToCompilerMessages(json).sortedWith(
                     compareBy(
-                            { it.name },
-                            { it.messageWithRegion.region.start.line },
-                            { it.messageWithRegion.region.start.column }
+                            { it.title },
+                            { it.location?.region?.start?.line },
+                            { it.location?.region?.start?.column }
                     ))
         }
         project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
@@ -93,7 +93,7 @@ class ElmBuildAction : AnAction() {
     }
 
     interface ElmErrorsListener {
-        fun update(baseDir: VirtualFile, messages: List<CompilerMessage>)
+        fun update(baseDir: VirtualFile, messages: List<ElmError>)
     }
 
     companion object {

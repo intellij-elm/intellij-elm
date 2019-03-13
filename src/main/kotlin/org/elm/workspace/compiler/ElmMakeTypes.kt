@@ -71,8 +71,15 @@ class ChunkDeserializer : JsonDeserializer<Chunk> {
 }
 
 
-// plugin's types
+// ElmCompilerPanel UI types
 
-data class CompilerMessage(val name: String, val path: String, val messageWithRegion: MessageAndRegion)
+data class ElmError(
+        val html: String,
+        val title: String,
+        val location: ElmLocation?
+)
 
-data class MessageAndRegion(val message: String, val region: Region, val title: String)
+data class ElmLocation(val path: String,
+                       val moduleName: String?,
+                       val region: Region?
+)
