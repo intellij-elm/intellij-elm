@@ -17,11 +17,11 @@ import java.nio.file.Path
  */
 class ElmCLI(private val elmExecutablePath: Path) {
 
-    fun make(owner: Disposable, elmProject: ElmProject, path: String): ProcessOutput {
+    fun make(owner: Disposable, elmProject: ElmProject, path: Path): ProcessOutput {
         val workDir = elmProject.manifestPath.parent
         return GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
-                .withParameters("make", path, "--output=/dev/null", "--report=json")
+                .withParameters("make", path.toString(), "--output=/dev/null", "--report=json")
                 .execute(owner, ignoreExitCode = true)
     }
 

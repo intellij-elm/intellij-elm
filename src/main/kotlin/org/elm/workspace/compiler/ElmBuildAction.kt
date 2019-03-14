@@ -20,10 +20,9 @@ import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findInference
 import org.elm.openapiext.isUnitTestMode
+import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
-import org.elm.workspace.ElmProject
-import org.elm.workspace.elmToolchain
-import org.elm.workspace.elmWorkspace
+import org.elm.workspace.*
 
 
 class ElmBuildAction : AnAction() {
@@ -35,20 +34,30 @@ class ElmBuildAction : AnAction() {
         val elmCLI = project.elmToolchain.elmCLI
                 ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
 
-        val elmProject = findElmProject(e, project)
-                ?: return showError(project, "Could not determine which Elm project to compile")
+        val elmFile = findActiveFile(e, project)
+                ?: return showError(project, "Could not determine active Elm file")
+
+        val elmProject = project.elmWorkspace.findProjectForFile(elmFile)
+                ?: return showError(project, "Could not determine active Elm project")
 
         if (elmProject.isElm18)
             return showError(project, "The Elm 0.18 compiler is not supported.")
 
-        val mainFuncDecl = findMainEntryPoint(project, elmProject)
-                ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
+        val filePathToCompile = when (elmProject) {
+            is ElmApplicationProject -> {
+                findMainEntryPoint(project, elmProject)?.containingFile?.virtualFile?.pathAsPath
+                        ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
+            }
 
-        val manifestBaseDir = elmProject.let { VfsUtil.findFile(elmProject.manifestPath.parent, /*refresh*/ true) }
+            is ElmPackageProject ->
+                elmFile.pathAsPath
+        }
+
+        val manifestBaseDir = VfsUtil.findFile(elmProject.manifestPath.parent, /*refresh*/ true)
                 ?: return showError(project, "Could not find Elm-Project base directory")
 
         val json = try {
-            elmCLI.make(project, elmProject, mainFuncDecl.containingFile.virtualFile.path).stderr
+            elmCLI.make(project, elmProject, filePathToCompile).stderr
         } catch (e: ExecutionException) {
             return showError(project, "Failed to run the 'elm' executable. Is the path correct?", includeFixAction = true)
         }
@@ -78,14 +87,9 @@ class ElmBuildAction : AnAction() {
                         key != null && key in elmMainTypes
                     }
 
-    private fun findElmProject(e: AnActionEvent, project: Project): ElmProject? {
-        val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
-                ?: FileEditorManager.getInstance(project).selectedFiles.firstOrNull { it.fileType == ElmFileType }
-
-        return file
-                ?.let { project.elmWorkspace.findProjectForFile(it) }
-                ?: project.elmWorkspace.allProjects.singleOrNull()
-    }
+    private fun findActiveFile(e: AnActionEvent, project: Project): VirtualFile? =
+            e.getData(CommonDataKeys.VIRTUAL_FILE)
+                    ?: FileEditorManager.getInstance(project).selectedFiles.firstOrNull { it.fileType == ElmFileType }
 
     private fun showError(project: Project, message: String, includeFixAction: Boolean = false) {
         val actions = if (includeFixAction)
