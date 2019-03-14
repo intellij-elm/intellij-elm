@@ -1,9 +1,7 @@
 package org.elm.workspace.compiler
 
-import java.util.regex.Pattern
-
-private val urlPattern = Pattern.compile(".*<((http|https)(://.*))>.*", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
-private const val nonBreakingSpace = "&nbsp;"
+// The Elm compiler emits HTTP URLs with angle brackets around them
+private val urlPattern = Regex("""<((http|https)://.*)>""")
 
 
 fun elmJsonToCompilerMessages(json: String): List<ElmError> {
@@ -22,7 +20,10 @@ fun elmJsonToCompilerMessages(json: String): List<ElmError> {
                     ElmError(
                             title = problem.title,
                             html = chunksToHtml(problem.message),
-                            location = ElmLocation(path = error.path, moduleName = error.name, region = problem.region)
+                            location = ElmLocation(
+                                    path = error.path,
+                                    moduleName = error.name,
+                                    region = problem.region)
                     )
                 }
             }
@@ -38,34 +39,46 @@ private fun chunksToHtml(chunks: List<Chunk>): String =
 
 private fun chunkToHtml(chunk: Chunk): String =
         when (chunk) {
-            is Chunk.Unstyled -> {
-                val urlMatcher = urlPattern.matcher(chunk.string)
-                if (urlMatcher.find()) {
-                    val httpUrl = urlMatcher.group(1)
-                    val anchor = "<a href=\"$httpUrl\">$httpUrl</a>"
-                    asTextSpan(chunk.string
-                            .replace("<$httpUrl>", anchor)
-                            .replace(" ", nonBreakingSpace)
-                            .replace("\n", "<br>"))
-                } else {
-                    asTextSpan(chunk.string.replace(" ", nonBreakingSpace).replace("\n", "<br>"))
-                }
-            }
-            is Chunk.Styled -> {
-                val styleBuilder = StringBuilder()
-                if (chunk.bold) styleBuilder.append("font-weight: bold;")
-                if (chunk.underline) styleBuilder.append("text-decoration: underline;")
-                styleBuilder.append("color: ${mapColor(chunk.color)};")
-                "<span style=\"$styleBuilder\">${chunk.string.replace(" ", nonBreakingSpace)}</span>"
+            is Chunk.Unstyled -> toHtmlSpan("color: #4F9DA6", chunk.string)
+            is Chunk.Styled -> with(StringBuilder()) {
+                if (chunk.bold) append("font-weight: bold;")
+                if (chunk.underline) append("text-decoration: underline;")
+                append("color: ${chunk.color.adjustForDisplay()};")
+                toHtmlSpan(this, chunk.string)
             }
         }
 
-private fun asTextSpan(text: String) = "<span style='color: #4F9DA6'>$text</span>"
+private fun toHtmlSpan(style: CharSequence, text: String) =
+        """<span style="$style">${text.convertWhitespaceToHtml().createHyperlinks()}</span>"""
 
-private fun mapColor(color: String?): String =
-        when (color) {
+private fun String.createHyperlinks(): String =
+        urlPattern.replace(this) { result ->
+            val url = result.groupValues[1]
+            "<a href=\"$url\">$url</a>"
+        }
+
+/**
+ * The Elm compiler emits the text where the whitespace is already formatted to line up
+ * using a fixed-with font. But HTML does its own thing with whitespace. We could use a
+ * `<pre>` element, but then we wouldn't be able to do the color highlights and other
+ * formatting tricks.
+ *
+ * The best solution would be to use the "white-space: pre" CSS rule, but the UI widget
+ * that we use to render the HTML, [javax.swing.JTextPane], does not support it
+ * (as best I can tell).
+ *
+ * So we will instead manually convert the whitespace so that it renders correctly.
+ */
+private fun String.convertWhitespaceToHtml() =
+        replace(" ", "&nbsp;").replace("\n", "<br>")
+
+/**
+ * Adjust the Elm compiler's colors to make it look good
+ */
+private fun String?.adjustForDisplay(): String =
+        when (this) {
             "yellow" -> "#FACF5A"
             "red" -> "#FF5959"
             null -> "white" // Elm compiler uses null to indicate default foreground color? who knows!
-            else -> color
+            else -> this
         }
