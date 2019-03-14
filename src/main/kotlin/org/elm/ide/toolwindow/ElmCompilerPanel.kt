@@ -6,7 +6,6 @@ import com.intellij.ide.OccurenceNavigator.OccurenceInfo
 import com.intellij.ide.util.PsiNavigationSupport
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
@@ -86,14 +85,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     // UI
 
-    override fun dispose() {
-        // TODO [kl] why is this here?
-        with(ActionManager.getInstance()) {
-            val defaultActionGroup = getAction("Elm.CompilerToolsGroup") as DefaultActionGroup
-            defaultActionGroup.remove(nextOccurenceAction)
-            defaultActionGroup.remove(prevOccurenceAction)
-        }
-    }
+    override fun dispose() {}
 
     private val backgroundColorUI = Color(0x23, 0x31, 0x42)
 
@@ -198,26 +190,16 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
     }
 
-    private lateinit var nextOccurenceAction: AnAction
-
-    private lateinit var prevOccurenceAction: AnAction
-
     private fun createToolbar(): JComponent {
         val compilerPanel = this
         val toolbar = with(ActionManager.getInstance()) {
-            val defaultActionGroup = getAction("Elm.CompilerToolsGroup") as DefaultActionGroup
-
-            nextOccurenceAction = CommonActionsManager.getInstance().createNextOccurenceAction(compilerPanel)
-            prevOccurenceAction = CommonActionsManager.getInstance().createPrevOccurenceAction(compilerPanel)
-            defaultActionGroup.addSeparator()
-            defaultActionGroup.add(nextOccurenceAction)
-            defaultActionGroup.add(prevOccurenceAction)
-
-            createActionToolbar(
-                    "Elm Compiler Toolbar", // the value here doesn't matter, as far as I can tell
-                    getAction("Elm.CompilerToolsGroup") as DefaultActionGroup, // defined in plugin.xml
-                    true // horizontal layout
-            )
+            val buttonGroup = DefaultActionGroup().apply {
+                add(getAction("Elm.Build"))
+                addSeparator()
+                add(CommonActionsManager.getInstance().createNextOccurenceAction(compilerPanel))
+                add(CommonActionsManager.getInstance().createPrevOccurenceAction(compilerPanel))
+            }
+            createActionToolbar("Elm Compiler Toolbar", buttonGroup, true)
         }
         toolbar.setTargetComponent(this)
         return toolbar.component
@@ -243,6 +225,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         val start = elmLocation.region?.start ?: return null
         return Triple(virtualFile, document, start)
     }
+
 
     companion object {
 
