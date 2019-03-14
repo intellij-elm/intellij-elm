@@ -7,7 +7,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
@@ -24,6 +23,7 @@ import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.*
+import java.nio.file.Path
 
 
 class ElmBuildAction : AnAction() {
@@ -57,9 +57,6 @@ class ElmBuildAction : AnAction() {
                 activeFile.pathAsPath
         }
 
-        val manifestBaseDir = VfsUtil.findFile(elmProject.manifestPath.parent, /*refresh*/ true)
-                ?: return showError(project, "Could not find Elm-Project base directory")
-
         val json = try {
             elmCLI.make(project, elmProject, filePathToCompile).stderr
         } catch (e: ExecutionException) {
@@ -74,7 +71,7 @@ class ElmBuildAction : AnAction() {
                             { it.location?.region?.start?.column }
                     ))
         }
-        project.messageBus.syncPublisher(ERRORS_TOPIC).update(manifestBaseDir, messages)
+        project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages)
         if (isUnitTestMode) return
         ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
     }
@@ -104,7 +101,7 @@ class ElmBuildAction : AnAction() {
     }
 
     interface ElmErrorsListener {
-        fun update(baseDir: VirtualFile, messages: List<ElmError>)
+        fun update(baseDirPath: Path, messages: List<ElmError>)
     }
 
     companion object {

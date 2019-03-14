@@ -7,6 +7,7 @@ import com.intellij.testFramework.TestActionEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
+import java.nio.file.Path
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
@@ -46,7 +47,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         var succeeded = false
         with(project.messageBus.connect(testRootDisposable)) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDir: VirtualFile, messages: List<ElmError>) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>) {
                     succeeded = messages.size == expectedNumErrors
                 }
             })

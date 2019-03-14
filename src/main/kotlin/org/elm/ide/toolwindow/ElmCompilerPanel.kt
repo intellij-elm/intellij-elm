@@ -23,7 +23,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
-import org.elm.openapiext.findFileByMaybeRelativePath
+import org.elm.openapiext.findFileByPathTestAware
 import org.elm.openapiext.toPsiFile
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.ElmError
@@ -33,6 +33,7 @@ import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.font.TextAttribute
+import java.nio.file.Path
 import java.util.*
 import javax.swing.JComponent
 import javax.swing.JTable
@@ -48,7 +49,7 @@ import kotlin.math.sign
 
 class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
-    var elmManifestDir: VirtualFile? = null
+    var baseDirPath: Path? = null
 
 
     // OCCURRENCE NAVIGATOR
@@ -184,9 +185,9 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDir: VirtualFile, messages: List<ElmError>) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>) {
                     ApplicationManager.getApplication().invokeLater {
-                        elmManifestDir = baseDir
+                        this@ElmCompilerPanel.baseDirPath = baseDirPath
                         compilerMessages = messages
                         contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                         errorTableUI.setRowSelectionInterval(0, 0)
@@ -236,7 +237,7 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     private fun startFromErrorMessage(): Triple<VirtualFile, Document, Start>? {
         val elmError = compilerMessages.getOrNull(indexCompilerMessages) ?: return null
         val elmLocation = elmError.location ?: return null
-        val virtualFile = elmManifestDir?.findFileByMaybeRelativePath(elmLocation.path) ?: return null
+        val virtualFile = baseDirPath?.resolve(elmLocation.path)?.let { findFileByPathTestAware(it) } ?: return null
         val psiFile = virtualFile.toPsiFile(project) ?: return null
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
         val start = elmLocation.region?.start ?: return null
