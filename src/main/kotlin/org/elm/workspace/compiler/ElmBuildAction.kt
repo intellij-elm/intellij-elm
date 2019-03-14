@@ -15,6 +15,7 @@ import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
+import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.TyUnknown
@@ -34,10 +35,13 @@ class ElmBuildAction : AnAction() {
         val elmCLI = project.elmToolchain.elmCLI
                 ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
 
-        val elmFile = findActiveFile(e, project)
+        val activeFile = findActiveFile(e, project)
                 ?: return showError(project, "Could not determine active Elm file")
 
-        val elmProject = project.elmWorkspace.findProjectForFile(elmFile)
+        if (ElmFile.fromVirtualFile(activeFile, project)?.isInTestsDirectory == true)
+            return showError(project, "To check tests for compile errors, use the elm-test run configuration instead.")
+
+        val elmProject = project.elmWorkspace.findProjectForFile(activeFile)
                 ?: return showError(project, "Could not determine active Elm project")
 
         if (elmProject.isElm18)
@@ -50,7 +54,7 @@ class ElmBuildAction : AnAction() {
             }
 
             is ElmPackageProject ->
-                elmFile.pathAsPath
+                activeFile.pathAsPath
         }
 
         val manifestBaseDir = VfsUtil.findFile(elmProject.manifestPath.parent, /*refresh*/ true)
