@@ -972,7 +972,7 @@ main arg =
         _ -> ()
 """)
 
-    fun `test case branches using union patterns with tuple destructuring of record`() = checkByText("""
+    fun `test case branches using union patterns with record destructuring of var`() = checkByText("""
 type Foo
     = Bar (Maybe {x: ()})
     | Baz ()
@@ -999,36 +999,33 @@ main arg =
 <error descr="<module declaration> expected, got 'main'">main</error> <error descr="Unresolved reference 'Foo'">Foo bar</error> = <error descr="Value cannot be defined in terms of itself">bar</error>
 """)
 
-    fun `test valid case branch with cons pattern head`() = checkByText("""
-main : ()
+    fun `test case branch with cons pattern head`() = checkByText("""
 main =
     case [()] of
         x :: xs -> x
-        _ -> ()
+        _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    fun `test valid case branch with cons pattern tail`() = checkByText("""
+    fun `test case branch with cons pattern tail`() = checkByText("""
 main : List ()
 main =
-    case [()] of
+    <error descr="Type mismatch.Required: List ()Found: List String">case [""] of
         x :: xs -> xs
-        _ -> []
+        _ -> []</error>
 """)
 
-    fun `test valid case branch with list pattern`() = checkByText("""
-main : ()
+    fun `test case branch with list pattern`() = checkByText("""
 main =
     case [()] of
         [x, y] -> y
-        _ -> ()
+        _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    fun `test valid case branch with cons and list pattern`() = checkByText("""
-main : ()
+    fun `test case branch with cons and list pattern`() = checkByText("""
 main =
     case [()] of
         z :: [x, y] -> y
-        _ -> ()
+        _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
     fun `test case branches binding the same names`() = checkByText("""
@@ -1686,4 +1683,46 @@ main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: { field : () }">foo { field = () }</error>
 """)
+
+    fun `test unconstrained case branch with unit pattern`() = checkByText("""
+foo : String -> String
+foo a = a
+main a =
+    let
+        b = case a of
+            () -> ()
+    in
+        foo <error descr="Type mismatch.Required: StringFound: ()">a</error>
+""")
+
+    fun `test unconstrained case branch with cons pattern head`() = checkByText("""
+foo : () -> ()
+foo a = a
+main a =
+    let
+        b = case a of
+            x :: xs -> x
+            _ -> ""
+    in
+        ( foo <error descr="Type mismatch.Required: ()Found: List String">a</error>
+        , foo <error descr="Type mismatch.Required: ()Found: String">b</error>
+        )
+""")
+
+    fun `test unconstrained case branch with tuple pattern`() = checkByText("""
+foo : () -> ()
+foo a = a
+main a =
+    let
+        b = case a of
+            (x, y) -> x
+            (x, ()) -> x
+            _ -> ""
+    in
+        ( foo <error descr="Type mismatch.Required: ()Found: (String, ())">a</error>
+        , foo <error descr="Type mismatch.Required: ()Found: String">b</error>
+        )
+""")
+
+    //TODO remaining pattern types
 }

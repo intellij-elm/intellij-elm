@@ -128,7 +128,7 @@ private class InferenceScope(
         val ty = when (binding) {
             is ParameterBindingResult.Annotated -> binding.ty
             is ParameterBindingResult.Unannotated -> {
-                if (binding.count == 0) bodyTy
+                if (binding.count == 0) TypeReplacement.replace(bodyTy, replacements)
                 else TypeReplacement.replace(TyFunction(binding.params, bodyTy).uncurry(), replacements)
             }
             is ParameterBindingResult.Other -> bodyTy
@@ -161,15 +161,21 @@ private class InferenceScope(
         return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
-    private fun beginCaseBranchInference(pattern: ElmPattern, caseTy: Ty, branchExpression: ElmExpressionTag): InferenceResult {
+    private fun beginCaseBranchInference(
+            pattern: ElmPattern,
+            caseTy: Ty,
+            branchExpression: ElmExpressionTag
+    ): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpression(branchExpression)
         return InferenceResult(expressionTypes, diagnostics, ty)
     }
 
-    private inline fun inferChild(activeScopes: MutableSet<ElmValueDeclaration> = this.activeScopes.toMutableSet(),
-                                  recursionAllowed: Boolean = this.recursionAllowed,
-                                  block: InferenceScope.() -> InferenceResult): InferenceResult {
+    private inline fun inferChild(
+            activeScopes: MutableSet<ElmValueDeclaration> = this.activeScopes.toMutableSet(),
+            recursionAllowed: Boolean = this.recursionAllowed,
+            block: InferenceScope.() -> InferenceResult
+    ): InferenceResult {
         val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, recursionAllowed, this).block()
         diagnostics += result.diagnostics
         expressionTypes += result.expressionTypes
@@ -413,7 +419,7 @@ private class InferenceScope(
         // the first branch expression.
 
         val caseOfExprTy = inferExpression(caseOf.expression)
-        var ty: Ty = TyUnknown()
+        var ty: Ty? = null
         var errorEncountered = false
 
         // TODO: check patterns cover possibilities
@@ -431,13 +437,13 @@ private class InferenceScope(
                 continue
             }
 
-            if (requireAssignable(branchExpression, result.ty, ty)) {
+            if (ty == null) {
                 ty = result.ty
-            } else {
+            } else if (!requireAssignable(branchExpression, result.ty, ty)) {
                 errorEncountered = true
             }
         }
-        return ty
+        return ty ?: TyUnknown()
     }
 
 
@@ -710,7 +716,8 @@ private class InferenceScope(
         }
     }
 
-    private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, ty: Ty, isParameter: Boolean) {
+    private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, type: Ty, isParameter: Boolean) {
+        val ty = getReplacement(type)
         when (pat) {
             is ElmAnythingPattern -> {
             }
@@ -741,8 +748,7 @@ private class InferenceScope(
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
             is ElmTuplePattern -> bindTuplePattern(pat, ty, isParameter)
             is ElmUnionPattern -> bindUnionPattern(pat, isParameter)
-            is ElmUnitExpr -> {
-            }
+            is ElmUnitExpr -> requireAssignable(pat, ty, TyUnit())
             else -> error(pat, "unexpected pattern type")
         }
     }
@@ -755,7 +761,13 @@ private class InferenceScope(
         bindListPatternParts(pat, pat.parts.toList(), ty, false)
     }
 
-    private fun bindListPatternParts(pat: ElmPatternChildTag, parts: List<ElmPatternChildTag>, ty: Ty, isCons: Boolean) {
+    private fun bindListPatternParts(pat: ElmPatternChildTag, parts: List<ElmPatternChildTag>, type: Ty, isCons: Boolean) {
+        // vars always get bound to `List a` before further constraints
+        val ty = when (type) {
+            is TyVar -> TyList(TyVar("a")).also { requireAssignable(pat, type, it) }
+            else -> type
+        }
+
         if (!isInferable(ty) || ty !is TyUnion || !ty.isTyList) {
             if (isInferable(ty)) {
                 diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
@@ -806,8 +818,15 @@ private class InferenceScope(
         }
     }
 
-    private fun bindTuplePattern(pat: ElmTuplePattern, ty: Ty, isParameter: Boolean) {
+    private fun bindTuplePattern(pat: ElmTuplePattern, type: Ty, isParameter: Boolean) {
         val patternList = pat.patternList
+
+        // vars always get bound to `(a, b) or `(a, b, c)` before further constraints
+        val ty = when (type) {
+            is TyVar -> TyTuple(uniqueVars(patternList.size)).also { requireAssignable(pat, type, it) }
+            else -> type
+        }
+
         if (ty !is TyTuple || ty.types.size != patternList.size) {
             patternList.forEach { bindPattern(it, TyUnknown(), isParameter) }
             if (isInferable(ty)) {
@@ -816,8 +835,10 @@ private class InferenceScope(
             }
             return
         }
-        patternList.zip(ty.types)
-                .forEach { (pat, type) -> bindPattern(pat, type, isParameter) }
+
+        patternList.zip(ty.types).forEach { (pat, type) ->
+            bindPattern(pat, type, isParameter)
+        }
     }
 
     private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
@@ -962,6 +983,7 @@ private class InferenceScope(
         return sharedAssignable && tailAssignable
     }
 
+    // TODO rigid vars
     /** Check if a [ty] can that compares unequal to a [tyVar] can be unified with it */
     private fun varAssignable(tyVar: TyVar, ty: Ty): Boolean {
         // Vars with certain names are treated as typeclasses that only unify with a limited set of
