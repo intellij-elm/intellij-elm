@@ -871,9 +871,9 @@ private class InferenceScope(
     }
 
     /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
-    private fun assignable(ty1: Ty, ty2: Ty): Boolean {
-        if (ty1 is TyVar && ty1 in replacements) return assignable(replacements[ty1]!!, ty2)
-        if (ty2 is TyVar && ty2 in replacements) return assignable(ty1, replacements[ty2]!!)
+    private fun assignable(type1: Ty, type2: Ty): Boolean {
+        val ty1 = getReplacement(type1)
+        val ty2 = getReplacement(type2)
 
         val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
             varAssignable(ty2, ty1)
@@ -1032,6 +1032,24 @@ private class InferenceScope(
         if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
             replacements[ty1] = ty2
         }
+    }
+
+    private fun getReplacement(ty: Ty): Ty {
+        if (ty !is TyVar) return ty
+
+        var node: TyVar = ty
+        var parent = replacements[node]
+
+        // treat the replacements as a disjoint-set and use Tarjan's algorithm for path compression
+        // to keep access near constant time
+        while (parent is TyVar) {
+            val grandparent = replacements[parent] ?: return parent
+            replacements[node] = grandparent
+            node = parent
+            parent = grandparent
+        }
+
+        return parent ?: node
     }
 
     //</editor-fold>
