@@ -762,11 +762,7 @@ private class InferenceScope(
     }
 
     private fun bindListPatternParts(pat: ElmPatternChildTag, parts: List<ElmPatternChildTag>, type: Ty, isCons: Boolean) {
-        // vars always get bound to `List a` before further constraints
-        val ty = when (type) {
-            is TyVar -> TyList(TyVar("a")).also { requireAssignable(pat, type, it) }
-            else -> type
-        }
+        val ty = bindIfVar(pat, type) { TyList(TyVar("a")) }
 
         if (!isInferable(ty) || ty !is TyUnion || !ty.isTyList) {
             if (isInferable(ty)) {
@@ -820,12 +816,7 @@ private class InferenceScope(
 
     private fun bindTuplePattern(pat: ElmTuplePattern, type: Ty, isParameter: Boolean) {
         val patternList = pat.patternList
-
-        // vars always get bound to `(a, b) or `(a, b, c)` before further constraints
-        val ty = when (type) {
-            is TyVar -> TyTuple(uniqueVars(patternList.size)).also { requireAssignable(pat, type, it) }
-            else -> type
-        }
+        val ty = bindIfVar(pat, type) { TyTuple(uniqueVars(patternList.size)) }
 
         if (ty !is TyTuple || ty.types.size != patternList.size) {
             patternList.forEach { bindPattern(it, TyUnknown(), isParameter) }
@@ -841,12 +832,19 @@ private class InferenceScope(
         }
     }
 
-    private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
-        val lowerPatternList = pat.lowerPatternList
-        if (ty !is TyRecord || lowerPatternList.any { it.name !in ty.fields }) {
-            // TODO[unification] bind to vars
+    private fun bindRecordPattern(pat: ElmRecordPattern, type: Ty, isParameter: Boolean) {
+        val fields = pat.lowerPatternList
+
+        val ty = bindIfVar(pat, type) {
+            TyRecord(
+                    fields = fields.zip(uniqueVars(fields.size)).associate { (f, t) -> f.name to t },
+                    baseTy = TyVar("a")
+            )
+        }
+
+        if (ty !is TyRecord || fields.any { it.name !in ty.fields }) {
             if (isInferable(ty)) {
-                val actualTyParams = lowerPatternList.map { it.name }.zip(uniqueVars(lowerPatternList.size))
+                val actualTyParams = fields.map { it.name }.zip(uniqueVars(fields.size))
                 val actualTy = TyRecord(actualTyParams.toMap())
 
                 // For pattern declarations, the elm compiler issues diagnostics on the expression
@@ -854,16 +852,15 @@ private class InferenceScope(
                 diagnostics += TypeMismatchError(pat, actualTy, ty)
             }
 
-            for (p in lowerPatternList) {
-                bindPattern(p, TyUnknown(), isParameter)
+            for (f in fields) {
+                bindPattern(f, TyUnknown(), isParameter)
             }
 
             return
         }
 
-        for (id in lowerPatternList) {
-            val fieldTy = ty.fields.getValue(id.name)
-            bindPattern(id, fieldTy, isParameter)
+        for (f in fields) {
+            bindPattern(f, ty.fields.getValue(f.name), isParameter)
         }
     }
 
@@ -1072,6 +1069,14 @@ private class InferenceScope(
         }
 
         return parent ?: node
+    }
+
+    /** If the [ty] corresponding to [elem] is a [TyVar], bind [ty] to [default]; otherwise return [ty] */
+    private inline fun bindIfVar(elem: ElmPsiElement, ty: Ty, default: () -> Ty): Ty {
+        return when (ty) {
+            is TyVar -> default().also { requireAssignable(elem, ty, it) }
+            else -> ty
+        }
     }
 
     //</editor-fold>

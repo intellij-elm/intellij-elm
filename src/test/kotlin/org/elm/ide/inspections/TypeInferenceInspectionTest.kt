@@ -1724,5 +1724,19 @@ main a =
         )
 """)
 
-    //TODO remaining pattern types
+    fun `test unconstrained case branch with record pattern`() = checkByText("""
+foo : () -> ()
+foo a = a
+main a =
+    let
+        b = case a of
+            {x, y} -> x
+            _ -> ""
+    in
+        ( foo <error descr="Type mismatch.Required: ()Found: { a | x : String, y : b }">a</error>
+        , foo <error descr="Type mismatch.Required: ()Found: String">b</error>
+        )
+""")
+
+    //TODO record field access, adding fields to existing inference
 }
