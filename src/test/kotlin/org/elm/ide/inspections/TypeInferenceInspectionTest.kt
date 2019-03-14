@@ -945,6 +945,22 @@ main x =
         Qux (y, z) -> z</error>
 """)
 
+    fun `test case branches with mismatched union pattern`() = checkByText("""
+type Foo = Bar
+type Baz = Qux
+
+main : Foo -> ()
+main arg =
+    case arg of
+         <error descr="Type mismatch.Required: FooFound: Baz">Qux</error> -> ()
+""")
+
+    /*
+    qwe : List a -> ()
+qwe a = case a of
+    Just b -> ()
+     */
+
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Foo
     = Bar ()
@@ -1735,6 +1751,21 @@ main a =
     in
         ( foo <error descr="Type mismatch.Required: ()Found: { a | x : String, y : b }">a</error>
         , foo <error descr="Type mismatch.Required: ()Found: String">b</error>
+        )
+""")
+
+    fun `test unconstrained case branch with union pattern`() = checkByText("""
+type Foo a = Bar a
+foo : String -> String
+foo a = a
+main a =
+    let
+        b = case a of
+            Bar c -> c
+            Bar () -> ()
+    in
+        ( foo <error descr="Type mismatch.Required: StringFound: Foo ()">a</error>
+        , foo <error descr="Type mismatch.Required: StringFound: ()">b</error>
         )
 """)
 

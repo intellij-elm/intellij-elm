@@ -747,7 +747,7 @@ private class InferenceScope(
             is ElmLowerPattern -> setBinding(pat, ty)
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
             is ElmTuplePattern -> bindTuplePattern(pat, ty, isParameter)
-            is ElmUnionPattern -> bindUnionPattern(pat, isParameter)
+            is ElmUnionPattern -> bindUnionPattern(pat, ty, isParameter)
             is ElmUnitExpr -> requireAssignable(pat, ty, TyUnit())
             else -> error(pat, "unexpected pattern type")
         }
@@ -786,31 +786,39 @@ private class InferenceScope(
         }
     }
 
-    private fun bindUnionPattern(pat: ElmUnionPattern, isParameter: Boolean) {
-        // If the referenced union variant isn't a constructor (e.g. `Nothing`), then there's nothing
-        // to bind.
-        val variantTy = (pat.reference.resolve() as? ElmUnionVariant)?.typeExpressionInference()?.value
-        val argumentPatterns = pat.argumentPatterns.toList()
+    private fun bindUnionPattern(pat: ElmUnionPattern, type: Ty, isParameter: Boolean) {
+        val variant = pat.reference.resolve() as? ElmUnionVariant
+        val variantTy = variant?.typeExpressionInference()?.value
+
+        if (variantTy == null) {
+            pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
+            return
+        }
 
         fun issueError(actual: Int, expected: Int) {
             diagnostics += ArgumentCountError(pat, actual, expected)
             pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         }
 
+        val argumentPatterns = pat.argumentPatterns.toList()
+
         if (variantTy is TyFunction) {
-            if (argumentPatterns.size != variantTy.parameters.size) {
-                issueError(argumentPatterns.size, variantTy.parameters.size)
-            } else {
-                for ((p, t) in argumentPatterns.zip(variantTy.parameters)) {
-                    // The other option is an UpperCaseQID, which doesn't bind anything
-                    if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
+            val ty = bindIfVar(pat, type) { variantTy.ret }
+            if (requireAssignable(pat, variantTy.ret, ty)) {
+                if (argumentPatterns.size != variantTy.parameters.size) {
+                    issueError(argumentPatterns.size, variantTy.parameters.size)
+                } else {
+                    for ((p, t) in argumentPatterns.zip(variantTy.parameters)) {
+                        // The other option is an UpperCaseQID, which doesn't bind anything
+                        if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
+                    }
                 }
             }
-        } else if (variantTy == null) {
-            // null variantTy means the reference didn't resolve
-            pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
-        } else if (argumentPatterns.isNotEmpty()) {
-            issueError(argumentPatterns.size, 0)
+        } else {
+            val ty = bindIfVar(pat, type) { variantTy }
+            if (requireAssignable(pat, variantTy, ty) && argumentPatterns.isNotEmpty()) {
+                issueError(argumentPatterns.size, 0)
+            }
         }
     }
 
@@ -888,7 +896,7 @@ private class InferenceScope(
         return assignable
     }
 
-    /** Return `false` if [ty1] definitely cannot be assigned to [ty2] */
+    /** Return `false` if [type1] definitely cannot be assigned to [type2] */
     private fun assignable(type1: Ty, type2: Ty): Boolean {
         val ty1 = getReplacement(type1)
         val ty2 = getReplacement(type2)
