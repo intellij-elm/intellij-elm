@@ -4,7 +4,6 @@ import java.util.regex.Pattern
 
 private val urlPattern = Pattern.compile(".*<((http|https)(://.*))>.*", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
 private const val nonBreakingSpace = "&nbsp;"
-private const val tempAnchorReplacement = "##TEMP##"
 
 
 fun elmJsonToCompilerMessages(json: String): List<ElmError> {
@@ -45,10 +44,9 @@ private fun chunkToHtml(chunk: Chunk): String =
                     val httpUrl = urlMatcher.group(1)
                     val anchor = "<a href=\"$httpUrl\">$httpUrl</a>"
                     asTextSpan(chunk.string
-                            .replace("<$httpUrl>", tempAnchorReplacement)
+                            .replace("<$httpUrl>", anchor)
                             .replace(" ", nonBreakingSpace)
-                            .replace("\n", "<br>")
-                            .replace(tempAnchorReplacement, anchor))
+                            .replace("\n", "<br>"))
                 } else {
                     asTextSpan(chunk.string.replace(" ", nonBreakingSpace).replace("\n", "<br>"))
                 }

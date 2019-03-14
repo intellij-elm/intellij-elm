@@ -15,6 +15,7 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
+import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
@@ -85,6 +86,8 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
 
     private val messageUI = JTextPane().apply {
         contentType = "text/html"
+        isEditable = false
+        addHyperlinkListener(BrowserHyperlinkListener.INSTANCE)
         background = backgroundColorUI
     }
 
