@@ -50,38 +50,6 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     var baseDirPath: Path? = null
 
 
-    // OCCURRENCE NAVIGATOR
-
-
-    private fun calcNextOccurrence(direction: Int, go: Boolean = false): OccurenceInfo? {
-        if (compilerMessages.isEmpty()) return null
-
-        val nextIndex = indexCompilerMessages + direction.sign
-        val elmError = compilerMessages.getOrNull(nextIndex) ?: return null
-
-        if (go) {
-            // update selection
-            indexCompilerMessages = nextIndex
-            messageUI.text = elmError.html
-            errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
-        }
-
-        // create occurrence info
-        val (virtualFile, document, start) = startFromErrorMessage() ?: return null
-        val offset = document.getLineStartOffset(start.line - 1) + start.column - 1
-        val navigatable = PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset)
-        return OccurenceInfo(navigatable, -1, -1)
-    }
-
-    override fun getNextOccurenceActionName() = "Next Error"
-    override fun hasNextOccurence() = calcNextOccurrence(1) != null
-    override fun goNextOccurence(): OccurenceInfo? = calcNextOccurrence(1, go = true)
-
-    override fun getPreviousOccurenceActionName() = "Previous Error"
-    override fun hasPreviousOccurence() = calcNextOccurrence(-1) != null
-    override fun goPreviousOccurence(): OccurenceInfo? = calcNextOccurrence(-1, go = true)
-
-
     // UI
 
     override fun dispose() {}
@@ -139,12 +107,15 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
                 indexCompilerMessages = 0
                 messageUI.text = compilerMessages[0].html
 
-                val locationsAndType: Array<Array<String>> = compilerMessages.map {
+                val columnNames = arrayOf("Module", "Location", "Type")
+                val cellValues = compilerMessages.map {
                     arrayOf(it.location?.moduleName ?: "n/a",
                             it.location?.region?.pretty() ?: "n/a",
                             toNiceName(it.title))
                 }.toTypedArray()
-                errorTableUI.model = DefaultTableModel(locationsAndType, arrayOf("Module", "Location", "Type"))
+                errorTableUI.model = object : DefaultTableModel(cellValues, columnNames) {
+                    override fun isCellEditable(row: Int, column: Int) = false
+                }
                 errorTableUI.tableHeader.defaultRenderer = errorTableHeaderRenderer
                 errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(0), errorTableCellRenderer)
                 errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(1), errorTableCellRenderer)
@@ -152,13 +123,30 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
             }
         }
 
-    private fun toNiceName(title: String): String {
-        return title.split(" ").joinToString(" ") { it.first() + it.substring(1).toLowerCase() }
+    private val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
+        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            rendererComponent.foreground = Color.WHITE
+            return rendererComponent
+        }
     }
 
-    private fun Region.pretty(): String {
-        return " line ${start.line}, column ${start.column}"
+    private val errorTableCellRenderer = object : DefaultTableCellRenderer() {
+        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            rendererComponent.foreground = Color.LIGHT_GRAY
+            border = EmptyBorder(2, 2, 2, 2)
+            if (column == 2) {
+                rendererComponent.font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD))
+            }
+            return rendererComponent
+        }
     }
+
+    private fun toNiceName(title: String) =
+            title.split(" ").joinToString(" ") { it.first() + it.substring(1).toLowerCase() }
+
+    private fun Region.pretty() = "line ${start.line}, column ${start.column}"
 
     private var errorContent: JBSplitter
 
@@ -224,27 +212,34 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     }
 
 
-    companion object {
+    // OCCURRENCE NAVIGATOR
 
-        val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
-            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-                val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-                rendererComponent.foreground = Color.WHITE
-                return rendererComponent
-            }
+
+    private fun calcNextOccurrence(direction: Int, go: Boolean = false): OccurenceInfo? {
+        if (compilerMessages.isEmpty()) return null
+
+        val nextIndex = indexCompilerMessages + direction.sign
+        val elmError = compilerMessages.getOrNull(nextIndex) ?: return null
+
+        if (go) {
+            // update selection
+            indexCompilerMessages = nextIndex
+            messageUI.text = elmError.html
+            errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
         }
 
-        val errorTableCellRenderer = object : DefaultTableCellRenderer() {
-            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-                val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-                rendererComponent.foreground = Color.LIGHT_GRAY
-                border = EmptyBorder(2, 2, 2, 2)
-                if (column == 2) {
-                    rendererComponent.font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD))
-                }
-                return rendererComponent
-            }
-        }
+        // create occurrence info
+        val (virtualFile, document, start) = startFromErrorMessage() ?: return null
+        val offset = document.getLineStartOffset(start.line - 1) + start.column - 1
+        val navigatable = PsiNavigationSupport.getInstance().createNavigatable(project, virtualFile, offset)
+        return OccurenceInfo(navigatable, -1, -1)
     }
 
+    override fun getNextOccurenceActionName() = "Next Error"
+    override fun hasNextOccurence() = calcNextOccurrence(1) != null
+    override fun goNextOccurence(): OccurenceInfo? = calcNextOccurrence(1, go = true)
+
+    override fun getPreviousOccurenceActionName() = "Previous Error"
+    override fun hasPreviousOccurence() = calcNextOccurrence(-1) != null
+    override fun goPreviousOccurence(): OccurenceInfo? = calcNextOccurrence(-1, go = true)
 }
