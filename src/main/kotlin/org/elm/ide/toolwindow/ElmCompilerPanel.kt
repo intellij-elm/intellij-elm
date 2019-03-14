@@ -8,7 +8,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
@@ -178,13 +177,11 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(baseDirPath: Path, messages: List<ElmError>) {
-                    ApplicationManager.getApplication().invokeLater {
-                        this@ElmCompilerPanel.baseDirPath = baseDirPath
-                        compilerMessages = messages
-                        contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
-                        errorTableUI.setRowSelectionInterval(0, 0)
-                        indexCompilerMessages = 0
-                    }
+                    this@ElmCompilerPanel.baseDirPath = baseDirPath
+                    compilerMessages = messages
+                    contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
+                    errorTableUI.setRowSelectionInterval(0, 0)
+                    indexCompilerMessages = 0
                 }
             })
         }
