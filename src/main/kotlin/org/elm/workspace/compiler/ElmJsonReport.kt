@@ -59,7 +59,7 @@ private fun String.createHyperlinks(): String =
 
 /**
  * The Elm compiler emits the text where the whitespace is already formatted to line up
- * using a fixed-with font. But HTML does its own thing with whitespace. We could use a
+ * using a fixed-width font. But HTML does its own thing with whitespace. We could use a
  * `<pre>` element, but then we wouldn't be able to do the color highlights and other
  * formatting tricks.
  *
