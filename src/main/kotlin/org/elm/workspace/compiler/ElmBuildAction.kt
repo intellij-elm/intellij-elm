@@ -106,7 +106,11 @@ class ElmBuildAction : AnAction() {
 
     companion object {
         val ERRORS_TOPIC = Topic("Elm compiler-messages", ElmErrorsListener::class.java)
-        private val elmMainTypes = setOf("Platform" to "Program", "Html" to "Html")
+        private val elmMainTypes = setOf(
+                "Platform" to "Program",
+                "Html" to "Html",
+                "VirtualDom" to "Node"
+        )
     }
 
     data class LookupClientLocation(
