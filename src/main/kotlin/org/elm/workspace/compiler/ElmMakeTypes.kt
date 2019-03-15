@@ -1,17 +1,15 @@
 package org.elm.workspace.compiler
 
 import com.google.gson.*
+import com.google.gson.annotations.JsonAdapter
 import java.lang.reflect.Type
 
-// types for Elm's json report
-// The naming is based on https://package.elm-lang.org/packages/elm/project-metadata-utils/latest/Elm-Error
+// ELM COMPILER DTO TYPES
+// Naming based on https://package.elm-lang.org/packages/elm/project-metadata-utils/latest/Elm-Error
 
-fun newGson(): Gson =
-        GsonBuilder()
-                .registerTypeAdapter(Report::class.java, ReportDeserializer())
-                .registerTypeAdapter(Chunk::class.java, ChunkDeserializer())
-                .create()
+private val gson = Gson()
 
+@JsonAdapter(ReportDeserializer::class)
 sealed class Report {
     data class General(
             val path: String?,
@@ -26,7 +24,6 @@ sealed class Report {
 
 class ReportDeserializer : JsonDeserializer<Report> {
     override fun deserialize(element: JsonElement, typeOf: Type, context: JsonDeserializationContext): Report {
-        val gson = newGson()
         if (!element.isJsonObject) throw JsonParseException("Expected a report object")
         val obj = element.asJsonObject
         val reportType = obj["type"].asString
@@ -54,20 +51,20 @@ data class Region(val start: Start, val end: End)
 data class Start(val line: Int, val column: Int)
 data class End(val line: Int, val column: Int)
 
+
+@JsonAdapter(ChunkDeserializer::class)
 sealed class Chunk {
     data class Unstyled(val string: String) : Chunk()
     data class Styled(val bold: Boolean, val underline: Boolean, val color: String, val string: String) : Chunk()
 }
 
 class ChunkDeserializer : JsonDeserializer<Chunk> {
-    override fun deserialize(element: JsonElement, typeOf: Type, context: JsonDeserializationContext): Chunk {
-        val gson = newGson()
-        return when {
-            element.isJsonObject -> gson.fromJson(element, Chunk.Styled::class.java)
-            element.isJsonPrimitive -> Chunk.Unstyled(element.asString)
-            else -> throw JsonParseException("Expected a simple string or a rich-text chunk")
-        }
-    }
+    override fun deserialize(element: JsonElement, typeOf: Type, context: JsonDeserializationContext): Chunk =
+            when {
+                element.isJsonObject -> gson.fromJson(element, Chunk.Styled::class.java)
+                element.isJsonPrimitive -> Chunk.Unstyled(element.asString)
+                else -> throw JsonParseException("Expected a simple string or a rich-text chunk")
+            }
 }
 
 

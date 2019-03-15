@@ -1,11 +1,13 @@
 package org.elm.workspace.compiler
 
+import com.google.gson.Gson
+
 // The Elm compiler emits HTTP URLs with angle brackets around them
 private val urlPattern = Regex("""<((http|https)://.*)>""")
 
 
 fun elmJsonToCompilerMessages(json: String): List<ElmError> {
-    val report = newGson().fromJson(json, Report::class.java) ?: error("failed to parse JSON report from elm")
+    val report = Gson().fromJson(json, Report::class.java) ?: error("failed to parse JSON report from elm")
     return when (report) {
         is Report.General -> {
             listOf(ElmError(
