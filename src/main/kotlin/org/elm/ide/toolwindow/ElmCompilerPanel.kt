@@ -33,7 +33,6 @@ import java.awt.Component
 import java.awt.Dimension
 import java.awt.font.TextAttribute
 import java.nio.file.Path
-import java.util.*
 import javax.swing.JComponent
 import javax.swing.JTable
 import javax.swing.JTextPane
@@ -46,7 +45,10 @@ import javax.swing.table.DefaultTableModel
 import kotlin.math.sign
 
 
-class ElmCompilerPanel(private val project: Project, private val contentManager: ContentManager) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
+class ElmCompilerPanel(
+        private val project: Project,
+        private val contentManager: ContentManager
+) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
     var baseDirPath: Path? = null
 
@@ -87,8 +89,8 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
     private val messageUI = JTextPane().apply {
         contentType = "text/html"
         isEditable = false
-        addHyperlinkListener(BrowserHyperlinkListener.INSTANCE)
         background = backgroundColorUI
+        addHyperlinkListener(BrowserHyperlinkListener.INSTANCE)
     }
 
     private var indexCompilerMessages: Int = 0
@@ -127,22 +129,21 @@ class ElmCompilerPanel(private val project: Project, private val contentManager:
         }
 
     private val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
-        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-            rendererComponent.foreground = Color.WHITE
-            return rendererComponent
-        }
+        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component =
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                        .apply { foreground = Color.WHITE }
     }
 
     private val errorTableCellRenderer = object : DefaultTableCellRenderer() {
         override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-            val rendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-            rendererComponent.foreground = Color.LIGHT_GRAY
             border = EmptyBorder(2, 2, 2, 2)
-            if (column == 2) {
-                rendererComponent.font = font.deriveFont(Collections.singletonMap(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD))
-            }
-            return rendererComponent
+            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                    .apply {
+                        foreground = Color.LIGHT_GRAY
+                        if (column == 2) {
+                            font = font.deriveFont(mapOf(TextAttribute.WEIGHT to TextAttribute.WEIGHT_BOLD))
+                        }
+                    }
         }
     }
 
