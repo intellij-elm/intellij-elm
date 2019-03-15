@@ -1769,5 +1769,14 @@ main a =
         )
 """)
 
-    //TODO record field access, adding fields to existing inference
+    fun `test field accessor on unconstrained var`() = checkByText("""
+foo : () -> ()
+foo a = a
+main a =
+    let
+        b = a.x + 1
+        c = a.y ++ ""
+    in
+        foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
+""")
 }
