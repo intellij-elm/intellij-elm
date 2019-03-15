@@ -1103,6 +1103,11 @@ main r =
     <error descr="Type mismatch.Required: ()Found: String">record.field</error>
 """)
 
+    fun `test nested param as`() = checkByText("""
+main : (String, String) -> ()
+main ( (x) as foo, _ ) =
+     <error descr="Type mismatch.Required: ()Found: String">foo</error>
+""")
 
     fun `test mismatched left operand to non-associative operator`() = checkByText("""
 foo : () -> () -> ()

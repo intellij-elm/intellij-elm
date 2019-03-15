@@ -800,7 +800,7 @@ private class InferenceScope(
             return
         }
         patternList.zip(ty.types)
-                .forEach { (pat, type) -> bindPattern(pat.child, type, isParameter) }
+                .forEach { (pat, type) -> bindPattern(pat, type, isParameter) }
     }
 
     private fun bindRecordPattern(pat: ElmRecordPattern, ty: Ty, isParameter: Boolean) {
