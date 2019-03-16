@@ -120,4 +120,57 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                                 moduleName = null,
                                 region = null))))
     }
+
+    fun `test hyperlink within a longer run of text`() {
+        @Language("JSON")
+        val json = """
+{
+  "type": "compile-errors",
+  "errors": [
+    {
+      "path": "src/JsonTree.elm",
+      "name": "JsonTree",
+      "problems": [
+        {
+          "title": "CYCLIC DEFINITION",
+          "region": {
+            "start": {
+              "line": 54,
+              "column": 1
+            },
+            "end": {
+              "line": 54,
+              "column": 4
+            }
+          },
+          "message": [
+            "The `foo` value is defined directly in terms of itself, causing an infinite loop.",
+            {
+              "bold": false,
+              "underline": true,
+              "color": null,
+              "string": "Hint"
+            },
+            ": The root problem is often a typo in some variable name, but I recommend\nreading <https://elm-lang.org/0.19.0/bad-recursion> for more detailed advice,\nespecially if you actually do need a recursive value."
+          ]
+        }
+      ]
+    }
+  ]
+}
+""".trimIndent()
+
+        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">The&nbsp;`foo`&nbsp;value&nbsp;is&nbsp;defined&nbsp;directly&nbsp;in&nbsp;terms&nbsp;of&nbsp;itself,&nbsp;causing&nbsp;an&nbsp;infinite&nbsp;loop.</span><span style="text-decoration: underline;color: white;">Hint</span><span style="color: #4F9DA6">:&nbsp;The&nbsp;root&nbsp;problem&nbsp;is&nbsp;often&nbsp;a&nbsp;typo&nbsp;in&nbsp;some&nbsp;variable&nbsp;name,&nbsp;but&nbsp;I&nbsp;recommend<br>reading&nbsp;<a href="https://elm-lang.org/0.19.0/bad-recursion">https://elm-lang.org/0.19.0/bad-recursion</a>&nbsp;for&nbsp;more&nbsp;detailed&nbsp;advice,<br>especially&nbsp;if&nbsp;you&nbsp;actually&nbsp;do&nbsp;need&nbsp;a&nbsp;recursive&nbsp;value.</span></body></html>"""
+
+        TestCase.assertEquals(elmJsonToCompilerMessages(json),
+                listOf(ElmError(
+                        title = "CYCLIC DEFINITION",
+                        html = expectedHtml,
+                        location = ElmLocation(
+                                path = "src/JsonTree.elm",
+                                moduleName = "JsonTree",
+                                region = Region(
+                                        start = Start(line = 54, column = 1),
+                                        end = End(line = 54, column = 4))))))
+    }
 }

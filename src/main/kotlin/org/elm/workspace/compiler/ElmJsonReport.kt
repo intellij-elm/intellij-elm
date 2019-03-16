@@ -3,7 +3,7 @@ package org.elm.workspace.compiler
 import com.google.gson.Gson
 
 // The Elm compiler emits HTTP URLs with angle brackets around them
-private val urlPattern = Regex("""<((http|https)://.*)>""")
+private val urlPattern = Regex("""<((http|https)://.*?)>""")
 
 
 fun elmJsonToCompilerMessages(json: String): List<ElmError> {
