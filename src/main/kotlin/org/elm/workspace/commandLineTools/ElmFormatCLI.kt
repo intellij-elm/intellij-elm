@@ -10,7 +10,10 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import org.elm.lang.core.psi.ElmFile
-import org.elm.openapiext.*
+import org.elm.openapiext.GeneralCommandLine
+import org.elm.openapiext.Result
+import org.elm.openapiext.execute
+import org.elm.openapiext.isSuccess
 import org.elm.workspace.ElmApplicationProject
 import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ParseException
@@ -87,7 +90,7 @@ class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
 
     companion object {
         fun getElmVersion(project: Project, file: VirtualFile): Version? {
-            val psiFile = (file.toPsiFile(project) as? ElmFile) ?: return null
+            val psiFile = ElmFile.fromVirtualFile(file, project) ?: return null
 
             return when (val elmProject = psiFile.elmProject) {
                 is ElmApplicationProject -> elmProject.elmVersion

@@ -14,6 +14,7 @@ import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.stubs.*
 import org.elm.openapiext.pathAsPath
+import org.elm.openapiext.toPsiFile
 import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
@@ -133,6 +134,10 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         }
     }
 
+    companion object {
+        fun fromVirtualFile(file: VirtualFile, project: Project): ElmFile? =
+                file.toPsiFile(project) as? ElmFile
+    }
 }
 
 val VirtualFile.isElmFile
