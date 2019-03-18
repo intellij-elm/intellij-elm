@@ -33,6 +33,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.1.0</b> <em>(2019-03-18)</em>
+                <ul>
+                    <li>Add Elm compiler integration to check errors</li>
+                    <li>Bug fixes for type inference</li>
+                </ul>
+            </li>
             <li><b>3.0.1</b> <em>(2019-03-06)</em>
                 <ul>
                     <li>Added "auto test" support in the elm-test runner</li>
