@@ -22,7 +22,7 @@ fun PsiElement.findInference(): InferenceResult? {
 /** Find the type of a given element, if the element is a value expression or declaration */
 fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
 
-
+// TODO[aj]: make sure that these cached values don't contain mutable records
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     return CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TYPE_INFERENCE_KEY, { useActiveScopes ->
         // Elm lets you shadow imported names, including auto-imported names, so only count names
@@ -368,30 +368,43 @@ private class InferenceScope(
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
 
-    private fun inferFieldAccess(fieldAccess: ElmFieldAccessExpr): Ty {
-        val target = fieldAccess.targetExpr
-        val baseTy = inferFieldAccessTarget(target)
+    private fun inferFieldAccess(expr: ElmFieldAccessExpr): Ty {
+        val target = expr.targetExpr
+        val targetType = inferFieldAccessTarget(target)
+        val targetTy = getReplacement(targetType)
+        val fieldIdentifier = expr.lowerCaseIdentifier ?: return TyUnknown()
+        val fieldName = fieldIdentifier.text
 
-        if (baseTy !is TyRecord) {
-            if (isInferable(baseTy)) {
-                val errorElem = if (target is ElmFieldAccessExpr) target.lowerCaseIdentifier
-                        ?: target else target
-                diagnostics += TypeMismatchError(errorElem, baseTy, TyVar("record"))
+        if (targetTy is TyVar) {
+            val ty = TyVar("b")
+            trackReplacement(targetTy, MutableTyRecord(mutableMapOf(fieldName to ty), TyVar("a")))
+            expressionTypes[expr] = ty
+            return ty
+        }
+
+        if (targetTy is MutableTyRecord) {
+            val ty = targetTy.fields.getOrPut(fieldName) { TyVar(nthVarName(targetTy.fields.size)) }
+            expressionTypes[expr] = ty
+            return ty
+        }
+
+        if (targetTy !is TyRecord) {
+            if (isInferable(targetTy)) {
+                val errorElem = if (target is ElmFieldAccessExpr) fieldIdentifier else target
+                diagnostics += TypeMismatchError(errorElem, targetTy, TyVar("record"))
             }
             return TyUnknown()
         }
 
-        val fieldIdentifier = fieldAccess.lowerCaseIdentifier ?: return TyUnknown()
-        if (fieldIdentifier.text !in baseTy.fields) {
-            // TODO[unification] once we know all available fields, we can be stricter about subset records.
-            if (!baseTy.isSubset) {
-                diagnostics += RecordFieldError(fieldIdentifier, fieldIdentifier.text)
+        if (fieldName !in targetTy.fields) {
+            if (!targetTy.isSubset) {
+                diagnostics += RecordFieldError(fieldIdentifier, fieldName)
             }
             return TyUnknown()
         }
 
-        val ty = baseTy.fields.getValue(fieldIdentifier.text)
-        expressionTypes[fieldAccess] = ty
+        val ty = targetTy.fields.getValue(fieldName)
+        expressionTypes[expr] = ty
         return ty
     }
 
@@ -578,7 +591,7 @@ private class InferenceScope(
     private fun inferFieldAccessorFunction(function: ElmFieldAccessorFunctionExpr): Ty {
         val field = function.identifier.text
         val tyVar = TyVar("b")
-        return TyFunction(listOf(TyRecord(mapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
+        return TyFunction(listOf(MutableTyRecord(mutableMapOf(field to tyVar), baseTy = TyVar("a"))), tyVar)
     }
 
     private fun inferNegateExpression(expr: ElmNegateExpr): Ty {
@@ -908,7 +921,14 @@ private class InferenceScope(
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
-            is TyRecord -> ty2 is TyRecord && recordAssignable(ty1, ty2)
+            is TyRecord -> {
+                ty2 is TyRecord && recordAssignable(ty1, ty2) ||
+                        ty2 is MutableTyRecord && mutableRecordAssignable(ty2, ty1)
+            }
+            is MutableTyRecord -> {
+                ty2 is TyRecord && mutableRecordAssignable(ty1, ty2) ||
+                        ty2 is MutableTyRecord && mutableRecordAssignable(ty1, ty2.asRecord())
+            }
             is TyUnion -> ty2 is TyUnion
                     && ty1.name == ty2.name
                     && ty1.module == ty2.module
@@ -921,6 +941,12 @@ private class InferenceScope(
 
         if (result) trackReplacement(ty1, ty2)
         return result
+    }
+
+    private fun mutableRecordAssignable(ty1: MutableTyRecord, ty2: TyRecord): Boolean {
+        if (!recordAssignable(ty1.asRecord(), ty2)) return false
+        ty1.fields += ty2.fields
+        return true
     }
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
@@ -1170,3 +1196,6 @@ private sealed class ParameterBindingResult {
     data class Unannotated(val params: List<Ty>, override val count: Int) : ParameterBindingResult()
     data class Other(override val count: Int) : ParameterBindingResult()
 }
+
+/** dangerous shallow copy of a mutable record for performance, use `toRecord` if the result isn't discarded. */
+private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy)

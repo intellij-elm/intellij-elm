@@ -1769,13 +1769,24 @@ main a =
         )
 """)
 
-    fun `test field accessor on unconstrained var`() = checkByText("""
+    fun `test field access on unconstrained var`() = checkByText("""
 foo : () -> ()
 foo a = a
 main a =
     let
         b = a.x + 1
         c = a.y ++ ""
+    in
+        foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
+""")
+
+    fun `test field accessors on unconstrained var`() = checkByText("""
+foo : () -> ()
+foo a = a
+main a =
+    let
+        b = (.x a) + 1
+        c = (.y a) ++ ""
     in
         foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
 """)

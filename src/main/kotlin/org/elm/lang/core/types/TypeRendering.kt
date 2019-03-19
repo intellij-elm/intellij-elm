@@ -25,7 +25,7 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
             is TyVar -> renderVar(ty)
             is TyUnit -> "()"
             is TyUnknown, TyInProgressBinding -> "unknown"
-            TyShader -> "shader"
+            is MutableTyRecord -> renderRecord(ty.toRecord())
         }
     }
 
@@ -54,6 +54,8 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
     }
 
     private fun renderUnion(ty: TyUnion): String {
+        if (ty == TyShader) return "shader"
+
         val name = buildString { renderLink(ty.name, ty.name) }
         val type = when {
             ty.parameters.isEmpty() -> name
@@ -95,13 +97,13 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
 fun Ty.renderParam(): String {
     return alias?.name?.toFirstCharLowerCased() ?: when (this) {
         is TyFunction -> "function"
+        TyShader -> "shader"
         is TyUnion -> name.toFirstCharLowerCased()
-        is TyRecord -> "record"
+        is TyRecord, is MutableTyRecord -> "record"
         is TyTuple -> renderParam()
         is TyVar -> name
         is TyUnit -> "()"
         is TyUnknown, TyInProgressBinding -> "unknown"
-        TyShader -> "shader"
     }
 }
 
@@ -114,9 +116,16 @@ private fun String.toFirstCharLowerCased(): String =
         else first().toLowerCase() + substring(1)
 
 /** An infinite sequence of possible type variable names: (a, b, ... z, a1, b1, ...) */
-fun varNames(): Sequence<String> {
-    val s = "abcdefghijklmnopqrstuvwxyz"
-    return (0..Int.MAX_VALUE).asSequence().map {
-        s[it % s.length] + if (it >= s.length) (it / s.length).toString() else ""
+fun varNames(): Sequence<String> = (0..Int.MAX_VALUE).asSequence().map { nthVarName(it) }
+
+/** return the [n]th item from [varNames], calculated directly */
+fun nthVarName(n: Int): String {
+    val letter = VAR_LETTERS[n % 26]
+    return when {
+        n < 26 -> letter.toString()
+        else -> "$letter${n / 26}"
     }
 }
+
+private const val VAR_LETTERS = "abcdefghijklmnopqrstuvwxyz"
+

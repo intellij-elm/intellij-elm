@@ -1,5 +1,7 @@
 package org.elm.lang.core.types
 
+import java.lang.RuntimeException
+
 /**
  * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
  * which could also be [TyVar]s.
@@ -48,6 +50,7 @@ class TypeReplacement(
         is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
         is TyUnit, TyInProgressBinding -> ty
+        is MutableTyRecord -> replaceRecord(ty.toRecord())
     }
 
     /*

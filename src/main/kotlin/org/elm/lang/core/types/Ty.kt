@@ -60,6 +60,17 @@ data class TyRecord(
     }
 }
 
+data class MutableTyRecord(
+        val fields: MutableMap<String, Ty>,
+        val baseTy: Ty? = null
+) : Ty() {
+    fun toRecord() = TyRecord(fields.toMap(), baseTy)
+
+    override val alias: AliasInfo? get() = null
+    override fun withAlias(alias: AliasInfo) = error("MutableTyRecord cannot have aliases")
+    override fun toString() = toRecord().toString()
+}
+
 /** A type like `String` or `Maybe a` */
 data class TyUnion(
         val module: String,
