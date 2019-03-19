@@ -43,18 +43,16 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
-        val psiFile = PsiDocumentManager.getInstance(ctx.project).getPsiFile(ctx.document) ?: return
-        if (PsiTreeUtil.hasErrorElements(psiFile)) {
-            ctx.project.showBalloon(FileHasErrorsNotificationMsg, NotificationType.WARNING)
-            return
-        }
-
         try {
             elmFormat.formatDocumentAndSetText(ctx.project, ctx.document, ctx.elmVersion, addToUndoStack = true)
         } catch (ex: ExecutionException) {
             if (isUnitTestMode) throw ex
             val message = ex.message ?: "something went wrong running elm-format"
-            ctx.project.showBalloon(message, NotificationType.ERROR, fixAction)
+            if (message.contains("SYNTAX PROBLEM", ignoreCase = true)) {
+                ctx.project.showBalloon("Please fix the syntax errors before running elm-format.", NotificationType.WARNING)
+            } else {
+                ctx.project.showBalloon(message, NotificationType.ERROR, fixAction)
+            }
         }
     }
 
@@ -77,6 +75,5 @@ class ElmExternalFormatAction : AnAction() {
 
     companion object {
         const val ID = "Elm.RunExternalElmFormat" // must stay in-sync with `plugin.xml`
-        const val FileHasErrorsNotificationMsg = "Please fix the syntax errors in this file before running elm-format."
     }
 }
