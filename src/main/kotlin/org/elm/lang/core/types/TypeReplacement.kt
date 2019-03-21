@@ -1,7 +1,5 @@
 package org.elm.lang.core.types
 
-import java.lang.RuntimeException
-
 /**
  * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
  * which could also be [TyVar]s.
@@ -14,7 +12,8 @@ import java.lang.RuntimeException
 class TypeReplacement(
         // A map of variables that should be replaced to the ty to replace them with
         replacements: Map<TyVar, Ty>,
-        private val freshen: Boolean
+        private val freshen: Boolean,
+        private val rigidify: Boolean
 ) {
     companion object {
         /**
@@ -22,7 +21,7 @@ class TypeReplacement(
          */
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
             if (replacements.isEmpty()) return ty
-            return TypeReplacement(replacements, freshen = false).replace(ty)
+            return TypeReplacement(replacements, freshen = false, rigidify = false).replace(ty)
         }
 
         /**
@@ -35,7 +34,18 @@ class TypeReplacement(
          * call from another.
          */
         fun freshenVars(ty: Ty): Ty {
-            return TypeReplacement(emptyMap(), freshen = true).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = true, rigidify = false).replace(ty)
+        }
+
+        /**
+         * Make all type variables in a [ty] rigid.
+         *
+         * Type variables in function annotations are rigid when bound to parameters; in all other
+         * cases vars are flexible. This function is used to make vars inferred as flexible rigid
+         * when binding parameters.
+         */
+        fun rigidify(ty: Ty): Ty {
+            return TypeReplacement(emptyMap(), freshen = false, rigidify = true).replace(ty)
         }
     }
 
@@ -98,11 +108,8 @@ class TypeReplacement(
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
     // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
-        if (i++ > 75) {
-            throw RuntimeException()
-        }
-        if (key !in replacements && freshen) {
-            val ty = TyVar(key.name)
+        if (key !in replacements && (freshen || rigidify)) {
+            val ty = TyVar(key.name, rigid = rigidify)
             replacements[key] = true to ty
             return ty
         }
@@ -115,6 +122,4 @@ class TypeReplacement(
         replacements[key] = true to replacedVal
         return replacedVal
     }
-
-    var i = 0
 }

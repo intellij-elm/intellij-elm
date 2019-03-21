@@ -393,7 +393,7 @@ main a = ()
 """)
 
     fun `test matched value from union constructor`() = checkByText("""
-foo : (() -> Maybe) -> () -> ()
+foo : (() -> Maybe a) -> () -> ()
 foo _ _ = ()
 
 main = foo Just ()
@@ -1836,5 +1836,20 @@ main a =
         c = baz a ""
     in
         foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
+""")
+
+    fun `test passing rigid var to function expecting concrete type`() = checkByText("""
+foo : () -> ()
+foo a = a
+
+main : a -> a
+main a =
+    foo <error descr="Type mismatch.Required: ()Found: a">a</error>
+""")
+
+    fun `test returning rigid var from function expecting concrete type`() = checkByText("""
+main : a -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: a">a</error>
 """)
 }

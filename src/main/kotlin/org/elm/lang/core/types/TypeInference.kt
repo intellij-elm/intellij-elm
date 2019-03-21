@@ -688,7 +688,9 @@ private class InferenceScope(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
     ): ParameterBindingResult {
-        val typeRefTy = valueDeclaration.typeAnnotation?.typeExpressionInference()?.value
+        val typeRefTy = valueDeclaration.typeAnnotation
+                ?.typeExpressionInference()?.value
+                ?.let { TypeReplacement.rigidify(it) }
         val patterns = decl.patterns.toList()
 
         if (typeRefTy == null) {
@@ -921,9 +923,9 @@ private class InferenceScope(
         val ty2 = getReplacement(type2)
 
         val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
-            varAssignable(ty2, ty1)
+            varAssignable(ty2, ty1, true)
         } else when (ty1) {
-            is TyVar -> varAssignable(ty1, ty2)
+            is TyVar -> varAssignable(ty1, ty2, false)
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
@@ -1019,9 +1021,8 @@ private class InferenceScope(
         return sharedAssignable && tailAssignable
     }
 
-    // TODO rigid vars
     /** Check if a [ty] can that compares unequal to a [tyVar] can be unified with it */
-    private fun varAssignable(tyVar: TyVar, ty: Ty): Boolean {
+    private fun varAssignable(tyVar: TyVar, ty: Ty, flipped: Boolean): Boolean {
         // Vars with certain names are treated as typeclasses that only unify with a limited set of
         // types.
         //
@@ -1060,6 +1061,9 @@ private class InferenceScope(
                 is TyVar -> ty.name.startsWith("number") || typeclassCompatable("compappend", tyVar.name, ty.name)
                 else -> false
             }
+            // If the var isn't a typeclass: Anything can be assigned to a rigid var, but a rigid
+            // var can only be assigned to itself and flexible vars.
+            tyVar.rigid && !flipped -> ty is TyVar && !ty.rigid
             else -> true
         }
     }

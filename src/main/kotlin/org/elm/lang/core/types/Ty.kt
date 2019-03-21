@@ -19,11 +19,17 @@ sealed class Ty {
 }
 
 // vars are not a data class because they need to be compared by identity
-/** A type variable (e.g. `a` in `Maybe a`) */
-class TyVar(val name: String) : Ty() {
+/**
+ * A type variable.
+ *
+ * Either rigid (e.g. `a` in `Maybe a`), or flexible (e.g. the type of an unannotated function parameter).
+ */
+class TyVar(val name: String, val rigid: Boolean = false) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
-    override fun toString(): String = "<$name@${(System.identityHashCode(this)).toString(16).take(3)}>"
+    override fun toString(): String {
+        return "<${if (rigid) "!" else ""}$name@${(System.identityHashCode(this)).toString(16).take(3)}>"
+    }
 }
 
 /** A tuple type like `(Int, String)` */

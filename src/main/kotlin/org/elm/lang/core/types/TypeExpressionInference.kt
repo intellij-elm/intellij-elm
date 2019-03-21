@@ -239,10 +239,6 @@ class TypeExpression(
             else -> error(typeRef, "Unexpected type reference")
         }
 
-//        if (!isInferable(declaredTy)) {
-//            return declaredTy
-//        }
-
         // This cast is safe, since parameters of type declarations are always inferred as TyVar.
         // We know the parameters haven't been replaced yet, since we just created the ty ourselves.
         @Suppress("UNCHECKED_CAST")
