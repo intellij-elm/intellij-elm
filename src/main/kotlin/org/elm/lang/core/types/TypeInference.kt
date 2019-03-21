@@ -832,7 +832,7 @@ private class InferenceScope(
 
         if (variantTy is TyFunction) {
             val ty = bindIfVar(pat, type) { variantTy.ret }
-            if (requireAssignable(pat, variantTy.ret, ty)) {
+            if (requireAssignable(pat, ty, variantTy.ret)) {
                 if (argumentPatterns.size != variantTy.parameters.size) {
                     issueError(argumentPatterns.size, variantTy.parameters.size)
                 } else {
@@ -846,7 +846,7 @@ private class InferenceScope(
             }
         } else {
             val ty = bindIfVar(pat, type) { variantTy }
-            if (requireAssignable(pat, variantTy, ty) && argumentPatterns.isNotEmpty()) {
+            if (requireAssignable(pat, ty, variantTy) && argumentPatterns.isNotEmpty()) {
                 issueError(argumentPatterns.size, 0)
             } else {
                 pat.namedParameters.forEach { setBinding(it, TyUnknown()) }

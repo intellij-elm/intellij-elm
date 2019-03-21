@@ -908,6 +908,13 @@ main =
         _ -> ()
 """)
 
+    fun `test case branches with mismatched types from pattern`() = checkByText("""
+main =
+    case Just 42 of
+        Nothing -> ""
+        Just x -> <error descr="Type mismatch.Required: StringFound: number">x</error>
+""")
+
     // https://github.com/klazuka/intellij-elm/issues/113
     fun `test case branches with union value call`() = checkByText("""
 foo : Maybe (List a)
@@ -951,7 +958,7 @@ type Baz = Qux
 main : Foo -> ()
 main arg =
     case arg of
-         <error descr="Type mismatch.Required: FooFound: Baz">Qux</error> -> ()
+         <error descr="Type mismatch.Required: BazFound: Foo">Qux</error> -> ()
 """)
 
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
@@ -1011,7 +1018,7 @@ type Qux = Qux
 main : Qux -> ()
 main arg =
     case arg of
-        <error descr="Type mismatch.Required: QuxFound: Foo a">Bar (Just {x})</error> -> x
+        <error descr="Type mismatch.Required: Foo aFound: Qux">Bar (Just {x})</error> -> x
         Baz x -> x
         _ -> ()
 """)
@@ -1023,6 +1030,14 @@ main : Foo -> ()
 main arg =
     case arg of
          <error descr="The type expects 0 arguments, but it got 1 instead.">Bar foo</error> -> foo
+""")
+
+    fun `test mismatched case branch union pattern`() = checkByText("""
+main =
+    case Just 42 of
+        Just x ->
+            "" ++ <error descr="Type mismatch.Required: StringFound: number">x</error>
+        Nothing -> ""
 """)
 
     fun `test function parameters using union patterns to unresolved type`() = checkByText("""
