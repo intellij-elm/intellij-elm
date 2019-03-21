@@ -92,10 +92,6 @@ The plugin can perform type inference on arbitrary expressions in your program. 
 
 The plugin also performs type checking, marking incompatible types in red.
 
-The current implementation of the type system does not constrain the types of parameters of unannotated
-functions, but this limitation will be removed in the future.
-
-
 # Attribution
 
 This project heavily leverages the open-source work of other IntelliJ plugin developers:

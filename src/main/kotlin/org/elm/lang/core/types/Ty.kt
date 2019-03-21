@@ -66,6 +66,12 @@ data class TyRecord(
     }
 }
 
+/**
+ * A [TyRecord] with mutable fields, only used internally by type inference. These are never cached.
+ *
+ * This is used to track multiple constraints on record types. Only records can have more than one
+ * constraint, so other types don't need a mutable version.
+ */
 data class MutableTyRecord(
         val fields: MutableMap<String, Ty>,
         val baseTy: Ty? = null
