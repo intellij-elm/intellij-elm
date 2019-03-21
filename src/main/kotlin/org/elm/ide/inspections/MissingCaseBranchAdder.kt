@@ -104,7 +104,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
             return Result.NoMissing
         }
 
-        val qualifierPrefix = ModuleScope(element.elmFile).getQualifierForTypeName(exprTy.module, exprTy.name)
+        val qualifierPrefix = ModuleScope.getQualifierForTypeName(element.elmFile, exprTy.module, exprTy.name)
                 ?: ""
 
         return Result.MissingVariants(missingBranches.mapKeys { (k, _) -> qualifierPrefix + k })

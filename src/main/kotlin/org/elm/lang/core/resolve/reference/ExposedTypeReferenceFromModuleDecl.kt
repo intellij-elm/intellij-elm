@@ -16,7 +16,7 @@ class ExposedTypeReferenceFromModuleDecl(exposedType: ElmExposedType)
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
-        return ModuleScope(element.elmFile).getDeclaredTypes().toTypedArray()
+        return ModuleScope.getDeclaredTypes(element.elmFile).toTypedArray()
     }
 
 }

@@ -17,6 +17,6 @@ class SimpleTypeReference(element: ElmReferenceElement)
             getCandidates().find { it.name == element.referenceName }
 
     private fun getCandidates(): Array<ElmNamedElement> {
-        return ModuleScope(element.elmFile).getVisibleTypes().all.toTypedArray()
+        return ModuleScope.getVisibleTypes(element.elmFile).all.toTypedArray()
     }
 }

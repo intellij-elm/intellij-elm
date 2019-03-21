@@ -20,7 +20,7 @@ class OptimizeImportsFix : LocalQuickFix {
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
         val file = descriptor.psiElement?.containingFile as? ElmFile ?: return
-        val visitor = ImportVisitor(ModuleScope(file).getImportDecls())
+        val visitor = ImportVisitor(ModuleScope.getImportDecls(file))
 
         file.accept(object : PsiRecursiveElementWalkingVisitor() {
             override fun visitElement(element: PsiElement) {
