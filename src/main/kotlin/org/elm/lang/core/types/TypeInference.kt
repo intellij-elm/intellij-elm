@@ -72,7 +72,7 @@ private class InferenceScope(
     private val expressionTypes: MutableMap<ElmPsiElement, Ty> = mutableMapOf()
 
     /** The unification table used for unannotated parameters */
-    private val replacements: MutableMap<TyVar, Ty> = parent?.replacements ?: mutableMapOf()
+    private val replacements: DisjointSet = parent?.replacements ?: DisjointSet()
 
     private val ancestors: Sequence<InferenceScope> get() = generateSequence(this) { it.parent }
 
@@ -374,7 +374,7 @@ private class InferenceScope(
     private fun inferFieldAccess(expr: ElmFieldAccessExpr): Ty {
         val target = expr.targetExpr
         val targetType = inferFieldAccessTarget(target)
-        val targetTy = getReplacement(targetType)
+        val targetTy = replacements[targetType]
         val fieldIdentifier = expr.lowerCaseIdentifier ?: return TyUnknown()
         val fieldName = fieldIdentifier.text
 
@@ -745,7 +745,7 @@ private class InferenceScope(
     }
 
     private fun bindPattern(pat: ElmFunctionParamOrPatternChildTag, type: Ty, isParameter: Boolean) {
-        val ty = getReplacement(type)
+        val ty = replacements[type]
         when (pat) {
             is ElmAnythingPattern -> {
             }
@@ -930,8 +930,8 @@ private class InferenceScope(
 
     /** Return `false` if [type1] definitely cannot be assigned to [type2] */
     private fun assignable(type1: Ty, type2: Ty): Boolean {
-        val ty1 = getReplacement(type1)
-        val ty2 = getReplacement(type2)
+        val ty1 = replacements[type1]
+        val ty2 = replacements[type2]
 
         val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
             varAssignable(ty2, ty1, true)
@@ -1111,24 +1111,6 @@ private class InferenceScope(
                 replacements[ty1] = ty2
             }
         }
-    }
-
-    private fun getReplacement(ty: Ty): Ty {
-        if (ty !is TyVar) return ty
-
-        var node: TyVar = ty
-        var parent = replacements[node]
-
-        // treat the replacements as a disjoint-set and use Tarjan's algorithm for path compression
-        // to keep access near constant time
-        while (parent is TyVar) {
-            val grandparent = replacements[parent] ?: return parent
-            replacements[node] = grandparent
-            node = parent
-            parent = grandparent
-        }
-
-        return parent ?: node
     }
 
     /** If the [ty] corresponding to [elem] is a [TyVar], bind [ty] to [default]; otherwise return [ty] */

@@ -24,6 +24,8 @@ class TypeReplacement(
             return TypeReplacement(replacements, freshen = false, rigidify = false).replace(ty)
         }
 
+        fun replace(ty: Ty, replacements: DisjointSet): Ty = replace(ty, replacements.asMap())
+
         /**
          * Replace all [TyVar]s in a [ty] with new copies with the same names.
          *
