@@ -592,19 +592,19 @@ main (Foo foo) = <error descr="Type mismatch.Required: FooFound: ()">foo</error>
     fun `test union pattern in parameter with too many args`() = checkByText("""
 type Foo = Foo ()
 main : Foo -> ()
-main (<error descr="The function expects 1 argument, but it got 2 instead.">Foo foo bar</error>) = foo
+main (<error descr="The type expects 1 argument, but it got 2 instead.">Foo foo bar</error>) = foo
 """)
 
     fun `test union pattern in parameter with too few args`() = checkByText("""
 type Foo = Foo () ()
 main : Foo -> ()
-main (<error descr="The function expects 2 arguments, but it got 1 instead.">Foo foo</error>) = foo
+main (<error descr="The type expects 2 arguments, but it got 1 instead.">Foo foo</error>) = foo
 """)
 
     fun `test union pattern in parameter with too many args for non-constructor`() = checkByText("""
 type Foo = Foo
 main : Foo -> ()
-main (<error descr="This value is not a function, but it was given 1 argument.">Foo foo</error>) = foo
+main (<error descr="The type expects 0 arguments, but it got 1 instead.">Foo foo</error>) = foo
 """)
 
     fun `test mismatched record subset pattern in parameter`() = checkByText("""
@@ -954,12 +954,6 @@ main arg =
          <error descr="Type mismatch.Required: FooFound: Baz">Qux</error> -> ()
 """)
 
-    /*
-    qwe : List a -> ()
-qwe a = case a of
-    Just b -> ()
-     */
-
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Foo
     = Bar ()
@@ -1008,6 +1002,27 @@ main arg =
         <error descr="Unresolved reference 'Bar'">Bar (Just {x})</error> -> x
         <error descr="Unresolved reference 'Baz'">Baz x</error> -> x
         _ -> ()
+""")
+
+    fun `test case branches using union patterns to mismatched type`() = checkByText("""
+type Foo a = Bar (Maybe a) | Baz a
+type Qux = Qux
+
+main : Qux -> ()
+main arg =
+    case arg of
+        <error descr="Type mismatch.Required: QuxFound: Foo a">Bar (Just {x})</error> -> x
+        Baz x -> x
+        _ -> ()
+""")
+
+    fun `test case branches with union pattern referencing invalid arg`() = checkByText("""
+type Foo = Bar
+
+main : Foo -> ()
+main arg =
+    case arg of
+         <error descr="The type expects 0 arguments, but it got 1 instead.">Bar foo</error> -> foo
 """)
 
     fun `test function parameters using union patterns to unresolved type`() = checkByText("""

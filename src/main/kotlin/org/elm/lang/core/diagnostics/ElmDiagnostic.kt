@@ -17,7 +17,7 @@ class ArgumentCountError(
 ) : ElmDiagnostic(element) {
     override val message: String
         get() =
-            if (expected == 0) "This value is not a function, but it was given $actual ${pl(actual, "argument")}."
+            if (expected == 0 && !isType) "This value is not a function, but it was given $actual ${pl(actual, "argument")}."
             else "The ${if (isType) "type" else "function"} expects $expected ${pl(expected, "argument")}, but it got $actual instead."
 }
 

@@ -805,13 +805,13 @@ private class InferenceScope(
         val variant = pat.reference.resolve() as? ElmUnionVariant
         val variantTy = variant?.typeExpressionInference()?.value
 
-        if (variantTy == null) {
+        if (variantTy == null || !isInferable(variantTy)) {
             pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
             return
         }
 
         fun issueError(actual: Int, expected: Int) {
-            diagnostics += ArgumentCountError(pat, actual, expected)
+            diagnostics += ArgumentCountError(pat, actual, expected, true)
             pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         }
 
@@ -828,11 +828,15 @@ private class InferenceScope(
                         if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
                     }
                 }
+            } else {
+                pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
             }
         } else {
             val ty = bindIfVar(pat, type) { variantTy }
             if (requireAssignable(pat, variantTy, ty) && argumentPatterns.isNotEmpty()) {
                 issueError(argumentPatterns.size, 0)
+            } else {
+                pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
             }
         }
     }
