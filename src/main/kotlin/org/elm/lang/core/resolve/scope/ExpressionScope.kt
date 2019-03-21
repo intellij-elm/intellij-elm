@@ -18,7 +18,7 @@ class ExpressionScope(val element: PsiElement) {
 
         treeWalkUp(element) {
             if (it is ElmFile) {
-                results.addAll(ModuleScope(it).getVisibleValues().all)
+                results.addAll(ModuleScope.getVisibleValues(it).all)
                 return@treeWalkUp false // stop
             }
 

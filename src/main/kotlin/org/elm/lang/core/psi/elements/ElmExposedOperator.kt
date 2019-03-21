@@ -59,7 +59,7 @@ class ExposedOperatorModuleReference(exposedValue: ElmExposedOperator
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] verify: this was copied from ElmExposedValue's ref
-        return ModuleScope(element.elmFile).getDeclaredValues().toTypedArray()
+        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
     }
 }
 

@@ -29,7 +29,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
     return CachedValuesManager.getCachedValue(this, TYPE_INFERENCE_KEY) {
         // Elm lets you shadow imported names, including auto-imported names, so only count names
         // declared in this file as shadowable.
-        val shadowableNames = ModuleScope(elmFile).getVisibleValues().topLevel.mapNotNullTo(mutableSetOf()) { it.name }
+        val shadowableNames = ModuleScope.getVisibleValues(elmFile).topLevel.mapNotNullTo(mutableSetOf()) { it.name }
         val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), false, null).beginDeclarationInference(this)
         CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
     }

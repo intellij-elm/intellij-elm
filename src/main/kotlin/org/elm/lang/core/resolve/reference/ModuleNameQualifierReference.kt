@@ -36,7 +36,7 @@ class ModuleNameQualifierReference<T : ElmReferenceElement>(
 
     override fun resolveInner(): ElmNamedElement? {
         val clientFile = element.elmFile
-        val importDecls = ModuleScope(clientFile).getImportDecls()
+        val importDecls = ModuleScope.getImportDecls(clientFile)
 
         // First, check to see if it resolves to an aliased import
         importDecls.mapNotNull { it.asClause }

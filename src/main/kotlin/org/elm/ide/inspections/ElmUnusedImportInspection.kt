@@ -28,7 +28,7 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         val file = session.file as? ElmFile
                 ?: return super.buildVisitor(holder, isOnTheFly, session)
-        val visitor = ImportVisitor(ModuleScope(file).getImportDecls())
+        val visitor = ImportVisitor(ModuleScope.getImportDecls(file))
         session.putUserData(visitorKey, visitor)
         return visitor
     }

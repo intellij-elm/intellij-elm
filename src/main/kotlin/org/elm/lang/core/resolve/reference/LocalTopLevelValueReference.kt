@@ -16,5 +16,5 @@ class LocalTopLevelValueReference(element: ElmReferenceElement)
     }
 
     override fun getVariants() =
-            ModuleScope(element.elmFile).getDeclaredValues().toTypedArray()
+            ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
 }

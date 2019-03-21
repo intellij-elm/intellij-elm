@@ -40,7 +40,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 is ElmValueExpr -> {
                     if (qualifierPrefix.isEmpty()) {
                         ExpressionScope(parent).getVisibleValues().forEach { result.add(it) }
-                        ModuleScope(file).getVisibleConstructors().all.forEach { result.add(it) }
+                        ModuleScope.getVisibleConstructors(file).all.forEach { result.add(it) }
                         GlobalScope.builtInValues.forEach { result.add(it) }
                     } else {
                         /* TODO Make a distinction between completion results that are already imported
@@ -54,7 +54,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 }
                 is ElmUnionPattern -> {
                     if (qualifierPrefix.isEmpty()) {
-                        ModuleScope(file).getVisibleConstructors().all
+                        ModuleScope.getVisibleConstructors(file).all
                                 .filter { it is ElmUnionVariant }
                                 .forEach { result.add(it) }
                     } else {
@@ -66,7 +66,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 }
                 is ElmTypeRef -> {
                     if (qualifierPrefix.isEmpty()) {
-                        ModuleScope(file).getVisibleTypes().all.forEach { result.add(it) }
+                        ModuleScope.getVisibleTypes(file).all.forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }
                     } else {
                         ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
@@ -94,7 +94,7 @@ object ElmQualifiableRefSuggestor : Suggestor {
         // Aliases are forbidden from having dots in the name. So if the qualifier prefix is empty, then
         // we are in a state where aliases can (and should) be suggested.
         if (qualifierPrefix.isEmpty()) {
-            ModuleScope(file).getAliasDecls().forEach { result.add(it) }
+            ModuleScope.getAliasDecls(file).forEach { result.add(it) }
         }
     }
 

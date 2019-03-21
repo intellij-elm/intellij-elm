@@ -113,7 +113,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
         if (element !is ElmValueExpr && element !is ElmTypeRef) return false
         val elmFile = element.containingFile as? ElmFile ?: return false
 
-        val importDecl = ModuleScope(elmFile).getImportDecls().find { it.moduleQID.text == ref.qualifierPrefix }
+        val importDecl = ModuleScope.getImportDecls(elmFile).find { it.moduleQID.text == ref.qualifierPrefix }
                 ?: return false
         val aliasName = importDecl.asClause?.upperCaseIdentifier?.text ?: return false
 
