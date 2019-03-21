@@ -36,11 +36,9 @@ class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIn
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        object : WriteCommandAction.Simple<Unit>(project) {
-            override fun run() {
-                generateDecl(project, editor, context)
-            }
-        }.execute()
+        WriteCommandAction.writeCommandAction(project).run<Throwable> {
+            generateDecl(project, editor, context)
+        }
     }
 
     private fun generateDecl(project: Project, editor: Editor, context: Context) {
