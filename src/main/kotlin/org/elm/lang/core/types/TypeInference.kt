@@ -2,10 +2,7 @@ package org.elm.lang.core.types
 
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.*
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.OperatorAssociativity.NON
@@ -13,7 +10,8 @@ import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 
-private val TYPE_INFERENCE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TYPE_INFERENCE_KEY")
+private val TYPE_INFERENCE_KEY: Key<ParameterizedCachedValue<InferenceResult, Set<ElmValueDeclaration>>> =
+        Key.create("TYPE_INFERENCE_KEY")
 
 /** Find the inference result that contains the given element */
 fun PsiElement.findInference(): InferenceResult? {
@@ -26,13 +24,13 @@ fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
 
 
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
-    return CachedValuesManager.getCachedValue(this, TYPE_INFERENCE_KEY) {
+    return CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TYPE_INFERENCE_KEY, { useActiveScopes ->
         // Elm lets you shadow imported names, including auto-imported names, so only count names
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope.getVisibleValues(elmFile).topLevel.mapNotNullTo(mutableSetOf()) { it.name }
-        val result = InferenceScope(shadowableNames, activeScopes.toMutableSet(), false, null).beginDeclarationInference(this)
+        val result = InferenceScope(shadowableNames, useActiveScopes.toMutableSet(), false, null).beginDeclarationInference(this)
         CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
-    }
+    }, /*trackValue*/ false, /*parameter*/ activeScopes)
 }
 
 /**
