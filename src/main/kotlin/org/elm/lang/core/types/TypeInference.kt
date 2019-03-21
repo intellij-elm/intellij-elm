@@ -933,7 +933,7 @@ private class InferenceScope(
         val ty1 = replacements[type1]
         val ty2 = replacements[type2]
 
-        val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty2 is TyVar) {
+        val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty1 !is TyVar && ty2 is TyVar) {
             varAssignable(ty2, ty1, true)
         } else when (ty1) {
             is TyVar -> varAssignable(ty1, ty2, false)
@@ -1073,8 +1073,8 @@ private class InferenceScope(
                 else -> false
             }
             // If the var isn't a typeclass: Anything can be assigned to a rigid var, but a rigid
-            // var can only be assigned to itself and flexible vars.
-            tyVar.rigid && !flipped -> ty is TyVar && !ty.rigid
+            // var can only be assigned to itself and flexible vars that aren't typeclasses.
+            tyVar.rigid && !flipped -> ty is TyVar && !ty.rigid && getTypeclassName(ty.name) == null
             else -> true
         }
     }

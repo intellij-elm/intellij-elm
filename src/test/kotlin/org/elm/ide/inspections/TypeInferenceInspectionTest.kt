@@ -1880,4 +1880,11 @@ main : a -> ()
 main a =
     <error descr="Type mismatch.Required: ()Found: a">a</error>
 """)
+
+    fun `test rigid vars within tuple`() = checkByText("""
+main : (a, a) -> a
+main (x, y) =
+  <error descr="Type mismatch.Required: numberFound: a">x</error> + 1
+""")
+
 }
