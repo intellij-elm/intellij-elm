@@ -467,7 +467,7 @@ private class InferenceScope(
             f.lowerCaseIdentifier to inferExpression(f.expression)
         }
 
-        // If there's no base id, then we the record is just the type of the fields
+        // If there's no base id, then the record is just the type of the fields
         val recordIdentifier = record.baseRecordIdentifier
                 ?: return TyRecord(fields.mapKeys { (k, _) -> k.text })
 
@@ -487,15 +487,26 @@ private class InferenceScope(
             }
         }
 
-        if (baseTy !is TyRecord) {
-            diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
-            return TyUnknown()
+        val baseFields = when (baseTy) {
+            is TyRecord -> baseTy.fields
+            is MutableTyRecord -> baseTy.fields
+            else -> {
+                diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
+                return TyUnknown()
+            }
         }
 
         for ((name, ty) in fields) {
-            val expected = baseTy.fields[name.text]
+            val expected = baseFields[name.text]
             if (expected == null) {
-                if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
+                when (baseTy) {
+                    is TyRecord -> {
+                        if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
+                    }
+                    is MutableTyRecord -> {
+                        baseTy.fields[name.text] = ty
+                    }
+                }
             } else {
                 requireAssignable(name, ty, expected)
             }

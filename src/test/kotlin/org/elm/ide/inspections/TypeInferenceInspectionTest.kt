@@ -1838,6 +1838,19 @@ main a =
         foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
 """)
 
+    fun `test unconstrained record pattern used as extension base`() = checkByText("""
+foo : () -> ()
+foo a = a
+
+main ({x} as a) ({y} as b) =
+    let
+        c = { a | z = { b | w = () } }
+        d = x + 1
+        e = y ++ ""
+    in
+        foo <error descr="Type mismatch.Required: ()Found: { a | x : number, z : { b | y : String, w : () } }">a</error>
+""")
+
     fun `test passing rigid var to function expecting concrete type`() = checkByText("""
 foo : () -> ()
 foo a = a
