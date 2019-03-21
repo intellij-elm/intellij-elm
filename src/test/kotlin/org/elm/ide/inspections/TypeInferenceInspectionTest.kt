@@ -349,18 +349,17 @@ recordAccessor = <error descr="Type mismatch.Required: FooFound: ()">{b = {a = {
 """)
 
     fun `test non-record in middle of accessor chain`() = checkByText("""
-type Foo = Bar
 type alias A = {x: ()}
 type alias B = {a: A}
 type alias C = {b: B}
-fieldAccessor : C -> Foo
-fieldAccessor c = c.b.a.<error descr="Type mismatch.Required: recordFound: ()">x</error>.z.z
+fieldAccessor : C -> ()
+fieldAccessor c = <error descr="Type mismatch.Required: recordFound: ()">c.b.a.x</error>.z.z
 
 exprAccessor : ()
-exprAccessor = (C (B (A ()))).b.a.<error descr="Type mismatch.Required: recordFound: ()">x</error>.z.z
+exprAccessor = <error descr="Type mismatch.Required: recordFound: ()">(C (B (A ()))).b.a.x</error>.z.z
 
 recordAccessor : ()
-recordAccessor = {b = {a = { x = () } } }.b.a.<error descr="Type mismatch.Required: recordFound: ()">x</error>.z.z
+recordAccessor = <error descr="Type mismatch.Required: recordFound: ()">{b = {a = { x = () } } }.b.a.x</error>.z.z
 """)
 
     fun `test missing field in accessor chains`() = checkByText("""
@@ -1787,6 +1786,31 @@ main a =
     let
         b = (.x a) + 1
         c = (.y a) ++ ""
+    in
+        foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
+""")
+
+    fun `test updating record fields with own field on unconstrained var`() = checkByText("""
+foo : () -> ()
+foo a = a
+main a =
+    let
+        b = { a | x = a.x + 1 }
+        c = { a | y = a.y ++ "" }
+    in
+        foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
+""")
+
+    fun `test extension record param with unconstrained var`() = checkByText("""
+foo : () -> ()
+foo a = a
+bar a b = { a | x = b }
+baz a b = { a | y = b }
+
+main a =
+    let
+        b = bar a 1
+        c = baz a ""
     in
         foo <error descr="Type mismatch.Required: ()Found: { a | x : number, y : String }">a</error>
 """)

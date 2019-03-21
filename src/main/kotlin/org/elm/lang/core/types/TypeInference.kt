@@ -390,8 +390,7 @@ private class InferenceScope(
 
         if (targetTy !is TyRecord) {
             if (isInferable(targetTy)) {
-                val errorElem = if (target is ElmFieldAccessExpr) fieldIdentifier else target
-                diagnostics += TypeMismatchError(errorElem, targetTy, TyVar("record"))
+                diagnostics += TypeMismatchError(target, targetTy, TyVar("record"))
             }
             return TyUnknown()
         }
@@ -981,10 +980,9 @@ private class InferenceScope(
             else -> error("impossible")
         }
 
-        // We need to unify the base var with the record being assigned for the case where we have
-        // an alias to an extension record constructor. We only do this if the records are
-        // different, since that would incorrectly create a recursive type.
-        if (result && ty2.baseTy is TyVar && (ty1.baseTy == null || ty1.fields != ty2.fields)) {
+        // If we're assigning a concrete record to an extension, set the type of the extension base
+        // var to the concrete record.
+        if (result && ty1.baseTy == null && ty2.baseTy is TyVar) {
             trackReplacement(ty1, ty2.baseTy)
         }
         return result
@@ -1076,14 +1074,20 @@ private class InferenceScope(
 
     private fun trackReplacement(ty1: Ty, ty2: Ty) {
         if (ty1 == ty2) return
-        // assigning anything to a variable fixes the type of that variable
+        // assigning anything to a variable constrains the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             replacements[ty2] = ty1
         }
-        // unification: assigning a var to a type also restricts the vars type, but only if not
+        // unification: assigning a var to a type also constrains the var, but only if not
         // assigning it to another var.
         if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
-            replacements[ty1] = ty2
+            // If the var is being assigned to an extension record, make the constraint mutable,
+            // since other field constraints could be added later.
+            if (ty2 is TyRecord && ty2.isSubset) {
+                replacements[ty1] = MutableTyRecord(ty2.fields.toMutableMap(), ty2.baseTy)
+            } else {
+                replacements[ty1] = ty2
+            }
         }
     }
 

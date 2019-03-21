@@ -98,6 +98,9 @@ class TypeReplacement(
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
     // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
+        if (i++ > 75) {
+            throw RuntimeException()
+        }
         if (key !in replacements && freshen) {
             val ty = TyVar(key.name)
             replacements[key] = true to ty
@@ -112,4 +115,6 @@ class TypeReplacement(
         replacements[key] = true to replacedVal
         return replacedVal
     }
+
+    var i = 0
 }
