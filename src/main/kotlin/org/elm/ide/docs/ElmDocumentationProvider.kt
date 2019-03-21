@@ -55,19 +55,17 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
 
 private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildString {
     val parent = decl.parent as? ElmValueDeclaration ?: return null
-    val typeAnnotation = parent.typeAnnotation
-
+    val ty = decl.findInference()?.ty
+    val id = decl.lowerCaseIdentifier.text
     definition {
-        if (typeAnnotation != null) {
-            val id = (typeAnnotation.lowerCaseIdentifier ?: typeAnnotation.operatorIdentifier) ?: return null
-            val ty = typeAnnotation.typeExpressionInference()?.value ?: return null
-            b { append(id.text) }
+        if (ty != null && ty !is TyUnknown) {
+            b { append(id) }
             append(" : ")
             append(ty.renderedText(true, false))
             append("\n")
         }
 
-        b { append(decl.lowerCaseIdentifier.text) }
+        b {append(id) }
         for (pat in decl.patterns) {
             append(" ")
             // As clauses can't appear at the top level, but can appear inside parentheses

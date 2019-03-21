@@ -22,7 +22,6 @@ fun PsiElement.findInference(): InferenceResult? {
 /** Find the type of a given element, if the element is a value expression or declaration */
 fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
 
-// TODO[aj]: make sure that these cached values don't contain mutable records
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     return CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TYPE_INFERENCE_KEY, { useActiveScopes ->
         // Elm lets you shadow imported names, including auto-imported names, so only count names
@@ -91,9 +90,8 @@ private class InferenceScope(
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
         // references in expressions that contain syntax errors can result in infinite recursion and
         // surprising bugs.
-        // We don't currently infer recursive functions in order to avoid infinite loops in the inference.
         if (checkRecursion(declaration) || assignee == null || PsiTreeUtil.hasErrorElements(assignee)) {
-            return InferenceResult(expressionTypes, diagnostics, TyUnknown())
+            return replacedResult(TyUnknown())
         }
 
         activeScopes += declaration
@@ -105,7 +103,7 @@ private class InferenceScope(
         // The body of pattern declarations is inferred as part of parameter binding, so there's no
         // more to do here.
         if (declaration.pattern != null) {
-            return InferenceResult(expressionTypes, diagnostics, TyUnknown())
+            return replacedResult(TyUnknown())
         }
 
         // For function declarations, we need to infer the body and check that it matches the
@@ -128,12 +126,12 @@ private class InferenceScope(
         val ty = when (binding) {
             is ParameterBindingResult.Annotated -> binding.ty
             is ParameterBindingResult.Unannotated -> {
-                if (binding.count == 0) TypeReplacement.replace(bodyTy, replacements)
-                else TypeReplacement.replace(TyFunction(binding.params, bodyTy).uncurry(), replacements)
+                if (binding.count == 0) bodyTy
+                else TyFunction(binding.params, bodyTy).uncurry()
             }
             is ParameterBindingResult.Other -> bodyTy
         }
-        return InferenceResult(expressionTypes, diagnostics, ty)
+        return replacedResult(ty)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
@@ -141,8 +139,7 @@ private class InferenceScope(
         val paramVars = uniqueVars(patternList.size)
         patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
-        val ty = TypeReplacement.replace(TyFunction(paramVars, bodyTy).uncurry(), replacements)
-        return InferenceResult(expressionTypes, diagnostics, ty)
+        return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
     }
 
     private fun beginLetInInference(letIn: ElmLetInExpr): InferenceResult {
@@ -213,6 +210,12 @@ private class InferenceScope(
         }
 
         return isRecursive
+    }
+
+    private fun replacedResult(ty: Ty): InferenceResult {
+        val exprs = expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
+        val ret = TypeReplacement.replace(ty, replacements)
+        return InferenceResult(exprs, diagnostics, ret)
     }
 
     //</editor-fold>

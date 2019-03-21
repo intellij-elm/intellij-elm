@@ -97,7 +97,7 @@ main = f (g 'x' {-caret-})
 
     fun `test lambda`() = checkByText("""
 main = (\a b -> "done") "hi"{-caret-}
-""", "a → b → String")
+""", "String → b → String")
 
     fun `test expression`() = checkByText("""
 main = ((+) 1) 1{-caret-}

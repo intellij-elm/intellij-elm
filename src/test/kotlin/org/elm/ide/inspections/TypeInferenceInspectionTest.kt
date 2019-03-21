@@ -1664,6 +1664,14 @@ main : Int
 main = bar <error descr="Type mismatch.Required: IntFound: String">""</error>
 """)
 
+    fun `test using constrained var in tuple`() = checkByText("""
+foo a = ((), "", a + 1)
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: number → ((), String, number)">foo</error>
+""")
+
     fun `test using constrained var in let`() = checkByText("""
 bar : String -> String
 bar a = a
