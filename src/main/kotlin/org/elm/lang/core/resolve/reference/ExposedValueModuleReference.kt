@@ -15,7 +15,7 @@ class ExposedValueModuleReference(exposedValue: ElmExposedValue)
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
-        return ModuleScope(element.elmFile).getDeclaredValues().toTypedArray()
+        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
     }
 
 }

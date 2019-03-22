@@ -48,10 +48,8 @@ class RemoveExposureIntention : ElmAtCaretIntentionActionBase<RemoveExposureInte
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        object : WriteCommandAction.Simple<Unit>(project) {
-            override fun run() {
-                context.exposingList.removeItem(context.element)
-            }
-        }.execute()
+        WriteCommandAction.writeCommandAction(project).run<Throwable> {
+            context.exposingList.removeItem(context.element)
+        }
     }
 }

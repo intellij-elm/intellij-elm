@@ -44,10 +44,8 @@ class AddExposureIntention : ElmAtCaretIntentionActionBase<AddExposureIntention.
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        object : WriteCommandAction.Simple<Unit>(project) {
-            override fun run() {
-                context.exposingList.addItem(context.nameToExpose)
-            }
-        }.execute()
+        WriteCommandAction.writeCommandAction(project).run<Throwable> {
+            context.exposingList.addItem(context.nameToExpose)
+        }
     }
 }

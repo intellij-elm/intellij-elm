@@ -94,7 +94,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         else
             factory.createImportExposing(candidate.moduleName, listOf(candidate.nameToBeExposed))
 
-        val existingImport = ModuleScope(file).getImportDecls()
+        val existingImport = ModuleScope.getImportDecls(file)
                 .find { it.moduleQID.text == candidate.moduleName }
         if (existingImport != null) {
             // merge with existing import
@@ -120,7 +120,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
      * Returns the node which will *follow* the new import clause
      */
     private fun getInsertPosition(file: ElmFile, moduleName: String): ASTNode {
-        val existingImports = ModuleScope(file).getImportDecls()
+        val existingImports = ModuleScope.getImportDecls(file)
         return when {
             existingImports.isEmpty() -> prepareInsertInNewSection(file)
             else -> getSortedInsertPosition(moduleName, existingImports)

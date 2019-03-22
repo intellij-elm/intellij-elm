@@ -42,7 +42,7 @@ class ImportScope(val elmFile: ElmFile) {
             val implicitScopes = GlobalScope.implicitModulesMatching(qualifierPrefix, clientFile)
                     .map { ImportScope(it.elmFile) }
 
-            val explicitScopes = ModuleScope(clientFile).importDeclsForQualifierPrefix(qualifierPrefix)
+            val explicitScopes = ModuleScope.importDeclsForQualifierPrefix(clientFile, qualifierPrefix)
                     .mapNotNull { ImportScope.fromImportDecl(it) }
 
             return if (importsOnly) {
@@ -65,7 +65,7 @@ class ImportScope(val elmFile: ElmFile) {
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope(elmFile).getDeclaredValues()
+            return ModuleScope.getDeclaredValues(elmFile)
 
         val exposingList = moduleDecl.exposingList
                 ?: return emptyList()
@@ -86,7 +86,7 @@ class ImportScope(val elmFile: ElmFile) {
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope(elmFile).getDeclaredTypes()
+            return ModuleScope.getDeclaredTypes(elmFile)
 
         return moduleDecl.exposingList?.exposedTypeList
                 ?.mapNotNull { it.reference.resolve() }
@@ -101,7 +101,7 @@ class ImportScope(val elmFile: ElmFile) {
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope(elmFile).getDeclaredConstructors()
+            return ModuleScope.getDeclaredConstructors(elmFile)
 
         return moduleDecl.exposingList
                 ?.exposedTypeList

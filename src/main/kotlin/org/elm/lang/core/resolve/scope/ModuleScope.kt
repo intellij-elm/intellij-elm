@@ -36,19 +36,18 @@ data class VisibleNames(
 }
 
 /**
- * A scope that provides access to declarations within the module as well as declarations
- * that have been imported into the module. You can think of it as the view of the module
- * from the inside
+ * A scope that provides access to declarations within the Elm module/file as well as declarations
+ * that have been imported into the module. You can think of it as the view of the module from the inside.
  *
  * @see ImportScope for the view of the module from the outside
  */
-class ModuleScope(val elmFile: ElmFile) {
+object ModuleScope {
 
-    fun getImportDecls() =
+    fun getImportDecls(elmFile: ElmFile) =
             elmFile.directChildren.filterIsInstance<ElmImportClause>().toList()
 
-    fun getAliasDecls() =
-            getImportDecls().mapNotNull { it.asClause }
+    fun getAliasDecls(elmFile: ElmFile) =
+            getImportDecls(elmFile).mapNotNull { it.asClause }
 
 
     /**
@@ -67,8 +66,8 @@ class ModuleScope(val elmFile: ElmFile) {
      * foo = List.<whatever> -- where <whatever> can come from either `List` or `List.Extra`
      * ```
      */
-    fun importDeclsForQualifierPrefix(qualifierPrefix: String) =
-            getImportDecls().filter {
+    fun importDeclsForQualifierPrefix(elmFile: ElmFile, qualifierPrefix: String) =
+            getImportDecls(elmFile).filter {
                 // If a module has an alias, then the alias hides the original module name. (issue #93)
                 qualifierPrefix == it.asClause?.name ?: it.moduleQID.text
             }
@@ -92,8 +91,8 @@ class ModuleScope(val elmFile: ElmFile) {
      * - `getQualifierForTypeName(A, B)` -> `""`
      * - `getQualifierForTypeName(X, Y)` -> `null`
      */
-    fun getQualifierForTypeName(module: String, name: String): String? =
-            getImportDecls()
+    fun getQualifierForTypeName(elmFile: ElmFile, module: String, name: String): String? =
+            getImportDecls(elmFile)
                     .find { it.moduleQID.text == module }
                     ?.let { importDecl ->
                         when {
@@ -106,7 +105,7 @@ class ModuleScope(val elmFile: ElmFile) {
 
     // VALUES
 
-    fun getDeclaredValues(): List<ElmNamedElement> {
+    fun getDeclaredValues(elmFile: ElmFile): List<ElmNamedElement> {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_VALUES_KEY) {
             val valueDecls = elmFile.getValueDeclarations().flatMap {
                 it.declaredNames(includeParameters = false)
@@ -118,10 +117,10 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-    fun getVisibleValues(): VisibleNames {
+    fun getVisibleValues(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_VALUES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
-            val fromTopLevel = getDeclaredValues()
+            val fromTopLevel = getDeclaredValues(elmFile)
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportNames(it) }
             val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
@@ -159,7 +158,7 @@ class ModuleScope(val elmFile: ElmFile) {
     // TYPES
 
 
-    fun getDeclaredTypes(): List<ElmNamedElement> {
+    fun getDeclaredTypes(elmFile: ElmFile): List<ElmNamedElement> {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_KEY) {
             val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
                     (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
@@ -168,10 +167,10 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-    fun getVisibleTypes(): VisibleNames {
+    fun getVisibleTypes(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_TYPES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleTypes() ?: emptyList()
-            val fromTopLevel = getDeclaredTypes()
+            val fromTopLevel = getDeclaredTypes(elmFile)
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportTypes(it) }
             val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
@@ -200,7 +199,7 @@ class ModuleScope(val elmFile: ElmFile) {
     // UNION CONSTRUCTORS AND RECORD CONSTRUCTORS
 
 
-    fun getDeclaredConstructors(): List<ElmNamedElement> {
+    fun getDeclaredConstructors(elmFile: ElmFile): List<ElmNamedElement> {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_CONSTRUCTORS_KEY) {
             val declaredConstructors = listOf(
                     elmFile.getTypeDeclarations().flatMap { it.unionVariantList },
@@ -211,10 +210,10 @@ class ModuleScope(val elmFile: ElmFile) {
     }
 
 
-    fun getVisibleConstructors(): VisibleNames {
+    fun getVisibleConstructors(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_CONSTRUCTORS_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleConstructors() ?: emptyList()
-            val fromTopLevel = getDeclaredConstructors()
+            val fromTopLevel = getDeclaredConstructors(elmFile)
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportConstructors(it) }
             val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)

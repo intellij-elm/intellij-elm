@@ -55,7 +55,6 @@ class LocalOperatorReference(element: ElmReferenceElement)
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] filter the variants to just include binary operators
-        return ModuleScope(element.elmFile).getDeclaredValues()
-                .toTypedArray()
+        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
     }
 }
