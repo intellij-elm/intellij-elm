@@ -19,6 +19,7 @@ import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
@@ -28,18 +29,14 @@ import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.ElmError
 import org.elm.workspace.compiler.Region
 import org.elm.workspace.compiler.Start
-import java.awt.Color
-import java.awt.Component
-import java.awt.Dimension
+import java.awt.*
 import java.awt.font.TextAttribute
 import java.nio.file.Path
-import javax.swing.JComponent
-import javax.swing.JTable
-import javax.swing.JTextPane
-import javax.swing.ListSelectionModel
-import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+import javax.swing.*
+import javax.swing.ScrollPaneConstants.*
+import javax.swing.border.BevelBorder
 import javax.swing.border.EmptyBorder
+import javax.swing.border.SoftBevelBorder
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 import kotlin.math.sign
@@ -156,24 +153,55 @@ class ElmCompilerPanel(
 
     private val emptyBorder = EmptyBorder(10, 10, 10, 10)
 
+    private var mainText: JBTextField
+
     init {
         setToolbar(createToolbar())
 
         errorContent = JBSplitter("ElmCompilerErrorPanel", 0.4F)
-        errorContent.firstComponent = JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
+        mainText = JBTextField("")
+        mainText.alignmentX = Component.LEFT_ALIGNMENT
+        mainText.isEditable = false
+        mainText.border = SoftBevelBorder(BevelBorder.LOWERED)
+        mainText.background = backgroundColorUI
+        mainText.foreground = Color.LIGHT_GRAY
+
+        val leftPane = JPanel()
+        leftPane.layout = BoxLayout(leftPane, BoxLayout.Y_AXIS)
+
+        val textPane = JPanel()
+        textPane.layout = GridBagLayout()
+
+        val gbc = GridBagConstraints()
+        gbc.weightx = 1.0
+        gbc.fill = GridBagConstraints.HORIZONTAL
+        textPane.add(mainText, gbc)
+        textPane.alignmentX = Component.LEFT_ALIGNMENT
+        leftPane.add(textPane)
+
+        val jbScrollPaneErrors = JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
+
+        jbScrollPaneErrors.alignmentX = Component.LEFT_ALIGNMENT
+        leftPane.add(jbScrollPaneErrors)
+
+        errorContent.firstComponent = leftPane
         errorContent.firstComponent.border = emptyBorder
-        errorContent.secondComponent = messageUI
+
+        val jbScrollPaneMessage = JBScrollPane(messageUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)
+        errorContent.secondComponent = jbScrollPaneMessage
         errorContent.secondComponent.border = emptyBorder
+
         setContent(noErrorContent)
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDirPath: Path, messages: List<ElmError>) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>, pathToCompile: String?) {
                     this@ElmCompilerPanel.baseDirPath = baseDirPath
                     compilerMessages = messages
                     contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                     errorTableUI.setRowSelectionInterval(0, 0)
                     indexCompilerMessages = 0
+                    mainText.text = pathToCompile
                 }
             })
         }

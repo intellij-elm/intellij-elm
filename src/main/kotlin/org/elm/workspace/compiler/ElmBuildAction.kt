@@ -7,6 +7,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
@@ -47,14 +49,17 @@ class ElmBuildAction : AnAction() {
         if (elmProject.isElm18)
             return showError(project, "The Elm 0.18 compiler is not supported.")
 
-        val filePathToCompile = when (elmProject) {
+        val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
+                ?: return showError(project, "Could not determine active Elm project's path")
+
+        val (filePathToCompile, relPath) = when (elmProject) {
             is ElmApplicationProject -> {
-                findMainEntryPoint(project, elmProject)?.containingFile?.virtualFile?.pathAsPath
+                findMainEntryPoint(project, elmProject)?.containingFile?.virtualFile?.let { Pair(it.pathAsPath, VfsUtilCore.getRelativePath(it, projectDir)) }
                         ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
             }
 
             is ElmPackageProject ->
-                activeFile.pathAsPath
+                Pair(activeFile.pathAsPath, VfsUtilCore.getRelativePath(activeFile, projectDir))
         }
 
         val json = try {
@@ -71,7 +76,7 @@ class ElmBuildAction : AnAction() {
                             { it.location?.region?.start?.column }
                     ))
         }
-        project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages)
+        project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages, relPath)
         if (isUnitTestMode) return
         ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
     }
@@ -101,7 +106,7 @@ class ElmBuildAction : AnAction() {
     }
 
     interface ElmErrorsListener {
-        fun update(baseDirPath: Path, messages: List<ElmError>)
+        fun update(baseDirPath: Path, messages: List<ElmError>, pathToCompile: String?)
     }
 
     companion object {
