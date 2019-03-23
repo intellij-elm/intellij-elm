@@ -17,7 +17,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentManager
@@ -29,14 +29,15 @@ import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.ElmError
 import org.elm.workspace.compiler.Region
 import org.elm.workspace.compiler.Start
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Component
+import java.awt.Dimension
 import java.awt.font.TextAttribute
 import java.nio.file.Path
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.*
-import javax.swing.border.BevelBorder
 import javax.swing.border.EmptyBorder
-import javax.swing.border.SoftBevelBorder
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 import kotlin.math.sign
@@ -49,12 +50,19 @@ class ElmCompilerPanel(
 
     var baseDirPath: Path? = null
 
-
-    // UI
-
     override fun dispose() {}
 
+    private val emptyBorder = EmptyBorder(3, 3, 3, 3)
+
     private val backgroundColorUI = Color(0x23, 0x31, 0x42)
+
+    private var compilerTargetUI = JBTextField("").apply {
+        isEditable = false
+        border = emptyBorder
+        alignmentX = Component.LEFT_ALIGNMENT
+        background = backgroundColorUI
+        foreground = Color.LIGHT_GRAY
+    }
 
     private val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
 
@@ -92,7 +100,7 @@ class ElmCompilerPanel(
 
     private var indexCompilerMessages: Int = 0
 
-    private val noErrorContent = JBLabel()
+    private val noErrorContent = JBPanelWithEmptyText()
 
     var compilerMessages: List<ElmError> = emptyList()
         set(value) {
@@ -151,45 +159,21 @@ class ElmCompilerPanel(
 
     private var errorContent: JBSplitter
 
-    private val emptyBorder = EmptyBorder(10, 10, 10, 10)
-
-    private var mainText: JBTextField
-
     init {
         setToolbar(createToolbar())
 
         errorContent = JBSplitter("ElmCompilerErrorPanel", 0.4F)
-        mainText = JBTextField("")
-        mainText.alignmentX = Component.LEFT_ALIGNMENT
-        mainText.isEditable = false
-        mainText.border = SoftBevelBorder(BevelBorder.LOWERED)
-        mainText.background = backgroundColorUI
-        mainText.foreground = Color.LIGHT_GRAY
 
-        val leftPane = JPanel()
-        leftPane.layout = BoxLayout(leftPane, BoxLayout.Y_AXIS)
-
-        val textPane = JPanel()
-        textPane.layout = GridBagLayout()
-
-        val gbc = GridBagConstraints()
-        gbc.weightx = 1.0
-        gbc.fill = GridBagConstraints.HORIZONTAL
-        textPane.add(mainText, gbc)
-        textPane.alignmentX = Component.LEFT_ALIGNMENT
-        leftPane.add(textPane)
+        val leftPane = JPanel(BorderLayout())
+        leftPane.add(compilerTargetUI, BorderLayout.NORTH)
 
         val jbScrollPaneErrors = JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
-
-        jbScrollPaneErrors.alignmentX = Component.LEFT_ALIGNMENT
-        leftPane.add(jbScrollPaneErrors)
+        leftPane.add(jbScrollPaneErrors, BorderLayout.CENTER)
 
         errorContent.firstComponent = leftPane
-        errorContent.firstComponent.border = emptyBorder
 
         val jbScrollPaneMessage = JBScrollPane(messageUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)
         errorContent.secondComponent = jbScrollPaneMessage
-        errorContent.secondComponent.border = emptyBorder
 
         setContent(noErrorContent)
 
@@ -201,7 +185,7 @@ class ElmCompilerPanel(
                     contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                     errorTableUI.setRowSelectionInterval(0, 0)
                     indexCompilerMessages = 0
-                    mainText.text = pathToCompile
+                    compilerTargetUI.text = pathToCompile
                 }
             })
         }
