@@ -121,37 +121,40 @@ object ModuleScope {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_VALUES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
             val fromTopLevel = getDeclaredValues(elmFile)
+
+            // Explicit imports shadow names from wildcard imports, so we need to sort the names
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportNames(it) }
+                    .sortedBy { it.fromWildcard }
+                    .map { it.element }
+
             val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
             Result.create(visibleValues, elmFile.project.modificationTracker)
         }
     }
 
+    private data class ExposedElement(val fromWildcard: Boolean, val element: ElmNamedElement)
 
-    private fun getVisibleImportNames(importClause: ElmImportClause): List<ElmNamedElement> {
+    private fun getVisibleImportNames(importClause: ElmImportClause): List<ExposedElement> {
         val allExposedValues = ImportScope.fromImportDecl(importClause)
                 ?.getExposedValues()
                 ?: return emptyList()
 
         if (importClause.exposesAll)
-            return allExposedValues
+            return allExposedValues.map { ExposedElement(true, it) }
 
         // intersect the names exposed by the module with the names declared
         // in this import clause's exposing list.
-        val locallyExposedNames = importClause.exposingList?.exposedValueList
-                ?.map { it.lowerCaseIdentifier.text }
-                ?.toSet()
-                ?: emptySet()
+        val exposedNames = mutableSetOf<String>()
+        importClause.exposingList?.exposedValueList
+                ?.mapTo(exposedNames) { it.lowerCaseIdentifier.text }
 
-        val locallyExposedOperators = importClause.exposingList?.exposedOperatorList
-                ?.map { it.operatorIdentifier.text }
-                ?.toSet()
-                ?: emptySet()
+        importClause.exposingList?.exposedOperatorList
+                ?.mapTo(exposedNames) { it.operatorIdentifier.text }
 
         return allExposedValues.filter {
-            it.name in locallyExposedNames || it.name in locallyExposedOperators
-        }
+            it.name in exposedNames
+        }.map { ExposedElement(false, it) }
     }
 
 
@@ -190,8 +193,8 @@ object ModuleScope {
         // intersect the names exposed by the module with the names declared
         // in this import clause's exposing list.
         val locallyExposedNames = importClause.exposingList?.exposedTypeList
-                ?.map { it.upperCaseIdentifier.text }
-                ?.toSet() ?: emptySet()
+                ?.mapTo(mutableSetOf<String>()) { it.upperCaseIdentifier.text }
+                ?: return emptyList()
         return allExposedTypes.filter { locallyExposedNames.contains(it.name) }
     }
 
@@ -254,12 +257,12 @@ object ModuleScope {
                 }
 
         val locallyExposedRecordConstructorNames = exposedTypes
-                .mapNotNull {
+                .mapNotNullTo(mutableSetOf()) {
                     if (it.exposedUnionConstructors == null)
                         it.upperCaseIdentifier.text
                     else
                         null
-                }.toSet()
+                }
 
         val allExposedNames = locallyExposedUnionConstructorNames.union(locallyExposedRecordConstructorNames)
         return allExposedConstructors.filter { allExposedNames.contains(it.name) }
