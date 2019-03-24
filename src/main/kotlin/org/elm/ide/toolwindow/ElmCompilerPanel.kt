@@ -38,6 +38,7 @@ import java.nio.file.Path
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.*
 import javax.swing.border.EmptyBorder
+import javax.swing.event.ListSelectionEvent
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 import kotlin.math.sign
@@ -52,103 +53,43 @@ class ElmCompilerPanel(
 
     override fun dispose() {}
 
-    private val emptyBorder = EmptyBorder(3, 3, 3, 3)
-
-    private val backgroundColorUI = Color(0x23, 0x31, 0x42)
-
-    private var compilerTargetUI = JBTextField("").apply {
-        isEditable = false
-        border = emptyBorder
-        alignmentX = Component.LEFT_ALIGNMENT
-        background = backgroundColorUI
-        foreground = Color.LIGHT_GRAY
-    }
-
-    private val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
-
-    private val errorTableUI = JBTable().apply {
-        setShowGrid(false)
-        intercellSpacing = Dimension(2, 2)
-        border = emptyBorder
-        background = backgroundColorUI
-        selectionBackground = Color(0x11, 0x51, 0x73)
-        emptyText.text = ""
-        model = emptyErrorTable
-        object : AutoScrollToSourceHandler() {
-            override fun isAutoScrollMode() = true
-            override fun setAutoScrollMode(state: Boolean) {}
-        }.install(this)
-        selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
-        selectionModel.addListSelectionListener {
-            if (!it.valueIsAdjusting && selectedRow >= 0) {
-                val cellRect = getCellRect(selectedRow, 0, true)
-                scrollRectToVisible(cellRect)
-                if (compilerMessages.isNotEmpty()) {
-                    indexCompilerMessages = selectedRow
-                    messageUI.text = compilerMessages[indexCompilerMessages].html
-                }
-            }
-        }
-    }
-
-    private val messageUI = JTextPane().apply {
-        contentType = "text/html"
-        isEditable = false
-        background = backgroundColorUI
-        addHyperlinkListener(BrowserHyperlinkListener.INSTANCE)
-    }
-
     private var indexCompilerMessages: Int = 0
-
-    private val noErrorContent = JBPanelWithEmptyText()
 
     var compilerMessages: List<ElmError> = emptyList()
         set(value) {
             checkIsEventDispatchThread()
             field = value
-            if (compilerMessages.isEmpty()) {
-                setContent(noErrorContent)
+            indexCompilerMessages = 0
 
+            // update UI
+            if (compilerMessages.isEmpty()) {
+                setContent(emptyUI)
                 errorTableUI.model = emptyErrorTable
                 messageUI.text = ""
             } else {
-                setContent(errorContent)
-
-                indexCompilerMessages = 0
+                setContent(errorUI)
                 messageUI.text = compilerMessages[0].html
-
-                val columnNames = arrayOf("Module", "Location", "Type")
                 val cellValues = compilerMessages.map {
                     arrayOf(it.location?.moduleName ?: "n/a",
                             it.location?.region?.pretty() ?: "n/a",
                             toNiceName(it.title))
                 }.toTypedArray()
-                errorTableUI.model = object : DefaultTableModel(cellValues, columnNames) {
+                errorTableUI.model = object : DefaultTableModel(cellValues, errorTableColumnNames) {
                     override fun isCellEditable(row: Int, column: Int) = false
                 }
-                errorTableUI.tableHeader.defaultRenderer = errorTableHeaderRenderer
-                errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(0), errorTableCellRenderer)
-                errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(1), errorTableCellRenderer)
-                errorTableUI.setDefaultRenderer(errorTableUI.getColumnClass(2), errorTableCellRenderer)
+                errorTableUI.setRowSelectionInterval(0, 0)
+                errorTableUI.selectionModel.addListSelectionListener(errorTableSelectionListener)
             }
         }
 
-    private val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
-        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component =
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-                        .apply { foreground = Color.WHITE }
-    }
-
-    private val errorTableCellRenderer = object : DefaultTableCellRenderer() {
-        override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
-            border = EmptyBorder(2, 2, 2, 2)
-            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-                    .apply {
-                        foreground = Color.LIGHT_GRAY
-                        if (column == 2) {
-                            font = font.deriveFont(mapOf(TextAttribute.WEIGHT to TextAttribute.WEIGHT_BOLD))
-                        }
-                    }
+    private val errorTableSelectionListener = { event: ListSelectionEvent ->
+        if (!event.valueIsAdjusting && errorTableUI.selectedRow >= 0) {
+            val cellRect = errorTableUI.getCellRect(errorTableUI.selectedRow, 0, true)
+            scrollRectToVisible(cellRect)
+            if (compilerMessages.isNotEmpty()) {
+                indexCompilerMessages = errorTableUI.selectedRow
+                messageUI.text = compilerMessages[indexCompilerMessages].html
+            }
         }
     }
 
@@ -157,34 +98,20 @@ class ElmCompilerPanel(
 
     private fun Region.pretty() = "line ${start.line}, column ${start.column}"
 
-    private var errorContent: JBSplitter
-
     init {
         setToolbar(createToolbar())
-
-        errorContent = JBSplitter("ElmCompilerErrorPanel", 0.4F)
-
-        val leftPane = JPanel(BorderLayout())
-        leftPane.add(compilerTargetUI, BorderLayout.NORTH)
-
-        val jbScrollPaneErrors = JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
-        leftPane.add(jbScrollPaneErrors, BorderLayout.CENTER)
-
-        errorContent.firstComponent = leftPane
-
-        val jbScrollPaneMessage = JBScrollPane(messageUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)
-        errorContent.secondComponent = jbScrollPaneMessage
-
-        setContent(noErrorContent)
+        setContent(emptyUI)
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(baseDirPath: Path, messages: List<ElmError>, pathToCompile: String?) {
                     this@ElmCompilerPanel.baseDirPath = baseDirPath
                     compilerMessages = messages
+                    indexCompilerMessages = 0
+
+                    // initialize UI
                     contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
                     errorTableUI.setRowSelectionInterval(0, 0)
-                    indexCompilerMessages = 0
                     compilerTargetUI.text = pathToCompile
                 }
             })
@@ -258,4 +185,72 @@ class ElmCompilerPanel(
     override fun getPreviousOccurenceActionName() = "Previous Error"
     override fun hasPreviousOccurence() = calcNextOccurrence(-1) != null
     override fun goPreviousOccurence(): OccurenceInfo? = calcNextOccurrence(-1, go = true)
+
+    // UI COMPONENTS
+    private companion object {
+
+        val backgroundColorUI = Color(0x23, 0x31, 0x42)
+
+        val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
+
+        val compilerTargetUI = JBTextField("").apply {
+            isEditable = false
+            alignmentX = Component.LEFT_ALIGNMENT
+            foreground = Color.BLACK
+        }
+
+        val errorTableColumnNames = arrayOf("Module", "Location", "Type")
+        val errorTableUI = JBTable().apply {
+            setShowGrid(false)
+            intercellSpacing = Dimension(2, 2)
+            border = EmptyBorder(3, 3, 3, 3)
+            background = backgroundColorUI
+            selectionBackground = Color(0x11, 0x51, 0x73)
+            emptyText.text = ""
+            model = emptyErrorTable
+            object : AutoScrollToSourceHandler() {
+                override fun isAutoScrollMode() = true
+                override fun setAutoScrollMode(state: Boolean) {}
+            }.install(this)
+            selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
+            // setup renderers
+            val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
+                override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component =
+                        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                                .apply { foreground = Color.WHITE }
+            }
+            val errorTableCellRenderer = object : DefaultTableCellRenderer() {
+                override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+                    border = EmptyBorder(2, 2, 2, 2)
+                    return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                            .apply {
+                                foreground = Color.LIGHT_GRAY
+                                if (column == 2) {
+                                    font = font.deriveFont(mapOf(TextAttribute.WEIGHT to TextAttribute.WEIGHT_BOLD))
+                                }
+                            }
+                }
+            }
+            tableHeader.defaultRenderer = errorTableHeaderRenderer
+            setDefaultRenderer(Any::class.java, errorTableCellRenderer)
+        }
+
+        // RIGHT PANEL
+        val messageUI = JTextPane().apply {
+            contentType = "text/html"
+            isEditable = false
+            background = backgroundColorUI
+            addHyperlinkListener(BrowserHyperlinkListener.INSTANCE)
+        }
+
+        val errorUI = JBSplitter("ElmCompilerErrorPanel", 0.4F).apply {
+            firstComponent = JPanel(BorderLayout()).apply {
+                add(compilerTargetUI, BorderLayout.NORTH)
+                add(JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER), BorderLayout.CENTER)
+            }
+            secondComponent = JBScrollPane(messageUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)
+        }
+
+        val emptyUI = JBPanelWithEmptyText()
+    }
 }
