@@ -80,16 +80,21 @@ class ElmCompilerPanel(
             }
         }
 
-    private val errorTableSelectionListener = ListSelectionListener { event ->
-        event.let {
-            if (!it.valueIsAdjusting && errorTableUI.selectedRow >= 0) {
-                val cellRect = errorTableUI.getCellRect(errorTableUI.selectedRow, 0, true)
-                scrollRectToVisible(cellRect)
-                if (compilerMessages.isNotEmpty()) {
-                    indexCompilerMessages = errorTableUI.selectedRow
-                    messageUI.text = compilerMessages[indexCompilerMessages].html
+    // LEFT PANEL
+    private fun createCompilerTargetUI(baseDirPath: Path, targetPath: String?): ActionLink {
+        return ActionLink("", object : AnAction() {
+            override fun actionPerformed(e: AnActionEvent) {
+                e.project?.let {
+                    val targetFile = VfsUtil.findFile(baseDirPath.resolve(targetPath), true) ?: return
+                    val descriptor = OpenFileDescriptor(it, targetFile, 0, 0)
+                    descriptor.navigate(true)
                 }
             }
+        }).apply {
+            alignmentX = Component.LEFT_ALIGNMENT
+            setNormalColor(Color.BLACK)
+            activeColor = Color.BLACK
+            text = "Compiler Target  $targetPath"
         }
     }
 
@@ -108,6 +113,19 @@ class ElmCompilerPanel(
         selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
         tableHeader.defaultRenderer = errorTableHeaderRenderer
         setDefaultRenderer(Any::class.java, errorTableCellRenderer)
+    }
+
+    private val errorTableSelectionListener = ListSelectionListener { event ->
+        event.let {
+            if (!it.valueIsAdjusting && errorTableUI.selectedRow >= 0) {
+                val cellRect = errorTableUI.getCellRect(errorTableUI.selectedRow, 0, true)
+                scrollRectToVisible(cellRect)
+                if (compilerMessages.isNotEmpty()) {
+                    indexCompilerMessages = errorTableUI.selectedRow
+                    messageUI.text = compilerMessages[indexCompilerMessages].html
+                }
+            }
+        }
     }
 
     // RIGHT PANEL
@@ -153,23 +171,6 @@ class ElmCompilerPanel(
                     errorUI.firstComponent.add(compilerTargetUI, BorderLayout.NORTH, 0)
                 }
             })
-        }
-    }
-
-    private fun createCompilerTargetUI(baseDirPath: Path, targetPath: String?): ActionLink {
-        return ActionLink("", object : AnAction() {
-            override fun actionPerformed(e: AnActionEvent) {
-                e.project?.let {
-                    val targetFile = VfsUtil.findFile(baseDirPath.resolve(targetPath), true) ?: return
-                    val descriptor = OpenFileDescriptor(it, targetFile, 0, 0)
-                    descriptor.navigate(true)
-                }
-            }
-        }).apply {
-            alignmentX = Component.LEFT_ALIGNMENT
-            setNormalColor(Color.BLACK)
-            activeColor = Color.BLACK
-            text = "Compiler Target  $targetPath"
         }
     }
 
