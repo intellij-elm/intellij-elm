@@ -322,8 +322,10 @@ private class InferenceScope(
         if (targetTy !is TyFunction) return argCountError(0)
         if (arguments.size > targetTy.parameters.size) return argCountError(targetTy.parameters.size)
 
-        val ok = (0..arguments.lastIndex).all { i ->
-            requireAssignable(arguments[i], argTys[i], targetTy.parameters[i])
+        var ok = true
+        for (i in 0..arguments.lastIndex) {
+            // don't short-circuit: we need to check all args
+            ok = ok && requireAssignable(arguments[i], argTys[i], targetTy.parameters[i])
         }
 
         val resultTy = if (ok) {
@@ -1032,8 +1034,37 @@ private class InferenceScope(
         return sharedAssignable && tailAssignable
     }
 
-    /** Check if a [ty] can that compares unequal to a [tyVar] can be unified with it */
-    private fun varAssignable(tyVar: TyVar, ty: Ty, flipped: Boolean): Boolean {
+    /**
+     * Check if a [ty] can that compares unequal to a [tyVar] can be unified with it
+     *
+     * If [param] is true, the [tyVar] is being assigned to. Otherwise, [ty] is being assigned to.
+     * [param] must always be false if [ty] is a [TyVar]
+     */
+    private fun varAssignable(tyVar: TyVar, ty: Ty, param: Boolean): Boolean {
+        // TODO f x y = if ( x < y ) then ( x ++ y ) else ( y ++ x )
+
+        if (ty !is TyVar) {
+            if (!param) {
+                return !tyVar.rigid && nonVarAssignableToVar(ty, tyVar)
+            }
+
+            return nonVarAssignableToVar(ty, tyVar)
+        }
+
+        val tcArg = getTypeclassName(tyVar)
+        val tcParam = getTypeclassName(ty)
+
+        return when {
+            !tyVar.rigid && tcArg == null -> true
+            !tyVar.rigid && tcArg != null -> typeclassesCompatable(tcArg, tcParam, unconstrainedAllowed = !ty.rigid)
+            tyVar.rigid && tcArg == null -> !ty.rigid && tcParam == null
+            tyVar.rigid && tcArg != null && ty.rigid -> tcArg == tcParam
+            tyVar.rigid && tcArg != null && !ty.rigid -> typeclassesCompatable(tcArg, tcParam, unconstrainedAllowed = !ty.rigid)
+            else -> error("impossible")
+        }
+    }
+
+    private fun nonVarAssignableToVar(ty: Ty, tyVar: TyVar): Boolean {
         // Vars with certain names are treated as typeclasses that only unify with a limited set of
         // types.
         //
@@ -1043,55 +1074,51 @@ private class InferenceScope(
         //  - `appendable` permits `String` and `List a`
         //  - `comparable` permits `Int`, `Float`, `Char`, `String`, and lists/tuples of `comparable` values
         //  - `compappend` permits `String` and `List comparable`
+        //
+        //  Not listed in the elm guide:
+        //
+        //  - `comparable` permits `number` and lists/tuples of `number`
+        //  - `compappend` permits `List compappend`
 
-        fun List<Ty>.allComparable(): Boolean = all { assignable(it, TyVar("comparable")) }
+        fun List<Ty>.allAssignableTo(typeclass: String): Boolean = all { assignable(it, TyVar(typeclass)) }
 
         return when {
             tyVar.name.startsWith("number") -> when (ty) {
                 is TyUnion -> ty.isTyFloat || ty.isTyInt
-                is TyVar -> typeclassCompatable("number", tyVar.name, ty.name)
                 else -> false
             }
             tyVar.name.startsWith("appendable") -> when (ty) {
                 is TyUnion -> ty.isTyString || ty.isTyList
-                is TyVar -> typeclassCompatable("appendable", tyVar.name, ty.name)
                 else -> false
             }
             tyVar.name.startsWith("comparable") -> when (ty) {
-                is TyTuple -> ty.types.allComparable()
+                is TyTuple -> ty.types.allAssignableTo("comparable")
                 is TyUnion -> ty.isTyFloat
                         || ty.isTyInt
                         || ty.isTyChar
                         || ty.isTyString
-                        || ty.isTyList && ty.parameters.allComparable()
-                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("comparable", tyVar.name, ty.name)
+                        || ty.isTyList && ty.parameters.run {
+                    allAssignableTo("comparable") || allAssignableTo("number")
+                }
                 else -> false
             }
             tyVar.name.startsWith("compappend") -> when (ty) {
-                is TyUnion -> ty.isTyString || ty.isTyList && ty.parameters.allComparable()
-                is TyVar -> ty.name.startsWith("number") || typeclassCompatable("compappend", tyVar.name, ty.name)
+                is TyUnion -> ty.isTyString || ty.isTyList && ty.parameters.run {
+                    allAssignableTo("comparable") || allAssignableTo("compappend")
+                }
                 else -> false
             }
-            // If the var isn't a typeclass: Anything can be assigned to a rigid var, but a rigid
-            // var can only be assigned to itself and flexible vars that aren't typeclasses.
-            tyVar.rigid && !flipped -> ty is TyVar && !ty.rigid && getTypeclassName(ty.name) == null
-            else -> true
+            else -> !tyVar.rigid
         }
     }
 
-    /**
-     * Check if a var with [name1] of a var in [typeclass] is compatible with the typeclass of a var with [name2]
-     *
-     * Specifics of each typeclass are checked outside this function.
-     */
-    private fun typeclassCompatable(typeclass: String, name1: String, name2: String): Boolean {
-        // all unconstrained vars can unify with constrained vars, so if there's no typeclass, we
-        // always return true
-        val otherTypclassName = getTypeclassName(name2) ?: return true
-        // any numbered var can be unify with an unnumbered var in the same typeclass. If they're
-        // both numbered, they have to match exactly.
-        return otherTypclassName == typeclass &&
-                (name1 == name2 || otherTypclassName == typeclass || name1 == typeclass)
+    private fun typeclassesCompatable(name1: String, name2: String?, unconstrainedAllowed: Boolean = true): Boolean {
+        return when {
+            name2 == null -> unconstrainedAllowed
+            name1 == name2 -> true
+            name1 == "number" && name2 == "comparable" -> true
+            else -> false
+        }
     }
 
     private fun trackReplacement(ty1: Ty, ty2: Ty) {
@@ -1176,7 +1203,7 @@ fun isInferable(ty: Ty): Boolean = ty !is TyUnknown
 private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")
 
 /** Extract the typeclass for a var name if it is one, or null if it's a normal var*/
-fun getTypeclassName(name: String): String? = TYPECLASS_REGEX.matchEntire(name)?.value
+fun getTypeclassName(ty: TyVar): String? = TYPECLASS_REGEX.matchEntire(ty.name)?.groups?.get(1)?.value
 
 /** Throw an [IllegalStateException] with [message] augmented with information about [element] */
 fun error(element: ElmPsiElement, message: String): Nothing {

@@ -36,7 +36,7 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
         // avoid confusion. Typeclasses are identified by their name rather than their id, so we
         // leave these as-is.
         val takenNames = varDisplayNames.values
-        if (getTypeclassName(ty.name) == null && ty.name in takenNames) {
+        if (getTypeclassName(ty) == null && ty.name in takenNames) {
             val displayName = possibleNames.first { it !in takenNames }
             varDisplayNames[ty] = displayName
             return displayName

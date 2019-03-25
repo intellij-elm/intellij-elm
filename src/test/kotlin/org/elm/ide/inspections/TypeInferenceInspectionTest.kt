@@ -871,7 +871,7 @@ embed : () -> () -> ()
 embed a b = a
 
 main : (a -> ()) -> a -> a -> ()
-main fn a = lazy3 apply1 fn a
+main fn a = <error descr="Type mismatch.Required: a → ()Found: () → ()">lazy3 apply1 fn a</error>
 """)
 
     fun `test function argument mismatch in case expression`() = checkByText("""
@@ -1544,7 +1544,35 @@ main a =
     <error descr="Type mismatch.Required: ()Found: Int">foo a a</error>
 """)
 
+    fun `test constraint comparable number`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : number -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: number">foo a a</error>
+""")
+
+
+    fun `test constraint comparable int literal`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: number">foo 1 2</error>
+""")
+
     fun `test constraint comparable float`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: Float">foo 1.1 2.2</error>
+""")
+
+    fun `test constraint comparable float literal`() = checkByText("""
 foo : comparable -> comparable -> comparable
 foo a b = a
 
@@ -1580,6 +1608,33 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String">foo ["a"] []</error>
 """)
 
+    fun `test constraint comparable list comparable`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : List comparable -> List comparable -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: List comparable">foo a b</error>
+""")
+
+    fun `test constraint comparable list number`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : List number -> List number -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: List number">foo a b</error>
+""")
+
+    fun `test constraint comparable tuple number`() = checkByText("""
+foo : comparable -> comparable -> comparable
+foo a b = a
+
+main : (number, number) -> (number, number) -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: (number, number)">foo a b</error>
+""")
+
     fun `test constraint comparable tuple float`() = checkByText("""
 foo : comparable -> comparable -> comparable
 foo a b = a
@@ -1608,7 +1663,7 @@ main a b =
 """)
 
     fun `test constraint compappend string`() = checkByText("""
-foo : comappend -> comappend -> comappend
+foo : compappend -> compappend -> compappend
 foo a b = a
 
 main : ()
@@ -1617,12 +1672,30 @@ main =
 """)
 
     fun `test constraint compappend list string`() = checkByText("""
-foo : comappend -> comappend -> comappend
+foo : compappend -> compappend -> compappend
 foo a b = a
 
 main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: List String">foo [""] []</error>
+""")
+
+    fun `test constraint compappend list comparable`() = checkByText("""
+foo : compappend -> compappend -> compappend
+foo a b = a
+
+main : List comparable -> List comparable -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: List comparable">foo a b</error>
+""")
+
+    fun `test constraint compappend list compappend`() = checkByText("""
+foo : compappend -> compappend -> compappend
+foo a b = a
+
+main : List compappend -> List compappend -> ()
+main a b =
+    <error descr="Type mismatch.Required: ()Found: List compappend">foo a b</error>
 """)
 
     fun `test constraint compappend compappend`() = checkByText("""
@@ -1650,6 +1723,15 @@ foo a b c = b
 main : ()
 main =
     foo "" [""] <error descr="Type mismatch.Required: StringFound: List String">[""]</error>
+""")
+
+    fun `test numbered constraints in different functions`() = checkByText("""
+foo : number1 -> appendable1 -> comparable1 -> compappend1 -> appendable1
+foo a b c d = b
+
+main : number2 -> appendable2 -> comparable2 -> compappend2 -> ()
+main a b c d  =
+    <error descr="Type mismatch.Required: ()Found: appendable2">foo a b c d</error>
 """)
 
     fun `test calling function with its own return value`() = checkByText("""
@@ -1881,10 +1963,91 @@ main a =
     <error descr="Type mismatch.Required: ()Found: a">a</error>
 """)
 
-    fun `test rigid vars within tuple`() = checkByText("""
-main : (a, a) -> a
-main (x, y) =
-  <error descr="Type mismatch.Required: numberFound: a">x</error> + 1
+    fun `test returning rigid var from function expecting different rigid var`() = checkByText("""
+main : a -> b
+main a =
+    <error descr="Type mismatch.Required: bFound: a">a</error>
 """)
 
+    fun `test rigid vars within tuple`() = checkByText("""
+foo : number -> number
+foo a = a
+main : (a, a) -> a
+main (x, y) =
+  foo <error descr="Type mismatch.Required: numberFound: a">x</error>
+""")
+
+    fun `test rigid number assigned to rigid comparable`() = checkByText("""
+main : number -> (comparable -> ()) -> ()
+main a f =
+    f <error descr="Type mismatch.Required: comparableFound: number">a</error>
+""")
+
+    fun `test rigid comparable assigned to rigid number`() = checkByText("""
+main : comparable -> (number -> ()) -> ()
+main a f =
+    f <error descr="Type mismatch.Required: numberFound: comparable">a</error>
+""")
+
+    fun `test calling rigid var in parent scope`() = checkByText("""
+main : (a -> a) -> ()
+main f =
+    let
+        b : a -> a
+        b a = f a
+    in
+    b <error descr="Type mismatch.Required: aFound: String">""</error>
+""")
+
+    fun `test assigning flex typeclass to rigid typeclass`() = checkByText("""
+main : (number -> number) -> ()
+main f =
+    <error descr="Type mismatch.Required: ()Found: number">f 1</error>
+""")
+
+    fun `test assigning rigid typeclass to flex var`() = checkByText("""
+foo : a -> b -> c -> d -> b
+foo a b c d = b
+
+main : number -> appendable -> comparable -> compappend -> ()
+main a b c d =
+    <error descr="Type mismatch.Required: ()Found: appendable">foo a b c d</error>
+""")
+
+    fun `test assigning flex var to rigid typeclass`() = checkByText("""
+a : a
+a = Debug.todo ""
+
+main : (number -> appendable -> comparable -> compappend -> appendable) -> ()
+main f =
+    <error descr="Type mismatch.Required: ()Found: appendable">f a a a a</error>
+""")
+
+    fun `test assigning flex var to flex typeclass`() = checkByText("""
+foo : number -> appendable -> comparable -> compappend -> appendable
+foo a b c d = b
+bar : () -> ()
+bar a = a
+main a b c d =
+    bar <error descr="Type mismatch.Required: ()Found: appendable">(foo a b c d)</error>
+""")
+
+    fun `test assigning flex typeclass to rigid var`() = checkByText("""
+a : number
+a = Debug.todo ""
+b : appendable
+b = Debug.todo ""
+c : comparable
+c = Debug.todo ""
+d : compappend
+d = Debug.todo ""
+
+main : (a -> b -> c -> d -> b) -> b
+main foo =
+    foo
+        <error descr="Type mismatch.Required: aFound: number">a</error>
+        <error descr="Type mismatch.Required: bFound: appendable">b</error>
+        <error descr="Type mismatch.Required: cFound: comparable">c</error>
+        <error descr="Type mismatch.Required: dFound: compappend">d</error>
+""")
 }
