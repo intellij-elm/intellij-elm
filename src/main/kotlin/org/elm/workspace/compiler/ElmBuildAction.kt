@@ -52,7 +52,7 @@ class ElmBuildAction : AnAction() {
         val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
                 ?: return showError(project, "Could not determine active Elm project's path")
 
-        val (filePathToCompile, relPath) = when (elmProject) {
+        val (filePathToCompile, targetPath) = when (elmProject) {
             is ElmApplicationProject -> {
                 findMainEntryPoint(project, elmProject)?.containingFile?.virtualFile?.let { Pair(it.pathAsPath, VfsUtilCore.getRelativePath(it, projectDir)) }
                         ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
@@ -76,7 +76,7 @@ class ElmBuildAction : AnAction() {
                             { it.location?.region?.start?.column }
                     ))
         }
-        project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages, relPath)
+        project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages, targetPath)
         if (isUnitTestMode) return
         ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
     }
@@ -106,7 +106,7 @@ class ElmBuildAction : AnAction() {
     }
 
     interface ElmErrorsListener {
-        fun update(baseDirPath: Path, messages: List<ElmError>, pathToCompile: String?)
+        fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?)
     }
 
     companion object {
