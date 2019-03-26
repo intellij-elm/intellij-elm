@@ -38,7 +38,6 @@ import java.nio.file.Path
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.*
 import javax.swing.border.EmptyBorder
-import javax.swing.event.ListSelectionListener
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 
@@ -113,15 +112,12 @@ class ElmCompilerPanel(
         selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
         tableHeader.defaultRenderer = errorTableHeaderRenderer
         setDefaultRenderer(Any::class.java, errorTableCellRenderer)
-    }
-
-    private val errorTableSelectionListener = ListSelectionListener { event ->
-        event.let {
-            if (!it.valueIsAdjusting && errorTableUI.selectedRow >= 0) {
-                val cellRect = errorTableUI.getCellRect(errorTableUI.selectedRow, 0, true)
-                scrollRectToVisible(cellRect)
-                if (compilerMessages.isNotEmpty()) {
-                    indexCompilerMessages = errorTableUI.selectedRow
+        selectionModel.addListSelectionListener { event ->
+            event.let {
+                if (!it.valueIsAdjusting && compilerMessages.isNotEmpty() && selectedRow >= 0) {
+                    val cellRect = getCellRect(selectedRow, 0, true)
+                    scrollRectToVisible(cellRect)
+                    indexCompilerMessages = selectedRow
                     messageUI.text = compilerMessages[indexCompilerMessages].html
                 }
             }
@@ -158,11 +154,9 @@ class ElmCompilerPanel(
                 override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?) {
                     this@ElmCompilerPanel.baseDirPath = baseDirPath
 
-                    errorTableUI.selectionModel.removeListSelectionListener(errorTableSelectionListener)
                     compilerMessages = messages
                     indexCompilerMessages = 0
                     errorTableUI.setRowSelectionInterval(0, 0)
-                    errorTableUI.selectionModel.addListSelectionListener(errorTableSelectionListener)
 
                     contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
 
