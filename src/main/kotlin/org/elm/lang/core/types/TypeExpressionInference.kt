@@ -7,11 +7,8 @@ import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
-import org.elm.lang.core.psi.ElmTypeSignatureDeclarationTag
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.modificationTracker
-import org.elm.lang.core.psi.outermostDeclaration
-import org.elm.lang.core.psi.parentOfType
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -26,7 +23,7 @@ private val TY_VARIANT_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<V
 
 fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
-        val inferenceResult = TypeExpression().beginTypeDeclarationInference(this)
+        val inferenceResult = TypeExpression(this).beginTypeDeclarationInference(this)
         CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value) as TyUnion)
@@ -34,7 +31,7 @@ fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<T
 
 fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-        val inferenceResult = TypeExpression().beginTypeAliasDeclarationInference(this)
+        val inferenceResult = TypeExpression(this).beginTypeAliasDeclarationInference(this)
         CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
@@ -43,7 +40,7 @@ fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceRes
 
 fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-        val inferenceResult = TypeExpression().beginPortAnnotationInference(this)
+        val inferenceResult = TypeExpression(this).beginPortAnnotationInference(this)
         CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
@@ -52,7 +49,7 @@ fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty
 
 fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-        val inferenceResult = TypeExpression().beginUnionConstructorInference(this)
+        val inferenceResult = TypeExpression(this).beginUnionConstructorInference(this)
         CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
@@ -69,7 +66,7 @@ fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty
     val parentModificationTracker = outermostDeclaration(strict = true)?.modificationTracker
 
     val cachedValue = CachedValuesManager.getCachedValue(typeRef, TY_CACHE_KEY) {
-        val inferenceResult = TypeExpression().beginTypeRefInference(typeRef)
+        val inferenceResult = TypeExpression(this).beginTypeRefInference(typeRef)
 
         val trackers = when (parentModificationTracker) {
             null -> arrayOf(project.modificationTracker)
@@ -84,7 +81,7 @@ fun ElmTypeAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty
 /** Get the names and parameter tys for all variants of this union */
 fun ElmTypeDeclaration.variantInference(): ParameterizedInferenceResult<VariantParameters> =
         CachedValuesManager.getCachedValue(this, TY_VARIANT_CACHE_KEY) {
-            val inferenceResult = TypeExpression().beginUnionVariantsInference(this)
+            val inferenceResult = TypeExpression(this).beginUnionVariantsInference(this)
             CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
         }
 
@@ -110,6 +107,7 @@ fun ElmTypeDeclaration.variantInference(): ParameterizedInferenceResult<VariantP
  * declarations, and opens the door to caching the [Ty]s for declarations and aliases.
  */
 class TypeExpression(
+        private val root: ElmPsiElement,
         private val varsByName: MutableMap<String, TyVar> = mutableMapOf(),
         private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf(),
         private val activeAliases: MutableSet<ElmTypeAliasDeclaration> = mutableSetOf()
@@ -213,11 +211,15 @@ class TypeExpression(
         val ref = typeRef.reference.resolve()
 
         val declaredTy = when (ref) {
-            is ElmTypeAliasDeclaration -> {
-                inferChild { beginTypeAliasDeclarationInference(ref) }
+            is ElmTypeAliasDeclaration -> when (root) {
+                is ElmTypeAliasDeclaration -> {
+                    val child = TypeExpression(ref, mutableMapOf(), diagnostics, activeAliases.toMutableSet())
+                    child.beginTypeAliasDeclarationInference(ref).value
+                }
+                else -> ref.typeExpressionInference().value
             }
             is ElmTypeDeclaration -> {
-                inferChild { beginTypeDeclarationInference(ref) }
+                ref.typeExpressionInference().value
             }
             // In 0.19, unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
             // reference won't resolve. So we check for a reference to that type here. Note that users can
@@ -270,8 +272,5 @@ class TypeExpression(
     }
 
     private fun getTyVar(name: String) = varsByName.getOrPut(name) { TyVar(name) }
-
-    private inline fun <T : Ty> inferChild(block: TypeExpression.() -> ParameterizedInferenceResult<T>) =
-            TypeExpression(mutableMapOf(), diagnostics, activeAliases.toMutableSet()).block().value
 }
 
