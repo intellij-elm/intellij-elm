@@ -48,7 +48,7 @@ class ElmSyntaxHighlightAnnotator : Annotator {
         }
 
         val def = typeAnnotation.typeExpression
-        listOf(ElmUpperCaseQID::class.java, ElmTypeVariableRef::class.java)
+        listOf(ElmUpperCaseQID::class.java, ElmTypeVariable::class.java)
                 .flatMap { PsiTreeUtil.findChildrenOfType(def, it) }
                 .forEach {
                     highlightElement(holder, it, ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES)

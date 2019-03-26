@@ -82,7 +82,7 @@ class ElmPsiFactory(private val project: Project) {
                     TYPE_ANNOTATION -> ElmTypeAnnotation(node)
                     TYPE_DECLARATION -> ElmTypeDeclaration(node)
                     TYPE_EXPRESSION -> ElmTypeExpression(node)
-                    TYPE_VARIABLE_REF -> ElmTypeVariableRef(node)
+                    TYPE_VARIABLE -> ElmTypeVariable(node)
                     UNION_VARIANT -> ElmUnionVariant(node)
                     UNION_PATTERN -> ElmUnionPattern(node)
                     UNIT_EXPR -> ElmUnitExpr(node)

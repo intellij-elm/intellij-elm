@@ -190,7 +190,7 @@ class TypeExpression(
     /** Get the type for one segment of a type expression */
     private fun typeSignatureDeclType(decl: ElmTypeSignatureDeclarationTag): Ty {
         return when (decl) {
-            is ElmTypeVariableRef -> getTyVar(decl.identifier.text)
+            is ElmTypeVariable -> getTyVar(decl.identifier.text)
             is ElmRecordType -> recordTypeDeclType(decl)
             is ElmTupleType -> if (decl.unitExpr != null) TyUnit() else TyTuple(decl.typeExpressionList.map { typeExpresionType(it) })
             is ElmTypeRef -> typeRefType(decl)
