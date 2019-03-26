@@ -80,12 +80,12 @@ class ElmCompilerPanel(
         }
 
     // LEFT PANEL
-    private fun createCompilerTargetUI(baseDirPath: Path, targetPath: String?): ActionLink {
+    private fun createCompilerTargetUI(baseDirPath: Path, targetPath: String?, offset: Int): ActionLink {
         return ActionLink("", object : AnAction() {
             override fun actionPerformed(e: AnActionEvent) {
                 e.project?.let {
                     val targetFile = VfsUtil.findFile(baseDirPath.resolve(targetPath), true) ?: return
-                    val descriptor = OpenFileDescriptor(it, targetFile, 0, 0)
+                    val descriptor = OpenFileDescriptor(it, targetFile, offset)
                     descriptor.navigate(true)
                 }
             }
@@ -151,7 +151,7 @@ class ElmCompilerPanel(
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?, offset: Int) {
                     this@ElmCompilerPanel.baseDirPath = baseDirPath
 
                     compilerMessages = messages
@@ -160,7 +160,7 @@ class ElmCompilerPanel(
 
                     contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
 
-                    val compilerTargetUI = createCompilerTargetUI(baseDirPath, targetPath)
+                    val compilerTargetUI = createCompilerTargetUI(baseDirPath, targetPath, offset)
                     errorUI.firstComponent.remove(0)
                     errorUI.firstComponent.add(compilerTargetUI, BorderLayout.NORTH, 0)
                 }
