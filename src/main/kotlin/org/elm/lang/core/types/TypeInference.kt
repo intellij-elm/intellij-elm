@@ -632,7 +632,7 @@ private class InferenceScope(
         val existing = resolvedDeclarations[decl]
         if (existing != null) return TypeReplacement.freshenVars(existing)
         // Use the type annotation if there is one
-        var ty = decl.typeAnnotation?.typeExpressionInference()?.value
+        var ty = decl.typeAnnotation?.typeExpressionInference(rigid = false)?.ty
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
             // First we have to find the parent of the declaration so that it has access to the
@@ -702,8 +702,7 @@ private class InferenceScope(
             decl: ElmFunctionDeclarationLeft
     ): ParameterBindingResult {
         val typeRefTy = valueDeclaration.typeAnnotation
-                ?.typeExpressionInference()?.value
-                ?.let { TypeReplacement.rigidify(it) }
+                ?.typeExpressionInference(rigid = true)?.ty
         val patterns = decl.patterns.toList()
 
         if (typeRefTy == null) {

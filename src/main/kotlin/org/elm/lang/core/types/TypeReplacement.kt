@@ -13,7 +13,7 @@ class TypeReplacement(
         // A map of variables that should be replaced to the ty to replace them with
         replacements: Map<TyVar, Ty>,
         private val freshen: Boolean,
-        private val rigidify: Boolean
+        private val flexify: Boolean
 ) {
     companion object {
         /**
@@ -21,7 +21,7 @@ class TypeReplacement(
          */
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
             if (replacements.isEmpty()) return ty
-            return TypeReplacement(replacements, freshen = false, rigidify = false).replace(ty)
+            return TypeReplacement(replacements, freshen = false, flexify = false).replace(ty)
         }
 
         fun replace(ty: Ty, replacements: DisjointSet): Ty = replace(ty, replacements.asMap())
@@ -36,18 +36,18 @@ class TypeReplacement(
          * call from another.
          */
         fun freshenVars(ty: Ty): Ty {
-            return TypeReplacement(emptyMap(), freshen = true, rigidify = false).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = true, flexify = false).replace(ty)
         }
 
         /**
-         * Make all type variables in a [ty] rigid.
+         * Make all type variables in a [ty] flexible.
          *
          * Type variables in function annotations are rigid when bound to parameters; in all other
-         * cases vars are flexible. This function is used to make vars inferred as flexible rigid
-         * when binding parameters.
+         * cases vars are flexible. This function is used to make vars inferred as rigid into flexible
+         * when calling functions.
          */
-        fun rigidify(ty: Ty): Ty {
-            return TypeReplacement(emptyMap(), freshen = false, rigidify = true).replace(ty)
+        fun flexify(ty: Ty): Ty {
+            return TypeReplacement(emptyMap(), freshen = false, flexify = true).replace(ty)
         }
     }
 
@@ -110,8 +110,8 @@ class TypeReplacement(
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
     // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
-        if (key !in replacements && (freshen || rigidify)) {
-            val ty = TyVar(key.name, rigid = rigidify)
+        if (key !in replacements && (freshen || flexify)) {
+            val ty = TyVar(key.name, rigid = !flexify && key.rigid)
             replacements[key] = true to ty
             return ty
         }
