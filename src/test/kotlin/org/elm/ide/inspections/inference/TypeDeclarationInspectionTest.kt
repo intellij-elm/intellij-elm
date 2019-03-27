@@ -1,4 +1,7 @@
-package org.elm.ide.inspections
+package org.elm.ide.inspections.inference
+
+import org.elm.ide.inspections.ElmInspectionsTestBase
+import org.elm.ide.inspections.ElmTypeDeclarationInspection
 
 class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationInspection()) {
     fun `test bad self-recursion in type alias`() = checkByText("""
