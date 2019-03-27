@@ -935,9 +935,9 @@ private class InferenceScope(
         val ty2 = replacements[type2]
 
         val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty1 !is TyVar && ty2 is TyVar) {
-            varAssignable(ty2, ty1, true)
+            nonVarAssignableToVar(ty1, ty2)
         } else when (ty1) {
-            is TyVar -> varAssignable(ty1, ty2, false)
+            is TyVar -> if (ty2 is TyVar) varAssignable(ty1, ty2) else nonVarAssignableToVar(ty2, ty1)
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
@@ -1034,29 +1034,18 @@ private class InferenceScope(
     }
 
     /**
-     * Check if a [ty] can that compares unequal to a [tyVar] can be unified with it
-     *
-     * If [param] is true, the [tyVar] is being assigned to. Otherwise, [ty] is being assigned to.
-     * [param] must always be false if [ty] is a [TyVar]
+     * Check if a [ty2] can that compares unequal to a [ty1] can be unified with it
      */
-    private fun varAssignable(tyVar: TyVar, ty: Ty, param: Boolean): Boolean {
-        if (ty !is TyVar) {
-            if (!param) {
-                return !tyVar.rigid && nonVarAssignableToVar(ty, tyVar)
-            }
-
-            return nonVarAssignableToVar(ty, tyVar)
-        }
-
-        val tcArg = getTypeclassName(tyVar)
-        val tcParam = getTypeclassName(ty)
+    private fun varAssignable(ty1: TyVar, ty2: TyVar): Boolean {
+        val tc1 = getTypeclassName(ty1)
+        val tc2 = getTypeclassName(ty2)
 
         return when {
-            !tyVar.rigid && tcArg == null -> true
-            !tyVar.rigid && tcArg != null -> typeclassesCompatable(tcArg, tcParam, unconstrainedAllowed = !ty.rigid)
-            tyVar.rigid && tcArg == null -> !ty.rigid && tcParam == null
-            tyVar.rigid && tcArg != null && ty.rigid -> tcArg == tcParam
-            tyVar.rigid && tcArg != null && !ty.rigid -> typeclassesCompatable(tcArg, tcParam, unconstrainedAllowed = !ty.rigid)
+            !ty1.rigid && tc1 == null -> true
+            !ty1.rigid && tc1 != null -> typeclassesCompatable(tc1, tc2, unconstrainedAllowed = !ty2.rigid)
+            ty1.rigid && tc1 == null -> !ty2.rigid && tc2 == null
+            ty1.rigid && tc1 != null && ty2.rigid -> tc1 == tc2
+            ty1.rigid && tc1 != null && !ty2.rigid -> typeclassesCompatable(tc1, tc2, unconstrainedAllowed = !ty2.rigid)
             else -> error("impossible")
         }
     }
