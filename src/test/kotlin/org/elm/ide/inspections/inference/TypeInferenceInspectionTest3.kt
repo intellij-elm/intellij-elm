@@ -761,12 +761,12 @@ main a b c d =
 """)
 
     fun `test assigning flex var to rigid typeclass`() = checkByText("""
-a : a
-a = Debug.todo ""
-
 main : (number -> appendable -> comparable -> compappend -> appendable) -> ()
 main f =
-    <error descr="Type mismatch.Required: ()Found: appendable">f a a a a</error>
+    let
+        g a b c d = f a b c d
+    in
+    <error descr="Type mismatch.Required: ()Found: number → appendable → comparable → compappend → appendable">g</error>
 """)
 
     fun `test assigning flex var to flex typeclass`() = checkByText("""

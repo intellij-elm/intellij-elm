@@ -1111,10 +1111,18 @@ private class InferenceScope(
         if (ty1 == ty2) return
         // assigning anything to a variable constrains the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
-            replacements[ty2] = ty1
+            if (ty1 is TyVar && getTypeclassName(ty1) == null && getTypeclassName(ty2) != null) {
+                // There's a very specific edge case where, when as assignment like `a => number` should
+                // constrain `a` to be a number, rather than `number` to be an `a`.
+                replacements[ty1] = ty2
+            } else {
+                // Normally, you have assignments like `Int => number` which constrains `number` to
+                // be an `Int`.
+                replacements[ty2] = ty1
+            }
         }
         // unification: assigning a var to a type also constrains the var, but only if not
-        // assigning it to another var.
+        // assigning it to another var, since we just handled that case above.
         if (ty1 is TyVar && ty2 !is TyVar && ty1 !in replacements) {
             // If the var is being assigned to an extension record, make the constraint mutable,
             // since other field constraints could be added later.
