@@ -20,9 +20,20 @@ sealed class Ty {
 
 // vars are not a data class because they need to be compared by identity
 /**
- * A type variable.
+ * A type variable, either rigid or flexible.
  *
- * Either rigid (e.g. `a` in `Maybe a`), or flexible (e.g. the type of an unannotated function parameter).
+ * e.g. Given the following declaration:
+ *
+ * ```
+ * foo : a -> ()
+ * foo x =
+ *    ...
+ * ```
+ *
+ * While inferring the body of the declaration, the value `x` is a rigid variable (meaning it can't
+ * be assigned to anything expecting a concrete type, so an expression like `x + 1` is invalid).
+ * When calling `foo`, the parameter is a flexible variable (meaning any type can be passed as an
+ * argument).
  */
 class TyVar(val name: String, val rigid: Boolean = false) : Ty() {
     override val alias: AliasInfo? get() = null

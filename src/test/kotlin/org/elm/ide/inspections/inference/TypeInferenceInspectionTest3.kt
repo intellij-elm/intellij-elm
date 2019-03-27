@@ -735,6 +735,16 @@ main f =
     b <error descr="Type mismatch.Required: aFound: String">""</error>
 """)
 
+    fun `test passing rigid var through unannotated function stored as value`() = checkByText("""
+main : (() -> a -> a) -> a -> ()
+main f a =
+    let
+        g = f ()
+        h = g a
+    in
+    <error descr="Type mismatch.Required: ()Found: a">h</error>
+""")
+
     fun `test assigning flex typeclass to rigid typeclass`() = checkByText("""
 main : (number -> number) -> ()
 main f =

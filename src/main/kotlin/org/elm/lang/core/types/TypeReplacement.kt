@@ -111,7 +111,9 @@ class TypeReplacement(
     // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
         if (key !in replacements && (freshen || flexify)) {
-            val ty = TyVar(key.name, rigid = !flexify && key.rigid)
+            if (key.rigid && !flexify) return null // never freshen rigid vars
+
+            val ty = TyVar(key.name, rigid = false)
             replacements[key] = true to ty
             return ty
         }
