@@ -325,7 +325,7 @@ private class InferenceScope(
         var ok = true
         for (i in 0..arguments.lastIndex) {
             // don't short-circuit: we need to check all args
-            ok = ok && requireAssignable(arguments[i], argTys[i], targetTy.parameters[i])
+            ok = requireAssignable(arguments[i], argTys[i], targetTy.parameters[i]) && ok
         }
 
         val resultTy = if (ok) {
@@ -1040,8 +1040,6 @@ private class InferenceScope(
      * [param] must always be false if [ty] is a [TyVar]
      */
     private fun varAssignable(tyVar: TyVar, ty: Ty, param: Boolean): Boolean {
-        // TODO f x y = if ( x < y ) then ( x ++ y ) else ( y ++ x )
-
         if (ty !is TyVar) {
             if (!param) {
                 return !tyVar.rigid && nonVarAssignableToVar(ty, tyVar)
