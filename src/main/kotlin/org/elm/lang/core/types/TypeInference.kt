@@ -137,7 +137,7 @@ private class InferenceScope(
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
         val patternList = lambda.patternList
         val paramVars = uniqueVars(patternList.size)
-        patternList.zip(paramVars).forEach { (p, t) -> bindPattern(p, t, true) }
+        patternList.zip(paramVars) { p, t -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
         return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
     }
@@ -707,7 +707,7 @@ private class InferenceScope(
 
         if (typeRefTy == null) {
             val params = uniqueVars(patterns.size)
-            patterns.zip(params).forEach { (pat, param) -> bindPattern(pat, param, true) }
+            patterns.zip(params) { pat, param -> bindPattern(pat, param, true) }
             return ParameterBindingResult.Unannotated(params, params.size)
         }
         val maxParams = (typeRefTy as? TyFunction)?.parameters?.size ?: 0
@@ -718,7 +718,7 @@ private class InferenceScope(
         }
 
         if (typeRefTy is TyFunction) {
-            patterns.zip(typeRefTy.parameters).forEach { (pat, ty) -> bindPattern(pat, ty, true) }
+            patterns.zip(typeRefTy.parameters) { pat, ty -> bindPattern(pat, ty, true) }
         }
         return ParameterBindingResult.Annotated(typeRefTy, patterns.size)
     }
@@ -868,8 +868,8 @@ private class InferenceScope(
             return
         }
 
-        patternList.zip(ty.types).forEach { (pat, type) ->
-            bindPattern(pat, type, isParameter)
+        patternList.zip(ty.types) { p, t ->
+            bindPattern(p, t, isParameter)
         }
     }
 
@@ -878,14 +878,14 @@ private class InferenceScope(
 
         val ty = bindIfVar(pat, type) {
             TyRecord(
-                    fields = fields.zip(uniqueVars(fields.size)).associate { (f, t) -> f.name to t },
+                    fields = fields.zip(uniqueVars(fields.size)) { f, t -> f.name to t }.toMap(),
                     baseTy = TyVar("a")
             )
         }
 
         if (ty !is TyRecord || fields.any { it.name !in ty.fields }) {
             if (isInferable(ty)) {
-                val actualTyParams = fields.map { it.name }.zip(uniqueVars(fields.size))
+                val actualTyParams = fields.zip(uniqueVars(fields.size)) { f, v -> f.name to v }
                 val actualTy = TyRecord(actualTyParams.toMap())
 
                 // For pattern declarations, the elm compiler issues diagnostics on the expression
@@ -1012,7 +1012,7 @@ private class InferenceScope(
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>): Boolean {
         // don't short circuit so that all types get applied
-        return ty1.size == ty2.size && ty1.zip(ty2).map { (l, r) -> assignable(l, r) }.all { it }
+        return ty1.size == ty2.size && ty1.zip(ty2) { l, r -> assignable(l, r) }.all { it }
     }
 
     private fun funcsAssignable(ty1: TyFunction, ty2: TyFunction): Boolean {
