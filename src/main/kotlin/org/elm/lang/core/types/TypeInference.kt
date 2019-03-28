@@ -937,7 +937,7 @@ private class InferenceScope(
         val result = ty1 === ty2 || ty1 is TyUnknown || ty2 is TyUnknown || if (ty1 !is TyVar && ty2 is TyVar) {
             nonVarAssignableToVar(ty1, ty2)
         } else when (ty1) {
-            is TyVar -> if (ty2 is TyVar) varAssignable(ty1, ty2) else nonVarAssignableToVar(ty2, ty1)
+            is TyVar -> if (ty2 is TyVar) varsAssignable(ty1, ty2) else nonVarAssignableToVar(ty2, ty1)
             is TyTuple -> ty2 is TyTuple
                     && ty1.types.size == ty2.types.size
                     && allAssignable(ty1.types, ty2.types)
@@ -1036,13 +1036,16 @@ private class InferenceScope(
     /**
      * Check if a [ty2] can that compares unequal to a [ty1] can be unified with it
      */
-    private fun varAssignable(ty1: TyVar, ty2: TyVar): Boolean {
+    private fun varsAssignable(ty1: TyVar, ty2: TyVar): Boolean {
         val tc1 = getTypeclassName(ty1)
         val tc2 = getTypeclassName(ty2)
 
         return when {
             !ty1.rigid && tc1 == null -> true
-            !ty1.rigid && tc1 != null -> typeclassesCompatable(tc1, tc2, unconstrainedAllowed = !ty2.rigid)
+            !ty1.rigid && tc1 != null -> {
+                typeclassesCompatable(tc1, tc2, unconstrainedAllowed = !ty2.rigid) ||
+                        !ty2.rigid && typeclassesContrainToCompappend(tc1, tc2)
+            }
             ty1.rigid && tc1 == null -> !ty2.rigid && tc2 == null
             ty1.rigid && tc1 != null && ty2.rigid -> tc1 == tc2
             ty1.rigid && tc1 != null && !ty2.rigid -> typeclassesCompatable(tc1, tc2, unconstrainedAllowed = !ty2.rigid)
@@ -1063,7 +1066,8 @@ private class InferenceScope(
         //
         //  Not listed in the elm guide:
         //
-        //  - `comparable` permits `number` and lists/tuples of `number`
+        //  - `comparable` permits `compappend`, `number` and lists/tuples of `number`
+        //  - `appendable` permits `compappend`
         //  - `compappend` permits `List compappend`
 
         fun List<Ty>.allAssignableTo(typeclass: String): Boolean = all { assignable(it, TyVar(typeclass)) }
@@ -1103,18 +1107,37 @@ private class InferenceScope(
             name2 == null -> unconstrainedAllowed
             name1 == name2 -> true
             name1 == "number" && name2 == "comparable" -> true
+            name1 == "compappend" && (name2 == "comparable" || name2 == "appendable") -> true
             else -> false
         }
+    }
+
+    private fun typeclassesContrainToCompappend(tc1: String?, tc2: String?): Boolean {
+        return tc1 == "appendable" && tc2 == "comparable" || tc1 == "comparable" && tc2 == "appendable"
     }
 
     private fun trackReplacement(ty1: Ty, ty2: Ty) {
         if (ty1 == ty2) return
         // assigning anything to a variable constrains the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
-            if (ty1 is TyVar && getTypeclassName(ty1) == null && getTypeclassName(ty2) != null) {
-                // There's a very specific edge case where, when as assignment like `a => number` should
-                // constrain `a` to be a number, rather than `number` to be an `a`.
-                replacements[ty1] = ty2
+            if (ty1 is TyVar) {
+                val tc1 = getTypeclassName(ty1)
+                val tc2 = getTypeclassName(ty2)
+                if (tc1 == null && tc2 != null) {
+                    // There's a very specific edge case where an assignment like `a => number`
+                    // should constrain `a` to be a `number`, rather than `number` to be an `a`.
+                    replacements[ty1] = ty2
+                } else if (!ty1.rigid && !ty2.rigid && typeclassesContrainToCompappend(tc1, tc2)) {
+                    // There's another edge case where unifying flex `comparable` with flex
+                    // `appendable` creates a new contraint with typeclass `compappend`
+                    val ty = TyVar("compappend")
+                    replacements[ty1] = ty
+                    replacements[ty2] = ty
+                }else {
+                    // Normally, you have assignments like `Int => number` which constrains `number` to
+                    // be an `Int`.
+                    replacements[ty2] = ty1
+                }
             } else {
                 // Normally, you have assignments like `Int => number` which constrains `number` to
                 // be an `Int`.

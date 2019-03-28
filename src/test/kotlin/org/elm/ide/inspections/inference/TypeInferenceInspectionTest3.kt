@@ -6,6 +6,25 @@ import org.elm.ide.inspections.ElmTypeInferenceInspection
 class TypeInferenceInspectionTest3 : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
+    fun `test compappend inference from compare before append`() = checkByText("""
+f x y = if ( x < y ) then ( x ++ y ) else ( y ++ x )
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: compappend → compappend → compappend">f</error>
+""")
+
+    fun `test compappend inference from append before compare`() = checkByText("""
+f x y =
+    let
+        b = x ++ y
+        c = x < y
+    in
+        x
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: compappend → compappend → compappend">f</error>
+""")
+
     fun `test mismatched return value from rigid vars`() = checkByText("""
 foo : a -> a
 foo a = a
@@ -247,6 +266,15 @@ main a b =
     <error descr="Type mismatch.Required: ()Found: appendable">foo a b</error>
 """)
 
+    fun `test constraint appendable comparable mismatch`() = checkByText("""
+foo : appendable -> appendable
+foo a = a
+
+main : comparable -> ()
+main a =
+    foo <error descr="Type mismatch.Required: appendableFound: comparable">a</error>
+""")
+
     fun `test constraint appendable string and list mismatch`() = checkByText("""
 foo : appendable -> appendable -> appendable
 foo a b = a
@@ -378,6 +406,15 @@ foo a b = a
 main : ()
 main =
     <error descr="Type mismatch.Required: ()Found: (Float, Float)">foo (1.1, 2.2) (3.3, 4.4)</error>
+""")
+
+    fun `test constraint comparable appendable mismatch`() = checkByText("""
+foo : comparable -> comparable
+foo a = a
+
+main : appendable -> ()
+main a =
+    foo <error descr="Type mismatch.Required: comparableFound: appendable">a</error>
 """)
 
     fun `test constraint comparable tuple mismatch`() = checkByText("""
