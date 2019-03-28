@@ -85,7 +85,7 @@ fun ElmTypeAnnotation.typeExpressionInference(rigid: Boolean = true): InferenceR
     }
     // As an optimization, we don't freshen the tys here. The `flexify` call takes care of
     // freshening the inferred ty for function calls. Parameter binding needs expression types to
-    // _not_be freshened so that we can keep track of variables that reference outer scopes.
+    // _not_ be freshened so that we can keep track of variables that reference outer scopes.
     // Non-inference usages don't care about freshness either way.
     if (!rigid) {
         return cachedValue.copy(ty = TypeReplacement.flexify(cachedValue.ty))
@@ -221,7 +221,7 @@ class TypeExpression(
     }
 
     private fun typeVariableType(typeVar: ElmTypeVariable): Ty {
-        // type variables can only reference others vars in the same annotation or a parent
+        // type variables only ever reference other vars in the same annotation or a parent
         // annotation; there's no risk of circular references.
         val ref = typeVar.reference.resolve()
 
@@ -332,4 +332,3 @@ class TypeExpression(
         TyVar(element.text, rigid = rigidVars)
     }
 }
-
