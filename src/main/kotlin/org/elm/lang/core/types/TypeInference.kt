@@ -1157,7 +1157,13 @@ private class InferenceScope(
         }
     }
 
-    /** If the [ty] corresponding to [elem] is a [TyVar], bind [ty] to [default]; otherwise return [ty] */
+    /**
+     * If the [ty] corresponding to [elem] is a [TyVar], bind [ty] to [default]; otherwise return [ty].
+     *
+     * This is used to constrain unannotated parameters during binding. Note that this binds via
+     * [requireAssignable], so if [ty] is rigid, this will take care of generating a diagnostic
+     * rather than constraining the variable.
+     */
     private inline fun bindIfVar(elem: ElmPsiElement, ty: Ty, default: () -> Ty): Ty {
         return when (ty) {
             is TyVar -> default().also { requireAssignable(elem, ty, it) }

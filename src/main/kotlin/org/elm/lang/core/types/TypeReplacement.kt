@@ -34,6 +34,10 @@ class TypeReplacement(
          * its vars are distinct, even though they share a name with vars from the previous
          * reference. If we use the cached tys, there's no way to distinguish between vars in one
          * call from another.
+         *
+         * Note that rigid vars are never freshened. In a function with an annotation like
+         * `f : (a -> b) -> a -> b`, every time you call the `(a -> b)` parameter within the body of
+         * `f`, the ty of `a` and `b` have to be the same.
          */
         fun freshenVars(ty: Ty): Ty {
             return TypeReplacement(emptyMap(), freshen = true, flexify = false).replace(ty)

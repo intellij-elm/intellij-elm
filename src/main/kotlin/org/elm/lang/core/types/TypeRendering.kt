@@ -3,7 +3,7 @@ package org.elm.lang.core.types
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
 
 /**
- * Render a [Ty] to a strign that can be shown tot he user.
+ * Render a [Ty] to a string that can be shown to the user.
  *
  * @param linkify If true, add hyperlinks to union names
  * @param withModule If true, qualify union names with their module
@@ -33,8 +33,8 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
         if (ty in varDisplayNames) return varDisplayNames[ty]!!
 
         // If two different normal vars in this ty have the same name, show a unique name instead to
-        // avoid confusion. Typeclasses are identified by their name rather than their id, so we
-        // leave these as-is.
+        // avoid confusion. This is common with multiple unannotated functions, where they'll each
+        // have types inferred as `a`, `b`, etc.
         val takenNames = varDisplayNames.values
         if (getTypeclassName(ty) == null && ty.name in takenNames) {
             val displayName = possibleNames.first { it !in takenNames }
@@ -45,7 +45,6 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
         varDisplayNames[ty] = ty.name
         return ty.name
     }
-
 
     private fun renderFunc(ty: TyFunction): String {
         return (ty.parameters + ty.ret).joinToString(" → ") {
