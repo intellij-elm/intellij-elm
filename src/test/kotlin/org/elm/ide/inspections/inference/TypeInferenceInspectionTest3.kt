@@ -239,6 +239,17 @@ main =
     foo 1 <error descr="Type mismatch.Required: numberFound: ()">()</error>
 """)
 
+    fun `test constraint number comparable`() = checkByText("""
+foo : number -> number
+foo a = a
+
+bar : () -> ()
+bar a = a
+
+main a b =
+    bar <error descr="Type mismatch.Required: ()Found: number">(foo (if a < b then a else b))</error>
+""")
+
     fun `test constraint appendable string`() = checkByText("""
 foo : appendable -> appendable -> appendable
 foo a b = a
@@ -316,7 +327,6 @@ main : number -> ()
 main a =
     <error descr="Type mismatch.Required: ()Found: number">foo a a</error>
 """)
-
 
     fun `test constraint comparable int literal`() = checkByText("""
 foo : comparable -> comparable -> comparable

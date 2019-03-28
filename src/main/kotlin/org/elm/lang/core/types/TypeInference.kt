@@ -1067,6 +1067,7 @@ private class InferenceScope(
         //
         //  Not listed in the elm guide:
         //
+        //  - `number`     permits `comparable`
         //  - `comparable` permits `compappend`, `number` and lists/tuples of `number`
         //  - `appendable` permits `compappend`
         //  - `compappend` permits `List compappend`
@@ -1108,6 +1109,7 @@ private class InferenceScope(
             name2 == null -> unconstrainedAllowed
             name1 == name2 -> true
             name1 == "number" && name2 == "comparable" -> true
+            name1 == "comparable" && name2 == "number" -> true
             name1 == "compappend" && (name2 == "comparable" || name2 == "appendable") -> true
             else -> false
         }
@@ -1125,15 +1127,16 @@ private class InferenceScope(
                 val tc1 = getTypeclassName(ty1)
                 val tc2 = getTypeclassName(ty2)
                 if (tc1 == null && tc2 != null) {
-                    // There's a very specific edge case where an assignment like `a => number`
+                    // There's an edge case where an assignment like `a => number`
                     // should constrain `a` to be a `number`, rather than `number` to be an `a`.
                     replacements[ty1] = ty2
                 } else if (!ty1.rigid && !ty2.rigid && typeclassesContrainToCompappend(tc1, tc2)) {
                     // There's another edge case where unifying flex `comparable` with flex
-                    // `appendable` creates a new contraint with typeclass `compappend`
-                    val ty = TyVar("compappend")
-                    replacements[ty1] = ty
-                    replacements[ty2] = ty
+                    // `appendable` creates a new constraint with typeclass `compappend`
+                    replacements[ty1] = TyVar("compappend")
+                } else if (!ty1.rigid && !ty2.rigid && tc1 == "comparable" && tc2 == "number") {
+                    // `comparable` can be constrained to `number`
+                    replacements[ty1] = ty2
                 } else {
                     // Normally, you have assignments like `Int => number` which constrains `number` to
                     // be an `Int`.
