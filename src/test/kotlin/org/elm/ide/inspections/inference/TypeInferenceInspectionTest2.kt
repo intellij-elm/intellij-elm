@@ -61,7 +61,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Type mismatch.Required: ((), ())Found: (a, b, c)">(x, y, z)</error> = ((), ())
+        <error descr="Invalid pattern.Required type: ((), ())Pattern type: (a, b, c)">(x, y, z)</error> = ((), ())
     in
         y
 """)
@@ -70,7 +70,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Type mismatch.Required: ((), (), ())Found: (a, b)">(x, y)</error> = ((), (), ())
+        <error descr="Invalid pattern.Required type: ((), (), ())Pattern type: (a, b)">(x, y)</error> = ((), (), ())
     in
         y
 """)
@@ -145,7 +145,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Type mismatch.Required: ()Found: { x : a, y : b }">{x, y}</error> = ()
+        <error descr="Invalid pattern.Required type: ()Pattern type: { x : a, y : b }">{x, y}</error> = ()
     in
         y
 """)
@@ -154,7 +154,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Type mismatch.Required: ()Found: (a, b)">(x, y)</error> = ()
+        <error descr="Invalid pattern.Required type: ()Pattern type: (a, b)">(x, y)</error> = ()
     in
         y
 """)

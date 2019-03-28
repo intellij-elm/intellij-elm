@@ -93,7 +93,8 @@ class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,
         private val expected: Ty,
-        endElement: PsiElement? = null
+        endElement: PsiElement? = null,
+        private val patternBinding: Boolean = false
 ) : ElmDiagnostic(element, endElement) {
     override val message: String
         get() {
@@ -104,9 +105,15 @@ class TypeMismatchError(
                 expectedRendered = expected.renderedText(false, true)
                 foundRendered = actual.renderedText(false, true)
             }
-            return "Type mismatch." +
-                    "<br>Required: $expectedRendered" +
-                    "<br>Found: $foundRendered"
+            return if (patternBinding) {
+                "Invalid pattern." +
+                        "<br>Required type: $expectedRendered" +
+                        "<br>Pattern type: $foundRendered"
+            } else {
+                "Type mismatch." +
+                        "<br>Required: $expectedRendered" +
+                        "<br>Found: $foundRendered"
+            }
         }
 
     private fun tysAreAmbiguousUnions(l: Ty, r: Ty): Boolean {

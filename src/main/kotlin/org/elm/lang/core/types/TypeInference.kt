@@ -777,7 +777,7 @@ private class InferenceScope(
             is ElmRecordPattern -> bindRecordPattern(pat, ty, isParameter)
             is ElmTuplePattern -> bindTuplePattern(pat, ty, isParameter)
             is ElmUnionPattern -> bindUnionPattern(pat, ty, isParameter)
-            is ElmUnitExpr -> requireAssignable(pat, ty, TyUnit())
+            is ElmUnitExpr -> requireAssignable(pat, ty, TyUnit(), patternBinding = true)
             else -> error(pat, "unexpected pattern type")
         }
     }
@@ -795,7 +795,7 @@ private class InferenceScope(
 
         if (!isInferable(ty) || ty !is TyUnion || !ty.isTyList) {
             if (isInferable(ty)) {
-                diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty)
+                diagnostics += TypeMismatchError(pat, TyList(TyVar("a")), ty, patternBinding = true)
             }
             parts.forEach { bindPattern(it, TyUnknown(), false) }
             return
@@ -863,7 +863,7 @@ private class InferenceScope(
             patternList.forEach { bindPattern(it, TyUnknown(), isParameter) }
             if (isInferable(ty)) {
                 val actualTy = TyTuple(uniqueVars(patternList.size))
-                diagnostics += TypeMismatchError(pat, actualTy, ty)
+                diagnostics += TypeMismatchError(pat, actualTy, ty, patternBinding = true)
             }
             return
         }
@@ -890,7 +890,7 @@ private class InferenceScope(
 
                 // For pattern declarations, the elm compiler issues diagnostics on the expression
                 // rather than the pattern, but it's easier for us to issue them on the pattern instead.
-                diagnostics += TypeMismatchError(pat, actualTy, ty)
+                diagnostics += TypeMismatchError(pat, actualTy, ty, patternBinding = true)
             }
 
             for (f in fields) {
@@ -918,13 +918,14 @@ private class InferenceScope(
             element: PsiElement,
             ty1: Ty,
             ty2: Ty,
-            endElement: ElmPsiElement? = null
+            endElement: ElmPsiElement? = null,
+            patternBinding: Boolean = false
     ): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
-            diagnostics += TypeMismatchError(element, t1, t2, endElement)
+            diagnostics += TypeMismatchError(element, t1, t2, endElement, patternBinding)
         }
         return assignable
     }
@@ -1133,7 +1134,7 @@ private class InferenceScope(
                     val ty = TyVar("compappend")
                     replacements[ty1] = ty
                     replacements[ty2] = ty
-                }else {
+                } else {
                     // Normally, you have assignments like `Int => number` which constrains `number` to
                     // be an `Int`.
                     replacements[ty2] = ty1
@@ -1166,7 +1167,7 @@ private class InferenceScope(
      */
     private inline fun bindIfVar(elem: ElmPsiElement, ty: Ty, default: () -> Ty): Ty {
         return when (ty) {
-            is TyVar -> default().also { requireAssignable(elem, ty, it) }
+            is TyVar -> default().also { requireAssignable(elem, ty, it, patternBinding = true) }
             else -> ty
         }
     }
