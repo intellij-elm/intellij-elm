@@ -4,6 +4,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.ParameterizedCachedValue
 import org.elm.lang.core.diagnostics.BadRecursionError
 import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
@@ -19,7 +20,8 @@ typealias VariantParameters = Map<String, List<Ty>>
 
 private val TY_UNION_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<TyUnion>>> = Key.create("TY_UNION_INFERENCE")
 private val TY_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<Ty>>> = Key.create("TY_INFERENCE")
-private val EXPR_INFER_CACHE_KEY: Key<CachedValue<InferenceResult>> = Key.create("EXPR_INFER_CACHE_KEY")
+private val TY_ANNOTATION_CACHE_KEY: Key<CachedValue<InferenceResult>> = Key.create("TY_ANNOTATION_CACHE_KEY")
+private val TY_ALIAS_CACHE_KEY: Key<ParameterizedCachedValue<ParameterizedInferenceResult<Ty>, MutableSet<ElmTypeAliasDeclaration>>> = Key.create("TY_ALIAS_CACHE_KEY")
 private val TY_VARIANT_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<VariantParameters>>> = Key.create("TY_VARIANT_INFERENCE")
 
 fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> {
@@ -30,11 +32,13 @@ fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<T
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value) as TyUnion)
 }
 
-fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
-    val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
-        val inferenceResult = TypeExpression(this, rigidVars = false).beginTypeAliasDeclarationInference(this)
+fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> = typeExpressionInference(mutableSetOf())
+
+private fun ElmTypeAliasDeclaration.typeExpressionInference(activeAliases: MutableSet<ElmTypeAliasDeclaration>): ParameterizedInferenceResult<Ty> {
+    val cachedValue = CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TY_ALIAS_CACHE_KEY, { useActiveAliases ->
+        val inferenceResult = TypeExpression(this, rigidVars = false, activeAliases = useActiveAliases).beginTypeAliasDeclarationInference(this)
         CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
-    }
+    },  /*trackValue*/ false, /*parameter*/ activeAliases)
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
 
@@ -56,7 +60,6 @@ fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> 
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
 
-
 /**
  * Get the type of the expression in this annotation, or null if the program is incomplete and no expression exists.
  *
@@ -70,7 +73,7 @@ fun ElmTypeAnnotation.typeExpressionInference(rigid: Boolean = true): InferenceR
     // find that tracker.
     val parentModificationTracker = outermostDeclaration(strict = true)?.modificationTracker
 
-    val cachedValue = CachedValuesManager.getCachedValue(typeRef, EXPR_INFER_CACHE_KEY) {
+    val cachedValue = CachedValuesManager.getCachedValue(typeRef, TY_ANNOTATION_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = true).beginTypeRefInference(typeRef)
 
         val trackers = when (parentModificationTracker) {
@@ -117,6 +120,11 @@ fun ElmTypeDeclaration.variantInference(): ParameterizedInferenceResult<VariantP
  *
  * This two step process is simpler than trying to pass arguments around while inferring
  * declarations, and opens the door to caching the [Ty]s for declarations and aliases.
+ *
+ * @property root The element that will be passed to a `begin*` function
+ * @property rigidVars If true, any created [TyVar]s will be rigid
+ * @property diagnostics The list to populate with diagnostics during inference
+ * @property activeAliases The set of type alias declarations currently being inferred on the stack. Used to detect infinite recursion.
  */
 class TypeExpression(
         private val root: ElmPsiElement,
@@ -134,7 +142,6 @@ class TypeExpression(
         return result(ty)
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun beginTypeRefInference(typeExpr: ElmTypeExpression): InferenceResult {
         val ty = typeExpressionType(typeExpr)
         return InferenceResult(expressionTypes, diagnostics, ty)
@@ -269,16 +276,8 @@ class TypeExpression(
         val ref = typeRef.reference.resolve()
 
         val declaredTy = when (ref) {
-            is ElmTypeAliasDeclaration -> when (root) {
-                is ElmTypeAliasDeclaration -> {
-                    val child = TypeExpression(ref, false, diagnostics, activeAliases.toMutableSet())
-                    child.beginTypeAliasDeclarationInference(ref).value
-                }
-                else -> ref.typeExpressionInference().value
-            }
-            is ElmTypeDeclaration -> {
-                ref.typeExpressionInference().value
-            }
+            is ElmTypeAliasDeclaration -> ref.typeExpressionInference(activeAliases).value
+            is ElmTypeDeclaration -> ref.typeExpressionInference().value
             // In 0.19, unlike all other built-in types, Elm core doesn't define the List type anywhere, so the
             // reference won't resolve. So we check for a reference to that type here. Note that users can
             // create their own List types that shadow the built-in, so we only want to do this check if the
