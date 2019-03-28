@@ -70,12 +70,23 @@ class RecordFieldError(
 
 class RecordBaseIdError(
         element: PsiElement,
-        private val expected: Ty
+        private val actual: Ty
 ) : ElmDiagnostic(element) {
     override val message: String
         get() {
-            val expectedRendered = expected.renderedText(false, false)
+            val expectedRendered = actual.renderedText(false, false)
             return "Type must be a record.<br>Found: $expectedRendered"
+        }
+}
+
+class FieldAccessOnNonRecordError(
+        element: PsiElement,
+        private val actual: Ty
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() {
+            val expectedRendered = actual.renderedText(false, false)
+            return "Value is not a record, cannot access fields.<br>Type: $expectedRendered"
         }
 }
 

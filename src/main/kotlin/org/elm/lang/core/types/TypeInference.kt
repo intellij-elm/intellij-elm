@@ -395,7 +395,7 @@ private class InferenceScope(
 
         if (targetTy !is TyRecord) {
             if (isInferable(targetTy)) {
-                diagnostics += TypeMismatchError(target, targetTy, TyVar("record"))
+                diagnostics += FieldAccessOnNonRecordError(target, targetTy)
             }
             return TyUnknown()
         }

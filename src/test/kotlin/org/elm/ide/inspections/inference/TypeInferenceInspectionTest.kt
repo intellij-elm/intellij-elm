@@ -358,13 +358,13 @@ type alias A = {x: ()}
 type alias B = {a: A}
 type alias C = {b: B}
 fieldAccessor : C -> ()
-fieldAccessor c = <error descr="Type mismatch.Required: recordFound: ()">c.b.a.x</error>.z.z
+fieldAccessor c = <error descr="Value is not a record, cannot access fields.Type: ()">c.b.a.x</error>.z.z
 
 exprAccessor : ()
-exprAccessor = <error descr="Type mismatch.Required: recordFound: ()">(C (B (A ()))).b.a.x</error>.z.z
+exprAccessor = <error descr="Value is not a record, cannot access fields.Type: ()">(C (B (A ()))).b.a.x</error>.z.z
 
 recordAccessor : ()
-recordAccessor = <error descr="Type mismatch.Required: recordFound: ()">{b = {a = { x = () } } }.b.a.x</error>.z.z
+recordAccessor = <error descr="Value is not a record, cannot access fields.Type: ()">{b = {a = { x = () } } }.b.a.x</error>.z.z
 """)
 
     fun `test missing field in accessor chains`() = checkByText("""
