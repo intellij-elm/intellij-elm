@@ -2,7 +2,10 @@ package org.elm.lang.core.types
 
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.*
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.ParameterizedCachedValue
+import com.intellij.psi.util.parentOfType
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.OperatorAssociativity.NON
@@ -344,8 +347,8 @@ private class InferenceScope(
 
     private fun inferAtom(atom: ElmAtomTag): Ty {
         // For most atoms, we don't try to infer them if they contain errors.
-        val ty = when  {
-            atom is ElmLetInExpr ->  inferChild { beginLetInInference(atom) }.ty
+        val ty = when {
+            atom is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
             atom is ElmCaseOfExpr -> inferCase(atom)
             atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
             atom.hasErrors -> TyUnknown()
@@ -1058,7 +1061,7 @@ private class InferenceScope(
             !ty1.rigid && tc1 == null -> true
             !ty1.rigid && tc1 != null -> {
                 typeclassesCompatable(tc1, tc2, unconstrainedAllowed = !ty2.rigid) ||
-                        !ty2.rigid && typeclassesContrainToCompappend(tc1, tc2)
+                        !ty2.rigid && typeclassesConstrainToCompappend(tc1, tc2)
             }
             ty1.rigid && tc1 == null -> !ty2.rigid && tc2 == null
             ty1.rigid && tc1 != null && ty2.rigid -> tc1 == tc2
@@ -1123,13 +1126,18 @@ private class InferenceScope(
             name1 == name2 -> true
             name1 == "number" && name2 == "comparable" -> true
             name1 == "comparable" && name2 == "number" -> true
+            name1 == "comparable" && (name2 == "number" || name2 == "compappend") -> true
             name1 == "compappend" && (name2 == "comparable" || name2 == "appendable") -> true
             else -> false
         }
     }
 
-    private fun typeclassesContrainToCompappend(tc1: String?, tc2: String?): Boolean {
-        return tc1 == "appendable" && tc2 == "comparable" || tc1 == "comparable" && tc2 == "appendable"
+    private fun typeclassesConstrainToCompappend(tc1: String?, tc2: String?): Boolean {
+        return when (tc1) {
+            "comparable" -> tc2 == "appendable" || tc2 == "compappend"
+            "appendable" -> tc2 == "comparable" || tc2 == "compappend"
+            else -> false
+        }
     }
 
     private fun trackReplacement(ty1: Ty, ty2: Ty) {
@@ -1143,10 +1151,12 @@ private class InferenceScope(
                     // There's an edge case where an assignment like `a => number`
                     // should constrain `a` to be a `number`, rather than `number` to be an `a`.
                     replacements[ty1] = ty2
-                } else if (!ty1.rigid && !ty2.rigid && typeclassesContrainToCompappend(tc1, tc2)) {
+                } else if (!ty1.rigid && !ty2.rigid && typeclassesConstrainToCompappend(tc1, tc2)) {
                     // There's another edge case where unifying flex `comparable` with flex
-                    // `appendable` creates a new constraint with typeclass `compappend`
-                    replacements[ty1] = TyVar("compappend")
+                    // `appendable` creates a new constraint with typeclass `compappend`.
+                    // Assigning flex `comparable` or `appendable` to flex `compappend` will also
+                    // constrain the arguments.
+                    replacements[ty1] = if (tc2 == "compappend") ty2 else TyVar("compappend")
                 } else if (!ty1.rigid && !ty2.rigid && tc1 == "comparable" && tc2 == "number") {
                     // `comparable` can be constrained to `number`
                     replacements[ty1] = ty2

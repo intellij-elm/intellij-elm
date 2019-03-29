@@ -25,6 +25,34 @@ main : ()
 main = <error descr="Type mismatch.Required: ()Found: compappend → compappend → compappend">f</error>
 """)
 
+    fun `test compappend inference from comparable assigned to compappend`() = checkByText("""
+f x y =
+    let
+        b = x < x
+        c = x ++ x
+        d = y < y
+        e = x < y
+    in
+        y
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: compappend → compappend → compappend">f</error>
+""")
+
+    fun `test compappend inference from appendable assigned to compappend`() = checkByText("""
+f x y =
+    let
+        b = x < x
+        c = x ++ x
+        d = y ++ y
+        e = x < y
+    in
+        y
+
+main : ()
+main = <error descr="Type mismatch.Required: ()Found: compappend → compappend → compappend">f</error>
+""")
+
     fun `test mismatched return value from rigid vars`() = checkByText("""
 foo : a -> a
 foo a = a
