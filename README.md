@@ -88,7 +88,7 @@ Does your project use WebGL/GLSL? If you install the [GLSL language plugin](http
 
 # Type Inference and Type Checking
 
-The plugin can perform type inference on arbitrary expressions in your program. Press `ctrl-shift-p` to display the inferred type of the expression under the cursor/caret.
+The plugin can perform type inference on arbitrary expressions in your program. Use the `Type Info` command (bound to `cmd/ctrl-shift-p` by default) to display the inferred type of the expression under the cursor/caret.
 
 The plugin also performs type checking, marking incompatible types in red.
 
