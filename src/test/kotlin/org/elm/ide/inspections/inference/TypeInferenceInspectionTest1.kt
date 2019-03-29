@@ -5,7 +5,7 @@ import org.elm.ide.inspections.ElmTypeInferenceInspection
 
 // The type inference tests are broken up arbitrarily into several files, since IntelliJ gets bogged
 // down when they're all combined.
-class TypeInferenceInspectionTest : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
+class TypeInferenceInspectionTest1 : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
     fun `test too many arguments to value`() = checkByText("""

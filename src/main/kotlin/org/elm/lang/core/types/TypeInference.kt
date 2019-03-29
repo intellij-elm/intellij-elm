@@ -88,9 +88,9 @@ private class InferenceScope(
         val assignee = declaration.assignee
 
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
-        // references in expressions that contain syntax errors can result in infinite recursion and
-        // surprising bugs.
-        if (checkRecursion(declaration) || assignee == null || PsiTreeUtil.hasErrorElements(assignee)) {
+        // references in bodies when the parameters contain syntax errors can result in infinite
+        // recursion and surprising bugs.
+        if (checkRecursion(declaration) || assignee == null || assignee.hasErrors) {
             return replacedResult(TyUnknown())
         }
 
@@ -110,7 +110,7 @@ private class InferenceScope(
         // annotation, if there is one.
         val expr = declaration.expression
         var bodyTy: Ty = TyUnknown()
-        if (expr != null && !PsiTreeUtil.hasErrorElements(expr)) {
+        if (expr != null) {
             bodyTy = inferExpression(expr)
 
             if (binding is ParameterBindingResult.Annotated) {
@@ -227,7 +227,7 @@ private class InferenceScope(
      */
 
     private fun inferExpression(expr: ElmExpressionTag?): Ty {
-        if (expr == null || PsiTreeUtil.hasErrorElements(expr)) return TyUnknown()
+        if (expr == null) return TyUnknown()
         return when (expr) {
             is ElmBinOpExpr -> inferBinOpExpr(expr)
             is ElmFunctionCallExpr -> inferFunctionCall(expr)
@@ -237,6 +237,8 @@ private class InferenceScope(
     }
 
     private fun inferBinOpExpr(expr: ElmBinOpExpr): Ty {
+        if (expr.hasErrors) return TyUnknown()
+
         val parts: List<ElmBinOpPartTag> = expr.parts.toList()
 
         // Get the operator types and precedences. We don't have to worry about invalid
@@ -299,6 +301,8 @@ private class InferenceScope(
             }
 
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
+        if (expr.hasErrors) return TyUnknown()
+
         val targetTy = inferAtom(expr.target)
         val arguments = expr.arguments.toList()
 
@@ -339,27 +343,31 @@ private class InferenceScope(
     }
 
     private fun inferAtom(atom: ElmAtomTag): Ty {
-        val ty = when (atom) {
-            is ElmAnonymousFunctionExpr -> inferLambda(atom)
-            is ElmCaseOfExpr -> inferCase(atom)
-            is ElmCharConstantExpr -> TyChar
-            is ElmFieldAccessExpr -> inferFieldAccess(atom)
-            is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(atom)
-            is ElmGlslCodeExpr -> TyShader
-            is ElmIfElseExpr -> inferIfElse(atom)
-            is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
-            is ElmListExpr -> inferList(atom)
-            is ElmNegateExpr -> inferNegateExpression(atom)
-            is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
-            is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number")
-            is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
-            is ElmParenthesizedExpr -> inferExpression(atom.expression)
-            is ElmRecordExpr -> inferRecord(atom)
-            is ElmStringConstantExpr -> TyString
-            is ElmTupleConstructorExpr -> TyUnknown()// TODO [drop 0.18] remove this case
-            is ElmUnitExpr -> TyUnit()
-            is ElmValueExpr -> inferReferenceElement(atom)
-            else -> error(atom, "unexpected atom type $atom")
+        // For most atoms, we don't try to infer them if they contain errors.
+        val ty = when  {
+            atom is ElmLetInExpr ->  inferChild { beginLetInInference(atom) }.ty
+            atom is ElmCaseOfExpr -> inferCase(atom)
+            atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
+            atom.hasErrors -> TyUnknown()
+            else -> when (atom) {
+                is ElmAnonymousFunctionExpr -> inferLambda(atom)
+                is ElmCharConstantExpr -> TyChar
+                is ElmFieldAccessExpr -> inferFieldAccess(atom)
+                is ElmFieldAccessorFunctionExpr -> inferFieldAccessorFunction(atom)
+                is ElmGlslCodeExpr -> TyShader
+                is ElmIfElseExpr -> inferIfElse(atom)
+                is ElmListExpr -> inferList(atom)
+                is ElmNegateExpr -> inferNegateExpression(atom)
+                is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
+                is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number")
+                is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
+                is ElmRecordExpr -> inferRecord(atom)
+                is ElmStringConstantExpr -> TyString
+                is ElmTupleConstructorExpr -> TyUnknown()// TODO [drop 0.18] remove this case
+                is ElmUnitExpr -> TyUnit()
+                is ElmValueExpr -> inferReferenceElement(atom)
+                else -> error(atom, "unexpected atom type $atom")
+            }
         }
         expressionTypes[atom] = ty
         return ty
@@ -441,6 +449,8 @@ private class InferenceScope(
 
         // TODO: check patterns cover possibilities
         for (branch in caseOf.branches) {
+            if (branch.hasErrors) break
+
             // The elm compiler stops issuing diagnostics for branches when it encounters most errors,
             // but will still issue errors within expressions if an earlier type error was encountered
             val pat = branch.pattern
