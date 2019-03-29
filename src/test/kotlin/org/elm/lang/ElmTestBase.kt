@@ -154,7 +154,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         fail("No ${X::class.java} was thrown during the test")
     }
 
-    inner class InlineFile(private @Language("Elm") val code: String, val name: String = "main.elm") {
+    inner class InlineFile(@Language("Elm") private val code: String, val name: String = "main.elm") {
         private val hasCaretMarker = "{-caret-}" in code
 
         init {
@@ -163,7 +163,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
         fun withCaret() {
             check(hasCaretMarker) {
-                "Please, add `{-caret-}` marker to\n$code"
+                "Please add `{-caret-}` marker to\n$code"
             }
         }
     }

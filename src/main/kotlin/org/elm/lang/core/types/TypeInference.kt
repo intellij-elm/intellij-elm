@@ -553,13 +553,10 @@ private class InferenceScope(
         for ((name, ty) in fields) {
             val expected = baseFields[name.text]
             if (expected == null) {
-                when (baseTy) {
-                    is TyRecord -> {
-                        if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
-                    }
-                    is MutableTyRecord -> {
-                        baseTy.fields[name.text] = ty
-                    }
+                if (baseTy is TyRecord) {
+                    if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
+                } else if (baseTy is MutableTyRecord) {
+                    baseTy.fields[name.text] = ty
                 }
             } else {
                 requireAssignable(name, ty, expected)

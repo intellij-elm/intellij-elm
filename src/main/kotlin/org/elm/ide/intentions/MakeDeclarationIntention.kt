@@ -8,13 +8,16 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.nextLeaves
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.types.TyFunction
 import org.elm.lang.core.types.renderParam
 import org.elm.lang.core.types.typeExpressionInference
+import org.elm.utils.getIndent
 
 class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIntention.Context>() {
 
@@ -49,7 +52,8 @@ class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIn
         val anchor = typeAnnotation.nextLeaves
                 .takeWhile { !it.text.contains('\n') }
                 .lastOrNull() ?: typeAnnotation
-        typeAnnotation.parent.addAfter(factory.createFreshLine(), anchor)
+        val indent = editor.getIndent(typeAnnotation.startOffset)
+        typeAnnotation.parent.addAfter(factory.createWhitespace("\n$indent"), anchor)
         PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(editor.document)
 
         // Move the caret down to the line that we just created

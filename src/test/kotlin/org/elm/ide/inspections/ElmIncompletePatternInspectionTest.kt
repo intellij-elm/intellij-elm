@@ -174,14 +174,14 @@ foo =
 type Foo = Bar
 
 foo : Foo -> ()
-foo it =<error>case{-caret-}</error> it of
+foo it = <error>case{-caret-}</error> it of
 """, """
 type Foo = Bar
 
 foo : Foo -> ()
-foo it =case it of
-        Bar ->
-            --EOL
+foo it = case it of
+    Bar ->
+        --EOL
 """)
 
     fun `test nesting in let`() = checkFixByText("Add missing case branches", """

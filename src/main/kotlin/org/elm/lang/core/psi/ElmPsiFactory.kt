@@ -6,6 +6,7 @@ import com.intellij.lang.PsiBuilder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.PsiParserFacade
 import com.intellij.psi.tree.IElementType
 import com.intellij.util.IncorrectOperationException
 import org.elm.lang.core.ElmFileType
@@ -139,8 +140,10 @@ class ElmPsiFactory(private val project: Project) {
                     ?.childOfType<ElmCaseOfExpr>()?.branches
                     ?: error("Failed to create case of branches from $patterns")
 
-    fun createFreshLine() =
-            createElements("\n").single()
+    fun createNewline(): PsiElement = createWhitespace("\n")
+
+    fun createWhitespace(ws: String): PsiElement =
+            PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText(ws)
 
     fun createElements(@Language("Elm") code: String): List<PsiElement> =
             PsiFileFactory.getInstance(project)

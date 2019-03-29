@@ -1,14 +1,17 @@
 package org.elm.ide.inspections
 
-import org.elm.ide.typing.guessIndent
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.util.DocumentUtil
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
+import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
+import org.elm.utils.getIndent
 
 /**
  * This class can detect missing branches for case expressions and insert them into the PSI in place.
@@ -29,11 +32,17 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         object NoMissing : Result()
     }
 
+    private val document = element.containingFile
+            ?.let { PsiDocumentManager.getInstance(element.project).getDocument(it) }
+
     // This should be a lazy {}, but using it causes a compilation error due to conflicting
     // declarations.
     val result: Result
         get() {
-            if (_result == null) _result = calcMissingBranches()
+
+            if (_result == null) {
+                _result = if (document == null) Result.NoMissing else calcMissingBranches()
+            }
             return _result!!
         }
     private var _result: Result? = null
@@ -56,7 +65,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     private fun addPatterns(patterns: List<String>) {
         val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
-        val indent = guessIndent(element) + "    "
+        val indent = document!!.getIndent(element.startOffset) + "    "
         val elements = factory.createCaseOfBranches(indent, patterns)
         // Add the two or first generated branch, which are the indent
         // and newline

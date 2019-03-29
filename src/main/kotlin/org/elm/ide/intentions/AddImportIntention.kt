@@ -111,7 +111,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         val parent = insertPosition.treeParent
         val factory = ElmPsiFactory(importClause.project)
         // insert the import clause followed by a newline immediately before `insertPosition`
-        val newlineNode = factory.createFreshLine().node
+        val newlineNode = factory.createNewline().node
         parent.addChild(newlineNode, insertPosition)
         parent.addChild(importClause.node, newlineNode)
     }
