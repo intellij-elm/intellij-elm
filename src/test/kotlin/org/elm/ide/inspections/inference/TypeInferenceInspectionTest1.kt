@@ -64,8 +64,8 @@ type Foo = Bar N
 
 main : Foo -> ()
 main foo =
-    <error descr="Type mismatch.Required: ()Found: N">case foo of
-        Bar n -> -n</error>
+    case foo of
+        Bar n -> <error descr="Type mismatch.Required: ()Found: N">-n</error>
 """)
 
     fun `test mismatched tuple value type from missing field`() = checkByText("""

@@ -439,10 +439,6 @@ private class InferenceScope(
     }
 
     private fun inferCase(caseOf: ElmCaseOfExpr): Ty {
-        // Currently, if the type of a case expression doesn't match the value it's assigned to, we issue a
-        // diagnostic on the entire case expression. The elm compiler only issues the diagnostic on
-        // the first branch expression.
-
         val caseOfExprTy = inferExpression(caseOf.expression)
         var ty: Ty? = null
         var errorEncountered = false
@@ -933,9 +929,16 @@ private class InferenceScope(
     ): Boolean {
         val assignable = assignable(ty1, ty2)
         if (!assignable) {
+            // To match the elm compiler, we report type errors on case expression as if they're
+            // errors on the first branch expression
+            val start = if (endElement == null && element is ElmCaseOfExpr) {
+                element.branches.firstOrNull()?.expression ?: element
+            } else {
+                element
+            }
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
-            diagnostics += TypeMismatchError(element, t1, t2, endElement, patternBinding)
+            diagnostics += TypeMismatchError(start, t1, t2, endElement, patternBinding)
         }
         return assignable
     }

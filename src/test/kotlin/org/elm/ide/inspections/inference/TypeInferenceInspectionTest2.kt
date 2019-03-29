@@ -294,8 +294,8 @@ main =
     fun `test value mismatch from case`() = checkByText("""
 main : ()
 main =
-    <error descr="Type mismatch.Required: ()Found: String">case () of
-        _ -> ""</error>
+    case () of
+        _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
     fun `test case branches with mismatched types`() = checkByText("""
@@ -346,8 +346,8 @@ type Baz = Qux(Foo, Foo)
 
 main : Baz -> ()
 main x =
-    <error descr="Type mismatch.Required: ()Found: Foo">case x of
-        Qux (y, z) -> z</error>
+    case x of
+        Qux (y, z) -> <error descr="Type mismatch.Required: ()Found: Foo">z</error>
 """)
 
     fun `test case branches with mismatched union pattern`() = checkByText("""
@@ -453,9 +453,9 @@ main =
     fun `test case branch with cons pattern tail`() = checkByText("""
 main : List ()
 main =
-    <error descr="Type mismatch.Required: List ()Found: List String">case [""] of
-        x :: xs -> xs
-        _ -> []</error>
+    case [""] of
+        x :: xs -> <error descr="Type mismatch.Required: List ()Found: List String">xs</error>
+        _ -> []
 """)
 
     fun `test case branch with list pattern`() = checkByText("""
@@ -491,8 +491,8 @@ foo f =
     fun `test invalid return value from cons pattern`() = checkByText("""
 main : ()
 main =
-    <error descr="Type mismatch.Required: ()Found: String">case [""] of
-        x :: xs -> x</error>
+    case [""] of
+        x :: xs -> <error descr="Type mismatch.Required: ()Found: String">x</error>
 """)
 
     // TODO [drop 0.18] remove this test
@@ -664,8 +664,8 @@ type Tree a = Tree a (List (Tree a))
 
 directChildren : Tree a -> ()
 directChildren tree =
-    <error descr="Type mismatch.Required: ()Found: List (Tree a)">case tree of
+    case tree of
         Tree _ children ->
-            children</error>
+            <error descr="Type mismatch.Required: ()Found: List (Tree a)">children</error>
 """)
 }
