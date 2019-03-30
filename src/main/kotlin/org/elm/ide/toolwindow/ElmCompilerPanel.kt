@@ -47,17 +47,17 @@ class ElmCompilerPanel(
         private val contentManager: ContentManager
 ) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
-    var baseDirPath: Path? = null
-
     override fun dispose() {}
 
-    private var indexCompilerMessages: Int = 0
+    private var baseDirPath: Path? = null
+
+    private var selectedCompilerMessage: Int = 0
 
     var compilerMessages: List<ElmError> = emptyList()
         set(value) {
             checkIsEventDispatchThread()
             field = value
-            indexCompilerMessages = 0
+            selectedCompilerMessage = 0
 
             // update UI
             if (compilerMessages.isEmpty()) {
@@ -78,6 +78,11 @@ class ElmCompilerPanel(
                 errorTableUI.setRowSelectionInterval(0, 0)
             }
         }
+
+    private fun toNiceName(title: String) =
+            title.split(" ").joinToString(" ") { it.first() + it.substring(1).toLowerCase() }
+
+    private fun Region.pretty() = "${start.line} : ${start.column}"
 
     // LEFT PANEL
     private fun createCompilerTargetUI(baseDirPath: Path, targetPath: String?, offset: Int): ActionLink {
@@ -109,7 +114,7 @@ class ElmCompilerPanel(
             override fun isAutoScrollMode() = true
             override fun setAutoScrollMode(state: Boolean) {}
         }.install(this)
-        selectionModel.selectionMode = ListSelectionModel.SINGLE_INTERVAL_SELECTION
+        selectionModel.selectionMode = ListSelectionModel.SINGLE_SELECTION
         tableHeader.defaultRenderer = errorTableHeaderRenderer
         setDefaultRenderer(Any::class.java, errorTableCellRenderer)
         selectionModel.addListSelectionListener { event ->
@@ -117,8 +122,8 @@ class ElmCompilerPanel(
                 if (!it.valueIsAdjusting && compilerMessages.isNotEmpty() && selectedRow >= 0) {
                     val cellRect = getCellRect(selectedRow, 0, true)
                     scrollRectToVisible(cellRect)
-                    indexCompilerMessages = selectedRow
-                    messageUI.text = compilerMessages[indexCompilerMessages].html
+                    selectedCompilerMessage = selectedRow
+                    messageUI.text = compilerMessages[selectedCompilerMessage].html
                 }
             }
         }
@@ -132,6 +137,7 @@ class ElmCompilerPanel(
         addHyperlinkListener(BrowserHyperlinkListener.INSTANCE)
     }
 
+    // TOOLWINDOW CONTENT
     private val errorUI = JBSplitter("ElmCompilerErrorPanel", 0.4F).apply {
         firstComponent = JPanel(BorderLayout()).apply {
             add(JBLabel()) // dummy-placeholder component at index 0 (gets replaced by org.elm.workspace.compiler.ElmBuildAction.ElmErrorsListener.update)
@@ -139,11 +145,6 @@ class ElmCompilerPanel(
         }
         secondComponent = JBScrollPane(messageUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)
     }
-
-    private fun toNiceName(title: String) =
-            title.split(" ").joinToString(" ") { it.first() + it.substring(1).toLowerCase() }
-
-    private fun Region.pretty() = "line ${start.line}, column ${start.column}"
 
     init {
         setToolbar(createToolbar())
@@ -155,7 +156,7 @@ class ElmCompilerPanel(
                     this@ElmCompilerPanel.baseDirPath = baseDirPath
 
                     compilerMessages = messages
-                    indexCompilerMessages = 0
+                    selectedCompilerMessage = 0
                     errorTableUI.setRowSelectionInterval(0, 0)
 
                     contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
@@ -195,7 +196,7 @@ class ElmCompilerPanel(
     }
 
     private fun startFromErrorMessage(): Triple<VirtualFile, Document, Start>? {
-        val elmError = compilerMessages.getOrNull(indexCompilerMessages) ?: return null
+        val elmError = compilerMessages.getOrNull(selectedCompilerMessage) ?: return null
         val elmLocation = elmError.location ?: return null
         val virtualFile = baseDirPath?.resolve(elmLocation.path)?.let { findFileByPathTestAware(it) } ?: return null
         val psiFile = virtualFile.toPsiFile(project) ?: return null
@@ -206,21 +207,15 @@ class ElmCompilerPanel(
 
 
     // OCCURRENCE NAVIGATOR
-
-    sealed class OccurenceDirection {
-        object Forward : OccurenceDirection()
-        object Back : OccurenceDirection()
-    }
-
     private fun calcNextOccurrence(direction: OccurenceDirection, go: Boolean = false): OccurenceInfo? {
         if (compilerMessages.isEmpty()) return null
 
         val nextIndex = when(direction) {
-            is OccurenceDirection.Forward -> if (indexCompilerMessages < compilerMessages.lastIndex)
-                                                indexCompilerMessages + 1
+            is OccurenceDirection.Forward -> if (selectedCompilerMessage < compilerMessages.lastIndex)
+                                                selectedCompilerMessage + 1
                                                 else return null
-            is OccurenceDirection.Back    -> if (indexCompilerMessages > 0)
-                                                indexCompilerMessages - 1
+            is OccurenceDirection.Back    -> if (selectedCompilerMessage > 0)
+                                                selectedCompilerMessage - 1
                                                 else return null
         }
 
@@ -228,9 +223,9 @@ class ElmCompilerPanel(
 
         if (go) {
             // update selection
-            indexCompilerMessages = nextIndex
+            selectedCompilerMessage = nextIndex
             messageUI.text = elmError.html
-            errorTableUI.setRowSelectionInterval(indexCompilerMessages, indexCompilerMessages)
+            errorTableUI.setRowSelectionInterval(selectedCompilerMessage, selectedCompilerMessage)
         }
 
         // create occurrence info
@@ -248,14 +243,18 @@ class ElmCompilerPanel(
     override fun hasPreviousOccurence() = calcNextOccurrence(OccurenceDirection.Back) != null
     override fun goPreviousOccurence(): OccurenceInfo? = calcNextOccurrence(OccurenceDirection.Back, go = true)
 
-    // UI COMPONENTS
     private companion object {
+
+        sealed class OccurenceDirection {
+            object Forward : OccurenceDirection()
+            object Back : OccurenceDirection()
+        }
 
         val backgroundColorUI = Color(0x23, 0x31, 0x42)
 
-        val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(arrayOf()), arrayOf())
+        val emptyErrorTable = DefaultTableModel(arrayOf<Array<String>>(emptyArray()), emptyArray())
 
-        val errorTableColumnNames = arrayOf("Module", "Location", "Type")
+        val errorTableColumnNames = arrayOf("Module", "Line : Column", "Type")
 
         val errorTableHeaderRenderer = object : DefaultTableCellRenderer() {
             override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component =
