@@ -72,7 +72,7 @@ class ElmBuildAction : AnAction() {
         val messages = if (json.isEmpty()) emptyList() else {
             elmJsonToCompilerMessages(json).sortedWith(
                     compareBy(
-                            { it.title },
+                            { it.location?.moduleName },
                             { it.location?.region?.start?.line },
                             { it.location?.region?.start?.column }
                     ))
