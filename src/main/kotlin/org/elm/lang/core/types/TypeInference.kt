@@ -283,7 +283,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end)
                     val ty = when {
-                        lAssignable && rAssignable -> func.partiallyApply(2)
+                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -336,7 +336,8 @@ private class InferenceScope(
         }
 
         val resultTy = if (ok) {
-            targetTy.partiallyApply(arguments.size)
+            val appliedTy = targetTy.partiallyApply(arguments.size)
+            TypeReplacement.replace(appliedTy, replacements)
         } else {
             TyUnknown()
         }
