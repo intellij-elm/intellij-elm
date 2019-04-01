@@ -871,4 +871,9 @@ main foo =
         <error descr="Type mismatch.Required: cFound: comparable">c</error>
         <error descr="Type mismatch.Required: dFound: compappend">d</error>
 """)
+
+    fun `test infinite type in record base`() = checkByText("""
+main x =
+    { <error descr="Infinite self-referential type">x</error> | ff = x.ff "" }
+""")
 }

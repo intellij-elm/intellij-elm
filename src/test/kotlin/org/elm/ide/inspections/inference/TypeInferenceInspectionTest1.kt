@@ -130,6 +130,11 @@ main a =
     <error descr="Type mismatch.Required: ()Found: Foo ty → Foo ty">a</error>
 """)
 
+    fun `test correct value type from empty record`() = checkByText("""
+main : {}
+main = {}
+""")
+
     fun `test correct value type from record`() = checkByText("""
 main : {x: (), y: ()}
 main = {x = (), y = ()}

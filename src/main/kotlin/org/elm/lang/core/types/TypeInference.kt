@@ -283,7 +283,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
+                        lAssignable && rAssignable -> func.partiallyApply(2)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -336,8 +336,7 @@ private class InferenceScope(
         }
 
         val resultTy = if (ok) {
-            val appliedTy = targetTy.partiallyApply(arguments.size)
-            TypeReplacement.replace(appliedTy, replacements)
+            targetTy.partiallyApply(arguments.size)
         } else {
             TyUnknown()
         }
@@ -493,7 +492,6 @@ private class InferenceScope(
             return if (requireAssignable(recordIdentifier, baseTy, extRecord)) {
                 extRecord.copy(baseTy = baseTy)
             } else {
-                diagnostics += RecordBaseIdError(recordIdentifier, baseTy)
                 TyUnknown()
             }
         }
@@ -919,8 +917,7 @@ private class InferenceScope(
 
     /*
      * These functions test that a Ty can be assigned to another Ty. The tests are lenient, so no
-     * diagnostic will be reported if either type is TyUnknown. Other than `requireAssignable`, none
-     * of these functions access any scope `InferenceScope` properties.
+     * diagnostic will be reported if either type is TyUnknown.
      */
 
     private fun requireAssignable(
@@ -930,7 +927,12 @@ private class InferenceScope(
             endElement: ElmPsiElement? = null,
             patternBinding: Boolean = false
     ): Boolean {
-        val assignable = assignable(ty1, ty2)
+        val assignable = try {
+            assignable(ty1, ty2)
+        } catch (e: InfiniteTypeException) {
+            diagnostics += InfiniteTypeError(element)
+            return false
+        }
         if (!assignable) {
             // To match the elm compiler, we report type errors on case expression as if they're
             // errors on the first branch expression
@@ -1141,7 +1143,13 @@ private class InferenceScope(
     }
 
     private fun trackReplacement(ty1: Ty, ty2: Ty) {
-        if (ty1 == ty2) return
+        if (ty1 === ty2) return
+
+        fun assign(k: TyVar, v: Ty) {
+            if (containsVar(v, k)) throw InfiniteTypeException()
+            replacements[k] = v
+        }
+
         // assigning anything to a variable constrains the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             if (ty1 is TyVar) {
@@ -1150,25 +1158,25 @@ private class InferenceScope(
                 if (tc1 == null && tc2 != null) {
                     // There's an edge case where an assignment like `a => number`
                     // should constrain `a` to be a `number`, rather than `number` to be an `a`.
-                    replacements[ty1] = ty2
+                    assign(ty1, ty2)
                 } else if (!ty1.rigid && !ty2.rigid && typeclassesConstrainToCompappend(tc1, tc2)) {
                     // There's another edge case where unifying flex `comparable` with flex
                     // `appendable` creates a new constraint with typeclass `compappend`.
                     // Assigning flex `comparable` or `appendable` to flex `compappend` will also
                     // constrain the arguments.
-                    replacements[ty1] = if (tc2 == "compappend") ty2 else TyVar("compappend")
+                    assign(ty1, if (tc2 == "compappend") ty2 else TyVar("compappend"))
                 } else if (!ty1.rigid && !ty2.rigid && tc1 == "comparable" && tc2 == "number") {
                     // `comparable` can be constrained to `number`
-                    replacements[ty1] = ty2
+                    assign(ty1, ty2)
                 } else {
                     // Normally, you have assignments like `Int => number` which constrains `number` to
                     // be an `Int`.
-                    replacements[ty2] = ty1
+                    assign(ty2, ty1)
                 }
             } else {
                 // Normally, you have assignments like `Int => number` which constrains `number` to
                 // be an `Int`.
-                replacements[ty2] = ty1
+                assign(ty2, ty1)
             }
         }
         // unification: assigning a var to a type also constrains the var, but only if not
@@ -1177,9 +1185,9 @@ private class InferenceScope(
             // If the var is being assigned to an extension record, make the constraint mutable,
             // since other field constraints could be added later.
             if (ty2 is TyRecord && ty2.isSubset) {
-                replacements[ty1] = MutableTyRecord(ty2.fields.toMutableMap(), ty2.baseTy)
+                assign(ty1, MutableTyRecord(ty2.fields.toMutableMap(), ty2.baseTy))
             } else {
-                replacements[ty1] = ty2
+                assign(ty1, ty2)
             }
         }
     }
@@ -1284,3 +1292,15 @@ private sealed class ParameterBindingResult {
 
 /** dangerous shallow copy of a mutable record for performance, use `toRecord` if the result isn't discarded. */
 private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy)
+
+/** Return true if [tyVar] is referenced anywhere withing [ty] */
+private fun containsVar(ty: Ty, tyVar: TyVar): Boolean = when (ty) {
+    is TyVar -> ty == tyVar
+    is TyTuple -> ty.types.any { containsVar(it, tyVar) }
+    is TyRecord -> ty.fields.values.any { containsVar(it, tyVar) } || (ty.baseTy != null && containsVar(ty.baseTy, tyVar))
+    is MutableTyRecord -> containsVar(ty.asRecord(), tyVar)
+    is TyFunction -> containsVar(ty.ret, tyVar) || ty.parameters.any { containsVar(it, tyVar) }
+    is TyUnion, is TyUnit, is TyUnknown, TyInProgressBinding -> false
+}
+
+private class InfiniteTypeException : Exception()

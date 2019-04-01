@@ -60,6 +60,13 @@ class CyclicDefinitionError(
         get() = "Value cannot be defined in terms of itself"
 }
 
+class InfiniteTypeError(
+        element: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Infinite self-referential type"
+}
+
 class RecordFieldError(
         element: PsiElement,
         private val name: String
