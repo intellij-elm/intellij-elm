@@ -224,7 +224,7 @@ TypeRef ::= UpperCaseQID (SingleTypeExpression)+
 
 private SingleTypeExpression ::=
     TypeRefWithoutArgs
-    | TypeVariableRef
+    | TypeVariable
     | RecordType
     | TupleType
     | LEFT_PARENTHESIS TypeExpression RIGHT_PARENTHESIS
@@ -232,7 +232,7 @@ private SingleTypeExpression ::=
 TypeRefWithoutArgs ::=
     UpperCaseQID { elementType = TypeRef }
 
-TypeVariableRef ::=
+TypeVariable ::=
     LOWER_CASE_IDENTIFIER
 
 RecordType ::=

@@ -38,6 +38,9 @@ type alias MyList = List
 foo : { a | name : String } -> String
 """)
 
+    fun `test type annotation variables have no errors`() = checkErrors("""
+foo : a -> b -> c
+""")
 
     fun `test record extension base variables are checked for errors in type declarations`() = checkErrors("""
 type alias Foo a = { <error descr="Unresolved reference 'b'">b</error> | name : String }
