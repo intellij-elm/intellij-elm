@@ -93,8 +93,9 @@ private class InferenceScope(
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
         // references in bodies when the parameters contain syntax errors can result in infinite
         // recursion and surprising bugs.
+        // We don't currently infer recursive functions in order to avoid infinite loops in the inference.
         if (checkRecursion(declaration) || assignee == null || assignee.hasErrors) {
-            return replacedResult(TyUnknown())
+            return toTopLevelResult(TyUnknown())
         }
 
         activeScopes += declaration
@@ -106,7 +107,7 @@ private class InferenceScope(
         // The body of pattern declarations is inferred as part of parameter binding, so there's no
         // more to do here.
         if (declaration.pattern != null) {
-            return replacedResult(TyUnknown())
+            return toTopLevelResult(TyUnknown())
         }
 
         // For function declarations, we need to infer the body and check that it matches the
@@ -134,7 +135,7 @@ private class InferenceScope(
             }
             is ParameterBindingResult.Other -> bodyTy
         }
-        return replacedResult(ty)
+        return toTopLevelResult(ty)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
@@ -215,7 +216,9 @@ private class InferenceScope(
         return isRecursive
     }
 
-    private fun replacedResult(ty: Ty): InferenceResult {
+    // We only call this for inference scopes that will eventually be cached. There's no
+    // need to replace everything for child calls since they share our replacements table.
+    private fun toTopLevelResult(ty: Ty): InferenceResult {
         val exprs = expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
         val ret = TypeReplacement.replace(ty, replacements)
         return InferenceResult(exprs, diagnostics, ret)
