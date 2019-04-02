@@ -49,7 +49,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         var succeeded = false
         with(project.messageBus.connect(testRootDisposable)) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDirPath: Path, messages: List<ElmError>, filePathToCompile: String?) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>, pathToCompile: String?) {
                     succeeded = messages.size == expectedNumErrors
                 }
             })

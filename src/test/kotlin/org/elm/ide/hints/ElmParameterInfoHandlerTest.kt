@@ -35,10 +35,6 @@ import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
 
 class ElmParameterInfoHandlerTest : ElmTestBase() {
-    // TODO: At some point, the type annotations on each function should no longer be necessary.
-    //       But right now the type inference system needs them.
-
-
     // must include Elm stdlib because the type inference code must resolve types like String, Char, Int
     override fun getProjectDescriptor() =
             ElmWithStdlibDescriptor
@@ -48,48 +44,40 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
 
 
     fun `test function with one arg`() = checkByText("""
-f : String -> Int
 f x = 42
 main = f "foo"{-caret-}
-""", "f : String → Int")
+""", "f : String → number")
 
     fun `test function with one arg nested in another function call`() = checkByText("""
-f : Int -> String
 f x = "blah"
-g : Char -> Int
 g x = 99
 main = f (g 'c'{-caret-})
-""", "g : Char → Int")
+""", "g : Char → number")
 
     fun `test higher-order function renders the hint with parens`() = checkByText("""
-f : (String -> Char) -> Int
 f g = 0
 main = f {-caret-}(\s -> 'x')
-""", "f : (String → Char) → Int")
+""", "f : (a → Char) → number")
 
 
     // MULTIPLE ARGUMENTS
 
 
     fun `test function with two args, caret on first arg`() = checkByText("""
-f : String -> Char -> Int
 f x y = 42
 main = f "hi"{-caret-}
-""", "f : String → Char → Int")
+""", "f : String → b → number")
 
     fun `test function with two args, caret on second arg`() = checkByText("""
-f : String -> Char -> Int
 f x y = 42
 main = f "x" {-caret-}
-""", "f : String → Char → Int")
+""", "f : String → b → number")
 
     fun `test function with two args nested in another function call`() = checkByText("""
-f : Int -> Int
 f x = 42
-g : Char -> Bool -> Int
 g x y = 99
 main = f (g 'x' {-caret-})
-""", "g : Char → Bool → Int")
+""", "g : Char → b → number")
 
 
     // UNNAMED FUNCTIONS
@@ -97,7 +85,7 @@ main = f (g 'x' {-caret-})
 
     fun `test lambda`() = checkByText("""
 main = (\a b -> "done") "hi"{-caret-}
-""", "a → b → String")
+""", "String → b → String")
 
     fun `test expression`() = checkByText("""
 main = ((+) 1) 1{-caret-}

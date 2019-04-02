@@ -19,11 +19,28 @@ sealed class Ty {
 }
 
 // vars are not a data class because they need to be compared by identity
-/** A type variable (e.g. `a` in `Maybe a`) */
-class TyVar(val name: String) : Ty() {
+/**
+ * A type variable, either rigid or flexible.
+ *
+ * e.g. Given the following declaration:
+ *
+ * ```
+ * foo : a -> ()
+ * foo x =
+ *    ...
+ * ```
+ *
+ * While inferring the body of the declaration, the value `x` is a rigid variable (meaning it can't
+ * be assigned to anything expecting a concrete type, so an expression like `x + 1` is invalid).
+ * When calling `foo`, the parameter is a flexible variable (meaning any type can be passed as an
+ * argument).
+ */
+class TyVar(val name: String, val rigid: Boolean = false) : Ty() {
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo): TyVar = this
-    override fun toString(): String = "<$name>"
+    override fun toString(): String {
+        return "<${if (rigid) "!" else ""}$name@${(System.identityHashCode(this)).toString(16).take(3)}>"
+    }
 }
 
 /** A tuple type like `(Int, String)` */
@@ -53,10 +70,28 @@ data class TyRecord(
 
     override fun withAlias(alias: AliasInfo): TyRecord = copy(alias = alias)
     override fun toString(): String {
+        val f = fields.toString().let { it.substring(1, it.lastIndex) }
         return alias?.let {
             "{${it.name}${if (it.parameters.isEmpty()) "" else " ${it.parameters.joinToString(" ")}"}}"
-        } ?: baseTy?.let { "{$baseTy | $fields}" } ?: "{$fields}"
+        } ?: baseTy?.let { "{$baseTy | $f}" } ?: "{$f}"
     }
+}
+
+/**
+ * A [TyRecord] with mutable fields, only used internally by type inference. These are never cached.
+ *
+ * This is used to track multiple constraints on record types. Only records can have more than one
+ * constraint, so other types don't need a mutable version.
+ */
+data class MutableTyRecord(
+        val fields: MutableMap<String, Ty>,
+        val baseTy: Ty? = null
+) : Ty() {
+    fun toRecord() = TyRecord(fields.toMap(), baseTy)
+
+    override val alias: AliasInfo? get() = null
+    override fun withAlias(alias: AliasInfo) = error("MutableTyRecord cannot have aliases")
+    override fun toString() = toRecord().toString()
 }
 
 /** A type like `String` or `Maybe a` */

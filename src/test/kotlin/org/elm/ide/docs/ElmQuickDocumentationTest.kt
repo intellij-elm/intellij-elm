@@ -11,7 +11,8 @@ foo = 0
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b></pre></div>
+<div class='definition'><pre><b>foo</b> : number
+<b>foo</b></pre></div>
 """)
 
     fun `test unary function`() = doTest(
@@ -20,7 +21,8 @@ foo bar = bar
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> bar</pre></div>
+<div class='definition'><pre><b>foo</b> : a → a
+<b>foo</b> bar</pre></div>
 """)
 
     fun `test binary function with line comment`() = doTest(
@@ -30,7 +32,8 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : (b → a) → b → a
+<b>foo</b> bar baz</pre></div>
 """)
 
     fun `test binary function with as`() = doTest(
@@ -39,7 +42,35 @@ foo (bar as baz) qux = bar
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> (bar as baz) qux</pre></div>
+<div class='definition'><pre><b>foo</b> : a → b → a
+<b>foo</b> (bar as baz) qux</pre></div>
+""")
+
+    fun `test unannotated function`() = doTest(
+            """
+foo a = ((), "", a + 1)
+main = foo
+      --^
+""",
+            """
+<div class='definition'><pre><b>foo</b> : number → ((), <a href="psi_element://String">String</a>, number)
+<b>foo</b> a</pre></div>
+""")
+
+    fun `test var with later constraints`() = doTest(
+            """
+foo a =
+    let
+        b = a
+          --^
+        c = a ++ ""
+    in
+        a
+
+""",
+            """
+<div class='definition'><pre><i>parameter</i> a : <a href="psi_element://String">String</a>
+<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
     fun `test function with doc comment`() = doTest(
@@ -49,7 +80,8 @@ foo bar baz = bar baz
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> bar baz</pre></div>
+<div class='definition'><pre><b>foo</b> : (b → a) → b → a
+<b>foo</b> bar baz</pre></div>
 <div class='content'><p>this should be included.</p></div>
 """)
 
@@ -98,7 +130,7 @@ main a =
         --^
 """,
             """
-<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
 <b>foo</b> bar baz</pre></div>
 """)
 
@@ -135,7 +167,8 @@ foo bar = bar
 --^
 """,
             """
-<div class='definition'><pre><b>foo</b> bar<i> defined in </i>Foo.Bar</pre></div>
+<div class='definition'><pre><b>foo</b> : a → a
+<b>foo</b> bar<i> defined in </i>Foo.Bar</pre></div>
 """)
 
 
