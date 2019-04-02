@@ -30,7 +30,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
     }
 %}
 
-%xstate COMMENT GLSL_CODE STRING RAW_STRING CHAR
+%xstate COMMENT GLSL_CODE STRING RAW_STRING CHAR TYPE_PENDING
 
 Newline = (\n|\r|\r\n)
 Space = " "
@@ -121,6 +121,18 @@ ThreeQuotes = \"\"\"
     }
 }
 
+<TYPE_PENDING> {
+    {WhiteSpace} { return TokenType.WHITE_SPACE; }
+    "alias" {
+          yybegin(YYINITIAL);
+          return ALIAS;
+    }
+    [^] {
+          yypushback(1);
+          yybegin(YYINITIAL);
+    }
+}
+
 <YYINITIAL> {
     "module"                    { return MODULE; }
     "where"                     { return WHERE; }
@@ -134,8 +146,7 @@ ThreeQuotes = \"\"\"
     "of"                        { return OF; }
     "let"                       { return LET; }
     "in"                        { return IN; }
-    "type"                      { return TYPE; }
-    "alias"                     { return ALIAS; }
+    "type"                      { yybegin(TYPE_PENDING); return TYPE; }
     "port"                      { return PORT; }
     "infix"                     { return INFIX; }
     "infixl"                    { return INFIXL; } // TODO [drop 0.18] remove infixl entirely
