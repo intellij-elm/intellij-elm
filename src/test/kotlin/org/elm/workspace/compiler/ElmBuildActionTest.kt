@@ -12,45 +12,51 @@ import java.nio.file.Path
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
+    val caret = "{-caret-}"
+
     fun `test build Elm application project`() {
+        val source = """
+                    import Html
+                    main = Html.text "hi"$caret
+                """.trimIndent()
+
         ensureElmStdlibInstalled(FullElmStdlibVariant)
         val fileWithCaret = buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
-                elm("Main.elm", """
-                    import Html
-                    main = Html.text "hi"{-caret-}
-                """.trimIndent())
+                elm("Main.elm", source)
             }
         }.fileWithCaret
         val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
-        doTest(file, expectedNumErrors = 0)
+        doTest(file, expectedNumErrors = 0, expectedOffset = source.indexOf("main"))
     }
 
 
     fun `test build Elm application project with an error`() {
+        val source = """
+                    import Html
+                    foo = bogus$caret
+                    main = Html.text "hi"
+                """.trimIndent()
+
         ensureElmStdlibInstalled(FullElmStdlibVariant)
         val fileWithCaret = buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
-                elm("Main.elm", """
-                    import Html
-                    foo = bogus{-caret-}
-                    main = Html.text "hi"
-                """.trimIndent())
+                elm("Main.elm", source)
             }
         }.fileWithCaret
         val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
-        doTest(file, expectedNumErrors = 1)
+        doTest(file, expectedNumErrors = 1, expectedOffset = source.indexOf("main") - caret.length)
     }
 
 
-    private fun doTest(file: VirtualFile, expectedNumErrors: Int) {
+    private fun doTest(file: VirtualFile, expectedNumErrors: Int, expectedOffset: Int) {
         var succeeded = false
         with(project.messageBus.connect(testRootDisposable)) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDirPath: Path, messages: List<ElmError>, pathToCompile: String?) {
-                    succeeded = messages.size == expectedNumErrors
+                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?, offset: Int) {
+                    succeeded = messages.size == expectedNumErrors && targetPath == "src/Main.elm" && offset == expectedOffset
                 }
             })
         }
