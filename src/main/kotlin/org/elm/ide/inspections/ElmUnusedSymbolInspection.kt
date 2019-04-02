@@ -21,7 +21,7 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
         val name = element.name
 
         // ignore certain kinds of declarations which we don't want to inspect
-        if (element is ElmTypeAliasDeclaration || element is ElmTypeDeclaration) {
+        if (element is ElmTypeAliasDeclaration || element is ElmTypeDeclaration || element is ElmTypeVariable) {
             // TODO revisit: implementation for types is a little tricky since
             //      type annotations are optional; punting for now
             return

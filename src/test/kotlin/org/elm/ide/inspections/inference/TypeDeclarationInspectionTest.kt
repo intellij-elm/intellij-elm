@@ -1,4 +1,7 @@
-package org.elm.ide.inspections
+package org.elm.ide.inspections.inference
+
+import org.elm.ide.inspections.ElmInspectionsTestBase
+import org.elm.ide.inspections.ElmTypeDeclarationInspection
 
 class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationInspection()) {
     fun `test bad self-recursion in type alias`() = checkByText("""
@@ -7,7 +10,7 @@ class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationI
 
     fun `test bad mutual self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = B</error>
-<error descr="Infinite recursion">type alias B = A</error>
+type alias B = A
 """)
 
     fun `test good recursion in through union`() = checkByText("""

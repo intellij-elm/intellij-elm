@@ -86,6 +86,8 @@ inline fun <reified T : PsiElement> PsiElement.descendantsOfType(): Collection<T
 fun PsiElement.offsetIn(owner: PsiElement): Int =
         ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
 
+val PsiElement.hasErrors : Boolean
+    get() = PsiTreeUtil.hasErrorElements(this)
 
 // Elm-specific helpers
 

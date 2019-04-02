@@ -17,7 +17,7 @@ class ArgumentCountError(
 ) : ElmDiagnostic(element) {
     override val message: String
         get() =
-            if (expected == 0) "This value is not a function, but it was given $actual ${pl(actual, "argument")}."
+            if (expected == 0 && !isType) "This value is not a function, but it was given $actual ${pl(actual, "argument")}."
             else "The ${if (isType) "type" else "function"} expects $expected ${pl(expected, "argument")}, but it got $actual instead."
 }
 
@@ -60,6 +60,13 @@ class CyclicDefinitionError(
         get() = "Value cannot be defined in terms of itself"
 }
 
+class InfiniteTypeError(
+        element: PsiElement
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() = "Infinite self-referential type"
+}
+
 class RecordFieldError(
         element: PsiElement,
         private val name: String
@@ -70,12 +77,23 @@ class RecordFieldError(
 
 class RecordBaseIdError(
         element: PsiElement,
-        private val expected: Ty
+        private val actual: Ty
 ) : ElmDiagnostic(element) {
     override val message: String
         get() {
-            val expectedRendered = expected.renderedText(false, false)
+            val expectedRendered = actual.renderedText(false, false)
             return "Type must be a record.<br>Found: $expectedRendered"
+        }
+}
+
+class FieldAccessOnNonRecordError(
+        element: PsiElement,
+        private val actual: Ty
+) : ElmDiagnostic(element) {
+    override val message: String
+        get() {
+            val expectedRendered = actual.renderedText(false, false)
+            return "Value is not a record, cannot access fields.<br>Type: $expectedRendered"
         }
 }
 
@@ -93,7 +111,8 @@ class TypeMismatchError(
         element: PsiElement,
         private val actual: Ty,
         private val expected: Ty,
-        endElement: PsiElement? = null
+        endElement: PsiElement? = null,
+        private val patternBinding: Boolean = false
 ) : ElmDiagnostic(element, endElement) {
     override val message: String
         get() {
@@ -104,9 +123,15 @@ class TypeMismatchError(
                 expectedRendered = expected.renderedText(false, true)
                 foundRendered = actual.renderedText(false, true)
             }
-            return "Type mismatch." +
-                    "<br>Required: $expectedRendered" +
-                    "<br>Found: $foundRendered"
+            return if (patternBinding) {
+                "Invalid pattern." +
+                        "<br>Required type: $expectedRendered" +
+                        "<br>Pattern type: $foundRendered"
+            } else {
+                "Type mismatch." +
+                        "<br>Required: $expectedRendered" +
+                        "<br>Found: $foundRendered"
+            }
         }
 
     private fun tysAreAmbiguousUnions(l: Ty, r: Ty): Boolean {

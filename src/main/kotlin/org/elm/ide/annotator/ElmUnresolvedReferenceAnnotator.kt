@@ -36,7 +36,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     )
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
-        var refs = element.references.toMutableList()
+        val refs = element.references.toMutableList()
 
         // Pre-processing: ignore any qualified value/type refs where the module qualifier could not be resolved.
         // This is necessary because a single Psi element like ElmValueExpr can return multiple references:
@@ -90,11 +90,6 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
         when {
             element is ElmValueExpr && element.qid.isKernelModule -> return true
             element is ElmImportClause && element.moduleQID.isKernelModule -> return true
-        }
-
-        // Ignore refs to type variables in a type annotation
-        if (ref is TypeVariableReference && element.ancestors.any { it is ElmTypeAnnotation }) {
-            return true
         }
 
         // Ignore soft refs

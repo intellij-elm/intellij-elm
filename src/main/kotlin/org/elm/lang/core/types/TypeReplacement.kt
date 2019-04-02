@@ -12,7 +12,8 @@ package org.elm.lang.core.types
 class TypeReplacement(
         // A map of variables that should be replaced to the ty to replace them with
         replacements: Map<TyVar, Ty>,
-        private val freshen: Boolean
+        private val freshen: Boolean,
+        private val flexify: Boolean
 ) {
     companion object {
         /**
@@ -20,8 +21,10 @@ class TypeReplacement(
          */
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
             if (replacements.isEmpty()) return ty
-            return TypeReplacement(replacements, freshen = false).replace(ty)
+            return TypeReplacement(replacements, freshen = false, flexify = false).replace(ty)
         }
+
+        fun replace(ty: Ty, replacements: DisjointSet): Ty = replace(ty, replacements.asMap())
 
         /**
          * Replace all [TyVar]s in a [ty] with new copies with the same names.
@@ -31,9 +34,24 @@ class TypeReplacement(
          * its vars are distinct, even though they share a name with vars from the previous
          * reference. If we use the cached tys, there's no way to distinguish between vars in one
          * call from another.
+         *
+         * Note that rigid vars are never freshened. In a function with an annotation like
+         * `f : (a -> b) -> a -> b`, every time you call the `(a -> b)` parameter within the body of
+         * `f`, the ty of `a` and `b` have to be the same.
          */
         fun freshenVars(ty: Ty): Ty {
-            return TypeReplacement(emptyMap(), freshen = true).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = true, flexify = false).replace(ty)
+        }
+
+        /**
+         * Make all type variables in a [ty] flexible.
+         *
+         * Type variables in function annotations are rigid when bound to parameters; in all other
+         * cases vars are flexible. This function is used to make vars inferred as rigid into flexible
+         * when calling functions.
+         */
+        fun flexify(ty: Ty): Ty {
+            return TypeReplacement(emptyMap(), freshen = false, flexify = true).replace(ty)
         }
     }
 
@@ -48,6 +66,7 @@ class TypeReplacement(
         is TyUnion -> replaceUnion(ty)
         is TyRecord -> replaceRecord(ty)
         is TyUnit, TyInProgressBinding -> ty
+        is MutableTyRecord -> replaceRecord(ty.toRecord())
     }
 
     /*
@@ -95,8 +114,10 @@ class TypeReplacement(
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
     // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
-        if (key !in replacements && freshen) {
-            val ty = TyVar(key.name)
+        if (key !in replacements && (freshen || flexify)) {
+            if (key.rigid && !flexify) return null // never freshen rigid vars
+
+            val ty = TyVar(key.name, rigid = false)
             replacements[key] = true to ty
             return ty
         }
