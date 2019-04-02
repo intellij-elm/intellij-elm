@@ -26,4 +26,5 @@ class ElmBasicLexerTest: ElmLexerTestCaseBase() {
     fun testShaders() = doTest()
     fun testPartialSingleQuoteStrings() = doTest()
     fun testPartialTripleQuoteString() = doTest()
+    fun testTypes() = doTest()
 }
