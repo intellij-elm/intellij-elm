@@ -33,6 +33,15 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.1.1</b> <em>(2019-04-06)</em>
+                <ul>
+                    <li>The type system is now fully implemented!</li>
+                    <li>Finished full-program type unification/inference</li>
+                    <li>Explicit imports now shadow wildcard imports</li>
+                    <li>Elm compiler tool-window UI now shows path to file target and is scrollable</li>
+                    <li>Allowed elm-format to run even if there are syntax errors</li>
+                </ul>
+            </li>
             <li><b>3.1.0</b> <em>(2019-03-18)</em>
                 <ul>
                     <li>Add Elm compiler integration to check errors</li>
