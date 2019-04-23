@@ -325,24 +325,42 @@ private class InferenceScope(
             }
         }
 
-        fun argCountError(expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(expr, arguments.size, expected)
+        fun argCountError(element: PsiElement, endElement: PsiElement, actual: Int, expected: Int): TyUnknown {
+            diagnostics += ArgumentCountError(element, endElement, actual, expected)
             return TyUnknown()
         }
 
         if (!isInferable(targetTy)) return TyUnknown()
-        if (targetTy !is TyFunction) return argCountError(0)
-        if (arguments.size > targetTy.parameters.size) return argCountError(targetTy.parameters.size)
+        if (targetTy !is TyFunction) return argCountError(expr, expr, arguments.size, 0)
 
         var ok = true
-        for (i in 0..arguments.lastIndex) {
+        for (i in 0..(minOf(arguments.lastIndex, targetTy.parameters.lastIndex))) {
             // don't short-circuit: we need to check all args
             ok = requireAssignable(arguments[i], argTys[i], targetTy.parameters[i]) && ok
         }
 
+        if (ok && arguments.size > targetTy.parameters.size) {
+            var appliedTy = TypeReplacement.replace(targetTy.ret, replacements)
+
+            // friendly error for the common case
+            if (appliedTy !is TyFunction) {
+                return argCountError(expr, expr, arguments.size, targetTy.parameters.size)
+            }
+
+            // If any of the arguments contain a function, the partially applied expression may
+            // uncurry into a function.
+            for (i in targetTy.parameters.size..arguments.lastIndex) {
+                if (appliedTy !is TyFunction) return argCountError(expr.target, arguments[i], 1, 0)
+                if (!requireAssignable(arguments[i], argTys[i], appliedTy.parameters.first())) return TyUnknown()
+                appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements)
+            }
+
+            expressionTypes[expr] = appliedTy
+            return appliedTy
+        }
+
         val resultTy = if (ok) {
-            val appliedTy = targetTy.partiallyApply(arguments.size)
-            TypeReplacement.replace(appliedTy, replacements)
+            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements)
         } else {
             TyUnknown()
         }
@@ -838,7 +856,7 @@ private class InferenceScope(
         }
 
         fun issueError(actual: Int, expected: Int) {
-            diagnostics += ArgumentCountError(pat, actual, expected, true)
+            diagnostics += ArgumentCountError(pat, pat, actual, expected, true)
             pat.namedParameters.forEach { setBinding(it, TyUnknown()) }
         }
 
