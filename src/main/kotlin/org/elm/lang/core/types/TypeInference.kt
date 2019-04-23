@@ -182,8 +182,11 @@ private class InferenceScope(
         return result
     }
 
-    private fun inferChildDeclaration(decl: ElmValueDeclaration): InferenceResult {
-        val result = inferChild { beginDeclarationInference(decl) }
+    private fun inferChildDeclaration(
+            decl: ElmValueDeclaration,
+            activeScopes: Set<ElmValueDeclaration> = this.activeScopes
+    ): InferenceResult {
+        val result = inferChild(activeScopes = activeScopes.toMutableSet()) { beginDeclarationInference(decl) }
         resolvedDeclarations[decl] = result.ty
 
         // We need to keep track of declared function names and bound patterns so that other
@@ -650,7 +653,7 @@ private class InferenceScope(
             val declParentScope = ancestors.firstOrNull { decl in it.childDeclarations }
             ty = when (declParentScope) {
                 null -> decl.inference(activeScopes).ty
-                else -> declParentScope.inferChildDeclaration(decl).ty
+                else -> declParentScope.inferChildDeclaration(decl, activeScopes).ty
             }
         }
         resolvedDeclarations[decl] = ty

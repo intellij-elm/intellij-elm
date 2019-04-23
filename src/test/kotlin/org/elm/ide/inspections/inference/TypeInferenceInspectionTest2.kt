@@ -260,6 +260,15 @@ main = (\_ -> main) 1
 bar = foo
 """)
 
+    fun `test bad mutual recursion in let`() = checkByText("""
+main =
+    let
+        <error descr="Infinite recursion">foo = bar</error>
+        bar = foo
+    in
+    ()
+""")
+
     fun `test uncurrying return value from unannotated function`() = checkByText("""
 lazy3 : (a -> b -> c -> ()) -> a -> b -> c -> ()
 lazy3 a = a
