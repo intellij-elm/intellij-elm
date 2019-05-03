@@ -260,6 +260,25 @@ main = (\_ -> main) 1
 bar = foo
 """)
 
+    fun `test bad mutual recursion in let`() = checkByText("""
+main =
+    let
+        <error descr="Infinite recursion">foo = bar</error>
+        bar = foo
+    in
+    ()
+""")
+
+    fun `test uncurrying function passed as argument`() = checkByText("""
+foo : a -> a
+foo a = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: String">foo foo foo ""</error>
+
+""")
+
     fun `test uncurrying return value from unannotated function`() = checkByText("""
 lazy3 : (a -> b -> c -> ()) -> a -> b -> c -> ()
 lazy3 a = a

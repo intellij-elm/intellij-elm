@@ -11,10 +11,11 @@ sealed class ElmDiagnostic(val element: PsiElement, val endElement: PsiElement? 
 
 class ArgumentCountError(
         element: PsiElement,
+        endElement: PsiElement,
         private val actual: Int,
         private val expected: Int,
         private val isType: Boolean = false
-) : ElmDiagnostic(element) {
+) : ElmDiagnostic(element, endElement) {
     override val message: String
         get() =
             if (expected == 0 && !isType) "This value is not a function, but it was given $actual ${pl(actual, "argument")}."
