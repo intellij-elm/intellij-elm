@@ -1,44 +1,44 @@
 package org.elm.ide.inspections.fixes
 
+import com.intellij.codeInsight.intention.HighPriorityAction
+import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiRecursiveElementWalkingVisitor
-import org.elm.ide.inspections.ImportVisitor
+import com.intellij.psi.PsiFile
+import org.elm.ide.code.format.ElmImportOptimizer
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.removeItem
-import org.elm.lang.core.psi.parentOfType
-import org.elm.lang.core.psi.prevSiblings
-import org.elm.lang.core.resolve.scope.ModuleScope
 
-class OptimizeImportsFix : LocalQuickFix {
+class OptimizeImportsFix : LocalQuickFix, IntentionAction, HighPriorityAction {
+    override fun startInWriteAction() = false
+
+    override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?) = file is ElmFile
+
+    override fun getText() = name
+
+    override fun invoke(project: Project, editor: Editor?, file: PsiFile) {
+        optimizeImports(project, file)
+    }
 
     override fun getName() = "Optimize imports"
     override fun getFamilyName() = name
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
         val file = descriptor.psiElement?.containingFile as? ElmFile ?: return
-        val visitor = ImportVisitor(ModuleScope.getImportDecls(file))
 
-        file.accept(object : PsiRecursiveElementWalkingVisitor() {
-            override fun visitElement(element: PsiElement) {
-                element.accept(visitor)
-                super.visitElement(element)
-            }
-        })
+        optimizeImports(project, file)
+    }
 
-        for (unusedImport in visitor.unusedImports) {
-            val prevNewline = unusedImport.prevSiblings.firstOrNull { it.textContains('\n') }
-            if (prevNewline == null) unusedImport.delete()
-            else unusedImport.parent.deleteChildRange(prevNewline, unusedImport)
-        }
+    private fun optimizeImports(project: Project, file: PsiFile) {
+        val optimizer = ElmImportOptimizer()
 
-        for (item in visitor.unusedExposedItems) {
-            val exposingList = item.parentOfType<ElmImportClause>()?.exposingList ?: continue
-            if (exposingList.allExposedItems.size <= 1) exposingList.delete()
-            else exposingList.removeItem(item)
-        }
+        val runnable = optimizer.processFile(file)
+
+        WriteCommandAction
+                .writeCommandAction(project, file)
+                .withName(familyName)
+                .run<Exception> { runnable.run()  }
     }
 }
