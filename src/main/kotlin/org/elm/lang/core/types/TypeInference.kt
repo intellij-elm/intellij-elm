@@ -1282,7 +1282,7 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 fun isInferable(ty: Ty): Boolean = ty !is TyUnknown
 
 /** extracts the typeclass from a [TyVar] name if it is a typeclass */
-private val TYPECLASS_REGEX = Regex("(number|appendable|comparable|compappend)\\d*")
+private val TYPECLASS_REGEX = Regex("^(number|appendable|comparable|compappend).*")
 
 /** Extract the typeclass for a var name if it is one, or null if it's a normal var*/
 fun getTypeclassName(ty: TyVar): String? = TYPECLASS_REGEX.matchEntire(ty.name)?.groups?.get(1)?.value
