@@ -1,9 +1,8 @@
-package org.frawa.elmtest.core
+package org.elm.ide.test.core
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.ide.test.core.LabelUtils
 import org.elm.lang.core.psi.ElmAtomTag
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmTypes

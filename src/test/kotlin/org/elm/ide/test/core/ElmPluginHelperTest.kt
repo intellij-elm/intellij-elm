@@ -1,10 +1,9 @@
-package org.frawa.elmtest.core
+package org.elm.ide.test.core
 
 import com.intellij.psi.PsiElement
 import com.intellij.testFramework.ParsingTestCase
-import org.elm.ide.test.core.LabelUtils
+import org.elm.ide.test.core.ElmPluginHelper.getPsiElement
 import org.elm.lang.core.parser.ElmParserDefinition
-import org.frawa.elmtest.core.ElmPluginHelper.getPsiElement
 import java.util.*
 
 class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserDefinition()) {
