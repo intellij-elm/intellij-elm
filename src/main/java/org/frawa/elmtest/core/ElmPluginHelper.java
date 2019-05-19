@@ -18,8 +18,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static org.frawa.elmtest.core.LabelUtils.decodeLabel;
-
 public class ElmPluginHelper {
 
     public static PsiElement getPsiElement(boolean isDescribe, String labels, PsiFile file) {
@@ -41,19 +39,19 @@ public class ElmPluginHelper {
             return Optional.empty();
         }
 
-        String topLabel = decodeLabel(labelPath.getName(0));
+        String topLabel = LabelUtils.INSTANCE.decodeLabel(labelPath.getName(0));
         if (labelPath.getNameCount() > 1 || isDescribe) {
             Stream<ElmFunctionCallExpr> current = allSuites(topLabel).apply(file)
                     .filter(topLevel());
             for (int i = 1; i < labelPath.getNameCount() - 1; i++) {
-                String label = decodeLabel(labelPath.getName(i));
+                String label = LabelUtils.INSTANCE.decodeLabel(labelPath.getName(i));
                 current = current
                         .map(secondOperand())
                         .flatMap(allSuites(label));
             }
 
             if (labelPath.getNameCount() > 1) {
-                String leafLabel = decodeLabel(labelPath.getName(labelPath.getNameCount() - 1));
+                String leafLabel = LabelUtils.INSTANCE.decodeLabel(labelPath.getName(labelPath.getNameCount() - 1));
                 Function<PsiElement, Stream<ElmFunctionCallExpr>> leaf = isDescribe
                         ? allSuites(leafLabel)
                         : allTests(leafLabel);

@@ -35,12 +35,12 @@ public class ElmTestLocator extends FileUrlProvider {
     @NotNull
     @Override
     public List<Location> getLocation(@NotNull String protocol, @NotNull String path, @Nullable String metainfo, @NotNull Project project, @NotNull GlobalSearchScope scope) {
-        if (!protocol.startsWith(LabelUtils.ELM_TEST_PROTOCOL)) {
+        if (!protocol.startsWith(LabelUtils.INSTANCE.getELM_TEST_PROTOCOL())) {
             return super.getLocation(protocol, path, metainfo, project, scope);
         }
 
-        if (protocol.startsWith(LabelUtils.ERROR_PROTOCOL)) {
-            Pair<String, Pair<Integer, Integer>> pair = LabelUtils.fromErrorLocationUrlPath(path);
+        if (protocol.startsWith(LabelUtils.INSTANCE.getERROR_PROTOCOL())) {
+            Pair<String, Pair<Integer, Integer>> pair = LabelUtils.INSTANCE.fromErrorLocationUrlPath(path);
             String filePath = pair.first;
             int line = pair.second.first;
             int column = pair.second.second;
@@ -56,7 +56,7 @@ public class ElmTestLocator extends FileUrlProvider {
                     .collect(Collectors.toList());
         }
 
-        Pair<String, String> pair = LabelUtils.fromLocationUrlPath(path);
+        Pair<String, String> pair = LabelUtils.INSTANCE.fromLocationUrlPath(path);
         String filePath = pair.first;
         String labels = pair.second;
 
@@ -66,7 +66,7 @@ public class ElmTestLocator extends FileUrlProvider {
             return Collections.emptyList();
         }
 
-        boolean isDescribe = LabelUtils.DESCRIBE_PROTOCOL.equals(protocol);
+        boolean isDescribe = LabelUtils.INSTANCE.getDESCRIBE_PROTOCOL().equals(protocol);
 
         return virtualFiles.stream()
                 .map(vf -> getLocation(isDescribe, labels, project, vf))

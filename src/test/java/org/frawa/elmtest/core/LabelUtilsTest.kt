@@ -1,7 +1,15 @@
 package org.frawa.elmtest.core
 
 import com.intellij.openapi.vfs.VirtualFileManager
-import org.frawa.elmtest.core.LabelUtils.*
+import org.frawa.elmtest.core.LabelUtils.commonParent
+import org.frawa.elmtest.core.LabelUtils.fromErrorLocationUrlPath
+import org.frawa.elmtest.core.LabelUtils.fromLocationUrlPath
+import org.frawa.elmtest.core.LabelUtils.pathString
+import org.frawa.elmtest.core.LabelUtils.subParents
+import org.frawa.elmtest.core.LabelUtils.toErrorLocationUrl
+import org.frawa.elmtest.core.LabelUtils.toPath
+import org.frawa.elmtest.core.LabelUtils.toSuiteLocationUrl
+import org.frawa.elmtest.core.LabelUtils.toTestLocationUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.*
