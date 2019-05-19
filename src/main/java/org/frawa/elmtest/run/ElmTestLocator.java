@@ -15,6 +15,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.elm.ide.test.core.LabelUtils;
+import org.frawa.elmtest.core.ElmPluginHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.frawa.elmtest.core.ElmPluginHelper.getPsiElement;
 
 
 public class ElmTestLocator extends FileUrlProvider {
@@ -80,7 +80,7 @@ public class ElmTestLocator extends FileUrlProvider {
             return null;
         }
 
-        PsiElement found = getPsiElement(isDescribe, labels, psiFile);
+        PsiElement found = ElmPluginHelper.INSTANCE.getPsiElement(isDescribe, labels, psiFile);
         return PsiLocation.fromPsiElement(project, found);
     }
 
