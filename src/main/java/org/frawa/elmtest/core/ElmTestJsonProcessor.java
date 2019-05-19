@@ -2,6 +2,7 @@ package org.frawa.elmtest.core;
 
 import com.google.gson.*;
 import com.intellij.execution.testframework.sm.runner.events.*;
+import org.elm.ide.test.core.LabelUtils;
 import org.frawa.elmtest.core.json.CompileErrors;
 import org.frawa.elmtest.core.json.Error;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static org.frawa.elmtest.core.LabelUtils.INSTANCE;
+import static org.elm.ide.test.core.LabelUtils.INSTANCE;
 
 public class ElmTestJsonProcessor {
 

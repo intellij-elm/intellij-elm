@@ -2,6 +2,7 @@ package org.frawa.elmtest.core;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.ParsingTestCase;
+import org.elm.ide.test.core.LabelUtils;
 import org.elm.lang.core.parser.ElmParserDefinition;
 import org.jetbrains.annotations.NotNull;
 
