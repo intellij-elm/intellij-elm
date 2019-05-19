@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.intellij.execution.testframework.sm.runner.events.*;
+import org.elm.ide.test.core.LabelUtils;
 import org.frawa.elmtest.core.json.CompileErrors;
 import org.frawa.elmtest.core.json.Error;
 import org.frawa.elmtest.core.json.Problem;
@@ -15,8 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.elm.ide.test.core.LabelUtils.INSTANCE;
 import static org.frawa.elmtest.core.ElmTestJsonProcessor.*;
-import static org.frawa.elmtest.core.LabelUtils.INSTANCE;
 import static org.junit.Assert.*;
 
 public class ElmTestJsonProcessorTest {
