@@ -14,13 +14,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static org.frawa.elmtest.core.LabelUtils.*;
+import static org.frawa.elmtest.core.LabelUtils.INSTANCE;
 
 public class ElmTestJsonProcessor {
 
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    private Path currentPath = LabelUtils.EMPTY_PATH;
+    private Path currentPath = LabelUtils.INSTANCE.getEMPTY_PATH();
 
     public List<TreeNodeEvent> accept(String text) {
         try {
@@ -35,13 +35,13 @@ public class ElmTestJsonProcessor {
             String event = obj.get("event").getAsString();
 
             if ("runStart".equals(event)) {
-                currentPath = LabelUtils.EMPTY_PATH;
+                currentPath = LabelUtils.INSTANCE.getEMPTY_PATH();
                 return Collections.emptyList();
             } else if ("runComplete".equals(event)) {
-                List<TreeNodeEvent> closeAll = closeSuitePaths(currentPath, EMPTY_PATH)
+                List<TreeNodeEvent> closeAll = closeSuitePaths(currentPath, INSTANCE.getEMPTY_PATH())
                         .map((Function<Path, TreeNodeEvent>) this::newTestSuiteFinishedEvent)
                         .collect(Collectors.toList());
-                currentPath = LabelUtils.EMPTY_PATH;
+                currentPath = LabelUtils.INSTANCE.getEMPTY_PATH();
                 return closeAll;
             } else if (!"testCompleted".equals(event)) {
                 return Collections.emptyList();
@@ -113,32 +113,32 @@ public class ElmTestJsonProcessor {
 
     @NotNull
     private TestSuiteStartedEvent newTestSuiteStartedEvent(Path path) {
-        return new TestSuiteStartedEvent(getName(path), toSuiteLocationUrl(path));
+        return new TestSuiteStartedEvent(INSTANCE.getName(path), INSTANCE.toSuiteLocationUrl(path));
     }
 
     @NotNull
     private TestSuiteFinishedEvent newTestSuiteFinishedEvent(Path path) {
-        return new TestSuiteFinishedEvent(getName(path));
+        return new TestSuiteFinishedEvent(INSTANCE.getName(path));
     }
 
     @NotNull
     private static TestIgnoredEvent newTestIgnoredEvent(Path path, String comment) {
-        return new TestIgnoredEvent(getName(path), sureText(comment), null);
+        return new TestIgnoredEvent(INSTANCE.getName(path), sureText(comment), null);
     }
 
     @NotNull
     private static TestFinishedEvent newTestFinishedEvent(Path path, long duration) {
-        return new TestFinishedEvent(getName(path), duration);
+        return new TestFinishedEvent(INSTANCE.getName(path), duration);
     }
 
     @NotNull
     private static TestFailedEvent newTestFailedEvent(Path path, String actual, String expected, String message) {
-        return new TestFailedEvent(getName(path), sureText(message), null, false, actual, expected);
+        return new TestFailedEvent(INSTANCE.getName(path), sureText(message), null, false, actual, expected);
     }
 
     @NotNull
     private static TestStartedEvent newTestStartedEvent(Path path) {
-        return new TestStartedEvent(getName(path), toTestLocationUrl(path));
+        return new TestStartedEvent(INSTANCE.getName(path), INSTANCE.toTestLocationUrl(path));
     }
 
     @NotNull
@@ -207,20 +207,20 @@ public class ElmTestJsonProcessor {
     }
 
     static Path toPath(JsonObject element) {
-        return LabelUtils.toPath(StreamSupport.stream(element.get("labels").getAsJsonArray().spliterator(), false)
+        return LabelUtils.INSTANCE.toPath(StreamSupport.stream(element.get("labels").getAsJsonArray().spliterator(), false)
                 .map(JsonElement::getAsString)
                 .collect(Collectors.toList())
         );
     }
 
     static Stream<Path> closeSuitePaths(Path from, Path to) {
-        Path commonParent = commonParent(from, to);
-        return subParents(from, commonParent);
+        Path commonParent = INSTANCE.commonParent(from, to);
+        return INSTANCE.subParents(from, commonParent);
     }
 
     static Stream<Path> openSuitePaths(Path from, Path to) {
-        Path commonParent = commonParent(from, to);
-        List<Path> parents = subParents(to, commonParent).collect(Collectors.toList());
+        Path commonParent = INSTANCE.commonParent(from, to);
+        List<Path> parents = INSTANCE.subParents(to, commonParent).collect(Collectors.toList());
         Collections.reverse(parents);
         return parents.stream();
     }
@@ -238,7 +238,7 @@ public class ElmTestJsonProcessor {
     private Stream<TreeNodeEvent> toErrorEvents(Error error) {
         return error.problems.stream()
                 .flatMap(problem -> Stream.of(
-                        new TestStartedEvent(problem.title, toErrorLocationUrl(error.path, problem.region.start.line, problem.region.start.column)),
+                        new TestStartedEvent(problem.title, INSTANCE.toErrorLocationUrl(error.path, problem.region.start.line, problem.region.start.column)),
                         new TestFailedEvent(problem.title, null, problem.getTextMessage(), null, true, null, null, null, null, false, false, -1)
                 ));
     }
