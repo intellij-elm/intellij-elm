@@ -2,9 +2,9 @@ package org.elm.workspace
 
 import org.elm.TestProject
 import org.elm.fileTree
+import org.elm.ide.test.core.ElmProjectTestsHelper
+import org.elm.ide.test.core.ElmProjectTestsHelper.Companion.elmFolderForTesting
 import org.elm.openapiext.pathAsPath
-import org.frawa.elmtest.core.ElmProjectTestsHelper
-import org.frawa.elmtest.core.ElmProjectTestsHelper.Companion.elmFolderForTesting
 import java.util.*
 
 class ElmProjectHelperTest : ElmWorkspaceTestBase() {

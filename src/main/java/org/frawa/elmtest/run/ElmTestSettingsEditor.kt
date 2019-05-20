@@ -16,7 +16,7 @@ package org.frawa.elmtest.run
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import org.frawa.elmtest.core.ElmProjectTestsHelper
+import org.elm.ide.test.core.ElmProjectTestsHelper
 import javax.swing.JComponent
 import javax.swing.JPanel
 

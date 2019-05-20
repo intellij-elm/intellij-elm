@@ -6,8 +6,8 @@ import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
+import org.elm.ide.test.core.ElmProjectTestsHelper;
 import org.elm.workspace.ElmWorkspaceService;
-import org.frawa.elmtest.core.ElmProjectTestsHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
