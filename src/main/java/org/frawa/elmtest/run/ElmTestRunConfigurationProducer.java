@@ -52,7 +52,7 @@ public class ElmTestRunConfigurationProducer extends RunConfigurationProducer<El
                 .map(Location::getVirtualFile)
                 .map(elmWorkspace::findProjectForFile)
                 .flatMap(Optional::ofNullable)
-                .map(ElmProjectTestsHelper::elmFolderForTesting)
+                .map(ElmProjectTestsHelper.Companion::elmFolderForTesting)
                 .map(Path::toString);
     }
 }
