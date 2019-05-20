@@ -76,8 +76,9 @@ class ElmTestJsonProcessor {
 
     private fun accept(compileErrors: CompileErrors): Sequence<TreeNodeEvent> {
         return compileErrors.errors
-                .asSequence()
-                .flatMap { this.toErrorEvents(it) }
+                ?.asSequence()
+                ?.flatMap { this.toErrorEvents(it) }
+                ?: emptySequence()
     }
 
     fun toCompileErrors(obj: JsonObject): CompileErrors {
@@ -86,13 +87,14 @@ class ElmTestJsonProcessor {
 
     private fun toErrorEvents(error: Error): Sequence<TreeNodeEvent> {
         return error.problems
-                .asSequence()
-                .flatMap { problem ->
+                ?.asSequence()
+                ?.flatMap { problem ->
                     sequenceOf(
-                            TestStartedEvent(problem.title, toErrorLocationUrl(error.path, problem.region.start.line, problem.region.start.column)),
-                            TestFailedEvent(problem.title, null, problem.textMessage, null, true, null, null, null, null, false, false, -1)
+                            TestStartedEvent(problem.title!!, toErrorLocationUrl(error.path!!, problem.region?.start!!.line, problem.region?.start!!.column)),
+                            TestFailedEvent(problem.title!!, null, problem.textMessage, null, true, null, null, null, null, false, false, -1)
                     )
                 }
+                ?: emptySequence()
     }
 
     companion object {
