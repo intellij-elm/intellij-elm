@@ -1,11 +1,10 @@
-package org.frawa.elmtest.core
+package org.elm.ide.test.core
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSyntaxException
 import com.intellij.execution.testframework.sm.runner.events.*
-import org.elm.ide.test.core.LabelUtils
 import org.elm.ide.test.core.LabelUtils.commonParent
 import org.elm.ide.test.core.LabelUtils.getName
 import org.elm.ide.test.core.LabelUtils.subParents
@@ -116,7 +115,8 @@ class ElmTestJsonProcessor {
                 val expected = getExpected(obj)
 
                 return sequenceOf(newTestStartedEvent(path))
-                        .plus(newTestFailedEvent(path, actual, expected, message ?: ""))
+                        .plus(newTestFailedEvent(path, actual, expected, message
+                                ?: ""))
             } catch (e: Throwable) {
                 val failures = GsonBuilder().setPrettyPrinting().create().toJson(obj.get("failures"))
                 return sequenceOf(newTestStartedEvent(path))
