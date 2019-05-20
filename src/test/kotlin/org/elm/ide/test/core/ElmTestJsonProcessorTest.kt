@@ -340,16 +340,16 @@ class ElmTestJsonProcessorTest {
         //        assertEquals("",gson.toJson(compileErrors));
 
         assertNotNull(compileErrors)
-        assertEquals(1, compileErrors.errors.size.toLong())
+        assertEquals(1, compileErrors.errors?.size)
 
-        val error = compileErrors.errors[0]
+        val error = compileErrors.errors!![0]
         assertEquals("PATH/tests/UiTests.elm", error.path)
-        assertEquals(1, error.problems.size.toLong())
+        assertEquals(1, error.problems?.size)
 
-        val problem = error.problems[0]
+        val problem = error.problems!![0]
         assertEquals("TOO FEW ARGS", problem.title)
-        assertEquals(131, problem.region.start.line.toLong())
-        assertEquals(33, problem.region.start.column.toLong())
+        assertEquals(131, problem.region?.start?.line)
+        assertEquals(33, problem.region?.start?.column)
 
         val expectedMessage = "The `Msg` type needs 1 argument, but I see 0 instead:\n" +
                 "\n" +
