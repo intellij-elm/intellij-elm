@@ -7,8 +7,6 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
-import java.util.stream.Stream
 
 object LabelUtils {
     val ELM_TEST_PROTOCOL = "elmTest"
@@ -104,16 +102,13 @@ object LabelUtils {
     }
 
     //internal
-    fun subParents(path: Path, excludeParent: Path): Stream<Path> {
+    fun subParents(path: Path, excludeParent: Path): Sequence<Path> {
         if (excludeParent === EMPTY_PATH) {
-            // TODO remove duplication with below
-            val result = ArrayList<Path>()
-            var current: Path? = path.parent
-            while (current != null) {
-                result.add(current)
-                current = current.parent
+            var current: Path? = path
+            return generateSequence {
+                current = current?.parent
+                current
             }
-            return result.stream()
         }
 
         if (!path.startsWith(excludeParent)) {
@@ -121,20 +116,18 @@ object LabelUtils {
         }
 
         if (path === EMPTY_PATH) {
-            return Stream.empty()
+            return sequenceOf()
         }
 
-        val result = ArrayList<Path>()
-        var current = path.parent
-        while (current != excludeParent) {
-            result.add(current)
-            current = current.parent
+        var current: Path? = path
+        return generateSequence {
+            current = current?.parent
+            if (current != excludeParent) {
+                current
+            } else {
+                null
+            }
         }
-        return result.stream()
-
-        // JSK 9
-        //        return Stream.iterate(path, current -> current != null ? current.getParent() : null)
-        //                .takeWile(current -> !current.equals(excludeParent));
     }
 
     //internal
