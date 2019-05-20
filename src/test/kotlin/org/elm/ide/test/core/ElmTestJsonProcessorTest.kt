@@ -1,4 +1,4 @@
-package org.frawa.elmtest.core
+package org.elm.ide.test.core
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -7,15 +7,14 @@ import com.intellij.execution.testframework.sm.runner.events.TestFailedEvent
 import com.intellij.execution.testframework.sm.runner.events.TestFinishedEvent
 import com.intellij.execution.testframework.sm.runner.events.TestStartedEvent
 import com.intellij.execution.testframework.sm.runner.events.TestSuiteStartedEvent
-import org.elm.ide.test.core.LabelUtils
+import org.elm.ide.test.core.ElmTestJsonProcessor.Companion.closeSuitePaths
+import org.elm.ide.test.core.ElmTestJsonProcessor.Companion.getActual
+import org.elm.ide.test.core.ElmTestJsonProcessor.Companion.getComment
+import org.elm.ide.test.core.ElmTestJsonProcessor.Companion.getExpected
+import org.elm.ide.test.core.ElmTestJsonProcessor.Companion.getMessage
+import org.elm.ide.test.core.ElmTestJsonProcessor.Companion.openSuitePaths
 import org.elm.ide.test.core.LabelUtils.pathString
 import org.elm.ide.test.core.LabelUtils.toPath
-import org.frawa.elmtest.core.ElmTestJsonProcessor.Companion.closeSuitePaths
-import org.frawa.elmtest.core.ElmTestJsonProcessor.Companion.getActual
-import org.frawa.elmtest.core.ElmTestJsonProcessor.Companion.getComment
-import org.frawa.elmtest.core.ElmTestJsonProcessor.Companion.getExpected
-import org.frawa.elmtest.core.ElmTestJsonProcessor.Companion.getMessage
-import org.frawa.elmtest.core.ElmTestJsonProcessor.Companion.openSuitePaths
 import org.junit.Assert.*
 import org.junit.Test
 
