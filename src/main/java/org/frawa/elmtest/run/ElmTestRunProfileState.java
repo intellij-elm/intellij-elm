@@ -26,6 +26,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
+import kotlin.sequences.Sequence;
 import org.elm.workspace.ElmToolchain;
 import org.elm.workspace.ElmWorkspaceService;
 import org.elm.workspace.commandLineTools.ElmTestCLI;
@@ -37,7 +38,6 @@ import org.jetbrains.annotations.SystemIndependent;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 public class ElmTestRunProfileState extends CommandLineState {
 
@@ -153,11 +153,11 @@ public class ElmTestRunProfileState extends CommandLineState {
 
                 @Override
                 protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) {
-                    List<TreeNodeEvent> events = processor.accept(text);
+                    Sequence<TreeNodeEvent> events = processor.accept(text);
                     if (events == null) {
                         return false;
                     }
-                    events.stream().forEach(this::processEvent);
+                    events.iterator().forEachRemaining(this::processEvent);
                     return true;
                 }
 
