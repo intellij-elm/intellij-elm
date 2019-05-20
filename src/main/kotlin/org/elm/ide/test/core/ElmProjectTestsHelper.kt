@@ -1,4 +1,4 @@
-package org.frawa.elmtest.core
+package org.elm.ide.test.core
 
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
