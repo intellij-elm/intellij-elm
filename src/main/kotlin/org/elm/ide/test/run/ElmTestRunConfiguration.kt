@@ -53,7 +53,7 @@ class ElmTestRunConfiguration internal constructor(project: Project, factory: Co
             return null
         }
         val elmProjectName = Paths.get(options.elmFolder).fileName
-        return if (elmProjectName != null) "Tests in $elmProjectName" else null
+        return "Tests in $elmProjectName"
     }
 
     companion object {
