@@ -21,23 +21,19 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 
 class ElmTestSettingsEditor internal constructor(project: Project) : SettingsEditor<ElmTestRunConfiguration>() {
-    private val helper: ElmProjectTestsHelper
+    private val helper: ElmProjectTestsHelper = ElmProjectTestsHelper(project)
     private var myPanel: JPanel? = null
     private var projectChooser: ComboBox<String>? = null
 
-    init {
-        helper = ElmProjectTestsHelper(project)
+    override fun createEditor(): JComponent {
         helper
                 .allNames()
                 .forEach { projectChooser!!.addItem(it) }
-    }
-
-    override fun createEditor(): JComponent {
-        return myPanel!!
+        return this.myPanel!!
     }
 
     override fun resetEditorFrom(configuration: ElmTestRunConfiguration) {
-        projectChooser!!.selectedItem =
+        this.projectChooser!!.selectedItem =
                 configuration.options.elmFolder?.let {
                     helper.nameByProjectDirPath(it)
                 }
