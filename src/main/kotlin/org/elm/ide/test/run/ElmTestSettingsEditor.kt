@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package org.frawa.elmtest.run
+package org.elm.ide.test.run
 
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
@@ -38,7 +38,9 @@ class ElmTestSettingsEditor internal constructor(project: Project) : SettingsEdi
 
     override fun resetEditorFrom(configuration: ElmTestRunConfiguration) {
         projectChooser!!.selectedItem =
-                helper.nameByProjectDirPath(configuration.options.elmFolder)
+                configuration.options.elmFolder?.let {
+                    helper.nameByProjectDirPath(it)
+                }
     }
 
     override fun applyEditorTo(configuration: ElmTestRunConfiguration) {
