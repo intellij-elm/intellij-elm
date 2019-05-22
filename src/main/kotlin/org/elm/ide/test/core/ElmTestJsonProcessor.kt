@@ -11,8 +11,8 @@ import org.elm.ide.test.core.LabelUtils.subParents
 import org.elm.ide.test.core.LabelUtils.toErrorLocationUrl
 import org.elm.ide.test.core.LabelUtils.toSuiteLocationUrl
 import org.elm.ide.test.core.LabelUtils.toTestLocationUrl
-import org.frawa.elmtest.core.json.CompileErrors
-import org.frawa.elmtest.core.json.Error
+import org.elm.ide.test.core.json.CompileErrors
+import org.elm.ide.test.core.json.Error
 import java.nio.file.Path
 
 class ElmTestJsonProcessor {

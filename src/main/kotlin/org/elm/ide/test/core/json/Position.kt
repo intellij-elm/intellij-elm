@@ -1,4 +1,4 @@
-package org.frawa.elmtest.core.json
+package org.elm.ide.test.core.json
 
 class Position {
     var line: Int = 0

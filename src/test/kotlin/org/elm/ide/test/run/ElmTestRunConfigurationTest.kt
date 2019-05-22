@@ -1,4 +1,4 @@
-package org.frawa.elmtest.run
+package org.elm.ide.test.run
 
 import org.jdom.Element
 import org.junit.Assert.assertEquals
