@@ -863,6 +863,29 @@ main a f =
     f <error descr="Type mismatch.Required: numberFound: comparable">a</error>
 """)
 
+    fun `test passing function with vars in annotation in let to flex vars`() = checkByText("""
+foo : (a -> b) -> a -> b
+foo f a = f a
+
+main : ()
+main =
+    let
+        b : a -> a
+        b a = a
+    in
+    <error descr="Type mismatch.Required: ()Found: String">foo b ""</error>
+""")
+
+    fun `test passing function with mixed-rigidity vars in annotation`() = checkByText("""
+main : a -> ()
+main a =
+    let
+        foo : a -> b -> a
+        foo aa bb = aa
+    in
+    <error descr="Type mismatch.Required: ()Found: a">foo a ""</error>
+""")
+
     fun `test calling rigid var in parent scope`() = checkByText("""
 main : (a -> a) -> ()
 main f =

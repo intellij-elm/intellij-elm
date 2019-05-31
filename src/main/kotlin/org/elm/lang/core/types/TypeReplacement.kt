@@ -7,24 +7,29 @@ package org.elm.lang.core.types
  * It relies on the fact that [TyVar]s can be compared by identity. Vars in different scopes must
  * compare unequal, even if they have the same name.
  *
- * The constructor takes a map of vars to the ty to replace them with
+ * The constructor takes a map of vars to the ty to replace them with.
  */
 class TypeReplacement(
         // A map of variables that should be replaced to the ty to replace them with
         replacements: Map<TyVar, Ty>,
         private val freshen: Boolean,
-        private val flexify: Boolean
+        private val varsToRemainRigid: Collection<TyVar>?
 ) {
     companion object {
         /**
          * Replace vars in [ty] according to [replacements].
+         *
+         * @param varsToRemainRigid If given, all [TyVar]s will be replaced with flexible copies,
+         *  except for vars that occur in this collection, which will be left unchanged.
          */
-        fun replace(ty: Ty, replacements: Map<TyVar, Ty>): Ty {
-            if (replacements.isEmpty()) return ty
-            return TypeReplacement(replacements, freshen = false, flexify = false).replace(ty)
+        fun replace(ty: Ty, replacements: Map<TyVar, Ty>, varsToRemainRigid: Collection<TyVar>? = null): Ty {
+            if (varsToRemainRigid == null && replacements.isEmpty()) return ty
+            return TypeReplacement(replacements, freshen = false, varsToRemainRigid = varsToRemainRigid).replace(ty)
         }
 
-        fun replace(ty: Ty, replacements: DisjointSet): Ty = replace(ty, replacements.asMap())
+        fun replace(ty: Ty, replacements: DisjointSet, varsToRemainRigid: Collection<TyVar>? = null): Ty {
+            return replace(ty, replacements.asMap(), varsToRemainRigid = varsToRemainRigid)
+        }
 
         /**
          * Replace all [TyVar]s in a [ty] with new copies with the same names.
@@ -40,7 +45,7 @@ class TypeReplacement(
          * `f`, the ty of `a` and `b` have to be the same.
          */
         fun freshenVars(ty: Ty): Ty {
-            return TypeReplacement(emptyMap(), freshen = true, flexify = false).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null).replace(ty)
         }
 
         /**
@@ -51,14 +56,14 @@ class TypeReplacement(
          * when calling functions.
          */
         fun flexify(ty: Ty): Ty {
-            return TypeReplacement(emptyMap(), freshen = false, flexify = true).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList()).replace(ty)
         }
     }
 
     /** A map of var to (has been accessed, ty) */
     private val replacements = replacements.mapValuesTo(mutableMapOf()) { (_, v) -> false to v }
 
-    private fun replace(ty: Ty): Ty = when (ty) {
+    fun replace(ty: Ty): Ty = when (ty) {
         is TyVar -> getReplacement(ty) ?: ty
         is TyTuple -> TyTuple(ty.types.map { replace(it) }, replace(ty.alias))
         is TyFunction -> replaceFunction(ty)
@@ -114,8 +119,8 @@ class TypeReplacement(
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
     // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
-        if (key !in replacements && (freshen || flexify)) {
-            if (key.rigid && !flexify) return null // never freshen rigid vars
+        if (key !in replacements && (freshen || varsToRemainRigid != null)) {
+            if (key.rigid && (varsToRemainRigid == null || key in varsToRemainRigid)) return null // never freshen rigid vars
 
             val ty = TyVar(key.name, rigid = false)
             replacements[key] = true to ty
