@@ -76,6 +76,15 @@ private class InferenceScope(
     /** The unification table used for unannotated parameters */
     private val replacements: DisjointSet = parent?.replacements ?: DisjointSet()
 
+    /**
+     * All [TyVar]s that occur in this scope's type annotation, if there is one.
+     *
+     * This is used when inferring function call target types. Nested functions can contain
+     * variables that reference variables in annotations of outer scopes. These vars are rigid at
+     * call sites, while all other vars are flexible at call sites.
+     */
+    private var annotationVars: List<TyVar> = emptyList()
+
     private val ancestors: Sequence<InferenceScope> get() = generateSequence(this) { it.parent }
 
     private fun getBinding(e: ElmNamedElement): Ty? = ancestors.mapNotNull { it.bindings[e] }.firstOrNull()
@@ -222,7 +231,8 @@ private class InferenceScope(
     // need to replace everything for child calls since they share our replacements table.
     private fun toTopLevelResult(ty: Ty): InferenceResult {
         val exprs = expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
-        val ret = TypeReplacement.replace(ty, replacements)
+        val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
+        val ret = TypeReplacement.replace(ty, replacements, outerVars)
         return InferenceResult(exprs, diagnostics, ret)
     }
 
@@ -727,7 +737,6 @@ private class InferenceScope(
         }
     }
 
-
     private fun bindFunctionDeclarationParameters(
             valueDeclaration: ElmValueDeclaration,
             decl: ElmFunctionDeclarationLeft
@@ -751,6 +760,7 @@ private class InferenceScope(
         if (typeRefTy is TyFunction) {
             patterns.zip(typeRefTy.parameters) { pat, ty -> bindPattern(pat, ty, true) }
         }
+        annotationVars = allVars(typeRefTy).toList()
         return ParameterBindingResult.Annotated(typeRefTy, patterns.size)
     }
 
@@ -1317,14 +1327,25 @@ private sealed class ParameterBindingResult {
 /** dangerous shallow copy of a mutable record for performance, use `toRecord` if the result isn't discarded. */
 private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy)
 
-/** Return true if [tyVar] is referenced anywhere withing [ty] */
-private fun containsVar(ty: Ty, tyVar: TyVar): Boolean = when (ty) {
-    is TyVar -> ty == tyVar
-    is TyTuple -> ty.types.any { containsVar(it, tyVar) }
-    is TyRecord -> ty.fields.values.any { containsVar(it, tyVar) } || (ty.baseTy != null && containsVar(ty.baseTy, tyVar))
-    is MutableTyRecord -> containsVar(ty.asRecord(), tyVar)
-    is TyFunction -> containsVar(ty.ret, tyVar) || ty.parameters.any { containsVar(it, tyVar) }
-    is TyUnion, is TyUnit, is TyUnknown, TyInProgressBinding -> false
+/** Return true if [tyVar] is referenced anywhere within [ty] */
+private fun containsVar(ty: Ty, tyVar: TyVar): Boolean = allVars(ty).any { it == tyVar }
+
+private fun allVars(ty: Ty): Sequence<TyVar> = sequence<TyVar> {
+    when (ty) {
+        is TyVar -> yield(ty)
+        is TyTuple -> ty.types.forEach { yieldAll(allVars(it)) }
+        is TyRecord -> {
+            ty.fields.values.forEach { yieldAll(allVars(it)) }
+            if (ty.baseTy != null) yieldAll(allVars(ty.baseTy))
+        }
+        is MutableTyRecord -> yieldAll(allVars(ty.asRecord()))
+        is TyFunction -> {
+            yieldAll(allVars(ty.ret))
+            ty.parameters.forEach { yieldAll(allVars(it)) }
+        }
+        is TyUnion, is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        }
+    }
 }
 
 private class InfiniteTypeException : Exception()
