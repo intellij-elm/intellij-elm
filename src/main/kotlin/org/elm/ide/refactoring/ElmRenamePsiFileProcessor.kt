@@ -1,4 +1,4 @@
-package org.elm.lang.refactoring
+package org.elm.ide.refactoring
 
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiElement

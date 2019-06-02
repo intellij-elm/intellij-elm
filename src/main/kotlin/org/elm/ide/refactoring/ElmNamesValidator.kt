@@ -1,4 +1,4 @@
-package org.elm.lang.refactoring
+package org.elm.ide.refactoring
 
 import com.intellij.lang.refactoring.NamesValidator
 import com.intellij.openapi.project.Project
