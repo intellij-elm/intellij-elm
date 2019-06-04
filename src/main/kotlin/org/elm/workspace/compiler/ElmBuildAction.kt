@@ -21,6 +21,7 @@ import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findInference
+import org.elm.lang.core.types.functionTy
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
@@ -85,7 +86,7 @@ class ElmBuildAction : AnAction() {
     private fun findMainEntryPoint(project: Project, elmProject: ElmProject): ElmFunctionDeclarationLeft? =
             ElmLookup.findByName<ElmFunctionDeclarationLeft>("main", LookupClientLocation(project, elmProject))
                     .find { decl ->
-                        val ty = decl.findInference()?.ty
+                        val ty = decl.functionTy()
                         val key = when (ty) {
                             is TyUnion -> ty.module to ty.name
                             is TyUnknown -> ty.alias?.let { it.module to it.name }
