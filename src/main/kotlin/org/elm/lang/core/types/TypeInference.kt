@@ -21,6 +21,16 @@ fun PsiElement.findInference(): InferenceResult? {
     return outermostDeclaration(strict = false)?.inference(emptySet())
 }
 
+/**
+ * Find the type of a function declaration.
+ *
+ * This is like [findInference].ty, but handles nested declarations.
+ */
+fun ElmFunctionDeclarationLeft.functionTy(): Ty? {
+    val decl = parentOfType<ElmValueDeclaration>() ?: return null
+    return findInference()?.let { it.expressionTypes[decl] ?: it.ty }
+}
+
 /** Find the type of a given element, if the element is a value expression or declaration */
 fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
 
@@ -197,6 +207,7 @@ private class InferenceScope(
     ): InferenceResult {
         val result = inferChild(activeScopes = activeScopes.toMutableSet()) { beginDeclarationInference(decl) }
         resolvedDeclarations[decl] = result.ty
+        expressionTypes[decl] = result.ty
 
         // We need to keep track of declared function names and bound patterns so that other
         // children have access to them.
