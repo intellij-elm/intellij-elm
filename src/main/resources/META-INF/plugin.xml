@@ -240,6 +240,10 @@
             <className>org.elm.ide.intentions.RemoveExposureIntention</className>
             <category>Elm</category>
         </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.MakeAnnotationIntention</className>
+            <category>Elm</category>
+        </intentionAction>
 
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->

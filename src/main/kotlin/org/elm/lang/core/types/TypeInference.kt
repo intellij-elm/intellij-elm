@@ -21,18 +21,21 @@ fun PsiElement.findInference(): InferenceResult? {
     return outermostDeclaration(strict = false)?.inference(emptySet())
 }
 
-/**
- * Find the type of a function declaration.
- *
- * This is like [findInference].ty, but handles nested declarations.
- */
-fun ElmFunctionDeclarationLeft.functionTy(): Ty? {
-    val decl = parentOfType<ElmValueDeclaration>() ?: return null
-    return findInference()?.let { it.expressionTypes[decl] ?: it.ty }
-}
-
 /** Find the type of a given element, if the element is a value expression or declaration */
-fun ElmPsiElement.findTy(): Ty? = findInference()?.expressionTypes?.get(this)
+fun ElmPsiElement.findTy(): Ty? {
+    return when (this) {
+        is ElmFunctionDeclarationLeft -> {
+            val decl = parentOfType<ElmValueDeclaration>() ?: return null
+            return findInference()?.let { it.expressionTypes[decl] ?: it.ty }
+        }
+        is ElmValueDeclaration -> {
+            findInference()?.let { it.expressionTypes[this] ?: it.ty }
+        }
+        else -> {
+            findInference()?.expressionTypes?.get(this)
+        }
+    }
+}
 
 private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>): InferenceResult {
     return CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TYPE_INFERENCE_KEY, { useActiveScopes ->
@@ -553,13 +556,10 @@ private class InferenceScope(
         for ((name, ty) in fields) {
             val expected = baseFields[name.text]
             if (expected == null) {
-                when (baseTy) {
-                    is TyRecord -> {
-                        if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
-                    }
-                    is MutableTyRecord -> {
-                        baseTy.fields[name.text] = ty
-                    }
+                if (baseTy is TyRecord) {
+                    if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
+                } else if (baseTy is MutableTyRecord) {
+                    baseTy.fields[name.text] = ty
                 }
             } else {
                 requireAssignable(name, ty, expected)
