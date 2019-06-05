@@ -175,6 +175,18 @@ selectWidget w = w
 """)
 
 
+    fun `test suggests based on end of field access chain`() = doTest("""
+f model =
+    {-caret-}model.currentPage.title
+""", listOf("model", "model.currentPage", "model.currentPage.title"), 2, """
+f model =
+    let
+        title = model.currentPage.title
+    in
+    title
+""")
+
+
     private fun doTest(
             @Language("Elm") before: String,
             expressions: List<String>,

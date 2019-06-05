@@ -2,6 +2,7 @@ package org.elm.ide.refactoring
 
 import com.intellij.psi.codeStyle.NameUtil
 import org.elm.lang.core.psi.ElmExpressionTag
+import org.elm.lang.core.psi.elements.ElmFieldAccessExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.toElmLowerId
@@ -19,15 +20,19 @@ fun ElmExpressionTag.suggestedNames(): SuggestedNames {
     val names = LinkedHashSet<String>()
     val ty = findTy()
 
-    // suggest based on function call (e.g. suggest "books" for expr: `getBooks "shakespeare" library`)
-    if (this is ElmFunctionCallExpr) {
-        val target = target
-        if (target is ElmValueExpr) {
-            names.addName(target.referenceName)
+    when {
+        this is ElmFunctionCallExpr -> {
+            // suggest based on function call (e.g. suggest "books" for expr: `getBooks "shakespeare" library`)
+            val target = target
+            if (target is ElmValueExpr) {
+                names.addName(target.referenceName)
+            }
+        }
+        this is ElmFieldAccessExpr -> {
+            // suggest the last field in a record field access chain (e.g. "title" in expr `model.currentPage.title`)
+            names.addName(this.lowerCaseIdentifier?.text)
         }
     }
-
-    // TODO suggest names on based on ElmFieldAccessExpr (e.g. suggest "title" for `model.currentPage.title`)
 
     // if present, suggest type alias (useful for records which often have a descriptive alias name)
     ty?.alias?.name?.let { names.addName(it) }
@@ -45,7 +50,8 @@ fun ElmExpressionTag.suggestedNames(): SuggestedNames {
     return SuggestedNames(defaultName, names)
 }
 
-private fun LinkedHashSet<String>.addName(name: String) {
+private fun LinkedHashSet<String>.addName(name: String?) {
+    if (name == null) return
     // Generate variants on compound words (e.g. "selectedItem" -> ["item", "selectedItem"])
     NameUtil.getSuggestionsByName(name, "", "", false, false, false)
             .mapTo(this) { it.toElmLowerId() }
