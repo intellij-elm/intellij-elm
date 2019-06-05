@@ -3,14 +3,13 @@ package org.elm.ide.intentions
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.types.Ty
-import org.elm.lang.core.types.functionTy
+import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
 import org.elm.openapiext.runWriteCommandAction
 import org.elm.utils.getIndent
@@ -34,7 +33,7 @@ class MakeAnnotationIntention : ElmAtCaretIntentionActionBase<MakeAnnotationInte
             return null
         }
 
-        val ty = fdl.functionTy() ?: return null
+        val ty = declaration.findTy() ?: return null
 
         return Context(fdl, declaration, ty)
     }

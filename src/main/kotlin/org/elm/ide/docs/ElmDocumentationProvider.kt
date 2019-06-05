@@ -55,7 +55,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
 
 private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildString {
     val parent = decl.parent as? ElmValueDeclaration ?: return null
-    val ty = decl.functionTy()
+    val ty = parent.findTy()
     val id = decl.lowerCaseIdentifier.text
     definition {
         if (ty != null && ty !is TyUnknown) {
