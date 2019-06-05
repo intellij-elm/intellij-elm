@@ -16,9 +16,9 @@ f =
 """, listOf("3", "4 + 3"), 0, """
 f =
     let
-        foo = 3
+        x = 3
     in
-    4 + foo
+    4 + x
 """)
 
 
@@ -28,92 +28,92 @@ f =
 """, listOf("3", "4 + 3"), 1, """
 f =
     let
-        foo = 4 + 3
+        x = 4 + 3
     in
-    foo
+    x
 """)
 
 
     fun `test reuses existing let-in`() = doTest("""
 f =
     let
-        x = 4
+        k = 4
     in
-    x + {-caret-}3
-""", listOf("3", "x + 3"), 0, """
+    k + {-caret-}3
+""", listOf("3", "k + 3"), 0, """
 f =
     let
-        x = 4
+        k = 4
 
-        foo = 3
+        x = 3
     in
-    x + foo
+    k + x
 """)
 
 
     fun `test creates after the last decl in a let-in`() = doTest("""
 f =
     let
-        x = 4
+        k = 4
 
-        y = 3
+        r = 0
     in
-    x + {-caret-}3
-""", listOf("3", "x + 3"), 0, """
+    k + {-caret-}3
+""", listOf("3", "k + 3"), 0, """
 f =
     let
-        x = 4
+        k = 4
 
-        y = 3
+        r = 0
 
-        foo = 3
+        x = 3
     in
-    x + foo
+    k + x
 """)
 
 
     fun `test creates a let within a let`() = doTest("""
 f =
     let
-        x =
+        k =
             4 + {-caret-}3
     in
-    x
+    k
 """, listOf("3", "4 + 3"), 0, """
 f =
     let
-        x =
+        k =
             let
-                foo = 3
+                x = 3
             in
-            4 + foo
+            4 + x
     in
-    x
+    k
 """)
 
 
     fun `test creates in a let expression body nested in a let expr inner decl`() = doTest("""
 f =
     let
-        x =
+        k =
             let
                 y = 4
             in
             y + {-caret-}3
     in
-    x
+    k
 """, listOf("3", "y + 3"), 0, """
 f =
     let
-        x =
+        k =
             let
                 y = 4
 
-                foo = 3
+                x = 3
             in
-            y + foo
+            y + x
     in
-    x
+    k
 """)
 
 
@@ -123,9 +123,9 @@ f =
 """, listOf("3"), 0, """
 f =
     let
-        foo = 3
+        x = 3
     in
-    foo
+    x
 """)
 
 
@@ -139,9 +139,9 @@ f =
     case () of
         _ ->
             let
-                foo = 3
+                x = 3
             in
-            foo
+            x
 """)
 
 
@@ -153,9 +153,9 @@ f =
 f =
     \_ ->
         let
-            foo = 3
+            x = 3
         in
-        foo
+        x
 """)
 
 
@@ -163,7 +163,7 @@ f =
 f =
     selectWidget {-caret-}3
 
-selectWidget x = x
+selectWidget w = w
 """, listOf("3", "selectWidget 3"), 1, """
 f =
     let
@@ -171,7 +171,7 @@ f =
     in
     widget
 
-selectWidget x = x
+selectWidget w = w
 """)
 
 

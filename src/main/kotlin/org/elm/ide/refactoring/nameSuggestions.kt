@@ -5,7 +5,10 @@ import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.toElmLowerId
-import org.elm.lang.core.types.*
+import org.elm.lang.core.types.TyFloat
+import org.elm.lang.core.types.TyFunction
+import org.elm.lang.core.types.TyInt
+import org.elm.lang.core.types.findTy
 
 data class SuggestedNames(val default: String, val all: LinkedHashSet<String>)
 
@@ -33,7 +36,6 @@ fun ElmExpressionTag.suggestedNames(): SuggestedNames {
     when (ty) {
         TyInt -> names.addName("i")
         TyFloat -> names.addName("x")
-        is TyVar -> if (ty.name == "number") names.addName("foo") // TODO fix the tests so that they don't depend on "foo"
         is TyFunction -> names.addName("f")
     }
 
