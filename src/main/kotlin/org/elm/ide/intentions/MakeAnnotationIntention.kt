@@ -41,9 +41,9 @@ class MakeAnnotationIntention : ElmAtCaretIntentionActionBase<MakeAnnotationInte
     override fun invoke(project: Project, editor: Editor, context: Context) {
         val (fdl, valueDeclaration, ty) = context
         val indent = editor.getIndent(valueDeclaration.startOffset)
-        val code = "${fdl.name} : ${ty.renderedText(false, false).replace("→", "->")}\n$indent${valueDeclaration.text}"
+        val code = "${fdl.name} : ${ty.renderedText(false, false).replace("→", "->")}\n$indent"
         project.runWriteCommandAction {
-            editor.document.replaceString(valueDeclaration.startOffset, valueDeclaration.endOffset, code)
+            editor.document.insertString(valueDeclaration.startOffset, code)
         }
     }
 }
