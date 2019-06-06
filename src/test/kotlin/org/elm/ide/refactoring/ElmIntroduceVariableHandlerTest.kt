@@ -159,6 +159,18 @@ f =
 """)
 
 
+    fun `test extracts if predicate expr cleanly`() = doTest("""
+f k =
+    if {-caret-}0 == identity k then 1 else 0
+""", listOf("0", "0 == identity k", "if 0 == identity k then 1 else 0"), 1, """
+f k =
+    let
+        x = 0 == identity k
+    in
+    if x then 1 else 0
+""")
+
+
     fun `test suggests based on function call name`() = doTest("""
 f =
     selectWidget {-caret-}3
