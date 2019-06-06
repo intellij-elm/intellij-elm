@@ -187,6 +187,23 @@ f model =
 """)
 
 
+    fun `test suggest an alternate name if the default is already taken`() = doTest("""
+f p =
+    let
+        x = 0
+    in
+    x + {-caret-}p.x
+""", listOf("p", "p.x", "x + p.x"), 1, """
+f p =
+    let
+        x = 0
+
+        x1 = p.x
+    in
+    x + x1
+""")
+
+
     private fun doTest(
             @Language("Elm") before: String,
             expressions: List<String>,

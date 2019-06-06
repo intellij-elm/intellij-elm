@@ -5,6 +5,7 @@ import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.elements.ElmFieldAccessExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueExpr
+import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.lang.core.toElmLowerId
 import org.elm.lang.core.types.TyFloat
 import org.elm.lang.core.types.TyFunction
@@ -44,11 +45,22 @@ fun ElmExpressionTag.suggestedNames(): SuggestedNames {
         is TyFunction -> names.addName("f")
     }
 
-    // TODO do not suggest names which are already bound in the current lexical scope
+    // filter-out any suggestion which would conflict with a name that is already in lexical scope
+    val usedNames = ExpressionScope(this).getVisibleValues().mapNotNull { it.name }.toSet()
+    val defaultName = suggestDefault(names, usedNames)
+    names.removeAll(usedNames)
 
-    val defaultName = names.firstOrNull() ?: "x"
     return SuggestedNames(defaultName, names)
 }
+
+fun suggestDefault(names: LinkedHashSet<String>, usedNames: Set<String>): String {
+    val default = names.firstOrNull() ?: "x"
+    if (default !in usedNames) return default
+    return (1..100).asSequence()
+            .map { "$default$it" }
+            .first { it !in usedNames }
+}
+
 
 private fun LinkedHashSet<String>.addName(name: String?) {
     if (name == null) return
