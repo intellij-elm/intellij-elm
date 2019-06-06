@@ -10,6 +10,9 @@ class ElmIntroduceVariableHandlerTest : ElmTestBase() {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
 
+    // BASICS
+
+
     fun `test creates let-in when necessary`() = doTest("""
 f =
     4 + {-caret-}3
@@ -26,6 +29,18 @@ f =
 f =
     4 + {-caret-}3
 """, listOf("3", "4 + 3"), 1, """
+f =
+    let
+        x = 4 + 3
+    in
+    x
+""")
+
+
+    fun `test uses explicit selection when present`() = doTest("""
+f =
+    <selection>4 + 3</selection>
+""", emptyList(), 0, """
 f =
     let
         x = 4 + 3
@@ -70,6 +85,9 @@ f =
     in
     k + x
 """)
+
+
+    // EDGE CASES
 
 
     fun `test creates a let within a let`() = doTest("""
@@ -117,7 +135,7 @@ f =
 """)
 
 
-    fun `test works for very simple functions`() = doTest("""
+    fun `test works for very simple functions where the entire body is replaced`() = doTest("""
 f =
     {-caret-}3
 """, listOf("3"), 0, """
@@ -171,6 +189,111 @@ f k =
 """)
 
 
+    // AJ example1 and example3
+    fun `test caret anywhere inside a case extracts the entire case`() = doTest("""
+f x =
+    case x of
+        {-caret-}blah -> x
+""", listOf("case x of\n        blah -> x"), 0, """
+f x =
+    let
+        x1 = case x of
+                 blah -> x
+    in
+    x1
+""")
+
+
+    // AJ example2: throws an exception about an invalid offset when trying to do inplace rename
+    fun `test extract lambda inside parens`() = doTest("""
+f =
+     (\extractMe{-caret-} -> ())
+""", listOf("""\extractMe -> ()""", """(\extractMe -> ())"""), 0, """
+f =
+    let
+        x = \extractMe -> ()
+    in
+    (x)
+""")
+
+
+    // AJ example4: original implementation was cutting off the record literal
+    fun `test extract record literal`() = doTest("""
+f =
+    { field = 1{-caret-}
+    , field2 = 2
+    }
+""", listOf("1", "{ field = 1\n    , field2 = 2\n    }"), 1, """
+f =
+    let
+        x = { field = 1
+            , field2 = 2
+            }
+    in
+    x
+""")
+
+
+    // AJ example5: multi-line expression cuts off the '+' and everything after
+    fun `test extract multiline binary op expr`() = doTest("""
+f =
+    1
+    +{-caret-}
+    2
+""", listOf("1\n    +\n    2"), 0, """
+f =
+    let
+        x = 1
+            +
+            2
+    in
+    x
+""")
+
+
+    // AJ example5 alt: multi-line expression cuts off the '+' and everything after
+    fun `test extract multiline binary op expr indented`() = doTest("""
+f =
+    1
+        +{-caret-}
+        2
+""", listOf("1\n        +\n        2"), 0, """
+f =
+    let
+        x = 1
+                +
+                2
+    in
+    x
+""")
+
+
+    // AJ example8 alt: extracting entire let-in generated code mangles previous top-level decl
+    fun `test extract entire let-in`() = doTest("""
+module Foo exposing (f)
+
+f =
+    <selection>let
+        x = 1
+    in
+    2</selection>
+""", listOf("let\n    x = 1\nin\n2"), 0, """
+module Foo exposing (f)
+
+f =
+    let
+        x1 = let
+                 x = 1
+             in
+             2
+    in
+    x1
+""")
+
+
+    // NAME SUGGESTIONS
+
+
     fun `test suggests based on function call name`() = doTest("""
 f =
     selectWidget {-caret-}3
@@ -214,6 +337,9 @@ f p =
     in
     x + x1
 """)
+
+
+    // HELPERS
 
 
     private fun doTest(
