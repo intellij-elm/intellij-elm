@@ -125,8 +125,7 @@ private class ExpressionReplacer(
         }
 
         if (newIdentifierElement != null) {
-            val occurrences = emptyArray<PsiElement>() // TODO implement me
-            ElmInplaceVariableIntroducer(newIdentifierElement, editor, project, "choose a name", occurrences)
+            ElmInplaceVariableIntroducer(newIdentifierElement, editor, project, "choose a name", emptyArray())
                     .performInplaceRefactoring(suggestedNames.all)
         }
     }
@@ -135,25 +134,35 @@ private class ExpressionReplacer(
      * Insert a new value decl into the exiting `let` expression's inner declarations.
      */
     fun extendExistingLet(letExpr: ElmLetInExpr) {
+        val file = letExpr.elmFile
         val anchor = letExpr.valueDeclarationList.last()
         val indent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
-        val declText = "\n\n$indent${identifier.text} = ${chosenExpr.text}"
+        val textToInsert = "\n\n$indent${identifier.text} = ${chosenExpr.text}"
+        val offsetOfNewDecl = anchor.endOffset + textToInsert.indexOf(identifier.text)
+
+        /*
+            I'm not sure what the best way to handle this would be. Normally you construct
+            Psi elements from text and then splice them into the tree. But "let/in" expressions
+            are parsed in a whitespace-sensitive manner, and we haven't yet done the IntelliJ
+            integration for whitespace formatting. The best I could come up with was a hodge-podge
+            of Psi manipulation and textual manipulation.
+        */
 
         project.runWriteCommandAction {
-            /*
-                I'm not sure what the best way to handle this would be. Normally you construct
-                Psi elements from text and then splice them into the tree. But "let/in" expressions
-                are parsed in a whitespace-sensitive manner, and we haven't yet done the IntelliJ
-                integration for whitespace formatting. The best I could come up with was a hodge-podge
-                of Psi manipulation and textual manipulation.
-                 */
             chosenExpr.replace(identifier)
             PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(editor.document)
-            editor.document.replaceString(anchor.endOffset, anchor.endOffset, declText)
-            // HACK to move the cursor to the newly introduced identifier
-            // FIXME find a better way to do this
-            val relativeOffsetOfNewDeclIdentifier = 2 + indent.length // 2 newlines + leading indent
-            editor.caretModel.moveToOffset(anchor.endOffset + relativeOffsetOfNewDeclIdentifier)
+            editor.document.insertString(anchor.endOffset, textToInsert)
+        }
+
+        // HACK: wait for the Psi tree to be updated, then move the cursor
+        //       to the newly introduced identifier, and finally trigger
+        //       inplace rename on the inserted variable.
+        PsiDocumentManager.getInstance(project).performWhenAllCommitted {
+            val newDecl = file.findElementAt(offsetOfNewDecl)?.parentOfType<ElmValueDeclaration>()
+            moveEditorToNameElement(editor, newDecl)?.let {
+                ElmInplaceVariableIntroducer(it, editor, project, "choose a name", emptyArray())
+                        .performInplaceRefactoring(suggestedNames.all)
+            }
         }
     }
 }
@@ -172,6 +181,8 @@ fun moveEditorToNameElement(editor: Editor, element: PsiElement?): PsiNamedEleme
     val newName = element?.descendants
             ?.filterIsInstance<ElmNameIdentifierOwner>()
             ?.firstOrNull { it.nameIdentifier.elementType == ElmTypes.LOWER_CASE_IDENTIFIER }
-    editor.caretModel.moveToOffset(newName?.nameIdentifier?.startOffset ?: 0)
+    if (newName != null) {
+        editor.caretModel.moveToOffset(newName.nameIdentifier.startOffset)
+    }
     return newName
 }
