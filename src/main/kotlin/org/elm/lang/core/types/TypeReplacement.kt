@@ -23,7 +23,7 @@ class TypeReplacement(
          *  except for vars that occur in this collection, which will be left unchanged.
          */
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>, varsToRemainRigid: Collection<TyVar>? = null): Ty {
-            if (varsToRemainRigid == null && replacements.isEmpty()) return ty
+            if (varsToRemainRigid == null && replacements.isEmpty() || ty.allVars(true).none()) return ty
             return TypeReplacement(replacements, freshen = false, varsToRemainRigid = varsToRemainRigid).replace(ty)
         }
 
@@ -45,6 +45,7 @@ class TypeReplacement(
          * `f`, the ty of `a` and `b` have to be the same.
          */
         fun freshenVars(ty: Ty): Ty {
+            if (ty.allVars(true).none()) return ty
             return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null).replace(ty)
         }
 
@@ -56,6 +57,7 @@ class TypeReplacement(
          * when calling functions.
          */
         fun flexify(ty: Ty): Ty {
+            if (ty.allVars(true).none()) return ty
             return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList()).replace(ty)
         }
     }
@@ -63,15 +65,19 @@ class TypeReplacement(
     /** A map of var to (has been accessed, ty) */
     private val replacements = replacements.mapValuesTo(mutableMapOf()) { (_, v) -> false to v }
 
-    fun replace(ty: Ty): Ty = when (ty) {
-        is TyVar -> getReplacement(ty) ?: ty
-        is TyTuple -> TyTuple(ty.types.map { replace(it) }, replace(ty.alias))
-        is TyFunction -> replaceFunction(ty)
-        is TyUnknown -> TyUnknown(replace(ty.alias))
-        is TyUnion -> replaceUnion(ty)
-        is TyRecord -> replaceRecord(ty)
-        is TyUnit, TyInProgressBinding -> ty
-        is MutableTyRecord -> replaceRecord(ty.toRecord())
+    fun replace(ty: Ty): Ty {
+        val replaced = when (ty) {
+            is TyVar -> getReplacement(ty) ?: ty
+            is TyTuple -> replaceTuple(ty)
+            is TyFunction -> replaceFunction(ty)
+            is TyUnknown -> TyUnknown(replace(ty.alias))
+            is TyUnion -> replaceUnion(ty)
+            is TyRecord -> replaceRecord(ty)
+            is TyUnit, TyInProgressBinding -> ty
+            is MutableTyRecord -> replaceRecord(ty.toRecord())
+        }
+        // If we didn't change anything, return the original ty to avoid duplicating the object
+        return if (replaced == ty) ty else replaced
     }
 
     /*
@@ -84,16 +90,23 @@ class TypeReplacement(
      * TyUnit so that it renders as `A ()` rather than `A a`.
      */
     private fun replace(aliasInfo: AliasInfo?) = aliasInfo?.let { info ->
-        info.copy(parameters = info.parameters.map { replace(it) })
+        info.copy(parameters = info.parameters.map { replace(it) }.optimizeReadOnlyList())
+    }
+
+    private fun replaceTuple(ty: TyTuple): TyTuple {
+        return TyTuple(ty.types.map { replace(it) }.optimizeReadOnlyList(), replace(ty.alias))
     }
 
     private fun replaceFunction(ty: TyFunction): TyFunction {
-        val parameters = ty.parameters.map { replace(it) }
+        val parameters = ty.parameters.map { replace(it) }.optimizeReadOnlyList()
         return TyFunction(parameters, replace(ty.ret), replace(ty.alias)).uncurry()
     }
 
     private fun replaceUnion(ty: TyUnion): TyUnion {
-        val parameters = ty.parameters.map { replace(it) }
+        // fast path for common cases like Basics.Int
+        if (ty.parameters.isEmpty() && ty.alias == null) return ty
+
+        val parameters = ty.parameters.map { replace(it) }.optimizeReadOnlyList()
         return TyUnion(ty.module, ty.name, parameters, replace(ty.alias))
     }
 
@@ -135,4 +148,11 @@ class TypeReplacement(
         replacements[key] = true to replacedVal
         return replacedVal
     }
+}
+
+// Copied from the stdlib, which doesn't apply this for `map` and `filter`
+private fun <T> List<T>.optimizeReadOnlyList() = when (size) {
+    0 -> emptyList()
+    1 -> listOf(this[0])
+    else -> this
 }
