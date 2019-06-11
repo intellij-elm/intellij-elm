@@ -771,7 +771,7 @@ private class InferenceScope(
         if (typeRefTy is TyFunction) {
             patterns.zip(typeRefTy.parameters) { pat, ty -> bindPattern(pat, ty, true) }
         }
-        annotationVars = allVars(typeRefTy).toList()
+        annotationVars = typeRefTy.allVars().toList()
         return ParameterBindingResult.Annotated(typeRefTy, patterns.size)
     }
 
@@ -1191,7 +1191,7 @@ private class InferenceScope(
         if (ty1 === ty2) return
 
         fun assign(k: TyVar, v: Ty) {
-            if (containsVar(v, k)) throw InfiniteTypeException()
+            if (v.allVars(includeAlias = true).any { it == k }) throw InfiniteTypeException()
             replacements[k] = v
         }
 
@@ -1337,26 +1337,5 @@ private sealed class ParameterBindingResult {
 
 /** dangerous shallow copy of a mutable record for performance, use `toRecord` if the result isn't discarded. */
 private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy)
-
-/** Return true if [tyVar] is referenced anywhere within [ty] */
-private fun containsVar(ty: Ty, tyVar: TyVar): Boolean = allVars(ty).any { it == tyVar }
-
-private fun allVars(ty: Ty): Sequence<TyVar> = sequence<TyVar> {
-    when (ty) {
-        is TyVar -> yield(ty)
-        is TyTuple -> ty.types.forEach { yieldAll(allVars(it)) }
-        is TyRecord -> {
-            ty.fields.values.forEach { yieldAll(allVars(it)) }
-            if (ty.baseTy != null) yieldAll(allVars(ty.baseTy))
-        }
-        is MutableTyRecord -> yieldAll(allVars(ty.asRecord()))
-        is TyFunction -> {
-            yieldAll(allVars(ty.ret))
-            ty.parameters.forEach { yieldAll(allVars(it)) }
-        }
-        is TyUnion, is TyUnit, is TyUnknown, TyInProgressBinding -> {
-        }
-    }
-}
 
 private class InfiniteTypeException : Exception()
