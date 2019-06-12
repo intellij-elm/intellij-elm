@@ -140,17 +140,19 @@ class ElmPsiFactory(private val project: Project) {
                     ?.childOfType<ElmCaseOfExpr>()?.branches
                     ?: error("Failed to create case of branches from $patterns")
 
-    fun createLetInWrapper(indent: String, newDeclText: String, bodyText: String): ElmLetInExpr =
-            """
+    fun createLetInWrapper(indent: String, newDeclText: String, bodyText: String): ElmLetInExpr {
+        val newDeclIndented = newDeclText.lines().joinToString("\n") { "${indent}    $it" }
+        val code = """
 foo =
 ${indent}let
-${indent}    $newDeclText
+$newDeclIndented
 ${indent}in
 ${indent}$bodyText
-            """
-                    .let { createFromText<ElmValueDeclaration>(it) }
-                    ?.childOfType<ElmLetInExpr>()
-                    ?: error("Failed to create let/in wrapper")
+"""
+        return createFromText<ElmValueDeclaration>(code)
+                ?.childOfType<ElmLetInExpr>()
+                ?: error("Failed to create let/in wrapper")
+    }
 
     fun createNewline(): PsiElement = createWhitespace("\n")
 
