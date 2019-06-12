@@ -19,7 +19,8 @@ f =
 """, listOf("3", "4 + 3"), 0, """
 f =
     let
-        x = 3
+        x =
+            3
     in
     4 + x
 """)
@@ -31,7 +32,8 @@ f =
 """, listOf("3", "4 + 3"), 1, """
 f =
     let
-        x = 4 + 3
+        x =
+            4 + 3
     in
     x
 """)
@@ -43,7 +45,8 @@ f =
 """, emptyList(), 0, """
 f =
     let
-        x = 4 + 3
+        x =
+            4 + 3
     in
     x
 """)
@@ -52,15 +55,18 @@ f =
     fun `test reuses existing let-in`() = doTest("""
 f =
     let
-        k = 4
+        k =
+            4
     in
     k + {-caret-}3
 """, listOf("3", "k + 3"), 0, """
 f =
     let
-        k = 4
+        k =
+            4
 
-        x = 3
+        x =
+            3
     in
     k + x
 """)
@@ -69,19 +75,24 @@ f =
     fun `test creates after the last decl in a let-in`() = doTest("""
 f =
     let
-        k = 4
+        k =
+            4
 
-        r = 0
+        r =
+            0
     in
     k + {-caret-}3
 """, listOf("3", "k + 3"), 0, """
 f =
     let
-        k = 4
+        k =
+            4
 
-        r = 0
+        r =
+            0
 
-        x = 3
+        x =
+            3
     in
     k + x
 """)
@@ -102,7 +113,8 @@ f =
     let
         k =
             let
-                x = 3
+                x =
+                    3
             in
             4 + x
     in
@@ -115,7 +127,8 @@ f =
     let
         k =
             let
-                y = 4
+                y =
+                    4
             in
             y + {-caret-}3
     in
@@ -125,9 +138,11 @@ f =
     let
         k =
             let
-                y = 4
+                y =
+                    4
 
-                x = 3
+                x =
+                    3
             in
             y + x
     in
@@ -141,7 +156,8 @@ f =
 """, listOf("3"), 0, """
 f =
     let
-        x = 3
+        x =
+            3
     in
     x
 """)
@@ -157,7 +173,8 @@ f =
     case () of
         _ ->
             let
-                x = 3
+                x =
+                    3
             in
             x
 """)
@@ -171,7 +188,8 @@ f =
 f =
     \_ ->
         let
-            x = 3
+            x =
+                3
         in
         x
 """)
@@ -183,7 +201,8 @@ f k =
 """, listOf("0", "0 == identity k", "if 0 == identity k then 1 else 0"), 1, """
 f k =
     let
-        x = 0 == identity k
+        x =
+            0 == identity k
     in
     if x then 1 else 0
 """)
@@ -197,8 +216,9 @@ f x =
 """, listOf("case x of\n        blah -> x"), 0, """
 f x =
     let
-        x1 = case x of
-                 blah -> x
+        x1 =
+            case x of
+                blah -> x
     in
     x1
 """)
@@ -211,7 +231,8 @@ f =
 """, listOf("""\extractMe -> ()""", """(\extractMe -> ())"""), 0, """
 f =
     let
-        x = \extractMe -> ()
+        x =
+            \extractMe -> ()
     in
     (x)
 """)
@@ -226,7 +247,8 @@ f =
 """, listOf("1", "{ field = 1\n    , field2 = 2\n    }"), 1, """
 f =
     let
-        x = { field = 1
+        x =
+            { field = 1
             , field2 = 2
             }
     in
@@ -243,7 +265,8 @@ f =
 """, listOf("1\n    +\n    2"), 0, """
 f =
     let
-        x = 1
+        x =
+            1
             +
             2
     in
@@ -260,7 +283,8 @@ f =
 """, listOf("1\n        +\n        2"), 0, """
 f =
     let
-        x = 1
+        x =
+            1
                 +
                 2
     in
@@ -274,7 +298,8 @@ module Foo exposing (f)
 
 f =
     <selection>let
-        x = 1
+        x =
+            1
     in
     2</selection>
 """, listOf("let\n    x = 1\nin\n2"), 0, """
@@ -282,10 +307,12 @@ module Foo exposing (f)
 
 f =
     let
-        x1 = let
-                 x = 1
-             in
-             2
+        x1 =
+            let
+                x =
+                    1
+            in
+            2
     in
     x1
 """)
@@ -302,7 +329,8 @@ selectWidget w = w
 """, listOf("3", "selectWidget 3"), 1, """
 f =
     let
-        widget = selectWidget 3
+        widget =
+            selectWidget 3
     in
     widget
 
@@ -316,7 +344,8 @@ f model =
 """, listOf("model", "model.currentPage", "model.currentPage.title"), 2, """
 f model =
     let
-        title = model.currentPage.title
+        title =
+            model.currentPage.title
     in
     title
 """)
@@ -328,7 +357,8 @@ f x =
 """, listOf("\"foo\""), 0, """
 f x =
     let
-        x1 = "foo"
+        x1 =
+            "foo"
     in
     x1
 """)

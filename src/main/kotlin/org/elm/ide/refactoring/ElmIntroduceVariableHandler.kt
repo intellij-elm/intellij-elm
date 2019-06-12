@@ -66,7 +66,7 @@ class ElmIntroduceVariableHandler : RefactoringActionHandler {
         val replacer = ExpressionReplacer(project, editor, chosenExpr)
         val anchor = findAnchor(chosenExpr) ?: error("could not find a place to introduce variable")
         when {
-            anchor is ElmLetInExpr -> replacer.extendExistingLet(anchor)
+            anchor is ElmLetInExpr && anchor !== chosenExpr -> replacer.extendExistingLet(anchor)
             else -> replacer.introduceLet(anchor)
         }
     }
@@ -111,7 +111,7 @@ private class ExpressionReplacer(
     fun introduceLet(elementToReplace: PsiElement) {
         val indent = DocumentUtil.getIndent(editor.document, elementToReplace.startOffset).toString()
         val exprText = chosenExpr.text
-        val declText = "${identifier.text} = $exprText"
+        val declText = "${identifier.text} =\n    $exprText"
 
         val newIdentifierElement = project.runWriteCommandAction {
             val newLetExpr = if (elementToReplace !== chosenExpr) {
@@ -137,7 +137,7 @@ private class ExpressionReplacer(
         val file = letExpr.elmFile
         val anchor = letExpr.valueDeclarationList.last()
         val indent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
-        val textToInsert = "\n\n$indent${identifier.text} = ${chosenExpr.text}"
+        val textToInsert = "\n\n$indent${identifier.text} =\n$indent    ${chosenExpr.text}"
         val offsetOfNewDecl = anchor.endOffset + textToInsert.indexOf(identifier.text)
 
         /*
