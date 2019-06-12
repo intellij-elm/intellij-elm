@@ -323,19 +323,14 @@ f model =
 
 
     fun `test suggest an alternate name if the default is already taken`() = doTest("""
-f p =
+f x =
+    {-caret-}"foo"
+""", listOf("\"foo\""), 0, """
+f x =
     let
-        x = 0
+        x1 = "foo"
     in
-    x + {-caret-}p.x
-""", listOf("p", "p.x", "x + p.x"), 1, """
-f p =
-    let
-        x = 0
-
-        x1 = p.x
-    in
-    x + x1
+    x1
 """)
 
 
