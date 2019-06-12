@@ -19,6 +19,7 @@ import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmLetInExpr
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
+import org.elm.lang.core.textWithNormalizedIndents
 import org.elm.openapiext.runWriteCommandAction
 
 class ElmIntroduceVariableHandler : RefactoringActionHandler {
@@ -96,7 +97,6 @@ class ElmIntroduceVariableHandler : RefactoringActionHandler {
  * Manages the replacement of an expression with the appropriate let/in expr
  *
  * This class exists solely to make the calling code nicer by consolidating shared parameters.
- * (poor-man's partially applied functions)
  */
 private class ExpressionReplacer(
         private val project: Project,
@@ -107,20 +107,27 @@ private class ExpressionReplacer(
     private val suggestedNames = chosenExpr.suggestedNames()
     private val identifier = psiFactory.createLowerCaseIdentifier(suggestedNames.default)
 
+    /*
+    NOTE If you ever have to make changes to how the Elm code is generated, especially
+         with respect to indentation, you will almost certainly want to rewrite this.
+         I have decided to go with dirty, ad-hoc string manipulation in the interest
+         of shipping this feature quickly. The right thing to do is probably to
+         integrate with IntelliJ's whitespace formatting system.
+    */
+
+
     /**
      * Wrap the existing function body in a `let` expression
      */
     fun introduceLet(elementToReplace: PsiElement) {
         val indent = DocumentUtil.getIndent(editor.document, elementToReplace.startOffset).toString()
-        val exprText = chosenExpr.text
-        val declText = "${identifier.text} =\n    $exprText"
-
+        val newDeclBodyText = chosenExpr.textWithNormalizedIndents
         val newIdentifierElement = project.runWriteCommandAction {
             val newLetExpr = if (elementToReplace !== chosenExpr) {
                 chosenExpr.replace(identifier)
-                psiFactory.createLetInWrapper(indent, declText, elementToReplace.text)
+                psiFactory.createLetInWrapper(indent, identifier.text, newDeclBodyText, elementToReplace.text)
             } else {
-                psiFactory.createLetInWrapper(indent, declText, identifier.text)
+                psiFactory.createLetInWrapper(indent, identifier.text, newDeclBodyText, identifier.text)
             }
             val newLetElement = elementToReplace.replace(newLetExpr) as ElmLetInExpr
             moveEditorToNameElement(editor, newLetElement.valueDeclarationList.first())
@@ -139,7 +146,8 @@ private class ExpressionReplacer(
         val file = letExpr.elmFile
         val anchor = letExpr.valueDeclarationList.last()
         val indent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
-        val textToInsert = "\n\n$indent${identifier.text} =\n$indent    ${chosenExpr.text}"
+        val indentedDeclExpr = chosenExpr.text.lines().joinToString("\n") { "${indent}    ${it.trimStart()}" }
+        val textToInsert = "\n\n$indent${identifier.text} =\n$indentedDeclExpr"
         val offsetOfNewDecl = anchor.endOffset + textToInsert.indexOf(identifier.text)
 
         /*

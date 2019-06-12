@@ -318,6 +318,53 @@ f =
 """)
 
 
+    fun `test extend a let with a multi-line expression`() = doTest("""
+f =
+    let
+        _ =
+            ()
+    in
+    [ 0{-caret-}
+    , 1
+    , 2
+    ]
+""", listOf("0", "[ 0\n    , 1\n    , 2\n    ]"), 1, """
+f =
+    let
+        _ =
+            ()
+
+        x =
+            [ 0
+            , 1
+            , 2
+            ]
+    in
+    x
+""")
+
+
+    fun `test indented multi-line expression`() = doTest("""
+f g =
+    g
+        [ 0{-caret-}
+        , 1
+        , 2
+        ]
+""", listOf("0", "[ 0\n        , 1\n        , 2\n        ]", "g\n        [ 0\n        , 1\n        , 2\n        ]"), 1, """
+f g =
+    let
+        x =
+            [ 0
+            , 1
+            , 2
+            ]
+    in
+    g
+        x
+""")
+
+
     // NAME SUGGESTIONS
 
 
