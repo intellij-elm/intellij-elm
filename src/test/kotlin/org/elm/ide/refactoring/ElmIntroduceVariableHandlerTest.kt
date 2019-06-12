@@ -226,15 +226,15 @@ f x =
 
     // AJ example2: throws an exception about an invalid offset when trying to do inplace rename
     fun `test extract lambda inside parens`() = doTest("""
-f =
-     (\extractMe{-caret-} -> ())
+g =
+    (\extractMe{-caret-} -> ())
 """, listOf("""\extractMe -> ()""", """(\extractMe -> ())"""), 0, """
-f =
+g =
     let
-        x =
+        f =
             \extractMe -> ()
     in
-    (x)
+    (f)
 """)
 
 
