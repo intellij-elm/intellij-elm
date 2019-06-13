@@ -146,7 +146,8 @@ private class ExpressionReplacer(
         val file = letExpr.elmFile
         val anchor = letExpr.valueDeclarationList.last()
         val indent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
-        val indentedDeclExpr = chosenExpr.text.lines().joinToString("\n") { "${indent}    ${it.trimStart()}" }
+        val indentedDeclExpr = chosenExpr.textWithNormalizedIndents.lines()
+                .joinToString("\n") { "$indent    $it" }
         val textToInsert = "\n\n$indent${identifier.text} =\n$indentedDeclExpr"
         val offsetOfNewDecl = anchor.endOffset + textToInsert.indexOf(identifier.text)
 

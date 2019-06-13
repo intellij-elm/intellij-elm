@@ -365,6 +365,30 @@ f g =
 """)
 
 
+    fun `test preserve indentation when extracting multi-line expr into an existing let-in`() = doTest("""
+f =
+    let
+        k =
+            4
+    in
+    2{-caret-}
+        *
+        k
+""", listOf("2", "2\n        *\n        k"), 1, """
+f =
+    let
+        k =
+            4
+
+        x =
+            2
+                *
+                k
+    in
+    x
+""")
+
+
     // NAME SUGGESTIONS
 
 
