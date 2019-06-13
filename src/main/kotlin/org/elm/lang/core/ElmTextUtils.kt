@@ -28,7 +28,7 @@ fun String.toElmLowerId(): String =
  */
 val ElmPsiElement.textWithNormalizedIndents: String
     get() {
-        val platformNewline = if (this.text.contains("\n\r")) "\n\r" else "\n"
+        val platformNewline = if (this.text.contains("\r\n")) "\r\n" else "\n"
         val firstColumn = StringUtil.offsetToLineColumn(this.containingFile.text, this.startOffset).column
         return this.text.lines().mapIndexed { index: Int, s: String ->
             if (index == 0) s else s.drop(firstColumn)
