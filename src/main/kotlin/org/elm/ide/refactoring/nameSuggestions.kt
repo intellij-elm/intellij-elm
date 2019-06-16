@@ -7,10 +7,7 @@ import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.lang.core.toElmLowerId
-import org.elm.lang.core.types.TyFloat
-import org.elm.lang.core.types.TyFunction
-import org.elm.lang.core.types.TyInt
-import org.elm.lang.core.types.findTy
+import org.elm.lang.core.types.*
 
 data class SuggestedNames(val default: String, val all: LinkedHashSet<String>)
 
@@ -38,27 +35,39 @@ fun ElmExpressionTag.suggestedNames(): SuggestedNames {
     // if present, suggest type alias (useful for records which often have a descriptive alias name)
     ty?.alias?.name?.let { names.addName(it) }
 
-    // suggest based on common types
-    when (ty) {
-        TyInt -> names.addName("i")
-        TyFloat -> names.addName("x")
-        is TyFunction -> names.addName("f")
-    }
+    // suggest based on the type of the expression
+    ty?.suggestedTyName()?.let { names.addName(it) }
 
     // filter-out any suggestion which would conflict with a name that is already in lexical scope
-    val usedNames = ExpressionScope(this).getVisibleValues().mapNotNull { it.name }.toSet()
+    val usedNames = ExpressionScope(this).getVisibleValues().mapNotNullTo(HashSet()) { it.name }
     val defaultName = suggestDefault(names, usedNames)
     names.removeAll(usedNames)
 
     return SuggestedNames(defaultName, names)
 }
 
-fun suggestDefault(names: LinkedHashSet<String>, usedNames: Set<String>): String {
+
+private fun Ty.suggestedTyName(): String? =
+        when (this) {
+            TyInt -> "i"
+            TyFloat -> "d"
+            TyShader -> "shader"
+            is TyFunction -> "f"
+            is TyUnion -> name.toElmLowerId()
+            is TyRecord -> "record"
+            is TyTuple -> "tuple"
+            is TyVar -> if (name == "number") "x" else name
+            else -> null
+        }
+
+
+private fun suggestDefault(names: LinkedHashSet<String>, usedNames: Set<String>): String {
     val default = names.firstOrNull() ?: "x"
     if (default !in usedNames) return default
     return (1..100).asSequence()
             .map { "$default$it" }
-            .first { it !in usedNames }
+            .firstOrNull { it !in usedNames }
+            ?: "x"
 }
 
 

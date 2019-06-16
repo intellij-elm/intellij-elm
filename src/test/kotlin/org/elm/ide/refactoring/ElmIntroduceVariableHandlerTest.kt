@@ -201,10 +201,10 @@ f k =
 """, listOf("0", "0 == identity k", "if 0 == identity k then 1 else 0"), 1, """
 f k =
     let
-        x =
+        bool =
             0 == identity k
     in
-    if x then 1 else 0
+    if bool then 1 else 0
 """)
 
 
@@ -216,11 +216,11 @@ f x =
 """, listOf("case x of\n        blah -> x"), 0, """
 f x =
     let
-        x1 =
+        a =
             case x of
                 blah -> x
     in
-    x1
+    a
 """)
 
 
@@ -247,12 +247,12 @@ f =
 """, listOf("1", "{ field = 1\n    , field2 = 2\n    }"), 1, """
 f =
     let
-        x =
+        record =
             { field = 1
             , field2 = 2
             }
     in
-    x
+    record
 """)
 
 
@@ -334,13 +334,13 @@ f =
         _ =
             ()
 
-        x =
+        list =
             [ 0
             , 1
             , 2
             ]
     in
-    x
+    list
 """)
 
 
@@ -354,14 +354,14 @@ f g =
 """, listOf("0", "[ 0\n        , 1\n        , 2\n        ]", "g\n        [ 0\n        , 1\n        , 2\n        ]"), 1, """
 f g =
     let
-        x =
+        list =
             [ 0
             , 1
             , 2
             ]
     in
     g
-        x
+        list
 """)
 
 
@@ -424,12 +424,12 @@ f model =
 
     fun `test suggest an alternate name if the default is already taken`() = doTest("""
 f x =
-    {-caret-}"foo"
-""", listOf("\"foo\""), 0, """
+    {-caret-}42
+""", listOf("42"), 0, """
 f x =
     let
         x1 =
-            "foo"
+            42
     in
     x1
 """)
