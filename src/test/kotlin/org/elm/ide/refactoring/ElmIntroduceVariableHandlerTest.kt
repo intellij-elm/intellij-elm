@@ -467,15 +467,14 @@ f number =
             @Language("Elm") before: String,
             expressions: List<String>,
             target: Int,
-            @Language("Elm") after: String,
-            replaceAll: Boolean = false
+            @Language("Elm") after: String
     ) {
         checkByText(before, after) {
-            doIntroduceVariable(expressions, target, replaceAll)
+            doIntroduceVariable(expressions, target)
         }
     }
 
-    private fun doIntroduceVariable(expressions: List<String>, target: Int, replaceAll: Boolean) {
+    private fun doIntroduceVariable(expressions: List<String>, target: Int) {
         var shownTargetChooser = false
         withMockTargetExpressionChooser(object : ExtractExpressionUi {
             override fun chooseTarget(exprs: List<ElmExpressionTag>): ElmExpressionTag {

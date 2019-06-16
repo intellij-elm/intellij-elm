@@ -28,7 +28,7 @@ interface ExtractExpressionUi {
     fun chooseTarget(exprs: List<ElmExpressionTag>): ElmExpressionTag
 }
 
-var MOCK: ExtractExpressionUi? = null
+private var MOCK: ExtractExpressionUi? = null
 @TestOnly
 fun withMockTargetExpressionChooser(mock: ExtractExpressionUi, f: () -> Unit) {
     MOCK = mock
