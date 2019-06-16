@@ -56,7 +56,7 @@ private fun Ty.suggestedTyName(): String? =
             is TyUnion -> name.toElmLowerId()
             is TyRecord -> "record"
             is TyTuple -> "tuple"
-            is TyVar -> if (name == "number") "x" else name
+            is TyVar -> name
             else -> null
         }
 

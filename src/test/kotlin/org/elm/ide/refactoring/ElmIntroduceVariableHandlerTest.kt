@@ -19,10 +19,10 @@ f =
 """, listOf("3", "4 + 3"), 0, """
 f =
     let
-        x =
+        number =
             3
     in
-    4 + x
+    4 + number
 """)
 
 
@@ -32,10 +32,10 @@ f =
 """, listOf("3", "4 + 3"), 1, """
 f =
     let
-        x =
+        number =
             4 + 3
     in
-    x
+    number
 """)
 
 
@@ -45,10 +45,10 @@ f =
 """, emptyList(), 0, """
 f =
     let
-        x =
+        number =
             4 + 3
     in
-    x
+    number
 """)
 
 
@@ -65,10 +65,10 @@ f =
         k =
             4
 
-        x =
+        number =
             3
     in
-    k + x
+    k + number
 """)
 
 
@@ -91,10 +91,10 @@ f =
         r =
             0
 
-        x =
+        number =
             3
     in
-    k + x
+    k + number
 """)
 
 
@@ -113,10 +113,10 @@ f =
     let
         k =
             let
-                x =
+                number =
                     3
             in
-            4 + x
+            4 + number
     in
     k
 """)
@@ -141,10 +141,10 @@ f =
                 y =
                     4
 
-                x =
+                number =
                     3
             in
-            y + x
+            y + number
     in
     k
 """)
@@ -156,10 +156,10 @@ f =
 """, listOf("3"), 0, """
 f =
     let
-        x =
+        number =
             3
     in
-    x
+    number
 """)
 
 
@@ -173,10 +173,10 @@ f =
     case () of
         _ ->
             let
-                x =
+                number =
                     3
             in
-            x
+            number
 """)
 
 
@@ -188,10 +188,10 @@ f =
 f =
     \_ ->
         let
-            x =
+            number =
                 3
         in
-        x
+        number
 """)
 
 
@@ -265,12 +265,12 @@ f =
 """, listOf("1\n    +\n    2"), 0, """
 f =
     let
-        x =
+        number =
             1
             +
             2
     in
-    x
+    number
 """)
 
 
@@ -283,12 +283,12 @@ f =
 """, listOf("1\n        +\n        2"), 0, """
 f =
     let
-        x =
+        number =
             1
                 +
                 2
     in
-    x
+    number
 """)
 
 
@@ -307,14 +307,14 @@ module Foo exposing (f)
 
 f =
     let
-        x1 =
+        number =
             let
                 x =
                     1
             in
             2
     in
-    x1
+    number
 """)
 
 
@@ -380,12 +380,12 @@ f =
         k =
             4
 
-        x =
+        number =
             2
                 *
                 k
     in
-    x
+    number
 """)
 
 
@@ -423,15 +423,15 @@ f model =
 
 
     fun `test suggest an alternate name if the default is already taken`() = doTest("""
-f x =
+f number =
     {-caret-}42
 """, listOf("42"), 0, """
-f x =
+f number =
     let
-        x1 =
+        number1 =
             42
     in
-    x1
+    number1
 """)
 
 
