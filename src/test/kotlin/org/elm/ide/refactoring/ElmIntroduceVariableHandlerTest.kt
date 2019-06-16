@@ -292,6 +292,31 @@ f =
 """)
 
 
+    // AJ example7: this is strange Elm code, but maybe people do it to control the visibility of the inner decls?
+    fun `test extract in the context of a let nested within the body of another let`() = doTest("""
+example7 =
+    let
+        x = 1
+    in
+    let
+        y = 2
+    in
+    y{-caret-}
+""", listOf("y"), 0, """
+example7 =
+    let
+        x = 1
+    in
+    let
+        y = 2
+
+        number =
+            y
+    in
+    number
+""")
+
+
     // AJ example8 alt: extracting entire let-in generated code mangles previous top-level decl
     fun `test extract entire let-in`() = doTest("""
 module Foo exposing (f)

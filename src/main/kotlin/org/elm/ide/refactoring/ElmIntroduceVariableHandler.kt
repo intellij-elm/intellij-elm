@@ -77,6 +77,7 @@ class ElmIntroduceVariableHandler : RefactoringActionHandler {
         var current: PsiElement? = chosenExpr
         while (current != null) {
             when {
+                current is ElmLetInExpr -> return current
                 current is ElmValueDeclaration -> return current.expression
                 current is ElmCaseOfBranch -> return current.expression
                 current is ElmAnonymousFunctionExpr -> {
