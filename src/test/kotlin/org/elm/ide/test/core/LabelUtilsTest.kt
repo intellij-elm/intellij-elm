@@ -1,6 +1,6 @@
 package org.elm.ide.test.core
 
-import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.VirtualFileManager.extractPath
 import org.elm.ide.test.core.LabelUtils.commonParent
 import org.elm.ide.test.core.LabelUtils.fromErrorLocationUrlPath
 import org.elm.ide.test.core.LabelUtils.fromLocationUrlPath
@@ -13,7 +13,6 @@ import org.elm.ide.test.core.LabelUtils.toTestLocationUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.*
-import kotlin.streams.asSequence
 
 class LabelUtilsTest {
 
@@ -135,7 +134,7 @@ class LabelUtilsTest {
         val url = toErrorLocationUrl("my/path/file", 1313, 13)
         assertEquals("elmTestError://my/path/file::1313::13", url)
 
-        val path = VirtualFileManager.extractPath(url)
+        val path = extractPath(url)
         val pair = fromErrorLocationUrlPath(path)
 
         val file = pair.first
