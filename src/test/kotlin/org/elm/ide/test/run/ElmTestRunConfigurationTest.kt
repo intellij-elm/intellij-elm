@@ -1,5 +1,8 @@
 package org.elm.ide.test.run
 
+import org.elm.ide.test.run.ElmTestRunConfiguration.Companion.readOptions
+import org.elm.ide.test.run.ElmTestRunConfiguration.Companion.writeOptions
+import org.elm.ide.test.run.ElmTestRunConfiguration.Options
 import org.jdom.Element
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -10,10 +13,10 @@ class ElmTestRunConfigurationTest {
     fun writeOptions() {
         val root = Element("ROOT")
 
-        val options = ElmTestRunConfiguration.Options()
+        val options = Options()
         options.elmFolder = "folder"
 
-        ElmTestRunConfiguration.writeOptions(options, root)
+        writeOptions(options, root)
 
         assertEquals(1, root.children.size.toLong())
         assertEquals(ElmTestRunConfiguration::class.java.simpleName, root.children[0].name)
@@ -26,11 +29,11 @@ class ElmTestRunConfigurationTest {
     fun roundTrip() {
         val root = Element("ROOT")
 
-        val options = ElmTestRunConfiguration.Options()
+        val options = Options()
         options.elmFolder = "folder"
 
-        ElmTestRunConfiguration.writeOptions(options, root)
-        val options2 = ElmTestRunConfiguration.readOptions(root)
+        writeOptions(options, root)
+        val options2 = readOptions(root)
 
         assertEquals(options.elmFolder, options2.elmFolder)
     }
