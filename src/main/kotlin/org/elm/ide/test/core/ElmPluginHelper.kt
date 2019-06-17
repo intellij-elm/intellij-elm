@@ -3,6 +3,8 @@ package org.elm.ide.test.core
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiTreeUtil.findFirstParent
+import org.elm.ide.test.core.LabelUtils.decodeLabel
 import org.elm.lang.core.psi.ElmAtomTag
 import org.elm.lang.core.psi.ElmOperandTag
 import org.elm.lang.core.psi.ElmTypes
@@ -18,13 +20,9 @@ object ElmPluginHelper {
     }
 
     private fun getPsiElement(isDescribe: Boolean, labelPath: Path, file: PsiFile): PsiElement {
-        val found = findPsiElement(isDescribe, labelPath, file)
-        if (found != null) {
-            return found
-        } else if (labelPath.parent != null) {
-            return getPsiElement(isDescribe, labelPath.parent, file)
-        }
-        return file
+        return findPsiElement(isDescribe, labelPath, file)
+                ?: labelPath.parent?.let { getPsiElement(isDescribe, it, file) }
+                ?: file
     }
 
     private fun findPsiElement(isDescribe: Boolean, labelPath: Path, file: PsiFile): PsiElement? {
@@ -32,19 +30,19 @@ object ElmPluginHelper {
             return null
         }
 
-        val topLabel = LabelUtils.decodeLabel(labelPath.getName(0))
+        val topLabel = decodeLabel(labelPath.getName(0))
         if (labelPath.nameCount > 1 || isDescribe) {
             var current = allSuites(topLabel)(file)
                     .filter(topLevel())
             for (i in 1 until labelPath.nameCount - 1) {
-                val label = LabelUtils.decodeLabel(labelPath.getName(i))
+                val label = decodeLabel(labelPath.getName(i))
                 current = current
                         .map(secondOperand())
                         .flatMap(allSuites(label))
             }
 
             if (labelPath.nameCount > 1) {
-                val leafLabel = LabelUtils.decodeLabel(labelPath.getName(labelPath.nameCount - 1))
+                val leafLabel = decodeLabel(labelPath.getName(labelPath.nameCount - 1))
                 val leaf = if (isDescribe)
                     allSuites(leafLabel)
                 else
@@ -82,7 +80,7 @@ object ElmPluginHelper {
     }
 
     private fun topLevel(): (ElmFunctionCallExpr) -> Boolean {
-        return { call -> null == PsiTreeUtil.findFirstParent(call, true) { element -> isSuite(element) } }
+        return { call -> null == findFirstParent(call, true) { element -> isSuite(element) } }
     }
 
     private fun isSuite(element: PsiElement): Boolean {
