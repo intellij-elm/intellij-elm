@@ -3,6 +3,7 @@ package org.elm.ide.test.core
 import com.intellij.psi.PsiElement
 import com.intellij.testFramework.ParsingTestCase
 import org.elm.ide.test.core.ElmPluginHelper.getPsiElement
+import org.elm.ide.test.core.LabelUtils.toPath
 import org.elm.lang.core.parser.ElmParserDefinition
 import java.util.*
 
@@ -59,7 +60,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertSuite(offset: Int, vararg labels: String) {
-        val path = LabelUtils.toPath(Arrays.asList(*labels))
+        val path = toPath(Arrays.asList(*labels))
         val element = getPsiElement(true, path.toString(), myFile)
 
         val expected = String.format("describe \"%s\"", labels[labels.size - 1])
@@ -68,7 +69,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertTest(offset: Int, vararg labels: String) {
-        val path = LabelUtils.toPath(Arrays.asList(*labels))
+        val path = toPath(Arrays.asList(*labels))
         val element = getPsiElement(false, path.toString(), myFile)
 
         val expected = String.format("test \"%s\"", labels[labels.size - 1])
@@ -77,13 +78,13 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertMissing(vararg labels: String) {
-        val path = LabelUtils.toPath(Arrays.asList(*labels))
+        val path = toPath(Arrays.asList(*labels))
         val element = getPsiElement(false, path.toString(), myFile)
         assertSame(myFile, element)
     }
 
     private fun assertFallback(fallback: String, vararg labels: String) {
-        val path = LabelUtils.toPath(Arrays.asList(*labels))
+        val path = toPath(Arrays.asList(*labels))
         val element = getPsiElement(true, path.toString(), myFile)
 
         val expected = String.format("describe \"%s\"", fallback)
