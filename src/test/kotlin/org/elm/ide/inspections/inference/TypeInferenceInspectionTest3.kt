@@ -527,6 +527,15 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String">foo "" [""] [()]</error>
 """)
 
+    fun `test named constraint appendable`() = checkByText("""
+foo : appendableOne -> appendableTwo -> appendableThree -> appendableTwo
+foo a b c = b
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: List String">foo "" [""] [()]</error>
+""")
+
     fun `test numbered constraint appendable mismatch`() = checkByText("""
 foo : appendable1 -> appendable2 -> appendable1 -> appendable2
 foo a b c = b
@@ -536,6 +545,33 @@ main =
     foo "" [""] <error descr="Type mismatch.Required: StringFound: List String">[""]</error>
 """)
 
+    fun `test named constraint appendable mismatch`() = checkByText("""
+foo : appendableOne -> appendableTwo -> appendableOne -> appendableTwo
+foo a b c = b
+
+main : ()
+main =
+    foo "" [""] <error descr="Type mismatch.Required: StringFound: List String">[""]</error>
+""")
+
+    fun `test numbered constraint appendable invalid value`() = checkByText("""
+foo : appendable1 -> appendable1
+foo a = a
+
+main : ()
+main =
+    foo <error descr="Type mismatch.Required: appendable1Found: ()">()</error>
+""")
+
+    fun `test named constraint appendable invalid value`() = checkByText("""
+foo : appendableOne -> appendableOne
+foo a = a
+
+main : ()
+main =
+    foo <error descr="Type mismatch.Required: appendableOneFound: ()">()</error>
+""")
+
     fun `test numbered constraints in different functions`() = checkByText("""
 foo : number1 -> appendable1 -> comparable1 -> compappend1 -> appendable1
 foo a b c d = b
@@ -543,6 +579,33 @@ foo a b c d = b
 main : number2 -> appendable2 -> comparable2 -> compappend2 -> ()
 main a b c d  =
     <error descr="Type mismatch.Required: ()Found: appendable2">foo a b c d</error>
+""")
+
+    fun `test named constraints in different functions`() = checkByText("""
+foo : numberOne -> appendableOne -> comparableOne -> compappendOne -> appendableOne
+foo a b c d = b
+
+main : numberTwo -> appendableTwo -> comparableTwo -> compappendTwo -> ()
+main a b c d  =
+    <error descr="Type mismatch.Required: ()Found: appendableTwo">foo a b c d</error>
+""")
+
+    fun `test numbered constraint assigned to unnumbered constraint`() = checkByText("""
+foo : number -> number
+foo a = a
+
+main : number1 -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: number1">foo a</error>
+""")
+
+    fun `test named constraint assigned to unnumbered constraint`() = checkByText("""
+foo : number -> number
+foo a = a
+
+main : numberOne -> ()
+main a =
+    <error descr="Type mismatch.Required: ()Found: numberOne">foo a</error>
 """)
 
     fun `test calling function with its own return value`() = checkByText("""
@@ -798,6 +861,29 @@ main a f =
 main : comparable -> (number -> ()) -> ()
 main a f =
     f <error descr="Type mismatch.Required: numberFound: comparable">a</error>
+""")
+
+    fun `test passing function with vars in annotation in let to flex vars`() = checkByText("""
+foo : (a -> b) -> a -> b
+foo f a = f a
+
+main : ()
+main =
+    let
+        b : a -> a
+        b a = a
+    in
+    <error descr="Type mismatch.Required: ()Found: String">foo b ""</error>
+""")
+
+    fun `test passing function with mixed-rigidity vars in annotation`() = checkByText("""
+main : a -> ()
+main a =
+    let
+        foo : a -> b -> a
+        foo aa bb = aa
+    in
+    <error descr="Type mismatch.Required: ()Found: a">foo a ""</error>
 """)
 
     fun `test calling rigid var in parent scope`() = checkByText("""

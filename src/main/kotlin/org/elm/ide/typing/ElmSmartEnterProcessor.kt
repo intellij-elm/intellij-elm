@@ -6,10 +6,12 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.util.DocumentUtil
 import org.elm.ide.inspections.MissingCaseBranchAdder
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.utils.getIndent
 
 class ElmSmartEnterProcessor : SmartEnterProcessorWithFixers() {
     init {
@@ -99,7 +101,7 @@ private class CaseExpressionFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmart
 private class LetInFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEnterProcessor>() {
     override fun apply(editor: Editor, processor: ElmSmartEnterProcessor, element: PsiElement) {
         if (element !is ElmLetInExpr || element.inKeyword != null) return
-        val indent = guessIndent(element)
+        val indent = editor.getIndent(element.startOffset)
         val lastDecl = element.valueDeclarationList.lastOrNull()
         val anchor = lastDecl ?: element.letKeyword
         val endOffset = anchor.textRange.endOffset
@@ -113,7 +115,7 @@ private class LetInFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEnterProc
 private class CaseBranchFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEnterProcessor>() {
     override fun apply(editor: Editor, processor: ElmSmartEnterProcessor, element: PsiElement) {
         if (element !is ElmCaseOfBranch || element.arrow != null) return
-        val indent = guessIndent(element)
+        val indent = editor.getIndent(element.startOffset)
         val endOffset = element.pattern.textRange.endOffset
         editor.document.insertString(endOffset, " ->\n$indent    ")
     }
@@ -128,27 +130,18 @@ private class IfElseFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEnterPro
                 elseKeywords.isNotEmpty() && elseKeywords.size == thenKeywords.size) return
         val expressionList = element.expressionList
         val expression = expressionList.lastOrNull() ?: return
-
-        // chained `if` expressions aren't parsed as a group if they're missing anything before the final else
-        val elementPrev = element.prevSiblings.withoutWs.firstOrNull()
-        val indentOffset = when {
-            elementPrev?.elementType == ElmTypes.ELSE -> -1
-            else -> 0
-        }
-
-        val indent = guessIndent(element, indentOffset)
-
+        val indent = editor.getIndent(element.startOffset)
         val exprPrev = expression.prevSiblings.withoutWs.first()
         val exprNext = expression.nextSiblings.withoutWs.firstOrNull()
 
         val (thenString, endExpr) = when {
             // `then` keyword present, cursor on predicate or `then`
-            (exprPrev.elementType == ElmTypes.THEN && expressionList.size % 2 == 1)
-                    || exprNext?.elementType == ElmTypes.THEN -> {
+            (exprPrev.elementType == THEN && expressionList.size % 2 == 1)
+                    || exprNext?.elementType == THEN -> {
                 "\n$indent    " to exprNext!!
             }
             // `then` keyword not present
-            exprPrev.elementType == ElmTypes.IF -> {
+            exprPrev.elementType == IF -> {
                 " then\n$indent    " to expression
             }
             // cursor on body
@@ -167,7 +160,7 @@ private class FunctionBodyFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEn
         if (!elementIsValueDeclWithoutEquals(element)) {
             return
         }
-        val indent = guessIndent(element)
+        val indent = editor.getIndent(element.startOffset)
         editor.document.insertString(element.textRange.endOffset, " =\n$indent    ")
     }
 }

@@ -16,7 +16,7 @@ sealed class BinaryExprTree<T : Any> {
          * Parse a list of operands and operators into a binary tree structured in evaluation
          * order based on precedence and associativity.
          *
-         * Note that it is that callers responsibility to ensure that all functions in the
+         * Note that it is the caller's responsibility to ensure that all functions in the
          * [expression] have an associativity of [LEFT] or [RIGHT] (not [NON]) if there is more than
          * one operator, and that [expression] and [operatorPrecedences] are in the correct format.
          *

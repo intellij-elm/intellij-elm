@@ -181,3 +181,31 @@ object TyInProgressBinding : Ty() {
 
 /** Information about a type alias. This is not a [Ty]. */
 data class AliasInfo(val module: String, val name: String, val parameters: List<Ty>)
+
+/** Create a lazy sequence of all [TyVar]s referenced within this ty. */
+fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = sequence<TyVar> {
+    when (this@allVars) {
+        is TyVar -> yield(this@allVars)
+        is TyTuple -> types.forEach { yieldAll(it.allVars(includeAlias)) }
+        is TyRecord -> {
+            fields.values.forEach { yieldAll(it.allVars(includeAlias)) }
+            if (baseTy != null) yieldAll(baseTy.allVars(includeAlias))
+        }
+        is MutableTyRecord -> {
+            fields.values.forEach { yieldAll(it.allVars(includeAlias)) }
+            if (baseTy != null) yieldAll(baseTy.allVars(includeAlias))
+        }
+        is TyFunction -> {
+            yieldAll(ret.allVars(includeAlias))
+            parameters.forEach { yieldAll(it.allVars(includeAlias)) }
+        }
+        is TyUnion -> {
+            parameters.forEach { yieldAll(it.allVars(includeAlias)) }
+        }
+        is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        }
+    }
+    if (includeAlias) {
+        alias?.parameters?.forEach { yieldAll(it.allVars(includeAlias)) }
+    }
+}

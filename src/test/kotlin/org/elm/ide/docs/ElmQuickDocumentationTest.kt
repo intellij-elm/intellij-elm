@@ -130,9 +130,24 @@ main a =
         --^
 """,
             """
-<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
+<div class='definition'><pre><b>foo</b> : <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a> → <a href="psi_element://Int">Int</a>
 <b>foo</b> bar baz</pre></div>
 """)
+
+    fun `test function in let`() = doTest(
+            """
+foo a =
+    let
+      bar b = b + 1
+      --^
+    in
+        a
+""",
+            """
+<div class='definition'><pre><b>bar</b> : number → number
+<b>bar</b> b</pre></div>
+""")
+
 
     fun `test function with qualified type annotation`() = doTest(
             """

@@ -78,6 +78,12 @@ inline fun <reified T : PsiElement> PsiElement.childOfType(strict: Boolean = tru
 inline fun <reified T : PsiElement> PsiElement.descendantsOfType(): Collection<T> =
         PsiTreeUtil.findChildrenOfType(this, T::class.java)
 
+val PsiElement.startOffset: Int
+    get() = textRange.startOffset
+
+val PsiElement.endOffset: Int
+    get() = textRange.endOffset
+
 /**
  * Computes the start offset of the receiver relative to [owner].
  *

@@ -1,0 +1,2 @@
+<spot>add</spot> a b =
+    a + b

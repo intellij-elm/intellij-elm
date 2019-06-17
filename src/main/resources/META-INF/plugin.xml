@@ -33,6 +33,13 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.1.2</b> <em>(2019-05-28)</em>
+                <ul>
+                    <li>Fixed a type inference bug related to curried functions</li>
+                    <li>Fixed a stack overflow crash in some recursive functions</li>
+                    <li>Allow named suffixes on special type variables: `comparable`, `number`, etc.</li>
+                </ul>
+            </li>
             <li><b>3.1.1</b> <em>(2019-04-06)</em>
                 <ul>
                     <li>The type system is now fully implemented!</li>
@@ -231,6 +238,10 @@
 
         <intentionAction>
             <className>org.elm.ide.intentions.RemoveExposureIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.MakeAnnotationIntention</className>
             <category>Elm</category>
         </intentionAction>
 
