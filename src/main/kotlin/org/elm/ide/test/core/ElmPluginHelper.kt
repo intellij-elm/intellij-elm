@@ -43,29 +43,24 @@ object ElmPluginHelper {
                 .filter(topLevel())
 
         if (isDescribe) {
-            return subLabels
-                    .fold(topSuites)
-                    { acc, label ->
-                        acc
-                                .map(secondOperand())
-                                .flatMap(allSuites(label))
-                    }
-                    .firstOrNull()
+            return subSuites(subLabels, topSuites).firstOrNull()
         }
 
-        val deepestSuites = subLabels
-                .dropLast(1)
-                .fold(topSuites)
+        val deepestSuites = subSuites(subLabels.dropLast(1), topSuites)
+        val leafLabel = decodeLabel(labels.last())
+        return deepestSuites.map(secondOperand())
+                .flatMap(allTests(leafLabel))
+                .firstOrNull()
+    }
+
+    private fun subSuites(labels: List<String>, tops: List<ElmFunctionCallExpr>): List<ElmFunctionCallExpr> {
+        return labels
+                .fold(tops)
                 { acc, label ->
                     acc
                             .map(secondOperand())
                             .flatMap(allSuites(label))
                 }
-
-        val leafLabel = decodeLabel(labels.last())
-        return deepestSuites.map(secondOperand())
-                .flatMap(allTests(leafLabel))
-                .firstOrNull()
     }
 
     private fun labels(path: Path): List<String> {
