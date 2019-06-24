@@ -26,39 +26,54 @@ object ElmPluginHelper {
     }
 
     private fun findPsiElement(isDescribe: Boolean, labelPath: Path, file: PsiFile): PsiElement? {
-        if (labelPath.nameCount == 0) {
+        val labels = labels(labelPath)
+
+        if (labels.isEmpty()) {
             return null
         }
 
-        val topLabel = decodeLabel(labelPath.getName(0))
-        if (labelPath.nameCount > 1 || isDescribe) {
-            var current = allSuites(topLabel)(file)
-                    .filter(topLevel())
-            for (i in 1 until labelPath.nameCount - 1) {
-                val label = decodeLabel(labelPath.getName(i))
-                current = current
-                        .map(secondOperand())
-                        .flatMap(allSuites(label))
-            }
+        val topLabel = decodeLabel(labels.first())
+        val subLabels = labels.drop(1)
 
-            if (labelPath.nameCount > 1) {
-                val leafLabel = decodeLabel(labelPath.getName(labelPath.nameCount - 1))
-                val leaf = if (isDescribe)
-                    allSuites(leafLabel)
-                else
-                    allTests(leafLabel)
-                current = current
-                        .map(secondOperand())
-                        .flatMap(leaf)
-            }
-            return current.firstOrNull()
+        if (subLabels.isEmpty() && !isDescribe) {
+            return allTests(topLabel)(file).firstOrNull(topLevel())
         }
 
-        return allTests(topLabel)(file)
+        val topSuites = allSuites(topLabel)(file)
                 .filter(topLevel())
+
+        if (isDescribe) {
+            return subLabels
+                    .fold(topSuites)
+                    { acc, label ->
+                        acc
+                                .map(secondOperand())
+                                .flatMap(allSuites(label))
+                    }
+                    .firstOrNull()
+        }
+
+        val deepestSuites = subLabels
+                .dropLast(1)
+                .fold(topSuites)
+                { acc, label ->
+                    acc
+                            .map(secondOperand())
+                            .flatMap(allSuites(label))
+                }
+
+        val leafLabel = decodeLabel(labels.last())
+        return deepestSuites.map(secondOperand())
+                .flatMap(allTests(leafLabel))
                 .firstOrNull()
     }
 
+    private fun labels(path: Path): List<String> {
+        return (0 until path.nameCount)
+                .map { path.getName(it) }
+                .map { it.toString() }
+                .toList()
+    }
 
     private fun allSuites(label: String): (PsiElement) -> List<ElmFunctionCallExpr> {
         return { psi ->

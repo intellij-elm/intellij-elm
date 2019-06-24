@@ -32,12 +32,16 @@ object LabelUtils {
 
     //internal
     fun decodeLabel(encoded: Path): String {
+        return decodeLabel(pathString(encoded))
+    }
+
+    //internal
+    fun decodeLabel(encoded: String): String {
         try {
-            return URLDecoder.decode(pathString(encoded), "utf8")
+            return URLDecoder.decode(encoded, "utf8")
         } catch (e: UnsupportedEncodingException) {
             throw RuntimeException(e)
         }
-
     }
 
     //internal
