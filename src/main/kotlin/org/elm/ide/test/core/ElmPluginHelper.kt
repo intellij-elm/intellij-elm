@@ -71,26 +71,26 @@ object ElmPluginHelper {
     }
 
     private fun allSuites(label: String): (PsiElement) -> List<ElmFunctionCallExpr> {
-        return { psi ->
-            functionCalls(psi, "describe")
+        return {
+            functionCalls(it, "describe")
                     .filter(firstArgumentIsString(label))
         }
     }
 
     private fun allTests(label: String): (PsiElement) -> List<ElmFunctionCallExpr> {
-        return { psi ->
-            functionCalls(psi, "test")
+        return {
+            functionCalls(it, "test")
                     .filter(firstArgumentIsString(label))
         }
     }
 
     private fun functionCalls(parent: PsiElement, targetName: String): List<ElmFunctionCallExpr> {
         return PsiTreeUtil.findChildrenOfType(parent, ElmFunctionCallExpr::class.java)
-                .filter { call -> call.target.text == targetName }
+                .filter { it.target.text == targetName }
     }
 
     private fun topLevel(): (ElmFunctionCallExpr) -> Boolean {
-        return { call -> null == findFirstParent(call, true) { element -> isSuite(element) } }
+        return { null == findFirstParent(it, true) { element -> isSuite(element) } }
     }
 
     private fun isSuite(element: PsiElement): Boolean {
@@ -98,31 +98,27 @@ object ElmPluginHelper {
     }
 
     private fun firstArgumentIsString(value: String): (ElmFunctionCallExpr) -> Boolean {
-        return { call ->
-            literalString()(firstOperand()(call)) == value
-        }
+        return { literalString()(firstOperand()(it)) == value }
     }
 
     private fun firstOperand(): (ElmFunctionCallExpr) -> ElmOperandTag {
-        return { call -> call.arguments.iterator().next() }
+        return { it.arguments.first() }
     }
 
     private fun secondOperand(): (ElmFunctionCallExpr) -> ElmAtomTag {
-        return { call ->
-            val iterator = call.arguments.iterator()
-            iterator.next()
-            iterator.next()
-        }
+        return { it.arguments.drop(1).first() }
     }
 
     private fun literalString(): (ElmOperandTag) -> String {
-        return { op -> stringConstant(op) }
+        return { stringConstant(it) }
     }
 
     private fun stringConstant(op: ElmOperandTag): String {
         return if (op is ElmStringConstantExpr) {
             PsiTreeUtil.findSiblingForward(op.getFirstChild(), ElmTypes.REGULAR_STRING_PART, null)!!.text
-        } else PsiTreeUtil.findChildOfType(op, ElmStringConstantExpr::class.java)!!.text
+        } else {
+            PsiTreeUtil.findChildOfType(op, ElmStringConstantExpr::class.java)!!.text
+        }
     }
 
 }
