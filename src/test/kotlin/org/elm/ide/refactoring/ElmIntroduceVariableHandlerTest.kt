@@ -343,6 +343,19 @@ f =
 """)
 
 
+    // AJ example 9: the indentation gets screwed up because the following lines need more indent
+    // TODO re-enable this test once we have a better way of formatting generated Elm code
+//    fun `test extract expr on same line as the function decl`() = doTest("""
+//example9 = (){-caret-}
+//""", listOf("()"), 0, """
+//example9 = let
+//               x =
+//                   ()
+//           in
+//           x
+//""")
+
+
     fun `test extend a let with a multi-line expression`() = doTest("""
 f =
     let
