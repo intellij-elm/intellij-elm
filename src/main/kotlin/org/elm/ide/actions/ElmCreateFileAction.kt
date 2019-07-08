@@ -16,7 +16,7 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
 
     private val log = logger<ElmCreateFileAction>()
 
-    override fun getActionName(directory: PsiDirectory?, newName: String?, templateName: String?): String =
+    override fun getActionName(directory: PsiDirectory?, newName: String, templateName: String?): String =
             CAPTION
 
     override fun buildDialog(project: Project?, directory: PsiDirectory?, builder: CreateFileFromTemplateDialog.Builder) {
