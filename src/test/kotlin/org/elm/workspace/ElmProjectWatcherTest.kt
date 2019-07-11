@@ -76,7 +76,7 @@ class ElmProjectWatcherTest: ElmTestBase() {
 
 
     private fun newCreateEvent(vFile: VirtualFile) =
-            VFileCreateEvent(null, vFile.parent, vFile.name, false, true)
+            VFileCreateEvent(null, vFile.parent, vFile.name, false, null, null, true, false)
 
 
     private fun newChangeEvent(vFile: VirtualFile) =
