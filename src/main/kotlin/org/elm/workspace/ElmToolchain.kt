@@ -124,7 +124,12 @@ data class ElmPackageRepository(val elmCompilerVersion: Version) {
      */
     private val globalPackageCacheDir: Path
         get() {
-            return Paths.get("$elmHomePath/$elmCompilerVersion/package/")
+            // In 0.19.0, the directory name was singular, but beginning in 0.19.1 it is now plural
+            val subDirName = when (elmCompilerVersion) {
+                Version(0, 19, 0) -> "package"
+                else -> "packages"
+            }
+            return Paths.get("$elmHomePath/$elmCompilerVersion/$subDirName/")
         }
 
     /**
