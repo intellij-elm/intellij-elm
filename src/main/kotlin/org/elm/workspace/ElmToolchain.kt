@@ -73,33 +73,25 @@ data class ElmToolchain(
             elmCompilerPath != null && Files.isExecutable(elmCompilerPath)
 
     /**
-     * Path to directory for a package at a specific version, containing `elm.json`
+     * Path to Elm's global package cache directory
      */
-    fun packageVersionDir(name: String, version: Version): Path? {
-        // TODO [kl] stop hard-coding the compiler version
-        // it's ok to assume 19 here because this will never be called from 0.18 code,
-        // but even this assumption will not be safe once future 19 releases are made.
+    private fun globalPackageCacheDir(): Path {
         val compilerVersion = "0.19.0"
-
-        return Paths.get("$elmHomePath/$compilerVersion/package/$name/$version/")
+        return Paths.get("$elmHomePath/$compilerVersion/package/")
     }
 
     /**
      * Path to the manifest file for the Elm package [name] at version [version]
      */
     fun findPackageManifest(name: String, version: Version): Path? {
-        // TODO [kl] use compiler version to determine whether to use elm.json vs elm-package.json
-        return packageVersionDir(name, version)?.resolve(ELM_JSON)
+        return globalPackageCacheDir().resolve("$name/$version/$ELM_JSON")
     }
 
     /**
      * Path to directory for a package, containing one or more versions
      */
     fun availableVersionsForPackage(name: String): List<Version> {
-        // TODO [kl] stop hard-coding the compiler version
-        val compilerVersion = "0.19.0"
-
-        val files = File("$elmHomePath/$compilerVersion/package/$name/").listFiles()
+        val files = File("${globalPackageCacheDir()}/$name/").listFiles()
                 ?: return emptyList()
         return files.mapNotNull { Version.parseOrNull(it.name) }
     }
