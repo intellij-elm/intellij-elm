@@ -8,6 +8,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
+import org.elm.workspace.ElmApplicationProject
 import org.elm.workspace.ElmWorkspaceService
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
@@ -46,7 +47,7 @@ class ElmNeedsConfigNotificationProvider(
 
         val toolchain = project.elmToolchain
         if (!toolchain.looksLikeValidToolchain()) {
-            return createBadToolchainPanel("Elm toolchain needs configuration")
+            return createBadToolchainPanel("You must specify a path to the Elm compiler")
         }
 
         val workspace = project.elmWorkspace
@@ -54,8 +55,14 @@ class ElmNeedsConfigNotificationProvider(
             return createNoElmProjectPanel("No Elm projects found")
         }
 
-        if (project.elmWorkspace.findProjectForFile(file) == null) {
-            return createNoElmProjectPanel("Could not find Elm project for this file")
+        val elmProject = project.elmWorkspace.findProjectForFile(file)
+                ?: return createNoElmProjectPanel("Could not find Elm project for this file")
+
+        val elmExecutableVersion = toolchain.elmCLI?.queryVersion()?.orNull()
+                ?: return createBadToolchainPanel("Could not determine Elm compiler version")
+
+        if (elmProject is ElmApplicationProject && elmProject.elmVersion != elmExecutableVersion) {
+            return createGenericPanel("Your elm.json file requires Elm ${elmProject.elmVersion} but your Elm compiler is $elmExecutableVersion")
         }
 
         return null
@@ -76,6 +83,11 @@ class ElmNeedsConfigNotificationProvider(
                 setText(message)
                 // TODO [drop 0.18] remove the `(or elm-package.json)` part
                 createActionLabel("Attach elm.json (or elm-package.json)", "Elm.AttachElmProject")
+            }
+
+    private fun createGenericPanel(message: String) =
+            EditorNotificationPanel().apply {
+                setText(message)
             }
 
 
