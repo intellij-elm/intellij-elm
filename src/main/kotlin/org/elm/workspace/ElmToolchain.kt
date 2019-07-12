@@ -39,62 +39,8 @@ data class ElmToolchain(
     val presentableLocation: String =
             elmCompilerPath?.toString() ?: "unknown location"
 
-    val elmHomePath: String
-        get() {
-            /*
-            The Elm compiler first checks the ELM_HOME environment variable. If not found,
-            it will fallback to the path returned by Haskell's `System.Directory.getAppUserDataDirectory`
-            function. That function behaves as follows:
-
-            - On Unix-like systems, the path is ~/.<app>.
-            - On Windows, the path is %APPDATA%/<app> (e.g. C:/Users/<user>/AppData/Roaming/<app>)
-
-            IntelliJ's FileUtil.expandUserHome() uses the JVM's `user.home` system property to
-            determine the home directory.
-
-            - On Unix-like systems, the path is /Users/<user>
-            - on Windows, the path is C:/Users/<user>
-
-            Note that the Haskell and Java functions do slightly different things.
-            */
-            val elmHomeVar = System.getenv("ELM_HOME")
-            if (elmHomeVar != null && Paths.get(elmHomeVar).exists())
-                return elmHomeVar
-
-            return when {
-                SystemInfo.isUnix -> FileUtil.expandUserHome("~/.elm")
-                SystemInfo.isMac -> FileUtil.expandUserHome("~/.elm")
-                SystemInfo.isWindows -> FileUtil.expandUserHome("~/AppData/Roaming/elm")
-                else -> error("Unsupported platform")
-            }
-        }
-
     fun looksLikeValidToolchain(): Boolean =
             elmCompilerPath != null && Files.isExecutable(elmCompilerPath)
-
-    /**
-     * Path to Elm's global package cache directory
-     */
-    private fun globalPackageCacheDir(): Path {
-        val compilerVersion = "0.19.0"
-        return Paths.get("$elmHomePath/$compilerVersion/package/")
-    }
-
-    /**
-     * Path to the manifest file for the Elm package [name] at version [version]
-     */
-    fun findPackageManifest(name: String, version: Version): Path? {
-        return globalPackageCacheDir().resolve("$name/$version/$ELM_JSON")
-    }
-
-    /**
-     * Path to directory for a package, containing one or more versions
-     */
-    fun availableVersionsForPackage(name: String): List<Version> {
-        val files = File("${globalPackageCacheDir()}/$name/").listFiles()
-                ?: return emptyList()
-        return files.mapNotNull { Version.parseOrNull(it.name) }
-    }
 
     /**
      * Attempts to locate Elm tool paths for all tools which are un-configured.
@@ -138,4 +84,63 @@ data class ElmToolchain(
         fun suggest(project: Project): ElmToolchain =
                 BLANK.autoDiscoverAll(project)
     }
+}
+
+
+data class ElmPackageRepository(val elmCompilerVersion: Version) {
+
+    val elmHomePath: String
+        get() {
+            /*
+            The Elm compiler first checks the ELM_HOME environment variable. If not found,
+            it will fallback to the path returned by Haskell's `System.Directory.getAppUserDataDirectory`
+            function. That function behaves as follows:
+
+            - On Unix-like systems, the path is ~/.<app>.
+            - On Windows, the path is %APPDATA%/<app> (e.g. C:/Users/<user>/AppData/Roaming/<app>)
+
+            IntelliJ's FileUtil.expandUserHome() uses the JVM's `user.home` system property to
+            determine the home directory.
+
+            - On Unix-like systems, the path is /Users/<user>
+            - on Windows, the path is C:/Users/<user>
+
+            Note that the Haskell and Java functions do slightly different things.
+            */
+            val elmHomeVar = System.getenv("ELM_HOME")
+            if (elmHomeVar != null && Paths.get(elmHomeVar).exists())
+                return elmHomeVar
+
+            return when {
+                SystemInfo.isUnix -> FileUtil.expandUserHome("~/.elm")
+                SystemInfo.isMac -> FileUtil.expandUserHome("~/.elm")
+                SystemInfo.isWindows -> FileUtil.expandUserHome("~/AppData/Roaming/elm")
+                else -> error("Unsupported platform")
+            }
+        }
+
+    /**
+     * Path to Elm's global package cache directory
+     */
+    private val globalPackageCacheDir: Path
+        get() {
+            return Paths.get("$elmHomePath/$elmCompilerVersion/package/")
+        }
+
+    /**
+     * Path to the manifest file for the Elm package [name] at version [version]
+     */
+    fun findPackageManifest(name: String, version: Version): Path? {
+        return globalPackageCacheDir.resolve("$name/$version/${ElmToolchain.ELM_JSON}")
+    }
+
+    /**
+     * Path to directory for a package, containing one or more versions
+     */
+    fun availableVersionsForPackage(name: String): List<Version> {
+        val files = File("$globalPackageCacheDir/$name/").listFiles()
+                ?: return emptyList()
+        return files.mapNotNull { Version.parseOrNull(it.name) }
+    }
+
 }

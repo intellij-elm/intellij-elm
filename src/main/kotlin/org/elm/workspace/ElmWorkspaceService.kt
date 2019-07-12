@@ -189,7 +189,9 @@ class ElmWorkspaceService(
      */
     private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                ElmProject.parse(manifestPath, settings.toolchain)
+                val compilerVersion = settings.toolchain.elmCLI?.queryVersion()?.orNull()
+                        ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
+                ElmProject.parse(manifestPath, ElmPackageRepository(compilerVersion))
             }.whenComplete { _, error ->
                 // log the result
                 if (error == null) {
