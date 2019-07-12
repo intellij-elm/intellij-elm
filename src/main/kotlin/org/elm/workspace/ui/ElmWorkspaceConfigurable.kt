@@ -9,18 +9,16 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ex.Settings
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
-import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.HyperlinkLabel
 import com.intellij.ui.JBColor
-import com.intellij.ui.layout.CCFlags
-import com.intellij.ui.layout.panel
 import com.intellij.util.ui.update.Activatable
 import com.intellij.util.ui.update.UiNotifyConnector
 import org.elm.ide.actions.ElmExternalFormatAction
 import org.elm.openapiext.Result
 import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.fileSystemPathTextField
+import org.elm.utils.layout
 import org.elm.workspace.ElmSuggest
 import org.elm.workspace.ElmToolchain
 import org.elm.workspace.commandLineTools.ElmCLI
@@ -29,10 +27,7 @@ import org.elm.workspace.commandLineTools.ElmTestCLI
 import org.elm.workspace.elmWorkspace
 import java.nio.file.Path
 import java.nio.file.Paths
-import javax.swing.JCheckBox
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
+import javax.swing.*
 
 class ElmWorkspaceConfigurable(
         private val project: Project
@@ -64,36 +59,21 @@ class ElmWorkspaceConfigurable(
             showActionShortcut(ElmExternalFormatAction.ID)
         }
 
-        val panel = JPanel(VerticalFlowLayout()).apply {
-            add(panel(title = "Elm Compiler") {
-                row("Location:") {
-                    cell {
-                        elmPathField(CCFlags.growX)
-                        button("Auto Discover", CCFlags.pushX) { elmPathField.text = autoDiscoverPathTo("elm") }
-                    }
-                }
-                row("Version:") { elmVersionLabel() }
-            })
-            add(panel(title = "elm-format") {
-                row("Location:") {
-                    cell {
-                        elmFormatPathField(CCFlags.growX)
-                        button("Auto Discover", CCFlags.pushX) { elmFormatPathField.text = autoDiscoverPathTo("elm-format") }
-                    }
-                }
-                row("Version:") { elmFormatVersionLabel() }
-                row("Keyboard shortcut:") { elmFormatShortcutLabel() }
-                row("Run when file saved?") { elmFormatOnSaveCheckbox() }
-            })
-            add(panel(title = "elm-test") {
-                row("Location:") {
-                    cell {
-                        elmTestPathField(CCFlags.growX)
-                        button("Auto Discover", CCFlags.pushX) { elmTestPathField.text = autoDiscoverPathTo("elm-test") }
-                    }
-                }
-                row("Version:") { elmTestVersionLabel() }
-            })
+        val panel = layout {
+            block("Elm Compiler") {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, "elm"))
+                row("Version:", elmVersionLabel)
+            }
+            block("elm-format") {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, "elm-format"))
+                row("Version:", elmFormatVersionLabel)
+                row("Keyboard shortcut:", elmFormatShortcutLabel)
+                row("Run when file saved?", elmFormatOnSaveCheckbox)
+            }
+            block("elm-test") {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmTestPathField, "elm-test"))
+                row("Version:", elmTestVersionLabel)
+            }
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
@@ -101,6 +81,15 @@ class ElmWorkspaceConfigurable(
             override fun showNotify() = update()
         }).also { Disposer.register(this, it) }
 
+        return panel
+    }
+
+    private fun pathFieldPlusAutoDiscoverButton(field: TextFieldWithBrowseButton, executableName: String): JPanel {
+        val panel = JPanel().apply { layout = BoxLayout(this, BoxLayout.X_AXIS) }
+        with(panel) {
+            add(field)
+            add(JButton("Auto Discover").apply { addActionListener { field.text = autoDiscoverPathTo(executableName) } })
+        }
         return panel
     }
 
