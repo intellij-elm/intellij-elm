@@ -34,6 +34,13 @@ data class Version(
                 else -> 0
             }
 
+    /**
+     * Compare two versions by only looking at major, minor and patch fields (ignores pre-release and build fields)
+     */
+    fun looseEquals(other: Version): Boolean =
+            x == other.x && y == other.y && z == other.z
+
+
     companion object {
         val UNKNOWN: Version = Version(0, 0, 0)
         val ELM_18: Version = Version(0, 18, 0) // TODO [drop 0.18]

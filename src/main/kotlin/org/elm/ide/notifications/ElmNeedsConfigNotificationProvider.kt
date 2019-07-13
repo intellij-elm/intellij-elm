@@ -1,17 +1,18 @@
 package org.elm.ide.notifications
 
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.SimpleModificationTracker
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotificationPanel
 import com.intellij.ui.EditorNotifications
 import org.elm.lang.core.psi.isElmFile
-import org.elm.workspace.ElmApplicationProject
-import org.elm.workspace.ElmWorkspaceService
-import org.elm.workspace.elmToolchain
-import org.elm.workspace.elmWorkspace
+import org.elm.openapiext.findFileByPath
+import org.elm.workspace.*
 
 
 /**
@@ -47,29 +48,32 @@ class ElmNeedsConfigNotificationProvider(
 
         val toolchain = project.elmToolchain
         if (!toolchain.looksLikeValidToolchain()) {
-            return createBadToolchainPanel("You must specify a path to the Elm compiler")
+            return badToolchainPanel("You must specify a path to the Elm compiler")
         }
 
         val workspace = project.elmWorkspace
         if (!workspace.hasAtLeastOneValidProject()) {
-            return createNoElmProjectPanel("No Elm projects found")
+            return noElmProjectPanel("No Elm projects found")
         }
 
         val elmProject = project.elmWorkspace.findProjectForFile(file)
-                ?: return createNoElmProjectPanel("Could not find Elm project for this file")
+                ?: return noElmProjectPanel("Could not find Elm project for this file")
 
-        val elmExecutableVersion = toolchain.elmCLI?.queryVersion()?.orNull()
-                ?: return createBadToolchainPanel("Could not determine Elm compiler version")
+        val compilerVersion = toolchain.elmCLI?.queryVersion()?.orNull()
+                ?: return badToolchainPanel("Could not determine Elm compiler version")
 
-        if (elmProject is ElmApplicationProject && elmProject.elmVersion != elmExecutableVersion) {
-            return createGenericPanel("Your elm.json file requires Elm ${elmProject.elmVersion} but your Elm compiler is $elmExecutableVersion")
+        when {
+            elmProject is ElmApplicationProject && !elmProject.elmVersion.looseEquals(compilerVersion) ->
+                return versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
+            elmProject is ElmPackageProject && !elmProject.elmVersion.contains(compilerVersion) ->
+                return versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
         }
 
         return null
     }
 
 
-    private fun createBadToolchainPanel(message: String) =
+    private fun badToolchainPanel(message: String) =
             EditorNotificationPanel().apply {
                 setText(message)
                 createActionLabel("Setup toolchain") {
@@ -78,17 +82,30 @@ class ElmNeedsConfigNotificationProvider(
             }
 
 
-    private fun createNoElmProjectPanel(message: String) =
+    private fun noElmProjectPanel(message: String) =
             EditorNotificationPanel().apply {
                 setText(message)
                 // TODO [drop 0.18] remove the `(or elm-package.json)` part
                 createActionLabel("Attach elm.json (or elm-package.json)", "Elm.AttachElmProject")
             }
 
-    private fun createGenericPanel(message: String) =
-            EditorNotificationPanel().apply {
-                setText(message)
+
+    private fun versionConflictPanel(project: Project, elmProject: ElmProject, expectedVersionText: String, compilerVersion: Version): EditorNotificationPanel {
+        val manifestFileName = elmProject.manifestPath.fileName.toString()
+        return EditorNotificationPanel().apply {
+            setText("Your $manifestFileName file requires Elm $expectedVersionText but your Elm compiler is $compilerVersion")
+            createActionLabel("Open $manifestFileName") {
+                val didNavigate = LocalFileSystem.getInstance().findFileByPath(elmProject.manifestPath)
+                        ?.let { OpenFileDescriptor(project, it) }
+                        ?.navigateInEditor(project, true)
+                if (didNavigate != true)
+                    project.showBalloon("Cannot open $manifestFileName", NotificationType.ERROR)
             }
+            createActionLabel("Setup toolchain") {
+                project.elmWorkspace.showConfigureToolchainUI()
+            }
+        }
+    }
 
 
     companion object {
