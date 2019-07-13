@@ -19,6 +19,7 @@
           <li>Rename refactoring</li>
           <li>Graphical UI for running elm-test</li>
           <li>Re-format code using elm-format</li>
+          <li>Generate type annotation for un-annotated function</li>
           <li>Detect unused code</li>
           <li>Detect and remove unused imports</li>
           <li>'Add Import' quick fix for unresolved references</li>
@@ -33,6 +34,13 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.2.0</b> <em>(2019-07-11)</em>
+                <ul>
+                    <li>Added an intention that generates a type annotation for un-annotated functions</li>
+                    <li>Significantly reduced memory usage in large projects</li>
+                    <li>Improved handling of nested let functions</li>
+                </ul>
+            </li>
             <li><b>3.1.2</b> <em>(2019-05-28)</em>
                 <ul>
                     <li>Fixed a type inference bug related to curried functions</li>

@@ -10,6 +10,7 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 * Rename refactoring
 * Graphical UI for running elm-test
 * Re-format code using elm-format
+* Generate type annotation for un-annotated function
 * Cleanup unused imports
 * Detect unused code
 * Code folding
