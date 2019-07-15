@@ -50,7 +50,8 @@ interface ElmStdlibVariant {
         // Now return an `ElmProject` with a manifest path suitable for IntelliJ's "light"
         // integration tests which put everything at `/src` using the in-memory VFS.
         val inMemManifestPath = Paths.get("/src/$ELM_JSON")
-        val elmProj = ElmProject.parse(jsonManifest.byteInputStream(), inMemManifestPath, toolchain)
+        val repo = ElmPackageRepository(compilerVersion)
+        val elmProj = ElmProject.parse(jsonManifest.byteInputStream(), inMemManifestPath, repo)
         require(Paths.get(".") in elmProj.sourceDirectories) {
             "Since the elm.json file is stored in `/src` (in-memory VFS), `source-directories` must contain \".\""
         }

@@ -49,11 +49,8 @@ import org.elm.TestProject
 import org.elm.fileTreeFromText
 import org.elm.lang.core.psi.parentOfType
 import org.elm.openapiext.pathAsPath
-import org.elm.workspace.ElmProject
-import org.elm.workspace.ElmToolchain
+import org.elm.workspace.*
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
-import org.elm.workspace.MinimalElmStdlibVariant
-import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 
 private val log = logger<ElmTestBase>()
@@ -236,13 +233,14 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
                 MinimalElmStdlibVariant.ensureElmStdlibInstalled(module.project, toolchain)
             } else {
                 log.debug("Configuring bare Elm project")
+                val elmCompilerVersion = Version(0, 19, 0)
                 @Language("JSON") val json = """
                     {
                         "type": "application",
                         "source-directories": [
                             "."
                         ],
-                        "elm-version": "0.19.0",
+                        "elm-version": "$elmCompilerVersion",
                         "dependencies": {
                             "direct": {},
                             "indirect": {}
@@ -256,7 +254,8 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
                 val contentRoot = contentEntry.file!!
                 val elmJsonFile = contentRoot.createChildData(contentRoot, ELM_JSON)
                 VfsUtil.saveText(elmJsonFile, json)
-                ElmProject.parse(json.byteInputStream(), elmJsonFile.pathAsPath, toolchain)
+                val repo = ElmPackageRepository(elmCompilerVersion)
+                ElmProject.parse(json.byteInputStream(), elmJsonFile.pathAsPath, repo)
             }
             module.project.elmWorkspace.setupForTests(toolchain, elmProject)
         }
