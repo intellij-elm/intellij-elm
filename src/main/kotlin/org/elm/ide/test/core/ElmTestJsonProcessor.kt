@@ -21,19 +21,18 @@ class ElmTestJsonProcessor {
 
     fun accept(text: String): Sequence<TreeNodeEvent>? {
         try {
-            val obj = gson.fromJson(text, JsonObject::class.java) ?: return null
-            val type = obj.get("type")
-            if (type != null && "compile-errors" == type.asString) {
+            val obj: JsonObject = gson.fromJson(text, JsonObject::class.java) ?: return null
+            if ("compile-errors" == obj.get("type")?.asString) {
                 return accept(toCompileErrors(obj))
             }
-            val event = obj.get("event").asString
 
+            val event = obj.get("event")?.asString
             if ("runStart" == event) {
                 currentPath = LabelUtils.EMPTY_PATH
                 return emptySequence()
             } else if ("runComplete" == event) {
                 val closeAll = closeSuitePaths(currentPath, LabelUtils.EMPTY_PATH)
-                        .map { p -> newTestSuiteFinishedEvent(p) }
+                        .map { newTestSuiteFinishedEvent(it) }
                 currentPath = LabelUtils.EMPTY_PATH
                 return closeAll
             } else if ("testCompleted" != event) {
@@ -45,7 +44,8 @@ class ElmTestJsonProcessor {
                 path = path.resolve("todo")
             }
 
-            val result: Sequence<TreeNodeEvent> = closeSuitePaths(currentPath, path).map { this.newTestSuiteFinishedEvent(it) }
+            val result: Sequence<TreeNodeEvent> = closeSuitePaths(currentPath, path)
+                    .map { this.newTestSuiteFinishedEvent(it) }
                     .plus(openSuitePaths(currentPath, path).map { this.newTestSuiteStartedEvent(it) })
                     .plus(testEvents(path, obj))
 
@@ -56,8 +56,7 @@ class ElmTestJsonProcessor {
             if (text.contains("Compilation failed")) {
                 val json = text.substring(0, text.lastIndexOf("Compilation failed"))
                 val obj = gson.fromJson(json, JsonObject::class.java) ?: return null
-                val type = obj.get("type")
-                if (type != null && "compile-errors" == type.asString) {
+                if ("compile-errors" == obj.get("type")?.asString) {
                     return accept(toCompileErrors(obj))
                 }
             }
