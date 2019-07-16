@@ -34,6 +34,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.2.1</b> <em>(2019-07-16)</em>
+                <ul>
+                    <li>Fixed a bug in 2019.2 EAP related to the Elm Settings UI</li>
+                    <li>Improved logic for locating packages in Elm's global package cache</li>
+                </ul>
+            </li>
             <li><b>3.2.0</b> <em>(2019-07-11)</em>
                 <ul>
                     <li>Added an intention that generates a type annotation for un-annotated functions</li>
