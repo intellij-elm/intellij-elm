@@ -1,2 +1,3 @@
 <spot>add : number -> number -> number</spot>
-add a b = a + b
+add a b = 
+    a + b
