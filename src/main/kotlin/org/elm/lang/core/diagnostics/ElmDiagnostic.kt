@@ -1,9 +1,7 @@
 package org.elm.lang.core.diagnostics
 
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.types.Ty
-import org.elm.lang.core.types.TyUnion
-import org.elm.lang.core.types.renderedText
+import org.elm.lang.core.types.*
 
 sealed class ElmDiagnostic(val element: PsiElement, val endElement: PsiElement? = null) {
     abstract val message: String
@@ -113,7 +111,8 @@ class TypeMismatchError(
         private val actual: Ty,
         private val expected: Ty,
         endElement: PsiElement? = null,
-        private val patternBinding: Boolean = false
+        private val patternBinding: Boolean = false,
+        private val recordDiff: RecordDiff? = null
 ) : ElmDiagnostic(element, endElement) {
     override val message: String
         get() {
@@ -124,7 +123,7 @@ class TypeMismatchError(
                 expectedRendered = expected.renderedText(false, true)
                 foundRendered = actual.renderedText(false, true)
             }
-            return if (patternBinding) {
+            val message = if (patternBinding) {
                 "Invalid pattern." +
                         "<br>Required type: $expectedRendered" +
                         "<br>Pattern type: $foundRendered"
@@ -133,12 +132,34 @@ class TypeMismatchError(
                         "<br>Required: $expectedRendered" +
                         "<br>Found: $foundRendered"
             }
+            return message + (recordDiff?.let { renderRecordDiff(it) } ?: "")
         }
 
     private fun tysAreAmbiguousUnions(l: Ty, r: Ty): Boolean {
         return l is TyUnion && r is TyUnion
                 && l.name == r.name
                 && l.module != r.module
+    }
+
+    private fun renderRecordDiff(recordDiff: RecordDiff) = buildString {
+        if (recordDiff.extra.isNotEmpty()) {
+            append("<br>Extra fields: ")
+            append(TyRecord(fields = recordDiff.extra).renderedText(false, false))
+        }
+        if (recordDiff.missing.isNotEmpty()) {
+            append("<br>Missing fields: ")
+            append(TyRecord(fields = recordDiff.missing).renderedText(false, false))
+        }
+        if (recordDiff.mismatched.isNotEmpty()) {
+            append("<br>Mismatched fields: ")
+            for ((k, v) in recordDiff.mismatched) {
+                append("<br>&nbsp;&nbsp;Field ").append(k).append(":")
+                append("<br>&nbsp;&nbsp;&nbsp;&nbsp;Required: ")
+                append(v.second.renderedText(false, false))
+                append("<br>&nbsp;&nbsp;&nbsp;&nbsp;Found: ")
+                append(v.first.renderedText(false, false))
+            }
+        }
     }
 }
 

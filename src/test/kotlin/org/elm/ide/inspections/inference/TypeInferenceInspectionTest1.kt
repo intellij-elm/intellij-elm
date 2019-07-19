@@ -228,7 +228,7 @@ foo : { r | x : ()} -> { r | x : ()}
 foo r = r
 
 main : R
-main = foo <error descr="Type mismatch.Required: { r | x : () }Found: { y : () }">{ y = () }</error>
+main = foo <error descr="Type mismatch.Required: { r | x : () }Found: { y : () }Missing fields: { x : () }">{ y = () }</error>
 """)
 
 
@@ -307,19 +307,19 @@ main a = <error descr="Type mismatch.Required: Foo IntFound: Bar">a</error>
     fun `test mismatched value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
 main : A ()
-main = <error descr="Type mismatch.Required: A ()Found: { x : Float, y : () }">{x = 1.0, y = ()}</error>
+main = <error descr="Type mismatch.Required: A ()Found: { x : Float, y : () }Mismatched fields: &nbsp;&nbsp;Field x:&nbsp;&nbsp;&nbsp;&nbsp;Required: ()&nbsp;&nbsp;&nbsp;&nbsp;Found: Float">{x = 1.0, y = ()}</error>
 """)
 
     fun `test mismatched value type from record subset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: { x : () }">{x = ()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x : () }Missing fields: { y : () }">{x = ()}</error>
 """)
 
     fun `test mismatched value type from record superset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: { x : (), y : (), z : () }">{x = (), y=(), z=()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x : (), y : (), z : () }Extra fields: { z : () }">{x = (), y=(), z=()}</error>
 """)
 
     fun `test mismatched return type from propagated type vars`() = checkByText("""
