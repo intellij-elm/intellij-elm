@@ -385,9 +385,8 @@ type alias Foo = { a : (), b : ()}
 main : Foo -> ()
 main arg =
     case arg of
-         <error descr="Invalid pattern.Required type: FooPattern type: { b : a, c : b }Extra fields: { c : b }Missing fields: { a : () }">{ b, c }</error> -> ()
+         <error descr="Invalid pattern.Required type: FooPattern type: { b : a, c : b }Extra fields: { c : b }">{ b, c }</error> -> ()
 """)
-
 
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Foo

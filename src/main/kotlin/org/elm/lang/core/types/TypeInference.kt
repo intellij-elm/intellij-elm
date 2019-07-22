@@ -939,7 +939,7 @@ private class InferenceScope(
             if (isInferable(ty)) {
                 val actualTyParams = fields.zip(uniqueVars(fields.size)) { f, v -> f.name to v }
                 val actualTy = TyRecord(actualTyParams.toMap())
-                val recordDiff = if (ty is TyRecord) calcRecordDiff(actualTy, ty) else null
+                val recordDiff = if (ty is TyRecord) calcRecordDiff(actualTy, ty).copy(missing = emptyMap()) else null
 
                 // For pattern declarations, the elm compiler issues diagnostics on the expression
                 // rather than the pattern, but it's easier for us to issue them on the pattern instead.
