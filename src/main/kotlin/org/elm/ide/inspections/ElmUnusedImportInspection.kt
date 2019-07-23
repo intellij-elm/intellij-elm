@@ -1,13 +1,12 @@
 package org.elm.ide.inspections
 
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.LocalInspectionToolSession
-import com.intellij.codeInspection.ProblemHighlightType
-import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.codeInsight.actions.OptimizeImportsProcessor
+import com.intellij.codeInspection.*
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import org.elm.ide.inspections.fixes.OptimizeImportsFix
+import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmAsClause
@@ -53,9 +52,17 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
 
 
 private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
-    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix())
+    val file = elem.containingFile as? ElmFile ?: return
+    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix(file))
 }
 
+private class OptimizeImportsFix(file: ElmFile) : LocalQuickFixOnPsiElement(file)  {
+    override fun getText() = "Optimize imports"
+    override fun getFamilyName() = name
+    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
+        OptimizeImportsProcessor(project, file).run()
+    }
+}
 
 class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor() {
 

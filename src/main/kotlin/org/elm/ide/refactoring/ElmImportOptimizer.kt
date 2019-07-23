@@ -1,9 +1,9 @@
-package org.elm.ide.inspections.fixes
+package org.elm.ide.refactoring
 
-import com.intellij.codeInspection.LocalQuickFix
-import com.intellij.codeInspection.ProblemDescriptor
-import com.intellij.openapi.project.Project
+import com.intellij.lang.ImportOptimizer
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor
 import org.elm.ide.inspections.ImportVisitor
 import org.elm.lang.core.psi.ElmFile
@@ -13,13 +13,22 @@ import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.psi.prevSiblings
 import org.elm.lang.core.resolve.scope.ModuleScope
 
-class OptimizeImportsFix : LocalQuickFix {
+class ElmImportOptimizer: ImportOptimizer {
+    override fun supports(file: PsiFile?): Boolean = file is ElmFile
 
-    override fun getName() = "Optimize imports"
-    override fun getFamilyName() = name
+    override fun processFile(file: PsiFile): Runnable {
+        true
+        return Runnable {
+            val documentManager = PsiDocumentManager.getInstance(file.project)
+            val document = documentManager.getDocument(file)
+            if (document != null) {
+                documentManager.commitDocument(document)
+            }
+            execute(file as ElmFile)
+        }
+    }
 
-    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val file = descriptor.psiElement?.containingFile as? ElmFile ?: return
+    private fun execute(file: ElmFile) {
         val visitor = ImportVisitor(ModuleScope.getImportDecls(file))
 
         file.accept(object : PsiRecursiveElementWalkingVisitor() {
