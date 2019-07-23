@@ -149,7 +149,13 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
-        val candidates = context.candidates.sortedBy { it.moduleName }
+
+        // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
+        val candidates = context.candidates.sortedWith(
+                compareBy<Candidate, String?>(nullsFirst()) { it.moduleAlias }
+                        .thenBy { it.moduleName }
+        )
+
         val project = file.project
 
         val picker = if (isUnitTestMode) {
