@@ -40,5 +40,11 @@ class OptimizeImportsFix : LocalQuickFix {
             if (exposingList.allExposedItems.size <= 1) exposingList.delete()
             else exposingList.removeItem(item)
         }
+
+        for (alias in visitor.unusedModuleAliases) {
+            val parent = alias.parentOfType<ElmImportClause>() ?: continue
+            // Delete the alias and the preceding whitespace
+            parent.deleteChildRange(parent.moduleQID.nextSibling, alias)
+        }
     }
 }
