@@ -1,11 +1,10 @@
 package org.elm.ide.highlight
 
+
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-
-
 import org.elm.ide.color.ElmColor
 import org.elm.lang.core.psi.elements.*
 
@@ -21,17 +20,34 @@ class ElmSyntaxHighlightAnnotator : Annotator {
             is ElmFieldType -> highlightField(holder, element.lowerCaseIdentifier)
             is ElmFieldAccessExpr -> highlightField(holder, element.lowerCaseIdentifier)
             is ElmFieldAccessorFunctionExpr -> highlightFieldAccessorFunction(holder, element)
+            is ElmUnionVariant -> highlightTypeConstructor(holder, element.upperCaseIdentifier)
+            is ElmTypeVariable -> highlightTypeExpr(holder, element)
+            is ElmLowerTypeName -> highlightTypeExpr(holder, element)
         }
     }
 
+    private fun highlightTypeExpr(holder: AnnotationHolder, element: PsiElement) {
+        highlightElement(holder, element, ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES)
+    }
+
+    private fun highlightTypeConstructor(holder: AnnotationHolder, element: PsiElement) {
+        highlightElement(holder, element, ElmColor.TYPE_CONSTRUCTOR)
+    }
+
     private fun highlightUpperCaseQID(holder: AnnotationHolder, element: ElmUpperCaseQID) {
-        // we only want to highlight upper-case QIDs when they are union or record constructors
-        val isModuleName = PsiTreeUtil.getParentOfType(element,
+        val isTypeExpr = PsiTreeUtil.getParentOfType(element,
                 ElmTypeAnnotation::class.java,
-                ElmModuleDeclaration::class.java,
-                ElmImportClause::class.java) != null
+                ElmUnionVariant::class.java)
+        if (isTypeExpr != null) {
+            highlightTypeExpr(holder, element)
+            return
+        }
+
+        val isModuleName = PsiTreeUtil.getParentOfType(element,
+                ElmImportClause::class.java,
+                ElmModuleDeclaration::class.java) != null
         if (!isModuleName) {
-            highlightElement(holder, element, ElmColor.TYPE)
+            highlightElement(holder, element, ElmColor.TYPE_CONSTRUCTOR)
         }
     }
 
@@ -51,13 +67,6 @@ class ElmSyntaxHighlightAnnotator : Annotator {
         typeAnnotation.lowerCaseIdentifier?.let {
             highlightElement(holder, it, ElmColor.TYPE_ANNOTATION_NAME)
         }
-
-        val def = typeAnnotation.typeExpression
-        listOf(ElmUpperCaseQID::class.java, ElmTypeVariable::class.java)
-                .flatMap { PsiTreeUtil.findChildrenOfType(def, it) }
-                .forEach {
-                    highlightElement(holder, it, ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES)
-                }
     }
 
     private fun highlightField(holder: AnnotationHolder, element: PsiElement?) {

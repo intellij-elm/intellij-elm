@@ -32,10 +32,9 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
     DEFINITION_NAME("Definition Name", Default.FUNCTION_DECLARATION),
 
     /**
-     * The uppercase identifier for a type in all contexts EXCEPT when appearing
-     * in a type annotation.
+     * The uppercase identifier for a type constructors and union variants
      */
-    TYPE("Type", Default.CLASS_NAME),
+    TYPE_CONSTRUCTOR("Type", Default.CLASS_NAME),
 
     /**
      * The lowercase identifier name in a type annotation.
