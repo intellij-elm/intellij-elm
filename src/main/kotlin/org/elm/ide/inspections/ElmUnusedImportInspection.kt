@@ -1,20 +1,20 @@
 package org.elm.ide.inspections
 
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.LocalInspectionToolSession
-import com.intellij.codeInspection.ProblemHighlightType
-import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.codeInsight.actions.OptimizeImportsProcessor
+import com.intellij.codeInspection.*
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import org.elm.ide.inspections.fixes.OptimizeImportsFix
+import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.elements.ElmExposedValue
+import org.elm.lang.core.psi.elements.ElmAsClause
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.LexicalValueReference
+import org.elm.lang.core.resolve.reference.QualifiedValueReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 import java.util.concurrent.ConcurrentHashMap
 
@@ -43,40 +43,53 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
         for (item in visitor.unusedExposedItems) {
             problemsHolder.markUnused(item, "'${item.text}' is exposed but unused")
         }
+
+        for (alias in visitor.unusedModuleAliases) {
+            problemsHolder.markUnused(alias, "Unused alias")
+        }
     }
 }
 
 
 private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
-    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix())
+    val file = elem.containingFile as? ElmFile ?: return
+    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix(file))
 }
 
+private class OptimizeImportsFix(file: ElmFile) : LocalQuickFixOnPsiElement(file)  {
+    override fun getText() = "Optimize imports"
+    override fun getFamilyName() = name
+    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
+        OptimizeImportsProcessor(project, file).run()
+    }
+}
 
 class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor() {
 
     // IMPORTANT! IntelliJ's LocalInspectionTool requires that visitor implementations be thread-safe.
-    private val imports: ConcurrentHashMap<String, ElmImportClause>
-    private val exposing: ConcurrentHashMap<String, ElmExposedValue>
-
-    init {
-        imports = ConcurrentHashMap(initialImports.associateBy { it.moduleQID.text })
-        exposing = initialImports.mapNotNull { it.exposingList }
-                .flatMap { it.exposedValueList }
-                .associateBy { it.text }
-                .let { ConcurrentHashMap(it) }
-    }
+    private val imports = initialImports.associateByTo(ConcurrentHashMap()) { it.moduleQID.text }
+    private val exposing = initialImports.mapNotNull { it.exposingList }
+            .flatMap { it.exposedValueList }
+            .associateByTo(ConcurrentHashMap()) { it.text }
+    private val moduleAliases = initialImports.mapNotNull { it.asClause }
+            .associateByTo(ConcurrentHashMap()) { it.upperCaseIdentifier.text }
 
     /** Returns the list of unused imports. IMPORTANT: only valid *after* the visitor completes its traversal. */
     val unusedImports: List<ElmImportClause>
-        get() = imports.values.toList().filter { !it.safeToIgnore }
+        get() = imports.values.filter { !it.safeToIgnore }
 
     /** Returns the list of unused exposed items. IMPORTANT: only valid *after* the visitor completes its traversal. */
     val unusedExposedItems: List<ElmExposedItemTag>
-        get() = exposing.values.toList().filter {
-            val import = it.parentOfType<ElmImportClause>() ?: return@filter false
-            val alreadyReported = import in unusedImports
-            !alreadyReported && !import.safeToIgnore
-        }
+        get() = exposing.values.filter { notChildOfAlreadyReportedStatement(it) }
+
+    /** Returns the list of unused module aliases. IMPORTANT: only valid *after* the visitor completes its traversal. */
+    val unusedModuleAliases: List<ElmAsClause>
+        get() = moduleAliases.values.filter { notChildOfAlreadyReportedStatement(it) }
+
+    private fun notChildOfAlreadyReportedStatement(it: PsiElement) : Boolean {
+        val import = it.parentOfType<ElmImportClause>() ?: return false
+        return import !in unusedImports && !import.safeToIgnore
+    }
 
     override fun visitElement(element: PsiElement?) {
         super.visitElement(element)
@@ -84,15 +97,23 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
             // TODO possible performance optimization:
             //      Qualified refs may not need to be resolved as they have enough information to determine
             //      the target module name directly. But the refs may be cached, so...shrug
-            val resolved = element.reference.resolve() ?: return
+            val reference = element.reference
+            val resolved = reference.resolve() ?: return
             val resolvedModule = resolved.elmFile.getModuleDecl() ?: return
             val resolvedModuleName = resolvedModule.name
             imports.remove(resolvedModuleName)
 
             // For now we are just going to mark exposed values/functions which are unused
             // TODO expand this to types, union variant constructors, and operators
-            if (element.reference is LexicalValueReference) {
+            if (reference is LexicalValueReference) {
                 exposing.remove(element.referenceName)
+            }
+
+            if (reference is QualifiedValueReference) {
+                val identifierList = reference.valueQID.upperCaseIdentifierList
+                if (identifierList.size == 1) {
+                    moduleAliases.remove(identifierList[0].text)
+                }
             }
         }
     }
