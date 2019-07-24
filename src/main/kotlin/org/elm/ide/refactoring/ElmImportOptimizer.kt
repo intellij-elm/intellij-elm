@@ -14,23 +14,16 @@ import org.elm.lang.core.psi.prevSiblings
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 class ElmImportOptimizer: ImportOptimizer {
-    override fun supports(file: PsiFile?): Boolean = file is ElmFile
+
+    override fun supports(file: PsiFile?) =
+            file is ElmFile
 
     override fun processFile(file: PsiFile): Runnable {
-        true
-        return Runnable {
-            val documentManager = PsiDocumentManager.getInstance(file.project)
-            val document = documentManager.getDocument(file)
-            if (document != null) {
-                documentManager.commitDocument(document)
-            }
-            execute(file as ElmFile)
-        }
-    }
+        if (file !is ElmFile) error("expected an Elm File!")
 
-    private fun execute(file: ElmFile) {
+        // Pre-compute the unused elements prior to performing the
+        // actual edits in the Runnable on the UI thread.
         val visitor = ImportVisitor(ModuleScope.getImportDecls(file))
-
         file.accept(object : PsiRecursiveElementWalkingVisitor() {
             override fun visitElement(element: PsiElement) {
                 element.accept(visitor)
@@ -38,6 +31,17 @@ class ElmImportOptimizer: ImportOptimizer {
             }
         })
 
+        return Runnable {
+            val documentManager = PsiDocumentManager.getInstance(file.project)
+            val document = documentManager.getDocument(file)
+            if (document != null) {
+                documentManager.commitDocument(document)
+            }
+            execute(visitor)
+        }
+    }
+
+    private fun execute(visitor: ImportVisitor) {
         for (unusedImport in visitor.unusedImports) {
             val prevNewline = unusedImport.prevSiblings.firstOrNull { it.textContains('\n') }
             if (prevNewline == null) unusedImport.delete()

@@ -14,7 +14,7 @@ import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.LexicalValueReference
-import org.elm.lang.core.resolve.reference.QualifiedValueReference
+import org.elm.lang.core.resolve.reference.QualifiedReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 import java.util.concurrent.ConcurrentHashMap
 
@@ -94,9 +94,6 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
     override fun visitElement(element: PsiElement?) {
         super.visitElement(element)
         if (element is ElmReferenceElement && element !is ElmImportClause && element !is ElmExposedItemTag) {
-            // TODO possible performance optimization:
-            //      Qualified refs may not need to be resolved as they have enough information to determine
-            //      the target module name directly. But the refs may be cached, so...shrug
             val reference = element.reference
             val resolved = reference.resolve() ?: return
             val resolvedModule = resolved.elmFile.getModuleDecl() ?: return
@@ -109,11 +106,8 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
                 exposing.remove(element.referenceName)
             }
 
-            if (reference is QualifiedValueReference) {
-                val identifierList = reference.valueQID.upperCaseIdentifierList
-                if (identifierList.size == 1) {
-                    moduleAliases.remove(identifierList[0].text)
-                }
+            if (reference is QualifiedReference) {
+                moduleAliases.remove(reference.qualifierPrefix)
             }
         }
     }
