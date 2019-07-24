@@ -30,6 +30,8 @@ class ElmColorSettingsPage : ColorSettingsPage {
                     "sig_left" to ElmColor.TYPE_ANNOTATION_NAME,
                     "sig_right" to ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES,
                     "type" to ElmColor.TYPE,
+                    "accessor" to ElmColor.RECORD_FIELD_ACCESSOR,
+                    "field" to ElmColor.RECORD_FIELD,
                     "func_decl" to ElmColor.DEFINITION_NAME
             ).mapValues { it.value.textAttributesKey }
 
@@ -37,7 +39,7 @@ class ElmColorSettingsPage : ColorSettingsPage {
             demoCodeText
 }
 
-private val demoCodeText = """
+private const val demoCodeText = """
 module Todo exposing (..)
 
 import Html exposing (div, h1, ul, li, text)
@@ -45,9 +47,9 @@ import Html exposing (div, h1, ul, li, text)
 -- a single line comment
 
 type alias <type>Model</type> =
-    { page : <type>Int</type>
-    , title : <type>String</type>
-    , stepper : <type>Int</type> -> <type>Int</type>
+    { <field>page</field> : <type>Int</type>
+    , <field>title</field> : <type>String</type>
+    , <field>stepper</field> : <type>Int</type> -> <type>Int</type>
     }
 
 type <type>Msg</type>
@@ -59,9 +61,9 @@ type <type>Msg</type>
     case msg of
         ModeA ->
             { model
-                | page = 0
-                , title = "Mode A"
-                , stepper = (\k -> k + 1)
+                | <field>page</field> = 0
+                , <field>title</field> = "Mode A"
+                , <field>stepper</field> = (\k -> k + 1)
             }
                 ! []
 
@@ -74,6 +76,6 @@ type <type>Msg</type>
         div []
             [ h1 [] [ text "Chapter One" ]
             , ul []
-                (List.map itemify model.items)
+                (List.map <accessor>.value</accessor> model.<field>items</field>)
             ]
 """

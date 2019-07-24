@@ -17,6 +17,10 @@ class ElmSyntaxHighlightAnnotator : Annotator {
             is ElmValueDeclaration -> highlightValueDeclaration(holder, element)
             is ElmTypeAnnotation -> highlightTypeAnnotation(holder, element)
             is ElmUpperCaseQID -> highlightUpperCaseQID(holder, element)
+            is ElmField -> highlightField(holder, element.lowerCaseIdentifier)
+            is ElmFieldType -> highlightField(holder, element.lowerCaseIdentifier)
+            is ElmFieldAccessExpr -> highlightField(holder, element.lowerCaseIdentifier)
+            is ElmFieldAccessorFunctionExpr -> highlightFieldAccessorFunction(holder, element)
         }
     }
 
@@ -26,8 +30,9 @@ class ElmSyntaxHighlightAnnotator : Annotator {
                 ElmTypeAnnotation::class.java,
                 ElmModuleDeclaration::class.java,
                 ElmImportClause::class.java) != null
-        if (!isModuleName)
+        if (!isModuleName) {
             highlightElement(holder, element, ElmColor.TYPE)
+        }
     }
 
     private fun highlightValueDeclaration(holder: AnnotationHolder, declaration: ElmValueDeclaration) {
@@ -53,6 +58,15 @@ class ElmSyntaxHighlightAnnotator : Annotator {
                 .forEach {
                     highlightElement(holder, it, ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES)
                 }
+    }
+
+    private fun highlightField(holder: AnnotationHolder, element: PsiElement?) {
+        if (element == null) return
+        highlightElement(holder, element, ElmColor.RECORD_FIELD)
+    }
+
+    private fun highlightFieldAccessorFunction(holder: AnnotationHolder, element: ElmFieldAccessorFunctionExpr) {
+        highlightElement(holder, element, ElmColor.RECORD_FIELD_ACCESSOR)
     }
 
     private fun highlightElement(holder: AnnotationHolder, element: PsiElement, color: ElmColor) {
