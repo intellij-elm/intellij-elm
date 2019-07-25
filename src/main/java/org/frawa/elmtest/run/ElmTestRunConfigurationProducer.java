@@ -2,7 +2,8 @@ package org.frawa.elmtest.run;
 
 import com.intellij.execution.Location;
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.actions.RunConfigurationProducer;
+import com.intellij.execution.actions.LazyRunConfigurationProducer;
+import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
@@ -13,14 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ElmTestRunConfigurationProducer extends RunConfigurationProducer<ElmTestRunConfiguration> {
+public class ElmTestRunConfigurationProducer extends LazyRunConfigurationProducer<ElmTestRunConfiguration> {
 
-    public ElmTestRunConfigurationProducer(@NotNull ElmTestConfigurationFactory configurationFactory) {
-        super(configurationFactory);
-    }
-
-    public ElmTestRunConfigurationProducer(@NotNull ElmTestRunConfigurationType configurationType) {
-        super(configurationType);
+    @NotNull
+    @Override
+    public ConfigurationFactory getConfigurationFactory() {
+        return new ElmTestConfigurationFactory(new ElmTestRunConfigurationType());
     }
 
     @Override
