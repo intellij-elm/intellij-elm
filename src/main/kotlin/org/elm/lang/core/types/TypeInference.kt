@@ -939,10 +939,11 @@ private class InferenceScope(
             if (isInferable(ty)) {
                 val actualTyParams = fields.zip(uniqueVars(fields.size)) { f, v -> f.name to v }
                 val actualTy = TyRecord(actualTyParams.toMap())
+                val recordDiff = if (ty is TyRecord) calcRecordDiff(actualTy, ty).copy(missing = emptyMap()) else null
 
                 // For pattern declarations, the elm compiler issues diagnostics on the expression
                 // rather than the pattern, but it's easier for us to issue them on the pattern instead.
-                diagnostics += TypeMismatchError(pat, actualTy, ty, patternBinding = true)
+                diagnostics += TypeMismatchError(pat, actualTy, ty, patternBinding = true, recordDiff = recordDiff)
             }
 
             for (f in fields) {
@@ -988,7 +989,8 @@ private class InferenceScope(
             }
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
-            diagnostics += TypeMismatchError(start, t1, t2, endElement, patternBinding)
+            val diff = if (t1 is TyRecord && t2 is TyRecord) calcRecordDiff(t1, t2) else null
+            diagnostics += TypeMismatchError(start, t1, t2, endElement, patternBinding, diff)
         }
         return assignable
     }
@@ -1034,44 +1036,31 @@ private class InferenceScope(
     }
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
-        fun fieldsAssignable(t1: TyRecord, t2: TyRecord, strict: Boolean): Boolean {
-            return t1.fields.all { (k, v) ->
-                t2.fields[k]?.let { assignable(v, it) } ?: !strict
-            }
-        }
-
-        // Subset record tys are created from extension record declarations or field accessor functions
-
-        val result = when {
-            // e.g. passing an extension record argument to an extension record parameter
-            ty1.isSubset && ty2.isSubset -> {
-                // whatever fields they have in common have to have the same types
-                fieldsAssignable(ty1, ty2, strict = false)
-            }
-            // e.g. invoking a field accessor function with a concrete record
-            // e.g. passing a concrete record into an extension record parameter
-            !ty1.isSubset && ty2.isSubset -> {
-                fieldsAssignable(ty2, ty1, strict = true)
-            }
-            // e.g. passing a field accessor into a parameter requiring a function taking a concrete record
-            // e.g. passing an extension record to a concrete parameter
-            ty1.isSubset && !ty2.isSubset -> {
-                fieldsAssignable(ty1, ty2, strict = true)
-            }
-            // e.g. returning a concrete record from a function declaring it returns a concrete record
-            !ty1.isSubset && !ty2.isSubset -> {
-                ty1.fields.size == ty2.fields.size && fieldsAssignable(ty1, ty2, strict = true)
-            }
-            else -> error("impossible")
-        }
-
-        // If we're assigning a concrete record to an extension, set the type of the extension base
-        // var to the concrete record.
-        if (result && ty1.baseTy == null && ty2.baseTy is TyVar) {
+        val result = calcRecordDiff(ty1, ty2).isEmpty()
+        // Subset record tys are created from extension record declarations or field accessor
+        // functions. If we're assigning a concrete record to a subset, set the type of the
+        // extension base var to the concrete record.
+        if (result && !ty1.isSubset && ty2.baseTy is TyVar) {
             trackReplacement(ty1, ty2.baseTy)
         }
         return result
     }
+
+    private fun calcRecordDiff(actual: TyRecord, expected: TyRecord) = RecordDiff(
+            extra = if (expected.isSubset) emptyMap() else {
+                actual.fields.filterKeys { it !in expected.fields }
+            },
+            missing = if (actual.isSubset) emptyMap() else {
+                expected.fields.filterKeys { it !in actual.fields }
+            },
+            mismatched = actual.fields.mapNotNull { (k, v) ->
+                if (expected.fields[k]?.let { assignable(v, it) } == false) {
+                    k to (v to expected.fields.getValue(k))
+                } else {
+                    null
+                }
+            }.toMap()
+    )
 
     private fun allAssignable(ty1: List<Ty>, ty2: List<Ty>): Boolean {
         // don't short circuit so that all types get applied
@@ -1326,6 +1315,14 @@ fun error(element: ElmPsiElement, message: String): Nothing {
     error("$message$location <${element.elementType}: '$text'>")
 }
 
+data class RecordDiff(
+        val extra: Map<String, Ty>,
+        val missing: Map<String, Ty>,
+        val mismatched: Map<String, Pair<Ty, Ty>>
+) {
+    fun isEmpty() = extra.isEmpty() && missing.isEmpty() && mismatched.isEmpty()
+    fun isNotEmpty() = extra.isNotEmpty() && missing.isNotEmpty() && mismatched.isNotEmpty()
+}
 
 private sealed class ParameterBindingResult {
     abstract val count: Int

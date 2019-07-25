@@ -379,6 +379,15 @@ main arg =
          <error descr="Type mismatch.Required: BazFound: Foo">Qux</error> -> ()
 """)
 
+    fun `test case branches with mismatched record pattern`() = checkByText("""
+type alias Foo = { a : (), b : ()}
+
+main : Foo -> ()
+main arg =
+    case arg of
+         <error descr="Invalid pattern.Required type: FooPattern type: { b : a, c : b }Extra fields: { c : b }">{ b, c }</error> -> ()
+""")
+
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Foo
     = Bar ()
