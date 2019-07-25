@@ -77,6 +77,18 @@ sealed class ElmProject(
             is ElmPackageProject -> elmVersion.contains(Version.ELM_18)
         }
 
+    /**
+     * Returns true if this project is compatible with Elm compiler [version].
+     *
+     * This is a looser form of a version check that allows for Elm compiler versions that include
+     * alpha/beta/rc suffixes. e.g. "0.19.1-alpha-4"
+     */
+    fun isCompatibleWith(version: Version) =
+            when (this) {
+                is ElmApplicationProject -> elmVersion.xyz == version.xyz
+                is ElmPackageProject -> elmVersion.contains(version.xyz)
+            }
+
     companion object {
 
         fun parse(manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {

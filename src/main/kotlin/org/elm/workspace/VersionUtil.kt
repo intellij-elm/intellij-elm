@@ -35,11 +35,9 @@ data class Version(
             }
 
     /**
-     * Compare two versions by only looking at major, minor and patch fields (ignores pre-release and build fields)
+     * Returns a "loose" form that ignores suffixes like alpha, rc-1, etc.
      */
-    fun looseEquals(other: Version): Boolean =
-            x == other.x && y == other.y && z == other.z
-
+    val xyz: Version by lazy { Version(x, y, z) }
 
     companion object {
         val UNKNOWN: Version = Version(0, 0, 0)
@@ -144,8 +142,17 @@ data class Constraint(
         }
     }
 
-    fun contains(version: Version): Boolean =
+    /**
+     * Returns true if the constraint is satisfied using SemVer ordering (namely "1.0-beta" < "1.0")
+     */
+    fun semVerContains(version: Version): Boolean =
             (lowOp.evaluate(low, version) && highOp.evaluate(version, high))
+
+    /**
+     * Returns true if the constraint is satisfied solely by comparing x.y.z (so "1.0-beta" == "1.0")
+     */
+    fun contains(version: Version): Boolean =
+            copy(low = low.xyz, high = high.xyz).semVerContains(version.xyz)
 
     override fun toString() =
             "$low $lowOp v $highOp $high"
