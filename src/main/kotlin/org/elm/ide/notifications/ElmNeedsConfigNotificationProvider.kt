@@ -1,11 +1,13 @@
 package org.elm.ide.notifications
 
+import com.intellij.execution.process.ProcessIOExecutorService
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
-import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotificationPanel
@@ -14,24 +16,36 @@ import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.findFileByPath
 import org.elm.workspace.*
 
+sealed class VersionCheck {
+    object NotChecked : VersionCheck()
+    object Checking : VersionCheck()
+    class Checked(val version: Version?) : VersionCheck()
+}
+
+private val log = logger<ElmNeedsConfigNotificationProvider>()
 
 /**
  * Presents actionable notifications at the top of an Elm file whenever the Elm plugin
  * needs configuration (e.g. the path to the Elm compiler).
  */
 class ElmNeedsConfigNotificationProvider(
-        private val project: Project,
-        private val notifications: EditorNotifications
+        private val project: Project
 ) : EditorNotifications.Provider<EditorNotificationPanel>() {
 
-    private val workspaceChangedTracker = SimpleModificationTracker()
+    private val notifications = EditorNotifications.getInstance(project)
+
+    private val lock = Any()
+    private var versionCheck: VersionCheck = VersionCheck.NotChecked
 
     init {
         project.messageBus.connect(project).apply {
             subscribe(ElmWorkspaceService.WORKSPACE_TOPIC,
                     object : ElmWorkspaceService.ElmWorkspaceListener {
                         override fun didUpdate() {
-                            workspaceChangedTracker.incModificationCount()
+                            log.debug("Workspace did change; invalidating cache and refreshing UI")
+                            synchronized(lock) {
+                                versionCheck = VersionCheck.NotChecked // Elm toolchain may have changed
+                            }
                             notifications.updateAllNotifications()
                         }
                     })
@@ -59,19 +73,52 @@ class ElmNeedsConfigNotificationProvider(
         val elmProject = project.elmWorkspace.findProjectForFile(file)
                 ?: return noElmProjectPanel("Could not find Elm project for this file")
 
-        val compilerVersion = toolchain.elmCLI?.queryVersion()?.orNull()
-                ?: return badToolchainPanel("Could not determine Elm compiler version")
+        // Check that the toolchain path to the Elm binary corresponds to a version of the compiler
+        // that is compatible with the Elm project. We have to do this async because this function
+        // was called by IntelliJ while holding a Read Action. And we are forbidden from invoking
+        // an external process while holding a Read Action.
+        synchronized(lock) {
+            when (val vc = versionCheck) {
+                VersionCheck.NotChecked -> {
+                    log.debug("Querying the version")
+                    versionCheck = VersionCheck.Checking
+                    asyncQueryElmCompilerVersion(toolchain)
+                    return null
+                }
+                VersionCheck.Checking -> {
+                    log.debug("Skipping version check")
+                    return null
+                }
+                is VersionCheck.Checked -> {
+                    log.debug("Using cached version ${vc.version}")
+                    val compilerVersion = vc.version
+                            ?: return badToolchainPanel("Could not determine Elm compiler version")
 
-        when {
-            elmProject is ElmApplicationProject && !elmProject.elmVersion.looseEquals(compilerVersion) ->
-                return versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
-            elmProject is ElmPackageProject && !elmProject.elmVersion.contains(compilerVersion) ->
-                return versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
+                    return when {
+                        elmProject is ElmApplicationProject && !elmProject.elmVersion.looseEquals(compilerVersion) ->
+                            versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
+                        elmProject is ElmPackageProject && !elmProject.elmVersion.contains(compilerVersion) ->
+                            versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
+                        else ->
+                            null
+                    }
+                }
+            }
         }
-
-        return null
     }
 
+    private fun asyncQueryElmCompilerVersion(toolchain: ElmToolchain) {
+        ProcessIOExecutorService.INSTANCE.submit {
+            val v = toolchain.elmCLI?.queryVersion()?.orNull()
+            synchronized(lock) {
+                versionCheck = VersionCheck.Checked(v)
+            }
+            // refresh the UI
+            ApplicationManager.getApplication().invokeLater {
+                notifications.updateAllNotifications()
+            }
+        }
+    }
 
     private fun badToolchainPanel(message: String) =
             EditorNotificationPanel().apply {
