@@ -1,0 +1,3 @@
+add : Int -> String
+<spot>add int =
+  </spot>

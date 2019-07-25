@@ -125,6 +125,7 @@ fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 val TyUnion.isTyInt: Boolean get() = module == TyInt.module && name == TyInt.name
 val TyUnion.isTyFloat: Boolean get() = module == TyFloat.module && name == TyFloat.name
+val TyUnion.isTyBool: Boolean get() = module == TyBool.module && name == TyBool.name
 val TyUnion.isTyString: Boolean get() = module == TyString.module && name == TyString.name
 val TyUnion.isTyChar: Boolean get() = module == TyChar.module && name == TyChar.name
 

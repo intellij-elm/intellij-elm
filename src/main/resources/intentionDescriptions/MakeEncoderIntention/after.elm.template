@@ -1,0 +1,3 @@
+add : Int -> Encode.Value
+<spot>add int =
+  Encode.int int</spot>
