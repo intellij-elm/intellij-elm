@@ -85,8 +85,8 @@ sealed class ElmProject(
      */
     fun isCompatibleWith(version: Version) =
             when (this) {
-                is ElmApplicationProject -> elmVersion.looseEquals(version)
-                is ElmPackageProject -> elmVersion.contains(version)
+                is ElmApplicationProject -> elmVersion.xyz == version.xyz
+                is ElmPackageProject -> elmVersion.contains(version.xyz)
             }
 
     companion object {

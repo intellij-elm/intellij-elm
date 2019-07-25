@@ -2,7 +2,6 @@ package org.elm.workspace
 
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -46,22 +45,6 @@ class VersionTest {
     @Test
     fun `version compare ignores build metadata`() {
         assertTrue(Version.parse("1.0.0+foo").compareTo(Version.parse("1.0.0+bar")) == 0)
-    }
-
-    @Test
-    fun `loose version equality ignores pre-release fields and build metadata`() {
-        // loosely equal
-        assertTrue(Version.parse("1.0.0").looseEquals(Version.parse("1.0.0")))
-        assertTrue(Version.parse("1.0.0-alpha").looseEquals(Version.parse("1.0.0")))
-        assertTrue(Version.parse("1.0.0-alpha").looseEquals(Version.parse("1.0.0-beta")))
-        assertTrue(Version.parse("1.0.0-alpha+foo").looseEquals(Version.parse("1.0.0-beta")))
-        assertTrue(Version.parse("1.0.0-beta1").looseEquals(Version.parse("1.0.0-beta2")))
-
-        // not loosely equal
-        assertFalse(Version.parse("1.0.0").looseEquals(Version.parse("2.0.0")))
-        assertFalse(Version.parse("1.0.0").looseEquals(Version.parse("1.1.0")))
-        assertFalse(Version.parse("1.0.0").looseEquals(Version.parse("1.0.1")))
-        assertFalse(Version.parse("1.0.0").looseEquals(Version.parse("1.0.1-beta")))
     }
 
     @Test
