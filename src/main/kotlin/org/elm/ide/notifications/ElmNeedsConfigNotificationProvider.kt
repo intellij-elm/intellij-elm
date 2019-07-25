@@ -94,14 +94,11 @@ class ElmNeedsConfigNotificationProvider(
                     val compilerVersion = vc.version
                             ?: return badToolchainPanel("Could not determine Elm compiler version")
 
-                    return when {
-                        elmProject is ElmApplicationProject && !elmProject.elmVersion.looseEquals(compilerVersion) ->
-                            versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
-                        elmProject is ElmPackageProject && !elmProject.elmVersion.contains(compilerVersion) ->
-                            versionConflictPanel(project, elmProject, elmProject.elmVersion.toString(), compilerVersion)
-                        else ->
-                            null
+                    if (!elmProject.isCompatibleWith(compilerVersion)) {
+                        return versionConflictPanel(project, elmProject, compilerVersion)
                     }
+
+                    return null
                 }
             }
         }
@@ -137,7 +134,11 @@ class ElmNeedsConfigNotificationProvider(
             }
 
 
-    private fun versionConflictPanel(project: Project, elmProject: ElmProject, expectedVersionText: String, compilerVersion: Version): EditorNotificationPanel {
+    private fun versionConflictPanel(project: Project, elmProject: ElmProject, compilerVersion: Version): EditorNotificationPanel {
+        val expectedVersionText = when (elmProject) {
+            is ElmApplicationProject -> elmProject.elmVersion.toString()
+            is ElmPackageProject -> elmProject.elmVersion.toString()
+        }
         val manifestFileName = elmProject.manifestPath.fileName.toString()
         return EditorNotificationPanel().apply {
             setText("Your $manifestFileName file requires Elm $expectedVersionText but your Elm compiler is $compilerVersion")
