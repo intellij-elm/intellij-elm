@@ -45,7 +45,7 @@ object ElmLookup {
             if (log.isDebugEnabled) log.debug("Cannot lookup '$name' when Elm project context is unknown")
             return emptyList()
         }
-        return ElmNamedElementIndex.find(name, clientLocation.intellijProject, ElmLookup.searchScopeAt(clientLocation))
+        return ElmNamedElementIndex.find(name, clientLocation.intellijProject, searchScopeAt(clientLocation))
                 .filterIsInstance<T>()
     }
 

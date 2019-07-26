@@ -9,6 +9,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
 
 class MakeEncoderIntention : ElmAtCaretIntentionActionBase<MakeEncoderIntention.Context>() {
@@ -36,10 +37,27 @@ class MakeEncoderIntention : ElmAtCaretIntentionActionBase<MakeEncoderIntention.
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        val code = EncoderGenerator.generate(context.file, context.ty, context.name)
+        val declarations = context.ty.allDeclarations().toList()
+        val code = EncoderGenerator.generate(context.file, context.ty, context.name, declarations)
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             editor.document.insertString(context.endOffset, code)
         }
+    }
+
+    // TODO: call this
+    private fun imports(file: ElmFile, declarations: List<DeclarationInTy>): List<Candidate> {
+        val moduleName = file.getModuleDecl()?.name ?: ""
+        val visibleTypes = ModuleScope.getVisibleTypes(file).all
+                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
+        return declarations
+                .filter { it.module != moduleName && it.toRef() !in visibleTypes }
+                .map {
+                    Candidate(
+                            moduleName = it.name,
+                            moduleAlias = null,
+                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else it.name
+                    )
+                }
     }
 }
 
@@ -47,14 +65,27 @@ private data class GeneratedFunction(
         val name: String,
         val paramTy: Ty,
         val paramName: String,
-        val body: String
+        val body: String,
+        val qualifier: String
 )
 
+private data class Ref(val module: String, val name: String)
 
-private class EncoderGenerator private constructor(val file: ElmFile) {
+private fun TyUnion.toRef() = Ref(module, name)
+private fun AliasInfo.toRef() = Ref(module, name)
+private fun DeclarationInTy.toRef() = Ref(module, name)
+
+private class EncoderGenerator private constructor(
+        private val file: ElmFile,
+        private val funcNames: Map<Ref, String>,
+        private val typeQualifiers: Map<Ref, String?>
+) {
     companion object {
-        fun generate(file: ElmFile, root: Ty, name: String): String {
-            val generator = EncoderGenerator(file)
+        fun generate(file: ElmFile, root: Ty, name: String, declarations: List<DeclarationInTy>): String {
+            val funcNames = funcNames(declarations)
+            val typeQualifiers = typeQualifiers(file, declarations)
+
+            val generator = EncoderGenerator(file, funcNames, typeQualifiers)
             val genBody = generator.gen(root)
             val rootFunc = generator.funcsByTy[root]
             generator.funcsByTy.remove(root)
@@ -65,12 +96,34 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
                 append("\n$name $param =\n")
                 append(body)
 
-                for ((_, func) in generator.funcsByTy) {
+                for (f in generator.funcsByTy.values) {
                     append("\n\n\n")
-                    append("${func.name} : ${func.paramTy.renderedText(false, false)} -> Encode.Value\n")
-                    append("${func.name} ${func.paramName} =\n")
-                    append(func.body)
+                    append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> Encode.Value\n")
+                    append("${f.name} ${f.paramName} =\n")
+                    append(f.body)
                 }
+            }
+        }
+
+        // There might be multiple types with the same name in different modules, so add the module
+        // name the function for any type with a conflict that isn't defined in this module
+        private fun funcNames(declarations: List<DeclarationInTy>): Map<Ref, String> {
+            return declarations.groupBy { it.name }
+                    .map { (_, decls) ->
+                        decls.map {
+                            it.toRef() to when {
+                                decls.size == 1 -> it.name
+                                else -> it.module.replace(".", "") + it.name
+                            }
+                        }
+                    }.flatten().toMap()
+        }
+
+        private fun typeQualifiers(file: ElmFile, declarations: List<DeclarationInTy>): Map<Ref, String?> {
+            // If this ends of being slow, we might be able to speed it up by caching
+            // ImportScope.getExposedTypes
+            return declarations.associate {
+                it.toRef() to ModuleScope.getQualifierForTypeName(file, it.module, it.name)
             }
         }
     }
@@ -107,8 +160,9 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
     private fun generateRecordFunc(ty: TyRecord): GeneratedFunction {
         if (ty in funcsByTy) return funcsByTy[ty]!!
 
-        val name = "encode${ty.alias?.name ?: "Record${i++}"}"
+        val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: "Record${i++}"}"
         val param = ty.renderParam()
+        val qualifier = ty.alias?.let { typeQualifiers[it.toRef()] } ?: ""
         val body = buildString {
             append("    Encode.object <|\n        [ ")
             ty.fields.entries.joinTo(this, separator = "\n        , ") { (k, v) ->
@@ -117,7 +171,7 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
             append("\n        ]")
         }
 
-        val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body)
+        val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body, qualifier = qualifier)
         funcsByTy[ty] = func
         return func
     }
@@ -125,9 +179,10 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
     private fun generateUnionFunc(ty: TyUnion): GeneratedFunction {
         if (ty in funcsByTy) return funcsByTy[ty]!!
 
-        val name = "encode${ty.alias?.name ?: ty.name}"
+        val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: ty.name}"
         val param = ty.renderParam()
         val decl = ElmLookup.findByFileAndTy(file, ty)
+        val qualifier = typeQualifiers[ty.toRef()] ?: ""
         val body = if (decl == null) {
             "Debug.todo \"Can't generate encoder for ${ty.name}\""
         } else {
@@ -143,7 +198,7 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
                 }
             }
         }
-        val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body)
+        val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body, qualifier = qualifier)
         funcsByTy[ty] = func
         return func
     }

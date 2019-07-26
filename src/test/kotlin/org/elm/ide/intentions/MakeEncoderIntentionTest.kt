@@ -3,6 +3,25 @@ package org.elm.ide.intentions
 class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeEncoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
+    fun `test unavailable with wrong return type`() = doUnavailableTest(
+            """
+encode : String -> String{-caret-}
+""")
+
+    fun `test unavailable with no arguments`() = doUnavailableTest(
+            """
+import Json.Encode as Encode
+
+encode : Encode.Value{-caret-}
+""")
+
+    fun `test unavailable with too many arguments`() = doUnavailableTest(
+            """
+import Json.Encode as Encode
+
+encode : String -> String -> Encode.Value{-caret-}
+""")
+
     fun `test basic type`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -124,6 +143,46 @@ encodeFoo foo =
         [ ( "foo1", Encode.string foo.foo1 )
         , ( "foo2", Encode.int foo.foo2 )
         , ( "enum", encodeEnum foo.enum )
+        ]
+""")
+
+    fun `test name conflict`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Json.Encode as Encode
+import Foo
+
+type alias Bar = { f : Foo.Bar } 
+type alias Model = { bar : Bar }
+encode : Model -> Encode.Value{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar)
+type alias Bar = { s : String }
+"""
+            , """
+import Json.Encode as Encode
+import Foo
+
+type alias Bar = { f : Foo.Bar } 
+type alias Model = { bar : Bar }
+encode : Model -> Encode.Value
+encode model =
+    Encode.object <|
+        [ ( "bar", encodeBar model.bar )
+        ]
+
+
+encodeFooBar : Foo.Bar -> Encode.Value
+encodeFooBar bar =
+    Encode.object <|
+        [ ( "s", Encode.string bar.s )
+        ]
+
+
+encodeBar : Bar -> Encode.Value
+encodeBar bar =
+    Encode.object <|
+        [ ( "f", encodeFooBar bar.f )
         ]
 """)
 }

@@ -201,19 +201,16 @@ private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
 /**
  * @param moduleName    the module where this value/type lives
  * @param moduleAlias   if present, the alias to use when importing [moduleName]
- * @param name          the name of the value/type
  * @param nameToBeExposed the name suitable for insert into an exposing clause.
  *                      Typically this is the same as `name`, but when importing
  *                      a bare union type variant, it will be the parenthesized
  *                      form: "TypeName(VariantName)"
- * @param targetElement the value/type element in the module-to-be-imported
  */
 data class Candidate(
         val moduleName: String,
         val moduleAlias: String?,
-        val name: String,
-        val nameToBeExposed: String,
-        val targetElement: ElmNamedElement) {
+        val nameToBeExposed: String
+) {
 
     companion object {
 
@@ -253,9 +250,8 @@ data class Candidate(
             return Candidate(
                     moduleName = moduleDecl.name,
                     moduleAlias = alias,
-                    name = element.name,
-                    nameToBeExposed = nameToBeExposed,
-                    targetElement = element)
+                    nameToBeExposed = nameToBeExposed
+            )
         }
 
         /**
