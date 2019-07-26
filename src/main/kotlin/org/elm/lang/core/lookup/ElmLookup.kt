@@ -85,7 +85,7 @@ object ElmLookup {
 
 
     /**
-     * Returns a [GlobalSearchScope] which includes all Elm files that belong to [elmProject]
+     * Returns a [GlobalSearchScope] which includes all Elm files that belong to [ElmProject]
      * taking into consideration:
      *
      *  - which source roots the [ElmProject] defines

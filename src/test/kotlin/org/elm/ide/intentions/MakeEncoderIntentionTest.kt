@@ -35,9 +35,12 @@ type alias Foo =
     , dictField : Dict String Float
     , arrayField : Array String
     , setField : Set Bool
+    , tuple2Field : ( Int, String )
+    , tuple3Field : ( Int, String, Float )
+    , unitField : ()
     }
-    
-    
+
+
 foo{-caret-} : Foo -> Encode.Value
 """
             , """
@@ -57,9 +60,12 @@ type alias Foo =
     , dictField : Dict String Float
     , arrayField : Array String
     , setField : Set Bool
+    , tuple2Field : ( Int, String )
+    , tuple3Field : ( Int, String, Float )
+    , unitField : ()
     }
-    
-    
+
+
 foo : Foo -> Encode.Value
 foo foo =
     Encode.object <|
@@ -68,11 +74,14 @@ foo foo =
         , ( "boolField", Encode.bool foo.boolField )
         , ( "stringField", Encode.string foo.stringField )
         , ( "charField", (String.fromChar >> Encode.string) foo.charField )
-        , ( "listIntField", (Encode.list Encode.int) foo.listIntField )
+        , ( "listIntField", Encode.list Encode.int foo.listIntField )
         , ( "maybeStringField", (Maybe.map Encode.string >> Maybe.withDefault Encode.null) foo.maybeStringField )
         , ( "dictField", (Dict.toList >> List.map (\( k, v ) -> ( k, Encode.float v )) >> Encode.object) foo.dictField )
-        , ( "arrayField", (Encode.array Encode.string) foo.arrayField )
-        , ( "setField", (Encode.set Encode.bool) foo.setField )
+        , ( "arrayField", Encode.array Encode.string foo.arrayField )
+        , ( "setField", Encode.set Encode.bool foo.setField )
+        , ( "tuple2Field", (\( a, b ) -> Encode.list identity [ Encode.int a, Encode.string b ]) foo.tuple2Field )
+        , ( "tuple3Field", (\( a, b, c ) -> Encode.list identity [ Encode.int a, Encode.string b, Encode.float c ]) foo.tuple3Field )
+        , ( "unitField", (\_ -> Encode.null) foo.unitField )
         ]
 """)
 

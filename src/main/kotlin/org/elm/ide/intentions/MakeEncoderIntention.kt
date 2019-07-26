@@ -63,7 +63,7 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
 
             return buildString {
                 append("\n$name $param =\n")
-                append("$body")
+                append(body)
 
                 for ((_, func) in generator.funcsByTy) {
                     append("\n\n\n")
@@ -78,36 +78,29 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
     private val funcsByTy = mutableMapOf<Ty, GeneratedFunction>()
     private var i = 1
 
-    private fun gen(ty: Ty): String {
-        return when (ty) {
-            is TyRecord -> generateRecordFunc(ty).name
-            is TyUnion -> generateUnion(ty)
-            else -> "TODO"// TODO
+    private fun gen(ty: Ty): String = when (ty) {
+        is TyRecord -> generateRecordFunc(ty).name
+        is TyUnion -> generateUnion(ty)
+        is TyVar -> "Debug.todo \"Can't generate encoders for type variables\""
+        is TyTuple -> generateTuple(ty)
+        is TyUnit -> "(\\_ -> Encode.null)"
+        is TyFunction, TyInProgressBinding, is MutableTyRecord, is TyUnknown -> {
+            "Debug.todo \"Can't generate encoder for type ${ty.renderedText(false, false)}\""
         }
     }
 
-    private fun generateUnion(ty: TyUnion): String {
-        return when {
-            ty.isTyInt -> "Encode.int"
-            ty.isTyFloat -> "Encode.float"
-            ty.isTyBool -> "Encode.bool"
-            ty.isTyString -> "Encode.string"
-            ty.isTyChar -> "(String.fromChar >> Encode.string)"
-            ty.isTyList -> "(Encode.list ${gen(ty.parameters[0])})"
-            ty.module == "Set" && ty.name == "Set" -> "(Encode.set ${gen(ty.parameters[0])})"
-            ty.module == "Array" && ty.name == "Array" -> "(Encode.array ${gen(ty.parameters[0])})"
-            ty.module == "Maybe" && ty.name == "Maybe" ->
-                "(Maybe.map ${gen(ty.parameters[0])} >> Maybe.withDefault Encode.null)"
-            ty.module == "Dict" && ty.name == "Dict" -> {
-                val k = ty.parameters[0]
-                if (k !is TyUnion || !k.isTyString) {
-                    "(\\_ -> Debug.todo \"Can't generate encoder for Dict with non-String keys\")"
-                } else {
-                    "(Dict.toList >> List.map (\\( k, v ) -> ( k, ${gen(ty.parameters[1])} v )) >> Encode.object)"
-                }
-            }
-            else -> generateUnionFunc(ty).name
-        }
+    private fun generateUnion(ty: TyUnion): String = when {
+        ty.isTyInt -> "Encode.int"
+        ty.isTyFloat -> "Encode.float"
+        ty.isTyBool -> "Encode.bool"
+        ty.isTyString -> "Encode.string"
+        ty.isTyChar -> "(String.fromChar >> Encode.string)"
+        ty.isTyList -> "Encode.list ${gen(ty.parameters[0])}"
+        ty.module == "Set" && ty.name == "Set" -> "Encode.set ${gen(ty.parameters[0])}"
+        ty.module == "Array" && ty.name == "Array" -> "Encode.array ${gen(ty.parameters[0])}"
+        ty.module == "Maybe" && ty.name == "Maybe" -> "(Maybe.map ${gen(ty.parameters[0])} >> Maybe.withDefault Encode.null)"
+        ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
+        else -> generateUnionFunc(ty).name
     }
 
 
@@ -143,13 +136,32 @@ private class EncoderGenerator private constructor(val file: ElmFile) {
                 append("    case $param of\n")
 
                 variants.keys.joinTo(this, separator = "\n\n") { variant ->
-                    "        $variant ->\n" +
-                            "            Encode.string \"$variant\""
+                    """
+                    |        $variant ->
+                    |            Encode.string "$variant"
+                    """.trimMargin()
                 }
             }
         }
         val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body)
         funcsByTy[ty] = func
         return func
+    }
+
+    private fun generateDict(ty: TyUnion): String {
+        val k = ty.parameters[0]
+        return if (k !is TyUnion || !k.isTyString) {
+            "(\\_ -> Debug.todo \"Can't generate encoder for Dict with non-String keys\")"
+        } else {
+            "(Dict.toList >> List.map (\\( k, v ) -> ( k, ${gen(ty.parameters[1])} v )) >> Encode.object)"
+        }
+    }
+
+    private fun generateTuple(ty: TyTuple): String {
+        return if (ty.types.size == 2) {
+            "(\\( a, b ) -> Encode.list identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b ])"
+        } else {
+            "(\\( a, b, c ) -> Encode.list identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b, ${gen(ty.types[2])} c ])"
+        }
     }
 }
