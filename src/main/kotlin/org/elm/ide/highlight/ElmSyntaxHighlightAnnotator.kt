@@ -79,8 +79,7 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun highlightElement(holder: AnnotationHolder, element: PsiElement, color: ElmColor) {
-        val msg = "Highlighting %-60s \"%-20s\" with %s".format(element, element.text, color)
-        println(msg)
+        //println("Highlighting %-60s \"%-20s\" with %s".format(element, element.text, color))
         holder.createInfoAnnotation(element, null).textAttributes = color.textAttributesKey
     }
 }
