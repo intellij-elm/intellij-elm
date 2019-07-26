@@ -27,7 +27,6 @@ class ElmColorSettingsPage : ColorSettingsPage {
     override fun getAdditionalHighlightingTagToDescriptorMap() =
     // special tags in [demoText] for semantic highlighting
             mapOf(
-                    "sig_left" to ElmColor.TYPE_ANNOTATION_NAME,
                     "type" to ElmColor.TYPE_EXPR,
                     "variant" to ElmColor.UNION_VARIANT,
                     "accessor" to ElmColor.RECORD_FIELD_ACCESSOR,
@@ -56,7 +55,7 @@ type Msg <type>a</type>
     = <variant>ModeA</variant>
     | <variant>ModeB</variant> <type>Maybe a</type>
 
-<sig_left>update</sig_left> : <type>Msg</type> -> <type>Model</type> -> ( <type>Model</type>, <type>Cmd Msg</type> )
+<func_decl>update</func_decl> : <type>Msg</type> -> <type>Model</type> -> ( <type>Model</type>, <type>Cmd Msg</type> )
 <func_decl>update</func_decl> msg model =
     case msg of
         <variant>ModeA</variant> ->
@@ -67,7 +66,7 @@ type Msg <type>a</type>
             }
                 ! []
 
-<sig_left>view</sig_left> : <type>Model</type> -> <type>Html.Html Msg</type>
+<func_decl>view</func_decl> : <type>Model</type> -> <type>Html.Html Msg</type>
 <func_decl>view</func_decl> model =
     let
         <func_decl>itemify</func_decl> label =

@@ -32,13 +32,6 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
     DEFINITION_NAME("Definition Name", Default.FUNCTION_DECLARATION),
 
     /**
-     * The lowercase identifier name on the left-hand side of a type annotation.
-     *
-     * e.g. 'foo' in 'foo : String -> Cmd msg'
-     */
-    TYPE_ANNOTATION_NAME("Type Annotation Name", Default.FUNCTION_DECLARATION),
-
-    /**
      * The uppercase identifier for a union (custom type) variant
      */
     UNION_VARIANT("Custom Type Variant", Default.IDENTIFIER),

@@ -6,12 +6,6 @@
             <option name="FONT_TYPE" value="1"/>
         </value>
     </option>
-    <option name="org.elm.TYPE_ANNOTATION_NAME">
-        <value>
-            <option name="FOREGROUND" value="#333333"/>
-            <option name="FONT_TYPE" value="1"/>
-        </value>
-    </option>
     <option name="org.elm.TYPE_EXPR">
         <value>
             <option name="FOREGROUND" value="#127b7e"/>
