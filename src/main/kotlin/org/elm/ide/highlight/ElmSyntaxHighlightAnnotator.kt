@@ -36,7 +36,7 @@ class ElmSyntaxHighlightAnnotator : Annotator {
 
     private fun highlightUpperCaseQID(holder: AnnotationHolder, element: ElmUpperCaseQID) {
         val isTypeExpr = PsiTreeUtil.getParentOfType(element,
-                ElmTypeAnnotation::class.java,
+                ElmTypeExpression::class.java,
                 ElmUnionVariant::class.java)
         if (isTypeExpr != null) {
             highlightTypeExpr(holder, element)
@@ -79,6 +79,8 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun highlightElement(holder: AnnotationHolder, element: PsiElement, color: ElmColor) {
+        val msg = "Highlighting %-60s \"%-20s\" with %s".format(element, element.text, color)
+        println(msg)
         holder.createInfoAnnotation(element, null).textAttributes = color.textAttributesKey
     }
 }
