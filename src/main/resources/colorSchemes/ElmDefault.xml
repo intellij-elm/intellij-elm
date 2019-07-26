@@ -12,13 +12,13 @@
             <option name="FONT_TYPE" value="1"/>
         </value>
     </option>
-    <option name="org.elm.TYPE_ANNOTATION_SIGNATURE_TYPES">
+    <option name="org.elm.TYPE_EXPR">
         <value>
             <option name="FOREGROUND" value="#127b7e"/>
             <option name="FONT_TYPE" value="1"/>
         </value>
     </option>
-    <option name="org.elm.TYPE_CONSTRUCTOR">
+    <option name="org.elm.UNION_VARIANT">
         <value>
             <option name="FOREGROUND" value="#604578"/>
             <option name="FONT_TYPE" value="1"/>

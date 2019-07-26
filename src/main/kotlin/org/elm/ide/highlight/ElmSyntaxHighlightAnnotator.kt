@@ -27,11 +27,11 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun highlightTypeExpr(holder: AnnotationHolder, element: PsiElement) {
-        highlightElement(holder, element, ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES)
+        highlightElement(holder, element, ElmColor.TYPE_EXPR)
     }
 
     private fun highlightTypeConstructor(holder: AnnotationHolder, element: PsiElement) {
-        highlightElement(holder, element, ElmColor.TYPE_CONSTRUCTOR)
+        highlightElement(holder, element, ElmColor.UNION_VARIANT)
     }
 
     private fun highlightUpperCaseQID(holder: AnnotationHolder, element: ElmUpperCaseQID) {
@@ -47,7 +47,7 @@ class ElmSyntaxHighlightAnnotator : Annotator {
                 ElmImportClause::class.java,
                 ElmModuleDeclaration::class.java) != null
         if (!isModuleName) {
-            highlightElement(holder, element, ElmColor.TYPE_CONSTRUCTOR)
+            highlightElement(holder, element, ElmColor.UNION_VARIANT)
         }
     }
 

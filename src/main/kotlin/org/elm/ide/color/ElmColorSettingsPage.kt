@@ -28,8 +28,8 @@ class ElmColorSettingsPage : ColorSettingsPage {
     // special tags in [demoText] for semantic highlighting
             mapOf(
                     "sig_left" to ElmColor.TYPE_ANNOTATION_NAME,
-                    "type" to ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES,
-                    "variant" to ElmColor.TYPE_CONSTRUCTOR,
+                    "type" to ElmColor.TYPE_EXPR,
+                    "variant" to ElmColor.UNION_VARIANT,
                     "accessor" to ElmColor.RECORD_FIELD_ACCESSOR,
                     "field" to ElmColor.RECORD_FIELD,
                     "func_decl" to ElmColor.DEFINITION_NAME

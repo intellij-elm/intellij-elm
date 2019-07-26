@@ -32,24 +32,23 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
     DEFINITION_NAME("Definition Name", Default.FUNCTION_DECLARATION),
 
     /**
-     * The uppercase identifier for a type constructors and union variants
-     */
-    TYPE_CONSTRUCTOR("Type", Default.CLASS_NAME),
-
-    /**
-     * The lowercase identifier name in a type annotation.
+     * The lowercase identifier name on the left-hand side of a type annotation.
      *
      * e.g. 'foo' in 'foo : String -> Cmd msg'
      */
-    TYPE_ANNOTATION_NAME("Type Annotation//Name", Default.FUNCTION_DECLARATION),
+    TYPE_ANNOTATION_NAME("Type Annotation Name", Default.FUNCTION_DECLARATION),
 
     /**
-     * Both uppercase and lowercase identifiers appearing on the right-hand side
-     * of a top-level type annotation.
+     * The uppercase identifier for a union (custom type) variant
+     */
+    UNION_VARIANT("Custom Type Variant", Default.IDENTIFIER),
+
+    /**
+     * Type expressions
      *
      * e.g. 'String' and 'Cmd msg' in 'foo : String -> Cmd msg'
      */
-    TYPE_ANNOTATION_SIGNATURE_TYPES("Type Annotation//Signature", Default.CLASS_REFERENCE),
+    TYPE_EXPR("Type", Default.CLASS_REFERENCE),
 
     RECORD_FIELD("Records//Field", Default.INSTANCE_FIELD),
     RECORD_FIELD_ACCESSOR("Record//Field Accessor", Default.STATIC_FIELD);

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <list>
-    <option name="org.elm.TYPE_ANNOTATION_SIGNATURE_TYPES">
+    <option name="org.elm.TYPE_EXPR">
         <value>
             <option name="FOREGROUND" value="#68B3C1"/>
             <option name="FONT_TYPE" value="1"/>
         </value>
     </option>
-    <option name="org.elm.TYPE_CONSTRUCTOR">
+    <option name="org.elm.UNION_VARIANT">
         <value>
             <option name="FOREGROUND" value="#96c876"/>
         </value>
