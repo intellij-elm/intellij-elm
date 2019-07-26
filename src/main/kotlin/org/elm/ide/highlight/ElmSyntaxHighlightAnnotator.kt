@@ -12,34 +12,40 @@ import org.elm.lang.core.psi.elements.*
 class ElmSyntaxHighlightAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+        val h = Highlighter(holder)
         when (element) {
-            is ElmValueDeclaration -> highlightValueDeclaration(holder, element)
-            is ElmTypeAnnotation -> highlightTypeAnnotation(holder, element)
-            is ElmUpperCaseQID -> highlightUpperCaseQID(holder, element)
-            is ElmField -> highlightField(holder, element.lowerCaseIdentifier)
-            is ElmFieldType -> highlightField(holder, element.lowerCaseIdentifier)
-            is ElmFieldAccessExpr -> highlightField(holder, element.lowerCaseIdentifier)
-            is ElmFieldAccessorFunctionExpr -> highlightFieldAccessorFunction(holder, element)
-            is ElmUnionVariant -> highlightTypeConstructor(holder, element.upperCaseIdentifier)
-            is ElmTypeVariable -> highlightTypeExpr(holder, element)
-            is ElmLowerTypeName -> highlightTypeExpr(holder, element)
+            is ElmValueDeclaration -> h.valueDeclaration(element)
+            is ElmTypeAnnotation -> h.typeAnnotation(element)
+            is ElmUpperCaseQID -> h.upperCaseQID(element)
+            is ElmField -> h.field(element.lowerCaseIdentifier)
+            is ElmFieldType -> h.field(element.lowerCaseIdentifier)
+            is ElmFieldAccessExpr -> h.field(element.lowerCaseIdentifier)
+            is ElmFieldAccessorFunctionExpr -> h.fieldAccessorFunction(element)
+            is ElmUnionVariant -> h.unionVariant(element.upperCaseIdentifier)
+            is ElmTypeVariable -> h.typeExpr(element)
+            is ElmLowerTypeName -> h.typeExpr(element)
         }
     }
+}
 
-    private fun highlightTypeExpr(holder: AnnotationHolder, element: PsiElement) {
-        highlightElement(holder, element, ElmColor.TYPE_EXPR)
+
+@Suppress("EXPERIMENTAL_FEATURE_WARNING")
+inline class Highlighter(private val holder: AnnotationHolder) {
+
+    fun typeExpr(element: PsiElement) {
+        highlight(element, ElmColor.TYPE_EXPR)
     }
 
-    private fun highlightTypeConstructor(holder: AnnotationHolder, element: PsiElement) {
-        highlightElement(holder, element, ElmColor.UNION_VARIANT)
+    fun unionVariant(element: PsiElement) {
+        highlight(element, ElmColor.UNION_VARIANT)
     }
 
-    private fun highlightUpperCaseQID(holder: AnnotationHolder, element: ElmUpperCaseQID) {
+    fun upperCaseQID(element: ElmUpperCaseQID) {
         val isTypeExpr = PsiTreeUtil.getParentOfType(element,
                 ElmTypeExpression::class.java,
                 ElmUnionVariant::class.java)
         if (isTypeExpr != null) {
-            highlightTypeExpr(holder, element)
+            typeExpr(element)
             return
         }
 
@@ -47,39 +53,32 @@ class ElmSyntaxHighlightAnnotator : Annotator {
                 ElmImportClause::class.java,
                 ElmModuleDeclaration::class.java) != null
         if (!isModuleName) {
-            highlightElement(holder, element, ElmColor.UNION_VARIANT)
+            highlight(element, ElmColor.UNION_VARIANT)
         }
     }
 
-    private fun highlightValueDeclaration(holder: AnnotationHolder, declaration: ElmValueDeclaration) {
-        // first try to get the name of a value/function
-        // TODO [kl] we will need to do something smarter here if we want to highlight
-        // destructuring pattern value declarations (e.g. within a `let/in` expression)
-        // TODO [kl] cleanup the PSI so that this is cleaner (or use ElmNamedElement)
-        val nameElement = declaration.functionDeclarationLeft?.lowerCaseIdentifier
-
-        nameElement?.let {
-            highlightElement(holder, it, ElmColor.DEFINITION_NAME)
+    fun valueDeclaration(declaration: ElmValueDeclaration) {
+        declaration.declaredNames().forEach {
+            highlight(it, ElmColor.DEFINITION_NAME)
         }
     }
 
-    private fun highlightTypeAnnotation(holder: AnnotationHolder, typeAnnotation: ElmTypeAnnotation) {
+    fun typeAnnotation(typeAnnotation: ElmTypeAnnotation) {
         typeAnnotation.lowerCaseIdentifier?.let {
-            highlightElement(holder, it, ElmColor.DEFINITION_NAME)
+            highlight(it, ElmColor.DEFINITION_NAME)
         }
     }
 
-    private fun highlightField(holder: AnnotationHolder, element: PsiElement?) {
+    fun field(element: PsiElement?) {
         if (element == null) return
-        highlightElement(holder, element, ElmColor.RECORD_FIELD)
+        highlight(element, ElmColor.RECORD_FIELD)
     }
 
-    private fun highlightFieldAccessorFunction(holder: AnnotationHolder, element: ElmFieldAccessorFunctionExpr) {
-        highlightElement(holder, element, ElmColor.RECORD_FIELD_ACCESSOR)
+    fun fieldAccessorFunction(element: ElmFieldAccessorFunctionExpr) {
+        highlight(element, ElmColor.RECORD_FIELD_ACCESSOR)
     }
 
-    private fun highlightElement(holder: AnnotationHolder, element: PsiElement, color: ElmColor) {
-        //println("Highlighting %-60s \"%-20s\" with %s".format(element, element.text, color))
+    private fun highlight(element: PsiElement, color: ElmColor) {
         holder.createInfoAnnotation(element, null).textAttributes = color.textAttributesKey
     }
 }
