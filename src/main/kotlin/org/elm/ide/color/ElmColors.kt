@@ -1,9 +1,9 @@
 package org.elm.ide.color
 
-import com.intellij.openapi.editor.DefaultLanguageHighlighterColors as Default
 import com.intellij.openapi.editor.HighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.options.colors.AttributesDescriptor
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors as Default
 
 enum class ElmColor(humanName: String, default: TextAttributesKey) {
 
@@ -51,7 +51,7 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
     TYPE_EXPR("Type", Default.CLASS_REFERENCE),
 
     RECORD_FIELD("Records//Field", Default.INSTANCE_FIELD),
-    RECORD_FIELD_ACCESSOR("Record//Field Accessor", Default.STATIC_FIELD);
+    RECORD_FIELD_ACCESSOR("Records//Field Accessor", Default.STATIC_FIELD);
 
 
     val textAttributesKey = TextAttributesKey.createTextAttributesKey("org.elm.$name", default)
