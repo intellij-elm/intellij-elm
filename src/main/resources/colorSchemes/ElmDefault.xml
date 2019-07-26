@@ -18,7 +18,7 @@
             <option name="FONT_TYPE" value="1"/>
         </value>
     </option>
-    <option name="org.elm.TYPE">
+    <option name="org.elm.TYPE_CONSTRUCTOR">
         <value>
             <option name="FOREGROUND" value="#604578"/>
             <option name="FONT_TYPE" value="1"/>

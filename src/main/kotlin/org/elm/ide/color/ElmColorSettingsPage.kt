@@ -28,8 +28,10 @@ class ElmColorSettingsPage : ColorSettingsPage {
     // special tags in [demoText] for semantic highlighting
             mapOf(
                     "sig_left" to ElmColor.TYPE_ANNOTATION_NAME,
-                    "sig_right" to ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES,
-                    "type" to ElmColor.TYPE,
+                    "type" to ElmColor.TYPE_ANNOTATION_SIGNATURE_TYPES,
+                    "variant" to ElmColor.TYPE_CONSTRUCTOR,
+                    "accessor" to ElmColor.RECORD_FIELD_ACCESSOR,
+                    "field" to ElmColor.RECORD_FIELD,
                     "func_decl" to ElmColor.DEFINITION_NAME
             ).mapValues { it.value.textAttributesKey }
 
@@ -37,43 +39,43 @@ class ElmColorSettingsPage : ColorSettingsPage {
             demoCodeText
 }
 
-private val demoCodeText = """
+private const val demoCodeText = """
 module Todo exposing (..)
 
 import Html exposing (div, h1, ul, li, text)
 
 -- a single line comment
 
-type alias <type>Model</type> =
-    { page : <type>Int</type>
-    , title : <type>String</type>
-    , stepper : <type>Int</type> -> <type>Int</type>
+type alias Model =
+    { <field>page</field> : <type>Int</type>
+    , <field>title</field> : <type>String</type>
+    , <field>stepper</field> : <type>Int</type> -> <type>Int</type>
     }
 
-type <type>Msg</type>
-    = ModeA
-    | ModeB <type>Int</type>
+type Msg <type>a</type>
+    = <variant>ModeA</variant>
+    | <variant>ModeB</variant> <type>Maybe a</type>
 
-<sig_left>update</sig_left> : <sig_right>Msg</sig_right> -> <sig_right>Model</sig_right> -> ( <sig_right>Model</sig_right>, <sig_right>Cmd Msg</sig_right> )
+<sig_left>update</sig_left> : <type>Msg</type> -> <type>Model</type> -> ( <type>Model</type>, <type>Cmd Msg</type> )
 <func_decl>update</func_decl> msg model =
     case msg of
-        ModeA ->
+        <variant>ModeA</variant> ->
             { model
-                | page = 0
-                , title = "Mode A"
-                , stepper = (\k -> k + 1)
+                | <field>page</field> = 0
+                , <field>title</field> = "Mode A"
+                , <field>stepper</field> = (\k -> k + 1)
             }
                 ! []
 
-<sig_left>view</sig_left> : <sig_right>Model</sig_right> -> <sig_right>Html.Html Msg</sig_right>
+<sig_left>view</sig_left> : <type>Model</type> -> <type>Html.Html Msg</type>
 <func_decl>view</func_decl> model =
     let
-        itemify label =
+        <func_decl>itemify</func_decl> label =
             li [] [ text label ]
     in
         div []
             [ h1 [] [ text "Chapter One" ]
             , ul []
-                (List.map itemify model.items)
+                (List.map <accessor>.value</accessor> model.<field>items</field>)
             ]
 """

@@ -1,5 +1,6 @@
 package org.elm.ide.highlight
 
+import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase
 import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
@@ -16,7 +17,7 @@ class ElmSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getHighlightingLexer() =
             ElmIncrementalLexer()
 
-    override fun getTokenHighlights(tokenType: IElementType?) =
+    override fun getTokenHighlights(tokenType: IElementType?): Array<TextAttributesKey> =
             pack(map(tokenType)?.textAttributesKey)
 
     companion object {
