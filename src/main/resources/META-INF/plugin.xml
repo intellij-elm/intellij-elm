@@ -195,14 +195,14 @@
         <completion.contributor language="Elm"
                                 implementationClass="org.elm.lang.core.completion.ElmCompletionContributor"/>
         <lang.findUsagesProvider language="Elm" implementationClass="org.elm.ide.search.ElmFindUsagesProvider"/>
-        <lang.namesValidator language="Elm" implementationClass="org.elm.lang.refactoring.ElmNamesValidator"/>
+        <lang.namesValidator language="Elm" implementationClass="org.elm.ide.refactoring.ElmNamesValidator"/>
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
         <lang.psiStructureViewFactory language="Elm"
                                       implementationClass="org.elm.ide.structure.ElmStructureViewFactory"/>
         <lang.refactoringSupport language="Elm"
-                                 implementationClass="org.elm.lang.refactoring.ElmRefactoringSupportProvider"/>
-        <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiFileProcessor"/>
-        <renamePsiElementProcessor implementation="org.elm.lang.refactoring.ElmRenamePsiElementProcessor"/>
+                                 implementationClass="org.elm.ide.refactoring.ElmRefactoringSupportProvider"/>
+        <renamePsiElementProcessor implementation="org.elm.ide.refactoring.ElmRenamePsiFileProcessor"/>
+        <renamePsiElementProcessor implementation="org.elm.ide.refactoring.ElmRenamePsiElementProcessor"/>
         <lang.syntaxHighlighterFactory language="Elm"
                                        implementationClass="org.elm.ide.highlight.ElmSyntaxHighlighterFactory"/>
         <spellchecker.support language="Elm" implementationClass="org.elm.ide.spelling.ElmSpellCheckingStrategy"/>

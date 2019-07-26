@@ -2,17 +2,12 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import com.intellij.psi.search.LocalSearchScope
+import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmExposableTag
-import org.elm.lang.core.psi.ElmFunctionParamTag
-import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmValueAssigneeTag
-import org.elm.lang.core.psi.IdentifierCase
-import org.elm.lang.core.psi.directChildren
-import org.elm.lang.core.psi.isTopLevel
 import org.elm.lang.core.stubs.ElmFunctionDeclarationLeftStub
 
 
@@ -69,4 +64,24 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
             val p = parent
             return p is ElmValueDeclaration && p.isTopLevel
         }
+
+    override fun getUseScope(): SearchScope {
+        /*
+        Performance optimization to limit the [PsiReference] candidates that IntelliJ has to resolve
+        when finding occurrences of a function. The default search scope is the entire project.
+
+        If a function is declared in a `let` expression, we can restrict the scope to just the
+        `let` expression and its children.
+         */
+
+        if (!isTopLevel) {
+            return ancestors.firstOrNull { it is ElmLetInExpr }
+                    ?.let { LocalSearchScope(it) }
+                    ?: super.getUseScope()
+        }
+
+        // TODO consider optimizing this further for top-level functions which are not exposed by the module
+
+        return super.getUseScope()
+    }
 }

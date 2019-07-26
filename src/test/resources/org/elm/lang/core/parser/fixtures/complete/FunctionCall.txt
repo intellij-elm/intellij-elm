@@ -75,7 +75,7 @@ Elm File
         PsiWhiteSpace(' ')
         ElmNumberConstantExpr(NUMBER_CONSTANT_EXPR)
           PsiElement(NUMBER_LITERAL)('1')
-        PsiWhiteSpace(' ')
+      PsiWhiteSpace(' ')
       ElmOperator(OPERATOR)
         PsiElement(OPERATOR_IDENTIFIER)('+')
       PsiWhiteSpace(' ')

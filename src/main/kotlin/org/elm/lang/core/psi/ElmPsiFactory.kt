@@ -140,6 +140,23 @@ class ElmPsiFactory(private val project: Project) {
                     ?.childOfType<ElmCaseOfExpr>()?.branches
                     ?: error("Failed to create case of branches from $patterns")
 
+    fun createLetInWrapper(indent: String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
+        // NOTE: Assumes that each line in newDeclBody has had its indent normalized to match the indent of the first line.
+        //       Each line of newDeclBody must start with a non-whitespace character.
+        val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$indent        $it" }
+        val code = """
+foo =
+${indent}let
+${indent}    $newDeclName =
+$newDeclBodyIndented
+${indent}in
+${indent}$bodyText
+"""
+        return createFromText<ElmValueDeclaration>(code)
+                ?.childOfType<ElmLetInExpr>()
+                ?: error("Failed to create let/in wrapper")
+    }
+
     fun createNewline(): PsiElement = createWhitespace("\n")
 
     fun createWhitespace(ws: String): PsiElement =

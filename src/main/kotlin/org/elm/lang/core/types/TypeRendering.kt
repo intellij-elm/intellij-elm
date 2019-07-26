@@ -1,6 +1,7 @@
 package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
+import org.elm.lang.core.toElmLowerId
 
 /**
  * Render a [Ty] to a string that can be shown to the user.
@@ -94,10 +95,10 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
 
 /** Render a name or destructuring pattern to use as a parameter for a function or case branch */
 fun Ty.renderParam(): String {
-    return alias?.name?.toFirstCharLowerCased() ?: when (this) {
+    return alias?.name?.toElmLowerId() ?: when (this) {
         is TyFunction -> "function"
         TyShader -> "shader"
-        is TyUnion -> name.toFirstCharLowerCased()
+        is TyUnion -> name.toElmLowerId()
         is TyRecord, is MutableTyRecord -> "record"
         is TyTuple -> renderParam()
         is TyVar -> name
@@ -109,10 +110,6 @@ fun Ty.renderParam(): String {
 fun TyTuple.renderParam(): String {
     return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
 }
-
-private fun String.toFirstCharLowerCased(): String =
-        if (isEmpty()) ""
-        else first().toLowerCase() + substring(1)
 
 /** An infinite sequence of possible type variable names: (a, b, ... z, a1, b1, ...) */
 fun varNames(): Sequence<String> = (0..Int.MAX_VALUE).asSequence().map { nthVarName(it) }
