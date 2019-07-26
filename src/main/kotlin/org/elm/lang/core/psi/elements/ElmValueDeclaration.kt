@@ -71,8 +71,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
      * @param includeParameters include names declared as parameters to the function
      *                          (also includes destructured names). The default is `true`
      */
-    fun declaredNames(includeParameters: Boolean = true): List<ElmNamedElement> {
-        val namedElements = mutableListOf<ElmNamedElement>()
+    fun declaredNames(includeParameters: Boolean = true): List<ElmNameIdentifierOwner> {
+        val namedElements = mutableListOf<ElmNameIdentifierOwner>()
 
         if (functionDeclarationLeft != null) {
             // the most common case, a named function or value declaration
@@ -88,7 +88,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
 
         } else if (pattern != null) {
             // value destructuring assignment (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(pattern!!.descendantsOfType<ElmNamedElement>())
+            namedElements.addAll(pattern!!.descendantsOfType<ElmNameIdentifierOwner>())
         }
 
         return namedElements

@@ -4,12 +4,8 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmExposableTag
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.ElmValueAssigneeTag
-import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.stubs.ElmOperatorDeclarationLeftStub
 
 // TODO [drop 0.18] delete this entire file
@@ -37,9 +33,9 @@ class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclara
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
 
 
-    val namedParameters: List<ElmNamedElement>
+    val namedParameters: List<ElmNameIdentifierOwner>
         get() {
-            val results = mutableListOf<ElmNamedElement>()
+            val results = mutableListOf<ElmNameIdentifierOwner>()
             results.addAll(PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java))
             return results
         }
