@@ -22,6 +22,9 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
     override val upperCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(UPPER_CASE_IDENTIFIER)
 
+    override val qualifiers: List<PsiElement>
+        get() = upperCaseIdentifierList
+
     /**
      * The value identifier
      */
