@@ -25,7 +25,7 @@ interface ElmOperandTag : ElmPsiElement, ElmBinOpPartTag
 interface ElmBinOpPartTag : ElmPsiElement
 
 /** An element that can be the parameter of an [ElmFunctionDeclarationLeft], [ElmAnonymousFunctionExpr], or [ElmCaseOfBranch] */
-interface ElmNameDeclarationPatternTag : ElmNamedElement
+interface ElmNameDeclarationPatternTag : ElmNameIdentifierOwner
 
 /** A function being called as the child of a [ElmFunctionCallExpr] */
 interface ElmFunctionCallTargetTag : ElmAtomTag

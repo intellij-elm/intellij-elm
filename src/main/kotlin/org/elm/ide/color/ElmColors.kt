@@ -1,9 +1,9 @@
 package org.elm.ide.color
 
-import com.intellij.openapi.editor.DefaultLanguageHighlighterColors as Default
 import com.intellij.openapi.editor.HighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.options.colors.AttributesDescriptor
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors as Default
 
 enum class ElmColor(humanName: String, default: TextAttributesKey) {
 
@@ -32,27 +32,19 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
     DEFINITION_NAME("Definition Name", Default.FUNCTION_DECLARATION),
 
     /**
-     * The uppercase identifier for a type constructors and union variants
+     * The uppercase identifier for a union (custom type) variant
      */
-    TYPE_CONSTRUCTOR("Type", Default.CLASS_NAME),
+    UNION_VARIANT("Custom Type Variant", Default.IDENTIFIER),
 
     /**
-     * The lowercase identifier name in a type annotation.
-     *
-     * e.g. 'foo' in 'foo : String -> Cmd msg'
-     */
-    TYPE_ANNOTATION_NAME("Type Annotation//Name", Default.FUNCTION_DECLARATION),
-
-    /**
-     * Both uppercase and lowercase identifiers appearing on the right-hand side
-     * of a top-level type annotation.
+     * Type expressions
      *
      * e.g. 'String' and 'Cmd msg' in 'foo : String -> Cmd msg'
      */
-    TYPE_ANNOTATION_SIGNATURE_TYPES("Type Annotation//Signature", Default.CLASS_REFERENCE),
+    TYPE_EXPR("Type", Default.CLASS_REFERENCE),
 
     RECORD_FIELD("Records//Field", Default.INSTANCE_FIELD),
-    RECORD_FIELD_ACCESSOR("Record//Field Accessor", Default.STATIC_FIELD);
+    RECORD_FIELD_ACCESSOR("Records//Field Accessor", Default.STATIC_FIELD);
 
 
     val textAttributesKey = TextAttributesKey.createTextAttributesKey("org.elm.$name", default)

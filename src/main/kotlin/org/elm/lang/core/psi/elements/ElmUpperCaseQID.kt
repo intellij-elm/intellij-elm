@@ -21,6 +21,9 @@ class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID, ElmUnion
     override val upperCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(UPPER_CASE_IDENTIFIER)
 
+    override val qualifiers: List<PsiElement>
+        get() = upperCaseIdentifierList.dropLast(1)
+
     /**
      * True if the identifier is qualified by a module name (in the case of union or
      * record constructors) or the module exists in a hierarchy (in the case of a pure
