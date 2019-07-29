@@ -17,6 +17,7 @@
           <li>Find usages</li>
           <li>Type Inference and Type Checking</li>
           <li>Rename refactoring</li>
+          <li>Introduce "variable" refactoring (`let/in`)</li>
           <li>Graphical UI for running elm-test</li>
           <li>Re-format code using elm-format</li>
           <li>Generate type annotation for un-annotated function</li>
@@ -34,6 +35,15 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.3.0</b> <em>(2019-07-29)</em>
+                <ul>
+                    <li>Added "introduce variable" refactoring (creates a `let/in` for selected expression)</li>
+                    <li>Added syntax highlighting for record fields and made everything more consistent</li>
+                    <li>Improved record type errors by showing a diff of mismatched fields</li>
+                    <li>Added an inspection for detecting unused module alias imports</li>
+                    <li>Plus some more bug fixes</li>
+                </ul>
+            </li>
             <li><b>3.2.1</b> <em>(2019-07-16)</em>
                 <ul>
                     <li>Fixed a bug in 2019.2 EAP related to the Elm Settings UI</li>
