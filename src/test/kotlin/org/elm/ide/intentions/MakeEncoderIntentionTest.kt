@@ -30,7 +30,7 @@ encode : String -> Encode.Value{-caret-}
 """, """
 import Json.Encode as Encode
 
-encode : String -> Encode.Value{-caret-}
+encode : String -> Encode.Value
 encode string =
     Encode.string string
 """)
@@ -297,5 +297,85 @@ encodeBar bar =
 
         Qux ->
             Encode.string "Qux"
+""")
+
+    fun `test existing union encoder`() = doAvailableTest(
+            """
+import Json.Encode as Encode
+
+type Foo = Foo
+type alias Bar = { foo : Foo }
+existing : Foo -> Encode.Value
+existing foo = Encode.null
+
+encode : Bar -> Encode.Value{-caret-}
+""", """
+import Json.Encode as Encode
+
+type Foo = Foo
+type alias Bar = { foo : Foo }
+existing : Foo -> Encode.Value
+existing foo = Encode.null
+
+encode : Bar -> Encode.Value
+encode bar =
+    Encode.object <|
+        [ ( "foo", existing bar.foo )
+        ]
+""")
+
+    fun `test existing record encoder`() = doAvailableTest(
+            """
+import Json.Encode as Encode
+
+type alias Foo = { s : String }
+type alias Bar = { foo : Foo }
+existing : Foo -> Encode.Value
+existing foo = Encode.null
+
+encode : Bar -> Encode.Value{-caret-}
+""", """
+import Json.Encode as Encode
+
+type alias Foo = { s : String }
+type alias Bar = { foo : Foo }
+existing : Foo -> Encode.Value
+existing foo = Encode.null
+
+encode : Bar -> Encode.Value
+encode bar =
+    Encode.object <|
+        [ ( "foo", existing bar.foo )
+        ]
+""")
+
+    fun `test existing union encoder in other module`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Json.Encode as Encode
+import Foo
+
+type alias Bar = { foo : Foo.Foo }
+
+encode : Bar -> Encode.Value{-caret-}
+
+--@ Foo.elm
+module Foo exposing (..)
+import Json.Encode as Encode
+type Foo = Foo
+existing : Foo -> Encode.Value
+existing foo = Encode.null
+""", """
+import Json.Encode as Encode
+import Foo
+
+type alias Bar = { foo : Foo.Foo }
+
+encode : Bar -> Encode.Value
+encode bar =
+    Encode.object <|
+        [ ( "foo", Foo.existing bar.foo )
+        ]
+
 """)
 }

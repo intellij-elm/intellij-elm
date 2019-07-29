@@ -5,6 +5,7 @@ import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -81,7 +82,8 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
                 ?: return defaultResult
 
-        val declaration = ElmLookup.findByFileAndTy(element.elmFile, exprTy) ?: return defaultResult
+        val declaration: ElmTypeDeclaration = ElmLookup.findFirstByNameAndModule(exprTy.name, exprTy.module, element.elmFile)
+                ?: return defaultResult
 
         val allBranches = declaration.variantInference().value
         val missingBranches = allBranches.toMutableMap()
@@ -101,7 +103,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
             return Result.NoMissing
         }
 
-        val qualifierPrefix = ModuleScope.getQualifierForTypeName(element.elmFile, exprTy.module, exprTy.name)
+        val qualifierPrefix = ModuleScope.getQualifierForName(element.elmFile, exprTy.module, exprTy.name)
                 ?: ""
 
         return Result.MissingVariants(missingBranches.mapKeys { (k, _) -> qualifierPrefix + k })

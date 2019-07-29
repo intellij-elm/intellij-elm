@@ -11,9 +11,7 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
-import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.moduleName
 import org.elm.openapiext.findFileByPathTestAware
 import org.elm.workspace.ElmPackageProject
@@ -68,9 +66,13 @@ object ElmLookup {
     ): List<T> =
             findByName<T>(name, clientLocation).filter { it.moduleName == module }
 
-    // TODO[aj]: Docs
-    fun findByFileAndTy(file: ElmFile, exprTy: TyUnion): ElmTypeDeclaration? {
-        val candidates = findByNameAndModule<ElmTypeDeclaration>(exprTy.name, exprTy.module, file)
+    /** Like [findByNameAndModule], but in the case of ambiguity, returns the first match located in the [file] */
+    inline fun <reified T : ElmNamedElement> findFirstByNameAndModule(
+            name: String,
+            module: String,
+            file: ElmFile
+    ): T? {
+        val candidates = findByNameAndModule<T>(name, module, file)
         return when {
             candidates.size < 2 -> candidates.firstOrNull()
             else -> {

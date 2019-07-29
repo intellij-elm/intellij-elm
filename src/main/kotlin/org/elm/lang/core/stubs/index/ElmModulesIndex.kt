@@ -1,6 +1,5 @@
 package org.elm.lang.core.stubs.index
 
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.stubs.IndexSink
@@ -13,9 +12,6 @@ import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
 import org.elm.workspace.ElmProject
-
-private val logger = Logger.getInstance(ElmModulesIndex::class.java)
-
 
 /**
  * Find Elm modules within an Elm project.

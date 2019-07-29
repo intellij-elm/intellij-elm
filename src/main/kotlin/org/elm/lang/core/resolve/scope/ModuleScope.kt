@@ -91,12 +91,12 @@ object ModuleScope {
      * - `getQualifierForTypeName(A, B)` -> `""`
      * - `getQualifierForTypeName(X, Y)` -> `null`
      */
-    fun getQualifierForTypeName(elmFile: ElmFile, module: String, name: String): String? =
+    fun getQualifierForName(elmFile: ElmFile, module: String, name: String): String? =
             getImportDecls(elmFile)
                     .find { it.moduleQID.text == module }
                     ?.let { importDecl ->
                         when {
-                            getVisibleImportTypes(importDecl).any { it.name == name } -> ""
+                            getVisibleImportNames(importDecl).any { it.element.name == name } -> ""
                             importDecl.asClause != null -> importDecl.asClause!!.name + "."
                             else -> importDecl.moduleQID.text + "."
                         }

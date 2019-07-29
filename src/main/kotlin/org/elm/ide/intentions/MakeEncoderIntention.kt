@@ -6,10 +6,11 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmTypeAnnotation
+import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
 import org.elm.openapiext.runWriteCommandAction
@@ -80,6 +81,8 @@ private class EncoderGenerator(
     private val unionsToExpose = mutableSetOf<Ref>()
     /** Counter used to prevent name collision of generated functions */
     private var i = 1
+    /** Cache of previously generated callable expressions that aren't in [funcsByTy] */
+    private val encodersByTy = mutableMapOf<Ty, String>()
 
     /** Code to insert after the type annotation */
     val code by lazy {
@@ -140,33 +143,24 @@ private class EncoderGenerator(
                 }.flatten().toMap()
     }
 
-    /** Module qualifier prefixes to add to type names (does not include types not already imported) */
-    private val typeQualifiers by lazy {
-        // If this ends up being slow, we might be able to speed it up by caching
-        // ImportScope.getExposedTypes
-        declarations.associate {
-            it.toRef() to ModuleScope.getQualifierForTypeName(file, it.module, it.name)
-        }
-    }
-
     /** Qualified names of all imported modules */
     private val importedModules: Set<String> by lazy {
         file.findChildrenByClass(ElmImportClause::class.java).mapTo(mutableSetOf()) { it.referenceName }
     }
 
-    /** Get the module qualifier prefix to add to a type name */
+    /** Get the module qualifier prefix to add to a name */
     private fun qualifierFor(ref: Ref): String {
         return when (ref.module) {
             moduleName -> ""
-            // We always fully qualify types from modules that we add imports for
+            // We always fully qualify references to modules that we add imports for
             !in importedModules -> "${ref.module}."
-            else -> typeQualifiers[ref] ?: ""
+            else -> ModuleScope.getQualifierForName(file, ref.module, ref.name) ?: ""
         }
     }
 
     /** Return a unary callable expression that will encode [ty] */
     private fun gen(ty: Ty): String = when (ty) {
-        is TyRecord -> generateRecordFunc(ty).name
+        is TyRecord -> generateRecordFunc(ty)
         is TyUnion -> generateUnion(ty)
         is TyVar -> "Debug.todo \"Can't generate encoders for type variables\""
         is TyTuple -> generateTuple(ty)
@@ -187,12 +181,14 @@ private class EncoderGenerator(
         ty.module == "Array" && ty.name == "Array" -> "Encode.array ${gen(ty.parameters[0])}"
         ty.module == "Maybe" && ty.name == "Maybe" -> "(Maybe.map ${gen(ty.parameters[0])} >> Maybe.withDefault Encode.null)"
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
-        else -> generateUnionFunc(ty).name
+        else -> findExistingEncoder(ty, ty.toRef()) ?: generateUnionFunc(ty)
     }
 
 
-    private fun generateRecordFunc(ty: TyRecord): GeneratedFunction {
-        if (ty in funcsByTy) return funcsByTy[ty]!!
+    private fun generateRecordFunc(ty: TyRecord): String {
+        val cached = ty.alias?.let { findExistingEncoder(ty, it.toRef()) } ?: funcsByTy[ty]?.name
+        if (cached != null) return cached
+
 
         val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: "Record${i++}"}"
         val param = ty.renderParam()
@@ -207,15 +203,15 @@ private class EncoderGenerator(
 
         val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body, qualifier = qualifier)
         funcsByTy[ty] = func
-        return func
+        return name
     }
 
-    private fun generateUnionFunc(ty: TyUnion): GeneratedFunction {
-        if (ty in funcsByTy) return funcsByTy[ty]!!
+    private fun generateUnionFunc(ty: TyUnion): String {
+        val cached = findExistingEncoder(ty, ty.toRef()) ?: funcsByTy[ty]?.name
+        if (cached != null) return cached
 
-        val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: ty.name}"
         val param = ty.renderParam()
-        val decl = ElmLookup.findByFileAndTy(file, ty)
+        val decl: ElmTypeDeclaration? = ElmLookup.findFirstByNameAndModule(ty.name, ty.module, file)
         val body = if (decl == null) {
             "Debug.todo \"Can't generate encoder for ${ty.name}\""
         } else {
@@ -245,9 +241,36 @@ private class EncoderGenerator(
                 }
             }
         }
+
+        val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: ty.name}"
         val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body, qualifier = qualifierFor(ty.toRef()))
         funcsByTy[ty] = func
-        return func
+        return name
+    }
+
+    private fun findExistingEncoder(ty: Ty, ref: Ref): String? {
+        if (ty in encodersByTy) return encodersByTy[ty]!!
+        val declaration = ElmLookup.findByNameAndModule<ElmNamedElement>(ref.name, ref.module, file)
+                .firstOrNull { it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration } ?: return null
+
+        val possibleValues =
+                ModuleScope.getVisibleValues(file).all + ImportScope(declaration.elmFile).getExposedValues()
+
+        possibleValues
+                .filterIsInstance<ElmFunctionDeclarationLeft>()
+                .forEach {
+                    val t = it.findTy()
+                    if (t is TyFunction &&
+                            t.parameters == listOf(ty) &&
+                            t.ret is TyUnion &&
+                            t.ret.module == "Json.Encode" &&
+                            t.ret.name == "Value") {
+                        val code = qualifierFor(ref) + it.name
+                        encodersByTy[ty] = code
+                        return code
+                    }
+                }
+        return null
     }
 
     private fun generateDict(ty: TyUnion): String {
