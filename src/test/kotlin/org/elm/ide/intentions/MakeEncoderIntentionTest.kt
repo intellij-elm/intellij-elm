@@ -27,8 +27,7 @@ encode : String -> String -> Encode.Value{-caret-}
 import Json.Encode as Encode
 
 encode : String -> Encode.Value{-caret-}
-"""
-            , """
+""", """
 import Json.Encode as Encode
 
 encode : String -> Encode.Value{-caret-}
@@ -61,8 +60,7 @@ type alias Foo =
 
 
 foo{-caret-} : Foo -> Encode.Value
-"""
-            , """
+""", """
 import Json.Encode as Encode
 import Dict exposing (Dict)
 import Set exposing (Set)
@@ -106,14 +104,15 @@ foo foo =
 
     fun `test mixed records and unions`() = doAvailableTest(
             """
+module Main exposing (..)
 import Json.Encode as Encode
 type Enum = Baz | Qux
 type alias Foo = { foo1 : String, foo2 : Int, enum : Enum }
 type alias Bar = { bar1 : String, fooRef : Foo }
 
 f : Bar -> Encode.Value{-caret-}
-"""
-            , """
+""", """
+module Main exposing (..)
 import Json.Encode as Encode
 type Enum = Baz | Qux
 type alias Foo = { foo1 : String, foo2 : Int, enum : Enum }
@@ -158,8 +157,7 @@ encode : Model -> Encode.Value{-caret-}
 --@ Foo.elm
 module Foo exposing (Bar)
 type alias Bar = { s : String }
-"""
-            , """
+""", """
 import Json.Encode as Encode
 import Foo
 
@@ -183,6 +181,39 @@ encodeBar : Bar -> Encode.Value
 encodeBar bar =
     Encode.object <|
         [ ( "f", encodeFooBar bar.f )
+        ]
+""")
+
+    fun `test adding import`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Json.Encode as Encode
+import Foo exposing (Foo)
+
+encode : Foo -> Encode.Value{-caret-}
+--@ Foo.elm
+module Foo exposing (..)
+import Bar
+type alias Foo = { bar : Bar.Bar }
+--@ Bar.elm
+module Bar exposing (..)
+type alias Bar = { s : String }
+""", """
+import Bar
+import Json.Encode as Encode
+import Foo exposing (Foo)
+
+encode : Foo -> Encode.Value
+encode foo =
+    Encode.object <|
+        [ ( "bar", encodeBar foo.bar )
+        ]
+
+
+encodeBar : Bar.Bar -> Encode.Value
+encodeBar bar =
+    Encode.object <|
+        [ ( "s", Encode.string bar.s )
         ]
 """)
 }

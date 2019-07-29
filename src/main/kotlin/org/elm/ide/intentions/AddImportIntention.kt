@@ -8,6 +8,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
+import org.elm.ide.intentions.ImportAdder.addImportForCandidate
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
@@ -80,72 +81,13 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
                 // they know what they're getting into. See https://github.com/klazuka/intellij-elm/issues/309
                 when {
                     candidate.moduleAlias != null -> promptToSelectCandidate(context, file)
-                    else -> addImportForCandidate(candidate, file, context)
+                    else -> addImportForCandidate(candidate, file, context.isQualified)
                 }
             }
             else -> promptToSelectCandidate(context, file)
         }
     }
 
-    private fun addImportForCandidate(candidate: Candidate, file: ElmFile, context: Context) {
-        val factory = ElmPsiFactory(file.project)
-        val newImport = if (context.isQualified)
-            factory.createImport(candidate.moduleName, alias = candidate.moduleAlias)
-        else
-            factory.createImportExposing(candidate.moduleName, listOf(candidate.nameToBeExposed))
-
-        val existingImport = ModuleScope.getImportDecls(file)
-                .find { it.moduleQID.text == candidate.moduleName }
-        if (existingImport != null) {
-            // merge with existing import
-            val mergedImport = mergeImports(file, existingImport, newImport)
-            existingImport.replace(mergedImport)
-        } else {
-            // insert a new import clause
-            val insertPosition = getInsertPosition(file, candidate.moduleName)
-            doInsert(newImport, insertPosition)
-        }
-    }
-
-    private fun doInsert(importClause: ElmImportClause, insertPosition: ASTNode) {
-        val parent = insertPosition.treeParent
-        val factory = ElmPsiFactory(importClause.project)
-        // insert the import clause followed by a newline immediately before `insertPosition`
-        val newlineNode = factory.createNewline().node
-        parent.addChild(newlineNode, insertPosition)
-        parent.addChild(importClause.node, newlineNode)
-    }
-
-    /**
-     * Returns the node which will *follow* the new import clause
-     */
-    private fun getInsertPosition(file: ElmFile, moduleName: String): ASTNode {
-        val existingImports = ModuleScope.getImportDecls(file)
-        return when {
-            existingImports.isEmpty() -> prepareInsertInNewSection(file)
-            else -> getSortedInsertPosition(moduleName, existingImports)
-        }
-    }
-
-    private fun prepareInsertInNewSection(sourceFile: ElmFile): ASTNode {
-        // prepare for insert immediately before the first top-level declaration
-        return sourceFile.node.findChildByType(ELM_TOP_LEVEL_DECLARATIONS)!!
-    }
-
-    private fun getSortedInsertPosition(moduleName: String, existingImports: List<ElmImportClause>): ASTNode {
-        // NOTE: assumes that they are already sorted
-        for (import in existingImports) {
-            if (moduleName < import.moduleQID.text)
-                return import.node
-        }
-
-        // It belongs at the end: go past the last import and its newline
-        var node = existingImports.last().node.treeNext
-        while (!node.textContains('\n')) {
-            node = node.treeNext
-        }
-        return node.treeNext
-    }
 
     private fun promptToSelectCandidate(context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
@@ -165,7 +107,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         }
         picker.choose(candidates) { candidate ->
             project.runWriteCommandAction {
-                addImportForCandidate(candidate, file, context)
+                addImportForCandidate(candidate, file, context.isQualified)
             }
         }
     }
@@ -262,5 +204,67 @@ data class Candidate(
                     ref.qualifierPrefix
                 else
                     null
+    }
+}
+
+object ImportAdder {
+    fun addImportForCandidate(candidate: Candidate, file: ElmFile, isQualified: Boolean) {
+        val factory = ElmPsiFactory(file.project)
+        val newImport = if (isQualified)
+            factory.createImport(candidate.moduleName, alias = candidate.moduleAlias)
+        else
+            factory.createImportExposing(candidate.moduleName, listOf(candidate.nameToBeExposed))
+
+        val existingImport = ModuleScope.getImportDecls(file)
+                .find { it.moduleQID.text == candidate.moduleName }
+        if (existingImport != null) {
+            // merge with existing import
+            val mergedImport = mergeImports(file, existingImport, newImport)
+            existingImport.replace(mergedImport)
+        } else {
+            // insert a new import clause
+            val insertPosition = getInsertPosition(file, candidate.moduleName)
+            doInsert(newImport, insertPosition)
+        }
+    }
+
+    private fun doInsert(importClause: ElmImportClause, insertPosition: ASTNode) {
+        val parent = insertPosition.treeParent
+        val factory = ElmPsiFactory(importClause.project)
+        // insert the import clause followed by a newline immediately before `insertPosition`
+        val newlineNode = factory.createNewline().node
+        parent.addChild(newlineNode, insertPosition)
+        parent.addChild(importClause.node, newlineNode)
+    }
+
+    /**
+     * Returns the node which will *follow* the new import clause
+     */
+    private fun getInsertPosition(file: ElmFile, moduleName: String): ASTNode {
+        val existingImports = ModuleScope.getImportDecls(file)
+        return when {
+            existingImports.isEmpty() -> prepareInsertInNewSection(file)
+            else -> getSortedInsertPosition(moduleName, existingImports)
+        }
+    }
+
+    private fun prepareInsertInNewSection(sourceFile: ElmFile): ASTNode {
+        // prepare for insert immediately before the first top-level declaration
+        return sourceFile.node.findChildByType(ELM_TOP_LEVEL_DECLARATIONS)!!
+    }
+
+    private fun getSortedInsertPosition(moduleName: String, existingImports: List<ElmImportClause>): ASTNode {
+        // NOTE: assumes that they are already sorted
+        for (import in existingImports) {
+            if (moduleName < import.moduleQID.text)
+                return import.node
+        }
+
+        // It belongs at the end: go past the last import and its newline
+        var node = existingImports.last().node.treeNext
+        while (!node.textContains('\n')) {
+            node = node.treeNext
+        }
+        return node.treeNext
     }
 }

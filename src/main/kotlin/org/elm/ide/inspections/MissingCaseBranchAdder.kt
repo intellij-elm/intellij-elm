@@ -33,17 +33,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     private val document = element.containingFile
             ?.let { PsiDocumentManager.getInstance(element.project).getDocument(it) }
 
-    // This should be a lazy {}, but using it causes a compilation error due to conflicting
-    // declarations.
-    val result: Result
-        get() {
-
-            if (_result == null) {
-                _result = if (document == null) Result.NoMissing else calcMissingBranches()
-            }
-            return _result!!
-        }
-    private var _result: Result? = null
+    val result: Result by lazy { if (document == null) Result.NoMissing else calcMissingBranches() }
 
     fun addMissingBranches() {
         val result = this.result as? Result.MissingVariants ?: return

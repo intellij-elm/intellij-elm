@@ -3,9 +3,11 @@ package org.elm.ide.intentions
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
@@ -37,27 +39,17 @@ class MakeEncoderIntention : ElmAtCaretIntentionActionBase<MakeEncoderIntention.
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        val declarations = context.ty.allDeclarations().toList()
-        val code = EncoderGenerator.generate(context.file, context.ty, context.name, declarations)
+        val encoder = EncoderGenerator(context.file, context.ty, context.name)
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
-            editor.document.insertString(context.endOffset, code)
-        }
-    }
-
-    // TODO: call this
-    private fun imports(file: ElmFile, declarations: List<DeclarationInTy>): List<Candidate> {
-        val moduleName = file.getModuleDecl()?.name ?: ""
-        val visibleTypes = ModuleScope.getVisibleTypes(file).all
-                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
-        return declarations
-                .filter { it.module != moduleName && it.toRef() !in visibleTypes }
-                .map {
-                    Candidate(
-                            moduleName = it.name,
-                            moduleAlias = null,
-                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else it.name
-                    )
+            editor.document.insertString(context.endOffset, encoder.code)
+            if (encoder.imports.isNotEmpty()) {
+                // Commit the string changes so we can work with the new PSI
+                PsiDocumentManager.getInstance(context.file.project).commitDocument(editor.document)
+                for (import in encoder.imports) {
+                    ImportAdder.addImportForCandidate(import, context.file, true)
                 }
+            }
+        }
     }
 }
 
@@ -75,61 +67,87 @@ private fun TyUnion.toRef() = Ref(module, name)
 private fun AliasInfo.toRef() = Ref(module, name)
 private fun DeclarationInTy.toRef() = Ref(module, name)
 
-private class EncoderGenerator private constructor(
+private class EncoderGenerator(
         private val file: ElmFile,
-        private val funcNames: Map<Ref, String>,
-        private val typeQualifiers: Map<Ref, String?>
+        private val root: Ty,
+        private val functionName: String
 ) {
-    companion object {
-        fun generate(file: ElmFile, root: Ty, name: String, declarations: List<DeclarationInTy>): String {
-            val funcNames = funcNames(declarations)
-            val typeQualifiers = typeQualifiers(file, declarations)
+    private val declarations by lazy { root.allDeclarations().toList() }
+    private val funcsByTy = mutableMapOf<Ty, GeneratedFunction>()
+    private var i = 1
 
-            val generator = EncoderGenerator(file, funcNames, typeQualifiers)
-            val genBody = generator.gen(root)
-            val rootFunc = generator.funcsByTy[root]
-            generator.funcsByTy.remove(root)
-            val param = rootFunc?.paramName ?: root.renderParam()
-            val body = rootFunc?.body ?: "    $genBody $param"
+    val code by lazy {
+        val genBody = gen(root)
+        val rootFunc = funcsByTy[root]
+        funcsByTy.remove(root)
+        val param = rootFunc?.paramName ?: root.renderParam()
+        val body = rootFunc?.body ?: "    $genBody $param"
 
-            return buildString {
-                append("\n$name $param =\n")
-                append(body)
+        buildString {
+            append("\n$functionName $param =\n")
+            append(body)
 
-                for (f in generator.funcsByTy.values) {
-                    append("\n\n\n")
-                    append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> Encode.Value\n")
-                    append("${f.name} ${f.paramName} =\n")
-                    append(f.body)
-                }
-            }
-        }
-
-        // There might be multiple types with the same name in different modules, so add the module
-        // name the function for any type with a conflict that isn't defined in this module
-        private fun funcNames(declarations: List<DeclarationInTy>): Map<Ref, String> {
-            return declarations.groupBy { it.name }
-                    .map { (_, decls) ->
-                        decls.map {
-                            it.toRef() to when {
-                                decls.size == 1 -> it.name
-                                else -> it.module.replace(".", "") + it.name
-                            }
-                        }
-                    }.flatten().toMap()
-        }
-
-        private fun typeQualifiers(file: ElmFile, declarations: List<DeclarationInTy>): Map<Ref, String?> {
-            // If this ends of being slow, we might be able to speed it up by caching
-            // ImportScope.getExposedTypes
-            return declarations.associate {
-                it.toRef() to ModuleScope.getQualifierForTypeName(file, it.module, it.name)
+            for (f in funcsByTy.values) {
+                append("\n\n\n")
+                append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> Encode.Value\n")
+                append("${f.name} ${f.paramName} =\n")
+                append(f.body)
             }
         }
     }
 
-    private val funcsByTy = mutableMapOf<Ty, GeneratedFunction>()
-    private var i = 1
+    val imports by lazy {
+        val visibleTypes = ModuleScope.getVisibleTypes(file).all
+                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
+        val visibleModules = importedModules + setOf("", "List", moduleName)
+        declarations
+                .filter { it.module !in visibleModules && it.toRef() !in visibleTypes }
+                .map {
+                    Candidate(
+                            moduleName = it.module,
+                            moduleAlias = null,
+                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else it.name
+                    )
+                }
+    }
+
+    private val moduleName by lazy { file.getModuleDecl()?.name ?: "" }
+
+
+    // There might be multiple types with the same name in different modules, so add the module
+    // name the function for any type with a conflict that isn't defined in this module
+    private val funcNames by lazy {
+        declarations.groupBy { it.name }
+                .map { (_, decls) ->
+                    decls.map {
+                        it.toRef() to when {
+                            decls.size == 1 -> it.name
+                            else -> it.module.replace(".", "") + it.name
+                        }
+                    }
+                }.flatten().toMap()
+    }
+
+    private val typeQualifiers by lazy {
+        // If this ends up being slow, we might be able to speed it up by caching
+        // ImportScope.getExposedTypes
+        declarations.associate {
+            it.toRef() to ModuleScope.getQualifierForTypeName(file, it.module, it.name)
+        }
+    }
+
+    private val importedModules: Set<String> by lazy {
+        file.findChildrenByClass(ElmImportClause::class.java).mapTo(mutableSetOf()) { it.referenceName }
+    }
+
+    private fun qualifierFor(ref: Ref): String {
+        return when (ref.module) {
+            moduleName -> ""
+            // We always fully qualify types from modules that we add imports for
+            !in importedModules -> "${ref.module}."
+            else -> typeQualifiers[ref] ?: ""
+        }
+    }
 
     private fun gen(ty: Ty): String = when (ty) {
         is TyRecord -> generateRecordFunc(ty).name
@@ -162,7 +180,7 @@ private class EncoderGenerator private constructor(
 
         val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: "Record${i++}"}"
         val param = ty.renderParam()
-        val qualifier = ty.alias?.let { typeQualifiers[it.toRef()] } ?: ""
+        val qualifier = ty.alias?.let { qualifierFor(it.toRef()) } ?: ""
         val body = buildString {
             append("    Encode.object <|\n        [ ")
             ty.fields.entries.joinTo(this, separator = "\n        , ") { (k, v) ->
@@ -182,7 +200,6 @@ private class EncoderGenerator private constructor(
         val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: ty.name}"
         val param = ty.renderParam()
         val decl = ElmLookup.findByFileAndTy(file, ty)
-        val qualifier = typeQualifiers[ty.toRef()] ?: ""
         val body = if (decl == null) {
             "Debug.todo \"Can't generate encoder for ${ty.name}\""
         } else {
@@ -198,7 +215,7 @@ private class EncoderGenerator private constructor(
                 }
             }
         }
-        val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body, qualifier = qualifier)
+        val func = GeneratedFunction(name = name, paramTy = ty, paramName = param, body = body, qualifier = qualifierFor(ty.toRef()))
         funcsByTy[ty] = func
         return func
     }
