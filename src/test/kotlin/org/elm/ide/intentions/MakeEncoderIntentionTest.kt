@@ -151,8 +151,8 @@ import Json.Encode as Encode
 import Time
 
 type UUID = UUID String
-type Posix = Posix Int
-type alias Foo = { uuid: UUID, time: Posix }
+type Time = Time Int
+type alias Foo = { uuid: UUID, time: Time }
 
 encode : Foo -> Encode.Value{-caret-}
 """, """
@@ -160,7 +160,7 @@ import Json.Encode as Encode
 import Time
 
 type UUID = UUID String
-type Posix = Time Int
+type Time = Time Int
 type alias Foo = { uuid: UUID, time: Time }
 
 encode : Foo -> Encode.Value
@@ -255,5 +255,47 @@ encodeBar bar =
     Encode.object <|
         [ ( "s", Encode.string bar.s )
         ]
+""")
+
+    fun `test adding variant imports`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Json.Encode as Encode
+import Foo
+
+type alias Baz = { foo : Foo.Foo, bar : Foo.Bar }
+encode : Baz -> Encode.Value{-caret-}
+--@ Foo.elm
+module Foo exposing (..)
+type Foo = Foo String
+type Bar = Baz | Qux
+""", """
+import Json.Encode as Encode
+import Foo exposing (Bar(..), Foo(..))
+
+type alias Baz = { foo : Foo.Foo, bar : Foo.Bar }
+encode : Baz -> Encode.Value
+encode baz =
+    Encode.object <|
+        [ ( "foo", encodeFoo baz.foo )
+        , ( "bar", encodeBar baz.bar )
+        ]
+
+
+encodeFoo : Foo.Foo -> Encode.Value
+encodeFoo foo =
+    case foo of
+        Foo string ->
+            Encode.string string
+
+
+encodeBar : Foo.Bar -> Encode.Value
+encodeBar bar =
+    case bar of
+        Baz ->
+            Encode.string "Baz"
+
+        Qux ->
+            Encode.string "Qux"
 """)
 }

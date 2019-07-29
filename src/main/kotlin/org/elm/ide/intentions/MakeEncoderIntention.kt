@@ -1,6 +1,5 @@
 package org.elm.ide.intentions
 
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -13,6 +12,7 @@ import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
+import org.elm.openapiext.runWriteCommandAction
 
 class MakeEncoderIntention : ElmAtCaretIntentionActionBase<MakeEncoderIntention.Context>() {
 
@@ -40,13 +40,13 @@ class MakeEncoderIntention : ElmAtCaretIntentionActionBase<MakeEncoderIntention.
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         val encoder = EncoderGenerator(context.file, context.ty, context.name)
-        WriteCommandAction.writeCommandAction(project).run<Throwable> {
+        project.runWriteCommandAction {
             editor.document.insertString(context.endOffset, encoder.code)
             if (encoder.imports.isNotEmpty()) {
                 // Commit the string changes so we can work with the new PSI
                 PsiDocumentManager.getInstance(context.file.project).commitDocument(editor.document)
                 for (import in encoder.imports) {
-                    ImportAdder.addImportForCandidate(import, context.file, true)
+                    ImportAdder.addImportForCandidate(import, context.file, import.nameToBeExposed.isEmpty())
                 }
             }
         }
@@ -72,10 +72,16 @@ private class EncoderGenerator(
         private val root: Ty,
         private val functionName: String
 ) {
+    /** All types and aliases referenced in the root ty */
     private val declarations by lazy { root.allDeclarations().toList() }
+    /** Additional encoder functions to generate */
     private val funcsByTy = mutableMapOf<Ty, GeneratedFunction>()
+    /** Unions that need their variants exposed. */
+    private val unionsToExpose = mutableSetOf<Ref>()
+    /** Counter used to prevent name collision of generated functions */
     private var i = 1
 
+    /** Code to insert after the type annotation */
     val code by lazy {
         val genBody = gen(root)
         val rootFunc = funcsByTy[root]
@@ -96,24 +102,30 @@ private class EncoderGenerator(
         }
     }
 
+    /** Imports to add because they are referenced by generated code. */
     val imports by lazy {
         val visibleTypes = ModuleScope.getVisibleTypes(file).all
                 .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
-        val visibleModules = importedModules + setOf("", "List", moduleName)
+        val visibleModules = importedModules + setOf("", "List")
         declarations
-                .filter { it.module !in visibleModules && it.toRef() !in visibleTypes }
+                .filter {
+                    it.module != moduleName &&
+                            (it.toRef() in unionsToExpose || it.module !in visibleModules && it.toRef() !in visibleTypes)
+                }
                 .map {
                     Candidate(
                             moduleName = it.module,
                             moduleAlias = null,
-                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else it.name
+                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else ""
                     )
                 }
     }
 
+    /** The name of the module in the current file */
     private val moduleName by lazy { file.getModuleDecl()?.name ?: "" }
 
 
+    /** The name to use for the encoder function for each type (does not include the "encoder" prefix) */
     // There might be multiple types with the same name in different modules, so add the module
     // name the function for any type with a conflict that isn't defined in this module
     private val funcNames by lazy {
@@ -128,6 +140,7 @@ private class EncoderGenerator(
                 }.flatten().toMap()
     }
 
+    /** Module qualifier prefixes to add to type names (does not include types not already imported) */
     private val typeQualifiers by lazy {
         // If this ends up being slow, we might be able to speed it up by caching
         // ImportScope.getExposedTypes
@@ -136,10 +149,12 @@ private class EncoderGenerator(
         }
     }
 
+    /** Qualified names of all imported modules */
     private val importedModules: Set<String> by lazy {
         file.findChildrenByClass(ElmImportClause::class.java).mapTo(mutableSetOf()) { it.referenceName }
     }
 
+    /** Get the module qualifier prefix to add to a type name */
     private fun qualifierFor(ref: Ref): String {
         return when (ref.module) {
             moduleName -> ""
@@ -149,6 +164,7 @@ private class EncoderGenerator(
         }
     }
 
+    /** Return a unary callable expression that will encode [ty] */
     private fun gen(ty: Ty): String = when (ty) {
         is TyRecord -> generateRecordFunc(ty).name
         is TyUnion -> generateUnion(ty)
@@ -203,6 +219,7 @@ private class EncoderGenerator(
         val body = if (decl == null) {
             "Debug.todo \"Can't generate encoder for ${ty.name}\""
         } else {
+            unionsToExpose += ty.toRef()
             val variants = decl.variantInference().value
             buildString {
                 append("    case $param of\n")
