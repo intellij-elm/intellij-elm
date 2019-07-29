@@ -145,6 +145,46 @@ encodeFoo foo =
         ]
 """)
 
+    fun `test union wrapper`() = doAvailableTest(
+            """
+import Json.Encode as Encode
+import Time
+
+type UUID = UUID String
+type Posix = Posix Int
+type alias Foo = { uuid: UUID, time: Posix }
+
+encode : Foo -> Encode.Value{-caret-}
+""", """
+import Json.Encode as Encode
+import Time
+
+type UUID = UUID String
+type Posix = Time Int
+type alias Foo = { uuid: UUID, time: Time }
+
+encode : Foo -> Encode.Value
+encode foo =
+    Encode.object <|
+        [ ( "uuid", encodeUUID foo.uuid )
+        , ( "time", encodeTime foo.time )
+        ]
+
+
+encodeUUID : UUID -> Encode.Value
+encodeUUID uuid =
+    case uuid of
+        UUID string ->
+            Encode.string string
+
+
+encodeTime : Time -> Encode.Value
+encodeTime time =
+    case time of
+        Time int ->
+            Encode.int int
+""")
+
     fun `test name conflict`() = doAvailableTestWithFileTree(
             """
 --@ main.elm

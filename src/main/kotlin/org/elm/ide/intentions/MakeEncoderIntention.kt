@@ -207,11 +207,24 @@ private class EncoderGenerator(
             buildString {
                 append("    case $param of\n")
 
-                variants.keys.joinTo(this, separator = "\n\n") { variant ->
-                    """
-                    |        $variant ->
-                    |            Encode.string "$variant"
-                    """.trimMargin()
+                val singleOrNull = variants.values.singleOrNull()
+                if (singleOrNull?.size == 1) {
+                    // For type wrappers like Time.Posix, encode their wrapped type
+                    val (k, v) = variants.entries.single()
+                    val p = v[0].renderParam()
+                    append("""
+                    |        $k $p ->
+                    |            ${gen(v[0])} $p
+                    """.trimMargin())
+                } else {
+                    // Otherwise treat them as enums. This is invalid code for variants with
+                    // parameters, but it's a helpful starting point.
+                    variants.keys.joinTo(this, separator = "\n\n") { variant ->
+                        """
+                        |        $variant ->
+                        |            Encode.string "$variant"
+                        """.trimMargin()
+                    }
                 }
             }
         }
