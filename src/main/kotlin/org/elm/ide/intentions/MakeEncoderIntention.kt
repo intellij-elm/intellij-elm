@@ -160,7 +160,7 @@ private class EncoderGenerator(
 
     /** Return a unary callable expression that will encode [ty] */
     private fun gen(ty: Ty): String = when (ty) {
-        is TyRecord -> generateRecordFunc(ty)
+        is TyRecord -> generateRecord(ty)
         is TyUnion -> generateUnion(ty)
         is TyVar -> "Debug.todo \"Can't generate encoders for type variables\""
         is TyTuple -> generateTuple(ty)
@@ -184,8 +184,7 @@ private class EncoderGenerator(
         else -> generateUnionFunc(ty)
     }
 
-
-    private fun generateRecordFunc(ty: TyRecord): String {
+    private fun generateRecord(ty: TyRecord): String {
         val cached = ty.alias?.let { findExistingEncoder(ty, it.toRef()) } ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
@@ -210,23 +209,28 @@ private class EncoderGenerator(
         val cached = findExistingEncoder(ty, ty.toRef()) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
-        val param = ty.renderParam()
+        val renderedTy = ty.renderParam()
         val decl: ElmTypeDeclaration? = ElmLookup.findFirstByNameAndModule(ty.name, ty.module, file)
-        val body = if (decl == null) {
-            "Debug.todo \"Can't generate encoder for ${ty.name}\""
+        val (param, body) = if (decl == null) {
+            renderedTy to "Debug.todo \"Can't generate encoder for ${ty.name}\""
         } else {
             unionsToExpose += ty.toRef()
             val variants = decl.variantInference().value
-            buildString {
-                append("    case $param of\n")
-
-                variants.entries.joinTo(this, separator = "\n\n") { (variant, params) ->
-                    val pattern = (listOf(variant) + params.map { it.renderParam() }).joinToString(" ")
-                    val expr = when (params.size) {
-                        0 -> "Encode.string \"$variant\""
-                        1 -> "${gen(params[0])} ${params[0].renderParam()}"
-                        else -> "Debug.todo \"Cannot generate encoder for variant with multiple parameters\""
-                    }
+            val patternsAndExprs = variants.map { (variant, params) ->
+                val pattern = (listOf(variant) + params.map { it.renderParam() }).joinToString(" ")
+                val expr = when (params.size) {
+                    0 -> "Encode.string \"$variant\""
+                    1 -> "${gen(params[0])} ${params[0].renderParam()}"
+                    else -> "Debug.todo \"Cannot generate encoder for variant with multiple parameters\""
+                }
+                pattern to expr
+            }
+            if (variants.size == 1) {
+                // For a single variant, we can pattern match it in the function parameter
+                "(${patternsAndExprs[0].first})" to "    ${patternsAndExprs[0].second}"
+            } else {
+                // Otherwise we have to use a case expression
+                renderedTy to patternsAndExprs.joinToString("\n\n", prefix = "    case $renderedTy of\n") { (pattern, expr) ->
                     """
                     |        $pattern ->
                     |            $expr

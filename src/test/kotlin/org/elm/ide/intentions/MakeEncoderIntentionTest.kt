@@ -170,10 +170,8 @@ encode foo =
 
 
 encodeUUID : UUID -> Encode.Value
-encodeUUID uuid =
-    case uuid of
-        UUID string ->
-            Encode.string string
+encodeUUID (UUID string) =
+    Encode.string string
 
 
 encodeWrappers : Wrappers -> Encode.Value
@@ -309,10 +307,8 @@ encode baz =
 
 
 encodeFoo : Foo.Foo -> Encode.Value
-encodeFoo foo =
-    case foo of
-        Foo string ->
-            Encode.string string
+encodeFoo (Foo string) =
+    Encode.string string
 
 
 encodeBar : Foo.Bar -> Encode.Value
