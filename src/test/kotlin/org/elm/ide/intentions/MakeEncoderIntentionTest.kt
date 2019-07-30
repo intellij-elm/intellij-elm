@@ -1,6 +1,6 @@
 package org.elm.ide.intentions
 
-class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeEncoderIntention()) {
+class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeDecoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
     fun `test unavailable with wrong return type`() = doUnavailableTest(
@@ -76,8 +76,8 @@ type alias Foo =
     , maybeStringField : Maybe String
     , dictField : Dict String Float
     , arrayField : Array String
-    , setField : Set Bool
-    , tuple2Field : ( Int, String )
+    , setField : Set Int
+    , tuple2Field : ( Bool, String )
     , tuple3Field : ( Int, String, Float )
     , unitField : ()
     }
@@ -95,8 +95,8 @@ foo foo =
         , ( "maybeStringField", (Maybe.map Encode.string >> Maybe.withDefault Encode.null) foo.maybeStringField )
         , ( "dictField", (Dict.toList >> List.map (\( k, v ) -> ( k, Encode.float v )) >> Encode.object) foo.dictField )
         , ( "arrayField", Encode.array Encode.string foo.arrayField )
-        , ( "setField", Encode.set Encode.bool foo.setField )
-        , ( "tuple2Field", (\( a, b ) -> Encode.list identity [ Encode.int a, Encode.string b ]) foo.tuple2Field )
+        , ( "setField", Encode.set Encode.int foo.setField )
+        , ( "tuple2Field", (\( a, b ) -> Encode.list identity [ Encode.bool a, Encode.string b ]) foo.tuple2Field )
         , ( "tuple3Field", (\( a, b, c ) -> Encode.list identity [ Encode.int a, Encode.string b, Encode.float c ]) foo.tuple3Field )
         , ( "unitField", (\_ -> Encode.null) foo.unitField )
         ]

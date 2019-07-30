@@ -1,0 +1,3 @@
+decode : Decode.Value Int
+<spot>decode int =
+  Encode.int int</spot>
