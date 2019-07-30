@@ -16,7 +16,7 @@ class LexicalValueReference(element: ElmReferenceElement)
     override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == element.referenceName }
 
-    private fun getCandidates(): Array<ElmNamedElement> {
-        return ExpressionScope(element).getVisibleValues().toTypedArray()
+    private fun getCandidates(): List<ElmNamedElement> {
+        return ExpressionScope(element).getVisibleValues()
     }
 }
