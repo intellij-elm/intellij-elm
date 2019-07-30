@@ -145,29 +145,27 @@ encodeFoo foo =
         ]
 """)
 
-    fun `test union wrapper`() = doAvailableTest(
+    fun `test union variant wrappers`() = doAvailableTest(
             """
 import Json.Encode as Encode
-import Time
 
 type UUID = UUID String
-type Time = Time Int
-type alias Foo = { uuid: UUID, time: Time }
+type Wrappers = Bar String | Baz Int | Qux
+type alias Foo = { uuid: UUID, wrappers : Wrappers }
 
 encode : Foo -> Encode.Value{-caret-}
 """, """
 import Json.Encode as Encode
-import Time
 
 type UUID = UUID String
-type Time = Time Int
-type alias Foo = { uuid: UUID, time: Time }
+type Wrappers = Bar String | Baz Int | Qux
+type alias Foo = { uuid: UUID, wrappers : Wrappers }
 
 encode : Foo -> Encode.Value
 encode foo =
     Encode.object <|
         [ ( "uuid", encodeUUID foo.uuid )
-        , ( "time", encodeTime foo.time )
+        , ( "wrappers", encodeWrappers foo.wrappers )
         ]
 
 
@@ -178,11 +176,17 @@ encodeUUID uuid =
             Encode.string string
 
 
-encodeTime : Time -> Encode.Value
-encodeTime time =
-    case time of
-        Time int ->
+encodeWrappers : Wrappers -> Encode.Value
+encodeWrappers wrappers =
+    case wrappers of
+        Bar string ->
+            Encode.string string
+
+        Baz int ->
             Encode.int int
+
+        Qux ->
+            Encode.string "Qux"
 """)
 
     fun `test name conflict`() = doAvailableTestWithFileTree(

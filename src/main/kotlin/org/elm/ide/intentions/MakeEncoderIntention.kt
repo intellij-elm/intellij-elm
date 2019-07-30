@@ -181,7 +181,7 @@ private class EncoderGenerator(
         ty.module == "Array" && ty.name == "Array" -> "Encode.array ${gen(ty.parameters[0])}"
         ty.module == "Maybe" && ty.name == "Maybe" -> "(Maybe.map ${gen(ty.parameters[0])} >> Maybe.withDefault Encode.null)"
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
-        else -> findExistingEncoder(ty, ty.toRef()) ?: generateUnionFunc(ty)
+        else -> generateUnionFunc(ty)
     }
 
 
@@ -220,19 +220,17 @@ private class EncoderGenerator(
             buildString {
                 append("    case $param of\n")
 
-                val singleOrNull = variants.values.singleOrNull()
-                if (singleOrNull?.size == 1) {
-                    // For type wrappers like Time.Posix, encode their wrapped type
-                    val (k, v) = variants.entries.single()
-                    val p = v[0].renderParam()
-                    append("""
-                    |        $k $p ->
-                    |            ${gen(v[0])} $p
-                    """.trimMargin())
-                } else {
-                    // Otherwise treat them as enums. This is invalid code for variants with
-                    // parameters, but it's a helpful starting point.
-                    variants.keys.joinTo(this, separator = "\n\n") { variant ->
+                variants.entries.joinTo(this, separator = "\n\n") { (variant, params) ->
+                    if (params.size == 1) {
+                        // For type wrappers like Time.Posix, encode their wrapped type
+                        val p = params[0].renderParam()
+                        """
+                        |        $variant $p ->
+                        |            ${gen(params[0])} $p
+                        """.trimMargin()
+                    } else {
+                        // Otherwise treat them as enums. This is invalid code for variants with
+                        // parameters, but it's a helpful starting point.
                         """
                         |        $variant ->
                         |            Encode.string "$variant"
