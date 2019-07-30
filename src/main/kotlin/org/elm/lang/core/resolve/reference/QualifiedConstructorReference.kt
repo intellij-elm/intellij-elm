@@ -20,11 +20,10 @@ class QualifiedConstructorReference(referenceElement: ElmReferenceElement, val u
     override val qualifierPrefix = upperCaseQID.qualifierPrefix
     override val nameWithoutQualifier = element.referenceName
 
-    private fun getCandidates(): Array<ElmNamedElement> {
+    private fun getCandidates(): List<ElmNamedElement> {
         // TODO [kl] depending on context, we may need to restrict the variants to just union constructors
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 .flatMap { it.getExposedConstructors() }
-                .toTypedArray()
     }
 
 }

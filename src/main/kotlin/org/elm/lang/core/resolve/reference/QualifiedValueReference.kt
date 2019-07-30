@@ -21,9 +21,8 @@ class QualifiedValueReference(element: ElmReferenceElement, val valueQID: ElmVal
     override val qualifierPrefix = valueQID.qualifierPrefix
     override val nameWithoutQualifier = element.referenceName
 
-    private fun getCandidates(): Array<ElmNamedElement> {
+    private fun getCandidates(): List<ElmNamedElement> {
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 .flatMap { it.getExposedValues() }
-                .toTypedArray()
     }
 }
