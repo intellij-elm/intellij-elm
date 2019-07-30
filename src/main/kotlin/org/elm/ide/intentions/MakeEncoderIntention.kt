@@ -221,21 +221,16 @@ private class EncoderGenerator(
                 append("    case $param of\n")
 
                 variants.entries.joinTo(this, separator = "\n\n") { (variant, params) ->
-                    if (params.size == 1) {
-                        // For type wrappers like Time.Posix, encode their wrapped type
-                        val p = params[0].renderParam()
-                        """
-                        |        $variant $p ->
-                        |            ${gen(params[0])} $p
-                        """.trimMargin()
-                    } else {
-                        // Otherwise treat them as enums. This is invalid code for variants with
-                        // parameters, but it's a helpful starting point.
-                        """
-                        |        $variant ->
-                        |            Encode.string "$variant"
-                        """.trimMargin()
+                    val pattern = (listOf(variant) + params.map { it.renderParam() }).joinToString(" ")
+                    val expr = when (params.size) {
+                        0 -> "Encode.string \"$variant\""
+                        1 -> "${gen(params[0])} ${params[0].renderParam()}"
+                        else -> "Debug.todo \"Cannot generate encoder for variant with multiple parameters\""
                     }
+                    """
+                    |        $pattern ->
+                    |            $expr
+                    """.trimMargin()
                 }
             }
         }

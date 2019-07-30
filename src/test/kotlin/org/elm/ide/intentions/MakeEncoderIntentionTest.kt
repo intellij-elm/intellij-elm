@@ -189,6 +189,28 @@ encodeWrappers wrappers =
             Encode.string "Qux"
 """)
 
+    fun `test union variants with multiple parameters`() = doAvailableTest(
+            """
+import Json.Encode as Encode
+
+type Foo a = Bar String Int | Baz a a a 
+
+encode : Foo Int -> Encode.Value{-caret-}
+""", """
+import Json.Encode as Encode
+
+type Foo a = Bar String Int | Baz a a a 
+
+encode : Foo Int -> Encode.Value
+encode foo =
+    case foo of
+        Bar string int ->
+            Debug.todo "Cannot generate encoder for variant with multiple parameters"
+
+        Baz a a a ->
+            Debug.todo "Cannot generate encoder for variant with multiple parameters"
+""")
+
     fun `test name conflict`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
