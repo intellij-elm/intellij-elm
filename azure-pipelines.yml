@@ -10,9 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: Npm@1
-  inputs:
-    command: 'install -g elm'
+- script: sudo npm install -g elm
 - task: Gradle@2
   inputs:
     workingDirectory: ''
