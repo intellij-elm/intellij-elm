@@ -1,24 +1,45 @@
-# Gradle
-# Build your Java project and run tests with Gradle using a Gradle wrapper script.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+# TODO factor out the duplicated parts using template YAML
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops
 
 trigger:
-- master
+    - master
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+    -   job: Linux
+        pool:
+            vmImage: 'ubuntu-latest'
+        steps:
+            -   script: |
+                    wget https://github.com/elm/compiler/releases/download/0.19.0/binary-for-linux-64-bit.gz
+                    gunzip binary-for-linux-64-bit.gz
+                    chmod +x binary-for-linux-64-bit
+                    mv binary-for-linux-64-bit /usr/local/bin/elm
+            -   task: Gradle@2
+                inputs:
+                    workingDirectory: ''
+                    gradleWrapperFile: 'gradlew'
+                    gradleOptions: '-Xmx3072m'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: true
+                    testResultsFiles: '**/TEST-*.xml'
+                    tasks: 'check --info --console=plain --max-workers=1 --no-daemon'
 
-steps:
-- script: sudo npm install -g elm
-- task: Gradle@2
-  inputs:
-    workingDirectory: ''
-    gradleWrapperFile: 'gradlew'
-    gradleOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/TEST-*.xml'
-    tasks: 'check --info --console=plain --max-workers=1 --no-daemon'
+    -   job: Windows
+        pool:
+            vmImage: 'windows-latest'
+        steps:
+            -   script: echo hello from Windows
+            -   script: npm install -g elm
+            -   task: Gradle@2
+            inputs:
+                workingDirectory: ''
+                gradleWrapperFile: 'gradlew'
+                gradleOptions: '-Xmx3072m'
+                javaHomeOption: 'JDKVersion'
+                jdkVersionOption: '1.8'
+                jdkArchitectureOption: 'x64'
+                publishJUnitResults: true
+                testResultsFiles: '**/TEST-*.xml'
+                tasks: 'check --info --console=plain --max-workers=1 --no-daemon'
