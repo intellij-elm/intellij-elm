@@ -1,7 +1,13 @@
 package org.elm.ide.intentions
 
+import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
 
@@ -29,10 +35,10 @@ abstract class TyFunctionGenerator(
     protected val declarations by lazy { root.allDeclarations().toList() }
     /** Additional encoder functions to generate */
     protected val funcsByTy = mutableMapOf<Ty, GeneratedFunction>()
+    /** Cache of already existing callable expressions that aren't in [funcsByTy] */
+    protected val callablesByTy = mutableMapOf<Ty, String>()
     /** Unions that need their variants exposed. */
     protected val unionsToExpose = mutableSetOf<Ref>()
-    /** Cache of previously generated callable expressions that aren't in [funcsByTy] */
-    protected val encodersByTy = mutableMapOf<Ty, String>()
 
     /** The name of the module in the current file */
     protected val moduleName by lazy { file.getModuleDecl()?.name ?: "" }
@@ -53,7 +59,7 @@ abstract class TyFunctionGenerator(
     }
 
     /** Qualified names of all imported modules */
-    protected val importedModules: Set<String> by lazy {
+    private val importedModules: Set<String> by lazy {
         file.findChildrenByClass(ElmImportClause::class.java).mapTo(mutableSetOf()) { it.referenceName }
     }
 
@@ -67,11 +73,56 @@ abstract class TyFunctionGenerator(
         }
     }
 
+    /** Prefix [name], defined in [module], with the necessary qualifier */
+    protected fun qual(module: String, name: String) = "${qualifierFor(Ref(module, name))}$name"
+
+
     /** Code to insert after the type annotation */
     abstract val code: String
 
     /** Imports to add because they are referenced by generated code. */
-    abstract val imports: List<Candidate>
+    val imports: List<Candidate> by lazy { calculateImports() }
 
+    protected open fun calculateImports(): List<Candidate> {
+        val visibleTypes = ModuleScope.getVisibleTypes(file).all
+                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
+        // Hack in List since GlobalScope.getVisibleTypes can't return it
+        val visibleModules = importedModules + "List"
+        return declarations
+                .filter {
+                    it.module != moduleName &&
+                            (it.toRef() in unionsToExpose || it.module !in visibleModules && it.toRef() !in visibleTypes)
+                }
+                .map {
+                    Candidate(
+                            moduleName = it.module,
+                            moduleAlias = null,
+                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else ""
+                    )
+                }
+    }
+
+    protected fun findExistingFunction(ty: Ty, ref: Ref): String? {
+        if (ty in callablesByTy) return callablesByTy[ty]!!
+        val declaration = ElmLookup.findByNameAndModule<ElmNamedElement>(ref.name, ref.module, file)
+                .firstOrNull { it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration } ?: return null
+
+        val possibleValues =
+                ModuleScope.getVisibleValues(file).all + ImportScope(declaration.elmFile).getExposedValues()
+
+        possibleValues
+                .filterIsInstance<ElmFunctionDeclarationLeft>()
+                .forEach {
+                    val t = it.findTy()
+                    if (t is TyFunction && isExistingFunction(ty, t)) {
+                        val code = qualifierFor(ref) + it.name
+                        callablesByTy[ty] = code
+                        return code
+                    }
+                }
+        return null
+    }
+
+    protected abstract fun isExistingFunction(needle: Ty, function: TyFunction): Boolean
 }
 

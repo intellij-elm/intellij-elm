@@ -2,10 +2,7 @@ package org.elm.ide.intentions
 
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.scope.ImportScope
-import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.types.*
 
 class MakeEncoderIntention : BaseTyGeneratorIntention() {
@@ -30,9 +27,10 @@ private class EncoderGenerator(
         functionName: String
 ): TyFunctionGenerator(file, root, functionName) {
     /** Counter used to prevent name collision of generated functions */
-    protected var i = 1
+    private var i = 1
 
     override val code by lazy {
+        // run gen on the root to kick off generation
         val genBody = gen(root)
         val rootFunc = funcsByTy[root]
         funcsByTy.remove(root)
@@ -50,24 +48,6 @@ private class EncoderGenerator(
                 append(f.body)
             }
         }
-    }
-
-    override val imports by lazy {
-        val visibleTypes = ModuleScope.getVisibleTypes(file).all
-                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
-        val visibleModules = importedModules + setOf("", "List")
-        declarations
-                .filter {
-                    it.module != moduleName &&
-                            (it.toRef() in unionsToExpose || it.module !in visibleModules && it.toRef() !in visibleTypes)
-                }
-                .map {
-                    Candidate(
-                            moduleName = it.module,
-                            moduleAlias = null,
-                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else ""
-                    )
-                }
     }
 
     /** Return a unary callable expression that will encode [ty] */
@@ -97,7 +77,7 @@ private class EncoderGenerator(
     }
 
     private fun generateUnionFunc(ty: TyUnion): String {
-        val cached = findExistingEncoder(ty, ty.toRef()) ?: funcsByTy[ty]?.name
+        val cached = findExistingFunction(ty, ty.toRef()) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val renderedTy = ty.renderParam()
@@ -137,7 +117,7 @@ private class EncoderGenerator(
     }
 
     private fun generateRecord(ty: TyRecord): String {
-        val cached = ty.alias?.let { findExistingEncoder(ty, it.toRef()) } ?: funcsByTy[ty]?.name
+        val cached = ty.alias?.let { findExistingFunction(ty, it.toRef()) } ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: "Record${i++}"}"
@@ -156,31 +136,6 @@ private class EncoderGenerator(
         return name
     }
 
-    private fun findExistingEncoder(ty: Ty, ref: Ref): String? {
-        if (ty in encodersByTy) return encodersByTy[ty]!!
-        val declaration = ElmLookup.findByNameAndModule<ElmNamedElement>(ref.name, ref.module, file)
-                .firstOrNull { it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration } ?: return null
-
-        val possibleValues =
-                ModuleScope.getVisibleValues(file).all + ImportScope(declaration.elmFile).getExposedValues()
-
-        possibleValues
-                .filterIsInstance<ElmFunctionDeclarationLeft>()
-                .forEach {
-                    val t = it.findTy()
-                    if (t is TyFunction &&
-                            t.parameters == listOf(ty) &&
-                            t.ret is TyUnion &&
-                            t.ret.module == "Json.Encode" &&
-                            t.ret.name == "Value") {
-                        val code = qualifierFor(ref) + it.name
-                        encodersByTy[ty] = code
-                        return code
-                    }
-                }
-        return null
-    }
-
     private fun generateDict(ty: TyUnion): String {
         val k = ty.parameters[0]
         return if (k !is TyUnion || !k.isTyString) {
@@ -195,6 +150,15 @@ private class EncoderGenerator(
             "(\\( a, b ) -> Encode.list identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b ])"
         } else {
             "(\\( a, b, c ) -> Encode.list identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b, ${gen(ty.types[2])} c ])"
+        }
+    }
+
+    override fun isExistingFunction(needle: Ty, function: TyFunction): Boolean {
+        return function.run {
+            parameters == listOf(needle) &&
+                    ret is TyUnion &&
+                    ret.module == "Json.Encode" &&
+                    ret.name == "Value"
         }
     }
 }

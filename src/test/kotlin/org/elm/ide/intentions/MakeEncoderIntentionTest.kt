@@ -1,6 +1,6 @@
 package org.elm.ide.intentions
 
-class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeDecoderIntention()) {
+class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeEncoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
     fun `test unavailable with wrong return type`() = doUnavailableTest(
@@ -106,6 +106,7 @@ foo foo =
             """
 module Main exposing (..)
 import Json.Encode as Encode
+
 type Enum = Baz | Qux
 type alias Foo = { foo1 : String, foo2 : Int, enum : Enum }
 type alias Bar = { bar1 : String, fooRef : Foo }
@@ -114,6 +115,7 @@ f : Bar -> Encode.Value{-caret-}
 """, """
 module Main exposing (..)
 import Json.Encode as Encode
+
 type Enum = Baz | Qux
 type alias Foo = { foo1 : String, foo2 : Int, enum : Enum }
 type alias Bar = { bar1 : String, fooRef : Foo }
@@ -217,6 +219,7 @@ import Foo
 
 type alias Bar = { f : Foo.Bar } 
 type alias Model = { bar : Bar }
+
 encode : Model -> Encode.Value{-caret-}
 --@ Foo.elm
 module Foo exposing (Bar)
@@ -227,6 +230,7 @@ import Foo
 
 type alias Bar = { f : Foo.Bar } 
 type alias Model = { bar : Bar }
+
 encode : Model -> Encode.Value
 encode model =
     Encode.object <|
@@ -288,6 +292,7 @@ import Json.Encode as Encode
 import Foo
 
 type alias Baz = { foo : Foo.Foo, bar : Foo.Bar }
+
 encode : Baz -> Encode.Value{-caret-}
 --@ Foo.elm
 module Foo exposing (..)
@@ -298,6 +303,7 @@ import Json.Encode as Encode
 import Foo exposing (Bar(..), Foo(..))
 
 type alias Baz = { foo : Foo.Foo, bar : Foo.Bar }
+
 encode : Baz -> Encode.Value
 encode baz =
     Encode.object <|
@@ -327,6 +333,7 @@ import Json.Encode as Encode
 
 type Foo = Foo
 type alias Bar = { foo : Foo }
+
 existing : Foo -> Encode.Value
 existing foo = Encode.null
 
@@ -336,6 +343,7 @@ import Json.Encode as Encode
 
 type Foo = Foo
 type alias Bar = { foo : Foo }
+
 existing : Foo -> Encode.Value
 existing foo = Encode.null
 
@@ -352,6 +360,7 @@ import Json.Encode as Encode
 
 type alias Foo = { s : String }
 type alias Bar = { foo : Foo }
+
 existing : Foo -> Encode.Value
 existing foo = Encode.null
 
@@ -361,6 +370,7 @@ import Json.Encode as Encode
 
 type alias Foo = { s : String }
 type alias Bar = { foo : Foo }
+
 existing : Foo -> Encode.Value
 existing foo = Encode.null
 
@@ -385,6 +395,7 @@ encode : Bar -> Encode.Value{-caret-}
 module Foo exposing (..)
 import Json.Encode as Encode
 type Foo = Foo
+
 existing : Foo -> Encode.Value
 existing foo = Encode.null
 """, """

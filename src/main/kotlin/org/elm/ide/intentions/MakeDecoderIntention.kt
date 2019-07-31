@@ -3,7 +3,6 @@ package org.elm.ide.intentions
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
 
 class MakeDecoderIntention : BaseTyGeneratorIntention() {
@@ -25,99 +24,88 @@ private class DecoderGenerator(
         root: Ty,
         functionName: String
 ) : TyFunctionGenerator(file, root, functionName) {
-    /** Code to insert after the type annotation */
+    /** true if we need to import Json.Decode.Pipeline */
+    private var usedPipeline = false
+
     override val code by lazy {
+        // run gen on the root to kick off generation
         val genBody = gen(root)
         val rootFunc = funcsByTy[root]
         funcsByTy.remove(root)
-        val param = rootFunc?.paramName ?: root.renderParam()
-        val body = rootFunc?.body ?: "    $genBody $param"
+        val body = rootFunc?.body ?: "    $genBody"
 
         buildString {
-            append("\n$functionName $param =\n")
+            append("\n$functionName =\n")
             append(body)
 
             for (f in funcsByTy.values) {
                 append("\n\n\n")
-                // TODO these are the only two lines that are different
-                append("${f.name} : Decoder ${f.qualifier}${f.paramTy.renderedText(false, false)}\n")
+                append("${f.name} : ${qual("Decoder")} ${f.qualifier}${f.paramTy.renderedText(false, false)}\n")
                 append("${f.name} =\n")
                 append(f.body)
             }
         }
     }
 
-    /** Imports to add because they are referenced by generated code. */
-    override val imports by lazy {
-        // TODO this is identical
-        val visibleTypes = ModuleScope.getVisibleTypes(file).all
-                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
-        val visibleModules = importedModules + setOf("", "List")
-        declarations
-                .filter {
-                    it.module != moduleName &&
-                            (it.toRef() in unionsToExpose || it.module !in visibleModules && it.toRef() !in visibleTypes)
-                }
-                .map {
+    override fun calculateImports(): List<Candidate> {
+        return when {
+            usedPipeline -> super.calculateImports() + listOf(
                     Candidate(
-                            moduleName = it.module,
+                            moduleName = "Json.Decode.Pipeline",
                             moduleAlias = null,
-                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else ""
+                            nameToBeExposed = "required"
                     )
-                }
+            )
+            else -> super.calculateImports()
+        }
     }
 
-    /** Return a unary callable expression that will encode [ty] */
     private fun gen(ty: Ty): String = when (ty) {
         is TyRecord -> generateRecord(ty)
         is TyUnion -> generateUnion(ty)
         is TyVar -> "(Debug.todo \"Can't generate decoders for type variables\")"
         is TyTuple -> generateTuple(ty)
-        is TyUnit -> "(Decode.succeed ())"
+        is TyUnit -> "(${qual("succeed")} ())"
         is TyFunction, TyInProgressBinding, is MutableTyRecord, is TyUnknown -> {
             "(Debug.todo \"Can't generate encoder for type ${ty.renderedText(false, false)}\")"
         }
     }
 
-
-    // TODO
     private fun generateUnion(ty: TyUnion): String = when {
-        ty.isTyInt -> "Decode.int"
-        ty.isTyFloat -> "Decode.float"
-        ty.isTyBool -> "Decode.bool"
-        ty.isTyString -> "Decode.string"
-        ty.isTyChar -> "(String.fromChar >> Decode.string)"
-        ty.isTyList -> "(Decode.list ${gen(ty.parameters[0])})"
-        ty.module == "Set" && ty.name == "Set" -> "(Decode.map Set.fromList (Decode.list ${gen(ty.parameters[0])}))"
-        ty.module == "Array" && ty.name == "Array" -> "(Decode.array ${gen(ty.parameters[0])})"
-        ty.module == "Maybe" && ty.name == "Maybe" -> "(Decode.nullable ${gen(ty.parameters[0])})"
+        ty.isTyInt -> qual("int")
+        ty.isTyFloat -> qual("float")
+        ty.isTyBool -> qual("bool")
+        ty.isTyString -> qual("string")
+        ty.isTyChar -> "(${qual("string")} |> ${qual("map")} (String.toList >> List.head >> Maybe.withDefault '?'))"
+        ty.isTyList -> "(${qual("list")} ${gen(ty.parameters[0])})"
+        ty.module == "Set" && ty.name == "Set" -> "(${qual("map")} Set.fromList (${qual("list")} ${gen(ty.parameters[0])}))"
+        ty.module == "Array" && ty.name == "Array" -> "(${qual("array")} ${gen(ty.parameters[0])})"
+        ty.module == "Maybe" && ty.name == "Maybe" -> "(${qual("nullable")} ${gen(ty.parameters[0])})"
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
         else -> generateUnionFunc(ty)
     }
 
     private fun generateRecord(ty: TyRecord): String {
-        val cached = /*findExistingEncoder(ty, ty.toRef()) ?:*/ funcsByTy[ty]?.name
-        // TODO      ^
+        val alias = ty.alias ?: return "(Debug.todo \"Cannot decode records without aliases\")"
+        val cached = findExistingFunction(ty, alias.toRef()) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
-        val alias = ty.alias ?: return "Debug.todo \"Cannot decode records without aliases\""
         val qualifier = qualifierFor(alias.toRef())
         val name = "decode${funcNames[alias.toRef()]}"
         val body = buildString {
-            append("    Decode.succeed $qualifier${alias.name}")
-            // TODO import `required`
+            append("    ${qual("succeed")} $qualifier${alias.name}")
             for ((field, fieldTy) in ty.fields) {
                 append("\n        |> required \"$field\" ${gen(fieldTy)}")
             }
         }
         val func = GeneratedFunction(name = name, paramTy = ty, paramName = "", body = body, qualifier = qualifier)
         funcsByTy[ty] = func
+        usedPipeline = true
         return name
     }
 
     private fun generateUnionFunc(ty: TyUnion): String {
-        val cached = /*findExistingEncoder(ty, ty.toRef()) ?:*/ funcsByTy[ty]?.name
-        // TODO      ^
+        val cached = findExistingFunction(ty, ty.toRef()) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val decl: ElmTypeDeclaration? = ElmLookup.findFirstByNameAndModule(ty.name, ty.module, file)
@@ -127,7 +115,7 @@ private class DecoderGenerator(
             unionsToExpose += ty.toRef()
             val variants = decl.variantInference().value
             if (variants.size == 1 && variants.values.first().size == 1) {
-                "    Decode.map ${variants.keys.first()} ${gen(variants.values.first().first())}"
+                "    ${qual("map")} ${variants.keys.first()} ${gen(variants.values.first().first())}"
             } else {
                 val branches = variants.entries.joinToString("\n\n                ") { (variant, params) ->
                     val expr = when {
@@ -146,9 +134,9 @@ private class DecoderGenerator(
                 |                $branches
                 |
                 |                _ ->
-                |                    Decode.fail ("unknown value for ${ty.renderedText(false, false)}: " ++ id)
+                |                    ${qual("fail")} ("unknown value for ${ty.renderedText(false, false)}: " ++ id)
                 |     in
-                |        Decode.string |> Decode.andThen get
+                |     ${qual("string")} |> ${qual("andThen")} get
                 """.trimMargin()
             }
         }
@@ -164,16 +152,28 @@ private class DecoderGenerator(
         return if (k !is TyUnion || !k.isTyString) {
             "(\\_ -> Debug.todo \"Can't generate encoder for Dict with non-String keys\")"
         } else {
-            "(Decode.dict ${gen(ty.parameters[1])})"
+            "(${qual("dict")} ${gen(ty.parameters[1])})"
         }
     }
 
     private fun generateTuple(ty: TyTuple): String {
         val decoders = ty.types.mapIndexed { i, it -> "(Decode.index $i ${gen(it)})" }.joinToString(" ")
         return if (ty.types.size == 2) {
-            "(Decode.map2 Tuple.pair $decoders)"
+            "(${qual("map2")} ${qual("pair", "Tuple")} $decoders)"
         } else {
-            "(Decode.map3 (\\a b c -> (a, b, c)) $decoders)"
+            "(${qual("map3")} (\\a b c -> ( a, b, c )) $decoders)"
         }
     }
+
+    override fun isExistingFunction(needle: Ty, function: TyFunction): Boolean {
+        return function.run {
+            parameters.isEmpty() &&
+                    ret is TyUnion &&
+                    ret.module == "Json.Decode" &&
+                    ret.name == "Decoder" &&
+                    ret.parameters.singleOrNull() == needle
+        }
+    }
+
+    private fun qual(name: String) = qual("Json.Decode", name)
 }
