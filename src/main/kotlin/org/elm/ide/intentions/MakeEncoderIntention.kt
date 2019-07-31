@@ -56,22 +56,22 @@ private class EncoderGenerator(
         is TyUnion -> generateUnion(ty)
         is TyVar -> "(\\_ -> Debug.todo \"Can't generate encoders for type variables\")"
         is TyTuple -> generateTuple(ty)
-        is TyUnit -> "(\\_ -> Encode.null)"
+        is TyUnit -> "(\\_ -> ${qual("null")})"
         is TyFunction, TyInProgressBinding, is MutableTyRecord, is TyUnknown -> {
             "(\\_ -> Debug.todo \"Can't generate encoder for type ${ty.renderedText(false, false)}\")"
         }
     }
 
     private fun generateUnion(ty: TyUnion): String = when {
-        ty.isTyInt -> "Encode.int"
-        ty.isTyFloat -> "Encode.float"
-        ty.isTyBool -> "Encode.bool"
-        ty.isTyString -> "Encode.string"
-        ty.isTyChar -> "(String.fromChar >> Encode.string)"
-        ty.isTyList -> "Encode.list ${gen(ty.parameters[0])}"
-        ty.module == "Set" && ty.name == "Set" -> "Encode.set ${gen(ty.parameters[0])}"
-        ty.module == "Array" && ty.name == "Array" -> "Encode.array ${gen(ty.parameters[0])}"
-        ty.module == "Maybe" && ty.name == "Maybe" -> "(Maybe.map ${gen(ty.parameters[0])} >> Maybe.withDefault Encode.null)"
+        ty.isTyInt -> qual("int")
+        ty.isTyFloat -> qual("float")
+        ty.isTyBool -> qual("bool")
+        ty.isTyString -> qual("string")
+        ty.isTyChar -> "(${qual("String", "fromChar")} >> ${qual("string")})"
+        ty.isTyList -> "${qual("list")} ${gen(ty.parameters[0])}"
+        ty.module == "Set" && ty.name == "Set" -> "${qual("set")} ${gen(ty.parameters[0])}"
+        ty.module == "Array" && ty.name == "Array" -> "${qual("array")} ${gen(ty.parameters[0])}"
+        ty.module == "Maybe" && ty.name == "Maybe" -> "(${qual("Maybe", "map")} ${gen(ty.parameters[0])} >> ${qual("Maybe", "withDefault")} ${qual("null")})"
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
         else -> generateUnionFunc(ty)
     }
@@ -90,7 +90,7 @@ private class EncoderGenerator(
             val patternsAndExprs = variants.map { (variant, params) ->
                 val pattern = (listOf(variant) + params.map { it.renderParam() }).joinToString(" ")
                 val expr = when (params.size) {
-                    0 -> "Encode.string \"$variant\""
+                    0 -> "${qual("string")} \"$variant\""
                     1 -> "${gen(params[0])} ${params[0].renderParam()}"
                     else -> "Debug.todo \"Cannot generate encoder for variant with multiple parameters\""
                 }
@@ -124,7 +124,7 @@ private class EncoderGenerator(
         val param = ty.renderParam()
         val qualifier = ty.alias?.let { qualifierFor(it.toRef()) } ?: ""
         val body = buildString {
-            append("    Encode.object <|\n        [ ")
+            append("    ${qual("object")} <|\n        [ ")
             ty.fields.entries.joinTo(this, separator = "\n        , ") { (k, v) ->
                 "( \"$k\", ${gen(v)} $param.$k )"
             }
@@ -141,15 +141,15 @@ private class EncoderGenerator(
         return if (k !is TyUnion || !k.isTyString) {
             "(\\_ -> Debug.todo \"Can't generate encoder for Dict with non-String keys\")"
         } else {
-            "(Dict.toList >> List.map (\\( k, v ) -> ( k, ${gen(ty.parameters[1])} v )) >> Encode.object)"
+            "(${qual("Dict", "toList")} >> ${qual("List", "map")} (\\( k, v ) -> ( k, ${gen(ty.parameters[1])} v )) >> ${qual("object")})"
         }
     }
 
     private fun generateTuple(ty: TyTuple): String {
         return if (ty.types.size == 2) {
-            "(\\( a, b ) -> Encode.list identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b ])"
+            "(\\( a, b ) -> ${qual("list")} identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b ])"
         } else {
-            "(\\( a, b, c ) -> Encode.list identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b, ${gen(ty.types[2])} c ])"
+            "(\\( a, b, c ) -> ${qual("list")} identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b, ${gen(ty.types[2])} c ])"
         }
     }
 
@@ -161,4 +161,6 @@ private class EncoderGenerator(
                     ret.name == "Value"
         }
     }
+
+    private fun qual(name: String) = qual("Json.Encode", name)
 }

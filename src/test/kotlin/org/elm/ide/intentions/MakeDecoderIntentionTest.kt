@@ -28,6 +28,52 @@ decode =
     Decode.string
 """)
 
+    fun `test exposed functions`() = doAvailableTest(
+            """
+import Json.Decode exposing (..)
+import Maybe exposing (..)
+import String exposing (..)
+
+type alias Foo = { s : Maybe String}
+
+decode : Decoder Foo{-caret-}
+""", """
+import Json.Decode exposing (..)
+import Json.Decode.Pipeline exposing (required)
+import Maybe exposing (..)
+import String exposing (..)
+
+type alias Foo = { s : Maybe String}
+
+decode : Decoder Foo
+decode =
+    succeed Foo
+        |> required "s" (nullable string)
+""")
+
+    fun `test aliased functions`() = doAvailableTest(
+            """
+import Json.Decode as D
+import Maybe as M
+import String as S
+
+type alias Foo = { s : M.Maybe S.String}
+
+decode : D.Decoder Foo{-caret-}
+""", """
+import Json.Decode as D
+import Json.Decode.Pipeline exposing (required)
+import Maybe as M
+import String as S
+
+type alias Foo = { s : M.Maybe S.String}
+
+decode : D.Decoder Foo
+decode =
+    D.succeed Foo
+        |> required "s" (D.nullable D.string)
+""")
+
     fun `test built in types in record`() = doAvailableTest(
             """
 import Array exposing (Array)

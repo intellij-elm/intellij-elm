@@ -35,6 +35,52 @@ encode string =
     Encode.string string
 """)
 
+    fun `test exposed functions`() = doAvailableTest(
+            """
+import Json.Encode exposing (..)
+import Maybe exposing (..)
+import String exposing (..)
+
+type alias Foo = { s : Maybe String}
+
+encode : Foo -> Value{-caret-}
+""", """
+import Json.Encode exposing (..)
+import Maybe exposing (..)
+import String exposing (..)
+
+type alias Foo = { s : Maybe String}
+
+encode : Foo -> Value
+encode foo =
+    object <|
+        [ ( "s", (map string >> withDefault null) foo.s )
+        ]
+""")
+
+    fun `test aliased functions`() = doAvailableTest(
+            """
+import Json.Encode as E
+import Maybe as M
+import String as S
+
+type alias Foo = { s : M.Maybe S.String}
+
+encode : Foo -> E.Value{-caret-}
+""", """
+import Json.Encode as E
+import Maybe as M
+import String as S
+
+type alias Foo = { s : M.Maybe S.String}
+
+encode : Foo -> E.Value
+encode foo =
+    E.object <|
+        [ ( "s", (M.map E.string >> M.withDefault E.null) foo.s )
+        ]
+""")
+
     fun `test built in types in record`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -52,8 +98,8 @@ type alias Foo =
     , maybeStringField : Maybe String
     , dictField : Dict String Float
     , arrayField : Array String
-    , setField : Set Bool
-    , tuple2Field : ( Int, String )
+    , setField : Set Int
+    , tuple2Field : ( Bool, String )
     , tuple3Field : ( Int, String, Float )
     , unitField : ()
     }
