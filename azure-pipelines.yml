@@ -33,13 +33,13 @@ jobs:
             -   script: echo hello from Windows
             -   script: npm install -g elm
             -   task: Gradle@2
-            inputs:
-                workingDirectory: ''
-                gradleWrapperFile: 'gradlew'
-                gradleOptions: '-Xmx3072m'
-                javaHomeOption: 'JDKVersion'
-                jdkVersionOption: '1.8'
-                jdkArchitectureOption: 'x64'
-                publishJUnitResults: true
-                testResultsFiles: '**/TEST-*.xml'
-                tasks: 'check --info --console=plain --max-workers=1 --no-daemon'
+                inputs:
+                    workingDirectory: ''
+                    gradleWrapperFile: 'gradlew'
+                    gradleOptions: '-Xmx3072m'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: true
+                    testResultsFiles: '**/TEST-*.xml'
+                    tasks: 'check --info --console=plain --max-workers=1 --no-daemon'
