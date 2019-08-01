@@ -89,8 +89,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         val missingBranches = allBranches.toMutableMap()
 
         for (branch in element.branches) {
-            val pat = branch.pattern.child
-            when (pat) {
+            when (val pat = branch.pattern.child) {
                 is ElmAnythingPattern -> return Result.NoMissing // covers all cases
                 is ElmUnionPattern -> {
                     missingBranches.remove(pat.referenceName)

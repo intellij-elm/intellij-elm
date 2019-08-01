@@ -193,6 +193,45 @@ encodeFoo foo =
         ]
 """)
 
+    fun `test nested function`() = doAvailableTest(
+            """
+import Json.Encode as Encode
+
+type Enum = Baz | Qux
+type alias Foo = { enum : Enum }
+
+main =
+    let
+        encode : Foo -> Encode.Value{-caret-}
+    in
+    ()
+""", """
+import Json.Encode as Encode
+
+type Enum = Baz | Qux
+type alias Foo = { enum : Enum }
+
+main =
+    let
+        encode : Foo -> Encode.Value        
+        encode foo =
+            Encode.object <|
+                [ ( "enum", encodeEnum foo.enum )
+                ]
+
+
+        encodeEnum : Enum -> Encode.Value
+        encodeEnum enum =
+            case enum of
+                Baz ->
+                    Encode.string "Baz"
+
+                Qux ->
+                    Encode.string "Qux"
+    in
+    ()
+""")
+
     fun `test union variant wrappers`() = doAvailableTest(
             """
 import Json.Encode as Encode

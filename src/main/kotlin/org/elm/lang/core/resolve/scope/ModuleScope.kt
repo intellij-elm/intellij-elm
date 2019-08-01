@@ -136,7 +136,7 @@ object ModuleScope {
     }
 
     /** Get all names that can be referenced from [elmFile], with or without a qualifier */
-    fun getRefrencableValues(elmFile: ElmFile): VisibleNames {
+    fun getReferencableValues(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, REFRENCABLE_VALUES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
             val fromTopLevel = getDeclaredValues(elmFile)

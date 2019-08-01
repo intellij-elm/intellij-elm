@@ -192,6 +192,54 @@ decodeFoo =
         |> required "enum" decodeEnum
 """)
 
+    fun `test nested function`() = doAvailableTest(
+            """
+module Main exposing (..)
+import Json.Decode as Decode
+
+type Enum = Baz | Qux
+type alias Foo = { enum : Enum }
+
+main =
+    let
+        decode : Decode.Decoder Foo{-caret-}
+    in
+    ()
+""", """
+module Main exposing (..)
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
+
+type Enum = Baz | Qux
+type alias Foo = { enum : Enum }
+
+main =
+    let
+        decode : Decode.Decoder Foo        
+        decode =
+            Decode.succeed Foo
+                |> required "enum" decodeEnum
+
+
+        decodeEnum : Decode.Decoder Enum
+        decodeEnum =
+            let
+                get id =
+                    case id of
+                        "Baz" ->
+                            Decode.succeed Baz
+
+                        "Qux" ->
+                            Decode.succeed Qux
+
+                        _ ->
+                            Decode.fail ("unknown value for Enum: " ++ id)
+            in
+            Decode.string |> Decode.andThen get
+    in
+    ()
+""")
+
     fun `test union variant wrappers`() = doAvailableTest(
             """
 import Json.Decode as Decode

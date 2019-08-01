@@ -8,12 +8,14 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.typeExpressionInference
 import org.elm.openapiext.runWriteCommandAction
+import org.elm.utils.getIndent
 
 abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase<AnnotationBasedGeneratorIntention.Context>() {
-    data class Context(val file: ElmFile, val ty: Ty, val name: String, val endOffset: Int)
+    data class Context(val file: ElmFile, val ty: Ty, val name: String, val startOffset: Int, val endOffset: Int)
 
     override fun getFamilyName() = text
 
@@ -29,7 +31,7 @@ abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase
 
         val ty = typeAnnotation.typeExpressionInference()?.ty ?: return null
         val root = getRootIfApplicable(ty) ?: return null
-        return Context(file, root, typeAnnotation.referenceName, typeAnnotation.endOffset)
+        return Context(file, root, typeAnnotation.referenceName, typeAnnotation.startOffset, typeAnnotation.endOffset)
     }
 
     /** If the intention applies to the type of this annotation, return the [Ty] to use as [Context.ty]. */
@@ -41,7 +43,9 @@ abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase
     override fun invoke(project: Project, editor: Editor, context: Context) {
         val generator = generator(context)
         project.runWriteCommandAction {
-            editor.document.insertString(context.endOffset, generator.code)
+            val indent = editor.getIndent(context.startOffset)
+            val code = generator.code.replace(Regex("\n(?![\r\n])"), "\n$indent")
+            editor.document.insertString(context.endOffset, "$indent$code")
             if (generator.imports.isNotEmpty()) {
                 // Commit the string changes so we can work with the new PSI
                 PsiDocumentManager.getInstance(context.file.project).commitDocument(editor.document)
