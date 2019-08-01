@@ -9,11 +9,10 @@ import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.types.Ty
-import org.elm.lang.core.types.TyFunction
 import org.elm.lang.core.types.typeExpressionInference
 import org.elm.openapiext.runWriteCommandAction
 
-abstract class BaseTyGeneratorIntention : ElmAtCaretIntentionActionBase<BaseTyGeneratorIntention.Context>() {
+abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase<AnnotationBasedGeneratorIntention.Context>() {
     data class Context(val file: ElmFile, val ty: Ty, val name: String, val endOffset: Int)
 
     override fun getFamilyName() = text
@@ -33,7 +32,10 @@ abstract class BaseTyGeneratorIntention : ElmAtCaretIntentionActionBase<BaseTyGe
         return Context(file, root, typeAnnotation.referenceName, typeAnnotation.endOffset)
     }
 
+    /** If the intention applies to the type of this annotation, return the [Ty] to use as [Context.ty]. */
     abstract fun getRootIfApplicable(annotationTy: Ty): Ty?
+
+    /** The code generator for this intention*/
     abstract fun generator(context: Context): TyFunctionGenerator
 
     override fun invoke(project: Project, editor: Editor, context: Context) {

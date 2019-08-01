@@ -5,7 +5,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.types.*
 
-class MakeEncoderIntention : BaseTyGeneratorIntention() {
+class MakeEncoderIntention : AnnotationBasedGeneratorIntention() {
     override fun getText() = "Generate Encoder"
 
     override fun getRootIfApplicable(annotationTy: Ty): Ty? {
