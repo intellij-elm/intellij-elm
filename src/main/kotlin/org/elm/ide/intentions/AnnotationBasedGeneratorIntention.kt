@@ -42,14 +42,15 @@ abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         val generator = generator(context)
+        val indent = editor.getIndent(context.startOffset)
+        val code = generator.code.replace(Regex("\n(?![\r\n])"), "\n$indent")
+        val imports = generator.imports
         project.runWriteCommandAction {
-            val indent = editor.getIndent(context.startOffset)
-            val code = generator.code.replace(Regex("\n(?![\r\n])"), "\n$indent")
             editor.document.insertString(context.endOffset, "$indent$code")
-            if (generator.imports.isNotEmpty()) {
+            if (imports.isNotEmpty()) {
                 // Commit the string changes so we can work with the new PSI
                 PsiDocumentManager.getInstance(context.file.project).commitDocument(editor.document)
-                for (import in generator.imports) {
+                for (import in imports) {
                     ImportAdder.addImportForCandidate(import, context.file, import.nameToBeExposed.isEmpty())
                 }
             }
