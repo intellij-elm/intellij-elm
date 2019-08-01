@@ -32,17 +32,7 @@ jobs:
         pool:
             vmImage: 'windows-latest'
         steps:
-            -   bash: |
-                    wget -q https://github.com/elm/compiler/releases/download/0.19.0/binary-for-windows-64-bit.gz
-                    gunzip binary-for-windows-64-bit.gz
-                    mkdir bin
-                    mv binary-for-windows-64-bit bin/elm.exe
-                    echo "Path before: $PATH"
-                    echo "##vso[task.prependpath]$AGENT_BUILDDIRECTORY/bin"
-                    echo "Path after: $PATH"
-                    echo "Elm version is: `elm.exe --version`"
-                displayName: 'Install Elm compiler'
-                failOnStderr: true
+            -   script: choco install --yes elm-platform
             -   task: Gradle@2
                 inputs:
                     workingDirectory: ''
