@@ -101,20 +101,15 @@ abstract class TyFunctionGenerator(
                 }
     }
 
-    protected fun findExistingFunction(ty: Ty, ref: Ref): String? {
+    protected fun findExistingFunction(ty: Ty): String? {
         if (ty in callablesByTy) return callablesByTy[ty]!!
-        val declaration = ElmLookup.findByNameAndModule<ElmNamedElement>(ref.name, ref.module, file)
-                .firstOrNull { it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration } ?: return null
 
-        val possibleValues =
-                ModuleScope.getVisibleValues(file).all + ImportScope(declaration.elmFile).getExposedValues()
-
-        possibleValues
+        ModuleScope.getRefrencableValues(file).all
                 .filterIsInstance<ElmFunctionDeclarationLeft>()
                 .forEach {
                     val t = it.findTy()
                     if (t != null && isExistingFunction(ty, t)) {
-                        val code = qualifierFor(ref) + it.name
+                        val code = qual(it.moduleName, it.name)
                         callablesByTy[ty] = code
                         return code
                     }

@@ -443,7 +443,7 @@ import Json.Encode as Encode
 type Foo = Foo
 
 existing : Foo -> Encode.Value
-existing foo = Encode.null
+existing _ = Encode.null
 """, """
 import Json.Encode as Encode
 import Foo
@@ -456,5 +456,36 @@ encode bar =
         [ ( "foo", Foo.existing bar.foo )
         ]
 
+""")
+
+    fun `test existing union encoder in separate module with qualification`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Json.Encode as Encode
+import Foo
+import Bar
+
+encode : Foo.Alias -> Encode.Value{-caret-}
+--@ Foo.elm
+module Foo exposing (..)
+type Type = Type
+type alias Alias = { t : Type }
+--@ Bar.elm
+module Bar exposing (..)
+import Foo exposing (..)
+import Json.Encode as Encode
+existing : Type -> Encode.Value
+existing _ = Encode.null
+""", """
+import Json.Encode as Encode
+import Foo
+import Bar
+import Json.Decode.Pipeline exposing (required)
+
+encode : Foo.Alias -> Encode.Value
+encode alias =
+    Encode.object <|
+        [ ( "t", Bar.existing alias.t )
+        ]
 """)
 }

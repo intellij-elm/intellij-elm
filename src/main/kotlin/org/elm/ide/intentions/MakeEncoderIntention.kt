@@ -77,7 +77,7 @@ private class EncoderGenerator(
     }
 
     private fun generateUnionFunc(ty: TyUnion): String {
-        val cached = findExistingFunction(ty, ty.toRef()) ?: funcsByTy[ty]?.name
+        val cached = findExistingFunction(ty) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val renderedTy = ty.renderParam()
@@ -117,7 +117,7 @@ private class EncoderGenerator(
     }
 
     private fun generateRecord(ty: TyRecord): String {
-        val cached = ty.alias?.let { findExistingFunction(ty, it.toRef()) } ?: funcsByTy[ty]?.name
+        val cached = ty.alias?.let { findExistingFunction(ty) } ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: "Record${i++}"}"

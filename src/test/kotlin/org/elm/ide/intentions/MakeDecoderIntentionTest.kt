@@ -392,7 +392,7 @@ decodeBar =
     Decode.string |> Decode.andThen get
 """)
 
-    fun `test existing union encoder`() = doAvailableTest(
+    fun `test existing union decoder`() = doAvailableTest(
             """
 import Json.Decode as Decode
 
@@ -419,7 +419,7 @@ decode =
         |> required "foo" existing
 """)
 
-    fun `test existing record encoder`() = doAvailableTest(
+    fun `test existing record decoder`() = doAvailableTest(
             """
 import Json.Decode as Decode
 
@@ -446,7 +446,7 @@ decode =
         |> required "foo" existing
 """)
 
-    fun `test existing union encoder in other module`() = doAvailableTestWithFileTree(
+    fun `test existing union decoder in other module`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
 import Json.Decode as Decode
@@ -472,5 +472,35 @@ decode : Decode.Decoder Bar
 decode =
     Decode.succeed Bar
         |> required "foo" Foo.existing
+""")
+
+    fun `test existing union decoder in separate module with qualification`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Json.Decode as Decode
+import Foo
+import Bar
+
+decode : Decode.Decoder Foo.Alias{-caret-}
+--@ Foo.elm
+module Foo exposing (..)
+type Type = Type
+type alias Alias = { t : Type }
+--@ Bar.elm
+module Bar exposing (..)
+import Foo exposing (..)
+import Json.Decode as Decode
+existing : Decode.Decoder Type
+existing = Decode.succeed Type
+""", """
+import Json.Decode as Decode
+import Foo
+import Bar
+import Json.Decode.Pipeline exposing (required)
+
+decode : Decode.Decoder Foo.Alias
+decode =
+    Decode.succeed Foo.Alias
+        |> required "t" Bar.existing
 """)
 }

@@ -87,7 +87,7 @@ private class DecoderGenerator(
 
     private fun generateRecord(ty: TyRecord): String {
         val alias = ty.alias ?: return "(Debug.todo \"Cannot decode records without aliases\")"
-        val cached = findExistingFunction(ty, alias.toRef()) ?: funcsByTy[ty]?.name
+        val cached = findExistingFunction(ty) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val qualifier = qualifierFor(alias.toRef())
@@ -105,7 +105,7 @@ private class DecoderGenerator(
     }
 
     private fun generateUnionFunc(ty: TyUnion): String {
-        val cached = findExistingFunction(ty, ty.toRef()) ?: funcsByTy[ty]?.name
+        val cached = findExistingFunction(ty) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val decl: ElmTypeDeclaration? = ElmLookup.findFirstByNameAndModule(ty.name, ty.module, file)

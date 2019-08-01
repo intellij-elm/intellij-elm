@@ -13,6 +13,7 @@ import org.elm.lang.core.psi.modificationTracker
 
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
 private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
+private val REFRENCABLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("REFRENCABLE_VALUES_KEY")
 private val DECLARED_TYPES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_TYPES_KEY")
 private val VISIBLE_TYPES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_TYPES_KEY")
 private val DECLARED_CONSTRUCTORS_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_CONSTRUCTORS_KEY")
@@ -117,6 +118,7 @@ object ModuleScope {
     }
 
 
+    /** Get all names that can be referenced from [elmFile] without a qualifier */
     fun getVisibleValues(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_VALUES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
@@ -125,6 +127,23 @@ object ModuleScope {
             // Explicit imports shadow names from wildcard imports, so we need to sort the names
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
                     .flatMap { getVisibleImportNames(it) }
+                    .sortedBy { it.fromWildcard }
+                    .map { it.element }
+
+            val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
+            Result.create(visibleValues, elmFile.project.modificationTracker)
+        }
+    }
+
+    /** Get all names that can be referenced from [elmFile], with or without a qualifier */
+    fun getRefrencableValues(elmFile: ElmFile): VisibleNames {
+        return CachedValuesManager.getCachedValue(elmFile, REFRENCABLE_VALUES_KEY) {
+            val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
+            val fromTopLevel = getDeclaredValues(elmFile)
+
+            // Explicit imports shadow names from wildcard imports, so we need to sort the names
+            val fromImports = getImportDecls(elmFile)
+                    .flatMap { getAllImportNames(it) }
                     .sortedBy { it.fromWildcard }
                     .map { it.element }
 
@@ -155,6 +174,13 @@ object ModuleScope {
         return allExposedValues.filter {
             it.name in exposedNames
         }.map { ExposedElement(false, it) }
+    }
+
+    private fun getAllImportNames(importClause: ElmImportClause): List<ExposedElement> {
+        return ImportScope.fromImportDecl(importClause)
+                ?.getExposedValues()
+                ?.map { ExposedElement(importClause.exposesAll, it) }
+                ?: return emptyList()
     }
 
 
