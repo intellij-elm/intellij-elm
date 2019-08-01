@@ -75,7 +75,6 @@ abstract class TyFunctionGenerator(
     /** Prefix [name], defined in [module], with the necessary qualifier */
     protected fun qual(module: String, name: String) = "${qualifierFor(Ref(module, name))}$name"
 
-
     /** Code to insert after the type annotation */
     abstract val code: String
 
@@ -101,7 +100,8 @@ abstract class TyFunctionGenerator(
                 }
     }
 
-    protected fun findExistingFunction(ty: Ty): String? {
+    /** Return the callable for a user-supplied function to process [ty] if there is one */
+    protected fun existing(ty: Ty): String? {
         if (ty in callablesByTy) return callablesByTy[ty]!!
 
         ModuleScope.getRefrencableValues(file).all

@@ -77,17 +77,17 @@ private class DecoderGenerator(
         ty.isTyBool -> qual("bool")
         ty.isTyString -> qual("string")
         ty.isTyChar -> "(${qual("string")} |> ${qual("map")} (String.toList >> List.head >> Maybe.withDefault '?'))"
-        ty.isTyList -> "(${qual("list")} ${gen(ty.parameters[0])})"
-        ty.module == "Set" && ty.name == "Set" -> "(${qual("map")} Set.fromList (${qual("list")} ${gen(ty.parameters[0])}))"
-        ty.module == "Array" && ty.name == "Array" -> "(${qual("array")} ${gen(ty.parameters[0])})"
-        ty.module == "Maybe" && ty.name == "Maybe" -> "(${qual("nullable")} ${gen(ty.parameters[0])})"
+        ty.isTyList -> existing(ty) ?: "(${qual("list")} ${gen(ty.parameters[0])})"
+        ty.module == "Array" && ty.name == "Array" -> existing(ty) ?: "(${qual("array")} ${gen(ty.parameters[0])})"
+        ty.module == "Maybe" && ty.name == "Maybe" -> existing(ty) ?: "(${qual("nullable")} ${gen(ty.parameters[0])})"
+        ty.module == "Set" && ty.name == "Set" -> generateSet(ty)
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
         else -> generateUnionFunc(ty)
     }
 
     private fun generateRecord(ty: TyRecord): String {
         val alias = ty.alias ?: return "(Debug.todo \"Cannot decode records without aliases\")"
-        val cached = findExistingFunction(ty) ?: funcsByTy[ty]?.name
+        val cached = existing(ty) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val qualifier = qualifierFor(alias.toRef())
@@ -105,7 +105,7 @@ private class DecoderGenerator(
     }
 
     private fun generateUnionFunc(ty: TyUnion): String {
-        val cached = findExistingFunction(ty) ?: funcsByTy[ty]?.name
+        val cached = existing(ty) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val decl: ElmTypeDeclaration? = ElmLookup.findFirstByNameAndModule(ty.name, ty.module, file)
@@ -148,6 +148,7 @@ private class DecoderGenerator(
     }
 
     private fun generateDict(ty: TyUnion): String {
+        existing(ty)?.let { return it }
         val k = ty.parameters[0]
         return if (k !is TyUnion || !k.isTyString) {
             "(\\_ -> Debug.todo \"Can't generate encoder for Dict with non-String keys\")"
@@ -163,6 +164,10 @@ private class DecoderGenerator(
         } else {
             "(${qual("map3")} (\\a b c -> ( a, b, c )) $decoders)"
         }
+    }
+
+    private fun generateSet(ty: TyUnion): String {
+        return existing(ty) ?: "(${qual("map")} Set.fromList (${qual("list")} ${gen(ty.parameters[0])}))"
     }
 
     override fun isExistingFunction(needle: Ty, function: Ty): Boolean {

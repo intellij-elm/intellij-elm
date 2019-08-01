@@ -68,16 +68,16 @@ private class EncoderGenerator(
         ty.isTyBool -> qual("bool")
         ty.isTyString -> qual("string")
         ty.isTyChar -> "(${qual("String", "fromChar")} >> ${qual("string")})"
-        ty.isTyList -> "${qual("list")} ${gen(ty.parameters[0])}"
-        ty.module == "Set" && ty.name == "Set" -> "${qual("set")} ${gen(ty.parameters[0])}"
-        ty.module == "Array" && ty.name == "Array" -> "${qual("array")} ${gen(ty.parameters[0])}"
-        ty.module == "Maybe" && ty.name == "Maybe" -> "(${qual("Maybe", "map")} ${gen(ty.parameters[0])} >> ${qual("Maybe", "withDefault")} ${qual("null")})"
+        ty.isTyList -> existing(ty) ?: "${qual("list")} ${gen(ty.parameters[0])}"
+        ty.module == "Set" && ty.name == "Set" -> existing(ty) ?: "${qual("set")} ${gen(ty.parameters[0])}"
+        ty.module == "Array" && ty.name == "Array" -> existing(ty) ?: "${qual("array")} ${gen(ty.parameters[0])}"
+        ty.module == "Maybe" && ty.name == "Maybe" -> generateMaybe(ty)
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
         else -> generateUnionFunc(ty)
     }
 
     private fun generateUnionFunc(ty: TyUnion): String {
-        val cached = findExistingFunction(ty) ?: funcsByTy[ty]?.name
+        val cached = existing(ty) ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val renderedTy = ty.renderParam()
@@ -117,7 +117,7 @@ private class EncoderGenerator(
     }
 
     private fun generateRecord(ty: TyRecord): String {
-        val cached = ty.alias?.let { findExistingFunction(ty) } ?: funcsByTy[ty]?.name
+        val cached = ty.alias?.let { existing(ty) } ?: funcsByTy[ty]?.name
         if (cached != null) return cached
 
         val name = "encode${ty.alias?.let { funcNames[it.toRef()] } ?: "Record${i++}"}"
@@ -150,6 +150,12 @@ private class EncoderGenerator(
             "(\\( a, b ) -> ${qual("list")} identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b ])"
         } else {
             "(\\( a, b, c ) -> ${qual("list")} identity [ ${gen(ty.types[0])} a, ${gen(ty.types[1])} b, ${gen(ty.types[2])} c ])"
+        }
+    }
+
+    private fun generateMaybe(ty: TyUnion): String {
+        return existing(ty) ?: run {
+            "(${qual("Maybe", "map")} ${gen(ty.parameters[0])} >> ${qual("Maybe", "withDefault")} ${qual("null")})"
         }
     }
 

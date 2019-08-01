@@ -427,6 +427,33 @@ encode bar =
         ]
 """)
 
+    fun `test existing list encoder`() = doAvailableTest(
+            """
+import Json.Encode as Encode
+
+type Foo = Foo
+type alias Bar = { foo : List Foo }
+
+existing : List Foo -> Encode.Value
+existing foo = Encode.null
+
+encode : Bar -> Encode.Value{-caret-}
+""", """
+import Json.Encode as Encode
+
+type Foo = Foo
+type alias Bar = { foo : List Foo }
+
+existing : List Foo -> Encode.Value
+existing foo = Encode.null
+
+encode : Bar -> Encode.Value
+encode bar =
+    Encode.object <|
+        [ ( "foo", existing bar.foo )
+        ]
+""")
+
     fun `test existing union encoder in other module`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -480,7 +507,6 @@ existing _ = Encode.null
 import Json.Encode as Encode
 import Foo
 import Bar
-import Json.Decode.Pipeline exposing (required)
 
 encode : Foo.Alias -> Encode.Value
 encode alias =

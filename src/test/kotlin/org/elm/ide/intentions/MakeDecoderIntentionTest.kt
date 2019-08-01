@@ -446,6 +446,33 @@ decode =
         |> required "foo" existing
 """)
 
+    fun `test existing list decoder`() = doAvailableTest(
+            """
+import Json.Decode as Decode
+
+type Foo = Foo
+type alias Bar = { foo : List Foo }
+
+existing : Decode.Decoder (List Foo)
+existing = Decode.succeed []
+
+decode : Decode.Decoder Bar{-caret-}
+""", """
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
+
+type Foo = Foo
+type alias Bar = { foo : List Foo }
+
+existing : Decode.Decoder (List Foo)
+existing = Decode.succeed []
+
+decode : Decode.Decoder Bar
+decode =
+    Decode.succeed Bar
+        |> required "foo" existing
+""")
+
     fun `test existing union decoder in other module`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
