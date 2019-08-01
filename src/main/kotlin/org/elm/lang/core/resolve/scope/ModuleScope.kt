@@ -97,7 +97,8 @@ object ModuleScope {
                     .find { it.moduleQID.text == module }
                     ?.let { importDecl ->
                         when {
-                            getVisibleImportNames(importDecl).any { it.element.name == name } -> ""
+                            getVisibleImportValues(importDecl).any { it.element.name == name } -> ""
+                            getVisibleImportTypes(importDecl).any { it.name == name } -> ""
                             importDecl.asClause != null -> importDecl.asClause!!.name + "."
                             else -> importDecl.moduleQID.text + "."
                         }
@@ -126,7 +127,7 @@ object ModuleScope {
 
             // Explicit imports shadow names from wildcard imports, so we need to sort the names
             val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
-                    .flatMap { getVisibleImportNames(it) }
+                    .flatMap { getVisibleImportValues(it) }
                     .sortedBy { it.fromWildcard }
                     .map { it.element }
 
@@ -154,7 +155,7 @@ object ModuleScope {
 
     private data class ExposedElement(val fromWildcard: Boolean, val element: ElmNamedElement)
 
-    private fun getVisibleImportNames(importClause: ElmImportClause): List<ExposedElement> {
+    private fun getVisibleImportValues(importClause: ElmImportClause): List<ExposedElement> {
         val allExposedValues = ImportScope.fromImportDecl(importClause)
                 ?.getExposedValues()
                 ?: return emptyList()

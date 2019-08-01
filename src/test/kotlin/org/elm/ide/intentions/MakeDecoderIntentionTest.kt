@@ -381,7 +381,7 @@ import Json.Decode.Pipeline exposing (required)
 
 decode : Decode.Decoder Foo
 decode =
-    Decode.succeed Foo.Foo
+    Decode.succeed Foo
         |> required "bar" decodeBar
 
 
