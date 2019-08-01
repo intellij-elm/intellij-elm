@@ -23,7 +23,7 @@ private class DecoderGenerator(
         file: ElmFile,
         root: Ty,
         functionName: String
-) : TyFunctionGenerator(file, root, functionName) {
+) : TyFunctionGenerator(file, root) {
     /** true if we need to import Json.Decode.Pipeline */
     private var usedPipeline = false
 
@@ -119,7 +119,7 @@ private class DecoderGenerator(
             } else {
                 val branches = variants.entries.joinToString("\n\n                ") { (variant, params) ->
                     val expr = when {
-                        params.isEmpty() -> "Decode.succeed $variant"
+                        params.isEmpty() -> "Decode.succeed ${qual(ty.module, variant)}"
                         else -> "Debug.todo \"Cannot decode variant with params: $variant\""
                     }
                     """
@@ -135,8 +135,8 @@ private class DecoderGenerator(
                 |
                 |                _ ->
                 |                    ${qual("fail")} ("unknown value for ${ty.renderedText(false, false)}: " ++ id)
-                |     in
-                |     ${qual("string")} |> ${qual("andThen")} get
+                |    in
+                |    ${qual("string")} |> ${qual("andThen")} get
                 """.trimMargin()
             }
         }
@@ -159,19 +159,18 @@ private class DecoderGenerator(
     private fun generateTuple(ty: TyTuple): String {
         val decoders = ty.types.mapIndexed { i, it -> "(Decode.index $i ${gen(it)})" }.joinToString(" ")
         return if (ty.types.size == 2) {
-            "(${qual("map2")} ${qual("pair", "Tuple")} $decoders)"
+            "(${qual("map2")} ${qual("Tuple", "pair")} $decoders)"
         } else {
             "(${qual("map3")} (\\a b c -> ( a, b, c )) $decoders)"
         }
     }
 
-    override fun isExistingFunction(needle: Ty, function: TyFunction): Boolean {
+    override fun isExistingFunction(needle: Ty, function: Ty): Boolean {
         return function.run {
-            parameters.isEmpty() &&
-                    ret is TyUnion &&
-                    ret.module == "Json.Decode" &&
-                    ret.name == "Decoder" &&
-                    ret.parameters.singleOrNull() == needle
+            this is TyUnion &&
+                    module == "Json.Decode" &&
+                    name == "Decoder" &&
+                    parameters.singleOrNull() == needle
         }
     }
 

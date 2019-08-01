@@ -154,6 +154,7 @@ f : Decode.Decoder Bar{-caret-}
 """, """
 module Main exposing (..)
 import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
 
 type Enum = Baz | Qux
 type alias Foo = { foo1 : String, foo2 : Int, enum : Enum }
@@ -202,6 +203,7 @@ type alias Foo = { uuid: UUID, wrappers : Wrappers }
 decode : Decode.Decoder Foo{-caret-}
 """, """
 import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
 
 type UUID = UUID String
 type Wrappers = Bar String | Baz Int | Qux
@@ -251,7 +253,7 @@ import Json.Decode as Decode
 
 type Foo a = Bar String Int | Baz a a a
 
-decode : Foo Decode.Decoder Int
+decode : Decode.Decoder (Foo Int)
 decode =
     let
         get id =
@@ -264,8 +266,8 @@ decode =
 
                 _ ->
                     Decode.fail ("unknown value for Foo Int: " ++ id)
-     in
-        Decode.string |> Decode.andThen get
+    in
+    Decode.string |> Decode.andThen get
 """)
 
     fun `test name conflict`() = doAvailableTestWithFileTree(
@@ -284,6 +286,7 @@ type alias Bar = { s : String }
 """, """
 import Json.Decode as Decode
 import Foo
+import Json.Decode.Pipeline exposing (required)
 
 type alias Bar = { f : Foo.Bar }
 type alias Model = { bar : Bar }
@@ -326,6 +329,7 @@ type alias Bar = { s : String }
 import Bar
 import Json.Decode as Decode
 import Foo exposing (Foo)
+import Json.Decode.Pipeline exposing (required)
 
 decode : Decode.Decoder Foo
 decode =
@@ -355,6 +359,7 @@ type Bar = Baz | Qux
 """, """
 import Json.Decode as Decode
 import Foo exposing (Bar(..), Foo(..))
+import Json.Decode.Pipeline exposing (required)
 
 type alias Baz = { foo : Foo.Foo, bar : Foo.Bar }
 
@@ -383,8 +388,8 @@ decodeBar =
 
                 _ ->
                     Decode.fail ("unknown value for Bar: " ++ id)
-     in
-        Decode.string |> Decode.andThen get
+    in
+    Decode.string |> Decode.andThen get
 """)
 
     fun `test existing union encoder`() = doAvailableTest(
@@ -400,6 +405,7 @@ existing = Decode.succeed Foo
 decode : Decode.Decoder Bar{-caret-}
 """, """
 import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
 
 type Foo = Foo
 type alias Bar = { foo : Foo }
@@ -426,6 +432,7 @@ existing = Decode.succeed { s = "" }
 decode : Decode.Decoder Bar{-caret-}
 """, """
 import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
 
 type alias Foo = { s : String }
 type alias Bar = { foo : Foo }
@@ -448,7 +455,6 @@ import Foo
 type alias Bar = { foo : Foo.Foo }
 
 decode : Decode.Decoder Bar{-caret-}
-
 --@ Foo.elm
 module Foo exposing (..)
 import Json.Decode as Decode
@@ -458,6 +464,7 @@ existing = Decode.succeed Foo
 """, """
 import Json.Decode as Decode
 import Foo
+import Json.Decode.Pipeline exposing (required)
 
 type alias Bar = { foo : Foo.Foo }
 

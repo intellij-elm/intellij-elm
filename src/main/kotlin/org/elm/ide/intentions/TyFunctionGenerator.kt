@@ -12,25 +12,24 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
 
 
-data class GeneratedFunction(
-        val name: String,
-        val paramTy: Ty,
-        val paramName: String,
-        val body: String,
-        val qualifier: String
-)
-
-data class Ref(val module: String, val name: String)
-
-fun TyUnion.toRef() = Ref(module, name)
-fun AliasInfo.toRef() = Ref(module, name)
-fun DeclarationInTy.toRef() = Ref(module, name)
-
 abstract class TyFunctionGenerator(
         protected val file: ElmFile,
-        protected val root: Ty,
-        protected val functionName: String
+        protected val root: Ty
 ) {
+    data class GeneratedFunction(
+            val name: String,
+            val paramTy: Ty,
+            val paramName: String,
+            val body: String,
+            val qualifier: String
+    )
+
+    data class Ref(val module: String, val name: String)
+
+    fun TyUnion.toRef() = Ref(module, name)
+    fun AliasInfo.toRef() = Ref(module, name)
+    fun DeclarationInTy.toRef() = Ref(module, name)
+
     /** All types and aliases referenced in the root ty */
     protected val declarations by lazy { root.allDeclarations().toList() }
     /** Additional encoder functions to generate */
@@ -114,7 +113,7 @@ abstract class TyFunctionGenerator(
                 .filterIsInstance<ElmFunctionDeclarationLeft>()
                 .forEach {
                     val t = it.findTy()
-                    if (t is TyFunction && isExistingFunction(ty, t)) {
+                    if (t != null && isExistingFunction(ty, t)) {
                         val code = qualifierFor(ref) + it.name
                         callablesByTy[ty] = code
                         return code
@@ -123,6 +122,6 @@ abstract class TyFunctionGenerator(
         return null
     }
 
-    protected abstract fun isExistingFunction(needle: Ty, function: TyFunction): Boolean
+    protected abstract fun isExistingFunction(needle: Ty, function: Ty): Boolean
 }
 

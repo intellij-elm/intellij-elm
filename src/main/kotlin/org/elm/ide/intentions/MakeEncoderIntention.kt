@@ -25,7 +25,7 @@ private class EncoderGenerator(
         file: ElmFile,
         root: Ty,
         functionName: String
-): TyFunctionGenerator(file, root, functionName) {
+): TyFunctionGenerator(file, root) {
     /** Counter used to prevent name collision of generated functions */
     private var i = 1
 
@@ -153,9 +153,10 @@ private class EncoderGenerator(
         }
     }
 
-    override fun isExistingFunction(needle: Ty, function: TyFunction): Boolean {
+    override fun isExistingFunction(needle: Ty, function: Ty): Boolean {
         return function.run {
-            parameters == listOf(needle) &&
+            this is TyFunction &&
+                    parameters == listOf(needle) &&
                     ret is TyUnion &&
                     ret.module == "Json.Encode" &&
                     ret.name == "Value"
