@@ -175,9 +175,6 @@ class TypeExpression(
     }
 
     fun beginTypeAliasDeclarationInference(decl: ElmTypeAliasDeclaration): ParameterizedInferenceResult<Ty> {
-        val record = decl.aliasedRecord
-        val params = decl.lowerTypeNameList.map { getTyVar(it) }.toList()
-
         if (decl in activeAliases) {
             diagnostics += BadRecursionError(decl)
             return result(TyUnknown())
@@ -185,12 +182,8 @@ class TypeExpression(
 
         activeAliases += decl
 
-        val ty = if (record == null) {
-            decl.typeExpression?.let { typeExpressionType(it) } ?: TyUnknown()
-        } else {
-            recordTypeDeclType(record)
-        }
-
+        val ty = decl.typeExpression?.let { typeExpressionType(it) } ?: TyUnknown()
+        val params = decl.lowerTypeNameList.map { getTyVar(it) }.toList()
         val aliasInfo = AliasInfo(decl.moduleName, decl.upperCaseIdentifier.text, params)
         return result(ty.withAlias(aliasInfo))
     }
@@ -201,10 +194,9 @@ class TypeExpression(
     /** Get the type for an entire type expression */
     private fun typeExpressionType(typeExpr: ElmTypeExpression): Ty {
         val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }.toList()
-        val last = segments.last()
         return when {
-            segments.size == 1 -> last
-            else -> TyFunction(segments.dropLast(1), last).uncurry()
+            segments.size == 1 -> segments.last()
+            else -> TyFunction(segments.dropLast(1), segments.last()).uncurry()
         }
     }
 
@@ -262,20 +254,19 @@ class TypeExpression(
     }
 
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
-        val declaredFields = record.fieldTypeList.associate { it.lowerCaseIdentifier.text to typeExpressionType(it.typeExpression) }
+        val fieldElements = record.fieldTypeList
+        val fieldTys = fieldElements.associate { it.lowerCaseIdentifier.text to typeExpressionType(it.typeExpression) }
+        val fieldReferences = fieldElements.associateBy { it.lowerCaseIdentifier.text }
         val baseId = record.baseTypeIdentifier
         val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.text) }
-        return TyRecord(declaredFields, baseTy)
+        return TyRecord(fieldTys, baseTy, fieldReferences = fieldReferences)
     }
 
     private fun typeRefType(typeRef: ElmTypeRef): Ty {
         val argElements = typeRef.allArguments.toList()
-        val args = argElements.map {
-            typeSignatureDeclType(it)
-        }
-        val ref = typeRef.reference.resolve()
+        val args = argElements.map { typeSignatureDeclType(it) }
 
-        val declaredTy = when (ref) {
+        val declaredTy = when (val ref = typeRef.reference.resolve()) {
             is ElmTypeAliasDeclaration -> ref.typeExpressionInference(activeAliases).value
             is ElmTypeDeclaration -> ref.typeExpressionInference().value
             // In 0.19, unlike all other built-in types, Elm core doesn't define the List type anywhere, so the

@@ -123,8 +123,14 @@ class TypeReplacement(
 
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
         val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
+        val baseFieldRefs = (replacedBase as? TyRecord)?.fieldReferences.orEmpty()
 
-        return TyRecord(baseFields + declaredFields, newBaseTy, replace(ty.alias))
+        return TyRecord(
+                fields = baseFields + declaredFields,
+                baseTy = newBaseTy,
+                alias = replace(ty.alias),
+                fieldReferences = ty.fieldReferences + baseFieldRefs
+        )
     }
 
     // When we replace a var, the new ty may itself contain vars, and so we need to recursively

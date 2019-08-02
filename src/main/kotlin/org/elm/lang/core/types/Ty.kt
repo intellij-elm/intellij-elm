@@ -1,5 +1,7 @@
 package org.elm.lang.core.types
 
+import org.elm.lang.core.psi.ElmNamedElement
+
 /**
  * A type in the inference system.
  *
@@ -63,7 +65,8 @@ data class TyTuple(val types: List<Ty>, override val alias: AliasInfo? = null) :
 data class TyRecord(
         val fields: Map<String, Ty>,
         val baseTy: Ty? = null,
-        override val alias: AliasInfo? = null
+        override val alias: AliasInfo? = null,
+        val fieldReferences: Map<String, ElmNamedElement> = emptyMap()
 ) : Ty() {
     /** true if this record has a base name, and will match a subset of a record's fields */
     val isSubset: Boolean get() = baseTy != null
@@ -74,6 +77,18 @@ data class TyRecord(
         return alias?.let {
             "{${it.name}${if (it.parameters.isEmpty()) "" else " ${it.parameters.joinToString(" ")}"}}"
         } ?: baseTy?.let { "{$baseTy | $f}" } ?: "{$f}"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TyRecord) return false
+        return fields == other.fields && baseTy == other.baseTy
+    }
+
+    override fun hashCode(): Int {
+        var result = fields.hashCode()
+        result = 31 * result + (baseTy?.hashCode() ?: 0)
+        return result
     }
 }
 
