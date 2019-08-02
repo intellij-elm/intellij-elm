@@ -1,5 +1,6 @@
 package org.elm.ide.intentions
 
+import org.elm.lang.core.imports.ImportAdder.Candidate
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmImportClause

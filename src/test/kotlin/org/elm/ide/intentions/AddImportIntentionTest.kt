@@ -2,6 +2,7 @@ package org.elm.ide.intentions
 
 import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
+import org.elm.lang.core.imports.ImportAdder.Candidate
 import org.intellij.lang.annotations.Language
 
 class AddImportIntentionTest : ElmIntentionTestBase(AddImportIntention()) {

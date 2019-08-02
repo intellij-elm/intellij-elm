@@ -4,6 +4,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.imports.ImportAdder
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.endOffset
@@ -51,7 +52,7 @@ abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase
                 // Commit the string changes so we can work with the new PSI
                 PsiDocumentManager.getInstance(context.file.project).commitDocument(editor.document)
                 for (import in imports) {
-                    ImportAdder.addImportForCandidate(import, context.file, import.nameToBeExposed.isEmpty())
+                    ImportAdder.addImport(import, context.file, import.nameToBeExposed.isEmpty())
                 }
             }
         }

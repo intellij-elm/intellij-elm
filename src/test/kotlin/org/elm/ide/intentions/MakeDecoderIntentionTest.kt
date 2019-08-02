@@ -28,6 +28,46 @@ decode =
     Decode.string
 """)
 
+    fun `test existing pipeline import`() = doAvailableTest(
+            """
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
+
+type alias Foo = { foo : Int }
+
+decode : Decode.Decoder Foo{-caret-}
+""", """
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (required)
+
+type alias Foo = { foo : Int }
+
+decode : Decode.Decoder Foo
+decode =
+    Decode.succeed Foo
+        |> required "foo" Decode.int
+""")
+
+    fun `test pipeline exposed`() = doAvailableTest(
+            """
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (..)
+
+type alias Foo = { foo : Int }
+
+decode : Decode.Decoder Foo{-caret-}
+""", """
+import Json.Decode as Decode
+import Json.Decode.Pipeline exposing (..)
+
+type alias Foo = { foo : Int }
+
+decode : Decode.Decoder Foo
+decode =
+    Decode.succeed Foo
+        |> required "foo" Decode.int
+""")
+
     fun `test exposed functions`() = doAvailableTest(
             """
 import Json.Decode exposing (..)
