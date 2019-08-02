@@ -68,7 +68,7 @@ private class DecoderGenerator(
         is TyTuple -> generateTuple(ty)
         is TyUnit -> "(${qual("succeed")} ())"
         is TyFunction, TyInProgressBinding, is MutableTyRecord, is TyUnknown -> {
-            "(Debug.todo \"Can't generate encoder for type ${ty.renderedText(false, false)}\")"
+            "(Debug.todo \"Can't generate decoder for type ${ty.renderedText(false, false)}\")"
         }
     }
 
@@ -120,7 +120,7 @@ private class DecoderGenerator(
             } else {
                 val branches = variants.entries.joinToString("\n\n                ") { (variant, params) ->
                     val expr = when {
-                        params.isEmpty() -> "Decode.succeed ${qual(ty.module, variant)}"
+                        params.isEmpty() -> "${qual("succeed")} ${qual(ty.module, variant)}"
                         else -> "Debug.todo \"Cannot decode variant with params: $variant\""
                     }
                     """
@@ -152,14 +152,14 @@ private class DecoderGenerator(
         existing(ty)?.let { return it }
         val k = ty.parameters[0]
         return if (k !is TyUnion || !k.isTyString) {
-            "(\\_ -> Debug.todo \"Can't generate encoder for Dict with non-String keys\")"
+            "(\\_ -> Debug.todo \"Can't generate decoder for Dict with non-String keys\")"
         } else {
             "(${qual("dict")} ${gen(ty.parameters[1])})"
         }
     }
 
     private fun generateTuple(ty: TyTuple): String {
-        val decoders = ty.types.mapIndexed { i, it -> "(Decode.index $i ${gen(it)})" }.joinToString(" ")
+        val decoders = ty.types.mapIndexed { i, it -> "(${qual("index")} $i ${gen(it)})" }.joinToString(" ")
         return if (ty.types.size == 2) {
             "(${qual("map2")} ${qual("Tuple", "pair")} $decoders)"
         } else {

@@ -43,7 +43,7 @@ private class EncoderGenerator(
 
             for (f in funcsByTy.values) {
                 append("\n\n\n")
-                append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> Encode.Value\n")
+                append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> ${qual("Value")}\n")
                 append("${f.name} ${f.paramName} =\n")
                 append(f.body)
             }

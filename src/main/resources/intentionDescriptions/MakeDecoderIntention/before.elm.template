@@ -1,1 +1,8 @@
-<spot>decode</spot> : Decode.Value Int
+import Json.Decode exposing (Decoder)
+
+type alias Person =
+    { name : String
+    , age : Int
+    }
+
+<spot>personDecoder</spot> : Decoder Person
