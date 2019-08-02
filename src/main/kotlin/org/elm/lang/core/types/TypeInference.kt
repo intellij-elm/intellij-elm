@@ -525,9 +525,11 @@ private class InferenceScope(
             f.lowerCaseIdentifier to inferExpression(f.expression)
         }
 
-        // If there's no base id, then the record is just the type of the fields
+        // If there's no base id, then the record is just the type of the fields. In that case, we
+        // use a mutable ty so we can track the field references later when we assign the value to
+        // something
         val recordIdentifier = record.baseRecordIdentifier
-                ?: return TyRecord(fields.mapKeys { (k, _) -> k.text })
+                ?: return MutableTyRecord(fields.mapKeysTo(mutableMapOf()) { (k, _) -> k.text })
 
         // If there is a base id, we need to combine it with the fields
 
@@ -784,7 +786,7 @@ private class InferenceScope(
         // bind all the names to sentinel values, then infer the expression and check for cyclic
         // references, then finally overwrite the sentinels with the proper inferred type.
         val declaredNames = pattern.descendantsOfType<ElmLowerPattern>()
-        declaredNames.associateTo(bindings) { it to TyInProgressBinding }
+        declaredNames.associateWithTo(bindings) { TyInProgressBinding }
         val bodyTy = inferExpression(valueDeclaration.expression)
         // Now we can overwrite the sentinels we set earlier with the inferred type
         bindPattern(pattern, bodyTy, false)
@@ -1224,6 +1226,14 @@ private class InferenceScope(
                 assign(ty1, ty2)
             }
         }
+
+        // If we assign a record value expression, we know what its field references resolve to
+        if (ty1 is MutableTyRecord) {
+            when (ty2) {
+                is TyRecord -> ty1.fieldReferences += ty2.fieldReferences
+                is MutableTyRecord -> ty1.fieldReferences += ty2.fieldReferences
+            }
+        }
     }
 
     /**
@@ -1333,6 +1343,6 @@ private sealed class ParameterBindingResult {
 }
 
 /** dangerous shallow copy of a mutable record for performance, use `toRecord` if the result isn't discarded. */
-private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy)
+private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy, fieldReferences = fieldReferences)
 
 private class InfiniteTypeException : Exception()

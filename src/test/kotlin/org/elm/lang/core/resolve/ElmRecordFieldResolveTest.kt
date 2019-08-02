@@ -79,4 +79,37 @@ main : ()
 main = func { field = () }
                --^
 """)
+
+    fun `test record value in forward pipeline`() = checkByCode(
+            """
+infix left  0 (|>) = apR
+apR : a -> (a -> b) -> b
+apR x f = f x
+
+type alias R = { field : () }
+                 --X
+func : R -> ()
+func _ = ()
+
+main : ()
+main = { field = () } |> func
+          --^
+""")
+
+    fun `test record value in backward pipeline`() = checkByCode(
+            """
+infix right 0 (<|) = apL
+apL : (a -> b) -> a -> b
+apL f x =
+  f x
+
+type alias R = { field : () }
+                 --X
+func : R -> ()
+func _ = ()
+
+main : ()
+main = func <| { field = () }
+                 --^
+""")
 }

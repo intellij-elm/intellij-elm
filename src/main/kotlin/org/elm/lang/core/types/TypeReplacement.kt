@@ -23,7 +23,10 @@ class TypeReplacement(
          *  except for vars that occur in this collection, which will be left unchanged.
          */
         fun replace(ty: Ty, replacements: Map<TyVar, Ty>, varsToRemainRigid: Collection<TyVar>? = null): Ty {
-            if (varsToRemainRigid == null && replacements.isEmpty() || ty.allVars(true).none()) return ty
+            val noMutableRecords = ty.traverse(true).none { it is MutableTyRecord }
+            if (noMutableRecords && (varsToRemainRigid == null && replacements.isEmpty() || ty.allVars(true).none())) {
+                return ty
+            }
             return TypeReplacement(replacements, freshen = false, varsToRemainRigid = varsToRemainRigid).replace(ty)
         }
 

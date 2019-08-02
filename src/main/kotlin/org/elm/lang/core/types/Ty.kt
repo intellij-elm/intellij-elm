@@ -102,13 +102,26 @@ data class TyRecord(
  */
 data class MutableTyRecord(
         val fields: MutableMap<String, Ty>,
-        val baseTy: Ty? = null
+        val baseTy: Ty? = null,
+        val fieldReferences: MutableMap<String, ElmNamedElement> = mutableMapOf()
 ) : Ty() {
-    fun toRecord() = TyRecord(fields.toMap(), baseTy)
+    fun toRecord() = TyRecord(fields.toMap(), baseTy, alias, fieldReferences)
 
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo) = error("MutableTyRecord cannot have aliases")
     override fun toString() = toRecord().toString()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TyRecord) return false
+        return fields == other.fields && baseTy == other.baseTy
+    }
+
+    override fun hashCode(): Int {
+        var result = fields.hashCode()
+        result = 31 * result + (baseTy?.hashCode() ?: 0)
+        return result
+    }
 }
 
 /** A type like `String` or `Maybe a` */
@@ -201,30 +214,32 @@ object TyInProgressBinding : Ty() {
 data class AliasInfo(val module: String, val name: String, val parameters: List<Ty>)
 
 /** Create a lazy sequence of all [TyVar]s referenced within this ty. */
-fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = sequence<TyVar> {
-    when (this@allVars) {
-        is TyVar -> yield(this@allVars)
-        is TyTuple -> types.forEach { yieldAll(it.allVars(includeAlias)) }
+fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = traverse(includeAlias).filterIsInstance<TyVar>()
+
+fun Ty.traverse(includeAlias: Boolean = false): Sequence<Ty> = sequence {
+    yield(this@traverse)
+    when (this@traverse) {
+        is TyTuple -> types.forEach { yieldAll(it.traverse(includeAlias)) }
         is TyRecord -> {
-            fields.values.forEach { yieldAll(it.allVars(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.allVars(includeAlias))
+            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
+            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
         }
         is MutableTyRecord -> {
-            fields.values.forEach { yieldAll(it.allVars(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.allVars(includeAlias))
+            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
+            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
         }
         is TyFunction -> {
-            yieldAll(ret.allVars(includeAlias))
-            parameters.forEach { yieldAll(it.allVars(includeAlias)) }
+            yieldAll(ret.traverse(includeAlias))
+            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
         }
         is TyUnion -> {
-            parameters.forEach { yieldAll(it.allVars(includeAlias)) }
+            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
         }
-        is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        is TyVar, is TyUnit, is TyUnknown, TyInProgressBinding -> {
         }
     }
     if (includeAlias) {
-        alias?.parameters?.forEach { yieldAll(it.allVars(includeAlias)) }
+        alias?.parameters?.forEach { yieldAll(it.traverse(includeAlias)) }
     }
 }
 
@@ -238,26 +253,26 @@ fun Ty.allDeclarations(
     when (this@allDeclarations) {
         is TyVar -> {
         }
-        is TyTuple -> types.forEach { yieldAll(it.allDeclarations()) }
+        is TyTuple -> types.forEach { yieldAll(it.allDeclarations(includeFunctions, includeUnionsWithAliases)) }
         is TyRecord -> {
-            fields.values.forEach { yieldAll(it.allDeclarations()) }
-            if (baseTy != null) yieldAll(baseTy.allDeclarations())
+            fields.values.forEach { yieldAll(it.allDeclarations(includeFunctions, includeUnionsWithAliases)) }
+            if (baseTy != null) yieldAll(baseTy.allDeclarations(includeFunctions, includeUnionsWithAliases))
         }
         is MutableTyRecord -> {
-            fields.values.forEach { yieldAll(it.allDeclarations()) }
-            if (baseTy != null) yieldAll(baseTy.allDeclarations())
+            fields.values.forEach { yieldAll(it.allDeclarations(includeFunctions, includeUnionsWithAliases)) }
+            if (baseTy != null) yieldAll(baseTy.allDeclarations(includeFunctions, includeUnionsWithAliases))
         }
         is TyFunction -> {
             if (includeFunctions) {
-                yieldAll(ret.allDeclarations())
-                parameters.forEach { yieldAll(it.allDeclarations()) }
+                yieldAll(ret.allDeclarations(includeFunctions, includeUnionsWithAliases))
+                parameters.forEach { yieldAll(it.allDeclarations(includeFunctions, includeUnionsWithAliases)) }
             }
         }
         is TyUnion -> {
             if (includeUnionsWithAliases || alias == null) {
                 yield(DeclarationInTy(module, name, isUnion = true))
             }
-            parameters.forEach { yieldAll(it.allDeclarations()) }
+            parameters.forEach { yieldAll(it.allDeclarations(includeFunctions, includeUnionsWithAliases)) }
         }
         is TyUnit, is TyUnknown, TyInProgressBinding -> {
         }
