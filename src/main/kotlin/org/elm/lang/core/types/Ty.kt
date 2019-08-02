@@ -61,6 +61,8 @@ data class TyTuple(val types: List<Ty>, override val alias: AliasInfo? = null) :
  * @property baseTy The type of the base record identifier, if there is one. Non-null for field
  *   accessors, record with base identifiers etc. that match a subset of record fields
  * @property alias The alias for this record, if there is one. Used for rendering and tracking record constructors
+ * @property fieldReferences A map of field name to the psi element that defines them; used for
+ *   reference resolve, does not affect equality
  */
 data class TyRecord(
         val fields: Map<String, Ty>,
