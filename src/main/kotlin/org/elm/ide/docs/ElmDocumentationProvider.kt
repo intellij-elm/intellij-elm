@@ -32,6 +32,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         is ElmModuleDeclaration -> documentationFor(element)
         is ElmAsClause -> documentationFor(element)
         is ElmInfixDeclaration -> documentationFor(element)
+        is ElmFieldType -> documentationFor(element)
         else -> null
     }
 
@@ -205,6 +206,26 @@ private fun documentationFor(element: ElmInfixDeclaration): String? {
     val decl = element.valueExpr?.reference?.resolve()?.parentOfType<ElmValueDeclaration>() ?: return null
     val func = decl.functionDeclarationLeft ?: return null
     return documentationFor(func)
+}
+
+private fun documentationFor(element: ElmFieldType): String? = buildString {
+    val recordTy = element.parentOfType<ElmTypeAliasDeclaration>()
+            ?.typeExpressionInference()?.value as? TyRecord ?: return null
+    val name = element.name
+    val fieldTy = recordTy.fields[name] ?: return null
+
+    definition {
+        i { append("field") }
+        append(" ", name)
+        if (fieldTy !is TyUnknown) {
+            append(": ", fieldTy.renderedText(true, false))
+        }
+        if (recordTy.alias != null) {
+            i { append(" of record ") }
+            renderLink(recordTy.alias.name, recordTy.alias.name)
+        }
+        renderDefinitionLocation(element)
+    }
 }
 
 private fun StringBuilder.renderVariantParameters(parameters: List<Ty>) {

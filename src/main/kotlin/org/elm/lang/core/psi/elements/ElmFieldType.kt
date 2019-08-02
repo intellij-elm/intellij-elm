@@ -2,8 +2,11 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.ElmNamedElementImpl
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.psi.IdentifierCase.LOWER
 
 
 /**
@@ -11,7 +14,7 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
  *
  * e.g. `name : String` in the record definition `type alias Person = { name : String }`
  */
-class ElmFieldType(node: ASTNode) : ElmPsiElementImpl(node) {
+class ElmFieldType(node: ASTNode) : ElmNamedElementImpl(node, LOWER) {
 
     /**
      * The name of a field in a record literal type definition

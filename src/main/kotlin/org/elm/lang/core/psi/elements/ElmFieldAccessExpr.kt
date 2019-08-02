@@ -7,6 +7,9 @@ import org.elm.lang.core.psi.ElmFieldAccessTargetTag
 import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
+import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
+import org.elm.lang.core.resolve.reference.FieldAccessReference
 
 /**
  * Accessing a field on a record.
@@ -19,13 +22,23 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
  * { user = { name = "George" } }.name
  * ```
  */
-class ElmFieldAccessExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmAtomTag, ElmFunctionCallTargetTag, ElmFieldAccessTargetTag {
+class ElmFieldAccessExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmAtomTag, ElmFunctionCallTargetTag, ElmFieldAccessTargetTag {
 
     /** An expression which evaluates to a record value whose field we want to access */
     val targetExpr: ElmFieldAccessTargetTag
         get() = findNotNullChildByClass(ElmFieldAccessTargetTag::class.java)
 
-    /** The name of the record field to read. This will be non-null in a well-formed program */
-    val lowerCaseIdentifier: PsiElement?
-        get() = findChildByType(LOWER_CASE_IDENTIFIER)
+    /** The name of the record field to read */
+    val lowerCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
+
+    override val referenceNameElement: PsiElement
+        get() = lowerCaseIdentifier
+
+    override val referenceName: String
+        get() = lowerCaseIdentifier.text
+
+    override fun getReference(): ElmReference {
+        return FieldAccessReference(this)
+    }
 }

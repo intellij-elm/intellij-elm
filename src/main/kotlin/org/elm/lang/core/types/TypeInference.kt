@@ -435,7 +435,7 @@ private class InferenceScope(
         val target = expr.targetExpr
         val targetType = inferFieldAccessTarget(target)
         val targetTy = replacements[targetType]
-        val fieldIdentifier = expr.lowerCaseIdentifier ?: return TyUnknown()
+        val fieldIdentifier = expr.lowerCaseIdentifier
         val fieldName = fieldIdentifier.text
 
         if (targetTy is TyVar) {
