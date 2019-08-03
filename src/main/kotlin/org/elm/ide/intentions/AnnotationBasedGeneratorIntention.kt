@@ -44,8 +44,8 @@ abstract class AnnotationBasedGeneratorIntention : ElmAtCaretIntentionActionBase
     override fun invoke(project: Project, editor: Editor, context: Context) {
         val generator = generator(context)
         val indent = editor.getIndent(context.startOffset)
-        val code = generator.code.replace(Regex("\n(?![\r\n])"), "\n$indent")
-        val imports = generator.imports
+        val (generatedCode, imports) = generator.run()
+        val code = generatedCode.replace(Regex("\n(?![\r\n])"), "\n$indent")
         project.runWriteCommandAction {
             editor.document.insertString(context.endOffset, "$indent$code")
             if (imports.isNotEmpty()) {

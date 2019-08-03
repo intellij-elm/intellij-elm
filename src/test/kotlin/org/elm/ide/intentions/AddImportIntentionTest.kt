@@ -2,7 +2,7 @@ package org.elm.ide.intentions
 
 import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
-import org.elm.lang.core.imports.ImportAdder.Candidate
+import org.elm.lang.core.imports.ImportAdder.Import
 import org.intellij.lang.annotations.Language
 
 class AddImportIntentionTest : ElmIntentionTestBase(AddImportIntention()) {
@@ -342,7 +342,7 @@ main = 2 |. 3
         var chooseItemWasCalled = false
 
         withMockUI(object : ImportPickerUI {
-            override fun choose(candidates: List<Candidate>, callback: (Candidate) -> Unit) {
+            override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
                 chooseItemWasCalled = true
                 val actualItems = candidates.map { it.moduleName }.toSet()
                 assertEquals(expectedElements, actualItems)

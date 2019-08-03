@@ -204,11 +204,12 @@ f : Decode.Decoder Bar
 f =
     Decode.succeed Bar
         |> required "bar1" Decode.string
-        |> required "fooRef" decodeFoo
+        |> required "fooRef" fooDecoder
 
 
-decodeEnum : Decode.Decoder Enum
-decodeEnum =
+-- TODO: generated code
+enumDecoder : Decode.Decoder Enum
+enumDecoder =
     let
         get id =
             case id of
@@ -224,12 +225,13 @@ decodeEnum =
     Decode.string |> Decode.andThen get
 
 
-decodeFoo : Decode.Decoder Foo
-decodeFoo =
+-- TODO: generated code
+fooDecoder : Decode.Decoder Foo
+fooDecoder =
     Decode.succeed Foo
         |> required "foo1" Decode.string
         |> required "foo2" Decode.int
-        |> required "enum" decodeEnum
+        |> required "enum" enumDecoder
 """)
 
     fun `test nested function`() = doAvailableTest(
@@ -258,11 +260,12 @@ main =
         decode : Decode.Decoder Foo        
         decode =
             Decode.succeed Foo
-                |> required "enum" decodeEnum
+                |> required "enum" enumDecoder
 
 
-        decodeEnum : Decode.Decoder Enum
-        decodeEnum =
+        -- TODO: generated code
+        enumDecoder : Decode.Decoder Enum
+        enumDecoder =
             let
                 get id =
                     case id of
@@ -300,17 +303,19 @@ type alias Foo = { uuid: UUID, wrappers : Wrappers }
 decode : Decode.Decoder Foo
 decode =
     Decode.succeed Foo
-        |> required "uuid" decodeUUID
-        |> required "wrappers" decodeWrappers
+        |> required "uuid" uuidDecoder
+        |> required "wrappers" wrappersDecoder
 
 
-decodeUUID : Decode.Decoder UUID
-decodeUUID =
+-- TODO: generated code
+uuidDecoder : Decode.Decoder UUID
+uuidDecoder =
     Decode.map UUID Decode.string
 
 
-decodeWrappers : Decode.Decoder Wrappers
-decodeWrappers =
+-- TODO: generated code
+wrappersDecoder : Decode.Decoder Wrappers
+wrappersDecoder =
     let
         get id =
             case id of
@@ -382,19 +387,21 @@ type alias Model = { bar : Bar }
 decode : Decode.Decoder Model
 decode =
     Decode.succeed Model
-        |> required "bar" decodeBar
+        |> required "bar" barDecoder
 
 
-decodeFooBar : Decode.Decoder Foo.Bar
-decodeFooBar =
+-- TODO: generated code
+fooBarDecoder : Decode.Decoder Foo.Bar
+fooBarDecoder =
     Decode.succeed Foo.Bar
         |> required "s" Decode.string
 
 
-decodeBar : Decode.Decoder Bar
-decodeBar =
+-- TODO: generated code
+barDecoder : Decode.Decoder Bar
+barDecoder =
     Decode.succeed Bar
-        |> required "f" decodeFooBar
+        |> required "f" fooBarDecoder
 """)
 
     fun `test adding import`() = doAvailableTestWithFileTree(
@@ -422,11 +429,12 @@ import Json.Decode.Pipeline exposing (required)
 decode : Decode.Decoder Foo
 decode =
     Decode.succeed Foo
-        |> required "bar" decodeBar
+        |> required "bar" barDecoder
 
 
-decodeBar : Decode.Decoder Bar.Bar
-decodeBar =
+-- TODO: generated code
+barDecoder : Decode.Decoder Bar.Bar
+barDecoder =
     Decode.succeed Bar.Bar
         |> required "s" Decode.string
 """)
@@ -454,17 +462,19 @@ type alias Baz = { foo : Foo.Foo, bar : Foo.Bar }
 decode : Decode.Decoder Baz
 decode =
     Decode.succeed Baz
-        |> required "foo" decodeFoo
-        |> required "bar" decodeBar
+        |> required "foo" fooDecoder
+        |> required "bar" barDecoder
 
 
-decodeFoo : Decode.Decoder Foo.Foo
-decodeFoo =
+-- TODO: generated code
+fooDecoder : Decode.Decoder Foo.Foo
+fooDecoder =
     Decode.map Foo Decode.string
 
 
-decodeBar : Decode.Decoder Foo.Bar
-decodeBar =
+-- TODO: generated code
+barDecoder : Decode.Decoder Foo.Bar
+barDecoder =
     let
         get id =
             case id of

@@ -1,10 +1,12 @@
 package org.elm.ide.intentions
 
-import org.elm.lang.core.imports.ImportAdder.Candidate
+import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.toElmLowerId
 import org.elm.lang.core.types.*
+import org.elm.lang.core.types.TyInProgressBinding.alias
 
 class MakeDecoderIntention : AnnotationBasedGeneratorIntention() {
     override fun getText() = "Generate Decoder"
@@ -23,24 +25,25 @@ class MakeDecoderIntention : AnnotationBasedGeneratorIntention() {
 private class DecoderGenerator(
         file: ElmFile,
         root: Ty,
-        functionName: String
+        private val functionName: String
 ) : TyFunctionGenerator(file, root) {
     /** true if we need to import Json.Decode.Pipeline */
     private var usedPipeline = false
 
-    override val code by lazy {
+    override fun generateCode(): String {
         // run gen on the root to kick off generation
         val genBody = gen(root)
         val rootFunc = funcsByTy[root]
         funcsByTy.remove(root)
         val body = rootFunc?.body ?: "    $genBody"
 
-        buildString {
+        return buildString {
             append("\n$functionName =\n")
             append(body)
 
             for (f in funcsByTy.values) {
                 append("\n\n\n")
+                append("-- TODO: generated code\n")
                 append("${f.name} : ${qual("Decoder")} ${f.qualifier}${f.paramTy.renderedText(false, false)}\n")
                 append("${f.name} =\n")
                 append(f.body)
@@ -48,16 +51,16 @@ private class DecoderGenerator(
         }
     }
 
-    override fun calculateImports(): List<Candidate> {
+    override fun generateImports(): List<Import> {
         return when {
-            usedPipeline -> super.calculateImports() + listOf(
-                    Candidate(
+            usedPipeline -> super.generateImports() + listOf(
+                    Import(
                             moduleName = "Json.Decode.Pipeline",
                             moduleAlias = null,
                             nameToBeExposed = "required"
                     )
             )
-            else -> super.calculateImports()
+            else -> super.generateImports()
         }
     }
 
@@ -92,7 +95,7 @@ private class DecoderGenerator(
         if (cached != null) return cached
 
         val qualifier = qualifierFor(alias.toRef())
-        val name = "decode${funcNames[alias.toRef()]}"
+        val name = "${(funcNames[alias.toRef()] ?: alias.name).toElmLowerId()}Decoder"
         val body = buildString {
             append("    ${qual("succeed")} $qualifier${alias.name}")
             for ((field, fieldTy) in ty.fields) {
@@ -142,7 +145,7 @@ private class DecoderGenerator(
             }
         }
 
-        val name = "decode${ty.alias?.let { funcNames[it.toRef()] } ?: ty.name}"
+        val name = "${(ty.alias?.let { funcNames[it.toRef()] } ?: ty.name).toElmLowerId()}Decoder"
         val func = GeneratedFunction(name = name, paramTy = ty, paramName = "", body = body, qualifier = qualifierFor(ty.toRef()))
         funcsByTy[ty] = func
         return name

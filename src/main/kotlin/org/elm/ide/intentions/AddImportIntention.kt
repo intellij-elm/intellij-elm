@@ -7,7 +7,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
-import org.elm.lang.core.imports.ImportAdder.Candidate
+import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.imports.ImportAdder.addImport
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmExposableTag
@@ -25,7 +25,7 @@ import javax.swing.JList
 
 
 interface ImportPickerUI {
-    fun choose(candidates: List<Candidate>, callback: (Candidate) -> Unit)
+    fun choose(candidates: List<Import>, callback: (Import) -> Unit)
 }
 
 private var MOCK: ImportPickerUI? = null
@@ -45,7 +45,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 
     data class Context(
             val refName: String,
-            val candidates: List<Candidate>,
+            val candidates: List<Import>,
             val isQualified: Boolean
     )
 
@@ -95,7 +95,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 
         // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
         val candidates = context.candidates.sortedWith(
-                compareBy<Candidate, String?>(nullsFirst()) { it.moduleAlias }
+                compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
                         .thenBy { it.moduleName }
         )
 
@@ -115,7 +115,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
 }
 
 class PickerUI(val project: Project, val context: AddImportIntention.Context) : ImportPickerUI {
-    override fun choose(candidates: List<Candidate>, callback: (Candidate) -> Unit) {
+    override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
         JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
                 .setTitle("Import '${context.refName}' from module:")
@@ -126,8 +126,8 @@ class PickerUI(val project: Project, val context: AddImportIntention.Context) : 
     }
 }
 
-private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
-    override fun customizeCellRenderer(list: JList<out Candidate>, value: Candidate, index: Int, selected: Boolean, hasFocus: Boolean) {
+private class CandidateRenderer : ColoredListCellRenderer<Import>() {
+    override fun customizeCellRenderer(list: JList<out Import>, value: Import, index: Int, selected: Boolean, hasFocus: Boolean) {
         // TODO set the background color based on project vs tests vs library
         append(value.moduleName)
         if (value.moduleAlias != null) {
@@ -144,7 +144,7 @@ private class CandidateRenderer : ColoredListCellRenderer<Candidate>() {
 /**
  * Returns a candidate if the element is exposed by its containing module
  */
-private fun fromExposableElement(element: ElmExposableTag, ref: ElmReference): Candidate? {
+private fun fromExposableElement(element: ElmExposableTag, ref: ElmReference): Import? {
     val moduleDecl = element.elmFile.getModuleDecl() ?: return null
     val exposingList = moduleDecl.exposingList ?: return null
 
@@ -174,7 +174,7 @@ private fun fromExposableElement(element: ElmExposableTag, ref: ElmReference): C
         return null
     }
 
-    return Candidate(
+    return Import(
             moduleName = moduleDecl.name,
             moduleAlias = alias,
             nameToBeExposed = nameToBeExposed

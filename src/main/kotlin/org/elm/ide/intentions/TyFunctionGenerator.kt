@@ -1,11 +1,17 @@
 package org.elm.ide.intentions
 
-import org.elm.lang.core.imports.ImportAdder.Candidate
+import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.types.*
+import org.elm.lang.core.types.AliasInfo
+import org.elm.lang.core.types.DeclarationInTy
+import org.elm.lang.core.types.Ty
+import org.elm.lang.core.types.TyUnion
+import org.elm.lang.core.types.allDeclarations
+import org.elm.lang.core.types.findTy
+import org.elm.lang.core.types.moduleName
 
 
 abstract class TyFunctionGenerator(
@@ -31,7 +37,7 @@ abstract class TyFunctionGenerator(
     /** Additional encoder functions to generate */
     protected val funcsByTy = mutableMapOf<Ty, GeneratedFunction>()
     /** Cache of already existing callable expressions that aren't in [funcsByTy] */
-    protected val callablesByTy = mutableMapOf<Ty, String>()
+    private val callablesByTy = mutableMapOf<Ty, String>()
     /** Unions that need their variants exposed. */
     protected val unionsToExpose = mutableSetOf<Ref>()
 
@@ -58,6 +64,32 @@ abstract class TyFunctionGenerator(
         file.findChildrenByClass(ElmImportClause::class.java).mapTo(mutableSetOf()) { it.referenceName }
     }
 
+    /** Generate the code and imports for this function */
+    fun run(): Pair<String, List<Import>> = generateCode() to generateImports()
+
+    /** The code to insert for this function */
+    protected abstract fun generateCode(): String
+
+    /** The list of imports needed by generated code. */
+    protected open fun generateImports(): List<Import> {
+        val visibleTypes = ModuleScope.getVisibleTypes(file).all
+                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
+        // Hack in List since GlobalScope.getVisibleTypes can't return it
+        val visibleModules = importedModules + "List"
+        return declarations
+                .filter {
+                    it.module != moduleName &&
+                            (it.toRef() in unionsToExpose || it.module !in visibleModules && it.toRef() !in visibleTypes)
+                }
+                .map {
+                    Import(
+                            moduleName = it.module,
+                            moduleAlias = null,
+                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else ""
+                    )
+                }
+    }
+
     /** Get the module qualifier prefix to add to a name */
     protected fun qualifierFor(ref: Ref): String {
         return when (ref.module) {
@@ -70,31 +102,6 @@ abstract class TyFunctionGenerator(
 
     /** Prefix [name], defined in [module], with the necessary qualifier */
     protected fun qual(module: String, name: String) = "${qualifierFor(Ref(module, name))}$name"
-
-    /** Code to insert after the type annotation */
-    abstract val code: String
-
-    /** Imports to add because they are referenced by generated code. */
-    val imports: List<Candidate> by lazy { calculateImports() }
-
-    protected open fun calculateImports(): List<Candidate> {
-        val visibleTypes = ModuleScope.getVisibleTypes(file).all
-                .mapNotNullTo(mutableSetOf()) { it.name?.let { n -> Ref(it.moduleName, n) } }
-        // Hack in List since GlobalScope.getVisibleTypes can't return it
-        val visibleModules = importedModules + "List"
-        return declarations
-                .filter {
-                    it.module != moduleName &&
-                            (it.toRef() in unionsToExpose || it.module !in visibleModules && it.toRef() !in visibleTypes)
-                }
-                .map {
-                    Candidate(
-                            moduleName = it.module,
-                            moduleAlias = null,
-                            nameToBeExposed = if (it.isUnion) "${it.name}(..)" else ""
-                    )
-                }
-    }
 
     /** Return the callable for a user-supplied function to process [ty] if there is one */
     protected fun existing(ty: Ty): String? {

@@ -24,12 +24,12 @@ class MakeEncoderIntention : AnnotationBasedGeneratorIntention() {
 private class EncoderGenerator(
         file: ElmFile,
         root: Ty,
-        functionName: String
-): TyFunctionGenerator(file, root) {
+        private val functionName: String
+) : TyFunctionGenerator(file, root) {
     /** Counter used to prevent name collision of generated functions */
     private var i = 1
 
-    override val code by lazy {
+    override fun generateCode(): String {
         // run gen on the root to kick off generation
         val genBody = gen(root)
         val rootFunc = funcsByTy[root]
@@ -37,12 +37,13 @@ private class EncoderGenerator(
         val param = rootFunc?.paramName ?: root.renderParam()
         val body = rootFunc?.body ?: "    $genBody $param"
 
-        buildString {
+        return buildString {
             append("\n$functionName $param =\n")
             append(body)
 
             for (f in funcsByTy.values) {
                 append("\n\n\n")
+                append("-- TODO: generated code\n")
                 append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> ${qual("Value")}\n")
                 append("${f.name} ${f.paramName} =\n")
                 append(f.body)
@@ -70,7 +71,8 @@ private class EncoderGenerator(
         ty.isTyChar -> "(${qual("String", "fromChar")} >> ${qual("string")})"
         ty.isTyList -> existing(ty) ?: "${qual("list")} ${gen(ty.parameters[0])}"
         ty.module == "Set" && ty.name == "Set" -> existing(ty) ?: "${qual("set")} ${gen(ty.parameters[0])}"
-        ty.module == "Array" && ty.name == "Array" -> existing(ty) ?: "${qual("array")} ${gen(ty.parameters[0])}"
+        ty.module == "Array" && ty.name == "Array" -> existing(ty)
+                ?: "${qual("array")} ${gen(ty.parameters[0])}"
         ty.module == "Maybe" && ty.name == "Maybe" -> generateMaybe(ty)
         ty.module == "Dict" && ty.name == "Dict" -> generateDict(ty)
         else -> generateUnionFunc(ty)

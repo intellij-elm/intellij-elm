@@ -174,6 +174,7 @@ f bar =
         ]
 
 
+-- TODO: generated code
 encodeEnum : Enum -> Encode.Value
 encodeEnum enum =
     case enum of
@@ -184,6 +185,7 @@ encodeEnum enum =
             Encode.string "Qux"
 
 
+-- TODO: generated code
 encodeFoo : Foo -> Encode.Value
 encodeFoo foo =
     Encode.object <|
@@ -220,6 +222,7 @@ main =
                 ]
 
 
+        -- TODO: generated code
         encodeEnum : Enum -> Encode.Value
         encodeEnum enum =
             case enum of
@@ -256,11 +259,13 @@ encode foo =
         ]
 
 
+-- TODO: generated code
 encodeUUID : UUID -> Encode.Value
 encodeUUID (UUID string) =
     Encode.string string
 
 
+-- TODO: generated code
 encodeWrappers : Wrappers -> Encode.Value
 encodeWrappers wrappers =
     case wrappers of
@@ -323,6 +328,7 @@ encode model =
         ]
 
 
+-- TODO: generated code
 encodeFooBar : Foo.Bar -> Encode.Value
 encodeFooBar bar =
     Encode.object <|
@@ -330,6 +336,7 @@ encodeFooBar bar =
         ]
 
 
+-- TODO: generated code
 encodeBar : Bar -> Encode.Value
 encodeBar bar =
     Encode.object <|
@@ -363,6 +370,7 @@ encode foo =
         ]
 
 
+-- TODO: generated code
 encodeBar : Bar.Bar -> Encode.Value
 encodeBar bar =
     Encode.object <|
@@ -397,11 +405,13 @@ encode baz =
         ]
 
 
+-- TODO: generated code
 encodeFoo : Foo.Foo -> Encode.Value
 encodeFoo (Foo string) =
     Encode.string string
 
 
+-- TODO: generated code
 encodeBar : Foo.Bar -> Encode.Value
 encodeBar bar =
     case bar of

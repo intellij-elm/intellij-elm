@@ -18,7 +18,7 @@ object ImportAdder {
      *                      a bare union type variant, it will be the parenthesized
      *                      form: "TypeName(VariantName)"
      */
-    data class Candidate(
+    data class Import(
             val moduleName: String,
             val moduleAlias: String?,
             val nameToBeExposed: String
@@ -27,7 +27,7 @@ object ImportAdder {
     /**
      * Merge an import [candidate] to the imports in [file], including exposing values if [isQualified] is true.
      */
-    fun addImport(candidate: Candidate, file: ElmFile, isQualified: Boolean) {
+    fun addImport(candidate: Import, file: ElmFile, isQualified: Boolean) {
         val factory = ElmPsiFactory(file.project)
         val newImport = if (isQualified)
             factory.createImport(candidate.moduleName, alias = candidate.moduleAlias)
