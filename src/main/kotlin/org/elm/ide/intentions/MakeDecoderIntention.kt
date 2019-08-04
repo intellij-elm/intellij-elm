@@ -43,7 +43,7 @@ private class DecoderGenerator(
 
             for (f in funcsByTy.values) {
                 append("\n\n\n")
-                append("-- TODO: generated code\n")
+                append("-- TODO: double-check generated code\n")
                 append("${f.name} : ${qual("Decoder")} ${f.qualifier}${f.paramTy.renderedText(false, false)}\n")
                 append("${f.name} =\n")
                 append(f.body)

@@ -207,7 +207,7 @@ f =
         |> required "fooRef" fooDecoder
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 enumDecoder : Decode.Decoder Enum
 enumDecoder =
     let
@@ -225,7 +225,7 @@ enumDecoder =
     Decode.string |> Decode.andThen get
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 fooDecoder : Decode.Decoder Foo
 fooDecoder =
     Decode.succeed Foo
@@ -263,7 +263,7 @@ main =
                 |> required "enum" enumDecoder
 
 
-        -- TODO: generated code
+        -- TODO: double-check generated code
         enumDecoder : Decode.Decoder Enum
         enumDecoder =
             let
@@ -307,13 +307,13 @@ decode =
         |> required "wrappers" wrappersDecoder
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 uuidDecoder : Decode.Decoder UUID
 uuidDecoder =
     Decode.map UUID Decode.string
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 wrappersDecoder : Decode.Decoder Wrappers
 wrappersDecoder =
     let
@@ -390,14 +390,14 @@ decode =
         |> required "bar" barDecoder
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 fooBarDecoder : Decode.Decoder Foo.Bar
 fooBarDecoder =
     Decode.succeed Foo.Bar
         |> required "s" Decode.string
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 barDecoder : Decode.Decoder Bar
 barDecoder =
     Decode.succeed Bar
@@ -432,7 +432,7 @@ decode =
         |> required "bar" barDecoder
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 barDecoder : Decode.Decoder Bar.Bar
 barDecoder =
     Decode.succeed Bar.Bar
@@ -466,13 +466,13 @@ decode =
         |> required "bar" barDecoder
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 fooDecoder : Decode.Decoder Foo.Foo
 fooDecoder =
     Decode.map Foo Decode.string
 
 
--- TODO: generated code
+-- TODO: double-check generated code
 barDecoder : Decode.Decoder Foo.Bar
 barDecoder =
     let
