@@ -274,7 +274,14 @@
             <className>org.elm.ide.intentions.MakeAnnotationIntention</className>
             <category>Elm</category>
         </intentionAction>
-
+        <intentionAction>
+            <className>org.elm.ide.intentions.MakeDecoderIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.MakeEncoderIntention</className>
+            <category>Elm</category>
+        </intentionAction>
 
         <!-- ELM PROJECTS, PACKAGES AND DEPENDENCIES -->
         <projectService serviceImplementation="org.elm.workspace.ElmWorkspaceService"/>

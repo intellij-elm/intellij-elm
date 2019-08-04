@@ -1,7 +1,6 @@
 package org.elm.ide.inspections
 
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.util.DocumentUtil
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.ElmAnythingPattern
@@ -35,17 +34,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     private val document = element.containingFile
             ?.let { PsiDocumentManager.getInstance(element.project).getDocument(it) }
 
-    // This should be a lazy {}, but using it causes a compilation error due to conflicting
-    // declarations.
-    val result: Result
-        get() {
-
-            if (_result == null) {
-                _result = if (document == null) Result.NoMissing else calcMissingBranches()
-            }
-            return _result!!
-        }
-    private var _result: Result? = null
+    val result: Result by lazy { if (document == null) Result.NoMissing else calcMissingBranches() }
 
     fun addMissingBranches() {
         val result = this.result as? Result.MissingVariants ?: return
@@ -93,14 +82,14 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
         val exprTy = element.expression?.let { inference.elementType(it) } as? TyUnion
                 ?: return defaultResult
 
-        val declaration = findTypeDeclaration(exprTy) ?: return defaultResult
+        val declaration: ElmTypeDeclaration = ElmLookup.findFirstByNameAndModule(exprTy.name, exprTy.module, element.elmFile)
+                ?: return defaultResult
 
         val allBranches = declaration.variantInference().value
         val missingBranches = allBranches.toMutableMap()
 
         for (branch in element.branches) {
-            val pat = branch.pattern.child
-            when (pat) {
+            when (val pat = branch.pattern.child) {
                 is ElmAnythingPattern -> return Result.NoMissing // covers all cases
                 is ElmUnionPattern -> {
                     missingBranches.remove(pat.referenceName)
@@ -113,23 +102,9 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
             return Result.NoMissing
         }
 
-        val qualifierPrefix = ModuleScope.getQualifierForTypeName(element.elmFile, exprTy.module, exprTy.name)
+        val qualifierPrefix = ModuleScope.getQualifierForName(element.elmFile, exprTy.module, exprTy.name)
                 ?: ""
 
         return Result.MissingVariants(missingBranches.mapKeys { (k, _) -> qualifierPrefix + k })
-    }
-
-    private fun findTypeDeclaration(exprTy: TyUnion): ElmTypeDeclaration? {
-        val candidates = ElmLookup.findByNameAndModule<ElmTypeDeclaration>(exprTy.name, exprTy.module, element.elmFile)
-        return when {
-            candidates.size < 2 -> candidates.firstOrNull()
-            else -> {
-                // Multiple modules have the same name and define a type of the same name.
-                // Since the Elm compiler forbids you from importing a module whose name
-                // is ambiguous, the only way for this to be valid is if they are actually
-                // the *same* module.
-                candidates.firstOrNull { it.elmFile == element.elmFile }
-            }
-        }
     }
 }

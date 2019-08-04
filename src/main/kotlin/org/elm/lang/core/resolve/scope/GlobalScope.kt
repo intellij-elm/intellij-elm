@@ -88,7 +88,8 @@ class GlobalScope private constructor(val clientFile: ElmFile) {
         return rest
     }
 
-
+    // this function should also return List, but, unlike all the other global types, Elm doesn't
+    // define it anywhere, so there's no element to return
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModulesIndex.get(moduleName, clientFile)

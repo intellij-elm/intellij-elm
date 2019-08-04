@@ -1,0 +1,1 @@
+<spot>encode</spot> : Int -> Encode.Value

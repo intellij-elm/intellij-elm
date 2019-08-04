@@ -125,6 +125,7 @@ fun TyList(elementTy: Ty) = TyUnion("List", "List", listOf(elementTy))
 val TyUnion.isTyList: Boolean get() = module == "List" && name == "List"
 val TyUnion.isTyInt: Boolean get() = module == TyInt.module && name == TyInt.name
 val TyUnion.isTyFloat: Boolean get() = module == TyFloat.module && name == TyFloat.name
+val TyUnion.isTyBool: Boolean get() = module == TyBool.module && name == TyBool.name
 val TyUnion.isTyString: Boolean get() = module == TyString.module && name == TyString.name
 val TyUnion.isTyChar: Boolean get() = module == TyChar.module && name == TyChar.name
 
@@ -207,5 +208,45 @@ fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = sequence<TyVar>
     }
     if (includeAlias) {
         alias?.parameters?.forEach { yieldAll(it.allVars(includeAlias)) }
+    }
+}
+
+data class DeclarationInTy(val module: String, val name: String, val isUnion: Boolean)
+
+/** Create a lazy sequence of all union and alias instances within a [Ty]. */
+fun Ty.allDeclarations(
+        includeFunctions: Boolean = false,
+        includeUnionsWithAliases: Boolean = false
+): Sequence<DeclarationInTy> = sequence {
+    when (this@allDeclarations) {
+        is TyVar -> {
+        }
+        is TyTuple -> types.forEach { yieldAll(it.allDeclarations()) }
+        is TyRecord -> {
+            fields.values.forEach { yieldAll(it.allDeclarations()) }
+            if (baseTy != null) yieldAll(baseTy.allDeclarations())
+        }
+        is MutableTyRecord -> {
+            fields.values.forEach { yieldAll(it.allDeclarations()) }
+            if (baseTy != null) yieldAll(baseTy.allDeclarations())
+        }
+        is TyFunction -> {
+            if (includeFunctions) {
+                yieldAll(ret.allDeclarations())
+                parameters.forEach { yieldAll(it.allDeclarations()) }
+            }
+        }
+        is TyUnion -> {
+            if (includeUnionsWithAliases || alias == null) {
+                yield(DeclarationInTy(module, name, isUnion = true))
+            }
+            parameters.forEach { yieldAll(it.allDeclarations()) }
+        }
+        is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        }
+    }
+    alias?.let {
+        yield(DeclarationInTy(it.module, it.name, isUnion = false))
+        it.parameters.forEach { p -> yieldAll(p.allDeclarations()) }
     }
 }
