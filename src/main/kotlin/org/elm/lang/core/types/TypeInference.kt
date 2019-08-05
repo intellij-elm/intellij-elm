@@ -1233,6 +1233,11 @@ private class InferenceScope(
                 is TyRecord -> ty1.fieldReferences += ty2.fieldReferences
                 is MutableTyRecord -> ty1.fieldReferences += ty2.fieldReferences
             }
+        } else if (ty2 is MutableTyRecord) {
+            when (ty1) {
+                is TyRecord -> ty2.fieldReferences += ty1.fieldReferences
+                is MutableTyRecord -> ty2.fieldReferences += ty1.fieldReferences
+            }
         }
     }
 

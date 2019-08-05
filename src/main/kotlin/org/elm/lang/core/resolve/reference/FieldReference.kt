@@ -16,8 +16,6 @@ class FieldReference(
     override fun isSoft(): Boolean = true
     override fun getVariants(): Array<ElmNamedElement> = emptyArray()
 
-    // TODO[aj] : This doesn't seem to work for |>. Maybe replacement is different somehow, or maybe
-    // its from the chained vars?
     override fun resolve(): ElmNamedElement? {
         val recordExpr = element.parentOfType<ElmRecordExpr>() ?: return null
         val ty = recordExpr.findTy() as? TyRecord ?: return null
