@@ -42,7 +42,7 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // Elm lets you shadow imported names, including auto-imported names, so only count names
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope.getVisibleValues(elmFile).topLevel.mapNotNullTo(mutableSetOf()) { it.name }
-        val result = InferenceScope(shadowableNames, useActiveScopes.toMutableSet(), false, null).beginDeclarationInference(this)
+        val result = InferenceScope(shadowableNames, useActiveScopes.toMutableSet(), false, null).beginDeclarationInference(this, true)
         CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
     }, /*trackValue*/ false, /*parameter*/ activeScopes)
 }
@@ -108,7 +108,7 @@ private class InferenceScope(
      * `begin` function should be called on a scope instance.
      */
 
-    fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
+    fun beginDeclarationInference(declaration: ElmValueDeclaration, replaceResult: Boolean): InferenceResult {
         val assignee = declaration.assignee
 
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
@@ -156,7 +156,7 @@ private class InferenceScope(
             }
             is ParameterBindingResult.Other -> bodyTy
         }
-        return toTopLevelResult(ty)
+        return if (replaceResult) toTopLevelResult(ty) else InferenceResult(expressionTypes, diagnostics, ty)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
@@ -208,7 +208,7 @@ private class InferenceScope(
             decl: ElmValueDeclaration,
             activeScopes: Set<ElmValueDeclaration> = this.activeScopes
     ): InferenceResult {
-        val result = inferChild(activeScopes = activeScopes.toMutableSet()) { beginDeclarationInference(decl) }
+        val result = inferChild(activeScopes = activeScopes.toMutableSet()) { beginDeclarationInference(decl, false) }
         resolvedDeclarations[decl] = result.ty
         expressionTypes[decl] = result.ty
 

@@ -149,4 +149,17 @@ main : R
 main = (\_ -> { field = () }) 1
                  --^
 """)
+
+    fun `test nested decl field access`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main r = 
+  let
+    nest = r.field
+             --^
+  in
+  nest
+""")
 }
