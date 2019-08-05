@@ -13,7 +13,8 @@ class TypeReplacement(
         // A map of variables that should be replaced to the ty to replace them with
         replacements: Map<TyVar, Ty>,
         private val freshen: Boolean,
-        private val varsToRemainRigid: Collection<TyVar>?
+        private val varsToRemainRigid: Collection<TyVar>?,
+        private val replaceMutableRecords: Boolean = true
 ) {
     companion object {
         /**
@@ -22,16 +23,32 @@ class TypeReplacement(
          * @param varsToRemainRigid If given, all [TyVar]s will be replaced with flexible copies,
          *  except for vars that occur in this collection, which will be left unchanged.
          */
-        fun replace(ty: Ty, replacements: Map<TyVar, Ty>, varsToRemainRigid: Collection<TyVar>? = null): Ty {
+        fun replace(
+                ty: Ty,
+                replacements: Map<TyVar, Ty>,
+                varsToRemainRigid: Collection<TyVar>? = null,
+                replaceMutableRecords: Boolean = true
+        ): Ty {
             val noMutableRecords = ty.traverse(true).none { it is MutableTyRecord }
-            if (noMutableRecords && (varsToRemainRigid == null && replacements.isEmpty() || ty.allVars(true).none())) {
+            if ((!replaceMutableRecords || noMutableRecords) &&
+                    (varsToRemainRigid == null && replacements.isEmpty() || ty.allVars(true).none())) {
                 return ty
             }
-            return TypeReplacement(replacements, freshen = false, varsToRemainRigid = varsToRemainRigid).replace(ty)
+            return TypeReplacement(
+                    replacements = replacements,
+                    freshen = false,
+                    varsToRemainRigid = varsToRemainRigid,
+                    replaceMutableRecords = replaceMutableRecords
+            ).replace(ty)
         }
 
-        fun replace(ty: Ty, replacements: DisjointSet, varsToRemainRigid: Collection<TyVar>? = null): Ty {
-            return replace(ty, replacements.asMap(), varsToRemainRigid = varsToRemainRigid)
+        fun replace(
+                ty: Ty,
+                replacements: DisjointSet,
+                varsToRemainRigid: Collection<TyVar>? = null,
+                replaceMutableRecords: Boolean = true
+        ): Ty {
+            return replace(ty, replacements.asMap(), varsToRemainRigid, replaceMutableRecords)
         }
 
         /**
@@ -77,7 +94,11 @@ class TypeReplacement(
             is TyUnion -> replaceUnion(ty)
             is TyRecord -> replaceRecord(ty)
             is TyUnit, TyInProgressBinding -> ty
-            is MutableTyRecord -> replaceRecord(ty.toRecord())
+            is MutableTyRecord -> {
+                val rec = replaceRecord(ty.toRecord())
+                if (replaceMutableRecords) rec
+                else MutableTyRecord(rec.fields.toMutableMap(), rec.baseTy, rec.fieldReferences.toMutableMap())
+            }
         }
         // If we didn't change anything, return the original ty to avoid duplicating the object
         return if (replaced == ty) ty else replaced
@@ -113,7 +134,7 @@ class TypeReplacement(
         return TyUnion(ty.module, ty.name, parameters, replace(ty.alias))
     }
 
-    private fun replaceRecord(ty: TyRecord): Ty {
+    private fun replaceRecord(ty: TyRecord): TyRecord {
         val replacedBase = if (ty.baseTy == null || ty.baseTy !is TyVar) null else getReplacement(ty.baseTy)
         val newBaseTy = when (replacedBase) {
             // If the base ty of the argument is a record, use it's base ty, which might be null.

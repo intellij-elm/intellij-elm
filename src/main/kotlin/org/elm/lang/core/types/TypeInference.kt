@@ -312,7 +312,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
+                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements, replaceMutableRecords = false)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -364,7 +364,7 @@ private class InferenceScope(
         }
 
         if (ok && arguments.size > targetTy.parameters.size) {
-            var appliedTy = TypeReplacement.replace(targetTy.ret, replacements)
+            var appliedTy = TypeReplacement.replace(targetTy.ret, replacements, replaceMutableRecords = false)
 
             // friendly error for the common case
             if (appliedTy !is TyFunction) {
@@ -376,7 +376,7 @@ private class InferenceScope(
             for (i in targetTy.parameters.size..arguments.lastIndex) {
                 if (appliedTy !is TyFunction) return argCountError(expr.target, arguments[i], 1, 0)
                 if (!requireAssignable(arguments[i], argTys[i], appliedTy.parameters.first())) return TyUnknown()
-                appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements)
+                appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements, replaceMutableRecords = false)
             }
 
             expressionTypes[expr] = appliedTy
@@ -384,7 +384,7 @@ private class InferenceScope(
         }
 
         val resultTy = if (ok) {
-            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements)
+            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements, replaceMutableRecords = false)
         } else {
             TyUnknown()
         }

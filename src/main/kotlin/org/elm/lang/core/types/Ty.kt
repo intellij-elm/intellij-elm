@@ -109,8 +109,6 @@ data class MutableTyRecord(
 
     override val alias: AliasInfo? get() = null
     override fun withAlias(alias: AliasInfo) = error("MutableTyRecord cannot have aliases")
-    override fun toString() = toRecord().toString()
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is TyRecord) return false
@@ -122,6 +120,7 @@ data class MutableTyRecord(
         result = 31 * result + (baseTy?.hashCode() ?: 0)
         return result
     }
+    override fun toString() = "{~${toRecord().toString().drop(1)}"
 }
 
 /** A type like `String` or `Maybe a` */

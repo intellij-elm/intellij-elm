@@ -40,6 +40,16 @@ main r = r.field
            --^
 """)
 
+    fun `test field access to field in record parameter`() = checkByCode(
+            """
+type alias R a = { a | field : () }
+type alias S = { s : R { field2 : () } }
+                          --X
+main : S -> ()
+main r = r.s.field2
+               --^
+""")
+
     fun `test field access to nested parameterized record`() = checkByCode(
             """
 type alias S = { nested : () }
@@ -48,6 +58,15 @@ type alias R a = { field : a }
 main : R S -> ()
 main r = r.field.nested
                   --^
+""")
+
+    fun `test field access in lambda call`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main r = (\rr -> rr.field) r
+                     --^
 """)
 
     fun `test record update`() = checkByCode(
@@ -110,6 +129,24 @@ func _ = ()
 
 main : ()
 main = func <| { field = () }
+                 --^
+""")
+
+    fun `test record value returned from function`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R
+main = { field = () }
+          --^
+""")
+
+    fun `test record value returned from lambda`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R
+main = (\_ -> { field = () }) 1
                  --^
 """)
 }
