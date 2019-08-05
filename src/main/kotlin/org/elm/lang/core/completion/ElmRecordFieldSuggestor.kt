@@ -53,5 +53,5 @@ object ElmRecordFieldSuggestor : Suggestor {
 
 private fun CompletionResultSet.add(str: String, field: Ty) {
     addElement(LookupElementBuilder.create(str)
-            .withTypeText(field.renderedText(false, false)))
+            .withTypeText(field.renderedText()))
 }

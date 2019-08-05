@@ -61,7 +61,7 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
         if (ty != null && ty !is TyUnknown) {
             b { append(id) }
             append(" : ")
-            append(ty.renderedText(true, false))
+            append(ty.renderedText(linkify = true, withModule = false))
             append("\n")
         }
 
@@ -85,7 +85,7 @@ private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
         b { append("type") }
         append(" ", ty.name)
         for (param in ty.parameters) {
-            append(" ", param.renderedText(true, false))
+            append(" ", param.renderedText(linkify = true, withModule = false))
         }
         renderDefinitionLocation(decl)
     }
@@ -114,7 +114,7 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
         b { append("type alias") }
         append(" ").append(alias.name)
         for (type in alias.parameters) {
-            append(" ", ty.renderedText(true, false))
+            append(" ", ty.renderedText(linkify = true, withModule = false))
         }
         renderDefinitionLocation(decl)
     }
@@ -126,7 +126,7 @@ private fun documentationFor(decl: ElmTypeAliasDeclaration): String? = buildStri
             section("Fields") {
                 for ((fieldName, fieldTy) in ty.fields) {
                     append("\n<p><code>$fieldName</code> : ")
-                    append(fieldTy.renderedText(true, false))
+                    append(fieldTy.renderedText(linkify = true, withModule = false))
                 }
             }
         }
@@ -143,7 +143,7 @@ private fun documentationForParameter(element: ElmNamedElement): String? = build
         append(" ", element.name, " ")
 
         if (ty != null && ty !is TyUnknown) {
-            append(": ", ty.renderedText(true, false), "\n")
+            append(": ", ty.renderedText(linkify = true, withModule = false), "\n")
         }
 
         i { append("of function ") }
@@ -210,7 +210,7 @@ private fun documentationFor(element: ElmInfixDeclaration): String? {
 private fun StringBuilder.renderVariantParameters(parameters: List<Ty>) {
     if (parameters.isNotEmpty()) {
         parameters.joinTo(this, " ", prefix = " ") {
-            val renderedText = it.renderedText(true, false)
+            val renderedText = it.renderedText(linkify = true, withModule = false)
             if (it is TyUnion && it.parameters.isNotEmpty()) "($renderedText)" else renderedText
         }
     }

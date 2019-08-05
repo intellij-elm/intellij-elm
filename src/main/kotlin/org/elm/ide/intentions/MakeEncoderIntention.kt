@@ -44,7 +44,7 @@ private class EncoderGenerator(
             for (f in funcsByTy.values) {
                 append("\n\n\n")
                 append("-- TODO: double-check generated code\n")
-                append("${f.name} : ${f.qualifier}${f.paramTy.renderedText(false, false)} -> ${qual("Value")}\n")
+                append("${f.name} : ${f.qualifier}${f.paramTy.renderedText()} -> ${qual("Value")}\n")
                 append("${f.name} ${f.paramName} =\n")
                 append(f.body)
             }
@@ -59,7 +59,7 @@ private class EncoderGenerator(
         is TyTuple -> generateTuple(ty)
         is TyUnit -> "(\\_ -> ${qual("null")})"
         is TyFunction, TyInProgressBinding, is MutableTyRecord, is TyUnknown -> {
-            "(\\_ -> Debug.todo \"Can't generate encoder for type ${ty.renderedText(false, false)}\")"
+            "(\\_ -> Debug.todo \"Can't generate encoder for type ${ty.renderedText()}\")"
         }
     }
 

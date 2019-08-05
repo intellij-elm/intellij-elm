@@ -19,7 +19,7 @@ class ElmExpressionTypeProvider : ExpressionTypeProvider<PsiElement>() {
 
     override fun getInformationHint(element: PsiElement): String {
         val ty = (element as? ElmPsiElement)?.findTy() ?: return errorHint
-        return StringUtil.escapeXmlEntities(ty.renderedText(false, false))
+        return StringUtil.escapeXmlEntities(ty.renderedText())
     }
 
     override fun getExpressionsAt(elementAt: PsiElement): List<PsiElement> {
