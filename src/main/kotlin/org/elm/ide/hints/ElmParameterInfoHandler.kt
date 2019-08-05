@@ -114,8 +114,8 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 class ElmParametersDescription(private val name: String?, private val ty: Ty) {
     val presentText: String
         get() =
-            if (name == null) ty.renderedText(false, false)
-            else "$name : ${ty.renderedText(false, false)}"
+            if (name == null) ty.renderedText()
+            else "$name : ${ty.renderedText()}"
 
     val rangeToHighlight: TextRange
         get() = TextRange(0, name?.length ?: 0)

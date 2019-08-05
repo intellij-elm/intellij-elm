@@ -44,7 +44,7 @@ private class DecoderGenerator(
             for (f in funcsByTy.values) {
                 append("\n\n\n")
                 append("-- TODO: double-check generated code\n")
-                append("${f.name} : ${qual("Decoder")} ${f.qualifier}${f.paramTy.renderedText(false, false)}\n")
+                append("${f.name} : ${qual("Decoder")} ${f.qualifier}${f.paramTy.renderedText()}\n")
                 append("${f.name} =\n")
                 append(f.body)
             }
@@ -71,7 +71,7 @@ private class DecoderGenerator(
         is TyTuple -> generateTuple(ty)
         is TyUnit -> "(${qual("succeed")} ())"
         is TyFunction, TyInProgressBinding, is MutableTyRecord, is TyUnknown -> {
-            "(Debug.todo \"Can't generate decoder for type ${ty.renderedText(false, false)}\")"
+            "(Debug.todo \"Can't generate decoder for type ${ty.renderedText()}\")"
         }
     }
 
@@ -138,7 +138,7 @@ private class DecoderGenerator(
                 |                $branches
                 |
                 |                _ ->
-                |                    ${qual("fail")} ("unknown value for ${ty.renderedText(false, false)}: " ++ id)
+                |                    ${qual("fail")} ("unknown value for ${ty.renderedText()}: " ++ id)
                 |    in
                 |    ${qual("string")} |> ${qual("andThen")} get
                 """.trimMargin()

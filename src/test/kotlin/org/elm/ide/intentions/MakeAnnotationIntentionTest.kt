@@ -182,4 +182,19 @@ f =
     in
         function
 """)
+
+    fun `test qualified name`() = doAvailableTestWithFileTree(
+            """
+--@ main.elm
+import Foo as F
+main{-caret-} i = F.foo i
+--@ Foo.elm
+module Foo exposing (..)
+type alias Bar = { i : Int }
+foo i = Bar i
+""", """
+import Foo as F
+main : Int -> F.Bar
+main i = F.foo i
+""")
 }

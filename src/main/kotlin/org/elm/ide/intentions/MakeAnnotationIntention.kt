@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
-import org.elm.lang.core.psi.endOffset
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.types.Ty
@@ -41,7 +40,7 @@ class MakeAnnotationIntention : ElmAtCaretIntentionActionBase<MakeAnnotationInte
     override fun invoke(project: Project, editor: Editor, context: Context) {
         val (fdl, valueDeclaration, ty) = context
         val indent = editor.getIndent(valueDeclaration.startOffset)
-        val code = "${fdl.name} : ${ty.renderedText(false, false).replace("→", "->")}\n$indent"
+        val code = "${fdl.name} : ${ty.renderedText(elmFile = fdl.elmFile).replace("→", "->")}\n$indent"
         project.runWriteCommandAction {
             editor.document.insertString(valueDeclaration.startOffset, code)
         }

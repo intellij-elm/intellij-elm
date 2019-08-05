@@ -1,6 +1,8 @@
 package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
+import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.toElmLowerId
 
 /**
@@ -8,12 +10,17 @@ import org.elm.lang.core.toElmLowerId
  *
  * @param linkify If true, add hyperlinks to union names
  * @param withModule If true, qualify union names with their module
+ * @param elmFile If given, [withModule] is ignored and this file will be used to determine module qualifiers
  */
-fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return TypeRenderer(linkify, withModule).render(this)
+fun Ty.renderedText(linkify: Boolean = false, withModule: Boolean = false, elmFile: ElmFile? = null): String {
+    return TypeRenderer(linkify, withModule, elmFile).render(this)
 }
 
-private class TypeRenderer(private val linkify: Boolean, private val withModule: Boolean) {
+private class TypeRenderer(
+        private val linkify: Boolean,
+        private val withModule: Boolean,
+        private val elmFile: ElmFile?
+) {
     private val varDisplayNames = mutableMapOf<TyVar, String>()
     private val possibleNames = varNames()
 
@@ -69,7 +76,11 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
                 }
             }
         }
-        return if (withModule && ty.module.isNotBlank()) "${ty.module}.$type" else type
+        return when {
+            elmFile != null -> "${ModuleScope.getQualifierForName(elmFile, ty.module, ty.name) ?: ""}$type"
+            withModule && ty.module.isNotBlank() -> "${ty.module}.$type"
+            else -> type
+        }
     }
 
     private fun renderRecord(ty: TyRecord): String {
