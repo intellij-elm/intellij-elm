@@ -167,22 +167,6 @@ private class InferenceScope(
         return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
     }
 
-    private fun beginLetInInference(letIn: ElmLetInExpr): InferenceResult {
-        val valueDeclarationList = letIn.valueDeclarationList
-        childDeclarations += valueDeclarationList
-
-        for (decl in valueDeclarationList) {
-            // If a declaration was referenced by a child defined earlier in this scope, it has
-            // already been inferred.
-            if (decl !in resolvedDeclarations) {
-                inferChildDeclaration(decl)
-            }
-        }
-
-        val exprTy = inferExpression(letIn.expression)
-        return InferenceResult(expressionTypes, diagnostics, exprTy)
-    }
-
     private fun beginCaseBranchInference(
             pattern: ElmPattern,
             caseTy: Ty,
@@ -403,7 +387,7 @@ private class InferenceScope(
     private fun inferAtom(atom: ElmAtomTag): Ty {
         // For most atoms, we don't try to infer them if they contain errors.
         val ty = when {
-            atom is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
+            atom is ElmLetInExpr -> inferLetIn(atom)
             atom is ElmCaseOfExpr -> inferCase(atom)
             atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
             atom.hasErrors -> TyUnknown()
@@ -527,6 +511,20 @@ private class InferenceScope(
         return ty ?: TyUnknown()
     }
 
+    private fun inferLetIn(letIn: ElmLetInExpr): Ty {
+        val valueDeclarationList = letIn.valueDeclarationList
+        childDeclarations += valueDeclarationList
+
+        for (decl in valueDeclarationList) {
+            // If a declaration was referenced by a child defined earlier in this scope, it has
+            // already been inferred.
+            if (decl !in resolvedDeclarations) {
+                inferChildDeclaration(decl)
+            }
+        }
+
+        return inferExpression(letIn.expression)
+    }
 
     private fun inferRecord(record: ElmRecordExpr): Ty {
         val fields = record.fieldList.associate { f ->
