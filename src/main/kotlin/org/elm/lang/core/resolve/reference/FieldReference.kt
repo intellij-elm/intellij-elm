@@ -14,11 +14,10 @@ class FieldReference(
 ) : ElmReferenceBase<ElmField>(element) {
     // Unresolved reference errors are handled during type inference
     override fun isSoft(): Boolean = true
-    override fun getVariants(): Array<ElmNamedElement> = emptyArray()
 
-    override fun resolve(): ElmNamedElement? {
-        val recordExpr = element.parentOfType<ElmRecordExpr>() ?: return null
-        val ty = recordExpr.findTy() as? TyRecord ?: return null
-        return ty.fieldReferences[element.referenceName]
+    override fun multiResolve(): List<ElmNamedElement> {
+        val recordExpr = element.parentOfType<ElmRecordExpr>() ?: return emptyList()
+        val ty = recordExpr.findTy() as? TyRecord ?: return emptyList()
+        return ty.fieldReferences.get(element.referenceName)
     }
 }

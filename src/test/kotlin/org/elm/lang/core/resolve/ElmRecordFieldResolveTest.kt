@@ -1,5 +1,7 @@
 package org.elm.lang.core.resolve
 
+import org.intellij.lang.annotations.Language
+
 
 class ElmRecordFieldResolveTest : ElmResolveTestBase() {
     fun `test simple field access`() = checkByCode(
@@ -180,4 +182,19 @@ main box =
     in                                                 
     map f box                                          
 """)
+
+    fun `test multi resolve`() = checkMultiResolve(
+            """
+type alias R = { field : () }
+type alias S = { field : () }
+first : () -> () -> ()
+first a _ = a
+main : R -> S -> ()
+main r s =
+  let
+    nest t = t.field
+               --^                               
+  in
+  first (nest r) (nest s)        
+    """)
 }

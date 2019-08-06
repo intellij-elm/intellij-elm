@@ -1,7 +1,5 @@
 package org.elm.lang.core.types
 
-import org.elm.lang.core.psi.ElmNamedElement
-
 /**
  * A type in the inference system.
  *
@@ -68,7 +66,7 @@ data class TyRecord(
         val fields: Map<String, Ty>,
         val baseTy: Ty? = null,
         override val alias: AliasInfo? = null,
-        val fieldReferences: MutableMap<String, ElmNamedElement> = mutableMapOf()
+        val fieldReferences: RecordFieldReferenceTable = RecordFieldReferenceTable()
 ) : Ty() {
     /** true if this record has a base name, and will match a subset of a record's fields */
     val isSubset: Boolean get() = baseTy != null
@@ -105,7 +103,7 @@ data class TyRecord(
 data class MutableTyRecord(
         val fields: MutableMap<String, Ty>,
         val baseTy: Ty? = null,
-        val fieldReferences: MutableMap<String, ElmNamedElement> = mutableMapOf()
+        val fieldReferences: RecordFieldReferenceTable = RecordFieldReferenceTable()
 ) : Ty() {
     fun toRecord() = TyRecord(fields.toMap(), baseTy, alias, fieldReferences)
 
@@ -214,31 +212,34 @@ object TyInProgressBinding : Ty() {
 /** Information about a type alias. This is not a [Ty]. */
 data class AliasInfo(val module: String, val name: String, val parameters: List<Ty>)
 
+
 /** Create a lazy sequence of all [TyVar]s referenced within this ty. */
-fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = sequence<TyVar> {
-    when (this@allVars) {
-        is TyVar -> yield(this@allVars)
-        is TyTuple -> types.forEach { yieldAll(it.allVars(includeAlias)) }
+fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = traverse(includeAlias).filterIsInstance<TyVar>()
+
+fun Ty.traverse(includeAlias: Boolean = false): Sequence<Ty> = sequence {
+    yield(this@traverse)
+    when (this@traverse) {
+        is TyTuple -> types.forEach { yieldAll(it.traverse(includeAlias)) }
         is TyRecord -> {
-            fields.values.forEach { yieldAll(it.allVars(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.allVars(includeAlias))
+            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
+            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
         }
         is MutableTyRecord -> {
-            fields.values.forEach { yieldAll(it.allVars(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.allVars(includeAlias))
+            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
+            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
         }
         is TyFunction -> {
-            yieldAll(ret.allVars(includeAlias))
-            parameters.forEach { yieldAll(it.allVars(includeAlias)) }
+            yieldAll(ret.traverse(includeAlias))
+            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
         }
         is TyUnion -> {
-            parameters.forEach { yieldAll(it.allVars(includeAlias)) }
+            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
         }
-        is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        is TyVar, is TyUnit, is TyUnknown, TyInProgressBinding -> {
         }
     }
     if (includeAlias) {
-        alias?.parameters?.forEach { yieldAll(it.allVars(includeAlias)) }
+        alias?.parameters?.forEach { yieldAll(it.traverse(includeAlias)) }
     }
 }
 

@@ -12,10 +12,9 @@ class FieldAccessReference(
 ) : ElmReferenceBase<ElmFieldAccessExpr>(element) {
     // Unresolved reference errors are handled during type inference
     override fun isSoft(): Boolean = true
-    override fun getVariants(): Array<ElmNamedElement> = emptyArray()
 
-    override fun resolve(): ElmNamedElement? {
-        val ty = element.targetExpr.findTy() as? TyRecord ?: return null
-        return ty.fieldReferences[element.referenceName]
+    override fun multiResolve(): List<ElmNamedElement> {
+        val ty = element.targetExpr.findTy() as? TyRecord ?: return emptyList()
+        return ty.fieldReferences.get(element.referenceName)
     }
 }

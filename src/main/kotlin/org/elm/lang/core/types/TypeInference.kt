@@ -1051,8 +1051,8 @@ private class InferenceScope(
         }
         if (result) {
             // If we assign a record value expression, we know what its field references resolve to
-            ty1.fieldReferences += ty2.fieldReferences
-            ty2.fieldReferences += ty1.fieldReferences
+            ty1.fieldReferences.addAll(ty2.fieldReferences)
+            ty2.fieldReferences.addAll(ty1.fieldReferences)
         }
         return result
     }

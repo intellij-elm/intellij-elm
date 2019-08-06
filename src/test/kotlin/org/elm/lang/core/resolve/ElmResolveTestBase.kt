@@ -99,4 +99,12 @@ abstract class ElmResolveTestBase : ElmTestBase() {
             }
         }
     }
+
+    protected fun checkMultiResolve(@Language("Elm") code: String) {
+        InlineFile(code)
+        val ref = findElementInEditor<ElmReferenceElement>().reference
+        check(ref.multiResolve().size == 2) {
+            "Expected 2 variants, got ${ref.multiResolve()}"
+        }
+    }
 }
