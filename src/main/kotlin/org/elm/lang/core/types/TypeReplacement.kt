@@ -124,14 +124,17 @@ class TypeReplacement(
         val declaredFields = ty.fields.mapValues { (_, it) -> replace(it) }
         val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
         val baseFieldRefs = (replacedBase as? TyRecord)?.fieldReferences.orEmpty()
-        val fieldReferences = ty.fieldReferences.toMutableMap()
-        fieldReferences += baseFieldRefs
+
+        // The new record shares its references table with the old record. That allows us to track
+        // references back to expressions inside nested declarations even when the record has been
+        // freshened or replaced.
+        ty.fieldReferences += baseFieldRefs
 
         return TyRecord(
                 fields = baseFields + declaredFields,
                 baseTy = newBaseTy,
                 alias = replace(ty.alias),
-                fieldReferences = fieldReferences
+                fieldReferences = ty.fieldReferences
         )
     }
 
