@@ -108,7 +108,7 @@ private class InferenceScope(
      * `begin` function should be called on a scope instance.
      */
 
-    fun beginDeclarationInference(declaration: ElmValueDeclaration, replaceResult: Boolean): InferenceResult {
+    fun beginDeclarationInference(declaration: ElmValueDeclaration, replaceExpressionTypes: Boolean): InferenceResult {
         val assignee = declaration.assignee
 
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
@@ -156,7 +156,7 @@ private class InferenceScope(
             }
             is ParameterBindingResult.Other -> bodyTy
         }
-        return if (replaceResult) toTopLevelResult(ty) else InferenceResult(expressionTypes, diagnostics, ty)
+        return toTopLevelResult(ty, replaceExpressionTypes)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
@@ -241,10 +241,18 @@ private class InferenceScope(
         return isRecursive
     }
 
-    // We only call this for inference scopes that will eventually be cached. There's no
-    // need to replace everything for child calls since they share our replacements table.
-    private fun toTopLevelResult(ty: Ty): InferenceResult {
-        val exprs = expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
+    // We only replace the expression types for inference scopes that will eventually be cached.
+    // There's no need to replace everything for child calls since they share our replacements
+    // table, and replacing them now would prevent record field references from being tracked in
+    // nested declarations. We always need to replace the return value, since that gets freshened,
+    // and that would prevent us from properly replacing vars in the ty.
+    private fun toTopLevelResult(ty: Ty, replaceExpressionTypes: Boolean = true): InferenceResult {
+        val exprs = when {
+            replaceExpressionTypes -> {
+                expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
+            }
+            else -> expressionTypes
+        }
         val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
         val ret = TypeReplacement.replace(ty, replacements, outerVars)
         return InferenceResult(exprs, diagnostics, ret)
@@ -1229,13 +1237,7 @@ private class InferenceScope(
         if (ty1 is TyRecord) {
             if (ty2 is TyRecord) ty1.fieldReferences += ty2.fieldReferences
             else if (ty2 is MutableTyRecord) ty1.fieldReferences += ty2.fieldReferences
-        } else if (ty1 is MutableTyRecord) {
-            if (ty2 is TyRecord) ty1.fieldReferences += ty2.fieldReferences
-            else if (ty2 is MutableTyRecord) ty1.fieldReferences += ty2.fieldReferences
         } else if (ty2 is TyRecord) {
-            if (ty1 is TyRecord) ty2.fieldReferences += ty1.fieldReferences
-            else if (ty1 is MutableTyRecord) ty2.fieldReferences += ty1.fieldReferences
-        } else if (ty2 is MutableTyRecord) {
             if (ty1 is TyRecord) ty2.fieldReferences += ty1.fieldReferences
             else if (ty1 is MutableTyRecord) ty2.fieldReferences += ty1.fieldReferences
         }
