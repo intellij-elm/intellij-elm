@@ -77,7 +77,9 @@ data class TyRecord(
     override fun toString(): String {
         val f = fields.toString().let { it.substring(1, it.lastIndex) }
         return alias?.let {
-            "{${it.name}${if (it.parameters.isEmpty()) "" else " ${it.parameters.joinToString(" ")}"}}"
+            val prefix = if (fieldReferences.isEmpty()) "" else "+"
+            val params = if (it.parameters.isEmpty()) "" else " ${it.parameters.joinToString(" ")}"
+            "{$prefix${it.name}$params}"
         } ?: baseTy?.let { "{$baseTy | $f}" } ?: "{$f}"
     }
 

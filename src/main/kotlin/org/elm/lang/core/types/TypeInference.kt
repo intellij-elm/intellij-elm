@@ -1051,6 +1051,11 @@ private class InferenceScope(
         if (result && !ty1.isSubset && ty2.baseTy is TyVar) {
             trackReplacement(ty1, ty2.baseTy)
         }
+        if (result) {
+            // If we assign a record value expression, we know what its field references resolve to
+            ty1.fieldReferences += ty2.fieldReferences
+            ty2.fieldReferences += ty1.fieldReferences
+        }
         return result
     }
 
@@ -1231,15 +1236,6 @@ private class InferenceScope(
             } else {
                 assign(ty1, ty2)
             }
-        }
-
-        // If we assign a record value expression, we know what its field references resolve to
-        if (ty1 is TyRecord) {
-            if (ty2 is TyRecord) ty1.fieldReferences += ty2.fieldReferences
-            else if (ty2 is MutableTyRecord) ty1.fieldReferences += ty2.fieldReferences
-        } else if (ty2 is TyRecord) {
-            if (ty1 is TyRecord) ty2.fieldReferences += ty1.fieldReferences
-            else if (ty1 is MutableTyRecord) ty2.fieldReferences += ty1.fieldReferences
         }
     }
 
