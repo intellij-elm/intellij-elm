@@ -1,7 +1,5 @@
 package org.elm.lang.core.resolve
 
-import org.intellij.lang.annotations.Language
-
 
 class ElmRecordFieldResolveTest : ElmResolveTestBase() {
     fun `test simple field access`() = checkByCode(
@@ -42,6 +40,18 @@ main r =
     .field r
       --^
 """)
+
+    fun `test field access on return value inside unannotated function`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+r : () -> R
+r unit = { field = unit }
+
+main = (r ()).field
+               --^
+""")
+
 
     fun `test field access to parameterized record`() = checkByCode(
             """
@@ -97,6 +107,18 @@ type alias R = { field : () }
 main : R -> ()
 main r = { r | field = () }.field
                            --^
+""")
+
+    fun `test field access of variant param`() = checkByCode(
+            """
+type T = T { field : () }
+              --X
+main : T -> ()
+main t =
+     case t of
+         T record ->
+             record.field
+                     --^
 """)
 
     fun `test record value in function call`() = checkByCode(
