@@ -312,7 +312,7 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements, replaceMutableRecords = false)
+                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -364,7 +364,7 @@ private class InferenceScope(
         }
 
         if (ok && arguments.size > targetTy.parameters.size) {
-            var appliedTy = TypeReplacement.replace(targetTy.ret, replacements, replaceMutableRecords = false)
+            var appliedTy = TypeReplacement.replace(targetTy.ret, replacements)
 
             // friendly error for the common case
             if (appliedTy !is TyFunction) {
@@ -376,7 +376,7 @@ private class InferenceScope(
             for (i in targetTy.parameters.size..arguments.lastIndex) {
                 if (appliedTy !is TyFunction) return argCountError(expr.target, arguments[i], 1, 0)
                 if (!requireAssignable(arguments[i], argTys[i], appliedTy.parameters.first())) return TyUnknown()
-                appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements, replaceMutableRecords = false)
+                appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements)
             }
 
             expressionTypes[expr] = appliedTy
@@ -384,7 +384,7 @@ private class InferenceScope(
         }
 
         val resultTy = if (ok) {
-            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements, replaceMutableRecords = false)
+            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements)
         } else {
             TyUnknown()
         }
@@ -525,11 +525,9 @@ private class InferenceScope(
             f.lowerCaseIdentifier to inferExpression(f.expression)
         }
 
-        // If there's no base id, then the record is just the type of the fields. In that case, we
-        // use a mutable ty so we can track the field references later when we assign the value to
-        // something
+        // If there's no base id, then the record is just the type of the fields.
         val recordIdentifier = record.baseRecordIdentifier
-                ?: return MutableTyRecord(fields.mapKeysTo(mutableMapOf()) { (k, _) -> k.text })
+                ?: return TyRecord(fields.mapKeysTo(mutableMapOf()) { (k, _) -> k.text })
 
         // If there is a base id, we need to combine it with the fields
 
@@ -1228,16 +1226,18 @@ private class InferenceScope(
         }
 
         // If we assign a record value expression, we know what its field references resolve to
-        if (ty1 is MutableTyRecord) {
-            when (ty2) {
-                is TyRecord -> ty1.fieldReferences += ty2.fieldReferences
-                is MutableTyRecord -> ty1.fieldReferences += ty2.fieldReferences
-            }
+        if (ty1 is TyRecord) {
+            if (ty2 is TyRecord) ty1.fieldReferences += ty2.fieldReferences
+            else if (ty2 is MutableTyRecord) ty1.fieldReferences += ty2.fieldReferences
+        } else if (ty1 is MutableTyRecord) {
+            if (ty2 is TyRecord) ty1.fieldReferences += ty2.fieldReferences
+            else if (ty2 is MutableTyRecord) ty1.fieldReferences += ty2.fieldReferences
+        } else if (ty2 is TyRecord) {
+            if (ty1 is TyRecord) ty2.fieldReferences += ty1.fieldReferences
+            else if (ty1 is MutableTyRecord) ty2.fieldReferences += ty1.fieldReferences
         } else if (ty2 is MutableTyRecord) {
-            when (ty1) {
-                is TyRecord -> ty2.fieldReferences += ty1.fieldReferences
-                is MutableTyRecord -> ty2.fieldReferences += ty1.fieldReferences
-            }
+            if (ty1 is TyRecord) ty2.fieldReferences += ty1.fieldReferences
+            else if (ty1 is MutableTyRecord) ty2.fieldReferences += ty1.fieldReferences
         }
     }
 
