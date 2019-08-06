@@ -8,7 +8,7 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
-import org.elm.lang.core.resolve.reference.RecordFieldReferenceBase
+import org.elm.lang.core.resolve.reference.RecordFieldReference
 
 
 /**
@@ -39,6 +39,6 @@ class ElmField(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
         get() = lowerCaseIdentifier.text
 
     override fun getReference(): ElmReference {
-        return RecordFieldReferenceBase.create(this) { it.parentOfType<ElmRecordExpr>() }
+        return RecordFieldReference.fromElement(this) { it.parentOfType<ElmRecordExpr>() }
     }
 }

@@ -33,6 +33,16 @@ main r = r.field.nested
            --^
 """)
 
+    fun `test simple field accessor function`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main r =
+    .field r
+      --^
+""")
+
     fun `test field access to parameterized record`() = checkByCode(
             """
 type alias R a = { field : a }
