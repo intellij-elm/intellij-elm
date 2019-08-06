@@ -533,7 +533,7 @@ private class InferenceScope(
 
         // If there's no base id, then the record is just the type of the fields.
         val recordIdentifier = record.baseRecordIdentifier
-                ?: return TyRecord(fields.mapKeysTo(mutableMapOf()) { (k, _) -> k.text })
+                ?: return TyRecord(fields.mapKeys { (k, _) -> k.text })
 
         // If there is a base id, we need to combine it with the fields
 
