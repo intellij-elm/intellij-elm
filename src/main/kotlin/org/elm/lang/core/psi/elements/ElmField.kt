@@ -39,6 +39,6 @@ class ElmField(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
         get() = lowerCaseIdentifier.text
 
     override fun getReference(): ElmReference {
-        return RecordFieldReference.fromElement(this) { it.parentOfType<ElmRecordExpr>() }
+        return RecordFieldReference.fromElement(this) { it.parent as? ElmRecordExpr }
     }
 }

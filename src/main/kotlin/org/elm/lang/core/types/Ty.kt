@@ -140,7 +140,7 @@ data class TyUnion(
     override fun withAlias(alias: AliasInfo): TyUnion = copy(alias = alias)
 
     override fun toString(): String {
-        return "(${listOf(module, name).joinToString(".")} ${parameters.joinToString(" ")})"
+        return "[${(listOf("$module.$name") + parameters).joinToString(" ")}]"
     }
 }
 

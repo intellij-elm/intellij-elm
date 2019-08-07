@@ -229,4 +229,40 @@ main r s =
   in
   first (nest r) (nest s)        
     """)
+
+    fun `test repeated reference in list 1`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : List R
+main = 
+    [ { field = () }
+        --^                               
+    ]                           
+""")
+
+    fun `test repeated reference in list 2`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : List R
+main = 
+    [ { field = () }
+    , { field = () }
+        --^                               
+    ]
+""")
+
+    fun `test repeated reference in list 3`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : List R
+main = 
+    [ { field = () }
+    , { field = () }
+    , { field = () }
+        --^                               
+    ]
+""")
 }
