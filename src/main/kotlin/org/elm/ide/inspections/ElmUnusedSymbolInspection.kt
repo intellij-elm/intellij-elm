@@ -54,10 +54,18 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
 
 
     private fun markAsUnused(holder: ProblemsHolder, element: ElmNameIdentifierOwner, name: String) {
+        val fixes = if (element is ElmLowerPattern) {
+            arrayOf(quickFix("Rename to _") { project, _ ->
+                element.replace(ElmPsiFactory(project).createAnythingPattern())
+            })
+        } else {
+            emptyArray()
+        }
         holder.registerProblem(
                 element.nameIdentifier,
                 "'$name' is never used",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL
+                ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+                *fixes
         )
     }
 }

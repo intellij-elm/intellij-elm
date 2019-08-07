@@ -6,8 +6,8 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     // FUNCTIONS
 
-    fun `test detects unused functions`() = checkByText("""
-        <warning descr="'f' is never used">f</warning> = g
+    fun `test detects unused functions`() = checkFixIsUnavailable("Rename to _", """
+        <warning descr="'f' is never used">f{-caret-}</warning> = g
         g = ()
         """.trimIndent())
 
@@ -99,16 +99,17 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     // PARAMETERS
 
-    fun `test detects unused function parameters`() = checkByText("""
-        f <warning descr="'x' is never used">x</warning> = ()
+    fun `test renames unused function parameters`() = checkFixByText("Rename to _", """
+        f <warning descr="'x' is never used">x{-caret-}</warning> = ()
+        main = f
+        """.trimIndent(),"""
+        f _ = ()
         main = f
         """.trimIndent())
 
-
-    fun `test detects unused lambda parameters`() = checkByText("""
-        main = (\<warning descr="'x' is never used">x</warning> -> ())
-        """.trimIndent())
-
+    fun `test renames lambda parameters`() = checkFixByText("Rename to _",
+            """main = (\<warning descr="'x' is never used">x{-caret-}</warning> -> ())""",
+            """main = (\_ -> ())""")
 
     // TYPES
 
@@ -129,10 +130,26 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         """.trimIndent())
 
 
-    fun `test detects unused union variant constructor`() = checkByText("""
+    fun `test detects unused union variant constructor`() = checkFixIsUnavailable("Rename to _", """
         type Foo = Bar | <warning descr="'Quux' is never used">Quux</warning>
         main : Foo
         main = Bar
+        """.trimIndent())
+
+    fun `test renames unused case branch patterns`() = checkFixByText("Rename to _", """
+        type T = T () ()
+        main : T -> ()
+        main t = 
+            case t of
+                T <warning descr="'x' is never used">x{-caret-}</warning> y ->
+                    y
+        """.trimIndent(), """
+        type T = T () ()
+        main : T -> ()
+        main t = 
+            case t of
+                T _ y ->
+                    y
         """.trimIndent())
 
 
