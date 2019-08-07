@@ -326,6 +326,15 @@ main =
         _ -> ()
 """)
 
+    fun `test case branches with multiple mismatched types`() = checkByText("""
+main : ()
+main =
+    case () of
+        "" -> <error descr="Type mismatch.Required: ()Found: String">""</error>
+        "x" -> <error descr="Type mismatch.Required: ()Found: String">""</error>
+        _ -> ()
+""")
+
     fun `test case branches with mismatched types from pattern`() = checkByText("""
 main =
     case Just 42 of
@@ -446,7 +455,8 @@ main : Qux -> ()
 main arg =
     case arg of
         <error descr="Type mismatch.Required: Foo aFound: Qux">Bar (Just {x})</error> -> x
-        Baz x -> x
+        <error descr="Type mismatch.Required: Foo aFound: Qux">Baz x</error> -> x
+        Qux -> ()
         _ -> ()
 """)
 
