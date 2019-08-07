@@ -391,7 +391,7 @@ main : Maybe a
 main = Nothing
 """)
 
-    fun `test mismatched value type from union case`() = checkByText("""
+    fun `test mismatched value type from union variant`() = checkByText("""
 type Foo = Bar
 main : Maybe a
 main = <error descr="Type mismatch.Required: Maybe aFound: Foo">Bar</error>

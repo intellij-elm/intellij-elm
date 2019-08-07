@@ -326,6 +326,15 @@ main =
         _ -> ()
 """)
 
+    fun `test case branches with multiple mismatched types`() = checkByText("""
+main : ()
+main =
+    case () of
+        "" -> <error descr="Type mismatch.Required: ()Found: String">""</error>
+        "x" -> <error descr="Type mismatch.Required: ()Found: String">""</error>
+        _ -> ()
+""")
+
     fun `test case branches with mismatched types from pattern`() = checkByText("""
 main =
     case Just 42 of

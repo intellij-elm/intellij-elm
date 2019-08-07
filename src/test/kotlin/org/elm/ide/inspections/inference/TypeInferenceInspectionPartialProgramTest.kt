@@ -80,7 +80,7 @@ main : ()
 main =
     case<error descr="<expression> expected, got 'of'"> </error> of
         1 -> <error descr="Type mismatch.Required: ()Found: String">""</error>
-        _ -> <error descr="Type mismatch.Required: StringFound: number">1</error>
+        _ -> <error descr="Type mismatch.Required: ()Found: number">1</error>
 """)
 
     fun `test case branch with pattern error`() = checkByText("""

@@ -93,6 +93,12 @@ private class InferenceScope(
     private val replacements: DisjointSet = parent?.replacements ?: DisjointSet()
 
     /**
+     * The types of the branches of case expressions inferred in this scope. Used to check each
+     * branch against the type the case is eventually assigned to.
+     */
+    private val caseBranches: MutableMap<ElmCaseOfExpr, List<Pair<ElmExpressionTag, Ty>>> = mutableMapOf()
+
+    /**
      * All [TyVar]s that occur in this scope's type annotation, if there is one.
      *
      * This is used when inferring function call target types. Nested functions can contain
@@ -148,6 +154,9 @@ private class InferenceScope(
 
                 val expected = (binding.ty as? TyFunction)?.partiallyApply(binding.count) ?: binding.ty
                 requireAssignable(errorExpr, bodyTy, expected)
+            } else if (expr is ElmCaseOfExpr && expr in caseBranches) {
+                // If there's no annotation and the body is a case expression, make sure all branches match
+                requireBranchesAssignable(caseBranches[expr]!!, bodyTy, TyUnknown())
             }
         }
 
@@ -485,8 +494,8 @@ private class InferenceScope(
 
     private fun inferCase(caseOf: ElmCaseOfExpr): Ty {
         val caseOfExprTy = inferExpression(caseOf.expression)
-        var ty: Ty? = null
         var errorEncountered = false
+        val branchTys = mutableListOf<Pair<ElmExpressionTag, Ty>>()
 
         // TODO: check patterns cover possibilities
         for (branch in caseOf.branches) {
@@ -500,18 +509,20 @@ private class InferenceScope(
             val childTy = if (errorEncountered) TyUnknown() else caseOfExprTy
             val result = inferChild { beginCaseBranchInference(pat, childTy, branchExpression) }
 
-            if (result.diagnostics.isNotEmpty() || errorEncountered) {
+            val ty = if (result.diagnostics.isNotEmpty() || errorEncountered) {
                 errorEncountered = true
-                continue
+                TyUnknown()
+            } else {
+                result.ty
             }
 
-            if (ty == null) {
-                ty = result.ty
-            } else if (!requireAssignable(branchExpression, result.ty, ty)) {
-                errorEncountered = true
-            }
+            // We check assignablility of branches as a special-case of requireAssignable. We don't
+            // want to do it now since we don't know what the case is being assigned to.
+            branchTys += branchExpression to ty
         }
-        return ty ?: TyUnknown()
+
+        caseBranches[caseOf] = branchTys
+        return branchTys.firstOrNull()?.second ?: TyUnknown()
     }
 
     private fun inferLetIn(letIn: ElmLetInExpr): Ty {
@@ -982,6 +993,9 @@ private class InferenceScope(
             endElement: ElmPsiElement? = null,
             patternBinding: Boolean = false
     ): Boolean {
+        if (element is ElmCaseOfExpr && element in caseBranches) {
+            return requireBranchesAssignable(caseBranches[element]!!, ty1, ty2)
+        }
         val assignable = try {
             assignable(ty1, ty2)
         } catch (e: InfiniteTypeException) {
@@ -989,19 +1003,24 @@ private class InferenceScope(
             return false
         }
         if (!assignable) {
-            // To match the elm compiler, we report type errors on case expression as if they're
-            // errors on the first branch expression
-            val start = if (endElement == null && element is ElmCaseOfExpr) {
-                element.branches.firstOrNull()?.expression ?: element
-            } else {
-                element
-            }
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
             val diff = if (t1 is TyRecord && t2 is TyRecord) calcRecordDiff(t1, t2) else null
-            diagnostics += TypeMismatchError(start, t1, t2, endElement, patternBinding, diff)
+            diagnostics += TypeMismatchError(element, t1, t2, endElement, patternBinding, diff)
         }
         return assignable
+    }
+
+    private fun requireBranchesAssignable(
+            branches: List<Pair<ElmExpressionTag, Ty>>,
+            ty1: Ty,
+            ty2: Ty
+    ): Boolean {
+        // if we don't have a concrete type that the case is assigned to, then all branches need to
+        // match the first
+        val t2 = if (isInferable(ty2) && ty2 !is TyVar) ty2 else ty1
+        // don't short-circuit
+        return branches.map { (branch, t1) -> requireAssignable(branch, t1, t2) }.all { it }
     }
 
     /** Return `false` if [type1] definitely cannot be assigned to [type2] */
