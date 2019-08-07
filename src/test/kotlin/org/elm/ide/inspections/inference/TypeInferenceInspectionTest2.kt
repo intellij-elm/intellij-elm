@@ -455,7 +455,8 @@ main : Qux -> ()
 main arg =
     case arg of
         <error descr="Type mismatch.Required: Foo aFound: Qux">Bar (Just {x})</error> -> x
-        Baz x -> x
+        <error descr="Type mismatch.Required: Foo aFound: Qux">Baz x</error> -> x
+        Qux -> ()
         _ -> ()
 """)
 
