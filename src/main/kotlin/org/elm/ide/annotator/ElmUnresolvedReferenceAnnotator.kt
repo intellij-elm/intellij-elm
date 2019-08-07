@@ -7,11 +7,7 @@ import com.intellij.psi.PsiReference
 import org.elm.ide.intentions.AddImportIntention
 import org.elm.ide.intentions.MakeDeclarationIntention
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmTypeAnnotation
-import org.elm.lang.core.psi.elements.ElmTypeRef
-import org.elm.lang.core.psi.elements.ElmValueExpr
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.reference.*
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
@@ -82,10 +78,6 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     }
 
     private fun handleSafeToIgnore(ref: PsiReference, element: PsiElement, @Suppress("UNUSED_PARAMETER") holder: AnnotationHolder): Boolean {
-        // Ignore refs to built-in types and values
-        if (GlobalScope.allBuiltInSymbols.contains(ref.canonicalText))
-            return true
-
         // Ignore refs to Kernel (JavaScript) modules
         when {
             element is ElmValueExpr && element.qid.isKernelModule -> return true
@@ -94,6 +86,11 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
 
         // Ignore soft refs
         if (ref.isSoft) {
+            return true
+        }
+
+        // Ignore refs to built-in types and values
+        if (GlobalScope.allBuiltInSymbols.contains(ref.canonicalText)) {
             return true
         }
 

@@ -42,11 +42,14 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // Elm lets you shadow imported names, including auto-imported names, so only count names
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope.getVisibleValues(elmFile).topLevel.mapNotNullTo(mutableSetOf()) { it.name }
-        val result = InferenceScope(shadowableNames, useActiveScopes.toMutableSet(), false, null).beginDeclarationInference(this)
+        val result = InferenceScope(shadowableNames, useActiveScopes.toMutableSet(), false, null).beginDeclarationInference(this, true)
         CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
     }, /*trackValue*/ false, /*parameter*/ activeScopes)
 }
 
+// Several element types (e.g. ElmField, ElmFieldAccessExpr, ElmFieldAccessorFunctionExpr) use
+// inference results to implement their references, so we can't resolve those elements when
+// doing inference.
 /**
  * Inference for a single lexical scope (declaration, lambda, or case branch).
  *
@@ -108,7 +111,7 @@ private class InferenceScope(
      * `begin` function should be called on a scope instance.
      */
 
-    fun beginDeclarationInference(declaration: ElmValueDeclaration): InferenceResult {
+    fun beginDeclarationInference(declaration: ElmValueDeclaration, replaceExpressionTypes: Boolean): InferenceResult {
         val assignee = declaration.assignee
 
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
@@ -156,7 +159,7 @@ private class InferenceScope(
             }
             is ParameterBindingResult.Other -> bodyTy
         }
-        return toTopLevelResult(ty)
+        return toTopLevelResult(ty, replaceExpressionTypes)
     }
 
     private fun beginLambdaInference(lambda: ElmAnonymousFunctionExpr): InferenceResult {
@@ -165,22 +168,6 @@ private class InferenceScope(
         patternList.zip(paramVars) { p, t -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
         return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
-    }
-
-    private fun beginLetInInference(letIn: ElmLetInExpr): InferenceResult {
-        val valueDeclarationList = letIn.valueDeclarationList
-        childDeclarations += valueDeclarationList
-
-        for (decl in valueDeclarationList) {
-            // If a declaration was referenced by a child defined earlier in this scope, it has
-            // already been inferred.
-            if (decl !in resolvedDeclarations) {
-                inferChildDeclaration(decl)
-            }
-        }
-
-        val exprTy = inferExpression(letIn.expression)
-        return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
     private fun beginCaseBranchInference(
@@ -208,7 +195,7 @@ private class InferenceScope(
             decl: ElmValueDeclaration,
             activeScopes: Set<ElmValueDeclaration> = this.activeScopes
     ): InferenceResult {
-        val result = inferChild(activeScopes = activeScopes.toMutableSet()) { beginDeclarationInference(decl) }
+        val result = inferChild(activeScopes = activeScopes.toMutableSet()) { beginDeclarationInference(decl, false) }
         resolvedDeclarations[decl] = result.ty
         expressionTypes[decl] = result.ty
 
@@ -241,10 +228,18 @@ private class InferenceScope(
         return isRecursive
     }
 
-    // We only call this for inference scopes that will eventually be cached. There's no
-    // need to replace everything for child calls since they share our replacements table.
-    private fun toTopLevelResult(ty: Ty): InferenceResult {
-        val exprs = expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
+    // We only replace the expression types for inference scopes that will eventually be cached.
+    // There's no need to replace everything for child calls since they share our replacements
+    // table, and replacing them now would prevent record field references from being tracked in
+    // nested declarations. We always need to replace the return value, since that gets freshened,
+    // and that would prevent us from properly replacing vars in the ty.
+    private fun toTopLevelResult(ty: Ty, replaceExpressionTypes: Boolean = true): InferenceResult {
+        val exprs = when {
+            replaceExpressionTypes -> {
+                expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
+            }
+            else -> expressionTypes
+        }
         val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
         val ret = TypeReplacement.replace(ty, replacements, outerVars)
         return InferenceResult(exprs, diagnostics, ret)
@@ -395,7 +390,7 @@ private class InferenceScope(
     private fun inferAtom(atom: ElmAtomTag): Ty {
         // For most atoms, we don't try to infer them if they contain errors.
         val ty = when {
-            atom is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
+            atom is ElmLetInExpr -> inferLetIn(atom)
             atom is ElmCaseOfExpr -> inferCase(atom)
             atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
             atom.hasErrors -> TyUnknown()
@@ -435,7 +430,7 @@ private class InferenceScope(
         val target = expr.targetExpr
         val targetType = inferFieldAccessTarget(target)
         val targetTy = replacements[targetType]
-        val fieldIdentifier = expr.lowerCaseIdentifier ?: return TyUnknown()
+        val fieldIdentifier = expr.lowerCaseIdentifier
         val fieldName = fieldIdentifier.text
 
         if (targetTy is TyVar) {
@@ -519,13 +514,27 @@ private class InferenceScope(
         return ty ?: TyUnknown()
     }
 
+    private fun inferLetIn(letIn: ElmLetInExpr): Ty {
+        val valueDeclarationList = letIn.valueDeclarationList
+        childDeclarations += valueDeclarationList
+
+        for (decl in valueDeclarationList) {
+            // If a declaration was referenced by a child defined earlier in this scope, it has
+            // already been inferred.
+            if (decl !in resolvedDeclarations) {
+                inferChildDeclaration(decl)
+            }
+        }
+
+        return inferExpression(letIn.expression)
+    }
 
     private fun inferRecord(record: ElmRecordExpr): Ty {
         val fields = record.fieldList.associate { f ->
             f.lowerCaseIdentifier to inferExpression(f.expression)
         }
 
-        // If there's no base id, then the record is just the type of the fields
+        // If there's no base id, then the record is just the type of the fields.
         val recordIdentifier = record.baseRecordIdentifier
                 ?: return TyRecord(fields.mapKeys { (k, _) -> k.text })
 
@@ -784,7 +793,7 @@ private class InferenceScope(
         // bind all the names to sentinel values, then infer the expression and check for cyclic
         // references, then finally overwrite the sentinels with the proper inferred type.
         val declaredNames = pattern.descendantsOfType<ElmLowerPattern>()
-        declaredNames.associateTo(bindings) { it to TyInProgressBinding }
+        declaredNames.associateWithTo(bindings) { TyInProgressBinding }
         val bodyTy = inferExpression(valueDeclaration.expression)
         // Now we can overwrite the sentinels we set earlier with the inferred type
         bindPattern(pattern, bodyTy, false)
@@ -1042,6 +1051,11 @@ private class InferenceScope(
         // extension base var to the concrete record.
         if (result && !ty1.isSubset && ty2.baseTy is TyVar) {
             trackReplacement(ty1, ty2.baseTy)
+        }
+        if (result) {
+            // If we assign a record value expression, we know what its field references resolve to
+            ty1.fieldReferences.addAll(ty2.fieldReferences)
+            ty2.fieldReferences.addAll(ty1.fieldReferences)
         }
         return result
     }
@@ -1333,6 +1347,6 @@ private sealed class ParameterBindingResult {
 }
 
 /** dangerous shallow copy of a mutable record for performance, use `toRecord` if the result isn't discarded. */
-private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy)
+private fun MutableTyRecord.asRecord(): TyRecord = TyRecord(fields, baseTy, fieldReferences = fieldReferences)
 
 private class InfiniteTypeException : Exception()

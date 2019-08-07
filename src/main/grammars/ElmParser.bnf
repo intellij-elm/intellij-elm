@@ -332,23 +332,8 @@ FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+
 private FieldAccessStart ::= ValueExpr | ParenthesizedExpr | RecordExpr
 
 left FieldAccessSegment ::=
-    /*
-    Technically the '.' token should not be followed by any whitespace either, but in order
-    to support parse error recovery of expressions like "user.\n", we must relax the restriction.
-
-    Likewise, the LOWER_CASE_IDENTIFIER should only match if it is not preceded by whitespace.
-    Unfortunately, I was not able to figure out how to get the parser to require no whitespace
-    before the identifier, and so expressions like "foo. bar" will parse as a FieldAccessExpr
-    whereas it would be better if it parsed as a FunctionCallExpr with "foo." as the target
-    and "bar" as a function argument. Our usual trick for working with whitespace in the parser--
-    using an external/manual parse rule--did not work in this case.
-
-    TODO re-visit this once we have time to really understand how PsiBuilder works.
-     */
-    DotWithoutLeadingWhitespace LOWER_CASE_IDENTIFIER
-    { pin = 1
-      elementType = FieldAccessExpr
-    }
+    DotWithoutWhitespace LOWER_CASE_IDENTIFIER
+    { elementType = FieldAccessExpr }
 
 
 NegateExpr ::= MinusWithoutTrailingWhitespace Atom

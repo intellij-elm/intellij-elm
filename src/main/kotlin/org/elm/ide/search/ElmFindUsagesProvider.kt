@@ -45,6 +45,7 @@ class ElmFindUsagesProvider : FindUsagesProvider {
             is ElmUnionVariant -> "Union Variant"
             is ElmLowerPattern -> "Value Binding"
             is ElmPortAnnotation -> "Port Annotation"
+            is ElmFieldType -> "Record Field"
             else -> "unknown type for $element"
         }
     }
