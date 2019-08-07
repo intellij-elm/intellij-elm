@@ -47,7 +47,7 @@ class TypeReplacement(
          */
         fun freshenVars(ty: Ty, freeze: Boolean = false): Ty {
             if (!tyWouldChange(ty, freeze)) return ty
-            return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null, freeze = false).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null, freeze = freeze).replace(ty)
         }
 
         /**

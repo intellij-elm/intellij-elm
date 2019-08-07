@@ -47,6 +47,9 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
     }, /*trackValue*/ false, /*parameter*/ activeScopes)
 }
 
+// Several element types (e.g. ElmField, ElmFieldAccessExpr, ElmFieldAccessorFunctionExpr) use
+// inference results to implement their references, so we can't resolve those elements when
+// doing inference.
 /**
  * Inference for a single lexical scope (declaration, lambda, or case branch).
  *

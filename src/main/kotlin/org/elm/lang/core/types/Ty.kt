@@ -84,12 +84,16 @@ data class TyRecord(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is TyRecord) return false
-        return fields == other.fields && baseTy == other.baseTy
+        if (fields != other.fields) return false
+        if (baseTy != other.baseTy) return false
+        if (alias != other.alias) return false
+        return true
     }
 
     override fun hashCode(): Int {
         var result = fields.hashCode()
         result = 31 * result + (baseTy?.hashCode() ?: 0)
+        result = 31 * result + (alias?.hashCode() ?: 0)
         return result
     }
 }
@@ -111,13 +115,16 @@ data class MutableTyRecord(
     override fun withAlias(alias: AliasInfo) = error("MutableTyRecord cannot have aliases")
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is TyRecord) return false
-        return fields == other.fields && baseTy == other.baseTy
+        if (other !is MutableTyRecord) return false
+        if (fields != other.fields) return false
+        if (baseTy != other.baseTy) return false
+        if (alias != other.alias) return false
+        return true
     }
-
     override fun hashCode(): Int {
         var result = fields.hashCode()
         result = 31 * result + (baseTy?.hashCode() ?: 0)
+        result = 31 * result + (alias?.hashCode() ?: 0)
         return result
     }
     override fun toString() = "{~${toRecord().toString().drop(1)}"
