@@ -531,7 +531,6 @@ private class InferenceScope(
                 ?: return TyRecord(fields.mapKeys { (k, _) -> k.text })
 
         // If there is a base id, we need to combine it with the fields
-
         val baseTy = inferReferenceElement(recordIdentifier)
 
         if (!isInferable(baseTy)) return TyUnknown()
@@ -575,8 +574,15 @@ private class InferenceScope(
         val expressionTys = expressionList.map { inferExpression(it) }
 
         for (i in 1..expressionList.lastIndex) {
-            // Only issue an error on the first mismatched expression
-            if (!requireAssignable(expressionList[i], expressionTys[i], expressionTys[0])) {
+            if (requireAssignable(expressionList[i], expressionTys[i], expressionTys[0])) {
+                // hack: if the list items are records, we will only end up setting the field
+                // references on the first element, since that's what we return from this function.
+                // So we set the expression type of all items to the ty of the first item so that we
+                // can look up the fields for any of them. This is safe when all items are
+                // assignable to each other.
+                expressionTypes[expressionList[i]] = expressionTys[0]
+            } else {
+                // Only issue an error on the first mismatched expression
                 break
             }
         }
@@ -742,7 +748,7 @@ private class InferenceScope(
             valueDeclaration.operatorDeclarationLeft != null -> {
                 // TODO [drop 0.18] remove this case
                 // this is 0.18 only, so we aren't going to bother implementing it
-                valueDeclaration.declaredNames().associateTo(bindings) { it to TyUnknown() }
+                valueDeclaration.declaredNames().associateWithTo(bindings) { TyUnknown() }
                 ParameterBindingResult.Other(2)
             }
             else -> ParameterBindingResult.Other(0)
