@@ -47,13 +47,13 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
     "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type  // TODO [drop 0.18] remove this line
     "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
-    "EXPOSING_LIST" -> ElmExposingListStub.Type
+    "EXPOSING_LIST" -> ElmPlaceholderStub.Type("EXPOSING_LIST", ::ElmExposingList)
     "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
     "EXPOSED_VALUE" -> ElmExposedValueStub.Type
     "EXPOSED_TYPE" -> ElmExposedTypeStub.Type
     "EXPOSED_UNION_CONSTRUCTOR" -> ElmExposedUnionConstructorStub.Type
-    "EXPOSED_UNION_CONSTRUCTORS" -> ElmExposedUnionConstructorsStub.Type
-    "VALUE_DECLARATION" -> ElmValueDeclarationStub.Type
+    "EXPOSED_UNION_CONSTRUCTORS" -> ElmPlaceholderStub.Type("EXPOSED_UNION_CONSTRUCTORS", ::ElmExposedUnionConstructors)
+    "VALUE_DECLARATION" -> ElmPlaceholderStub.Type("VALUE_DECLARATION", ::ElmValueDeclaration)
     "PORT_ANNOTATION" -> ElmPortAnnotationStub.Type
     else -> error("Unknown element $name")
 }
@@ -238,7 +238,6 @@ class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
 }
 
 
-
 class ElmInfixDeclarationStub(parent: StubElement<*>?,
                               elementType: IStubElementType<*, *>,
                               override val name: String
@@ -263,35 +262,6 @@ class ElmInfixDeclarationStub(parent: StubElement<*>?,
 
         override fun indexStub(stub: ElmInfixDeclarationStub, sink: IndexSink) {
             sink.indexInfixDecl(stub)
-        }
-    }
-}
-
-
-class ElmExposingListStub(parent: StubElement<*>?,
-                          elementType: IStubElementType<*, *>
-) : StubBase<ElmExposingList>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmExposingListStub, ElmExposingList>("EXPOSING_LIST") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmExposingListStub, dataStream: StubOutputStream) {
-            // nothing to write
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmExposingListStub(parentStub, this)
-
-        override fun createPsi(stub: ElmExposingListStub) =
-                ElmExposingList(stub, this)
-
-        override fun createStub(psi: ElmExposingList, parentStub: StubElement<*>?) =
-                ElmExposingListStub(parentStub, this)
-
-        override fun indexStub(stub: ElmExposingListStub, sink: IndexSink) {
-            // no-op
         }
     }
 }
@@ -422,62 +392,6 @@ class ElmExposedUnionConstructorStub(parent: StubElement<*>?,
                 ElmExposedUnionConstructorStub(parentStub, this, psi.referenceName)
 
         override fun indexStub(stub: ElmExposedUnionConstructorStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmExposedUnionConstructorsStub(parent: StubElement<*>?,
-                                      elementType: IStubElementType<*, *>
-) : StubBase<ElmExposedUnionConstructors>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmExposedUnionConstructorsStub, ElmExposedUnionConstructors>("EXPOSED_UNION_CONSTRUCTORS") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmExposedUnionConstructorsStub, dataStream: StubOutputStream) {
-            // nothing to write
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmExposedUnionConstructorsStub(parentStub, this)
-
-        override fun createPsi(stub: ElmExposedUnionConstructorsStub) =
-                ElmExposedUnionConstructors(stub, this)
-
-        override fun createStub(psi: ElmExposedUnionConstructors, parentStub: StubElement<*>?) =
-                ElmExposedUnionConstructorsStub(parentStub, this)
-
-        override fun indexStub(stub: ElmExposedUnionConstructorsStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmValueDeclarationStub(parent: StubElement<*>?,
-                              elementType: IStubElementType<*, *>
-) : StubBase<ElmValueDeclaration>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmValueDeclarationStub, ElmValueDeclaration>("VALUE_DECLARATION") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmValueDeclarationStub, dataStream: StubOutputStream) {
-            // nothing to write
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmValueDeclarationStub(parentStub, this)
-
-        override fun createPsi(stub: ElmValueDeclarationStub) =
-                ElmValueDeclaration(stub, this)
-
-        override fun createStub(psi: ElmValueDeclaration, parentStub: StubElement<*>?) =
-                ElmValueDeclarationStub(parentStub, this)
-
-        override fun indexStub(stub: ElmValueDeclarationStub, sink: IndexSink) {
             // no-op
         }
     }

@@ -5,14 +5,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
-import com.intellij.psi.impl.DebugUtil
-import com.intellij.psi.impl.source.tree.SharedImplUtil
-import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lookup.ClientLocation
-import org.elm.lang.core.stubs.*
+import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toPsiFile
 import org.elm.workspace.ElmPackageProject
@@ -62,77 +59,23 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         }
 
     fun getModuleDecl() =
-            getStubOrPsiChild(ElmModuleDeclarationStub.Type)
+            stubDirectChildrenOfType<ElmModuleDeclaration>().firstOrNull()
 
     fun getValueDeclarations() =
-            getStubOrPsiChildren(ElmValueDeclarationStub.Type, emptyArray())
+            stubDirectChildrenOfType<ElmValueDeclaration>()
 
     fun getTypeDeclarations() =
-            getStubOrPsiChildren(ElmTypeDeclarationStub.Type, emptyArray())
+            stubDirectChildrenOfType<ElmTypeDeclaration>()
 
     fun getTypeAliasDeclarations() =
-            getStubOrPsiChildren(ElmTypeAliasDeclarationStub.Type, emptyArray())
+            stubDirectChildrenOfType<ElmTypeAliasDeclaration>()
 
     fun getPortAnnotations() =
-            getStubOrPsiChildren(ElmPortAnnotationStub.Type, emptyArray())
+            stubDirectChildrenOfType<ElmPortAnnotation>()
 
     fun getInfixDeclarations() =
-            getStubOrPsiChildren(ElmInfixDeclarationStub.Type, emptyArray())
+            stubDirectChildrenOfType<ElmInfixDeclaration>()
 
-
-    // TODO [kl] I had to copy a bunch of stuff from StubBasedPsiElementBase to work with
-    // children of this file in a stub-friendly way. I must be doing something strange.
-    // What do other plugin developers do?
-
-    /**
-     * NOTE: copied from [StubBasedPsiElementBase] and ported to Kotlin
-     *
-     * @return a child of specified type, taken from stubs (if this element is currently stub-based) or AST (otherwise).
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <Psi : PsiElement> getStubOrPsiChild(elementType: IStubElementType<out StubElement<*>, Psi>): Psi? {
-        val stub = getGreenStub()
-        if (stub != null) {
-            val element = stub.findChildStubByType<Psi, StubElement<*>>(elementType)
-            if (element != null) {
-                return element.getPsi() as Psi?
-            }
-        } else {
-            val childNode = node.findChildByType(elementType)
-            if (childNode != null) {
-                return childNode.psi as Psi
-            }
-        }
-        return null
-    }
-
-
-    /**
-     * NOTE: copied from [StubBasedPsiElementBase] and ported to Kotlin
-     *
-     * @return a not-null child of specified type, taken from stubs (if this element is currently stub-based) or AST (otherwise).
-     */
-    fun <S : StubElement<*>, Psi : PsiElement> getRequiredStubOrPsiChild(elementType: IStubElementType<S, Psi>): Psi {
-        return getStubOrPsiChild(elementType)
-                ?: error("Missing required child of type " + elementType + "; tree: " + DebugUtil.psiToString(this, false))
-    }
-
-
-    /**
-     * NOTE: copied from [StubBasedPsiElementBase] and ported to Kotlin
-     *
-     * @return children of specified type, taken from stubs (if this element is currently stub-based) or AST (otherwise).
-     */
-    inline fun <S : StubElement<*>, reified Psi : PsiElement> getStubOrPsiChildren(elementType: IStubElementType<S, out Psi>, array: Array<Psi>): List<Psi> {
-        val stub = greenStub
-        if (stub != null) {
-            return stub.getChildrenByType<Psi>(elementType, array).filterIsInstance<Psi>()
-        } else {
-            val nodes = SharedImplUtil.getChildrenOfType(node, elementType)
-            val psiElements = nodes.map { it.getPsi(Psi::class.java) }
-            return psiElements
-        }
-    }
 
     companion object {
         fun fromVirtualFile(file: VirtualFile, project: Project): ElmFile? =

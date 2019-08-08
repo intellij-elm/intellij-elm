@@ -8,7 +8,7 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.stubs.ElmValueDeclarationStub
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
@@ -22,12 +22,12 @@ import org.elm.lang.core.stubs.ElmValueDeclarationStub
  * to a pattern, possibly introducing multiple top-level names.
  * e.g. `(x,y) = (0,0)`
  */
-class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTarget {
+class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmValueDeclarationStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
     val modificationTracker = SimpleModificationTracker()
