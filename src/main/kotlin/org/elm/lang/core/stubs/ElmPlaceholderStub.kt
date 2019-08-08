@@ -24,11 +24,11 @@ class ElmPlaceholderStub(
                 createStubIfParentIsStub(node)
 
         override fun serialize(stub: ElmPlaceholderStub, dataStream: StubOutputStream) {
-            // nothing to write
+            // nothing extra to write
         }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmPlaceholderStub(parentStub, this)
+                ElmPlaceholderStub(parentStub, this) // nothing extra to read
 
         override fun createPsi(stub: ElmPlaceholderStub) =
                 ctor(stub, this)

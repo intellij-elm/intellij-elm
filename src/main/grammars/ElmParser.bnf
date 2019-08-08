@@ -24,6 +24,9 @@
     elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
+    // stubs necessary to make type inference work using stubs
+    elementTypeFactory("TypeExpression")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
