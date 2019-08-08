@@ -112,7 +112,7 @@ class ElmPsiFactory(private val project: Project) {
     fun createValueQID(text: String): ElmValueQID =
             createFromText<ElmValueDeclaration>("f = $text")
                     ?.expression
-                    ?.childOfType()
+                    ?.descendantOfType()
                     ?: error("Invalid value QID: `$text`")
 
     fun createOperatorIdentifier(text: String): PsiElement =
@@ -137,7 +137,7 @@ class ElmPsiFactory(private val project: Project) {
     fun createCaseOfBranches(indent: String, patterns: List<String>): List<ElmCaseOfBranch> =
             patterns.joinToString("\n\n$indent", prefix = "foo = case 1 of\n\n$indent") { "$it ->\n$indent    " }
                     .let { createFromText<ElmValueDeclaration>(it) }
-                    ?.childOfType<ElmCaseOfExpr>()?.branches
+                    ?.descendantOfType<ElmCaseOfExpr>()?.branches
                     ?: error("Failed to create case of branches from $patterns")
 
     fun createLetInWrapper(indent: String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
@@ -153,7 +153,7 @@ ${indent}in
 ${indent}$bodyText
 """
         return createFromText<ElmValueDeclaration>(code)
-                ?.childOfType<ElmLetInExpr>()
+                ?.descendantOfType()
                 ?: error("Failed to create let/in wrapper")
     }
 
@@ -170,7 +170,7 @@ ${indent}$bodyText
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)
-                    .childOfType()
+                    .descendantOfType()
 
     private fun createFromText(code: String, elementType: IElementType): PsiElement? =
             PsiFileFactory.getInstance(project)

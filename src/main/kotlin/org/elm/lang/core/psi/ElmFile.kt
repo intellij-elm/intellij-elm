@@ -12,6 +12,7 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lookup.ClientLocation
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.stubs.*
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toPsiFile
@@ -65,7 +66,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
             getStubOrPsiChild(ElmModuleDeclarationStub.Type)
 
     fun getValueDeclarations() =
-            getStubOrPsiChildren(ElmValueDeclarationStub.Type, emptyArray())
+            stubDirectChildrenOfType<ElmValueDeclaration>()
 
     fun getTypeDeclarations() =
             getStubOrPsiChildren(ElmTypeDeclarationStub.Type, emptyArray())

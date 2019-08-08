@@ -6,7 +6,7 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.stubs.ElmExposedUnionConstructorsStub
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
@@ -19,12 +19,12 @@ import org.elm.lang.core.stubs.ElmExposedUnionConstructorsStub
  * 2. [doubleDot] is not-null, in which case all constructors are exposed
  *    (e.g. `import App exposing Page(..)`)
  */
-class ElmExposedUnionConstructors : ElmStubbedElement<ElmExposedUnionConstructorsStub> {
+class ElmExposedUnionConstructors : ElmStubbedElement<ElmPlaceholderStub> {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmExposedUnionConstructorsStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 

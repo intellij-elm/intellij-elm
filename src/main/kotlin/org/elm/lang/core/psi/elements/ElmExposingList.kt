@@ -7,15 +7,15 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
-import org.elm.lang.core.stubs.ElmExposingListStub
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
-class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
+class ElmExposingList : ElmStubbedElement<ElmPlaceholderStub> {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmExposingListStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
