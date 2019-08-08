@@ -233,6 +233,9 @@
 
         <!-- Inspections -->
 
+        <lang.inspectionSuppressor language="Elm"
+                                   implementationClass="org.elm.ide.inspections.ElmInspectionSuppressor"/>
+
         <localInspection language="Elm" groupName="Elm"
                          displayName="Type checker"
                          enabledByDefault="true" level="ERROR"
@@ -265,7 +268,6 @@
             <className>org.elm.ide.intentions.AddExposureIntention</className>
             <category>Elm</category>
         </intentionAction>
-
         <intentionAction>
             <className>org.elm.ide.intentions.RemoveExposureIntention</className>
             <category>Elm</category>
