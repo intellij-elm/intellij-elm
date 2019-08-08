@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 11
+        override fun getStubVersion() = 12
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -60,6 +60,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "FIELD_TYPE" -> ElmFieldTypeStub.Type
     "TUPLE_TYPE" -> ElmPlaceholderStub.Type("TUPLE_TYPE", ::ElmTupleType)
     "UNIT_EXPR" -> ElmPlaceholderStub.Type("UNIT_EXPR", ::ElmUnitExpr)
+    "TYPE_REF" -> ElmTypeRefStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -461,6 +462,42 @@ class ElmFieldTypeStub(
     }
 }
 
+class ElmTypeRefStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String,
+        val qualifierPrefix: String
+) : StubBase<ElmTypeRef>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmTypeRefStub, ElmTypeRef>("TYPE_REF") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmTypeRefStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+                writeName(stub.qualifierPrefix)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?): ElmTypeRefStub {
+            val refNameOnDisk = dataStream.readNameString()!!
+            val qualPrefixOnDisk = dataStream.readNameString()!!
+            return ElmTypeRefStub(parentStub, this, refNameOnDisk, qualPrefixOnDisk)
+        }
+
+        override fun createPsi(stub: ElmTypeRefStub) =
+                ElmTypeRef(stub, this)
+
+        override fun createStub(psi: ElmTypeRef, parentStub: StubElement<*>?) =
+                ElmTypeRefStub(parentStub, this, psi.referenceName, psi.upperCaseQID.qualifierPrefix)
+
+        override fun indexStub(stub: ElmTypeRefStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
 
 private fun StubInputStream.readNameAsString(): String? = readName()?.string
 private fun StubInputStream.readUTFFastAsNullable(): String? = readUTFFast().let { if (it == "") null else it }

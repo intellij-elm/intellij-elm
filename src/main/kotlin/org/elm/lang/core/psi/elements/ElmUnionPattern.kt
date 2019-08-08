@@ -42,7 +42,7 @@ class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override fun getReferences(): Array<ElmReference> =
             if (upperCaseQID.isQualified)
                 arrayOf(QualifiedConstructorReference(this, upperCaseQID),
-                        ModuleNameQualifierReference(this, upperCaseQID))
+                        ModuleNameQualifierReference(this, upperCaseQID, upperCaseQID.qualifierPrefix))
             else
                 arrayOf(SimpleUnionConstructorReference(this))
 

@@ -1,7 +1,6 @@
 package org.elm.lang.core.resolve.reference
 
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ImportScope
 
@@ -10,7 +9,7 @@ import org.elm.lang.core.resolve.scope.ImportScope
  */
 class QualifiedTypeReference(
         element: ElmReferenceElement,
-        val upperCaseQID: ElmUpperCaseQID
+        override val qualifierPrefix: String
 ) : ElmReferenceCached<ElmReferenceElement>(element), QualifiedReference {
 
     override fun getVariants(): Array<ElmNamedElement> =
@@ -19,7 +18,6 @@ class QualifiedTypeReference(
     override fun resolveInner(): ElmNamedElement? =
             getCandidates().find { it.name == nameWithoutQualifier }
 
-    override val qualifierPrefix = upperCaseQID.qualifierPrefix
     override val nameWithoutQualifier = element.referenceName
 
     private fun getCandidates(): List<ElmNamedElement> {

@@ -29,10 +29,11 @@ import org.elm.lang.core.stubs.index.ElmModulesIndex
  */
 class ModuleNameQualifierReference<T : ElmReferenceElement>(
         elem: T,
-        private val elementQID: ElmQID
+        private val elementQID: ElmQID, // IMPORTANT: do not use in stub-based codepaths; denormalize instead!
+        qualifierPrefix: String // denormalized from [elementQID] to support Stubs
 ) : ElmReferenceCached<T>(elem), ElmReference {
 
-    private val refText: String = elementQID.qualifierPrefix
+    private val refText: String = qualifierPrefix
 
     override fun resolveInner(): ElmNamedElement? {
         val clientFile = element.elmFile
