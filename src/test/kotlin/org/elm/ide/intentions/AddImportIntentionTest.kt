@@ -267,7 +267,7 @@ main = bar + quux
 """)
 
 
-    fun `test verify unavailable when value not exposed`() = verifyUnavailable(
+    fun `test verify unavailable when value not exposed`() = doUnavailableTestWithFileTree(
             """
 --@ main.elm
 main = bar{-caret-}
@@ -277,7 +277,7 @@ bar = 42
 quux = 0
 """)
 
-    fun `test verify unavailable when value not exposed (qualified ref)`() = verifyUnavailable(
+    fun `test verify unavailable when value not exposed (qualified ref)`() = doUnavailableTestWithFileTree(
             """
 --@ main.elm
 main = Foo.bar{-caret-}
@@ -287,7 +287,7 @@ bar = 42
 quux = 0
 """)
 
-    fun `test verify unavailable when qualified ref alias is not possible`() = verifyUnavailable(
+    fun `test verify unavailable when qualified ref alias is not possible`() = doUnavailableTestWithFileTree(
             """
 --@ main.elm
 main = Foo.Bogus.bar{-caret-}
@@ -296,7 +296,7 @@ module Foo exposing (bar)
 bar = 0
 """)
 
-    fun `test verify unavailable on type annotation when local function hides external name`() = verifyUnavailable(
+    fun `test verify unavailable on type annotation when local function hides external name`() = doUnavailableTestWithFileTree(
             """
 --@ main.elm
 bar{-caret-} : Int -> Int
@@ -321,7 +321,7 @@ main = 2 |. 3
 """)
 
 
-    protected fun check(@Language("Elm") before: String, @Language("Elm") after: String) {
+    private fun check(@Language("Elm") before: String, @Language("Elm") after: String) {
         val testProject = fileTreeFromText(before).createAndOpenFileWithCaretMarker()
 
         // auto-adding an import must be done using stubs only
@@ -333,7 +333,7 @@ main = 2 |. 3
         myFixture.checkResult(replaceCaretMarker(after).trim())
     }
 
-    protected fun checkAutoImportFixByTextWithMultipleChoice(
+    private fun checkAutoImportFixByTextWithMultipleChoice(
             @Language("Elm") before: String,
             expectedElements: Set<String>,
             choice: String,
@@ -341,7 +341,7 @@ main = 2 |. 3
     ) {
         var chooseItemWasCalled = false
 
-        withMockUI(object : ImportPickerUI {
+        withMockImportPickerUI(object : ImportPickerUI {
             override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
                 chooseItemWasCalled = true
                 val actualItems = candidates.map { it.moduleName }.toSet()
@@ -353,12 +353,5 @@ main = 2 |. 3
         }) { check(before, after) }
 
         check(chooseItemWasCalled) { "`chooseItem` was not called" }
-    }
-
-    protected fun verifyUnavailable(@Language("Elm") before: String) {
-        fileTreeFromText(before).createAndOpenFileWithCaretMarker()
-        check(intention.familyName !in myFixture.availableIntentions.mapNotNull { it.familyName }) {
-            "\"$intention\" intention should not be available"
-        }
     }
 }

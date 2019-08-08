@@ -31,6 +31,6 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
     val lowerCaseIdentifier: PsiElement
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
-    val isQualified: Boolean
+    override val isQualified: Boolean
         get() = findChildByType<PsiElement>(DOT) != null
 }

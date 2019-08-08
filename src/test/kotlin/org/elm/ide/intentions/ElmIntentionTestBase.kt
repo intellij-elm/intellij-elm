@@ -36,6 +36,13 @@ abstract class ElmIntentionTestBase(val intention: IntentionAction) : ElmTestBas
         }
     }
 
+    protected fun doUnavailableTestWithFileTree(@Language("Elm") before: String) {
+        fileTreeFromText(before).createAndOpenFileWithCaretMarker()
+        check(intention.familyName !in myFixture.availableIntentions.mapNotNull { it.familyName }) {
+            "\"$intention\" intention should not be available"
+        }
+    }
+
     private fun launchAction() {
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
         myFixture.launchAction(intention)
