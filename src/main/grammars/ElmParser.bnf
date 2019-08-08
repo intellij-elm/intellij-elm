@@ -28,6 +28,8 @@
     elementTypeFactory("TypeExpression")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("RecordType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("FieldType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TupleType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UnitExpr")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
