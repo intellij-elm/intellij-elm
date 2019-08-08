@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 6
+        override fun getStubVersion() = 7
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -56,6 +56,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "VALUE_DECLARATION" -> ElmPlaceholderStub.Type("VALUE_DECLARATION", ::ElmValueDeclaration)
     "PORT_ANNOTATION" -> ElmPortAnnotationStub.Type
     "TYPE_EXPRESSION" -> ElmPlaceholderStub.Type("TYPE_EXPRESSION", ::ElmTypeExpression)
+    "RECORD_TYPE" -> ElmPlaceholderStub.Type("RECORD_TYPE", ::ElmRecordType)
     else -> error("Unknown element $name")
 }
 
