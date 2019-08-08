@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 7
+        override fun getStubVersion() = 10
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -57,6 +57,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "PORT_ANNOTATION" -> ElmPortAnnotationStub.Type
     "TYPE_EXPRESSION" -> ElmPlaceholderStub.Type("TYPE_EXPRESSION", ::ElmTypeExpression)
     "RECORD_TYPE" -> ElmPlaceholderStub.Type("RECORD_TYPE", ::ElmRecordType)
+    "FIELD_TYPE" -> ElmFieldTypeStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -423,6 +424,37 @@ class ElmPortAnnotationStub(parent: StubElement<*>?,
 
         override fun indexStub(stub: ElmPortAnnotationStub, sink: IndexSink) {
             sink.indexPortAnnotation(stub)
+        }
+    }
+}
+
+class ElmFieldTypeStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
+) : StubBase<ElmFieldType>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmFieldTypeStub, ElmFieldType>("FIELD_TYPE") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmFieldTypeStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmFieldTypeStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmFieldTypeStub) =
+                ElmFieldType(stub, this)
+
+        override fun createStub(psi: ElmFieldType, parentStub: StubElement<*>?) =
+                ElmFieldTypeStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmFieldTypeStub, sink: IndexSink) {
         }
     }
 }

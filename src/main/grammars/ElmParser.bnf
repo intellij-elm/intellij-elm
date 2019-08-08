@@ -27,6 +27,7 @@
     // stubs necessary to make type inference work using stubs
     elementTypeFactory("TypeExpression")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("RecordType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("FieldType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
