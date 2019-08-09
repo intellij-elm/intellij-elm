@@ -5,11 +5,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
-import org.elm.lang.core.psi.ElmDocTarget
-import org.elm.lang.core.psi.ElmExposableTag
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.IdentifierCase
 import org.elm.lang.core.stubs.ElmTypeAliasDeclarationStub
 
 
@@ -46,7 +43,7 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
      * In a well-formed program, this will be non-null.
      */
     val typeExpression: ElmTypeExpression?
-        get() = findChildByClass(ElmTypeExpression::class.java)
+        get() = stubDirectChildrenOfType<ElmTypeExpression>().singleOrNull()
 
 
     /** `true` if the alias is exclusively a record */
