@@ -129,7 +129,7 @@ object ModuleScope {
             val fromTopLevel = getDeclaredValues(elmFile)
 
             // Explicit imports shadow names from wildcard imports, so we need to sort the names
-            val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
+            val fromImports = elmFile.getImportClauses()
                     .flatMap { getVisibleImportValues(it) }
                     .sortedBy { it.fromWildcard }
                     .map { it.element }
@@ -252,7 +252,7 @@ object ModuleScope {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_TYPES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleTypes() ?: emptyList()
             val fromTopLevel = getDeclaredTypes(elmFile)
-            val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
+            val fromImports = elmFile.getImportClauses()
                     .flatMap { getVisibleImportTypes(it) }
             val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
             Result.create(names, elmFile.project.modificationTracker)
@@ -295,7 +295,7 @@ object ModuleScope {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_CONSTRUCTORS_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleConstructors() ?: emptyList()
             val fromTopLevel = getDeclaredConstructors(elmFile)
-            val fromImports = elmFile.findChildrenByClass(ElmImportClause::class.java)
+            val fromImports = elmFile.getImportClauses()
                     .flatMap { getVisibleImportConstructors(it) }
             val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
             Result.create(names, elmFile.project.modificationTracker)

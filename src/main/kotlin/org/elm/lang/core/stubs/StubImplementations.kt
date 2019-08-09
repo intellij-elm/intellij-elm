@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 17
+        override fun getStubVersion() = 18
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -65,6 +65,8 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
     "RECORD_BASE_IDENTIFIER" -> ElmRecordBaseIdentifierStub.Type
     "TYPE_ANNOTATION" -> ElmTypeAnnotationStub.Type
+    "IMPORT_CLAUSE" -> ElmImportClauseStub.Type
+    "AS_CLAUSE" -> ElmAsClauseStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -627,6 +629,70 @@ class ElmTypeAnnotationStub(
 
         override fun indexStub(stub: ElmTypeAnnotationStub, sink: IndexSink) {
             // no-op
+        }
+    }
+}
+
+class ElmImportClauseStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String
+) : StubBase<ElmImportClause>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmImportClauseStub, ElmImportClause>("IMPORT_CLAUSE") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmImportClauseStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmImportClauseStub(parentStub, this,
+                        dataStream.readNameAsString()!!)
+
+        override fun createPsi(stub: ElmImportClauseStub) =
+                ElmImportClause(stub, this)
+
+        override fun createStub(psi: ElmImportClause, parentStub: StubElement<*>?) =
+                ElmImportClauseStub(parentStub, this, psi.referenceName)
+
+        override fun indexStub(stub: ElmImportClauseStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
+
+class ElmAsClauseStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
+) : StubBase<ElmAsClause>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmAsClauseStub, ElmAsClause>("AS_CLAUSE") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmAsClauseStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmAsClauseStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmAsClauseStub) =
+                ElmAsClause(stub, this)
+
+        override fun createStub(psi: ElmAsClause, parentStub: StubElement<*>?) =
+                ElmAsClauseStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmAsClauseStub, sink: IndexSink) {
         }
     }
 }

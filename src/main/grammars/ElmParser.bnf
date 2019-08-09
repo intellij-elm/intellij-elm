@@ -35,6 +35,8 @@
     elementTypeFactory("LowerTypeName")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("RecordBaseIdentifier")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ImportClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("AsClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"

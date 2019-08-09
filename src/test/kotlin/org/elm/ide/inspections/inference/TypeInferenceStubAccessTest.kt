@@ -58,6 +58,20 @@ foo = ()
 """)
 
 
+    fun `test infer function across modules where type does not exist`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing (foo)
+f = foo
+    --^unknown
+
+--@ Foo.elm
+module Foo exposing (..)
+foo : DoesNotExist
+foo = 42
+""")
+
+
     fun `test infer record field across modules`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
