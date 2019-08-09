@@ -7,6 +7,8 @@ import com.intellij.psi.tree.IStubFileElementType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.*
+import com.intellij.util.io.DataInputOutputUtil.readNullable
+import com.intellij.util.io.DataInputOutputUtil.writeNullable
 
 
 class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
@@ -16,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 18
+        override fun getStubVersion() = 19
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -47,6 +49,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
     "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type  // TODO [drop 0.18] remove this line
     "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
+    "INFIX_FUNC_REF" -> ElmInfixFuncRefStub.Type
     "EXPOSING_LIST" -> ElmPlaceholderStub.Type("EXPOSING_LIST", ::ElmExposingList)
     "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
     "EXPOSED_VALUE" -> ElmExposedValueStub.Type
@@ -87,7 +90,7 @@ class ElmModuleDeclarationStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmModuleDeclarationStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"),
+                        dataStream.readNameString() ?: error("expected non-null string"),
                         dataStream.readBoolean())
 
         override fun createPsi(stub: ElmModuleDeclarationStub) =
@@ -117,7 +120,7 @@ class ElmTypeDeclarationStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmTypeDeclarationStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmTypeDeclarationStub) =
                 ElmTypeDeclaration(stub, this)
@@ -148,7 +151,7 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmTypeAliasDeclarationStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"),
+                        dataStream.readNameString() ?: error("expected non-null string"),
                         dataStream.readBoolean())
 
         override fun createPsi(stub: ElmTypeAliasDeclarationStub) =
@@ -178,7 +181,7 @@ class ElmUnionVariantStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmUnionVariantStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmUnionVariantStub) =
                 ElmUnionVariant(stub, this)
@@ -206,7 +209,7 @@ class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmFunctionDeclarationLeftStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmFunctionDeclarationLeftStub) =
                 ElmFunctionDeclarationLeft(stub, this)
@@ -235,7 +238,7 @@ class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmOperatorDeclarationLeftStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmOperatorDeclarationLeftStub) =
                 ElmOperatorDeclarationLeft(stub, this)
@@ -252,28 +255,78 @@ class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
 
 class ElmInfixDeclarationStub(parent: StubElement<*>?,
                               elementType: IStubElementType<*, *>,
-                              override val name: String
+                              override val name: String,
+                              val precedence: Int,
+                              val associativity: String,
+                              val funcRefName: String?
 ) : StubBase<ElmInfixDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmInfixDeclarationStub, ElmInfixDeclaration>("INFIX_DECLARATION") {
 
         override fun serialize(stub: ElmInfixDeclarationStub, dataStream: StubOutputStream) =
                 with(dataStream) {
-                    writeName(stub.name)
+                    writeUTFFast(stub.name)
+                    writeInt(stub.precedence)
+                    writeUTFFast(stub.associativity)
+                    writeUTFFastAsNullable(stub.funcRefName)
                 }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmInfixDeclarationStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readUTFFast(),
+                        dataStream.readInt(),
+                        dataStream.readUTFFast(),
+                        dataStream.readUTFFastAsNullable()
+                )
 
         override fun createPsi(stub: ElmInfixDeclarationStub) =
                 ElmInfixDeclaration(stub, this)
 
         override fun createStub(psi: ElmInfixDeclaration, parentStub: StubElement<*>?) =
-                ElmInfixDeclarationStub(parentStub, this, psi.name)
+                ElmInfixDeclarationStub(
+                        parentStub,
+                        this,
+                        psi.name,
+                        psi.precedence ?: 0,
+                        psi.associativityElement.text,
+                        psi.funcRef?.referenceName
+                )
 
         override fun indexStub(stub: ElmInfixDeclarationStub, sink: IndexSink) {
             sink.indexInfixDecl(stub)
+        }
+    }
+}
+
+class ElmInfixFuncRefStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String
+) : StubBase<ElmInfixFuncRef>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmInfixFuncRefStub, ElmInfixFuncRef>("INFIX_FUNC_REF") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmInfixFuncRefStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmInfixFuncRefStub(parentStub, this,
+                        dataStream.readNameString()!!)
+
+        override fun createPsi(stub: ElmInfixFuncRefStub) =
+                ElmInfixFuncRef(stub, this)
+
+        override fun createStub(psi: ElmInfixFuncRef, parentStub: StubElement<*>?) =
+                ElmInfixFuncRefStub(parentStub, this, psi.referenceName)
+
+        override fun indexStub(stub: ElmInfixFuncRefStub, sink: IndexSink) {
+            // no-op
         }
     }
 }
@@ -296,7 +349,7 @@ class ElmExposedValueStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmExposedValueStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameString()!!)
 
         override fun createPsi(stub: ElmExposedValueStub) =
                 ElmExposedValue(stub, this)
@@ -328,7 +381,7 @@ class ElmExposedOperatorStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmExposedOperatorStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameString()!!)
 
         override fun createPsi(stub: ElmExposedOperatorStub) =
                 ElmExposedOperator(stub, this)
@@ -362,7 +415,7 @@ class ElmExposedTypeStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmExposedTypeStub(parentStub, this,
-                        dataStream.readNameAsString()!!,
+                        dataStream.readNameString()!!,
                         dataStream.readBoolean())
 
         override fun createPsi(stub: ElmExposedTypeStub) =
@@ -395,7 +448,7 @@ class ElmExposedUnionConstructorStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmExposedUnionConstructorStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameString()!!)
 
         override fun createPsi(stub: ElmExposedUnionConstructorStub) =
                 ElmExposedUnionConstructor(stub, this)
@@ -423,7 +476,7 @@ class ElmPortAnnotationStub(parent: StubElement<*>?,
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmPortAnnotationStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmPortAnnotationStub) =
                 ElmPortAnnotation(stub, this)
@@ -455,7 +508,7 @@ class ElmFieldTypeStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmFieldTypeStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmFieldTypeStub) =
                 ElmFieldType(stub, this)
@@ -488,9 +541,10 @@ class ElmTypeRefStub(
         }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?): ElmTypeRefStub {
-            val refNameOnDisk = dataStream.readNameString()!!
-            val qualPrefixOnDisk = dataStream.readNameString()!!
-            return ElmTypeRefStub(parentStub, this, refNameOnDisk, qualPrefixOnDisk)
+            return ElmTypeRefStub(parentStub, this,
+                    dataStream.readNameString() ?: error("refName: expected non-null string"),
+                    dataStream.readNameString() ?: error("qualifierPrefix: expected non-null string")
+            )
         }
 
         override fun createPsi(stub: ElmTypeRefStub) =
@@ -523,7 +577,7 @@ class ElmTypeVariableStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmTypeVariableStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmTypeVariableStub) =
                 ElmTypeVariable(stub, this)
@@ -554,7 +608,7 @@ class ElmLowerTypeNameStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmLowerTypeNameStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmLowerTypeNameStub) =
                 ElmLowerTypeName(stub, this)
@@ -586,7 +640,7 @@ class ElmRecordBaseIdentifierStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmRecordBaseIdentifierStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameString()!!)
 
         override fun createPsi(stub: ElmRecordBaseIdentifierStub) =
                 ElmRecordBaseIdentifier(stub, this)
@@ -619,7 +673,7 @@ class ElmTypeAnnotationStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmTypeAnnotationStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameString()!!)
 
         override fun createPsi(stub: ElmTypeAnnotationStub) =
                 ElmTypeAnnotation(stub, this)
@@ -652,7 +706,7 @@ class ElmImportClauseStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmImportClauseStub(parentStub, this,
-                        dataStream.readNameAsString()!!)
+                        dataStream.readNameString()!!)
 
         override fun createPsi(stub: ElmImportClauseStub) =
                 ElmImportClause(stub, this)
@@ -684,7 +738,7 @@ class ElmAsClauseStub(
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmAsClauseStub(parentStub, this,
-                        dataStream.readNameAsString() ?: error("expected non-null string"))
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmAsClauseStub) =
                 ElmAsClause(stub, this)
@@ -697,7 +751,15 @@ class ElmAsClauseStub(
     }
 }
 
-private fun StubInputStream.readNameAsString(): String? = readName()?.string
-private fun StubInputStream.readUTFFastAsNullable(): String? = readUTFFast().let { if (it == "") null else it }
 
-private fun StubOutputStream.writeUTFFastAsNullable(value: String?) = writeUTFFast(value ?: "")
+private fun StubInputStream.readUTFFastAsNullable(): String? = readNullable(this, this::readUTFFast)
+private fun StubOutputStream.writeUTFFastAsNullable(value: String?) = writeNullable(this, value, this::writeUTFFast)
+
+private fun <E : Enum<E>> StubOutputStream.writeEnum(e: E) = writeByte(e.ordinal)
+private inline fun <reified E : Enum<E>> StubInputStream.readEnum(): E = enumValues<E>()[readUnsignedByte()]
+
+private fun StubOutputStream.writeLongAsNullable(value: Long?) = writeNullable(this, value, this::writeLong)
+private fun StubInputStream.readLongAsNullable(): Long? = readNullable(this, this::readLong)
+
+private fun StubOutputStream.writeDoubleAsNullable(value: Double?) = writeNullable(this, value, this::writeDouble)
+private fun StubInputStream.readDoubleAsNullable(): Double? = readNullable(this, this::readDouble)
