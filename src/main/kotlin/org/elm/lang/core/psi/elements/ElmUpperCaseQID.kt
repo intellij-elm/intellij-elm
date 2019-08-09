@@ -30,8 +30,7 @@ class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID, ElmUnion
      * module name in a module decl or import decl).
      *
      * TODO [kl] this double-duty is a bit strange. Maybe make a separate Psi element?
-     * TODO [kl] also consider moving it into [ElmQID]
      */
-    val isQualified: Boolean
+    override val isQualified: Boolean
         get() = findChildByType<PsiElement>(ElmTypes.DOT) != null
 }

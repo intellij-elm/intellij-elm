@@ -32,4 +32,6 @@ interface ElmQID : ElmPsiElement {
             return moduleName.startsWith("Elm.Kernel.")
                     || moduleName.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
         }
+
+    val isQualified: Boolean
 }

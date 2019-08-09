@@ -31,7 +31,7 @@ interface ImportPickerUI {
 private var MOCK: ImportPickerUI? = null
 
 @TestOnly
-fun withMockUI(mockUi: ImportPickerUI, action: () -> Unit) {
+fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
     MOCK = mockUi
     try {
         action()
@@ -81,16 +81,16 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
                 // but if it's an alias-based import, we should show the user some UI so that
                 // they know what they're getting into. See https://github.com/klazuka/intellij-elm/issues/309
                 when {
-                    candidate.moduleAlias != null -> promptToSelectCandidate(context, file)
+                    candidate.moduleAlias != null -> promptToSelectCandidate(project, context, file)
                     else -> addImport(candidate, file, context.isQualified)
                 }
             }
-            else -> promptToSelectCandidate(context, file)
+            else -> promptToSelectCandidate(project, context, file)
         }
     }
 
 
-    private fun promptToSelectCandidate(context: Context, file: ElmFile) {
+    private fun promptToSelectCandidate(project: Project, context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
 
         // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
@@ -99,12 +99,10 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
                         .thenBy { it.moduleName }
         )
 
-        val project = file.project
-
         val picker = if (isUnitTestMode) {
-            MOCK ?: error("You must set mock UI via `withMockUI`")
+            MOCK ?: error("You must set mock UI via `withMockImportPickerUI`")
         } else {
-            PickerUI(project, context)
+            RealImportPickerUI(project, context)
         }
         picker.choose(candidates) { candidate ->
             project.runWriteCommandAction {
@@ -114,7 +112,7 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     }
 }
 
-class PickerUI(val project: Project, val context: AddImportIntention.Context) : ImportPickerUI {
+private class RealImportPickerUI(val project: Project, val context: AddImportIntention.Context) : ImportPickerUI {
     override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
         JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)

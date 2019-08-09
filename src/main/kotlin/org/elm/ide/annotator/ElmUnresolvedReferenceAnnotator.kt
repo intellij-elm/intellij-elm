@@ -5,9 +5,13 @@ import com.intellij.lang.annotation.Annotator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import org.elm.ide.intentions.AddImportIntention
+import org.elm.ide.intentions.AddQualifierIntention
 import org.elm.ide.intentions.MakeDeclarationIntention
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmTypeAnnotation
+import org.elm.lang.core.psi.elements.ElmTypeRef
+import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.resolve.reference.*
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
@@ -56,15 +60,16 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             //
             // Most of the time an ElmReferenceElement is not the ancestor of any other ElmReferenceElement.
             // And in these cases, it's ok to treat the error as spanning the entire reference element.
-            // However, in cases like ElmParametricTypeRef, its children can also be reference elements,
+            // However, in cases like ElmTypeRef, its children can also be reference elements,
             // and so it is vital that we correctly mark the error only on the text range that
             // contributed the reference.
             val errorRange = when (element) {
                 is ElmTypeRef -> element.upperCaseQID.textRange
                 else -> element.textRange
             }
-            holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
-                    .also { it.registerFix(AddImportIntention()) }
+            val annotation = holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
+            annotation.registerFix(AddQualifierIntention())
+            annotation.registerFix(AddImportIntention())
         }
     }
 

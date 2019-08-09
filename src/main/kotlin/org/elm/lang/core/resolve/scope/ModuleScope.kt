@@ -14,6 +14,8 @@ import org.elm.lang.core.psi.modificationTracker
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
 private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
 private val REFRENCABLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("REFRENCABLE_VALUES_KEY")
+private val REFRENCABLE_TYPES_KEY: Key<CachedValue<VisibleNames>> = Key.create("REFRENCABLE_TYPES_KEY")
+private val REFRENCABLE_CONSTRUCTORS_KEY: Key<CachedValue<VisibleNames>> = Key.create("REFRENCABLE_CONSTRUCTORS_KEY")
 private val DECLARED_TYPES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_TYPES_KEY")
 private val VISIBLE_TYPES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_TYPES_KEY")
 private val DECLARED_CONSTRUCTORS_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_CONSTRUCTORS_KEY")
@@ -99,6 +101,7 @@ object ModuleScope {
                         when {
                             getVisibleImportValues(importDecl).any { it.element.name == name } -> ""
                             getVisibleImportTypes(importDecl).any { it.name == name } -> ""
+                            getVisibleImportConstructors(importDecl).any { it.name == name } -> ""
                             importDecl.asClause != null -> importDecl.asClause!!.name + "."
                             else -> importDecl.moduleQID.text + "."
                         }
@@ -119,7 +122,7 @@ object ModuleScope {
     }
 
 
-    /** Get all names that can be referenced from [elmFile] without a qualifier */
+    /** Get all values that can be referenced from [elmFile] without a qualifier */
     fun getVisibleValues(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, VISIBLE_VALUES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
@@ -136,7 +139,7 @@ object ModuleScope {
         }
     }
 
-    /** Get all names that can be referenced from [elmFile], with or without a qualifier */
+    /** Get all values that can be referenced from [elmFile], with or without a qualifier */
     fun getReferencableValues(elmFile: ElmFile): VisibleNames {
         return CachedValuesManager.getCachedValue(elmFile, REFRENCABLE_VALUES_KEY) {
             val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleValues() ?: emptyList()
@@ -144,7 +147,41 @@ object ModuleScope {
 
             // Explicit imports shadow names from wildcard imports, so we need to sort the names
             val fromImports = getImportDecls(elmFile)
-                    .flatMap { getAllImportNames(it) }
+                    .flatMap { getAllImportValues(it) }
+                    .sortedBy { it.fromWildcard }
+                    .map { it.element }
+
+            val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
+            Result.create(visibleValues, elmFile.project.modificationTracker)
+        }
+    }
+
+    /** Get all types that can be referenced from [elmFile], with or without a qualifier */
+    fun getReferencableTypes(elmFile: ElmFile): VisibleNames {
+        return CachedValuesManager.getCachedValue(elmFile, REFRENCABLE_TYPES_KEY) {
+            val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleTypes() ?: emptyList()
+            val fromTopLevel = getDeclaredTypes(elmFile)
+
+            // Explicit imports shadow names from wildcard imports, so we need to sort the names
+            val fromImports = getImportDecls(elmFile)
+                    .flatMap { getAllImportTypes(it) }
+                    .sortedBy { it.fromWildcard }
+                    .map { it.element }
+
+            val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
+            Result.create(visibleValues, elmFile.project.modificationTracker)
+        }
+    }
+
+    /** Get all constructors that can be referenced from [elmFile], with or without a qualifier */
+    fun getReferencableConstructors(elmFile: ElmFile): VisibleNames {
+        return CachedValuesManager.getCachedValue(elmFile, REFRENCABLE_CONSTRUCTORS_KEY) {
+            val fromGlobal = GlobalScope.forElmFile(elmFile)?.getVisibleConstructors() ?: emptyList()
+            val fromTopLevel = getDeclaredConstructors(elmFile)
+
+            // Explicit imports shadow names from wildcard imports, so we need to sort the names
+            val fromImports = getImportDecls(elmFile)
+                    .flatMap { getAllImportConstructors(it) }
                     .sortedBy { it.fromWildcard }
                     .map { it.element }
 
@@ -177,9 +214,23 @@ object ModuleScope {
         }.map { ExposedElement(false, it) }
     }
 
-    private fun getAllImportNames(importClause: ElmImportClause): List<ExposedElement> {
+    private fun getAllImportValues(importClause: ElmImportClause): List<ExposedElement> {
         return ImportScope.fromImportDecl(importClause)
                 ?.getExposedValues()
+                ?.map { ExposedElement(importClause.exposesAll, it) }
+                ?: return emptyList()
+    }
+
+    private fun getAllImportTypes(importClause: ElmImportClause): List<ExposedElement> {
+        return ImportScope.fromImportDecl(importClause)
+                ?.getExposedTypes()
+                ?.map { ExposedElement(importClause.exposesAll, it) }
+                ?: return emptyList()
+    }
+
+    private fun getAllImportConstructors(importClause: ElmImportClause): List<ExposedElement> {
+        return ImportScope.fromImportDecl(importClause)
+                ?.getExposedConstructors()
                 ?.map { ExposedElement(importClause.exposesAll, it) }
                 ?: return emptyList()
     }
