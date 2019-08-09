@@ -28,8 +28,10 @@ import org.elm.lang.core.resolve.ElmReferenceElement
  * references should work. The Elm 0.19 compiler crashes if you try to call a function with this
  * annotation.
  */
-class TypeVariableReference(element: ElmReferenceElement)
-    : ElmReferenceCached<ElmReferenceElement>(element) {
+class TypeVariableReference(
+        element: ElmReferenceElement
+) : ElmReferenceCached<ElmReferenceElement>(element) {
+
     override fun isSoft(): Boolean {
         val decl = declaration()
         return decl == null || element is ElmRecordBaseIdentifier && decl is ElmTypeAnnotation

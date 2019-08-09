@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 12
+        override fun getStubVersion() = 13
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -61,6 +61,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "TUPLE_TYPE" -> ElmPlaceholderStub.Type("TUPLE_TYPE", ::ElmTupleType)
     "UNIT_EXPR" -> ElmPlaceholderStub.Type("UNIT_EXPR", ::ElmUnitExpr)
     "TYPE_REF" -> ElmTypeRefStub.Type
+    "TYPE_VARIABLE" -> ElmTypeVariableStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -495,6 +496,37 @@ class ElmTypeRefStub(
 
         override fun indexStub(stub: ElmTypeRefStub, sink: IndexSink) {
             // no-op
+        }
+    }
+}
+
+class ElmTypeVariableStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
+) : StubBase<ElmTypeVariable>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmTypeVariableStub, ElmTypeVariable>("TYPE_VARIABLE") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmTypeVariableStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmTypeVariableStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmTypeVariableStub) =
+                ElmTypeVariable(stub, this)
+
+        override fun createStub(psi: ElmTypeVariable, parentStub: StubElement<*>?) =
+                ElmTypeVariableStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmTypeVariableStub, sink: IndexSink) {
         }
     }
 }

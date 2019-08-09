@@ -31,6 +31,7 @@
     elementTypeFactory("TupleType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("UnitExpr")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeRef")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeVariable")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
