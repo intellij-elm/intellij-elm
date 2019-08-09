@@ -28,7 +28,7 @@ class ElmRecordType : ElmStubbedElement<ElmPlaceholderStub>,
      * e.g. entity in `{ entity | vx : Float, vy: Float }`
      */
     val baseTypeIdentifier: ElmRecordBaseIdentifier?
-        get() = findChildByClass(ElmRecordBaseIdentifier::class.java) // TODO [kl] stub child?
+        get() = stubDirectChildrenOfType<ElmRecordBaseIdentifier>().singleOrNull()
 
     /**
      * The definition of the fields which comprise the record proper.

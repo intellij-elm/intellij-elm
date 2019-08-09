@@ -33,6 +33,7 @@
     elementTypeFactory("TypeRef")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("TypeVariable")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("LowerTypeName")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("RecordBaseIdentifier")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"

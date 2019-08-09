@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 14
+        override fun getStubVersion() = 15
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -63,6 +63,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "TYPE_REF" -> ElmTypeRefStub.Type
     "TYPE_VARIABLE" -> ElmTypeVariableStub.Type
     "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
+    "RECORD_BASE_IDENTIFIER" -> ElmRecordBaseIdentifierStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -559,6 +560,39 @@ class ElmLowerTypeNameStub(
                 ElmLowerTypeNameStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmLowerTypeNameStub, sink: IndexSink) {
+        }
+    }
+}
+
+class ElmRecordBaseIdentifierStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String
+) : StubBase<ElmRecordBaseIdentifier>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmRecordBaseIdentifierStub, ElmRecordBaseIdentifier>("RECORD_BASE_IDENTIFIER") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmRecordBaseIdentifierStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmRecordBaseIdentifierStub(parentStub, this,
+                        dataStream.readNameAsString()!!)
+
+        override fun createPsi(stub: ElmRecordBaseIdentifierStub) =
+                ElmRecordBaseIdentifier(stub, this)
+
+        override fun createStub(psi: ElmRecordBaseIdentifier, parentStub: StubElement<*>?) =
+                ElmRecordBaseIdentifierStub(parentStub, this, psi.referenceName)
+
+        override fun indexStub(stub: ElmRecordBaseIdentifierStub, sink: IndexSink) {
+            // no-op
         }
     }
 }
