@@ -3,7 +3,6 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
@@ -16,7 +15,8 @@ import org.elm.lang.core.stubs.ElmTypeAliasDeclarationStub
  * e.g. `type alias User = { name : String, age : Int }`
  *
  */
-class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarationStub>, ElmDocTarget, ElmExposableTag {
+class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarationStub>,
+        ElmDocTarget, ElmExposableTag {
 
     constructor(node: ASTNode) :
             super(node, IdentifierCase.UPPER)
@@ -35,7 +35,7 @@ class ElmTypeAliasDeclaration : ElmStubbedNamedElementImpl<ElmTypeAliasDeclarati
 
     /** Zero-or-more type variables which may appear in [typeExpression] */
     val lowerTypeNameList: List<ElmLowerTypeName>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
+        get() = stubDirectChildrenOfType()
 
     /**
      * The type which is being aliased

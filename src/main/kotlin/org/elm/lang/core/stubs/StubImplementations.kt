@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 13
+        override fun getStubVersion() = 14
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -62,6 +62,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "UNIT_EXPR" -> ElmPlaceholderStub.Type("UNIT_EXPR", ::ElmUnitExpr)
     "TYPE_REF" -> ElmTypeRefStub.Type
     "TYPE_VARIABLE" -> ElmTypeVariableStub.Type
+    "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -527,6 +528,37 @@ class ElmTypeVariableStub(
                 ElmTypeVariableStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmTypeVariableStub, sink: IndexSink) {
+        }
+    }
+}
+
+class ElmLowerTypeNameStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
+) : StubBase<ElmLowerTypeName>(parent, elementType), ElmNamedStub {
+
+    object Type : ElmStubElementType<ElmLowerTypeNameStub, ElmLowerTypeName>("LOWER_TYPE_NAME") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmLowerTypeNameStub, dataStream: StubOutputStream) =
+                with(dataStream) {
+                    writeName(stub.name)
+                }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmLowerTypeNameStub(parentStub, this,
+                        dataStream.readNameAsString() ?: error("expected non-null string"))
+
+        override fun createPsi(stub: ElmLowerTypeNameStub) =
+                ElmLowerTypeName(stub, this)
+
+        override fun createStub(psi: ElmLowerTypeName, parentStub: StubElement<*>?) =
+                ElmLowerTypeNameStub(parentStub, this, psi.name)
+
+        override fun indexStub(stub: ElmLowerTypeNameStub, sink: IndexSink) {
         }
     }
 }
