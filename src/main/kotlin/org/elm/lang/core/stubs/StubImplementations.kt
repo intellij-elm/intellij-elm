@@ -16,7 +16,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 15
+        override fun getStubVersion() = 17
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -64,6 +64,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "TYPE_VARIABLE" -> ElmTypeVariableStub.Type
     "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
     "RECORD_BASE_IDENTIFIER" -> ElmRecordBaseIdentifierStub.Type
+    "TYPE_ANNOTATION" -> ElmTypeAnnotationStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -592,6 +593,39 @@ class ElmRecordBaseIdentifierStub(
                 ElmRecordBaseIdentifierStub(parentStub, this, psi.referenceName)
 
         override fun indexStub(stub: ElmRecordBaseIdentifierStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
+
+class ElmTypeAnnotationStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String
+) : StubBase<ElmTypeAnnotation>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmTypeAnnotationStub, ElmTypeAnnotation>("TYPE_ANNOTATION") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmTypeAnnotationStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmTypeAnnotationStub(parentStub, this,
+                        dataStream.readNameAsString()!!)
+
+        override fun createPsi(stub: ElmTypeAnnotationStub) =
+                ElmTypeAnnotation(stub, this)
+
+        override fun createStub(psi: ElmTypeAnnotation, parentStub: StubElement<*>?) =
+                ElmTypeAnnotationStub(parentStub, this, psi.referenceName)
+
+        override fun indexStub(stub: ElmTypeAnnotationStub, sink: IndexSink) {
             // no-op
         }
     }

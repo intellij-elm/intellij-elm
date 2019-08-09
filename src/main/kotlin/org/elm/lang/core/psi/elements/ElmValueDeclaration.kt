@@ -110,7 +110,17 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
 
     /** The type annotation for this function, or `null` if there isn't one. */
     val typeAnnotation: ElmTypeAnnotation?
-        get() = prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+        get() {
+            // HACK: try to find the type annotation as best we can, keeping stub-safe.
+            // TODO [kl] Look into parsing the type annotation as part of the value declaration.
+            val fdl = functionDeclarationLeft
+            val myStub = getStub()
+            return if (myStub != null && fdl != null) {
+                elmFile.getTypeAnnotations().firstOrNull { it.referenceName == fdl.name }
+            } else {
+                prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+            }
+        }
 
     override val docComment: PsiComment?
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
