@@ -1,5 +1,6 @@
 package org.elm.ide.inspections.inference
 
+import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmPsiElement
@@ -15,6 +16,19 @@ import org.intellij.lang.annotations.Language
 
 class TypeInferenceStubAccessTest : ElmTestBase() {
 
+    /*
+        Type inference should use stubs as much as possible.
+
+        Ideally type inference could operate 100% using stubs. But this is only feasible
+        when functions have type annotations, in which case we do not need to peek into
+        the body of the function.
+
+        So in the rare case where the user calls an unannotated function from a different
+        module, the other module's stubs will be converted to full-AST-backed. The only
+        other option is to return `TyUnknown` in such cases, but we have chosen to avoid
+        the false negative.
+    */
+
 
     fun `test infer basic value expr across modules`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
@@ -27,6 +41,20 @@ f x = x
 --@ Foo.elm
 module Foo exposing (..)
 type alias Bar = ()
+""")
+
+
+    fun `test infer function across modules with type annotation`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing (foo)
+f = foo
+    --^()
+
+--@ Foo.elm
+module Foo exposing (..)
+foo : ()
+foo = ()
 """)
 
 
@@ -62,10 +90,9 @@ type alias Bar = ()
         val testProject = fileTreeFromText(code)
                 .createAndOpenFileWithCaretMarker()
 
-//        TODO [kl] enable this once we have reasonable stub coverage for the data needed by type inference
-//        checkAstNotLoaded(VirtualFileFilter { file ->
-//            !file.path.endsWith(testProject.fileWithCaret)
-//        })
+        checkAstNotLoaded(VirtualFileFilter { file ->
+            !file.path.endsWith(testProject.fileWithCaret)
+        })
 
         checkExpectedType<T>()
         checkNoInferenceErrors()
