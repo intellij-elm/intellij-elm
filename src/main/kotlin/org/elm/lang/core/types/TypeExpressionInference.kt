@@ -184,7 +184,7 @@ class TypeExpression(
 
         val ty = decl.typeExpression?.let { typeExpressionType(it) } ?: TyUnknown()
         val params = decl.lowerTypeNameList.map { getTyVar(it) }.toList()
-        val aliasInfo = AliasInfo(decl.moduleName, decl.upperCaseIdentifier.text, params)
+        val aliasInfo = AliasInfo(decl.moduleName, decl.name, params)
         return result(ty.withAlias(aliasInfo))
     }
 
@@ -255,9 +255,9 @@ class TypeExpression(
 
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val fieldElements = record.fieldTypeList
-        val fieldTys = fieldElements.associate { it.lowerCaseIdentifier.text to typeExpressionType(it.typeExpression) }
+        val fieldTys = fieldElements.associate { it.name to typeExpressionType(it.typeExpression) }
         val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(mutableMapOf()) {
-            it.lowerCaseIdentifier.text to mutableSetOf<ElmNamedElement>(it)
+            it.name to mutableSetOf<ElmNamedElement>(it)
         })
         val baseId = record.baseTypeIdentifier
         val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.text) }
