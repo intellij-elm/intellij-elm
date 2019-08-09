@@ -42,8 +42,7 @@ class ElmTypeRef : ElmStubbedElement<ElmTypeRefStub>,
      * The elements will be in source order.
      */
     val allArguments: Sequence<ElmTypeRefArgumentTag>
-        // TODO [kl] look for stub children!
-        get() = directChildren.filterIsInstance<ElmTypeRefArgumentTag>()
+        get() = stubDirectChildrenOfType<ElmTypeRefArgumentTag>().asSequence()
 
     override val referenceNameElement: PsiElement
         get() = upperCaseQID.upperCaseIdentifierList.last()
