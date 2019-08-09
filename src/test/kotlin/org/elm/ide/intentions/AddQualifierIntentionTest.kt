@@ -49,6 +49,26 @@ import Foo
 main = Foo.BarVariant
 """)
 
+    fun `test pattern`() = check(
+            """
+--@ main.elm
+import Foo
+main : Foo.Bar -> ()
+main b =
+  case b of
+      BarVariant{-caret-} -> ()
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = BarVariant
+""",
+            """
+import Foo
+main : Foo.Bar -> ()
+main b =
+  case b of
+      Foo.BarVariant{-caret-} -> ()
+""")
+
     fun `test qualified value`() = doUnavailableTestWithFileTree(
             """
 --@ main.elm

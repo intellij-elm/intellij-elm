@@ -36,21 +36,22 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
         val qid = element.parentOfType<ElmQID>() ?: return null
         if (qid.isQualified) return null
 
-        val typeRef = qid.parentOfType<ElmTypeRef>()
-        if (typeRef != null) {
-            return makeContext(file, qid, typeRef, ModuleScope.getReferencableTypes(file))
-        }
-
-        val valueRef = qid.parentOfType<ElmValueExpr>() ?: return null
-
-        return when (valueRef.flavor) {
-            QualifiedValue, QualifiedConstructor -> null
-            BareValue -> {
-                makeContext(file, qid, valueRef, ModuleScope.getReferencableValues(file))
+        return when (val parent = qid.parent) {
+            is ElmTypeRef -> makeContext(file, qid, parent, ModuleScope.getReferencableTypes(file))
+            is ElmUnionPattern -> when (parent.upperCaseQID) {
+                qid -> makeContext(file, qid, parent, ModuleScope.getReferencableConstructors(file))
+                else -> null
             }
-            BareConstructor -> {
-                makeContext(file, qid, valueRef, ModuleScope.getReferencableConstructors(file))
+            is ElmValueExpr -> when (parent.flavor) {
+                QualifiedValue, QualifiedConstructor -> null
+                BareValue -> {
+                    makeContext(file, qid, parent, ModuleScope.getReferencableValues(file))
+                }
+                BareConstructor -> {
+                    makeContext(file, qid, parent, ModuleScope.getReferencableConstructors(file))
+                }
             }
+            else -> null
         }
     }
 
@@ -59,7 +60,7 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
         val candidates = (names.global + names.imported)
                 .filter { it.name == name }
                 .mapNotNull { ModuleScope.getQualifierForName(file, it.moduleName, name) }
-                .filter { it.isNotEmpty() }
+                .filter { it != "" }
         if (candidates.isEmpty()) return null
         return Context(candidates, name, qid)
     }
@@ -70,6 +71,17 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
             1 -> addQualifier(project, context, context.candidates.first())
             else -> promptToSelectCandidate(project, editor, context)
         }
+    }
+
+    private fun addQualifier(project: Project, context: Context, qualifier: String) {
+        val factory = ElmPsiFactory(project)
+        val newName = qualifier + context.referenceName
+        val newId = when (context.qid) {
+            is ElmUpperCaseQID -> factory.createUpperCaseQID(newName)
+            is ElmValueQID -> factory.createValueQID(newName)
+            else -> error("unexpected QID type")
+        }
+        context.qid.replace(newId)
     }
 
     private fun promptToSelectCandidate(project: Project, editor: Editor, context: Context) {
@@ -85,17 +97,6 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
                 addQualifier(project, context, qualifier)
             }
         }
-    }
-
-    private fun addQualifier(project: Project, context: Context, qualifier: String) {
-        val factory = ElmPsiFactory(project)
-        val newName = qualifier + context.referenceName
-        val newId = when (context.qid) {
-            is ElmUpperCaseQID -> factory.createUpperCaseQID(newName)
-            is ElmValueQID -> factory.createValueQID(newName)
-            else -> error("unexpected QID type")
-        }
-        context.qid.replace(newId)
     }
 }
 
