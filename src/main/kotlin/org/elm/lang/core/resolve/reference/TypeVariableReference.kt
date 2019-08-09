@@ -1,7 +1,6 @@
 package org.elm.lang.core.resolve.reference
 
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ancestorsStrict
@@ -53,11 +52,7 @@ class TypeVariableReference(
                 .filterIsInstance<ElmValueDeclaration>()
                 .mapNotNull { it.typeAnnotation }
         return (sequenceOf(annotation) + parents)
-                .mapNotNull { anno ->
-                    anno.typeExpression?.let {
-                        PsiTreeUtil.collectElementsOfType(it, ElmTypeVariable::class.java)
-                    }
-                }
+                .mapNotNull { it.typeExpression?.allTypeVariablesRecursively }
                 .toList().asReversed()
                 .flatten()
     }

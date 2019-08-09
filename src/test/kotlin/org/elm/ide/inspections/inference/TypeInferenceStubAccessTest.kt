@@ -100,6 +100,34 @@ type alias Bar = ()
 """)
 
 
+    fun `test infer union type with type variable expr`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
+            """
+--@ Main.elm
+import Foo exposing (Bar)
+type alias Thing = Bar ()
+           --^Thing
+
+--@ Foo.elm
+module Foo exposing (..)
+type Bar a = Bar a
+""")
+
+
+    fun `test infer with union type variable reference`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing (..)
+f = g
+  --^()
+g = foo () 0
+
+--@ Foo.elm
+module Foo exposing (..)
+foo : a -> b -> a
+foo x y = x
+""")
+
+
     private inline fun <reified T : ElmPsiElement> stubOnlyTypeInfer(@Language("Elm") code: String) {
         val testProject = fileTreeFromText(code)
                 .createAndOpenFileWithCaretMarker()

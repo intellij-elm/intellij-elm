@@ -35,4 +35,7 @@ class ElmTypeExpression : ElmStubbedElement<ElmPlaceholderStub>,
      */
     val allSegments: Sequence<ElmTypeExpressionSegmentTag>
         get() = stubDirectChildrenOfType<ElmTypeExpressionSegmentTag>().asSequence()
+
+    val allTypeVariablesRecursively: Collection<ElmTypeVariable>
+        get() = stubDescendantsOfTypeStrict()
 }

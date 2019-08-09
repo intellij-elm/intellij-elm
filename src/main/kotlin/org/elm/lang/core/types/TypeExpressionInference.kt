@@ -322,6 +322,6 @@ class TypeExpression(
     }
 
     private fun getTyVar(element: ElmNamedElement) = varsByElement.getOrPut(element) {
-        TyVar(element.text, rigid = rigidVars)
+        TyVar(element.name!!, rigid = rigidVars)
     }
 }
