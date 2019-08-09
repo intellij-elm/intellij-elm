@@ -424,7 +424,7 @@ private class InferenceScope(
     private fun inferOperatorAndPrecedence(operator: ElmOperator): Pair<Ty, OperatorPrecedence?> {
         val ref = operator.reference.resolve() as? ElmInfixDeclaration ?: return TyUnknown() to null
         val precedence = ref.precedence.text.toIntOrNull() ?: return TyUnknown() to null
-        val decl = ref.valueExpr?.reference?.resolve() ?: return TyUnknown() to null
+        val decl = ref.funcRef?.reference?.resolve() ?: return TyUnknown() to null
         val ty = inferReferencedValueDeclaration(decl.parentOfType())
         return ty to OperatorPrecedence(precedence, ref.associativity)
     }
@@ -681,7 +681,7 @@ private class InferenceScope(
         var ref = op.reference.resolve()
         // For operators, we need to resolve the infix declaration to the actual function
         if (ref is ElmInfixDeclaration) {
-            ref = ref.valueExpr?.reference?.resolve()
+            ref = ref.funcRef?.reference?.resolve()
         }
         return inferReferencedValueDeclaration(ref?.parentOfType())
     }

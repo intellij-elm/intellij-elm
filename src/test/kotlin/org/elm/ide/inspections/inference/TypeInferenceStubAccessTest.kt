@@ -128,6 +128,22 @@ foo x y = x
 """)
 
 
+    fun `test infer infix operator`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing ((**))
+f = g
+  --^()
+g = () ** ()
+
+--@ Foo.elm
+module Foo exposing (..)
+infix left  7 (**)  = foo
+foo : a -> b -> a
+foo x y = x
+""")
+
+
     private inline fun <reified T : ElmPsiElement> stubOnlyTypeInfer(@Language("Elm") code: String) {
         val testProject = fileTreeFromText(code)
                 .createAndOpenFileWithCaretMarker()

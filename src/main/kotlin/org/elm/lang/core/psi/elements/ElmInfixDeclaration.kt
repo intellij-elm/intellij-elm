@@ -40,6 +40,11 @@ class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub>,
     val operatorIdentifier: PsiElement
         get() = findNotNullChildByType(ElmTypes.OPERATOR_IDENTIFIER)
 
-    val valueExpr: ElmValueExpr?
-        get() = findChildByType(ElmTypes.VALUE_EXPR)
+    /**
+     * A ref to the function which implements the infix operator.
+     *
+     * This will be non-null in a well-formed program.
+     */
+    val funcRef: ElmInfixFuncRef?
+        get() = findChildByClass(ElmInfixFuncRef::class.java)
 }

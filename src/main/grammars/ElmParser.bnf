@@ -523,9 +523,11 @@ private ParenthesizedPattern ::=
 
 
 InfixDeclaration ::=
-    INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ ValueExpr
+    INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ InfixFuncRef
     { pin = 'EQ' }
 
+InfixFuncRef ::=
+    LOWER_CASE_IDENTIFIER
 
 GlslCodeExpr ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 

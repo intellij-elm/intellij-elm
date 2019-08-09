@@ -56,6 +56,7 @@ class ElmPsiFactory(private val project: Project) {
                     IF_ELSE_EXPR -> ElmIfElseExpr(node)
                     IMPORT_CLAUSE -> ElmImportClause(node)
                     INFIX_DECLARATION -> ElmInfixDeclaration(node)
+                    INFIX_FUNC_REF -> ElmInfixFuncRef(node)
                     LET_IN_EXPR -> ElmLetInExpr(node)
                     LIST_EXPR -> ElmListExpr(node)
                     LIST_PATTERN -> ElmListPattern(node)
