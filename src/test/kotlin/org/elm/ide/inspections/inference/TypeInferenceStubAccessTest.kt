@@ -155,6 +155,40 @@ type alias Bar = ()
 """)
 
 
+    fun `test infer qualified type expr in other file`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
+            """
+--@ Main.elm
+import Foo exposing (Foo)
+type alias Thing = Foo
+           --^Thing
+
+--@ Foo.elm
+module Foo exposing (..)
+import Bar
+type alias Foo = Bar.Bar
+
+--@ Bar.elm
+module Bar exposing (..)
+type alias Bar = ()
+""")
+
+
+    fun `test infer func that destructures union type parameter`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing (..)
+f = g
+  --^()
+g = foo (Foo ())
+
+--@ Foo.elm
+module Foo exposing (..)
+type Foo = Foo ()
+foo : Foo -> ()
+foo (Foo x) = x
+""")
+
+
     fun `test infer infix operator`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
