@@ -7,15 +7,16 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
+import org.elm.lang.core.stubs.ElmExposingListStub
 import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
-class ElmExposingList : ElmStubbedElement<ElmPlaceholderStub> {
+class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmExposingListStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
@@ -25,6 +26,8 @@ class ElmExposingList : ElmStubbedElement<ElmPlaceholderStub> {
     val doubleDot: PsiElement?
         get() = findChildByType(DOUBLE_DOT)
 
+    val exposesAll: Boolean
+        get() = getStub()?.exposesAll ?: doubleDot != null
 
     /**
      * Returns the opening parenthesis element.

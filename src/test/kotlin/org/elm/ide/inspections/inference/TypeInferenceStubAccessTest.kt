@@ -19,6 +19,15 @@ class TypeInferenceStubAccessTest : ElmTestBase() {
     /*
         Type inference should use stubs as much as possible.
 
+        These tests are kinda weird because you need to setup strange situations
+        in the imported file in order to exercise the type inference code completely
+        over a stub-backed Psi tree. Most of these tests have been discovered by running
+        IntelliJ with debug logging enabled for "#com.intellij.psi.impl.source.PsiFileImpl"
+        and looking for unexpected "Loaded text for file" log messages when opening files
+        and running type inference. Then set a breakpoint where that log message is
+        emitted to check the callstack and create a test that recreates the scenario.
+        It's tedious and lame, but it works.
+
         Ideally type inference could operate 100% using stubs. But this is only feasible
         when functions have type annotations, in which case we do not need to peek into
         the body of the function.
@@ -125,6 +134,24 @@ g = foo () 0
 module Foo exposing (..)
 foo : a -> b -> a
 foo x y = x
+""")
+
+
+    fun `test infer type via exposed import`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
+            """
+--@ Main.elm
+import Foo exposing (Foo)
+type alias Thing = Foo
+           --^Thing
+
+--@ Foo.elm
+module Foo exposing (..)
+import Bar exposing (Bar)
+type alias Foo = Bar
+
+--@ Bar.elm
+module Bar exposing (..)
+type alias Bar = ()
 """)
 
 

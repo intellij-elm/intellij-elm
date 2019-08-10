@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 19
+        override fun getStubVersion() = 20
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -50,7 +50,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type  // TODO [drop 0.18] remove this line
     "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
     "INFIX_FUNC_REF" -> ElmInfixFuncRefStub.Type
-    "EXPOSING_LIST" -> ElmPlaceholderStub.Type("EXPOSING_LIST", ::ElmExposingList)
+    "EXPOSING_LIST" -> ElmExposingListStub.Type
     "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
     "EXPOSED_VALUE" -> ElmExposedValueStub.Type
     "EXPOSED_TYPE" -> ElmExposedTypeStub.Type
@@ -326,6 +326,39 @@ class ElmInfixFuncRefStub(
                 ElmInfixFuncRefStub(parentStub, this, psi.referenceName)
 
         override fun indexStub(stub: ElmInfixFuncRefStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
+
+class ElmExposingListStub(
+        parent: StubElement<*>?,
+                          elementType: IStubElementType<*, *>,
+                          val exposesAll: Boolean
+) : StubBase<ElmExposingList>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmExposingListStub, ElmExposingList>("EXPOSING_LIST") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmExposingListStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeBoolean(stub.exposesAll)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
+                ElmExposingListStub(parentStub, this,
+                        dataStream.readBoolean())
+
+        override fun createPsi(stub: ElmExposingListStub) =
+                ElmExposingList(stub, this)
+
+        override fun createStub(psi: ElmExposingList, parentStub: StubElement<*>?) =
+                ElmExposingListStub(parentStub, this, psi.exposesAll)
+
+        override fun indexStub(stub: ElmExposingListStub, sink: IndexSink) {
             // no-op
         }
     }

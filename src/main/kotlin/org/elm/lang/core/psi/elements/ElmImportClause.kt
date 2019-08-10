@@ -41,7 +41,7 @@ class ElmImportClause : ElmStubbedElement<ElmImportClauseStub>, ElmReferenceElem
 
 
     val exposesAll: Boolean
-        get() = exposingList?.doubleDot != null
+        get() = exposingList?.exposesAll ?: false
 
 
     override val referenceNameElement: PsiElement
