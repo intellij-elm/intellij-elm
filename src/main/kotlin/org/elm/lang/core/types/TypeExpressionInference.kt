@@ -260,7 +260,7 @@ class TypeExpression(
             it.name to mutableSetOf<ElmNamedElement>(it)
         })
         val baseId = record.baseTypeIdentifier
-        val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.text) }
+        val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.referenceName) }
         return TyRecord(fieldTys, baseTy, fieldReferences = fieldReferences)
     }
 

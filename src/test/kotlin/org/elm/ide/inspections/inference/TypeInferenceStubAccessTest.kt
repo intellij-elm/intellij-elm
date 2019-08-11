@@ -218,6 +218,21 @@ port foo : ()
 """)
 
 
+    fun `test infer function with extensible record param`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing (foo)
+f = g
+  --^()
+g = foo { id = 0, name = () }
+
+--@ Foo.elm
+module Foo exposing (..)
+foo : { a | name : () } -> ()
+foo { name } = name
+""")
+
+
     private inline fun <reified T : ElmPsiElement> stubOnlyTypeInfer(@Language("Elm") code: String) {
         val testProject = fileTreeFromText(code)
                 .createAndOpenFileWithCaretMarker()
