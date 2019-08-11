@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 25
+        override fun getStubVersion() = 26
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -154,8 +154,7 @@ class ElmTypeDeclarationStub(parent: StubElement<*>?,
 
 class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
                                   elementType: IStubElementType<*, *>,
-                                  override val name: String,
-                                  val isRecordAlias: Boolean
+                                  override val name: String
 ) : StubBase<ElmTypeAliasDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmTypeAliasDeclarationStub, ElmTypeAliasDeclaration>("TYPE_ALIAS_DECLARATION") {
@@ -163,19 +162,17 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
         override fun serialize(stub: ElmTypeAliasDeclarationStub, dataStream: StubOutputStream) =
                 with(dataStream) {
                     writeName(stub.name)
-                    writeBoolean(stub.isRecordAlias)
                 }
 
         override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
                 ElmTypeAliasDeclarationStub(parentStub, this,
-                        dataStream.readNameString() ?: error("expected non-null string"),
-                        dataStream.readBoolean())
+                        dataStream.readNameString() ?: error("expected non-null string"))
 
         override fun createPsi(stub: ElmTypeAliasDeclarationStub) =
                 ElmTypeAliasDeclaration(stub, this)
 
         override fun createStub(psi: ElmTypeAliasDeclaration, parentStub: StubElement<*>?) =
-                ElmTypeAliasDeclarationStub(parentStub, this, psi.name, psi.isRecordAlias)
+                ElmTypeAliasDeclarationStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmTypeAliasDeclarationStub, sink: IndexSink) {
             sink.indexTypeAliasDecl(stub)
