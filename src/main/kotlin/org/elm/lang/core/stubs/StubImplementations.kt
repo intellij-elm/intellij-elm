@@ -91,10 +91,11 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
 }
 
 
-class ElmModuleDeclarationStub(parent: StubElement<*>?,
-                               elementType: IStubElementType<*, *>,
-                               override val name: String,
-                               val exposesAll: Boolean
+class ElmModuleDeclarationStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String,
+        val exposesAll: Boolean
 ) : StubBase<ElmModuleDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmModuleDeclarationStub, ElmModuleDeclaration>("MODULE_DECLARATION") {
@@ -123,9 +124,10 @@ class ElmModuleDeclarationStub(parent: StubElement<*>?,
 }
 
 
-class ElmTypeDeclarationStub(parent: StubElement<*>?,
-                             elementType: IStubElementType<*, *>,
-                             override val name: String
+class ElmTypeDeclarationStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
 ) : StubBase<ElmTypeDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmTypeDeclarationStub, ElmTypeDeclaration>("TYPE_DECLARATION") {
@@ -152,9 +154,10 @@ class ElmTypeDeclarationStub(parent: StubElement<*>?,
 }
 
 
-class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
-                                  elementType: IStubElementType<*, *>,
-                                  override val name: String
+class ElmTypeAliasDeclarationStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
 ) : StubBase<ElmTypeAliasDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmTypeAliasDeclarationStub, ElmTypeAliasDeclaration>("TYPE_ALIAS_DECLARATION") {
@@ -181,9 +184,10 @@ class ElmTypeAliasDeclarationStub(parent: StubElement<*>?,
 }
 
 
-class ElmUnionVariantStub(parent: StubElement<*>?,
-                          elementType: IStubElementType<*, *>,
-                          override val name: String
+class ElmUnionVariantStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
 ) : StubBase<ElmUnionVariant>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmUnionVariantStub, ElmUnionVariant>("UNION_VARIANT") {
@@ -209,9 +213,10 @@ class ElmUnionVariantStub(parent: StubElement<*>?,
     }
 }
 
-class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
-                                     elementType: IStubElementType<*, *>,
-                                     override val name: String
+class ElmFunctionDeclarationLeftStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
 ) : StubBase<ElmFunctionDeclarationLeft>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmFunctionDeclarationLeftStub, ElmFunctionDeclarationLeft>("FUNCTION_DECLARATION_LEFT") {
@@ -238,9 +243,10 @@ class ElmFunctionDeclarationLeftStub(parent: StubElement<*>?,
 }
 
 // TODO [drop 0.18] remove this class
-class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
-                                     elementType: IStubElementType<*, *>,
-                                     override val name: String
+class ElmOperatorDeclarationLeftStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
 ) : StubBase<ElmOperatorDeclarationLeft>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmOperatorDeclarationLeftStub, ElmOperatorDeclarationLeft>("OPERATOR_DECLARATION_LEFT") {
@@ -267,12 +273,13 @@ class ElmOperatorDeclarationLeftStub(parent: StubElement<*>?,
 }
 
 
-class ElmInfixDeclarationStub(parent: StubElement<*>?,
-                              elementType: IStubElementType<*, *>,
-                              override val name: String,
-                              val precedence: Int,
-                              val associativity: String,
-                              val funcRefName: String?
+class ElmInfixDeclarationStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String,
+        val precedence: Int,
+        val associativity: String,
+        val funcRefName: String?
 ) : StubBase<ElmInfixDeclaration>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmInfixDeclarationStub, ElmInfixDeclaration>("INFIX_DECLARATION") {
@@ -314,8 +321,8 @@ class ElmInfixDeclarationStub(parent: StubElement<*>?,
 
 class ElmExposingListStub(
         parent: StubElement<*>?,
-                          elementType: IStubElementType<*, *>,
-                          val exposesAll: Boolean
+        elementType: IStubElementType<*, *>,
+        val exposesAll: Boolean
 ) : StubBase<ElmExposingList>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposingListStub, ElmExposingList>("EXPOSING_LIST") {
@@ -345,10 +352,11 @@ class ElmExposingListStub(
     }
 }
 
-class ElmExposedTypeStub(parent: StubElement<*>?,
-                         elementType: IStubElementType<*, *>,
-                         val refName: String,
-                         val exposesAll: Boolean
+class ElmExposedTypeStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String,
+        val exposesAll: Boolean
 ) : StubBase<ElmExposedType>(parent, elementType) {
 
     object Type : ElmStubElementType<ElmExposedTypeStub, ElmExposedType>("EXPOSED_TYPE") {
@@ -380,9 +388,10 @@ class ElmExposedTypeStub(parent: StubElement<*>?,
     }
 }
 
-class ElmPortAnnotationStub(parent: StubElement<*>?,
-                            elementType: IStubElementType<*, *>,
-                            override val name: String
+class ElmPortAnnotationStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        override val name: String
 ) : StubBase<ElmPortAnnotation>(parent, elementType), ElmNamedStub {
 
     object Type : ElmStubElementType<ElmPortAnnotationStub, ElmPortAnnotation>("PORT_ANNOTATION") {
