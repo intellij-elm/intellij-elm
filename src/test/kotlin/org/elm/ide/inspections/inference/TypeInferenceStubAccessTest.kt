@@ -205,6 +205,19 @@ foo x y = x
 """)
 
 
+    fun `test infer port annotation`() = stubOnlyTypeInfer<ElmValueExpr>(
+            """
+--@ Main.elm
+import Foo exposing (foo)
+f = foo
+  --^()
+
+--@ Foo.elm
+port module Foo exposing (..)
+port foo : ()
+""")
+
+
     private inline fun <reified T : ElmPsiElement> stubOnlyTypeInfer(@Language("Elm") code: String) {
         val testProject = fileTreeFromText(code)
                 .createAndOpenFileWithCaretMarker()
