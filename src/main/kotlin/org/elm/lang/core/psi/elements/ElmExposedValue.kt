@@ -38,12 +38,9 @@ class ElmExposedValue : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceEl
     override val referenceName: String
         get() = getStub()?.refName ?: referenceNameElement.text
 
-    override fun getReference(): ElmReference {
-        // TODO [kl] cleanup
-        val moduleDecl = parentOfType<ElmModuleDeclaration>()
-        return if (moduleDecl != null)
-            ExposedValueModuleReference(this)
-        else
-            ExposedValueImportReference(this)
-    }
+    override fun getReference(): ElmReference =
+            if (parentOfType<ElmModuleDeclaration>() != null)
+                ExposedValueModuleReference(this)
+            else
+                ExposedValueImportReference(this)
 }

@@ -60,7 +60,6 @@ abstract class ElmStubbedElement<StubT : StubElement<*>>
     constructor(stub: StubT, nodeType: IStubElementType<*, *>)
             : super(stub, nodeType)
 
-    // TODO [kl] will this inadvertently cause the stub to become AST-backed?
     override val elmFile: ElmFile
         get() = containingFile as ElmFile
 
