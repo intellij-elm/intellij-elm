@@ -9,18 +9,18 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.stubs.ElmExposedOperatorStub
+import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 
 /**
  * Exposes a binary operator
  */
-class ElmExposedOperator : ElmStubbedElement<ElmExposedOperatorStub>, ElmReferenceElement, ElmExposedItemTag {
+class ElmExposedOperator : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement, ElmExposedItemTag {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmExposedOperatorStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderRefStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 

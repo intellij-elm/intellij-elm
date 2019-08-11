@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 24
+        override fun getStubVersion() = 25
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -40,6 +40,22 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
     }
 }
 
+/**
+NOTES ON CREATING STUBS
+
+If you need to add a new stub:
+- is the element a container with no interesting data of its own,
+but which needs to hold stub children? use [ElmPlaceholderStub]
+- is it a simple ElmReferenceElement? use [ElmPlaceholderRefStub]
+- is it an [ElmNamedElement]? create a custom stub class/type below
+and make sure you index it with [ElmNamedElementIndex].
+- for all other cases, create a custom stub class and type below.
+
+In all cases, you must also:
+1. bump the stubVersion integer in [ElmFileStub.Type.getStubVersion]
+2. add it to the factory dispatch `when` below
+2. register this factory method for the new, stubbed element type in the parser BNF file.
+ */
 
 fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "MODULE_DECLARATION" -> ElmModuleDeclarationStub.Type
@@ -49,26 +65,26 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "FUNCTION_DECLARATION_LEFT" -> ElmFunctionDeclarationLeftStub.Type
     "OPERATOR_DECLARATION_LEFT" -> ElmOperatorDeclarationLeftStub.Type  // TODO [drop 0.18] remove this line
     "INFIX_DECLARATION" -> ElmInfixDeclarationStub.Type
-    "INFIX_FUNC_REF" -> ElmInfixFuncRefStub.Type
+    "INFIX_FUNC_REF" -> ElmPlaceholderRefStub.Type(name, ::ElmInfixFuncRef)
     "EXPOSING_LIST" -> ElmExposingListStub.Type
-    "EXPOSED_OPERATOR" -> ElmExposedOperatorStub.Type
-    "EXPOSED_VALUE" -> ElmExposedValueStub.Type
+    "EXPOSED_OPERATOR" -> ElmPlaceholderRefStub.Type(name, ::ElmExposedOperator)
+    "EXPOSED_VALUE" -> ElmPlaceholderRefStub.Type(name, ::ElmExposedValue)
     "EXPOSED_TYPE" -> ElmExposedTypeStub.Type
-    "EXPOSED_UNION_CONSTRUCTOR" -> ElmExposedUnionConstructorStub.Type
-    "EXPOSED_UNION_CONSTRUCTORS" -> ElmPlaceholderStub.Type("EXPOSED_UNION_CONSTRUCTORS", ::ElmExposedUnionConstructors)
-    "VALUE_DECLARATION" -> ElmPlaceholderStub.Type("VALUE_DECLARATION", ::ElmValueDeclaration)
+    "EXPOSED_UNION_CONSTRUCTOR" -> ElmPlaceholderRefStub.Type(name, ::ElmExposedUnionConstructor)
+    "EXPOSED_UNION_CONSTRUCTORS" -> ElmPlaceholderStub.Type(name, ::ElmExposedUnionConstructors)
+    "VALUE_DECLARATION" -> ElmPlaceholderStub.Type(name, ::ElmValueDeclaration)
     "PORT_ANNOTATION" -> ElmPortAnnotationStub.Type
-    "TYPE_EXPRESSION" -> ElmPlaceholderStub.Type("TYPE_EXPRESSION", ::ElmTypeExpression)
-    "RECORD_TYPE" -> ElmPlaceholderStub.Type("RECORD_TYPE", ::ElmRecordType)
+    "TYPE_EXPRESSION" -> ElmPlaceholderStub.Type(name, ::ElmTypeExpression)
+    "RECORD_TYPE" -> ElmPlaceholderStub.Type(name, ::ElmRecordType)
     "FIELD_TYPE" -> ElmFieldTypeStub.Type
-    "TUPLE_TYPE" -> ElmPlaceholderStub.Type("TUPLE_TYPE", ::ElmTupleType)
-    "UNIT_EXPR" -> ElmPlaceholderStub.Type("UNIT_EXPR", ::ElmUnitExpr)
-    "TYPE_REF" -> ElmPlaceholderStub.Type("TYPE_REF", ::ElmTypeRef)
+    "TUPLE_TYPE" -> ElmPlaceholderStub.Type(name, ::ElmTupleType)
+    "UNIT_EXPR" -> ElmPlaceholderStub.Type(name, ::ElmUnitExpr)
+    "TYPE_REF" -> ElmPlaceholderStub.Type(name, ::ElmTypeRef)
     "TYPE_VARIABLE" -> ElmTypeVariableStub.Type
     "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
-    "RECORD_BASE_IDENTIFIER" -> ElmRecordBaseIdentifierStub.Type
-    "TYPE_ANNOTATION" -> ElmTypeAnnotationStub.Type
-    "IMPORT_CLAUSE" -> ElmPlaceholderStub.Type("IMPORT_CLAUSE", ::ElmImportClause)
+    "RECORD_BASE_IDENTIFIER" -> ElmPlaceholderRefStub.Type(name, ::ElmRecordBaseIdentifier)
+    "TYPE_ANNOTATION" -> ElmPlaceholderRefStub.Type(name, ::ElmTypeAnnotation)
+    "IMPORT_CLAUSE" -> ElmPlaceholderStub.Type(name, ::ElmImportClause)
     "AS_CLAUSE" -> ElmAsClauseStub.Type
     "UPPER_CASE_QID" -> ElmUpperCaseQIDStub.Type
     else -> error("Unknown element $name")
@@ -299,39 +315,6 @@ class ElmInfixDeclarationStub(parent: StubElement<*>?,
     }
 }
 
-class ElmInfixFuncRefStub(
-        parent: StubElement<*>?,
-        elementType: IStubElementType<*, *>,
-        val refName: String
-) : StubBase<ElmInfixFuncRef>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmInfixFuncRefStub, ElmInfixFuncRef>("INFIX_FUNC_REF") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmInfixFuncRefStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmInfixFuncRefStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmInfixFuncRefStub) =
-                ElmInfixFuncRef(stub, this)
-
-        override fun createStub(psi: ElmInfixFuncRef, parentStub: StubElement<*>?) =
-                ElmInfixFuncRefStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmInfixFuncRefStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
 class ElmExposingListStub(
         parent: StubElement<*>?,
                           elementType: IStubElementType<*, *>,
@@ -360,70 +343,6 @@ class ElmExposingListStub(
                 ElmExposingListStub(parentStub, this, psi.exposesAll)
 
         override fun indexStub(stub: ElmExposingListStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmExposedValueStub(parent: StubElement<*>?,
-                          elementType: IStubElementType<*, *>,
-                          val refName: String
-) : StubBase<ElmExposedValue>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmExposedValueStub, ElmExposedValue>("EXPOSED_VALUE") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmExposedValueStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmExposedValueStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmExposedValueStub) =
-                ElmExposedValue(stub, this)
-
-        override fun createStub(psi: ElmExposedValue, parentStub: StubElement<*>?) =
-                ElmExposedValueStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmExposedValueStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmExposedOperatorStub(parent: StubElement<*>?,
-                             elementType: IStubElementType<*, *>,
-                             val refName: String
-) : StubBase<ElmExposedOperator>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmExposedOperatorStub, ElmExposedOperator>("EXPOSED_OPERATOR") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmExposedOperatorStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmExposedOperatorStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmExposedOperatorStub) =
-                ElmExposedOperator(stub, this)
-
-        override fun createStub(psi: ElmExposedOperator, parentStub: StubElement<*>?) =
-                ElmExposedOperatorStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmExposedOperatorStub, sink: IndexSink) {
             // no-op
         }
     }
@@ -459,38 +378,6 @@ class ElmExposedTypeStub(parent: StubElement<*>?,
                 ElmExposedTypeStub(parentStub, this, psi.referenceName, psi.exposesAll)
 
         override fun indexStub(stub: ElmExposedTypeStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmExposedUnionConstructorStub(parent: StubElement<*>?,
-                                     elementType: IStubElementType<*, *>,
-                                     val refName: String
-) : StubBase<ElmExposedUnionConstructor>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmExposedUnionConstructorStub, ElmExposedUnionConstructor>("EXPOSED_UNION_CONSTRUCTOR") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmExposedUnionConstructorStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmExposedUnionConstructorStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmExposedUnionConstructorStub) =
-                ElmExposedUnionConstructor(stub, this)
-
-        override fun createStub(psi: ElmExposedUnionConstructor, parentStub: StubElement<*>?) =
-                ElmExposedUnionConstructorStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmExposedUnionConstructorStub, sink: IndexSink) {
             // no-op
         }
     }
@@ -651,72 +538,6 @@ class ElmLowerTypeNameStub(
                 ElmLowerTypeNameStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmLowerTypeNameStub, sink: IndexSink) {
-        }
-    }
-}
-
-class ElmRecordBaseIdentifierStub(
-        parent: StubElement<*>?,
-        elementType: IStubElementType<*, *>,
-        val refName: String
-) : StubBase<ElmRecordBaseIdentifier>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmRecordBaseIdentifierStub, ElmRecordBaseIdentifier>("RECORD_BASE_IDENTIFIER") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmRecordBaseIdentifierStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmRecordBaseIdentifierStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmRecordBaseIdentifierStub) =
-                ElmRecordBaseIdentifier(stub, this)
-
-        override fun createStub(psi: ElmRecordBaseIdentifier, parentStub: StubElement<*>?) =
-                ElmRecordBaseIdentifierStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmRecordBaseIdentifierStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmTypeAnnotationStub(
-        parent: StubElement<*>?,
-        elementType: IStubElementType<*, *>,
-        val refName: String
-) : StubBase<ElmTypeAnnotation>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmTypeAnnotationStub, ElmTypeAnnotation>("TYPE_ANNOTATION") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmTypeAnnotationStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmTypeAnnotationStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmTypeAnnotationStub) =
-                ElmTypeAnnotation(stub, this)
-
-        override fun createStub(psi: ElmTypeAnnotation, parentStub: StubElement<*>?) =
-                ElmTypeAnnotationStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmTypeAnnotationStub, sink: IndexSink) {
-            // no-op
         }
     }
 }

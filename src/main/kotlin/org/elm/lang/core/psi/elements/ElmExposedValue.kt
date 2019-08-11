@@ -11,7 +11,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.ExposedValueImportReference
 import org.elm.lang.core.resolve.reference.ExposedValueModuleReference
-import org.elm.lang.core.stubs.ElmExposedValueStub
+import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 
 /**
@@ -19,12 +19,12 @@ import org.elm.lang.core.stubs.ElmExposedValueStub
  *
  * e.g. `bar` in `import Foo exposing (bar)`
  */
-class ElmExposedValue : ElmStubbedElement<ElmExposedValueStub>, ElmReferenceElement, ElmExposedItemTag {
+class ElmExposedValue : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement, ElmExposedItemTag {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmExposedValueStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderRefStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 

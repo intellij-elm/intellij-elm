@@ -12,7 +12,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.reference.LocalTopLevelValueReference
-import org.elm.lang.core.stubs.ElmTypeAnnotationStub
+import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 
 /**
@@ -22,12 +22,12 @@ import org.elm.lang.core.stubs.ElmTypeAnnotationStub
  *
  * Either [lowerCaseIdentifier] or [operatorIdentifier] is non-null
  */
-class ElmTypeAnnotation : ElmStubbedElement<ElmTypeAnnotationStub>, ElmReferenceElement {
+class ElmTypeAnnotation : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmTypeAnnotationStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderRefStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 

@@ -9,7 +9,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.reference.TypeVariableReference
-import org.elm.lang.core.stubs.ElmRecordBaseIdentifierStub
+import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 /**
  * This can occur in 2 different contexts:
@@ -25,12 +25,12 @@ import org.elm.lang.core.stubs.ElmRecordBaseIdentifierStub
  *       (the type alias example above will resolve, but the function parameter example will not resolve)
  *
  */
-class ElmRecordBaseIdentifier : ElmStubbedElement<ElmRecordBaseIdentifierStub>, ElmReferenceElement {
+class ElmRecordBaseIdentifier : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmRecordBaseIdentifierStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderRefStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
