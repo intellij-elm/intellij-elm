@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 22
+        override fun getStubVersion() = 23
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -63,7 +63,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "FIELD_TYPE" -> ElmFieldTypeStub.Type
     "TUPLE_TYPE" -> ElmPlaceholderStub.Type("TUPLE_TYPE", ::ElmTupleType)
     "UNIT_EXPR" -> ElmPlaceholderStub.Type("UNIT_EXPR", ::ElmUnitExpr)
-    "TYPE_REF" -> ElmTypeRefStub.Type
+    "TYPE_REF" -> ElmPlaceholderStub.Type("TYPE_REF", ::ElmTypeRef)
     "TYPE_VARIABLE" -> ElmTypeVariableStub.Type
     "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
     "RECORD_BASE_IDENTIFIER" -> ElmRecordBaseIdentifierStub.Type
@@ -551,44 +551,6 @@ class ElmFieldTypeStub(
                 ElmFieldTypeStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmFieldTypeStub, sink: IndexSink) {
-        }
-    }
-}
-
-class ElmTypeRefStub(
-        parent: StubElement<*>?,
-        elementType: IStubElementType<*, *>,
-        val refName: String,
-        val qualifierPrefix: String
-) : StubBase<ElmTypeRef>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmTypeRefStub, ElmTypeRef>("TYPE_REF") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmTypeRefStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-                writeName(stub.qualifierPrefix)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?): ElmTypeRefStub {
-            return ElmTypeRefStub(parentStub, this,
-                    dataStream.readNameString() ?: error("refName: expected non-null string"),
-                    dataStream.readNameString() ?: error("qualifierPrefix: expected non-null string")
-            )
-        }
-
-        override fun createPsi(stub: ElmTypeRefStub) =
-                ElmTypeRef(stub, this)
-
-        override fun createStub(psi: ElmTypeRef, parentStub: StubElement<*>?) =
-                ElmTypeRefStub(parentStub, this, psi.referenceName, psi.upperCaseQID.qualifierPrefix)
-
-        override fun indexStub(stub: ElmTypeRefStub, sink: IndexSink) {
-            // no-op
         }
     }
 }

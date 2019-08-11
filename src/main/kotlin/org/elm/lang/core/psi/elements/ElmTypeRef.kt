@@ -9,7 +9,7 @@ import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.ModuleNameQualifierReference
 import org.elm.lang.core.resolve.reference.QualifiedTypeReference
 import org.elm.lang.core.resolve.reference.SimpleTypeReference
-import org.elm.lang.core.stubs.ElmTypeRefStub
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
@@ -23,13 +23,13 @@ import org.elm.lang.core.stubs.ElmTypeRefStub
  * - `List { x : Int }`
  * - `Task.Task Http.Error String`
  */
-class ElmTypeRef : ElmStubbedElement<ElmTypeRefStub>,
+class ElmTypeRef : ElmStubbedElement<ElmPlaceholderStub>,
         ElmReferenceElement, ElmTypeExpressionSegmentTag, ElmTypeRefArgumentTag, ElmUnionVariantParameterTag {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmTypeRefStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
@@ -48,13 +48,13 @@ class ElmTypeRef : ElmStubbedElement<ElmTypeRefStub>,
         get() = upperCaseQID.upperCaseIdentifierList.last()
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = upperCaseQID.refName // stub-safe
 
     override fun getReference(): ElmReference =
             references.first()
 
     override fun getReferences(): Array<ElmReference> {
-        val qualifierPrefix = getStub()?.qualifierPrefix ?: upperCaseQID.qualifierPrefix
+        val qualifierPrefix = upperCaseQID.qualifierPrefix // stub-safe
 
         return if (qualifierPrefix != "") {
             arrayOf(QualifiedTypeReference(this, qualifierPrefix),
