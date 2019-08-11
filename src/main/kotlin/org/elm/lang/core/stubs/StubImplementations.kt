@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 23
+        override fun getStubVersion() = 24
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -68,7 +68,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "LOWER_TYPE_NAME" -> ElmLowerTypeNameStub.Type
     "RECORD_BASE_IDENTIFIER" -> ElmRecordBaseIdentifierStub.Type
     "TYPE_ANNOTATION" -> ElmTypeAnnotationStub.Type
-    "IMPORT_CLAUSE" -> ElmImportClauseStub.Type
+    "IMPORT_CLAUSE" -> ElmPlaceholderStub.Type("IMPORT_CLAUSE", ::ElmImportClause)
     "AS_CLAUSE" -> ElmAsClauseStub.Type
     "UPPER_CASE_QID" -> ElmUpperCaseQIDStub.Type
     else -> error("Unknown element $name")
@@ -716,39 +716,6 @@ class ElmTypeAnnotationStub(
                 ElmTypeAnnotationStub(parentStub, this, psi.referenceName)
 
         override fun indexStub(stub: ElmTypeAnnotationStub, sink: IndexSink) {
-            // no-op
-        }
-    }
-}
-
-class ElmImportClauseStub(
-        parent: StubElement<*>?,
-        elementType: IStubElementType<*, *>,
-        val refName: String
-) : StubBase<ElmImportClause>(parent, elementType) {
-
-    object Type : ElmStubElementType<ElmImportClauseStub, ElmImportClause>("IMPORT_CLAUSE") {
-
-        override fun shouldCreateStub(node: ASTNode) =
-                createStubIfParentIsStub(node)
-
-        override fun serialize(stub: ElmImportClauseStub, dataStream: StubOutputStream) {
-            with(dataStream) {
-                writeName(stub.refName)
-            }
-        }
-
-        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?) =
-                ElmImportClauseStub(parentStub, this,
-                        dataStream.readNameString()!!)
-
-        override fun createPsi(stub: ElmImportClauseStub) =
-                ElmImportClause(stub, this)
-
-        override fun createStub(psi: ElmImportClause, parentStub: StubElement<*>?) =
-                ElmImportClauseStub(parentStub, this, psi.referenceName)
-
-        override fun indexStub(stub: ElmImportClauseStub, sink: IndexSink) {
             // no-op
         }
     }

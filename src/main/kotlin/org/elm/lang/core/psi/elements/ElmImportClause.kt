@@ -8,7 +8,7 @@ import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.stubDirectChildrenOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
-import org.elm.lang.core.stubs.ElmImportClauseStub
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 /**
@@ -21,12 +21,12 @@ import org.elm.lang.core.stubs.index.ElmModulesIndex
  * - possibly introduces an alias name for the module
  * - expose individual values and types from the module
  */
-class ElmImportClause : ElmStubbedElement<ElmImportClauseStub>, ElmReferenceElement {
+class ElmImportClause : ElmStubbedElement<ElmPlaceholderStub>, ElmReferenceElement {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmImportClauseStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
@@ -48,13 +48,13 @@ class ElmImportClause : ElmStubbedElement<ElmImportClauseStub>, ElmReferenceElem
         get() = moduleQID
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = moduleQID.fullName // stub-safe
 
     override fun getReference() =
             object : ElmReferenceCached<ElmImportClause>(this) {
 
                 override fun resolveInner(): ElmNamedElement? =
-                        ElmModulesIndex.get(element.referenceName, elmFile)
+                        ElmModulesIndex.get(moduleQID.fullName, elmFile)
 
                 override fun getVariants(): Array<ElmNamedElement> =
                         ElmModulesIndex.getAll(elmFile).toTypedArray()
