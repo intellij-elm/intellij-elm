@@ -4,11 +4,11 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiFile
 import com.intellij.psi.stubs.*
 import com.intellij.psi.tree.IStubFileElementType
+import com.intellij.util.io.DataInputOutputUtil.readNullable
+import com.intellij.util.io.DataInputOutputUtil.writeNullable
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.*
-import com.intellij.util.io.DataInputOutputUtil.readNullable
-import com.intellij.util.io.DataInputOutputUtil.writeNullable
 
 
 class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 20
+        override fun getStubVersion() = 22
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -70,6 +70,7 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "TYPE_ANNOTATION" -> ElmTypeAnnotationStub.Type
     "IMPORT_CLAUSE" -> ElmImportClauseStub.Type
     "AS_CLAUSE" -> ElmAsClauseStub.Type
+    "UPPER_CASE_QID" -> ElmUpperCaseQIDStub.Type
     else -> error("Unknown element $name")
 }
 
@@ -587,6 +588,44 @@ class ElmTypeRefStub(
                 ElmTypeRefStub(parentStub, this, psi.referenceName, psi.upperCaseQID.qualifierPrefix)
 
         override fun indexStub(stub: ElmTypeRefStub, sink: IndexSink) {
+            // no-op
+        }
+    }
+}
+
+class ElmUpperCaseQIDStub(
+        parent: StubElement<*>?,
+        elementType: IStubElementType<*, *>,
+        val refName: String,
+        val qualifierPrefix: String
+) : StubBase<ElmUpperCaseQID>(parent, elementType) {
+
+    object Type : ElmStubElementType<ElmUpperCaseQIDStub, ElmUpperCaseQID>("UPPER_CASE_QID") {
+
+        override fun shouldCreateStub(node: ASTNode) =
+                createStubIfParentIsStub(node)
+
+        override fun serialize(stub: ElmUpperCaseQIDStub, dataStream: StubOutputStream) {
+            with(dataStream) {
+                writeName(stub.refName)
+                writeName(stub.qualifierPrefix)
+            }
+        }
+
+        override fun deserialize(dataStream: StubInputStream, parentStub: StubElement<*>?): ElmUpperCaseQIDStub {
+            return ElmUpperCaseQIDStub(parentStub, this,
+                    dataStream.readNameString() ?: error("refName: expected non-null string"),
+                    dataStream.readNameString() ?: error("qualifierPrefix: expected non-null string")
+            )
+        }
+
+        override fun createPsi(stub: ElmUpperCaseQIDStub) =
+                ElmUpperCaseQID(stub, this)
+
+        override fun createStub(psi: ElmUpperCaseQID, parentStub: StubElement<*>?) =
+                ElmUpperCaseQIDStub(parentStub, this, psi.refName, psi.qualifierPrefix)
+
+        override fun indexStub(stub: ElmUpperCaseQIDStub, sink: IndexSink) {
             // no-op
         }
     }

@@ -31,7 +31,7 @@ class ElmImportClause : ElmStubbedElement<ElmImportClauseStub>, ElmReferenceElem
 
 
     val moduleQID: ElmUpperCaseQID
-        get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
+        get() = stubDirectChildrenOfType<ElmUpperCaseQID>().single()
 
     val asClause: ElmAsClause?
         get() = stubDirectChildrenOfType<ElmAsClause>().singleOrNull()

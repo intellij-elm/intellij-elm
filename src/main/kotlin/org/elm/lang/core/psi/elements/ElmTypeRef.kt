@@ -34,7 +34,7 @@ class ElmTypeRef : ElmStubbedElement<ElmTypeRefStub>,
 
 
     val upperCaseQID: ElmUpperCaseQID
-        get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
+        get() = stubDirectChildrenOfType<ElmUpperCaseQID>().single()
 
     /**
      * All arguments to the type, if there are any.

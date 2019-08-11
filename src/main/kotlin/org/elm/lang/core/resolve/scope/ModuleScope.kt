@@ -6,7 +6,6 @@ import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.modificationTracker
@@ -47,7 +46,7 @@ data class VisibleNames(
 object ModuleScope {
 
     fun getImportDecls(elmFile: ElmFile) =
-            elmFile.directChildren.filterIsInstance<ElmImportClause>().toList()
+            elmFile.getImportClauses()
 
     fun getAliasDecls(elmFile: ElmFile) =
             getImportDecls(elmFile).mapNotNull { it.asClause }
@@ -72,7 +71,7 @@ object ModuleScope {
     fun importDeclsForQualifierPrefix(elmFile: ElmFile, qualifierPrefix: String) =
             getImportDecls(elmFile).filter {
                 // If a module has an alias, then the alias hides the original module name. (issue #93)
-                qualifierPrefix == it.asClause?.name ?: it.moduleQID.text
+                qualifierPrefix == it.asClause?.name ?: it.moduleQID.fullName
             }
 
     /**
