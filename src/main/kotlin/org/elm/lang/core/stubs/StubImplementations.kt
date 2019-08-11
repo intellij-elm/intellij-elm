@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 26
+        override fun getStubVersion() = 27
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -41,7 +41,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 }
 
 /**
-NOTES ON CREATING STUBS
+CREATING NEW STUBS
 
 If you need to add a new stub:
 - is the element a container with no interesting data of its own,
@@ -435,6 +435,7 @@ class ElmFieldTypeStub(
                 ElmFieldTypeStub(parentStub, this, psi.name)
 
         override fun indexStub(stub: ElmFieldTypeStub, sink: IndexSink) {
+            sink.indexRecordField(stub)
         }
     }
 }
