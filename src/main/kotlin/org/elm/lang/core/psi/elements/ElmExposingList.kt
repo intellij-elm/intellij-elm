@@ -8,7 +8,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.stubs.ElmExposingListStub
-import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
@@ -27,7 +26,7 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
         get() = findChildByType(DOUBLE_DOT)
 
     val exposesAll: Boolean
-        get() = getStub()?.exposesAll ?: doubleDot != null
+        get() = stub?.exposesAll ?: doubleDot != null
 
     /**
      * Returns the opening parenthesis element.

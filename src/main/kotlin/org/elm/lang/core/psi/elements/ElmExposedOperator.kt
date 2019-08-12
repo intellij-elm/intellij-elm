@@ -38,7 +38,7 @@ class ElmExposedOperator : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenc
         get() = operatorIdentifier
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference() =
             if (parentOfType<ElmModuleDeclaration>() != null) ExposedOperatorModuleReference(this)

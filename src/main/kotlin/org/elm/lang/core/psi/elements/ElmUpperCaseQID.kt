@@ -39,7 +39,7 @@ class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID, ElmUnion
      * e.g. `""` for QID `Foo`
      */
     override val qualifierPrefix: String
-        get() = getStub()?.qualifierPrefix ?: qualifiers.joinToString(".") { it.text }
+        get() = stub?.qualifierPrefix ?: qualifiers.joinToString(".") { it.text }
 
     /**
      * The right-most name in a potentially qualified name.
@@ -48,7 +48,7 @@ class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID, ElmUnion
      * e.g. `"Foo"` for QID `Foo`
      */
     val refName: String
-        get() = getStub()?.refName ?: upperCaseIdentifierList.last().text
+        get() = stub?.refName ?: upperCaseIdentifierList.last().text
 
     /**
      * The fully qualified name. Equivalent to `PsiElement#text` but stub-safe.

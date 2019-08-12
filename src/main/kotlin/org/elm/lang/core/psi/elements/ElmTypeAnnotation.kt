@@ -65,7 +65,7 @@ class ElmTypeAnnotation : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReference
                 ?: throw RuntimeException("cannot determine type annotations's ref name element")
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference(): ElmReference =
             if (parent is PsiFile) LocalTopLevelValueReference(this)

@@ -31,13 +31,13 @@ class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub>,
         get() = findNotNullChildByType(ElmTypes.NUMBER_LITERAL)
 
     val precedence: Int?
-        get() = getStub()?.precedence ?: precedenceElement.text.toIntOrNull()
+        get() = stub?.precedence ?: precedenceElement.text.toIntOrNull()
 
     val associativityElement: PsiElement
         get() = findNotNullChildByType(ElmTypes.LOWER_CASE_IDENTIFIER)
 
     val associativity: OperatorAssociativity
-        get() = when (getStub()?.associativity ?: associativityElement.text) {
+        get() = when (stub?.associativity ?: associativityElement.text) {
             "left" -> OperatorAssociativity.LEFT
             "right" -> OperatorAssociativity.RIGHT
             else -> OperatorAssociativity.NON

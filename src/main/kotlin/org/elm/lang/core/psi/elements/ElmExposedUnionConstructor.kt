@@ -32,7 +32,7 @@ class ElmExposedUnionConstructor : ElmStubbedElement<ElmPlaceholderRefStub>, Elm
         get() = upperCaseIdentifier
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference() =
             ExposedUnionConstructorReference(this)

@@ -26,7 +26,7 @@ class ElmInfixFuncRef : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceEl
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference(): ElmReference =
             LocalTopLevelValueReference(this)

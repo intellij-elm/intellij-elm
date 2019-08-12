@@ -36,7 +36,7 @@ class ElmExposedValue : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceEl
         get() = lowerCaseIdentifier
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference(): ElmReference =
             if (parentOfType<ElmModuleDeclaration>() != null)

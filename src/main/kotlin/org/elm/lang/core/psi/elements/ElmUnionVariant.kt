@@ -34,6 +34,6 @@ class ElmUnionVariant : ElmStubbedNamedElementImpl<ElmUnionVariantStub>, ElmExpo
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
     /** All parameters of the variant, if any. */
-    val allParameters: Sequence<ElmUnionVariantParameterTag>
-        get() = stubDirectChildrenOfType<ElmUnionVariantParameterTag>().asSequence()
+    val allParameters: List<ElmUnionVariantParameterTag>
+        get() = stubDirectChildrenOfType()
 }

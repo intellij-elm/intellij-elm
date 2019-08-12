@@ -193,7 +193,7 @@ class TypeExpression(
 
     /** Get the type for an entire type expression */
     private fun typeExpressionType(typeExpr: ElmTypeExpression): Ty {
-        val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }.toList()
+        val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }
         return when {
             segments.size == 1 -> segments.last()
             else -> TyFunction(segments.dropLast(1), segments.last()).uncurry()
@@ -265,8 +265,7 @@ class TypeExpression(
     }
 
     private fun typeRefType(typeRef: ElmTypeRef): Ty {
-        val argElements = typeRef.allArguments.toList()
-        val args = argElements.map { typeSignatureDeclType(it) }
+        val args = typeRef.allArguments.map { typeSignatureDeclType(it) }
 
         val declaredTy = when (val ref = typeRef.reference.resolve()) {
             is ElmTypeAliasDeclaration -> ref.typeExpressionInference(activeAliases).value
