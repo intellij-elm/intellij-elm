@@ -1,13 +1,16 @@
-package org.elm.ide.annotator
+package org.elm.ide.inspections
 
-import com.intellij.lang.annotation.AnnotationHolder
-import com.intellij.lang.annotation.Annotator
+import com.intellij.codeInspection.LocalQuickFixOnPsiElement
+import com.intellij.codeInspection.ProblemHighlightType.LIKE_UNKNOWN_SYMBOL
+import com.intellij.codeInspection.ProblemHighlightType.WEAK_WARNING
+import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
-import org.elm.ide.intentions.AddImportIntention
-import org.elm.ide.intentions.AddQualifierIntention
-import org.elm.ide.intentions.MakeDeclarationIntention
+import org.elm.ide.inspections.import.AddImportFix
+import org.elm.ide.inspections.import.AddQualifierFix
+import org.elm.ide.inspections.import.MakeDeclarationFix
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeRef
@@ -18,24 +21,9 @@ import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 
-/**
- * A handler should return `true` if it handled the error and no further processing needs to be done.
- */
-typealias BadRefHandler =
-        (ref: PsiReference, element: PsiElement, holder: AnnotationHolder) -> Boolean
+class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
 
-
-class ElmUnresolvedReferenceAnnotator : Annotator {
-
-    // A chain of handlers to be executed sequentially when a reference cannot be resolved.
-    // Order matters! Handlers earlier in the chain can short-circuit further evaluation.
-    private val handlers = listOf<BadRefHandler>(
-            ::handleTypeAnnotation,
-            ::handleSafeToIgnore,
-            ::handleModuleHiddenByAlias
-    )
-
-    override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+    override fun visitElement(element: ElmPsiElement, holder: ProblemsHolder, isOnTheFly: Boolean) {
         val refs = element.references.toMutableList()
 
         // Pre-processing: ignore any qualified value/type refs where the module qualifier could not be resolved.
@@ -47,14 +35,11 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             refs.removeIf { it is QualifiedReference }
         }
 
-        // Give each handler a chance to deal with the unresolved ref before falling back on an error
-        outerLoop@
         for (ref in refs.filter { it.resolve() == null }) {
-            for (handler in handlers) {
-                if (handler(ref, element, holder)) {
-                    continue@outerLoop
-                }
-            }
+            // Give each handler a chance to deal with the unresolved ref before falling back on an error
+            if (handleTypeAnnotation(ref, element, holder)) continue
+            if (handleSafeToIgnore(ref, element, holder)) continue
+            if (handleModuleHiddenByAlias(ref, element, holder)) continue
 
             // Generic unresolved ref error
             //
@@ -63,26 +48,30 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             // However, in cases like ElmTypeRef, its children can also be reference elements,
             // and so it is vital that we correctly mark the error only on the text range that
             // contributed the reference.
-            val errorRange = when (element) {
-                is ElmTypeRef -> element.upperCaseQID.textRange
-                else -> element.textRange
-            }
-            val annotation = holder.createErrorAnnotation(errorRange, "Unresolved reference '${ref.canonicalText}'")
-            annotation.registerFix(AddQualifierIntention())
-            annotation.registerFix(AddImportIntention())
+            val errorRange = (element as? ElmTypeRef)?.upperCaseQID?.textRangeInParent
+
+            val description = "Unresolved reference '${ref.canonicalText}'"
+            val fixes = mutableListOf<LocalQuickFixOnPsiElement>()
+            if (AddImportFix(element).isAvailable) fixes += AddImportFix(element)
+            if (AddQualifierFix(element).isAvailable) fixes += AddQualifierFix(element)
+            holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL, errorRange, *fixes.toTypedArray())
         }
     }
 
-    private fun handleTypeAnnotation(ref: PsiReference, element: PsiElement, holder: AnnotationHolder): Boolean {
+    private fun handleTypeAnnotation(ref: PsiReference, element: PsiElement, holder: ProblemsHolder): Boolean {
         if (element !is ElmTypeAnnotation) return false
 
-        holder.createWeakWarningAnnotation(element, "'${ref.canonicalText}' does not exist")
-                .also { it.registerFix(MakeDeclarationIntention()) }
+        val description = "'${ref.canonicalText}' does not exist"
+        val fixes = when {
+            MakeDeclarationFix(element).isAvailable -> arrayOf(MakeDeclarationFix(element))
+            else -> emptyArray()
+        }
+        holder.registerProblem(element, description, WEAK_WARNING, *fixes)
 
         return true
     }
 
-    private fun handleSafeToIgnore(ref: PsiReference, element: PsiElement, @Suppress("UNUSED_PARAMETER") holder: AnnotationHolder): Boolean {
+    private fun handleSafeToIgnore(ref: PsiReference, element: PsiElement, @Suppress("UNUSED_PARAMETER") holder: ProblemsHolder): Boolean {
         // Ignore refs to Kernel (JavaScript) modules
         when {
             element is ElmValueExpr && element.qid.isKernelModule -> return true
@@ -105,7 +94,7 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
     // When a module is imported using an alias (e.g. `import Json.Decode as D`),
     // Elm prohibits the use of the original module name in qualified references.
     // So we will try to detect this condition and present a helpful error.
-    private fun handleModuleHiddenByAlias(ref: PsiReference, element: PsiElement, holder: AnnotationHolder): Boolean {
+    private fun handleModuleHiddenByAlias(ref: PsiReference, element: PsiElement, holder: ProblemsHolder): Boolean {
         if (ref !is QualifiedReference) return false
         if (element !is ElmValueExpr && element !is ElmTypeRef) return false
         val elmFile = element.containingFile as? ElmFile ?: return false
@@ -127,8 +116,9 @@ class ElmUnresolvedReferenceAnnotator : Annotator {
             return false
 
         // Success! The reference would have succeeded were it not for the alias.
-        holder.createErrorAnnotation(element, "Unresolved reference '${ref.nameWithoutQualifier}'. " +
-                "Module '${ref.qualifierPrefix}' is imported as '$aliasName' and so you must use the alias here.")
+        val description = "Unresolved reference '${ref.nameWithoutQualifier}'. " +
+                "Module '${ref.qualifierPrefix}' is imported as '$aliasName' and so you must use the alias here."
+        holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL)
         return true
     }
 }

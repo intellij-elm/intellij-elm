@@ -442,8 +442,8 @@ main arg =
 -- binding the parameters so that we can infer the branch expressions.
 main arg =
     case arg of
-        <error descr="Unresolved reference 'Bar'">Bar (Just {x})</error> -> x
-        <error descr="Unresolved reference 'Baz'">Baz x</error> -> x
+        Bar (Just {x}) -> x
+        Baz x -> x
         _ -> ()
 """)
 
@@ -478,7 +478,7 @@ main =
 """)
 
     fun `test function parameters using union patterns to unresolved type`() = checkByText("""
-<error descr="<module declaration> expected, got 'main'">main</error> <error descr="Unresolved reference 'Foo'">Foo bar</error> = <error descr="Value cannot be defined in terms of itself">bar</error>
+<error descr="<module declaration> expected, got 'main'">main</error> Foo bar = <error descr="Value cannot be defined in terms of itself">bar</error>
 """)
 
     fun `test case branch with cons pattern head`() = checkByText("""

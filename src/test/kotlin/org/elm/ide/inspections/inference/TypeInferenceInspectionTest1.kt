@@ -398,7 +398,7 @@ main = <error descr="Type mismatch.Required: Maybe aFound: Foo">Bar</error>
 """)
 
     fun `test invalid constructor as type annotation`() = checkByText("""
-main : <error descr="Unresolved reference 'Just'">Just</error> a -> ()
+main : Just a -> ()
 main a = ()
 """)
 

@@ -1,10 +1,12 @@
-package org.elm.ide.intentions
+package org.elm.ide.inspections.import
 
 import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
+import org.elm.ide.inspections.ElmInspectionsTestBase
+import org.elm.ide.inspections.ElmUnresolvedReferenceInspection
 import org.intellij.lang.annotations.Language
 
-class AddQualifierIntentionTest : ElmIntentionTestBase(AddQualifierIntention()) {
+class AddQualifierFixTest : ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
     fun `test value`() = check(
             """
 --@ main.elm
@@ -69,7 +71,7 @@ main b =
       Foo.BarVariant{-caret-} -> ()
 """)
 
-    fun `test qualified value`() = doUnavailableTestWithFileTree(
+    fun `test qualified value`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
@@ -80,7 +82,7 @@ bar = 42
 """)
 
 
-    fun `test qualified type`() = doUnavailableTestWithFileTree(
+    fun `test qualified type`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
@@ -92,7 +94,7 @@ type Bar = BarVariant
 """)
 
 
-    fun `test qualified constructor`() = doUnavailableTestWithFileTree(
+    fun `test qualified constructor`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
@@ -102,7 +104,7 @@ module Foo exposing (Bar(..))
 type Bar = BarVariant
 """)
 
-    fun `test value wiht import alias`() = check(
+    fun `test value with import alias`() = check(
             """
 --@ main.elm
 import Foo as F
@@ -164,39 +166,39 @@ import Bar as B
 main = B.quux
 """)
 
-    fun `test binary infix operator`() = doUnavailableTestWithFileTree(
+    fun `test binary infix operator`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
-main = 2 **{-caret-} 3
+main = 2 <error>**{-caret-}</error> 3
 --@ Foo.elm
 module Foo exposing ((**))
 infix right 5 (**) = power
 power a b = List.product (List.repeat b a)
 """)
 
-    fun `test unavailable when value not exposed`() = doUnavailableTestWithFileTree(
+    fun `test unavailable when value not exposed`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
-main = bar{-caret-}
+main = <error>bar{-caret-}</error>
 --@ Foo.elm
 module Foo exposing (quux)
 bar = 42
 quux = 0
 """)
 
-    fun `test unavailable when qualified ref alias is not possible`() = doUnavailableTestWithFileTree(
+    fun `test unavailable when qualified ref alias is not possible`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
-main = Foo.Bogus.bar{-caret-}
+main = <error>Foo.Bogus.bar{-caret-}</error>
 --@ Foo.elm
 module Foo exposing (bar)
 bar = 0
 """)
 
-    fun `test unavailable on type annotation when local function hides external name`() = doUnavailableTestWithFileTree(
+    fun `test unavailable on type annotation when local function hides external name`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
@@ -207,11 +209,11 @@ module Foo exposing (bar)
 bar = 42
 """)
 
-    fun `test binary infix operator containing dot is never qualified`() = doUnavailableTestWithFileTree(
+    fun `test binary infix operator containing dot is never qualified`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
 import Foo
-main = 2 |.{-caret-} 3
+main = 2 <error>|.{-caret-}</error> 3
 --@ Foo.elm
 module Foo exposing (..)
 infix right 5 (|.) = power
@@ -221,13 +223,14 @@ power a b = List.product (List.repeat b a)
 
     private fun check(@Language("Elm") before: String, @Language("Elm") after: String) {
         val testProject = fileTreeFromText(before).createAndOpenFileWithCaretMarker()
+        enableInspection()
+        applyQuickFix("Qualify name")
 
         // adding a qualifier must be done using stubs only
         checkAstNotLoaded(VirtualFileFilter { file ->
             !file.path.endsWith(testProject.fileWithCaret)
         })
 
-        myFixture.launchAction(intention)
         myFixture.checkResult(replaceCaretMarker(after).trim())
     }
 

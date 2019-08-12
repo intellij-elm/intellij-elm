@@ -1,32 +1,37 @@
-package org.elm.ide.intentions
+package org.elm.ide.inspections.import
 
 import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.codeInsight.template.impl.TextExpression
+import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmPsiFactory
+import com.intellij.psi.PsiFile
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
-import org.elm.lang.core.psi.nextLeaves
-import org.elm.lang.core.psi.parentOfType
-import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.types.TyFunction
 import org.elm.lang.core.types.renderParam
 import org.elm.lang.core.types.typeExpressionInference
 import org.elm.utils.getIndent
 
-class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIntention.Context>() {
+class MakeDeclarationFix(element: ElmPsiElement) : LocalQuickFixAndIntentionActionOnPsiElement(element) {
 
     data class Context(val typeAnnotation: ElmTypeAnnotation)
 
     override fun getText() = "Create"
     override fun getFamilyName() = text
 
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-        val typeAnnotation = element.parentOfType<ElmTypeAnnotation>()
+    public override fun isAvailable(): Boolean {
+        return super.isAvailable() && findApplicableContext() != null
+    }
+
+    private fun findApplicableContext(): Context? {
+        val element = startElement as? ElmPsiElement ?: return null
+
+        val typeAnnotation = element.parentOfType<ElmTypeAnnotation>(strict = false)
                 ?: return null
 
         if (typeAnnotation.reference.resolve() != null) {
@@ -37,7 +42,9 @@ class MakeDeclarationIntention : ElmAtCaretIntentionActionBase<MakeDeclarationIn
         return Context(typeAnnotation)
     }
 
-    override fun invoke(project: Project, editor: Editor, context: Context) {
+    override fun invoke(project: Project, file: PsiFile, editor: Editor?, startElement: PsiElement, endElement: PsiElement) {
+        if (file !is ElmFile || editor == null) return
+        val context = findApplicableContext() ?: return
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             generateDecl(project, editor, context)
         }
