@@ -7,7 +7,7 @@ import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ExposedUnionConstructorReference
-import org.elm.lang.core.stubs.ElmExposedUnionConstructorStub
+import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 
 /**
@@ -15,12 +15,12 @@ import org.elm.lang.core.stubs.ElmExposedUnionConstructorStub
  *
  * e.g. `Home` in `import App exposing Page(Home)`
  */
-class ElmExposedUnionConstructor : ElmStubbedElement<ElmExposedUnionConstructorStub>, ElmReferenceElement {
+class ElmExposedUnionConstructor : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmExposedUnionConstructorStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderRefStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
@@ -32,7 +32,7 @@ class ElmExposedUnionConstructor : ElmStubbedElement<ElmExposedUnionConstructorS
         get() = upperCaseIdentifier
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference() =
             ExposedUnionConstructorReference(this)

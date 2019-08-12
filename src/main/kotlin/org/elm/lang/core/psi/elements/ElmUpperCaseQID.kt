@@ -2,18 +2,26 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmPsiElementImpl
+import com.intellij.psi.stubs.IStubElementType
 import org.elm.lang.core.psi.ElmQID
-import org.elm.lang.core.psi.ElmTypes
+import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmUnionPatternChildTag
+import org.elm.lang.core.stubs.ElmUpperCaseQIDStub
 
 /**
  * An identifier that refers to a Module, Union Constructor, or Record Constructor,
  * and it may contain an additional qualifier prefix which identifies the module/alias
  * from which the identifier may be obtained.
  */
-class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID, ElmUnionPatternChildTag {
+class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID, ElmUnionPatternChildTag {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmUpperCaseQIDStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
+
 
     /**
      * Guaranteed to contain at least one element
@@ -25,6 +33,31 @@ class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID, ElmUnion
         get() = upperCaseIdentifierList.dropLast(1)
 
     /**
+     * The qualifier prefix, if any.
+     *
+     * e.g. `"Foo.Bar"` for QID `Foo.Bar.Quux`
+     * e.g. `""` for QID `Foo`
+     */
+    override val qualifierPrefix: String
+        get() = stub?.qualifierPrefix ?: qualifiers.joinToString(".") { it.text }
+
+    /**
+     * The right-most name in a potentially qualified name.
+     *
+     * e.g. `"Quux"` for QID `Foo.Bar.Quux`
+     * e.g. `"Foo"` for QID `Foo`
+     */
+    val refName: String
+        get() = stub?.refName ?: upperCaseIdentifierList.last().text
+
+    /**
+     * The fully qualified name. Equivalent to `PsiElement#text` but stub-safe.
+     *
+     * e.g. `"Foo.Bar.Quux"` for QID `Foo.Bar.Quux`
+     */
+    val fullName: String
+        get() = if (isQualified) "$qualifierPrefix.$refName" else refName
+    /**
      * True if the identifier is qualified by a module name (in the case of union or
      * record constructors) or the module exists in a hierarchy (in the case of a pure
      * module name in a module decl or import decl).
@@ -32,5 +65,5 @@ class ElmUpperCaseQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID, ElmUnion
      * TODO [kl] this double-duty is a bit strange. Maybe make a separate Psi element?
      */
     override val isQualified: Boolean
-        get() = findChildByType<PsiElement>(ElmTypes.DOT) != null
+        get() = qualifierPrefix != ""
 }

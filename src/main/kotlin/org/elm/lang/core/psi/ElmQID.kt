@@ -20,7 +20,6 @@ interface ElmQID : ElmPsiElement {
     val qualifiers: List<PsiElement>
 
     val qualifierPrefix: String
-        get() = qualifiers.joinToString(".") { it.text }
 
     /** Returns true if the qualified ID refers to Elm's "Kernel" modules,
      * which are defined in Javascript. This is useful since we don't (currently)

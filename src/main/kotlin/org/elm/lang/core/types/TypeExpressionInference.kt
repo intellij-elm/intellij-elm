@@ -184,7 +184,7 @@ class TypeExpression(
 
         val ty = decl.typeExpression?.let { typeExpressionType(it) } ?: TyUnknown()
         val params = decl.lowerTypeNameList.map { getTyVar(it) }.toList()
-        val aliasInfo = AliasInfo(decl.moduleName, decl.upperCaseIdentifier.text, params)
+        val aliasInfo = AliasInfo(decl.moduleName, decl.name, params)
         return result(ty.withAlias(aliasInfo))
     }
 
@@ -193,7 +193,7 @@ class TypeExpression(
 
     /** Get the type for an entire type expression */
     private fun typeExpressionType(typeExpr: ElmTypeExpression): Ty {
-        val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }.toList()
+        val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }
         return when {
             segments.size == 1 -> segments.last()
             else -> TyFunction(segments.dropLast(1), segments.last()).uncurry()
@@ -255,18 +255,17 @@ class TypeExpression(
 
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val fieldElements = record.fieldTypeList
-        val fieldTys = fieldElements.associate { it.lowerCaseIdentifier.text to typeExpressionType(it.typeExpression) }
+        val fieldTys = fieldElements.associate { it.name to typeExpressionType(it.typeExpression) }
         val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(mutableMapOf()) {
-            it.lowerCaseIdentifier.text to mutableSetOf<ElmNamedElement>(it)
+            it.name to mutableSetOf<ElmNamedElement>(it)
         })
         val baseId = record.baseTypeIdentifier
-        val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.text) }
+        val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.referenceName) }
         return TyRecord(fieldTys, baseTy, fieldReferences = fieldReferences)
     }
 
     private fun typeRefType(typeRef: ElmTypeRef): Ty {
-        val argElements = typeRef.allArguments.toList()
-        val args = argElements.map { typeSignatureDeclType(it) }
+        val args = typeRef.allArguments.map { typeSignatureDeclType(it) }
 
         val declaredTy = when (val ref = typeRef.reference.resolve()) {
             is ElmTypeAliasDeclaration -> ref.typeExpressionInference(activeAliases).value
@@ -322,6 +321,6 @@ class TypeExpression(
     }
 
     private fun getTyVar(element: ElmNamedElement) = varsByElement.getOrPut(element) {
-        TyVar(element.text, rigid = rigidVars)
+        TyVar(element.name!!, rigid = rigidVars)
     }
 }

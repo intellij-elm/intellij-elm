@@ -1,8 +1,17 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import org.elm.lang.core.psi.ElmNamedElementImpl
-import org.elm.lang.core.psi.IdentifierCase
+import com.intellij.psi.stubs.IStubElementType
+import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
+import org.elm.lang.core.psi.IdentifierCase.LOWER
+import org.elm.lang.core.stubs.ElmLowerTypeNameStub
 
 
-class ElmLowerTypeName(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER)
+class ElmLowerTypeName : ElmStubbedNamedElementImpl<ElmLowerTypeNameStub> {
+
+    constructor(node: ASTNode) :
+            super(node, LOWER)
+
+    constructor(stub: ElmLowerTypeNameStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType, LOWER)
+}

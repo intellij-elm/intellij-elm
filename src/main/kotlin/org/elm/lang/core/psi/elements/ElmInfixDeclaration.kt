@@ -24,22 +24,30 @@ class ElmInfixDeclaration : ElmStubbedNamedElementImpl<ElmInfixDeclarationStub>,
             super(stub, stubType, IdentifierCase.OPERATOR)
 
 
-    val precedence: PsiElement
-        get() = findNotNullChildByType(ElmTypes.NUMBER_LITERAL)
-
-    val associativity : OperatorAssociativity
-        get() {
-            val element = findNotNullChildByType<PsiElement>(ElmTypes.LOWER_CASE_IDENTIFIER)
-            return when (element.text) {
-                "left" -> OperatorAssociativity.LEFT
-                "right" -> OperatorAssociativity.RIGHT
-                else -> OperatorAssociativity.NON
-            }
-        }
-
     val operatorIdentifier: PsiElement
         get() = findNotNullChildByType(ElmTypes.OPERATOR_IDENTIFIER)
 
-    val valueExpr: ElmValueExpr?
-        get() = findChildByType(ElmTypes.VALUE_EXPR)
+    val precedenceElement: PsiElement
+        get() = findNotNullChildByType(ElmTypes.NUMBER_LITERAL)
+
+    val precedence: Int?
+        get() = stub?.precedence ?: precedenceElement.text.toIntOrNull()
+
+    val associativityElement: PsiElement
+        get() = findNotNullChildByType(ElmTypes.LOWER_CASE_IDENTIFIER)
+
+    val associativity: OperatorAssociativity
+        get() = when (stub?.associativity ?: associativityElement.text) {
+            "left" -> OperatorAssociativity.LEFT
+            "right" -> OperatorAssociativity.RIGHT
+            else -> OperatorAssociativity.NON
+        }
+
+    /**
+     * A ref to the function which implements the infix operator.
+     *
+     * This will be non-null in a well-formed program.
+     */
+    val funcRef: ElmInfixFuncRef?
+        get() = stubDirectChildrenOfType<ElmInfixFuncRef>().singleOrNull()
 }

@@ -1,7 +1,6 @@
 package org.elm.lang.core.resolve.reference
 
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ancestorsStrict
@@ -28,8 +27,10 @@ import org.elm.lang.core.resolve.ElmReferenceElement
  * references should work. The Elm 0.19 compiler crashes if you try to call a function with this
  * annotation.
  */
-class TypeVariableReference(element: ElmReferenceElement)
-    : ElmReferenceCached<ElmReferenceElement>(element) {
+class TypeVariableReference(
+        element: ElmReferenceElement
+) : ElmReferenceCached<ElmReferenceElement>(element) {
+
     override fun isSoft(): Boolean {
         val decl = declaration()
         return decl == null || element is ElmRecordBaseIdentifier && decl is ElmTypeAnnotation
@@ -51,11 +52,7 @@ class TypeVariableReference(element: ElmReferenceElement)
                 .filterIsInstance<ElmValueDeclaration>()
                 .mapNotNull { it.typeAnnotation }
         return (sequenceOf(annotation) + parents)
-                .mapNotNull { anno ->
-                    anno.typeExpression?.let {
-                        PsiTreeUtil.collectElementsOfType(it, ElmTypeVariable::class.java)
-                    }
-                }
+                .mapNotNull { it.typeExpression?.allTypeVariablesRecursively }
                 .toList().asReversed()
                 .flatten()
     }

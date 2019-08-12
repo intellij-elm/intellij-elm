@@ -203,7 +203,7 @@ private fun documentationFor(clause: ElmAsClause): String? = buildString {
 }
 
 private fun documentationFor(element: ElmInfixDeclaration): String? {
-    val decl = element.valueExpr?.reference?.resolve()?.parentOfType<ElmValueDeclaration>() ?: return null
+    val decl = element.funcRef?.reference?.resolve()?.parentOfType<ElmValueDeclaration>() ?: return null
     val func = decl.functionDeclarationLeft ?: return null
     return documentationFor(func)
 }

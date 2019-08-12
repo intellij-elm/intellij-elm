@@ -1,7 +1,9 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.stubs.IStubElementType
 import org.elm.lang.core.psi.*
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
@@ -14,8 +16,14 @@ import org.elm.lang.core.psi.*
  *  - `Int -> String`
  *  - `a -> (a -> {a: String})`
  */
-class ElmTypeExpression(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionVariantParameterTag,
-        ElmTypeRefArgumentTag, ElmTypeExpressionSegmentTag {
+class ElmTypeExpression : ElmStubbedElement<ElmPlaceholderStub>,
+        ElmUnionVariantParameterTag, ElmTypeRefArgumentTag, ElmTypeExpressionSegmentTag {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
 
     /**
      * All segments of the type expression.
@@ -25,6 +33,9 @@ class ElmTypeExpression(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionVarian
      *
      * e.g. `Int` and `String` in `Int -> String`
      */
-    val allSegments: Sequence<ElmTypeExpressionSegmentTag>
-        get() = directChildren.filterIsInstance<ElmTypeExpressionSegmentTag>()
+    val allSegments: List<ElmTypeExpressionSegmentTag>
+        get() = stubDirectChildrenOfType()
+
+    val allTypeVariablesRecursively: Collection<ElmTypeVariable>
+        get() = stubDescendantsOfTypeStrict()
 }

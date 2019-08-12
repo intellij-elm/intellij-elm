@@ -1,11 +1,9 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmTypeRefArgumentTag
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.ElmTypeExpressionSegmentTag
-import org.elm.lang.core.psi.ElmUnionVariantParameterTag
+import com.intellij.psi.stubs.IStubElementType
+import org.elm.lang.core.psi.*
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
@@ -13,12 +11,20 @@ import org.elm.lang.core.psi.ElmUnionVariantParameterTag
  *
  * e.g. `(Int, String)` in a type declaration or annotation
  */
-class ElmTupleType(node: ASTNode) : ElmPsiElementImpl(node), ElmUnionVariantParameterTag, ElmTypeRefArgumentTag, ElmTypeExpressionSegmentTag {
+class ElmTupleType : ElmStubbedElement<ElmPlaceholderStub>,
+        ElmUnionVariantParameterTag, ElmTypeRefArgumentTag, ElmTypeExpressionSegmentTag {
+
+    constructor(node: ASTNode) :
+            super(node)
+
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
+            super(stub, stubType)
+
 
     val typeExpressionList: List<ElmTypeExpression>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmTypeExpression::class.java)
+        get() = stubDirectChildrenOfType()
 
     val unitExpr: ElmUnitExpr?
-        get() = findChildByClass(ElmUnitExpr::class.java)
+        get() = stubDirectChildrenOfType<ElmUnitExpr>().singleOrNull()
 
 }

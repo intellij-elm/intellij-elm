@@ -39,15 +39,14 @@ class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElemen
 
 
     val exposesAll: Boolean
-        get() = getStub()?.exposesAll
-                ?: (exposedUnionConstructors?.doubleDot != null)
+        get() = stub?.exposesAll ?: (exposedUnionConstructors?.doubleDot != null)
 
 
     override val referenceNameElement: PsiElement
         get() = upperCaseIdentifier
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
     override fun getReference() =
             if (parentOfType<ElmModuleDeclaration>() != null) ExposedTypeReferenceFromModuleDecl(this)

@@ -25,6 +25,9 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
     override val qualifiers: List<PsiElement>
         get() = upperCaseIdentifierList
 
+    override val qualifierPrefix: String
+        get() = qualifiers.joinToString(".") { it.text }
+
     /**
      * The value identifier
      */
