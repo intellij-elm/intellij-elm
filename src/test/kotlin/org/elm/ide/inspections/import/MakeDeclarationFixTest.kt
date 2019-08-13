@@ -1,11 +1,14 @@
-package org.elm.ide.intentions
+package org.elm.ide.inspections.import
 
-class MakeDeclarationIntentionTest : ElmIntentionTestBase(MakeDeclarationIntention()) {
+import org.elm.ide.inspections.ElmInspectionsTestBase
+import org.elm.ide.inspections.ElmUnresolvedReferenceInspection
+
+class MakeDeclarationFixTest : ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
 
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
 
-    fun `test make value declaration`() = doAvailableTest(
+    fun `test make value declaration`() = checkFixByText("Create",
             """
 f : Int{-caret-}
 """
@@ -16,9 +19,9 @@ f =
 """)
 
 
-    fun `test make basic function declaration`() = doAvailableTest(
+    fun `test make basic function declaration`() = checkFixByText("Create",
             """
-f : Int -> Int{-caret-}
+f : Int{-caret-} -> Int
 """
             , """
 f : Int -> Int
@@ -27,7 +30,7 @@ f int =
 """)
 
 
-    fun `test make advanced function declaration`() = doAvailableTest(
+    fun `test make advanced function declaration`() = checkFixByText("Create",
             """
 f : (Int -> Int) -> List a -> (Char, String) -> { foo : Int } -> Bool{-caret-}
 """
@@ -38,7 +41,7 @@ f function list (char, string) record =
 """)
 
 
-    fun `test function parameters should be camelCased`() = doAvailableTest(
+    fun `test function parameters should be camelCased`() = checkFixByText("Create",
             """
 type FooBar = FooBar
 type QuuxQuuxQuux = QuuxQuuxQuux
@@ -54,7 +57,7 @@ f fooBar quuxQuuxQuux =
 
 
     // https://github.com/klazuka/intellij-elm/issues/232
-    fun `test trailing whitespace does not mess up the generated code`() = doAvailableTest(
+    fun `test trailing whitespace does not mess up the generated code`() = checkFixByText("Create",
             """
 f : Int -> Int{-caret-}  --end-of-line
 """
@@ -64,13 +67,13 @@ f int =
     {-caret-}
 """)
 
-    fun `test make nested value declaration`() = doAvailableTest(
+    fun `test make nested value declaration`() = checkFixByText("Create",
             """
 f =
     let
         g : Int{-caret-}
     in
-        g
+        ()
 """
             , """
 f =
@@ -79,6 +82,6 @@ f =
         g =
             {-caret-}
     in
-        g
+        ()
 """)
 }

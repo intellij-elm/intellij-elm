@@ -83,6 +83,15 @@ abstract class ElmAnnotationTestBase : ElmTestBase() {
             checkBefore = { myFixture.checkHighlighting(checkWarn, checkInfo, checkWeakWarn) },
             checkAfter = this::checkByText)
 
+    protected fun checkFixByFileTreeWithoutHighlighting(
+            fixName: String,
+            @Language("Elm") treeText: String,
+            @Language("Elm") after: String
+    ) = checkFix(fixName, treeText, after,
+            configure = this::configureByFileTree,
+            checkBefore = {},
+            checkAfter = this::checkByText)
+
     protected fun checkFixIsUnavailable(
             fixName: String,
             @Language("Elm") text: String,
@@ -144,7 +153,7 @@ abstract class ElmInspectionsTestBase(
         checkHtmlStyle(text)
     }
 
-    private fun enableInspection() = myFixture.enableInspections(inspection)
+    protected fun enableInspection() = myFixture.enableInspections(inspection)
 
     override fun configureByText(text: String) {
         super.configureByText(text)

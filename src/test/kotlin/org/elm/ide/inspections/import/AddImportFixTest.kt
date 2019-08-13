@@ -1,12 +1,13 @@
-package org.elm.ide.intentions
+package org.elm.ide.inspections.import
 
 import com.intellij.openapi.vfs.VirtualFileFilter
 import org.elm.fileTreeFromText
+import org.elm.ide.inspections.ElmInspectionsTestBase
+import org.elm.ide.inspections.ElmUnresolvedReferenceInspection
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.intellij.lang.annotations.Language
 
-class AddImportIntentionTest : ElmIntentionTestBase(AddImportIntention()) {
-
+class AddImportFixTest : ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
 
     fun `test un-qualified value`() = check(
             """
@@ -266,37 +267,36 @@ import Quux exposing (quux)
 main = bar + quux
 """)
 
-
-    fun `test verify unavailable when value not exposed`() = doUnavailableTestWithFileTree(
+    fun `test verify unavailable when value not exposed`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
-main = bar{-caret-}
+main = <error>bar</error>{-caret-}
 --@ Foo.elm
 module Foo exposing (quux)
 bar = 42
 quux = 0
 """)
 
-    fun `test verify unavailable when value not exposed (qualified ref)`() = doUnavailableTestWithFileTree(
+    fun `test verify unavailable when value not exposed (qualified ref)`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
-main = Foo.bar{-caret-}
+main = <error>Foo.bar</error>{-caret-}
 --@ Foo.elm
 module Foo exposing (quux)
 bar = 42
 quux = 0
 """)
 
-    fun `test verify unavailable when qualified ref alias is not possible`() = doUnavailableTestWithFileTree(
+    fun `test verify unavailable when qualified ref alias is not possible`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
-main = Foo.Bogus.bar{-caret-}
+main = <error>Foo.Bogus.bar</error>{-caret-}
 --@ Foo.elm
 module Foo exposing (bar)
 bar = 0
 """)
 
-    fun `test verify unavailable on type annotation when local function hides external name`() = doUnavailableTestWithFileTree(
+    fun `test verify unavailable on type annotation when local function hides external name`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
 bar{-caret-} : Int -> Int
@@ -320,16 +320,15 @@ import Foo exposing ((|.))
 main = 2 |. 3
 """)
 
-
     private fun check(@Language("Elm") before: String, @Language("Elm") after: String) {
         val testProject = fileTreeFromText(before).createAndOpenFileWithCaretMarker()
-
+        enableInspection()
+        applyQuickFix("Import")
         // auto-adding an import must be done using stubs only
         checkAstNotLoaded(VirtualFileFilter { file ->
             !file.path.endsWith(testProject.fileWithCaret)
         })
 
-        myFixture.launchAction(intention)
         myFixture.checkResult(replaceCaretMarker(after).trim())
     }
 

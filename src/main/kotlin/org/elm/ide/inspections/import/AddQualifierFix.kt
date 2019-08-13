@@ -1,9 +1,12 @@
-package org.elm.ide.intentions
+package org.elm.ide.inspections.import
 
-import com.intellij.openapi.editor.Editor
+import com.intellij.codeInspection.LocalQuickFixOnPsiElement
+import com.intellij.ide.DataManager
+import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.elements.Flavor.*
@@ -13,10 +16,9 @@ import org.elm.lang.core.resolve.scope.VisibleNames
 import org.elm.lang.core.types.moduleName
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
-import org.elm.openapiext.toPsiFile
 import org.jetbrains.annotations.TestOnly
 
-class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntention.Context>() {
+class AddQualifierFix(element: ElmPsiElement) : LocalQuickFixOnPsiElement(element) {
 
     data class Context(
             val candidates: List<String>,
@@ -27,28 +29,29 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
     override fun getText() = "Qualify name"
     override fun getFamilyName() = text
 
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-        val file = editor.toPsiFile(project) as? ElmFile ?: error("no file: should not happen")
+    public override fun isAvailable(): Boolean {
+        return super.isAvailable() && findApplicableContext() != null
+    }
+
+    private fun findApplicableContext(): Context? {
+        val element = startElement as? ElmPsiElement ?: return null
+
         if (element.ancestors.any { it is ElmModuleDeclaration || it is ElmPortAnnotation || it is ElmImportClause }) {
             return null
         }
 
-        val qid = element.parentOfType<ElmQID>() ?: return null
-        if (qid.isQualified) return null
+        val file = element.elmFile
 
-        return when (val parent = qid.parent) {
-            is ElmTypeRef -> makeContext(file, qid, parent, ModuleScope.getReferencableTypes(file))
-            is ElmUnionPattern -> when (parent.upperCaseQID) {
-                qid -> makeContext(file, qid, parent, ModuleScope.getReferencableConstructors(file))
-                else -> null
-            }
-            is ElmValueExpr -> when (parent.flavor) {
+        return when (element) {
+            is ElmTypeRef -> makeContext(file, element.upperCaseQID, element, ModuleScope.getReferencableTypes(file))
+            is ElmUnionPattern -> makeContext(file, element.upperCaseQID, element, ModuleScope.getReferencableConstructors(file))
+            is ElmValueExpr -> when (element.flavor) {
                 QualifiedValue, QualifiedConstructor -> null
                 BareValue -> {
-                    makeContext(file, qid, parent, ModuleScope.getReferencableValues(file))
+                    makeContext(file, element.qid, element, ModuleScope.getReferencableValues(file))
                 }
                 BareConstructor -> {
-                    makeContext(file, qid, parent, ModuleScope.getReferencableConstructors(file))
+                    makeContext(file, element.qid, element, ModuleScope.getReferencableConstructors(file))
                 }
             }
             else -> null
@@ -65,11 +68,14 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
         return Context(candidates, name, qid)
     }
 
-    override fun invoke(project: Project, editor: Editor, context: Context) {
+    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
+        if (file !is ElmFile) return
+        val context = findApplicableContext() ?: return
+
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
             1 -> addQualifier(project, context, context.candidates.first())
-            else -> promptToSelectCandidate(project, editor, context)
+            else -> promptToSelectCandidate(project, context)
         }
     }
 
@@ -84,17 +90,19 @@ class AddQualifierIntention : ElmAtCaretIntentionActionBase<AddQualifierIntentio
         context.qid.replace(newId)
     }
 
-    private fun promptToSelectCandidate(project: Project, editor: Editor, context: Context) {
+    private fun promptToSelectCandidate(project: Project, context: Context) {
         require(context.candidates.isNotEmpty())
 
-        val picker = if (isUnitTestMode) {
-            MOCK ?: error("You must set mock UI via `withMockQualifierPickerUI`")
-        } else {
-            RealQualifierPickerUI(editor, context)
-        }
-        picker.choose(context.candidates) { qualifier ->
-            project.runWriteCommandAction {
-                addQualifier(project, context, qualifier)
+        DataManager.getInstance().dataContextFromFocusAsync.onSuccess { dataContext ->
+            val picker = if (isUnitTestMode) {
+                MOCK ?: error("You must set mock UI via `withMockQualifierPickerUI`")
+            } else {
+                RealQualifierPickerUI(dataContext, context)
+            }
+            picker.choose(context.candidates) { qualifier ->
+                project.runWriteCommandAction {
+                    addQualifier(project, context, qualifier)
+                }
             }
         }
     }
@@ -116,12 +124,12 @@ fun withMockQualifierPickerUI(mockUi: QualifierPickerUI, action: () -> Unit) {
     }
 }
 
-private class RealQualifierPickerUI(val editor: Editor, val context: AddQualifierIntention.Context) : QualifierPickerUI {
+private class RealQualifierPickerUI(val dataContext: DataContext, val context: AddQualifierFix.Context) : QualifierPickerUI {
     override fun choose(qualifiers: List<String>, callback: (String) -> Unit) {
         JBPopupFactory.getInstance().createPopupChooserBuilder(qualifiers)
                 .setTitle("Add qualifier to '${context.referenceName}':")
                 .setItemChosenCallback { callback(it) }
                 .setNamerForFiltering { it }
-                .createPopup().showInBestPositionFor(editor)
+                .createPopup().showInBestPositionFor(dataContext)
     }
 }

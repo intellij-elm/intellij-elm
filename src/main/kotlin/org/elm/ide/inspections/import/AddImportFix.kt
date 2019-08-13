@@ -1,10 +1,12 @@
-package org.elm.ide.intentions
+package org.elm.ide.inspections.import
 
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.codeInspection.LocalQuickFixOnPsiElement
+import com.intellij.ide.DataManager
+import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
 import org.elm.lang.core.imports.ImportAdder.Import
@@ -12,6 +14,7 @@ import org.elm.lang.core.imports.ImportAdder.addImport
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
@@ -19,7 +22,6 @@ import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.QualifiedReference
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
-import org.elm.openapiext.toPsiFile
 import org.jetbrains.annotations.TestOnly
 import javax.swing.JList
 
@@ -41,8 +43,7 @@ fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
 }
 
 
-class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Context>() {
-
+class AddImportFix(element: ElmPsiElement) : LocalQuickFixOnPsiElement(element) {
     data class Context(
             val refName: String,
             val candidates: List<Import>,
@@ -52,9 +53,14 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
     override fun getText() = "Import"
     override fun getFamilyName() = text
 
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
+    public override fun isAvailable(): Boolean {
+        return super.isAvailable() && findApplicableContext() != null
+    }
+
+    private fun findApplicableContext(): Context? {
+        val element = startElement as? ElmPsiElement ?: return null
         if (element.parentOfType<ElmImportClause>() != null) return null
-        val refElement = element.parentOfType<ElmReferenceElement>() ?: return null
+        val refElement = element.parentOfType<ElmReferenceElement>(strict = false) ?: return null
         val ref = refElement.reference
 
         // we can't import the function we're annotating
@@ -71,8 +77,9 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         return Context(name, candidates, ref is QualifiedReference)
     }
 
-    override fun invoke(project: Project, editor: Editor, context: Context) {
-        val file = editor.toPsiFile(project) as? ElmFile ?: error("no file: should not happen")
+    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
+        if (file !is ElmFile) return
+        val context = findApplicableContext() ?: return
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
             1 -> {
@@ -89,7 +96,6 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
         }
     }
 
-
     private fun promptToSelectCandidate(project: Project, context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
 
@@ -99,28 +105,29 @@ class AddImportIntention : ElmAtCaretIntentionActionBase<AddImportIntention.Cont
                         .thenBy { it.moduleName }
         )
 
-        val picker = if (isUnitTestMode) {
-            MOCK ?: error("You must set mock UI via `withMockImportPickerUI`")
-        } else {
-            RealImportPickerUI(project, context)
-        }
-        picker.choose(candidates) { candidate ->
-            project.runWriteCommandAction {
-                addImport(candidate, file, context.isQualified)
+        DataManager.getInstance().dataContextFromFocusAsync.onSuccess { dataContext ->
+            val picker = if (isUnitTestMode) {
+                MOCK ?: error("You must set mock UI via `withMockImportPickerUI`")
+            } else {
+                RealImportPickerUI(dataContext, context.refName)
+            }
+            picker.choose(candidates) { candidate ->
+                project.runWriteCommandAction {
+                    addImport(candidate, file, context.isQualified)
+                }
             }
         }
     }
 }
 
-private class RealImportPickerUI(val project: Project, val context: AddImportIntention.Context) : ImportPickerUI {
+private class RealImportPickerUI(private val dataContext: DataContext, private val refName: String) : ImportPickerUI {
     override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
         JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
-                .setTitle("Import '${context.refName}' from module:")
+                .setTitle("Import '$refName' from module:")
                 .setItemChosenCallback { callback(it) }
                 .setNamerForFiltering { it.moduleName }
                 .setRenderer(CandidateRenderer())
-                .createPopup().showInBestPositionFor(editor)
+                .createPopup().showInBestPositionFor(dataContext)
     }
 }
 
