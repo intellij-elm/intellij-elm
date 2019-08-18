@@ -8,6 +8,9 @@ Elm language plugin for JetBrains IDEs (IntelliJ, WebStorm, PyCharm, etc.)
 * Find usages
 * Type Inference and Type Checking
 * Rename refactoring
+* Introduce "variable" refactoring (`let/in`)
+* Generate JSON encoders/decoders
+* Generate type annotation for un-annotated function
 * Graphical UI for running elm-test
 * Re-format code using elm-format
 * Generate type annotation for un-annotated function
@@ -58,7 +61,7 @@ Elm code tends to accumulate imports over time, some of which may no longer be n
 
 ### Rename Refactoring
 
-Reliably rename types, functions, values, modules and files. Press Shift-F6 to rename the identifier under the cursor. All references will also be renamed, including `import` statements and `exposing` lists.
+Reliably rename types, functions, values, record fields, modules and files. Press Shift-F6 to rename the identifier under the cursor. All references will also be renamed, including `import` statements and `exposing` lists.
 
 <video controls>
     <source src="assets/rename.mp4" type="video/mp4">
@@ -68,7 +71,7 @@ Reliably rename types, functions, values, modules and files. Press Shift-F6 to r
 
 ### Find Usages
  
-Find all usages of a type, function, value or module. Press Option-F7 (Ctrl-F7 on Windows) while the cursor is on an identifier to find all of its usages.
+Find all usages of a type, function, value, record field or module. Press Option-F7 (Ctrl-F7 on Windows) while the cursor is on an identifier to find all of its usages.
 
 <video controls>
     <source src="assets/find_usages.mp4" type="video/mp4">

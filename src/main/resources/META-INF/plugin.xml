@@ -18,9 +18,10 @@
           <li>Type Inference and Type Checking</li>
           <li>Rename refactoring</li>
           <li>Introduce "variable" refactoring (`let/in`)</li>
+          <li>Generate JSON encoders/decoders</li>
+          <li>Generate type annotation for un-annotated function</li>
           <li>Graphical UI for running elm-test</li>
           <li>Re-format code using elm-format</li>
-          <li>Generate type annotation for un-annotated function</li>
           <li>Detect unused code</li>
           <li>Detect and remove unused imports</li>
           <li>'Add Import' quick fix for unresolved references</li>
@@ -35,6 +36,20 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.0</b> <em>(2019-08-18)</em>
+                <ul>
+                    <li>Added record field 'rename refactoring'</li>
+                    <li>Added go-to-declaration and find usages for record fields</li>
+                    <li>Added intention to generate JSON encoders and decoders</li>
+                    <li>Added intention to qualify an unresolved ref with its module name</li>
+                    <li>Added a gutter line marker for recursive functions</li>
+                    <li>Added quick fix to rename unused patterns to `_`</li>
+                    <li>Added ability to suppress inspection with a comment</li>
+                    <li>Fixed a bug when generating type annotations</li>
+                    <li>Improved type checker errors for `case` branches</li>
+                    <li>Improved performance in very large projects</li>
+                </ul>
+            </li>
             <li><b>3.3.0</b> <em>(2019-07-29)</em>
                 <ul>
                     <li>Added "introduce variable" refactoring (creates a `let/in` for selected expression)</li>
