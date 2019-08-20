@@ -111,6 +111,13 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
             """main = (\<warning descr="'x' is never used">x{-caret-}</warning> -> ())""",
             """main = (\_ -> ())""")
 
+    fun `test used record field patterns`() = checkByText("""
+        type alias X  = { x : () }
+        f : X -> ()
+        f { x } = x
+        main = f
+        """.trimIndent())
+
     // TYPES
 
 

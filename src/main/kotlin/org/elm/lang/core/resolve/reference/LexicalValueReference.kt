@@ -13,8 +13,10 @@ class LexicalValueReference(element: ElmReferenceElement)
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolveInner(): ElmNamedElement? =
-            getCandidates().find { it.name == element.referenceName }
+    override fun resolveInner(): ElmNamedElement? {
+        val resolved = getCandidates().find { it.name == element.referenceName }
+        return (resolved as? ElmReferenceElement)?.reference?.resolve() ?: resolved
+    }
 
     private fun getCandidates(): List<ElmNamedElement> {
         return ExpressionScope(element).getVisibleValues()

@@ -658,6 +658,13 @@ private class InferenceScope(
                 // All patterns should now be bound
                 error(expr, "failed to bind pattern")
             }
+            is ElmFieldType -> {
+                return (ref.parentOfType<ElmTypeAliasDeclaration>()
+                        ?.typeExpressionInference()
+                        ?.value as? TyRecord)
+                        ?.fields?.get(ref.name)
+                        ?: TyUnknown()
+            }
             else -> error(ref, "Unexpected reference type")
         }
     }
@@ -963,6 +970,8 @@ private class InferenceScope(
         for (f in fields) {
             bindPattern(f, ty.fields.getValue(f.name), isParameter)
         }
+
+        expressionTypes[pat] = type
     }
 
     //</editor-fold>

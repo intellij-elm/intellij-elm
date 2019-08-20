@@ -230,6 +230,46 @@ main r s =
   first (nest r) (nest s)        
     """)
 
+    fun `test ref to destructuring in function parameter`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main { field } = field
+       --^
+""")
+
+    fun `test value ref through destructuring in function parameter`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main { field } = field
+                 --^
+""")
+
+    fun `test ref through destructuring in case`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main r = 
+  case r of
+      { field } -> field
+                    --^
+""")
+
+    fun `test ref to destructuring in case`() = checkByCode(
+            """
+type alias R = { field : () }
+                 --X
+main : R -> ()
+main r = 
+  case r of
+      { field } -> field
+        --^
+""")
+
     fun `test repeated reference in list 1`() = checkByCode(
             """
 type alias R = { field : () }
