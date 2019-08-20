@@ -1060,17 +1060,23 @@ private class InferenceScope(
 
     private fun recordAssignable(ty1: TyRecord, ty2: TyRecord): Boolean {
         val result = calcRecordDiff(ty1, ty2).isEmpty()
-        // Subset record tys are created from extension record declarations or field accessor
-        // functions. If we're assigning a concrete record to a subset, set the type of the
-        // extension base var to the concrete record.
-        if (result && !ty1.isSubset && ty2.baseTy is TyVar) {
-            trackReplacement(ty1, ty2.baseTy)
-        }
         if (result) {
+            // Subset record tys are created from extension record declarations or field accessor
+            // functions.
+            // If we're assigning a concrete record to a subset, set the type of the extension base
+            // var to the concrete record.
+            if (!ty1.isSubset && ty2.baseTy is TyVar) {
+                trackReplacement(ty1, ty2.baseTy)
+            }
+            // Do the same in the inverse case
+            if (ty1.baseTy is TyVar && !ty2.isSubset) {
+                trackReplacement(ty1.baseTy, ty2)
+            }
             // If we assign a record value expression, we know what its field references resolve to
             ty1.fieldReferences.addAll(ty2.fieldReferences)
             ty2.fieldReferences.addAll(ty1.fieldReferences)
         }
+
         return result
     }
 
