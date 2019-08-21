@@ -385,15 +385,6 @@ class ElmWorkspaceService(
             )
         }
 
-        // Ensure that `elm-stuff` directories are always excluded so that they don't pollute open-by-filename, etc.
-        intellijProject.modules
-                .asSequence()
-                .flatMap { ModuleRootManager.getInstance(it).contentEntries.asSequence() }
-                .forEach {
-                    if ("elm-stuff" !in it.excludePatterns)
-                        it.addExcludePattern("elm-stuff")
-                }
-
         return state.getChild("elmProjects")
                 .getChildren("project")
                 .mapNotNull { it.getAttributeValue("path") }
@@ -403,6 +394,20 @@ class ElmWorkspaceService(
                             .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
                 }.joinAll()
                 .thenApply { rawProjects ->
+                    if (rawProjects.isNotEmpty() && rawProjects.none { it.isElm18 }) {
+                        // Exclude `elm-stuff` directories to prevent pollution of open-by-filename, etc.
+                        // TODO [drop 0.18] always exclude `elm-stuff` and do this earlier in the
+                        //      process so that we don't have to jump back over to the EDT.
+                        ApplicationManager.getApplication().invokeLater {
+                            intellijProject.modules.asSequence()
+                                    .flatMap { ModuleRootManager.getInstance(it).contentEntries.asSequence() }
+                                    .forEach {
+                                        if ("elm-stuff" !in it.excludePatterns)
+                                            it.addExcludePattern("elm-stuff")
+                                    }
+                        }
+                    }
+
                     modifyProjects { _ -> rawProjects.filterNotNull() }
                     Unit
                 }
