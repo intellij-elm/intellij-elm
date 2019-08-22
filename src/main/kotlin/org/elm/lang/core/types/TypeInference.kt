@@ -936,13 +936,14 @@ private class InferenceScope(
         val fields = pat.lowerPatternList
 
         val ty = bindIfVar(pat, type) {
-            TyRecord(
-                    fields = fields.zip(uniqueVars(fields.size)) { f, t -> f.name to t }.toMap(),
-                    baseTy = TyVar("a")
-            )
+            MutableTyRecord(fields = mutableMapOf(), baseTy = TyVar("a"))
         }
 
-        if (ty !is TyRecord || fields.any { it.name !in ty.fields }) {
+        if (ty is MutableTyRecord) {
+            fields.zip(uniqueVars(fields.size)).forEach { (field, v) ->
+                ty.fields.getOrPut(field.name) { v }
+            }
+        } else if (ty !is TyRecord || fields.any { it.name !in ty.fields }) {
             if (isInferable(ty)) {
                 val actualTyParams = fields.zip(uniqueVars(fields.size)) { f, v -> f.name to v }
                 val actualTy = TyRecord(actualTyParams.toMap())
@@ -960,8 +961,9 @@ private class InferenceScope(
             return
         }
 
+        val tyFields = (ty as? MutableTyRecord)?.fields ?: (ty as TyRecord).fields
         for (f in fields) {
-            bindPattern(f, ty.fields.getValue(f.name), isParameter)
+            bindPattern(f, tyFields.getValue(f.name), isParameter)
         }
     }
 

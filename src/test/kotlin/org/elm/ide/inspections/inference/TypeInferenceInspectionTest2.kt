@@ -526,6 +526,19 @@ foo f =
        Quz x -> bar x
 """)
 
+    fun `test case branch with record pattern from previous mutable record`() = checkByText("""
+foo r =
+    let
+        f = r.f1
+    in
+    case r of
+        { f2 } -> r
+
+main : ()
+main = 
+  <error descr="Type mismatch.Required: ()Found: { f1 : (), f2 : String }">foo { f1 = (), f2 = "" }</error>
+""")
+
     fun `test invalid return value from cons pattern`() = checkByText("""
 main : ()
 main =
