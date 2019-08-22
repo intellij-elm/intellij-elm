@@ -310,7 +310,9 @@ private class InferenceScope(
                     val lAssignable = requireAssignable(l.start, l.ty, func.parameters[0], l.end)
                     val rAssignable = requireAssignable(r.start, r.ty, func.parameters[1], r.end)
                     val ty = when {
-                        lAssignable && rAssignable -> TypeReplacement.replace(func.partiallyApply(2), replacements)
+                        lAssignable && rAssignable -> {
+                            TypeReplacement.replace(func.partiallyApply(2), replacements, keepRecordsMutable = true)
+                        }
                         else -> TyUnknown()
                     }
                     TyAndRange(l.start, r.end, ty)
@@ -382,7 +384,7 @@ private class InferenceScope(
         }
 
         val resultTy = if (ok) {
-            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements)
+            TypeReplacement.replace(targetTy.partiallyApply(arguments.size), replacements, keepRecordsMutable = true)
         } else {
             TyUnknown()
         }
@@ -943,13 +945,14 @@ private class InferenceScope(
         val fields = pat.lowerPatternList
 
         val ty = bindIfVar(pat, type) {
-            TyRecord(
-                    fields = fields.zip(uniqueVars(fields.size)) { f, t -> f.name to t }.toMap(),
-                    baseTy = TyVar("a")
-            )
+            MutableTyRecord(fields = mutableMapOf(), baseTy = TyVar("a"))
         }
 
-        if (ty !is TyRecord || fields.any { it.name !in ty.fields }) {
+        if (ty is MutableTyRecord) {
+            fields.zip(uniqueVars(fields.size)).forEach { (field, v) ->
+                ty.fields.getOrPut(field.name) { v }
+            }
+        } else if (ty !is TyRecord || fields.any { it.name !in ty.fields }) {
             if (isInferable(ty)) {
                 val actualTyParams = fields.zip(uniqueVars(fields.size)) { f, v -> f.name to v }
                 val actualTy = TyRecord(actualTyParams.toMap())
@@ -967,8 +970,9 @@ private class InferenceScope(
             return
         }
 
+        val tyFields = (ty as? MutableTyRecord)?.fields ?: (ty as TyRecord).fields
         for (f in fields) {
-            bindPattern(f, ty.fields.getValue(f.name), isParameter)
+            bindPattern(f, tyFields.getValue(f.name), isParameter)
         }
 
         expressionTypes[pat] = type
