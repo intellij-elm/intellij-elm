@@ -290,6 +290,15 @@ main : ()
 main = foo .x
 """)
 
+    fun `test field accessor as argument to type var in pipeline`() = checkByText("""
+foo : (a -> ()) -> a -> a
+foo _ a = a
+
+main : ()
+main =
+    <error descr="Type mismatch.Required: ()Found: { a | f2 : (), f1 : () }">{ f1 = (), f2 = () } |> foo .f2</error>
+""")
+
     fun `test correct value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
 main : A Float

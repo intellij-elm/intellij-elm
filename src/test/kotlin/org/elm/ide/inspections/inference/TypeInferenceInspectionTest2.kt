@@ -526,6 +526,17 @@ foo f =
        Quz x -> bar x
 """)
 
+    fun `test case branches with record pattern on different field than previously accessed through pipeline`() = checkByText("""
+foo : (a -> ()) -> a -> a
+foo _ a = a
+
+main : String
+main =
+    case { f1 = (), f2 = () } |> foo .f2 of
+        { f1 }  ->
+            <error descr="Type mismatch.Required: StringFound: ()">f1</error>
+""")
+
     fun `test case branch with record pattern from previous mutable record`() = checkByText("""
 foo r =
     let
