@@ -36,6 +36,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.1</b> <em>(2019-08-24)</em>
+                <ul>
+                    <li>Fixed bugs related to record field rename</li>
+                    <li>Fixed a bug in Elm 0.18 projects related to the `elm-stuff` directory</li>
+                </ul>
+            </li>
             <li><b>3.4.0</b> <em>(2019-08-18)</em>
                 <ul>
                     <li>Added record field 'rename refactoring'</li>
