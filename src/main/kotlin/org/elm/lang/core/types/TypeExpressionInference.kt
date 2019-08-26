@@ -10,6 +10,7 @@ import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -256,7 +257,7 @@ class TypeExpression(
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val fieldElements = record.fieldTypeList
         val fieldTys = fieldElements.associate { it.name to typeExpressionType(it.typeExpression) }
-        val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(mutableMapOf()) {
+        val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(ConcurrentHashMap()) {
             it.name to mutableSetOf<ElmNamedElement>(it)
         })
         val baseId = record.baseTypeIdentifier
