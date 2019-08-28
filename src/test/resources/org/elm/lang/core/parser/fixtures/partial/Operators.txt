@@ -37,3 +37,15 @@ Elm File
         PsiElement(OPERATOR_IDENTIFIER)('++')
       PsiErrorElement:<expr> or <function call expr> expected
         <empty list>
+  PsiElement(VIRTUAL_END_DECL)('\n')
+  ElmValueDeclaration(VALUE_DECLARATION)
+    ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
+      PsiElement(LOWER_CASE_IDENTIFIER)('f2')
+    PsiWhiteSpace(' ')
+    PsiElement(EQ)('=')
+    PsiWhiteSpace(' ')
+    ElmOperatorAsFunctionExpr(OPERATOR_AS_FUNCTION_EXPR)
+      PsiElement(LEFT_PARENTHESIS)('(')
+      PsiElement(OPERATOR_IDENTIFIER)('+')
+      PsiErrorElement:<expr> or RIGHT_PARENTHESIS expected
+        <empty list>

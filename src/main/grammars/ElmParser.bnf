@@ -295,6 +295,7 @@ OperatorAsFunctionExpr ::=
 
 private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
+    { pin = 2 }
 
 private CallOrAtom ::=
     FunctionCallExpr
