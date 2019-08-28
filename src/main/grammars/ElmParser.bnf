@@ -325,11 +325,6 @@ private Atom ::=
     | FieldAccessExpr
     | ValueExpr
     | FieldAccessorFunctionExpr
-    | OperatorAsFunctionExpr
-    | ParenthesizedExpr
-    | TupleConstructorExpr
-    | UnitExpr
-    | TupleExpr
     | ListExpr
     | RecordExpr
     | IfElseExpr
@@ -337,6 +332,11 @@ private Atom ::=
     | LetInExpr
     | AnonymousFunctionExpr
     | GlslCodeExpr
+    | OperatorAsFunctionExpr
+    | ParenthesizedExpr
+    | TupleConstructorExpr
+    | UnitExpr
+    | TupleExpr
 { name="expr" }
 
 // Various tokens that can begin a new expression. Useful for parse error recovery.
