@@ -1,16 +1,12 @@
 package org.elm.lang.core.types
 
 import org.elm.lang.core.psi.ElmNamedElement
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 
 /**
  * A table that tracks references for [TyRecord] fields. Can be [frozen] to prevent updates.
  */
 data class RecordFieldReferenceTable(
-        // We use a ConcurrentHashMap even through writes are constrained to a single thread, since
-        // copies can occur concurrently with a write.
-        private var refsByField: ConcurrentMap<String, MutableSet<ElmNamedElement>> = ConcurrentHashMap(),
+        private var refsByField: MutableMap<String, MutableSet<ElmNamedElement>> = mutableMapOf(),
         val frozen: Boolean = false
 ) {
     /** Get all references for a [field], or an empty list if there are none. */
@@ -20,7 +16,7 @@ data class RecordFieldReferenceTable(
 
     /** Add all references from [other] to this table. Has no effect if [frozen]. */
     fun addAll(other: RecordFieldReferenceTable) {
-        if (frozen) return
+        if (frozen || other.refsByField === this.refsByField) return
         for ((field, refs) in other.refsByField) {
             refsByField.getOrPut(field) { mutableSetOf() } += refs
         }
@@ -36,7 +32,7 @@ data class RecordFieldReferenceTable(
 
     fun copy(frozen: Boolean = this.frozen): RecordFieldReferenceTable {
         return RecordFieldReferenceTable(
-                refsByField.mapValuesTo(ConcurrentHashMap()) { (_, v) -> v.toMutableSet() },
+                refsByField.mapValuesTo(mutableMapOf()) { (_, v) -> v.toMutableSet() },
                 frozen
         )
     }
