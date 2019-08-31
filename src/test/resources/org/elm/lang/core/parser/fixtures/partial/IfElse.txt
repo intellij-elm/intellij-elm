@@ -7,7 +7,7 @@ Elm File
     PsiWhiteSpace(' ')
     ElmIfElseExpr(IF_ELSE_EXPR)
       PsiElement(IF)('if')
-      PsiErrorElement:<expression> expected
+      PsiErrorElement:<expr> expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -41,7 +41,7 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
       PsiWhiteSpace(' ')
       PsiElement(THEN)('then')
-      PsiErrorElement:<expression> expected, got 'type'
+      PsiErrorElement:<expr> expected, got 'type'
         <empty list>
   PsiWhiteSpace('\n')
   PsiWhiteSpace('        ')
@@ -78,7 +78,7 @@ Elm File
       PsiWhiteSpace('\n')
       PsiWhiteSpace('     ')
       PsiElement(ELSE)('else')
-      PsiErrorElement:<expression> or IF expected, got 'type'
+      PsiErrorElement:<expr> or IF expected, got 'type'
         <empty list>
   PsiWhiteSpace(' ')
   PsiElement(TYPE)('type')

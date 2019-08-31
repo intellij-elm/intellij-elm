@@ -298,12 +298,10 @@ private OperatorAsFunction_inner ::=
     { pin = 2 }
 
 private CallOrAtom ::=
-    FunctionCallExpr
-    | Atom
+    Atom FunctionCallExpr?
 
-FunctionCallExpr ::=
-    FunctionCallTarget Atom+
-    { pin = 2 }
+left FunctionCallExpr ::=
+    Atom+
 
 private FunctionCallTarget ::=
     FieldAccessExpr
