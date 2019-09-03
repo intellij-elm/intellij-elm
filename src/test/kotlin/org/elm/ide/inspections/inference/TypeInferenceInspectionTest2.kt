@@ -269,6 +269,15 @@ main =
     ()
 """)
 
+    fun `test mapping over recursive container in annotated function`() = checkByText("""
+type Box a = Box a
+type Tree a = Node (List (Tree a))
+
+main : Tree (Box a) -> Box (Tree a)
+main (Node trees) =
+    <error descr="Type mismatch.Required: Box (Tree a)Found: List (Box (Tree a))">List.map main trees</error>
+""")
+
     fun `test uncurrying function passed as argument`() = checkByText("""
 foo : a -> a
 foo a = a

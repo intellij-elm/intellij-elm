@@ -117,8 +117,7 @@ private class InferenceScope(
         // If the assignee has any syntax errors, we don't run inference on it. Trying to resolve
         // references in bodies when the parameters contain syntax errors can result in infinite
         // recursion and surprising bugs.
-        // We don't currently infer recursive functions in order to avoid infinite loops in the inference.
-        if (checkRecursion(declaration) || assignee == null || assignee.hasErrors) {
+        if (assignee == null || assignee.hasErrors) {
             return toTopLevelResult(TyUnknown())
         }
 
@@ -696,13 +695,17 @@ private class InferenceScope(
     }
 
     private fun inferReferencedValueDeclaration(decl: ElmValueDeclaration?): Ty {
-        if (decl == null || checkRecursion(decl)) return TyUnknown()
+        if (decl == null) return TyUnknown()
+        // Check for bad recursion before we do any early returns in case it needs to generate diagnostics.
+        val recursive = checkRecursion(decl)
         val existing = resolvedDeclarations[decl]
         if (existing != null) return TypeReplacement.freshenVars(existing)
         // Use the type annotation if there is one
         var ty = decl.typeAnnotation?.typeExpressionInference(rigid = false)?.ty
         // If there's no annotation, do full inference on the function.
         if (ty == null) {
+            // Trying to infer unannotated recursive funcitons would cause an infinite loop
+            if (recursive) return TyUnknown()
             // First we have to find the parent of the declaration so that it has access to the
             // correct binding/declaration visibility. If there's no parent, we do a cached top-level inference.
             val declParentScope = ancestors.firstOrNull { decl in it.childDeclarations }
