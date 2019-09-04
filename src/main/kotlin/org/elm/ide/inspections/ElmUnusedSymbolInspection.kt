@@ -24,6 +24,7 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
         if (element is ElmTypeAliasDeclaration ||
                 element is ElmTypeDeclaration ||
                 element is ElmTypeVariable ||
+                element is ElmFieldType ||
                 element is ElmLowerPattern && element.parent is ElmRecordPattern) {
             // TODO revisit: implementation for types is a little tricky since
             //      type annotations are optional; punting for now
