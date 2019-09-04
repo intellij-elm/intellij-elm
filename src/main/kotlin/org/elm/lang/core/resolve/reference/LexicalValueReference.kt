@@ -14,8 +14,17 @@ class LexicalValueReference(element: ElmReferenceElement)
             emptyArray()
 
     override fun resolveInner(): ElmNamedElement? {
-        val resolved = getCandidates().find { it.name == element.referenceName }
+        val resolved = resolveShallow()
         return (resolved as? ElmReferenceElement)?.reference?.resolve() ?: resolved
+    }
+
+    /**
+     * References of this type normally recursively resolve references to elements that are
+     * themselves references (e.g. usage of a name in a record destructuring pattern). This function
+     * will only resolve the first level of reference.
+     */
+    fun resolveShallow(): ElmNamedElement? {
+        return getCandidates().find { it.name == element.referenceName }
     }
 
     private fun getCandidates(): List<ElmNamedElement> {
