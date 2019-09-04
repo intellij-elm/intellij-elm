@@ -141,12 +141,8 @@ private class InferenceScope(
             bodyTy = inferExpression(expr)
 
             if (binding is ParameterBindingResult.Annotated) {
-                // If the body is just a let expression, show the diagnostic on its expression
-                // rather than the whole body.
-                val errorExpr = (expr as? ElmLetInExpr)?.expression ?: expr
-
                 val expected = (binding.ty as? TyFunction)?.partiallyApply(binding.count) ?: binding.ty
-                requireAssignable(errorExpr, bodyTy, expected)
+                requireAssignable(expr, bodyTy, expected)
             } else if (expr is ElmCaseOfExpr) {
                 // If there's no annotation and the body is a case expression, make sure all branches match
                 requireBranchesAssignable(expr, bodyTy, TyUnknown())
@@ -170,6 +166,22 @@ private class InferenceScope(
         patternList.zip(paramVars) { p, t -> bindPattern(p, t, true) }
         val bodyTy = inferExpression(lambda.expression)
         return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
+    }
+
+    private fun beginLetInInference(letIn: ElmLetInExpr): InferenceResult {
+        val valueDeclarationList = letIn.valueDeclarationList
+        childDeclarations += valueDeclarationList
+
+        for (decl in valueDeclarationList) {
+            // If a declaration was referenced by a child defined earlier in this scope, it has
+            // already been inferred.
+            if (decl !in resolvedDeclarations) {
+                inferChildDeclaration(decl)
+            }
+        }
+
+        val exprTy = inferExpression(letIn.expression)
+        return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
     private fun beginCaseBranchInference(
@@ -394,7 +406,7 @@ private class InferenceScope(
     private fun inferAtom(atom: ElmAtomTag): Ty {
         // For most atoms, we don't try to infer them if they contain errors.
         val ty = when {
-            atom is ElmLetInExpr -> inferLetIn(atom)
+            atom is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
             atom is ElmCaseOfExpr -> inferCase(atom)
             atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
             atom.hasErrors -> TyUnknown()
@@ -505,21 +517,6 @@ private class InferenceScope(
         }
 
         return ty ?: TyUnknown()
-    }
-
-    private fun inferLetIn(letIn: ElmLetInExpr): Ty {
-        val valueDeclarationList = letIn.valueDeclarationList
-        childDeclarations += valueDeclarationList
-
-        for (decl in valueDeclarationList) {
-            // If a declaration was referenced by a child defined earlier in this scope, it has
-            // already been inferred.
-            if (decl !in resolvedDeclarations) {
-                inferChildDeclaration(decl)
-            }
-        }
-
-        return inferExpression(letIn.expression)
     }
 
     private fun inferRecord(record: ElmRecordExpr): Ty {
@@ -1009,7 +1006,10 @@ private class InferenceScope(
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
             val diff = if (t1 is TyRecord && t2 is TyRecord) calcRecordDiff(t1, t2) else null
-            diagnostics += TypeMismatchError(element, t1, t2, endElement, patternBinding, diff)
+            // For let expressions, show the diagnostic on its value expression
+            // rather than the whole thing.
+            val errorElement = (element as? ElmLetInExpr)?.expression ?: element
+            diagnostics += TypeMismatchError(errorElement, t1, t2, endElement, patternBinding, diff)
         }
         return assignable
     }
