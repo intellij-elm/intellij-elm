@@ -510,6 +510,19 @@ main <error descr="Conflicting name declaration">foo</error> = ()
 main a = (\<error descr="Conflicting name declaration">a</error> -> a)
 """)
 
+    fun `test allowed destructuring with same names in sibling contexts`() = checkByText("""
+main =
+    [ let
+        ( a, _ ) = ( "", "" )
+      in
+      a
+    , let
+        ( a, _ ) = ( (), () )
+      in
+      <error descr="Type mismatch.Required: StringFound: ()">a</error>
+    ]
+""")
+
     fun `test if-else with mismatched condition`() = checkByText("""
 main = if <error descr="Type mismatch.Required: BoolFound: Float">1.0</error> then 1 else 2
 """)
