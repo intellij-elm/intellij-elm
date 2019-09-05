@@ -46,6 +46,12 @@ foo e = ()
 main = foo { field = (), field2 = () }
 """)
 
+    fun `test record pattern parameter for record type literal`() = checkByText("""
+main : { field : () } -> Int
+main { field } = 
+  <error descr="Type mismatch.Required: IntFound: ()">field</error>
+""")
+
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
 main : ()
 main =

@@ -10,6 +10,7 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.OperatorAssociativity.NON
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 private val TYPE_INFERENCE_KEY: Key<ParameterizedCachedValue<InferenceResult, Set<ElmValueDeclaration>>> =
@@ -613,7 +614,12 @@ private class InferenceScope(
     }
 
     private fun inferReferenceElement(expr: ElmReferenceElement): Ty {
-        val ref = expr.reference.resolve() ?: return TyUnknown()
+        // Resolve lexical references shallowly. If they're a reference to a record pattern, we can
+        // get the parameter binding rather than resolving to the type annotation.
+        val ref = when (val exprRef = expr.reference) {
+            is LexicalValueReference -> exprRef.resolveShallow()
+            else -> exprRef.resolve()
+        } ?: return TyUnknown()
 
         // If the value is a parameter, its type has already been added to bindings
         getBinding(ref)?.let {
