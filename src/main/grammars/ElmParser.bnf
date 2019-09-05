@@ -317,7 +317,7 @@ private Atom ::=
     | TupleConstructorExpr
     | UnitExpr
     | FieldAccessExpr
-    | TupleOrParenOrFieldAccessExpr
+    | TupleOrParenExpr
     | ValueExpr
     | FieldAccessorFunctionExpr
     | ListExpr
@@ -333,7 +333,7 @@ private Atom ::=
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
 
-external TupleOrParenOrFieldAccessExpr ::= parseTupleOrParenOrFieldAccessExpr Expression
+external TupleOrParenExpr ::= parseTupleOrParenExpr Expression
 
 
 FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+

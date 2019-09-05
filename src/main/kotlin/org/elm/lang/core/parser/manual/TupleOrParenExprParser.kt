@@ -26,8 +26,8 @@ upper TupleUpper ::=
     { elementType = TupleExpr }
 
  */
-
-class TupleOrParenOrFieldAccessExprParser(val exprParser: Parser) : Parser {
+// TODO expand parser to also parse `FieldAccess` expressions that start with a parenthesized expr
+class TupleOrParenExprParser(val exprParser: Parser) : Parser {
 
     override fun parse(b: PsiBuilder, level: Int): Boolean {
         val tupleOrParens: PsiBuilder.Marker = enter_section_(b)
