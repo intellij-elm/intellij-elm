@@ -60,7 +60,7 @@ data class TyTuple(val types: List<Ty>, override val alias: AliasInfo? = null) :
  *   accessors, record with base identifiers etc. that match a subset of record fields
  * @property alias The alias for this record, if there is one. Used for rendering and tracking record constructors
  * @property fieldReferences A map of field name to the psi element that defines them; used for
- *   reference resolve, does not affect equality
+ *   reference resolve, only the frozen status affects equality
  */
 data class TyRecord(
         val fields: Map<String, Ty>,
@@ -87,6 +87,7 @@ data class TyRecord(
         if (fields != other.fields) return false
         if (baseTy != other.baseTy) return false
         if (alias != other.alias) return false
+        if (fieldReferences.frozen != other.fieldReferences.frozen) return false
         return true
     }
 
@@ -94,6 +95,7 @@ data class TyRecord(
         var result = fields.hashCode()
         result = 31 * result + (baseTy?.hashCode() ?: 0)
         result = 31 * result + (alias?.hashCode() ?: 0)
+        result = 31 * result + fieldReferences.frozen.hashCode()
         return result
     }
 }
@@ -119,12 +121,14 @@ data class MutableTyRecord(
         if (fields != other.fields) return false
         if (baseTy != other.baseTy) return false
         if (alias != other.alias) return false
+        if (fieldReferences.frozen != other.fieldReferences.frozen) return false
         return true
     }
     override fun hashCode(): Int {
         var result = fields.hashCode()
         result = 31 * result + (baseTy?.hashCode() ?: 0)
         result = 31 * result + (alias?.hashCode() ?: 0)
+        result = 31 * result + fieldReferences.frozen.hashCode()
         return result
     }
     override fun toString() = "{~${toRecord().toString().drop(1)}"

@@ -36,4 +36,8 @@ data class RecordFieldReferenceTable(
                 frozen
         )
     }
+
+    override fun toString(): String {
+        return "<RecordFieldReferenceTable frozen=$frozen, refs=${refsByField.keys}>"
+    }
 }
