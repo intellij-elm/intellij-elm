@@ -250,12 +250,12 @@ private class InferenceScope(
     private fun toTopLevelResult(ty: Ty, replaceExpressionTypes: Boolean = true): InferenceResult {
         val exprs = when {
             replaceExpressionTypes -> {
-                expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements) }
+                expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements, freeze = replaceExpressionTypes) }
             }
             else -> expressionTypes
         }
         val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
-        val ret = TypeReplacement.replace(ty, replacements, outerVars)
+        val ret = TypeReplacement.replace(ty, replacements, outerVars, freeze = replaceExpressionTypes)
         return InferenceResult(exprs, diagnostics, ret)
     }
 
