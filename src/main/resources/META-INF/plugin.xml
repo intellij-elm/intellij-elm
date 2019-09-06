@@ -36,6 +36,14 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.2</b> <em>(2019-09-06)</em>
+                <ul>
+                    <li>Fix ConcurrentModificationException</li>
+                    <li>Fix false positives for some unused record fields</li>
+                    <li>Improve type checking of recursive functions</li>
+                    <li>Improve type checking of destructured record fields</li>
+                </ul>
+            </li>
             <li><b>3.4.1</b> <em>(2019-08-24)</em>
                 <ul>
                     <li>Fixed bugs related to record field rename</li>
