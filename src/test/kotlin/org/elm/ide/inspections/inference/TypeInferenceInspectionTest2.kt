@@ -357,6 +357,31 @@ main =
         Just x -> <error descr="Type mismatch.Required: StringFound: number">x</error>
 """)
 
+    fun `test case branches with mismatched types in lambda`() = checkByText("""
+main =
+    \_ ->
+        case "" of
+            "" ->
+                ()
+
+            _ ->
+                <error descr="Type mismatch.Required: ()Found: String">""</error>
+""")
+
+    fun `test case branches with mismatched types in let`() = checkByText("""
+main =
+    let
+        f =
+            ()
+    in
+    case "" of
+        "" ->
+            ()
+
+        _ ->
+            <error descr="Type mismatch.Required: ()Found: String">""</error>
+""")
+
     // https://github.com/klazuka/intellij-elm/issues/113
     fun `test case branches with union value call`() = checkByText("""
 foo : Maybe (List a)
