@@ -144,9 +144,8 @@ private class InferenceScope(
             if (binding is ParameterBindingResult.Annotated) {
                 val expected = (binding.ty as? TyFunction)?.partiallyApply(binding.count) ?: binding.ty
                 requireAssignable(expr, bodyTy, expected)
-            } else if (expr is ElmCaseOfExpr) {
-                // If there's no annotation and the body is a case expression, make sure all branches match
-                requireBranchesAssignable(expr, bodyTy, TyUnknown())
+            } else {
+                checkToplevelCaseBranches(expr, bodyTy)
             }
         }
 
@@ -165,7 +164,11 @@ private class InferenceScope(
         val patternList = lambda.patternList
         val paramVars = uniqueVars(patternList.size)
         patternList.zip(paramVars) { p, t -> bindPattern(p, t, true) }
-        val bodyTy = inferExpression(lambda.expression)
+
+        val expr = lambda.expression
+        val bodyTy = inferExpression(expr)
+        checkToplevelCaseBranches(expr, bodyTy)
+
         return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
     }
 
@@ -181,7 +184,10 @@ private class InferenceScope(
             }
         }
 
-        val exprTy = inferExpression(letIn.expression)
+        val expr = letIn.expression
+        val exprTy = inferExpression(expr)
+        checkToplevelCaseBranches(expr, exprTy)
+
         return InferenceResult(expressionTypes, diagnostics, exprTy)
     }
 
@@ -230,6 +236,13 @@ private class InferenceScope(
             }
         }
         return result
+    }
+
+    /** if [expr] is a case expression, make sure all the branches match */
+    private fun checkToplevelCaseBranches(expr: ElmExpressionTag?, exprTy: Ty) {
+        if (expr is ElmCaseOfExpr) {
+            requireBranchesAssignable(expr, exprTy, TyUnknown())
+        }
     }
 
     private fun checkRecursion(declaration: ElmValueDeclaration): Boolean {
