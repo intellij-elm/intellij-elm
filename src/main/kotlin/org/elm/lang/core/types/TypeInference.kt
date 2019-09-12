@@ -352,15 +352,15 @@ private class InferenceScope(
         }
 
         val target = expr.target
+        val arguments = expr.arguments.toList()
+
+        // always infer the target and arguments so that they're added to expressionTypes
+        val targetTy = inferAtom(target)
+        val argTys = arguments.map { inferAtom(it) }
+
         if (target !is ElmFunctionCallTargetTag) {
             return argCountError(target, target, expr.arguments.count(), 0)
         }
-
-        val targetTy = inferAtom(target)
-        val arguments = expr.arguments.toList()
-
-        // always infer the arguments so that they're added to expressionTypes
-        val argTys = arguments.map { inferAtom(it) }
 
         if (targetTy is TyVar) {
             val ty = TyFunction(argTys, TyVar("a"))

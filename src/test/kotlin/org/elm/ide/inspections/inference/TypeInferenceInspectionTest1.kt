@@ -39,6 +39,14 @@ main: () -> ()
 main <error descr="The function expects 1 parameter, but it got 2 instead.">foo bar</error> = (foo, bar)
 """)
 
+    fun `test calling non-function with errors in argument`() = checkByText("""
+foo : () -> ()
+foo i = i
+main = 
+  <error descr="This value is not a function, but it was given 1 argument.">()</error> 
+  (foo <error descr="Type mismatch.Required: ()Found: String">""</error>)
+""")
+
     fun `test mismatched int value type`() = checkByText("""
 main : ()
 main = <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
