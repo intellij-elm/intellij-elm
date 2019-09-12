@@ -2,6 +2,7 @@ package org.elm.lang.core.parser.manual
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase.*
+import com.intellij.psi.tree.IElementType
 import org.elm.lang.core.psi.ElmTypes.*
 
 /*
@@ -27,61 +28,69 @@ upper TupleUpper ::=
 
  */
 // TODO expand parser to also parse `FieldAccess` expressions that start with a parenthesized expr
-class TupleOrParenExprParser(val exprParser: Parser) : Parser {
+class TupleOrParenExprParser(
+        private val exprParser: Parser
+) : Parser {
 
     override fun parse(b: PsiBuilder, level: Int): Boolean {
-        val tupleOrParens: PsiBuilder.Marker = enter_section_(b)
+        val tupleOrParens: PsiBuilder.Marker = enter_section_(b, level, _NONE_)
 
         if (!consumeTokenSmart(b, LEFT_PARENTHESIS)) {
-            exit_section_(b, tupleOrParens, null, false)
+            exit_section_(b, level, tupleOrParens, null, false, false, null)
             return false
         }
 
-        if (!exprParser.parse(b, level)) {
-            exit_section_(b, tupleOrParens, null, false)
-            return false
-        }
+        // Due to how our parse rules are ordered, it is safe to pin
+        // as soon as we see a left parenthesis. Whether we choose to treat
+        // this as a parenthesized expr or a tuple expr is arbitrary.
+        // I have chosen to treat it as a paren expr until we see a comma.
 
-        if (consumeTokenFast(b, RIGHT_PARENTHESIS)) {
-            exit_section_(b, tupleOrParens, PARENTHESIZED_EXPR, true)
+        fun commit(type: IElementType, success: Boolean): Boolean {
+            exit_section_(b, level, tupleOrParens, type, success, /*pinned*/ true, null)
             return true
         }
 
-        // parse: comma followed by expression
-
-        if (!consumeTokenFast(b, COMMA)) {
-            exit_section_(b, tupleOrParens, null, false)
-            return false
+        if (!exprParser.parse(b, level)) {
+            return commit(PARENTHESIZED_EXPR, success = false)
         }
 
+        if (consumeTokenSmart(b, RIGHT_PARENTHESIS)) {
+            return commit(PARENTHESIZED_EXPR, success = true)
+        }
+
+        // If this is actually a tuple expression, there should be a comma right here.
+
+        if (!consumeToken(b, COMMA)) {
+            return commit(PARENTHESIZED_EXPR, success = false)
+        }
+
+        // Now that we've seen a comma, we definitely are parsing a tuple, so
+        // if there are any parse errors beyond this point, we will commit
+        // it as a tuple expr (rather than a paren expr).
+
         if (!exprParser.parse(b, level)) {
-            exit_section_(b, tupleOrParens, null, false)
-            return false
+            return commit(TUPLE_EXPR, success = false)
         }
 
 
         // parse any remaining commas followed by expressions until closing parenthesis
 
-        while (b.tokenType != RIGHT_PARENTHESIS) {
+        while (!nextTokenIs(b, RIGHT_PARENTHESIS)) {
             // parse: comma followed by expression
 
-            if (!consumeTokenFast(b, COMMA)) {
-                exit_section_(b, tupleOrParens, null, false)
-                return false
+            if (!consumeToken(b, COMMA)) {
+                return commit(TUPLE_EXPR, success = false)
             }
 
             if (!exprParser.parse(b, level)) {
-                exit_section_(b, tupleOrParens, null, false)
-                return false
+                return commit(TUPLE_EXPR, success = false)
             }
         }
 
-        if (!consumeTokenFast(b, RIGHT_PARENTHESIS)) {
-            exit_section_(b, tupleOrParens, null, false)
-            return false
+        if (!consumeTokenSmart(b, RIGHT_PARENTHESIS)) {
+            return commit(TUPLE_EXPR, success = false)
         }
 
-        exit_section_(b, tupleOrParens, TUPLE_EXPR, true)
-        return true
+        return commit(TUPLE_EXPR, success = true)
     }
 }
