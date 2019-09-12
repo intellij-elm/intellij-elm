@@ -346,17 +346,17 @@ private class InferenceScope(
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
         if (expr.hasErrors) return TyUnknown()
 
-        fun argCountError(element: PsiElement, endElement: PsiElement, actual: Int, expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(element, endElement, actual, expected)
-            return TyUnknown()
-        }
-
         val target = expr.target
         val arguments = expr.arguments.toList()
 
         // always infer the target and arguments so that they're added to expressionTypes
         val targetTy = inferAtom(target)
         val argTys = arguments.map { inferAtom(it) }
+
+        fun argCountError(element: PsiElement, endElement: PsiElement, actual: Int, expected: Int): TyUnknown {
+            diagnostics += ArgumentCountError(element, endElement, actual, expected)
+            return TyUnknown()
+        }
 
         if (target !is ElmFunctionCallTargetTag) {
             return argCountError(target, target, expr.arguments.count(), 0)
