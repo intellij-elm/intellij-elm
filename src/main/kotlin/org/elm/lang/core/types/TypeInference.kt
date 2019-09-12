@@ -346,7 +346,17 @@ private class InferenceScope(
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
         if (expr.hasErrors) return TyUnknown()
 
-        val targetTy = inferAtom(expr.target)
+        fun argCountError(element: PsiElement, endElement: PsiElement, actual: Int, expected: Int): TyUnknown {
+            diagnostics += ArgumentCountError(element, endElement, actual, expected)
+            return TyUnknown()
+        }
+
+        val target = expr.target
+        if (target !is ElmFunctionCallTargetTag) {
+            return argCountError(target, target, expr.arguments.count(), 0)
+        }
+
+        val targetTy = inferAtom(target)
         val arguments = expr.arguments.toList()
 
         // always infer the arguments so that they're added to expressionTypes
@@ -355,14 +365,9 @@ private class InferenceScope(
         if (targetTy is TyVar) {
             val ty = TyFunction(argTys, TyVar("a"))
             return when {
-                requireAssignable(expr.target, targetTy, ty) -> ty.ret
+                requireAssignable(target, targetTy, ty) -> ty.ret
                 else -> TyUnknown()
             }
-        }
-
-        fun argCountError(element: PsiElement, endElement: PsiElement, actual: Int, expected: Int): TyUnknown {
-            diagnostics += ArgumentCountError(element, endElement, actual, expected)
-            return TyUnknown()
         }
 
         if (!isInferable(targetTy)) return TyUnknown()
@@ -385,7 +390,7 @@ private class InferenceScope(
             // If any of the arguments contain a function, the partially applied expression may
             // uncurry into a function.
             for (i in targetTy.parameters.size..arguments.lastIndex) {
-                if (appliedTy !is TyFunction) return argCountError(expr.target, arguments[i], 1, 0)
+                if (appliedTy !is TyFunction) return argCountError(target, arguments[i], 1, 0)
                 if (!requireAssignable(arguments[i], argTys[i], appliedTy.parameters.first())) return TyUnknown()
                 appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements)
             }
