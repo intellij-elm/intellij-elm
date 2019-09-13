@@ -360,23 +360,28 @@ private class InferenceScope(
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
         if (expr.hasErrors) return TyUnknown()
 
-        val targetTy = inferAtom(expr.target)
+        val target = expr.target
         val arguments = expr.arguments.toList()
 
-        // always infer the arguments so that they're added to expressionTypes
+        // always infer the target and arguments so that they're added to expressionTypes
+        val targetTy = inferAtom(target)
         val argTys = arguments.map { inferAtom(it) }
-
-        if (targetTy is TyVar) {
-            val ty = TyFunction(argTys, TyVar("a"))
-            return when {
-                requireAssignable(expr.target, targetTy, ty) -> ty.ret
-                else -> TyUnknown()
-            }
-        }
 
         fun argCountError(element: PsiElement, endElement: PsiElement, actual: Int, expected: Int): TyUnknown {
             diagnostics += ArgumentCountError(element, endElement, actual, expected)
             return TyUnknown()
+        }
+
+        if (target !is ElmFunctionCallTargetTag) {
+            return argCountError(target, target, expr.arguments.count(), 0)
+        }
+
+        if (targetTy is TyVar) {
+            val ty = TyFunction(argTys, TyVar("a"))
+            return when {
+                requireAssignable(target, targetTy, ty) -> ty.ret
+                else -> TyUnknown()
+            }
         }
 
         if (!isInferable(targetTy)) return TyUnknown()
@@ -399,7 +404,7 @@ private class InferenceScope(
             // If any of the arguments contain a function, the partially applied expression may
             // uncurry into a function.
             for (i in targetTy.parameters.size..arguments.lastIndex) {
-                if (appliedTy !is TyFunction) return argCountError(expr.target, arguments[i], 1, 0)
+                if (appliedTy !is TyFunction) return argCountError(target, arguments[i], 1, 0)
                 if (!requireAssignable(arguments[i], argTys[i], appliedTy.parameters.first())) return TyUnknown()
                 appliedTy = TypeReplacement.replace(appliedTy.partiallyApply(1), replacements)
             }

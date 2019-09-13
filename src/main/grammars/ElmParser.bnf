@@ -295,23 +295,14 @@ OperatorAsFunctionExpr ::=
 
 private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
-
-private CallOrAtom ::=
-    FunctionCallExpr
-    | Atom
-
-FunctionCallExpr ::=
-    FunctionCallTarget Atom+
     { pin = 2 }
 
-private FunctionCallTarget ::=
-    FieldAccessExpr
-    | ValueExpr
-    | FieldAccessorFunctionExpr
-    | OperatorAsFunctionExpr
-    | ParenthesizedExpr
-    | TupleConstructorExpr
-    | AnonymousFunctionExpr
+private CallOrAtom ::=
+    Atom FunctionCallExpr?
+
+left FunctionCallExpr ::=
+    Atom+
+
 
 // NOTE: all descendants must be:
 //       either a private group (such as `LiteralExprGroup`)
@@ -322,14 +313,13 @@ private FunctionCallTarget ::=
 private Atom ::=
     LiteralExprGroup
     | NegateExpr
-    | FieldAccessExpr
-    | ValueExpr
-    | FieldAccessorFunctionExpr
     | OperatorAsFunctionExpr
-    | ParenthesizedExpr
     | TupleConstructorExpr
     | UnitExpr
-    | TupleExpr
+    | FieldAccessExpr
+    | TupleOrParenExpr
+    | ValueExpr
+    | FieldAccessorFunctionExpr
     | ListExpr
     | RecordExpr
     | IfElseExpr
@@ -341,6 +331,9 @@ private Atom ::=
 
 // Various tokens that can begin a new expression. Useful for parse error recovery.
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
+
+
+external TupleOrParenExpr ::= parseTupleOrParenExpr Expression
 
 
 FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+

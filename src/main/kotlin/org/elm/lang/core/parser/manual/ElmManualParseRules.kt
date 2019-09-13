@@ -14,6 +14,10 @@ import com.intellij.lang.parser.GeneratedParserUtilBase
  */
 object ElmManualParseRules : GeneratedParserUtilBase() {
     @JvmStatic
+    fun parseTupleOrParenExpr(builder: PsiBuilder, level: Int, exprParser: Parser) =
+            TupleOrParenExprParser(exprParser).parse(builder, level)
+
+    @JvmStatic
     fun parseMinusWithoutTrailingWhitespace(builder: PsiBuilder, level: Int) =
             MinusWithoutTrailingWhitespaceParser.parse(builder, level)
 

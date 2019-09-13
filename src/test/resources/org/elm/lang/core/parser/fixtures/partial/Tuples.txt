@@ -14,7 +14,7 @@ Elm File
     PsiWhiteSpace(' ')
     PsiElement(EQ)('=')
     PsiWhiteSpace(' ')
-    ElmTupleExpr(TUPLE_EXPR)
+    ElmParenthesizedExpr(PARENTHESIZED_EXPR)
       PsiElement(LEFT_PARENTHESIS)('(')
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
@@ -33,9 +33,9 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('magicNumber')
-  PsiElement(COMMA)(',')
-  PsiErrorElement:<expression> expected
-    <empty list>
+      PsiElement(COMMA)(',')
+      PsiErrorElement:<expr> expected
+        <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
@@ -67,10 +67,11 @@ Elm File
       ElmValueExpr(VALUE_EXPR)
         ElmValueQID(VALUE_QID)
           PsiElement(LOWER_CASE_IDENTIFIER)('magicNumber')
-  PsiElement(COMMA)(',')
+      PsiElement(COMMA)(',')
+      PsiErrorElement:<expr> expected, got ')'
+        <empty list>
   PsiWhiteSpace(' ')
-  PsiErrorElement:<expression> expected, got ')'
-    PsiElement(RIGHT_PARENTHESIS)(')')
+  PsiElement(RIGHT_PARENTHESIS)(')')
   PsiElement(VIRTUAL_END_DECL)('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)

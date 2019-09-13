@@ -92,6 +92,12 @@ main = ((+) 1) 1{-caret-}
 """, "number → number")
 
 
+    // INVALID CALLS
+
+    fun `test non-function call`() = checkByText("""
+main = () "foo"{-caret-}
+""", "")
+
     // UTILS
 
 
