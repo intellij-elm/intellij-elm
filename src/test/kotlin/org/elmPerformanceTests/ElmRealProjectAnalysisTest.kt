@@ -34,22 +34,23 @@ import org.elm.openapiext.toPsiFile
 import org.junit.ComparisonFailure
 import java.lang.reflect.Field
 
+/**
+ * Smoke-test the plugin by evaluating it against a variety of real-world Elm projects.
+ * Assuming that the projects you are testing are well-formed, these tests will detect
+ * any false-positive errors caused by bugs in:
+ *
+ * - the parser
+ * - the unresolved reference inspector
+ * - the type checker
+ */
 class ElmRealProjectAnalysisTest : ElmRealProjectTestBase() {
 
-    fun `test analyze elm-json-tree-view`() = doTest(JSON_TREE_VIEW)
-    fun `test analyze elm-spa-example`() = doTest(SPA)
     fun `test analyze elm-css`() = doTest(ELM_CSS)
     fun `test analyze elm-dev-tools`() = doTest(DEV_TOOLS)
-    fun `test analyze list-extra`() = doTest(LIST_EXTRA)
-
-    /*
-        The 'platformer' project is disabled because it has false-positive
-        type errors. It appears that the code depends on bugs in the
-        Elm compiler's type inference, and AJ concluded that it wasn't
-        worth the trouble to copy the bug behavior.
-
-    fun `test analyze platformer`() = doTest(PLATFORMER)
-    */
+    fun `test analyze elm-json-tree-view`() = doTest(JSON_TREE_VIEW)
+    fun `test analyze elm-list-extra`() = doTest(LIST_EXTRA)
+    fun `test analyze elm-physics`() = doTest(ELM_PHYSICS)
+    fun `test analyze elm-spa-example`() = doTest(SPA)
 
     private fun doTest(info: RealProjectInfo, failOnFirstFileWithErrors: Boolean = false) {
         val inspections = InspectionToolRegistrar.getInstance().createTools()

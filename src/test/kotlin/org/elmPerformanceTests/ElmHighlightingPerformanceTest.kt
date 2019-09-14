@@ -43,19 +43,13 @@ class ElmHighlightingPerformanceTest : ElmRealProjectTestBase() {
             repeatTest { highlightProjectFile(SPA, "src/Page/Article/Editor.elm") }
 
     fun `test highlighting elm-css`() =
-            repeatTest { highlightProjectFile(ELM_CSS, "src/Css.elm") }
-
-    fun `test highlighting elm-css 2`() =
             repeatTest { highlightProjectFile(ELM_CSS, "src/Css/Transitions.elm") }
 
     fun `test highlighting elm-list-extra`() =
             repeatTest { highlightProjectFile(LIST_EXTRA, "src/List/Extra.elm") }
 
     fun `test highlighting elm-dev-tools`() =
-            repeatTest { highlightProjectFile(DEV_TOOLS, "src/DevTools.elm") }
-
-    fun `test highlighting platformer`() =
-            repeatTest { highlightProjectFile(PLATFORMER, "src/Tiled/Util.elm") }
+            repeatTest { highlightProjectFile(DEV_TOOLS, "src/Browser/DevTools/Main.elm") }
 
     private fun repeatTest(f: () -> Timings) {
         var result = Timings()
