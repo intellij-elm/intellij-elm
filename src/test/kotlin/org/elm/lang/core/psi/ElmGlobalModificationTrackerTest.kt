@@ -115,6 +115,17 @@ foo = ()
         file.rename(null, "Bar.elm")
     }
 
+    fun `test vfs directory removal`() = doVfsTest(INC, """
+--@ Main.elm
+import Foo.Bar exposing (..)
+--^
+--@ Foo/Bar.elm
+module Bar exposing (..)
+foo = ()
+""", "Foo") { file ->
+        file.delete(null)
+    }
+
     private enum class TestAction(val function: (Long, Long) -> Boolean, val comment: String) {
         INC({ a, b -> a > b }, "Modification counter expected to be incremented, but it remained the same"),
         NOT_INC({ a, b -> a == b }, "Modification counter expected to remain the same, but it was incremented")

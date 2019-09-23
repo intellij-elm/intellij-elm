@@ -52,11 +52,14 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
         }
 
         private fun onPsiChange(event: PsiTreeChangeEvent, element: PsiElement) {
-            // There are some cases when PsiFile stored in the event as a child
-            // e.g. file removal by external VFS change
-            val file = event.file ?: event.child as? PsiFile
+            // If the file is null, then this is an event about VFS changes
+            val file = event.file
+            if (file == null && (element is ElmFile || element is PsiDirectory)) {
+                modificationTracker.incModificationCount()
+                return
+            }
+            
             if (file?.fileType != ElmFileType) return
-
             if (element is PsiComment || element is PsiWhiteSpace) return
 
             updateModificationCount(element)
