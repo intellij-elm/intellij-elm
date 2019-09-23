@@ -27,7 +27,7 @@ private val TY_VARIANT_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<V
 fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = false).beginTypeDeclarationInference(this)
-        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true) as TyUnion)
 }
@@ -37,7 +37,7 @@ fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceRes
 private fun ElmTypeAliasDeclaration.typeExpressionInference(activeAliases: MutableSet<ElmTypeAliasDeclaration>): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TY_ALIAS_CACHE_KEY, { useActiveAliases ->
         val inferenceResult = TypeExpression(this, rigidVars = false, activeAliases = useActiveAliases).beginTypeAliasDeclarationInference(this)
-        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     },  /*trackValue*/ false, /*parameter*/ activeAliases)
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true))
 }
@@ -46,7 +46,7 @@ private fun ElmTypeAliasDeclaration.typeExpressionInference(activeAliases: Mutab
 fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = false).beginPortAnnotationInference(this)
-        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true))
 }
@@ -54,7 +54,7 @@ fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty
 fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = false).beginUnionConstructorInference(this)
-        CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+        CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     }
     return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true))
 }
@@ -77,8 +77,8 @@ fun ElmTypeAnnotation.typeExpressionInference(rigid: Boolean = true): InferenceR
         val frozenResult =  inferenceResult.copy(ty = TypeReplacement.freeze(inferenceResult.ty))
 
         val trackers = when (parentModificationTracker) {
-            null -> arrayOf(project.modificationTracker)
-            else -> arrayOf(project.modificationTracker, parentModificationTracker)
+            null -> arrayOf(globalModificationTracker)
+            else -> arrayOf(globalModificationTracker, parentModificationTracker)
         }
 
         CachedValueProvider.Result.create(frozenResult, *trackers)
@@ -97,7 +97,7 @@ fun ElmTypeAnnotation.typeExpressionInference(rigid: Boolean = true): InferenceR
 fun ElmTypeDeclaration.variantInference(): ParameterizedInferenceResult<VariantParameters> =
         CachedValuesManager.getCachedValue(this, TY_VARIANT_CACHE_KEY) {
             val inferenceResult = TypeExpression(this, rigidVars = false).beginUnionVariantsInference(this)
-            CachedValueProvider.Result.create(inferenceResult, project.modificationTracker)
+            CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
         }
 
 /**

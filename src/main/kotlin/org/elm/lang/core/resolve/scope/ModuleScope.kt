@@ -8,6 +8,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.globalModificationTracker
 import org.elm.lang.core.psi.modificationTracker
 
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
@@ -116,7 +117,7 @@ object ModuleScope {
             }
             val values = listOf(valueDecls, elmFile.getPortAnnotations(), elmFile.getInfixDeclarations())
                     .flatten()
-            Result.create(values, elmFile.project.modificationTracker)
+            Result.create(values, elmFile.globalModificationTracker)
         }
     }
 
@@ -134,7 +135,7 @@ object ModuleScope {
                     .map { it.element }
 
             val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
-            Result.create(visibleValues, elmFile.project.modificationTracker)
+            Result.create(visibleValues, elmFile.globalModificationTracker)
         }
     }
 
@@ -151,7 +152,7 @@ object ModuleScope {
                     .map { it.element }
 
             val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
-            Result.create(visibleValues, elmFile.project.modificationTracker)
+            Result.create(visibleValues, elmFile.globalModificationTracker)
         }
     }
 
@@ -168,7 +169,7 @@ object ModuleScope {
                     .map { it.element }
 
             val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
-            Result.create(visibleValues, elmFile.project.modificationTracker)
+            Result.create(visibleValues, elmFile.globalModificationTracker)
         }
     }
 
@@ -185,7 +186,7 @@ object ModuleScope {
                     .map { it.element }
 
             val visibleValues = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
-            Result.create(visibleValues, elmFile.project.modificationTracker)
+            Result.create(visibleValues, elmFile.globalModificationTracker)
         }
     }
 
@@ -242,7 +243,7 @@ object ModuleScope {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_KEY) {
             val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
                     (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
-            Result.create(declaredTypes, elmFile.project.modificationTracker)
+            Result.create(declaredTypes, elmFile.globalModificationTracker)
         }
     }
 
@@ -254,7 +255,7 @@ object ModuleScope {
             val fromImports = elmFile.getImportClauses()
                     .flatMap { getVisibleImportTypes(it) }
             val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
-            Result.create(names, elmFile.project.modificationTracker)
+            Result.create(names, elmFile.globalModificationTracker)
         }
     }
 
@@ -285,7 +286,7 @@ object ModuleScope {
                     elmFile.getTypeDeclarations().flatMap { it.unionVariantList },
                     elmFile.getTypeAliasDeclarations().filter { it.isRecordAlias }
             ).flatten()
-            Result.create(declaredConstructors, elmFile.project.modificationTracker)
+            Result.create(declaredConstructors, elmFile.globalModificationTracker)
         }
     }
 
@@ -297,7 +298,7 @@ object ModuleScope {
             val fromImports = elmFile.getImportClauses()
                     .flatMap { getVisibleImportConstructors(it) }
             val names = VisibleNames(global = fromGlobal, topLevel = fromTopLevel, imported = fromImports)
-            Result.create(names, elmFile.project.modificationTracker)
+            Result.create(names, elmFile.globalModificationTracker)
         }
 
     }
