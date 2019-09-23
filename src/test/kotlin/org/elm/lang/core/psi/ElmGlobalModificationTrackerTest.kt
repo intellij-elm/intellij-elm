@@ -52,7 +52,7 @@ main = {-caret-}
 
     fun `test nested function name in annotated parent`() = doTest(TestAction.NOT_INC, """
 main : ()
-main = 
+main =
     let
         foo{-caret-} = ()
     in
@@ -61,7 +61,7 @@ main =
 
     fun `test nested function body in annotated parent`() = doTest(TestAction.NOT_INC, """
 main : ()
-main = 
+main =
     let
         foo = {-caret-}
     in

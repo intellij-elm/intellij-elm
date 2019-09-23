@@ -58,7 +58,7 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
                 modificationTracker.incModificationCount()
                 return
             }
-            
+
             if (file?.fileType != ElmFileType) return
             if (element is PsiComment || element is PsiWhiteSpace) return
 
