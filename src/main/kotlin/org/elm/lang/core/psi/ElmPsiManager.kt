@@ -16,6 +16,7 @@ import com.intellij.psi.PsiTreeChangeEvent.PROP_WRITABLE
 import com.intellij.psi.impl.PsiTreeChangeEventImpl
 import com.intellij.psi.util.PsiModificationTracker
 import org.elm.lang.core.ElmFileType
+import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 
 class ElmPsiManager(val project: Project) : ProjectComponent {
     /**
@@ -51,25 +52,25 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
         }
 
         private fun onPsiChange(event: PsiTreeChangeEvent, element: PsiElement) {
-
-
             // There are some cases when PsiFile stored in the event as a child
             // e.g. file removal by external VFS change
             val file = event.file ?: event.child as? PsiFile
             if (file?.fileType != ElmFileType) return
 
-            val child = event.child
-            if (child is PsiComment || child is PsiWhiteSpace) return
+            if (element is PsiComment || element is PsiWhiteSpace) return
 
-            updateModificationCount(child ?: event.parent)
+            updateModificationCount(element)
         }
 
         private fun updateModificationCount(element: PsiElement) {
-            // If something is changed inside a function, we will only increment the function local
-            // modification counter. Otherwise, we will increment the global modification counter.
+            // If something is changed inside an annotated function, we will only increment the
+            // function local modification counter. Otherwise, we will increment the global
+            // modification counter.
 
-            val owner = element.outermostDeclaration(strict = true)
-            if (owner == null) {
+            val owner = element.outermostDeclaration(strict = false)
+            if (owner?.typeAnnotation == null ||
+                    // Invalidate globally if we change the name of a top level declaration
+                    (owner.assignee as? ElmFunctionDeclarationLeft)?.lowerCaseIdentifier == element) {
                 modificationTracker.incModificationCount()
             } else {
                 owner.modificationTracker.incModificationCount()
