@@ -235,14 +235,13 @@ private fun Map<String, Constraint>.constraintDepsToPackages(repo: ElmPackageRep
         map { (name, constraint) ->
             val version = repo.availableVersionsForPackage(name)
                     .filter { constraint.contains(it) }
-                    .sorted()
-                    .firstOrNull()
+                    .min()
                     ?: throw ProjectLoadException("Could not load $name ($constraint). Is it installed?")
 
             loadDependency(repo, name, version)
         }
 
-fun loadDependency(repo: ElmPackageRepository, name: String, version: Version): ElmPackageProject {
+private fun loadDependency(repo: ElmPackageRepository, name: String, version: Version): ElmPackageProject {
     val manifestPath = repo.findPackageManifest(name, version)
             ?: throw ProjectLoadException("Could not load $name ($version): manifest not found")
     // TODO [kl] guard against circular dependencies
@@ -257,7 +256,7 @@ fun loadDependency(repo: ElmPackageRepository, name: String, version: Version): 
 
 
 // TODO [drop 0.18] remove me
-fun loadPackageLegacy(elmStuffPath: Path, name: String, version: Version): ElmPackageProject {
+private fun loadPackageLegacy(elmStuffPath: Path, name: String, version: Version): ElmPackageProject {
     val manifestPath =
             elmStuffPath.resolve("packages")
                     .resolve(name)

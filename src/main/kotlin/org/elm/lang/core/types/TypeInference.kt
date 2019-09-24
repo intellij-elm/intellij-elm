@@ -1,10 +1,12 @@
 package org.elm.lang.core.types
 
+import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.ParameterizedCachedValue
+import com.intellij.psi.util.PsiModificationTracker
 import org.elm.lang.core.diagnostics.*
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.OperatorAssociativity.NON
@@ -44,7 +46,13 @@ private fun ElmValueDeclaration.inference(activeScopes: Set<ElmValueDeclaration>
         // declared in this file as shadowable.
         val shadowableNames = ModuleScope.getVisibleValues(elmFile).topLevel.mapNotNullTo(mutableSetOf()) { it.name }
         val result = InferenceScope(shadowableNames, useActiveScopes.toMutableSet(), false, null).beginDeclarationInference(this, true)
-        CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
+
+        if (containingFile.virtualFile is VirtualFileWindow) {
+            // See ElmPsiElement.globalModificationTracker
+            CachedValueProvider.Result.create(result, PsiModificationTracker.MODIFICATION_COUNT)
+        } else {
+            CachedValueProvider.Result.create(result, project.modificationTracker, modificationTracker)
+        }
     }, /*trackValue*/ false, /*parameter*/ activeScopes)
 }
 
