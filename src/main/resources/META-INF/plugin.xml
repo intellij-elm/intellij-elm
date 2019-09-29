@@ -36,6 +36,13 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.3</b> <em>(2019-09-29)</em>
+                <ul>
+                    <li>Parser performance improvements in deeply nested functions</li>
+                    <li>Improved type checking of case expressions</li>
+                    <li>Fixed various cache invalidation bugs</li>
+                </ul>
+            </li>
             <li><b>3.4.2</b> <em>(2019-09-06)</em>
                 <ul>
                     <li>Fix ConcurrentModificationException</li>
