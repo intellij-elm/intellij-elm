@@ -4,7 +4,7 @@
 
 ## Install
 
-You can install the plugin from within the JetBrains IDE by going to **Settings -> Plugins** and then searching for "Elm". After installing the plugin, restart the IDE and then [open your existing Elm project](#open-project) or [create a new project](#create-project).
+You can install the plugin from within the JetBrains IDE by going to **Settings -> Plugins** and then searching for "Elm". After installing the plugin, restart the IDE and then [open your existing Elm project](docs/existing-project.md) or [create a new project](docs/new-project.md).
 
 
 ## Highlighted Features
