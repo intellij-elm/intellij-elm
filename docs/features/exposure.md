@@ -10,4 +10,4 @@ A special icon will be displayed next to exposed functions/types in the gutter n
 
 ## Demo
 
-![add/remove exposure demo](../assets/edit_exposing_list.mp4)
+![add/remove exposure demo](../assets/edit_exposing_list.gif)

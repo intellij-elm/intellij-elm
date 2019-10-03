@@ -12,4 +12,4 @@ Press **Ctrl-Shift-P** to see the type of the expression under the cursor, or ex
 
 ## Demo
 
-![type inference](../assets/expr_type_inference.mp4)
+![type inference](../assets/expr_type_inference.gif)

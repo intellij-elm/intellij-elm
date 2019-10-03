@@ -15,4 +15,4 @@ The syntax error checker cannot be disabled, but you can turn off the type check
 
 ## Demo
 
-![type checking](../assets/type_checking.mp4)   
+![type checking](../assets/type_checking.gif)   

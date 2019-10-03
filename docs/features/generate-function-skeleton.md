@@ -11,4 +11,4 @@ Put the cursor on a type annotation and press **Option-Enter** _(Alt-Enter on Wi
 
 ## Demo
 
-![demo](../assets/generate_func_decl.mp4)
+![demo](../assets/generate_func_decl.gif)

@@ -16,7 +16,7 @@ Generate a JSON Decoder (or Encoder) based on a type annotation.
 
 ### Demo
 
-![generate JSON decoder demo](../assets/generate_json_decoder.mp4)
+![generate JSON decoder demo](../assets/generate_json_decoder.gif)
 
 <br/>
 
@@ -31,7 +31,7 @@ Generate a JSON Decoder (or Encoder) based on a type annotation.
 
 ### Demo
 
-![generate JSON encoder demo](../assets/generate_json_encoder.mp4)
+![generate JSON encoder demo](../assets/generate_json_encoder.gif)
 
 ## Notes
 

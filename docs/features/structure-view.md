@@ -13,7 +13,7 @@ Open the structure view by clicking the **Structure** button on the left-edge of
 ## Demo
 
 Display the structure in a popup and use the keyboard to navigate:
-![navigate by keyboard demo](../assets/quick_nav_structure.mp4)
+![navigate by keyboard demo](../assets/quick_nav_structure.gif)
 
 Show the structure of your Elm file:
 ![structure view](../assets/structure_view.jpg)

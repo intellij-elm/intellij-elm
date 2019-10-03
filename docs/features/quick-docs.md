@@ -10,4 +10,4 @@ Press **Ctrl-J** (macOS) to display the documentation for a function, type, etc.
 
 
 ## Demo
-![quick docs demo video](../assets/quick_docs.mp4)
+![quick docs demo video](../assets/quick_docs.gif)

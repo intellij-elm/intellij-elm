@@ -10,4 +10,4 @@ Press **Shift-F6** to rename the identifier under the cursor. All references wil
 
 ## Demo
 
-![rename demo](../assets/rename.mp4)
+![rename demo](../assets/rename.gif)

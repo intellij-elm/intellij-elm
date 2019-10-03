@@ -10,4 +10,4 @@ This feature runs automatically as you type. Unused code will be displayed in gr
 
 ## Demo
 
-![demo](../assets/unused_code.mp4)
+![demo](../assets/unused_code.gif)

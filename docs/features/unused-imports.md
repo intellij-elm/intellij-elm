@@ -15,4 +15,4 @@ You can also search for unused imports across your entire Elm project. Open Inte
 
 ## Demo
 
-![optimize imports demo](../assets/optimize_imports.mp4)
+![optimize imports demo](../assets/optimize_imports.gif)

@@ -8,4 +8,4 @@ Press **Option-F7** _(macOS; Ctrl-F7 on Windows/Linux)_ while the cursor is on a
 
 ## Demo
 
-![find usages demo](../assets/find_usages.mp4)
+![find usages demo](../assets/find_usages.gif)

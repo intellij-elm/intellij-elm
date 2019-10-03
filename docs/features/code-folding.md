@@ -8,5 +8,5 @@ By default, a module's `import`s are automatically collapsed using code folding.
 
 ## Demo
 
-![code folding demo](../assets/folding_imports.mp4)
+![code folding demo](../assets/folding_imports.gif)
 

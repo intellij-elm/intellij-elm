@@ -10,4 +10,4 @@ While you write code, intellij-elm checks that the functions and types that your
 
 ## Demo
 
-![add import demo](../assets/import_quick_fix.mp4)
+![add import demo](../assets/import_quick_fix.gif)
