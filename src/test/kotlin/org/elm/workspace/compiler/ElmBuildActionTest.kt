@@ -1,6 +1,10 @@
 package org.elm.workspace.compiler
 
+import com.intellij.notification.Notification
+import com.intellij.notification.Notifications
+import com.intellij.notification.NotificationsAdapter
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
@@ -50,13 +54,38 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         doTest(file, expectedNumErrors = 1, expectedOffset = source.indexOf("main") - caret.length)
     }
 
+    fun `test build Elm project ignores nested function named 'main'`() {
+        val source = """
+                    import Html
+                    foo =
+                        let
+                            main = Html.text "hi"$caret
+                        in
+                        main
+                        
+                """.trimIndent()
+
+        ensureElmStdlibInstalled(FullElmStdlibVariant)
+        val fileWithCaret = buildProject {
+            project("elm.json", manifestElm19)
+            dir("src") {
+                elm("Foo.elm", source)
+            }
+        }.fileWithCaret
+        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        doTestShowsErrorBalloon(file, "Cannot find your Elm app's main entry point")
+    }
+
 
     private fun doTest(file: VirtualFile, expectedNumErrors: Int, expectedOffset: Int) {
         var succeeded = false
         with(project.messageBus.connect(testRootDisposable)) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?, offset: Int) {
-                    succeeded = messages.size == expectedNumErrors && targetPath == "src/Main.elm" && offset == expectedOffset
+                    TestCase.assertEquals(expectedNumErrors, messages.size)
+                    TestCase.assertEquals("src/Main.elm", targetPath)
+                    TestCase.assertEquals(expectedOffset, offset)
+                    succeeded = true
                 }
             })
         }
@@ -67,6 +96,16 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         }
         action.actionPerformed(event)
         TestCase.assertTrue(succeeded)
+    }
+
+    private fun doTestShowsErrorBalloon(file: VirtualFile, errorFragment: String) {
+        val (action, event) = makeTestAction(file)
+        check(event.presentation.isEnabledAndVisible) {
+            "The build action should be enabled in this context"
+        }
+        val ref = connectToBusAndGetNotificationRef()
+        action.actionPerformed(event)
+        TestCase.assertTrue(ref.get().content.contains(errorFragment))
     }
 
 
@@ -80,8 +119,17 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         action.beforeActionPerformedUpdate(event)
         return Pair(action, event)
     }
-}
 
+    private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
+        val notificationRef = Ref<Notification>()
+        project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
+                object : NotificationsAdapter() {
+                    override fun notify(notification: Notification) =
+                            notificationRef.set(notification)
+                })
+        return notificationRef
+    }
+}
 
 @Language("JSON")
 private val manifestElm19 = """
