@@ -99,4 +99,18 @@ f : List User -> List Color -> Int
 f users colors =
     {-caret-}
 """)
+
+    fun `test maybe parameters`() = checkFixByText("Create",
+            """
+type Color = Red | Green | Blue
+type alias User = { name : String }
+f : Maybe User -> Maybe Color -> Int{-caret-}
+"""
+            , """
+type Color = Red | Green | Blue
+type alias User = { name : String }
+f : Maybe User -> Maybe Color -> Int
+f maybeUser maybeColor =
+    {-caret-}
+""")
 }
