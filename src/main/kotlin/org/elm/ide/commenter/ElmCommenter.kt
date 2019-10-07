@@ -1,8 +1,8 @@
 package org.elm.ide.commenter
 
-import com.intellij.lang.Commenter
+import com.intellij.codeInsight.generation.IndentedCommenter
 
-class ElmCommenter : Commenter {
+class ElmCommenter : IndentedCommenter {
     override fun getLineCommentPrefix() =
             "--"
 
@@ -17,4 +17,7 @@ class ElmCommenter : Commenter {
 
     override fun getCommentedBlockCommentSuffix() =
             "-}"
+
+    override fun forceIndentedLineComment() =
+            true
 }
