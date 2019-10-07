@@ -119,16 +119,18 @@ fun Ty.renderParam(): String {
     }
 }
 
-fun TyUnion.renderParam(): String =
-        when {
-            this.isTyList ->
-                when (val p = parameters.singleOrNull()) {
-                    is TyUnion -> StringUtil.pluralize(p.name)
-                    is TyRecord, is MutableTyRecord -> p.alias?.name?.let { StringUtil.pluralize(it) } ?: "list"
-                    else -> "list"
-                }
-            else -> name
-        }.toElmLowerId()
+fun TyUnion.renderParam(): String {
+    val singleParam = when (val p = parameters.singleOrNull()) {
+        is TyUnion -> p.name
+        is TyRecord, is MutableTyRecord -> p.alias?.name
+        else -> null
+    }
+    return when {
+        isTyList -> singleParam?.let { StringUtil.pluralize(it) } ?: "list"
+        module == "Maybe" && name == "Maybe" -> singleParam?.let { "maybe$it" } ?: "maybe"
+        else -> name
+    }.toElmLowerId()
+}
 
 fun TyTuple.renderParam(): String =
         types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
