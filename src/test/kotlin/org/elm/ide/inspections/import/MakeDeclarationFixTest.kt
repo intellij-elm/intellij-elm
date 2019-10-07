@@ -84,4 +84,19 @@ f =
     in
         ()
 """)
+
+
+    fun `test list parameters uses plural noun`() = checkFixByText("Create",
+            """
+type Color = Red | Green | Blue
+type alias User = { name : String }
+f : List User -> List Color -> Int{-caret-}
+"""
+            , """
+type Color = Red | Green | Blue
+type alias User = { name : String }
+f : List User -> List Color -> Int
+f users colors =
+    {-caret-}
+""")
 }
