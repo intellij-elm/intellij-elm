@@ -1,6 +1,7 @@
 package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
+import com.intellij.openapi.util.text.StringUtil
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.toElmLowerId
@@ -109,7 +110,7 @@ fun Ty.renderParam(): String {
     return alias?.name?.toElmLowerId() ?: when (this) {
         is TyFunction -> "function"
         TyShader -> "shader"
-        is TyUnion -> name.toElmLowerId()
+        is TyUnion -> renderParam()
         is TyRecord, is MutableTyRecord -> "record"
         is TyTuple -> renderParam()
         is TyVar -> name
@@ -118,9 +119,19 @@ fun Ty.renderParam(): String {
     }
 }
 
-fun TyTuple.renderParam(): String {
-    return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
-}
+fun TyUnion.renderParam(): String =
+        when {
+            this.isTyList ->
+                when (val p = parameters.singleOrNull()) {
+                    is TyUnion -> StringUtil.pluralize(p.name)
+                    is TyRecord, is MutableTyRecord -> p.alias?.name?.let { StringUtil.pluralize(it) } ?: "list"
+                    else -> "list"
+                }
+            else -> name
+        }.toElmLowerId()
+
+fun TyTuple.renderParam(): String =
+        types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
 
 /** An infinite sequence of possible type variable names: (a, b, ... z, a1, b1, ...) */
 fun varNames(): Sequence<String> = (0..Int.MAX_VALUE).asSequence().map { nthVarName(it) }
