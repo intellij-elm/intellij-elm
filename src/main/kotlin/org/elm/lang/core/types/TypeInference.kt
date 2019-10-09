@@ -938,7 +938,7 @@ private class InferenceScope(
                     issueError(argumentPatterns.size, variantTy.parameters.size)
                 } else {
                     for ((p, t) in argumentPatterns.zip(variantTy.parameters)) {
-                        // The other option is an UpperCaseQID, which doesn't bind anything
+                        // The other option is an ElmNullaryConstructorArgumentPattern, which doesn't bind anything
                         if (p is ElmFunctionParamOrPatternChildTag) bindPattern(p, t, isParameter)
                     }
                 }

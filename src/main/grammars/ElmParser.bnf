@@ -491,6 +491,8 @@ RecordPattern ::=
 ListPattern ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
 
+NullaryConstructorArgumentPattern ::= UpperCaseQID
+
 UnionPattern ::=
     UpperCaseQID UnionArgumentPattern*
 
@@ -498,7 +500,7 @@ private UnionArgumentPattern ::=
     AnythingPattern
     | LowerPattern
     | TuplePattern
-    | UpperCaseQID
+    | NullaryConstructorArgumentPattern
     | UnitExpr
     | ListPattern
     | RecordPattern

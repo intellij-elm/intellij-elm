@@ -2,8 +2,8 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.ElmUnionPatternChildTag
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.ModuleNameQualifierReference
@@ -12,23 +12,16 @@ import org.elm.lang.core.resolve.reference.SimpleUnionConstructorReference
 
 
 /**
- * A pattern that matches on the value of a union type
+ * A pattern that matches a zero-parameter variant constructor when used as the argument to another
+ * variant constructor in a pattern.
  *
- * e.g. `Just a` or `Nothing` when used as a function parameter or case pattern
+ * e.g. `Nothing` in `Just Nothing` when used as a function parameter or case pattern.
  */
-class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmPatternChildTag {
+class ElmNullaryConstructorArgumentPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmUnionPatternChildTag {
 
-    /** The union constructor */
+    /** The variant constructor */
     val upperCaseQID: ElmUpperCaseQID
         get() = findNotNullChildByClass(ElmUpperCaseQID::class.java)
-
-    /** pattern matching on the arguments (if any) to the union constructor */
-    val argumentPatterns: Sequence<ElmUnionPatternChildTag>
-        get() = directChildren.filterIsInstance<ElmUnionPatternChildTag>()
-
-    /** All named elements introduced by this pattern */
-    val namedParameters: List<ElmNameDeclarationPatternTag>
-        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
 
     override val referenceNameElement: PsiElement
         get() = upperCaseQID.upperCaseIdentifierList.last()

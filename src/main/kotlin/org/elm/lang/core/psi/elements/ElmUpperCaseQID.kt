@@ -14,7 +14,7 @@ import org.elm.lang.core.stubs.ElmUpperCaseQIDStub
  * and it may contain an additional qualifier prefix which identifies the module/alias
  * from which the identifier may be obtained.
  */
-class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID, ElmUnionPatternChildTag {
+class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID {
 
     constructor(node: ASTNode) :
             super(node)
