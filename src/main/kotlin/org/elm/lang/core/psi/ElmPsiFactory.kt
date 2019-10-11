@@ -65,6 +65,7 @@ class ElmPsiFactory(private val project: Project) {
                     MODULE_DECLARATION -> ElmModuleDeclaration(node)
                     NEGATE_EXPR -> ElmNegateExpr(node)
                     NUMBER_CONSTANT_EXPR -> ElmNumberConstantExpr(node)
+                    NULLARY_CONSTRUCTOR_ARGUMENT_PATTERN -> ElmNullaryConstructorArgumentPattern(node)
                     OPERATOR -> ElmOperator(node)
                     OPERATOR_AS_FUNCTION_EXPR -> ElmOperatorAsFunctionExpr(node)
                     TYPE_REF -> ElmTypeRef(node)
