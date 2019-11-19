@@ -58,7 +58,7 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
                         "vendor/elm-foo",
                         "./foo1"
                     ],
-                    "elm-version": "0.19.0",
+                    "elm-version": "0.19.1",
                     "dependencies":      { "direct": {}, "indirect": {} },
                     "test-dependencies": { "direct": {}, "indirect": {} }
                 }
