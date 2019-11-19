@@ -81,7 +81,7 @@ object ElmSuggest {
         return System.getenv("PATH").orEmpty()
                 .splitToSequence(File.pathSeparator)
                 .filter { !it.isEmpty() }
-                .map { Paths.get(it) }
+                .map { Paths.get(it.trim()) }
                 .filter { it.isDirectory() }
     }
 
