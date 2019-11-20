@@ -73,7 +73,7 @@ object MinimalElmStdlibVariant : ElmStdlibVariant {
                 "source-directories": [
                     "."
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
                         "elm/core": "1.0.0",
@@ -107,7 +107,7 @@ class CustomElmStdlibVariant(val extraDependencies: Map<String, Version>) : ElmS
                         "source-directories": [
                             "."
                         ],
-                        "elm-version": "0.19.0",
+                        "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {
                                 "elm/core": "1.0.0",
@@ -139,7 +139,7 @@ object FullElmStdlibVariant : ElmStdlibVariant {
                 "source-directories": [
                     "."
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
                         "elm/core": "1.0.0",
@@ -168,6 +168,7 @@ object FullElmStdlibVariant : ElmStdlibVariant {
  * A dummy Elm Main module necessary to get Elm to install the packages we want.
  */
 private val elmHeadlessWorkerCode = """
+        module Main exposing (..)
         main =
             Platform.worker { init = init , update = update , subscriptions = always Sub.none }
 

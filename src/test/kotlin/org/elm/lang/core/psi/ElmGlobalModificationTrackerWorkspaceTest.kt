@@ -12,7 +12,7 @@ internal class ElmGlobalModificationTrackerWorkspaceTest : ElmWorkspaceTestBase(
                     {
                       "type": "application",
                       "source-directories": [ "src" ],
-                      "elm-version": "0.19.0",
+                      "elm-version": "0.19.1",
                       "dependencies": {
                         "direct": {},
                         "indirect": {}

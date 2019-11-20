@@ -12,7 +12,7 @@ jobs:
             vmImage: 'ubuntu-latest'
         steps:
             -   script: |
-                    wget -q https://github.com/elm/compiler/releases/download/0.19.0/binary-for-linux-64-bit.gz
+                    wget -q https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz
                     gunzip binary-for-linux-64-bit.gz
                     chmod +x binary-for-linux-64-bit
                     sudo mv binary-for-linux-64-bit /usr/local/bin/elm

@@ -20,6 +20,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
     fun `test build Elm application project`() {
         val source = """
+                    module Main exposing (..)
                     import Html
                     main = Html.text "hi"$caret
                 """.trimIndent()
@@ -38,6 +39,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
     fun `test build Elm application project with an error`() {
         val source = """
+                    module Main exposing (..)
                     import Html
                     foo = bogus$caret
                     main = Html.text "hi"
@@ -56,6 +58,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
     fun `test build Elm project ignores nested function named 'main'`() {
         val source = """
+                    module Main exposing (..)
                     import Html
                     foo =
                         let
@@ -138,7 +141,7 @@ private val manifestElm19 = """
             "source-directories": [
                 "src"
             ],
-            "elm-version": "0.19.0",
+            "elm-version": "0.19.1",
             "dependencies": {
                 "direct": {
                     "elm/core": "1.0.0",

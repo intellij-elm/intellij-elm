@@ -42,9 +42,10 @@ jobs:
       -   run:
               name: Installing Elm toolchain
               command: |
-                  wget "https://github.com/elm/compiler/releases/download/0.19.0/binaries-for-linux.tar.gz"
-                  tar zxvf binaries-for-linux.tar.gz
-                  sudo mv elm /usr/local/bin/
+                  wget "https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz"
+                  gunzip binary-for-linux-64-bit
+                  chmod +x binary-for-linux-64-bit
+                  sudo mv binary-for-linux-64-bit /usr/local/bin/elm
                   elm --version
 
       -   run:
