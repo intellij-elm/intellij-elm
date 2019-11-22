@@ -1284,9 +1284,10 @@ private class InferenceScope(
                 } else if (!ty1.rigid && !ty2.rigid && tc1 == "comparable" && tc2 == "number") {
                     // `comparable` can be constrained to `number`
                     assign(ty1, ty2)
+                } else if (!ty1.rigid && ty2.rigid) {
+                    // Assigning a flex var to a rigid var makes the flex var rigid
+                    assign(ty1, ty2)
                 } else {
-                    // Normally, you have assignments like `Int => number` which constrains `number` to
-                    // be an `Int`.
                     assign(ty2, ty1)
                 }
             } else {
