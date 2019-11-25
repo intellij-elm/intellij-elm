@@ -8,11 +8,13 @@ internal class ElmStructureViewTest : ElmTestBase() {
     fun `test top-level declarations`() = doTest("""
 type alias Alias = ()
 type Foo = Bar
+port somePort : ()
 main = 1
 """, """
 -Main.elm
  Alias
  Foo
+ somePort
  main
 """)
 
