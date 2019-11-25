@@ -29,7 +29,7 @@ private fun presentableName(element: PsiElement): String? =
                 element.name
 
             is ElmValueDeclaration ->
-                element.declaredNames(includeParameters = false).firstOrNull()?.name
+                element.declaredNames(includeParameters = false).joinToString { it.name }.takeIf { it.isNotEmpty() }
 
             else ->
                 null
