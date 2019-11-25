@@ -36,6 +36,15 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.4</b> <em>(2019-11-25)</em>
+                <ul>
+                    <li>Improved generation of function params from a type annotation</li>
+                    <li>Improved commenter to play nicely with elm-format</li>
+                    <li>Fixed a bug with the Elm Compiler panel where it found the wrong entry-point</li>
+                    <li>Fixed a stack overflow in type inference on some malformed programs</li>
+                    <li>Fixed refs to union constructors in arguments to other constructors in patterns</li>
+                </ul>
+            </li>
             <li><b>3.4.3</b> <em>(2019-09-29)</em>
                 <ul>
                     <li>Parser performance improvements in deeply nested functions</li>
