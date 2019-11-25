@@ -12,15 +12,16 @@ import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
- * A top-level value/function declaration.
+ * A value/function declaration.
  *
  * Most of the time this is a simple value or function declaration
  * e.g. `x = 42` or `f x = 2 * x`
- * That case is covered by [ElmFunctionDeclarationLeft].
+ * That case is covered by [functionDeclarationLeft].
  *
- * The other case, and it's quite rare, is when you are binding a value
- * to a pattern, possibly introducing multiple top-level names.
+ * The other case is when you are binding a value to a pattern,
+ * possibly introducing multiple names.
  * e.g. `(x,y) = (0,0)`
+ * This case is covered by [pattern].
  */
 class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget {
 
