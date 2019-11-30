@@ -12,8 +12,8 @@ import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.ui.layout.panel
 import org.elm.openapiext.pathAsPath
+import org.elm.utils.layout
 import org.elm.workspace.asyncAutoDiscoverWorkspace
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
@@ -87,12 +87,11 @@ class ElmModuleBuilder : ModuleBuilder() {
 private class ElmProjectWizardStep(val context: WizardContext) : ModuleWizardStep() {
 
     override fun getComponent(): JComponent =
-    // TODO show the UI for configuring the path to the Elm compiler, etc.
-            panel {
-                titledRow("intellij-elm") {
+            layout {
+                block("intellij-elm") {
                     noteRow("Click the 'Next' button to generate a new Elm project.")
-                    noteRow("GitHub: <a href=\"https://github.com/klazuka/intellij-elm\">klazuka/intellij-elm</a>")
-                    noteRow("Demo Videos: <a href=\"https://klazuka.github.io/intellij-elm/\">https://klazuka.github.io/intellij-elm/</a>")
+                    noteRow("""GitHub: <a href="https://github.com/klazuka/intellij-elm">klazuka/intellij-elm</a>""")
+                    noteRow("""Demo Video: <a href="https://www.youtube.com/watch?v=CC2TdNuZztI">https://www.youtube.com/watch?v=CC2TdNuZztI</a>""")
                 }
             }
 
