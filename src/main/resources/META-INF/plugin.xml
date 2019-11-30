@@ -36,6 +36,13 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.5</b> <em>(2019-11-30)</em>
+                <ul>
+                    <li>Added nested functions/values to Structure View</li>
+                    <li>Added scroll-to-source in Structure View</li>
+                    <li>Fixed 'New Project Wizard' bug on IntelliJ 2019.3</li>
+                </ul>
+            </li>
             <li><b>3.4.4</b> <em>(2019-11-25)</em>
                 <ul>
                     <li>Improved generation of function params from a type annotation</li>
