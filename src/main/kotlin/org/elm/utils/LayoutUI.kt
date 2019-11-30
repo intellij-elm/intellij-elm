@@ -27,10 +27,14 @@ SOFTWARE.
 package org.elm.utils
 
 import com.intellij.openapi.ui.LabeledComponent
+import com.intellij.openapi.vcs.changes.issueLinks.LinkMouseListenerBase
 import com.intellij.ui.IdeBorderFactory
+import com.intellij.ui.SimpleColoredComponent
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import java.awt.BorderLayout
+import java.util.regex.Pattern
 import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -61,8 +65,9 @@ fun layout(block: ElmLayoutUIBuilder.() -> Unit): JPanel {
 
 
 interface ElmLayoutUIBuilder {
-    fun row(text: String = "", component: JComponent, toolTip: String = "")
     fun block(text: String, block: ElmLayoutUIBuilder.() -> Unit)
+    fun row(text: String = "", component: JComponent, toolTip: String = "")
+    fun noteRow(text: String)
 }
 
 
@@ -88,5 +93,45 @@ private class ElmLayoutUIBuilderImpl(
         }
         labeledComponents += labeledComponent
         panel.add(labeledComponent)
+    }
+
+    private val HREF_PATTERN =
+            Pattern.compile("<a(?:\\s+href\\s*=\\s*[\"']([^\"']*)[\"'])?\\s*>([^<]*)</a>")
+
+    private val LINK_TEXT_ATTRIBUTES: SimpleTextAttributes
+        get() = SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, JBUI.CurrentTheme.Link.linkColor())
+
+
+    override fun noteRow(text: String) {
+        val noteComponent = SimpleColoredComponent()
+        val matcher = HREF_PATTERN.matcher(text)
+        if (!matcher.find()) {
+            noteComponent.append(text)
+            panel.add(noteComponent)
+            return
+        }
+
+        var prev = 0
+        do {
+            if (matcher.start() != prev) {
+                noteComponent.append(text.substring(prev, matcher.start()))
+            }
+
+            val linkUrl = matcher.group(1)
+            noteComponent.append(
+                    matcher.group(2),
+                    LINK_TEXT_ATTRIBUTES,
+                    SimpleColoredComponent.BrowserLauncherTag(linkUrl)
+            )
+            prev = matcher.end()
+        } while (matcher.find())
+
+        LinkMouseListenerBase.installSingleTagOn(noteComponent)
+
+        if (prev < text.length) {
+            noteComponent.append(text.substring(prev))
+        }
+
+        panel.add(noteComponent)
     }
 }
