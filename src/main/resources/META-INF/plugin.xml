@@ -359,7 +359,10 @@
 
         <multiHostInjector implementation="org.elm.ide.injection.ElmGlslInjector"/>
 
-        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$Generic"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$TopLevel"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$Expression"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$ValueDecl"/>
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider"/>
 
         <configurationType implementation="org.frawa.elmtest.run.ElmTestRunConfigurationType"/>

@@ -3,14 +3,14 @@
     <variable name="NAME" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="true" />
     <variable name="EXPOSED" expression="&quot;..&quot;" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_TOP_LEVEL" value="true" />
     </context>
   </template>
   <template name="fn0" value="$NAME$ : $RETURNTYPE$&#10;$NAME$ =&#10;    $END$ " description="Function with no arguments" toReformat="false" toShortenFQNames="true">
     <variable name="NAME" expression="camelCase(String)" defaultValue="" alwaysStopAt="true" />
     <variable name="RETURNTYPE" expression="capitalize(String)" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_VALUE_DECL" value="true" />
     </context>
   </template>
   <template name="fn1" value="$NAME$ : $FIRSTTYPE$ -&gt; $RETURNTYPE$&#10;$NAME$ $FIRSTVAR$ =&#10;    $END$" description="Function with one argument" toReformat="false" toShortenFQNames="true">
@@ -19,7 +19,7 @@
     <variable name="RETURNTYPE" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="FIRSTVAR" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_VALUE_DECL" value="true" />
     </context>
   </template>
   <template name="fn2" value="$NAME$ : $FIRSTTYPE$ -&gt; $SECONDTYPE$ -&gt; $RETURNTYPE$&#10;$NAME$ $FIRSTVAR$ $SECONDVAR$ =&#10;    $END$" description="Function with two arguments" toReformat="false" toShortenFQNames="true">
@@ -30,7 +30,7 @@
     <variable name="FIRSTVAR" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="SECONDVAR" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_VALUE_DECL" value="true" />
     </context>
   </template>
   <template name="fn3" value="$NAME$ : $FIRSTTYPE$ -&gt; $SECONDTYPE$ -&gt; $THIRDTYPE$ -&gt; $RETURNTYPE$&#10;$NAME$ $FIRSTVAR$ $SECONDVAR$ $THIRDVAR$ =&#10;    $END$" description="Function with three arguments" toReformat="false" toShortenFQNames="true">
@@ -43,26 +43,26 @@
     <variable name="SECONDVAR" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="THIRDVAR" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_VALUE_DECL" value="true" />
     </context>
   </template>
   <template name="ty" value="type $NAME$&#10;    = $END$" description="Type Declaration" toReformat="false" toShortenFQNames="true">
     <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_TOP_LEVEL" value="true" />
     </context>
   </template>
   <template name="tya" value="type alias $NAME$ =&#10;   $END$" description="Typealias Declaration" toReformat="false" toShortenFQNames="true">
     <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_TOP_LEVEL" value="true" />
     </context>
   </template>
   <template name="let1" value="let&#10;    $FIRSTNAME$ =&#10;        $FIRSTEXP$&#10;in&#10;    $END$" description="Let expression with a single binding" toReformat="false" toShortenFQNames="true">
     <variable name="FIRSTNAME" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="FIRSTEXP" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_EXPRESSION" value="true" />
     </context>
   </template>
   <template name="let2" value="let&#10;    $FIRSTNAME$ =&#10;        $FIRSTEXP$&#10;    $SECONDNAME$ =&#10;        $SECONDEXP$&#10;in&#10;    $END$" description="Let expression with two bindings" toReformat="false" toShortenFQNames="true">
@@ -71,7 +71,7 @@
     <variable name="SECONDNAME" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="SECONDEXP" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_EXPRESSION" value="true" />
     </context>
   </template>
   <template name="let3" value="let&#10;    $FIRSTNAME$ =&#10;        $FIRSTEXP$&#10;    $SECONDNAME$ =&#10;        $SECONDEXP$&#10;    $THIRDNAME$ =&#10;        $THIRDEXP$&#10;in&#10;    $END$" description="Let expression with three bindings" toReformat="false" toShortenFQNames="true">
@@ -82,7 +82,7 @@
     <variable name="THIRDNAME" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="THIRDEXP" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_EXPRESSION" value="true" />
     </context>
   </template>
   <template name="case1" value="case $VAR$ of&#10;    $FIRSTCOND$ -&gt; &#10;        $FIRSTBRANCH$" description="Case Expression with one Branch" toReformat="false" toShortenFQNames="true">
@@ -90,7 +90,7 @@
     <variable name="FIRSTCOND" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="FIRSTBRANCH" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_EXPRESSION" value="true" />
     </context>
   </template>
   <template name="case2" value="case $VAR$ of&#10;    $FIRSTCOND$ -&gt; &#10;        $FIRSTBRANCH$&#10;        &#10;    $SECONDCOND$ -&gt; &#10;        $SECONDBRANCH$&#10;" description="Case Expression with two Branches" toReformat="false" toShortenFQNames="true">
@@ -100,7 +100,7 @@
     <variable name="SECONDCOND" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="SECONDBRANCH" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_EXPRESSION" value="true" />
     </context>
   </template>
   <template name="case3" value="case $VAR$ of&#10;    $FIRSTCOND$ -&gt; &#10;        $FIRSTBRANCH$&#10;        &#10;    $SECONDCOND$ -&gt; &#10;        $SECONDBRANCH$&#10;        &#10;    $THIRDCOND$ -&gt; &#10;        $THIRDBRANCH$" description="Case Expression with three Branches" toReformat="false" toShortenFQNames="true">
@@ -112,7 +112,7 @@
     <variable name="THIRDCOND" expression="" defaultValue="" alwaysStopAt="true" />
     <variable name="THIRDBRANCH" expression="" defaultValue="" alwaysStopAt="true" />
     <context>
-      <option name="ELM" value="true" />
+      <option name="ELM_EXPRESSION" value="true" />
     </context>
   </template>
 </templateSet>
