@@ -154,7 +154,7 @@ foo = ()
         val file = p.psiFile(filename).virtualFile!!
         checkModCount(op) {
             runWriteAction {
-                file.delete(null)
+                action(file)
             }
         }
     }
