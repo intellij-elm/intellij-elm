@@ -79,8 +79,12 @@ object ElmPluginHelper {
 
     private fun allTests(label: String): (PsiElement) -> List<ElmFunctionCallExpr> {
         return {
-            functionCalls(it, "test")
-                    .filter(firstArgumentIsString(label))
+            listOf(
+                    functionCalls(it, "test")
+                            .filter(firstArgumentIsString(label)),
+                    functionCalls(it, "fuzz")
+                            .filter(secondArgumentIsString(label))
+            ).flatten()
         }
     }
 
@@ -99,6 +103,10 @@ object ElmPluginHelper {
 
     private fun firstArgumentIsString(value: String): (ElmFunctionCallExpr) -> Boolean {
         return { literalString()(firstOperand()(it)) == value }
+    }
+
+    private fun secondArgumentIsString(value: String): (ElmFunctionCallExpr) -> Boolean {
+        return { literalString()(secondOperand()(it)) == value }
     }
 
     private fun firstOperand(): (ElmFunctionCallExpr) -> ElmOperandTag {

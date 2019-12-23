@@ -59,6 +59,12 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
         assertFallback("nested1", "suite2", "nested1", "testMissing")
     }
 
+    fun testFuzzTest() {
+        doTest(false)
+        assertFuzz(495, "fuzz1")
+        assertFuzz(388, "suite2", "fuzz1")
+    }
+
     private fun assertSuite(offset: Int, vararg labels: String) {
         val path = toPath(Arrays.asList(*labels))
         val element = getPsiElement(true, path.toString(), myFile)
@@ -73,6 +79,15 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
         val element = getPsiElement(false, path.toString(), myFile)
 
         val expected = String.format("test \"%s\"", labels[labels.size - 1])
+        assertEquals(expected, text(element))
+        assertEquals(offset, element.node.startOffset)
+    }
+
+    private fun assertFuzz(offset: Int, vararg labels: String) {
+        val path = toPath(Arrays.asList(*labels))
+        val element = getPsiElement(false, path.toString(), myFile)
+
+        val expected = String.format("fuzz fuzzer \"%s\"", labels[labels.size - 1])
         assertEquals(expected, text(element))
         assertEquals(offset, element.node.startOffset)
     }
