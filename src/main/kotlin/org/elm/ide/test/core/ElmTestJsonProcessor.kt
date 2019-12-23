@@ -8,8 +8,7 @@ import com.intellij.execution.testframework.sm.runner.events.*
 import org.elm.ide.test.core.LabelUtils.commonParent
 import org.elm.ide.test.core.LabelUtils.getName
 import org.elm.ide.test.core.LabelUtils.subParents
-import org.elm.ide.test.core.LabelUtils.toSuiteLocationUrl
-import org.elm.ide.test.core.LabelUtils.toTestLocationUrl
+import org.elm.ide.test.core.LabelUtils.toLocationUrl
 import org.elm.ide.test.core.json.CompileErrors
 import org.elm.ide.test.core.json.Error
 import java.nio.file.Path
@@ -65,7 +64,7 @@ class ElmTestJsonProcessor {
     }
 
     private fun newTestSuiteStartedEvent(path: Path): TestSuiteStartedEvent {
-        return TestSuiteStartedEvent(getName(path), toSuiteLocationUrl(path))
+        return TestSuiteStartedEvent(getName(path), toLocationUrl(path, isSuite = true))
     }
 
     private fun newTestSuiteFinishedEvent(path: Path): TestSuiteFinishedEvent {
@@ -142,7 +141,7 @@ class ElmTestJsonProcessor {
         }
 
         private fun newTestStartedEvent(path: Path): TestStartedEvent {
-            return TestStartedEvent(getName(path), toTestLocationUrl(path))
+            return TestStartedEvent(getName(path), toLocationUrl(path))
         }
 
         private fun sureText(comment: String?): String {

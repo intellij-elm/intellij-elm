@@ -47,16 +47,9 @@ object LabelUtils {
         return decodeLabel(path.fileName)
     }
 
-    fun toSuiteLocationUrl(path: Path): String {
-        return toLocationUrl(DESCRIBE_PROTOCOL, path)
-    }
-
-    fun toTestLocationUrl(path: Path): String {
-        return toLocationUrl(TEST_PROTOCOL, path)
-    }
-
-    private fun toLocationUrl(protocol: LabelProtocol, path: Path): String {
-        return String.format("%s://%s", protocol.protocol, pathString(path))
+    fun toLocationUrl(path: Path, isSuite: Boolean = false): String {
+        val p = if (isSuite) DESCRIBE_PROTOCOL else TEST_PROTOCOL
+        return String.format("%s://%s", p.protocol, pathString(path))
     }
 
     fun fromLocationUrlPath(path: String): Pair<String, String> {
