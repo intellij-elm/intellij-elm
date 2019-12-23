@@ -56,6 +56,7 @@ class ElmProjectTestsHelper(project: Project) {
     companion object {
 
         fun elmFolderForTesting(elmProject: ElmProject): Path {
+            // TODO [drop 0.18] this function can be removed
             return if (elmProject.isElm18 && elmProject.presentableName == "tests")
                 elmProject.projectDirPath.parent
             else
