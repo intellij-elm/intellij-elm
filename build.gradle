@@ -59,16 +59,12 @@ def genRoot = file('gen')
 sourceSets {
     main {
         kotlin.srcDir 'src/main/kotlin'
-        java {
-            srcDirs 'src/main/java'
-            srcDirs genRoot
-        }
+        java.srcDir genRoot
         resources.srcDir 'src/main/resources'
     }
 
     test {
         kotlin.srcDir 'src/test/kotlin'
-        java.srcDir 'src/test/java'
         resources.srcDir 'src/test/resources'
     }
 }
