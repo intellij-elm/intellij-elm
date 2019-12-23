@@ -88,7 +88,7 @@ class TypeReplacement(
          */
         fun freeze(ty: Ty): Ty {
             if (ty.traverse(true).none { it.isUnfrozenRecord() }) return ty
-            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = false, keepRecordsMutable = false).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = true, keepRecordsMutable = false).replace(ty)
         }
 
         private fun tyWouldChange(ty: Ty, freeze: Boolean): Boolean {
