@@ -96,7 +96,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun firstLine(text: String): String {
-        return text.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+        return text.substringBefore("\n");
     }
 
 }
