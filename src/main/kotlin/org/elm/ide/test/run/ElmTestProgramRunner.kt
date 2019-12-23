@@ -16,28 +16,20 @@ class ElmTestProgramRunner : GenericProgramRunner<Settings>() {
 
     @Throws(ExecutionException::class)
     override fun doExecute(state: RunProfileState, environment: ExecutionEnvironment): RunContentDescriptor? {
-        val result = state.execute(environment.executor, this)
-        val descriptor = RunContentBuilder(result!!, environment).showRunContent(environment.contentToReuse)
-        return withReusePolicy(descriptor)
+        val result = state.execute(environment.executor, this) ?: return null
+        return RunContentBuilder(result, environment)
+                .showRunContent(environment.contentToReuse)
+                .apply {
+                    reusePolicy = object : RunContentDescriptorReusePolicy() {
+                        override fun canBeReusedBy(newDescriptor: RunContentDescriptor) = true
+                    }
+                }
     }
 
+    override fun getRunnerId() = "ELM_TEST_PROGRAM_RUNNER"
 
-    private fun withReusePolicy(descriptor: RunContentDescriptor): RunContentDescriptor {
-        descriptor.reusePolicy = object : RunContentDescriptorReusePolicy() {
-            override fun canBeReusedBy(newDescriptor: RunContentDescriptor): Boolean {
-                return true
-            }
-        }
-        return descriptor
-    }
-
-    override fun getRunnerId(): String {
-        return "ELM_TEST_PROGRAM_RUNNER"
-    }
-
-    override fun canRun(executorId: String, profile: RunProfile): Boolean {
-        return DefaultRunExecutor.EXECUTOR_ID == executorId && profile is ElmTestRunConfiguration
-    }
+    override fun canRun(executorId: String, profile: RunProfile) =
+            DefaultRunExecutor.EXECUTOR_ID == executorId && profile is ElmTestRunConfiguration
 }
 
 class Settings : RunnerSettings {
