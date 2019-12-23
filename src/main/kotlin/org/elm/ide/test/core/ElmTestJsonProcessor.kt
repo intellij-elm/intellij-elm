@@ -8,7 +8,6 @@ import com.intellij.execution.testframework.sm.runner.events.*
 import org.elm.ide.test.core.LabelUtils.commonParent
 import org.elm.ide.test.core.LabelUtils.getName
 import org.elm.ide.test.core.LabelUtils.subParents
-import org.elm.ide.test.core.LabelUtils.toErrorLocationUrl
 import org.elm.ide.test.core.LabelUtils.toSuiteLocationUrl
 import org.elm.ide.test.core.LabelUtils.toTestLocationUrl
 import org.elm.ide.test.core.json.CompileErrors
@@ -89,7 +88,11 @@ class ElmTestJsonProcessor {
                 ?.asSequence()
                 ?.flatMap { problem ->
                     sequenceOf(
-                            TestStartedEvent(problem.title!!, toErrorLocationUrl(error.path!!, problem.region?.start!!.line, problem.region?.start!!.column)),
+                            TestStartedEvent(problem.title!!, ErrorLabelLocation(
+                                    file = error.path!!,
+                                    line = problem.region?.start!!.line,
+                                    column = problem.region?.start!!.column
+                            ).toUrl()),
                             TestFailedEvent(problem.title!!, null, problem.textMessage, null, true, null, null, null, null, false, false, -1)
                     )
                 }

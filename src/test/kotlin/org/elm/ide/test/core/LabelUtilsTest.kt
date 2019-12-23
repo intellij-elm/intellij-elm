@@ -2,11 +2,9 @@ package org.elm.ide.test.core
 
 import com.intellij.openapi.vfs.VirtualFileManager.extractPath
 import org.elm.ide.test.core.LabelUtils.commonParent
-import org.elm.ide.test.core.LabelUtils.fromErrorLocationUrlPath
 import org.elm.ide.test.core.LabelUtils.fromLocationUrlPath
 import org.elm.ide.test.core.LabelUtils.pathString
 import org.elm.ide.test.core.LabelUtils.subParents
-import org.elm.ide.test.core.LabelUtils.toErrorLocationUrl
 import org.elm.ide.test.core.LabelUtils.toPath
 import org.elm.ide.test.core.LabelUtils.toSuiteLocationUrl
 import org.elm.ide.test.core.LabelUtils.toTestLocationUrl
@@ -131,19 +129,15 @@ class LabelUtilsTest {
 
     @Test
     fun errorLocationUrl() {
-        val url = toErrorLocationUrl("my/path/file", 1313, 13)
+        val url = ErrorLabelLocation("my/path/file", 1313, 13).toUrl()
         assertEquals("elmTestError://my/path/file::1313::13", url)
 
         val path = extractPath(url)
-        val pair = fromErrorLocationUrlPath(path)
+        val location = ErrorLabelLocation.fromUrl(path)
 
-        val file = pair.first
-        val line = pair.second.first
-        val column = pair.second.second
-
-        assertEquals("my/path/file", file)
-        assertEquals(1313, line.toLong())
-        assertEquals(13, column.toLong())
+        assertEquals("my/path/file", location.file)
+        assertEquals(1313, location.line)
+        assertEquals(13, location.column)
     }
 
 }

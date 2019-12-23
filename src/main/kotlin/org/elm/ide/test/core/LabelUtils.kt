@@ -9,12 +9,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 object LabelUtils {
-    val ELM_TEST_PROTOCOL = "elmTest"
-    val DESCRIBE_PROTOCOL = ELM_TEST_PROTOCOL + "Describe"
-    private val TEST_PROTOCOL = ELM_TEST_PROTOCOL + "Test"
-    val ERROR_PROTOCOL = ELM_TEST_PROTOCOL + "Error"
+    val DESCRIBE_PROTOCOL = "elmTestDescribe"
+    val TEST_PROTOCOL = "elmTestTest"
+    val ERROR_PROTOCOL = "elmTestError"
 
-    //internal
     val EMPTY_PATH = Paths.get("")
 
     private fun getModuleName(path: Path): String {
@@ -30,12 +28,10 @@ object LabelUtils {
 
     }
 
-    //internal
     fun decodeLabel(encoded: Path): String {
         return decodeLabel(pathString(encoded))
     }
 
-    //internal
     fun decodeLabel(encoded: String): String {
         try {
             return URLDecoder.decode(encoded, "utf8")
@@ -44,7 +40,6 @@ object LabelUtils {
         }
     }
 
-    //internal
     fun toPath(labels: List<String>): Path {
         val encoded = labels
                 .asSequence()
@@ -59,7 +54,6 @@ object LabelUtils {
         }
     }
 
-    //internal
     fun pathString(path: Path): String {
         return FileUtil.toSystemIndependentName(path.toString())
     }
@@ -68,12 +62,10 @@ object LabelUtils {
         return decodeLabel(path.fileName)
     }
 
-    //internal
     fun toSuiteLocationUrl(path: Path): String {
         return toLocationUrl(DESCRIBE_PROTOCOL, path)
     }
 
-    //internal
     fun toTestLocationUrl(path: Path): String {
         return toLocationUrl(TEST_PROTOCOL, path)
     }
@@ -90,7 +82,6 @@ object LabelUtils {
         return Pair(moduleFile, label)
     }
 
-    //internal
     fun commonParent(path1: Path?, path2: Path): Path {
         if (path1 == null) {
             return EMPTY_PATH
@@ -105,7 +96,6 @@ object LabelUtils {
         }
     }
 
-    //internal
     fun subParents(path: Path, excludeParent: Path): Sequence<Path> {
         if (excludeParent === EMPTY_PATH) {
             var current: Path? = path
@@ -134,17 +124,24 @@ object LabelUtils {
         }
     }
 
-    //internal
-    fun toErrorLocationUrl(path: String, line: Int, column: Int): String {
-        return String.format("%s://%s::%d::%d", ERROR_PROTOCOL, path, line, column)
-    }
+}
 
-    fun fromErrorLocationUrlPath(spec: String): Pair<String, Pair<Int, Int>> {
-        val parts = spec.split("::".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val file = parts[0]
-        val line = if (parts.size > 1) Integer.parseInt(parts[1]) else 1
-        val column = if (parts.size > 2) Integer.parseInt(parts[2]) else 1
-        return Pair(file, Pair(line, column))
-    }
+data class ErrorLabelLocation(
+        val file: String,
+        val line: Int,
+        val column: Int
+) {
+    fun toUrl() =
+            String.format("%s://%s::%d::%d", LabelUtils.ERROR_PROTOCOL, file, line, column)
 
+    companion object {
+        fun fromUrl(spec: String): ErrorLabelLocation {
+            val parts = spec.split("::").dropLastWhile { it.isEmpty() }
+            return ErrorLabelLocation(
+                    file = parts[0],
+                    line = if (parts.size > 1) Integer.parseInt(parts[1]) else 1,
+                    column = if (parts.size > 2) Integer.parseInt(parts[2]) else 1
+            )
+        }
+    }
 }
