@@ -32,8 +32,7 @@ class ElmTestLocator private constructor() : FileUrlProvider() {
             return if (virtualFiles.isEmpty()) {
                 emptyList()
             } else virtualFiles
-                    .map { getErrorLocation(line, column, project, it) }
-                    .filter { it != null }
+                    .mapNotNull { getErrorLocation(line, column, project, it) }
                     .map { it!! }
         }
 
