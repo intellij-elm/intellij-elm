@@ -10,7 +10,6 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.execution.testframework.TestConsoleProperties
-import com.intellij.execution.testframework.autotest.AbstractAutoTestManager
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction
 import com.intellij.execution.testframework.sm.SMCustomMessagesParsing
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil
@@ -75,9 +74,7 @@ class ElmTestRunProfileState internal constructor(environment: ExecutionEnvironm
         val result = super.execute(executor, runner)
         if (result is DefaultExecutionResult) {
             result.setRestartActions(object : ToggleAutoTestAction() {
-                override fun getAutoTestManager(project: Project): AbstractAutoTestManager {
-                    return ElmTestAutoTestManager.getInstance(project)
-                }
+                override fun getAutoTestManager(project: Project) = project.elmAutoTestManager
             })
         }
         return result
