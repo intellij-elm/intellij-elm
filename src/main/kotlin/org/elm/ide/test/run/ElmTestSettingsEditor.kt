@@ -26,9 +26,7 @@ class ElmTestSettingsEditor internal constructor(project: Project) : SettingsEdi
     private var projectChooser: ComboBox<String>? = null
 
     override fun createEditor(): JComponent {
-        helper
-                .allNames()
-                .forEach { projectChooser!!.addItem(it) }
+        helper.allNames().forEach { projectChooser!!.addItem(it) }
         return this.myPanel!!
     }
 
