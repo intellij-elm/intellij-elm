@@ -5,7 +5,6 @@ import com.intellij.testFramework.ParsingTestCase
 import org.elm.ide.test.core.ElmPluginHelper.getPsiElement
 import org.elm.ide.test.core.LabelUtils.toPath
 import org.elm.lang.core.parser.ElmParserDefinition
-import java.util.*
 
 class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserDefinition()) {
 
@@ -66,7 +65,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertSuite(offset: Int, vararg labels: String) {
-        val path = toPath(Arrays.asList(*labels))
+        val path = toPath(*labels)
         val element = getPsiElement(true, path.toString(), myFile)
 
         val expected = String.format("describe \"%s\"", labels[labels.size - 1])
@@ -75,7 +74,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertTest(offset: Int, vararg labels: String) {
-        val path = toPath(Arrays.asList(*labels))
+        val path = toPath(*labels)
         val element = getPsiElement(false, path.toString(), myFile)
 
         val expected = String.format("test \"%s\"", labels[labels.size - 1])
@@ -84,7 +83,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertFuzz(offset: Int, vararg labels: String) {
-        val path = toPath(Arrays.asList(*labels))
+        val path = toPath(*labels)
         val element = getPsiElement(false, path.toString(), myFile)
 
         val expected = String.format("fuzz fuzzer \"%s\"", labels[labels.size - 1])
@@ -93,13 +92,13 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
     }
 
     private fun assertMissing(vararg labels: String) {
-        val path = toPath(Arrays.asList(*labels))
+        val path = toPath(*labels)
         val element = getPsiElement(false, path.toString(), myFile)
         assertSame(myFile, element)
     }
 
     private fun assertFallback(fallback: String, vararg labels: String) {
-        val path = toPath(Arrays.asList(*labels))
+        val path = toPath(*labels)
         val element = getPsiElement(true, path.toString(), myFile)
 
         val expected = String.format("describe \"%s\"", fallback)

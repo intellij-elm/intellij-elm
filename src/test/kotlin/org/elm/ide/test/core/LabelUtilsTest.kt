@@ -14,25 +14,25 @@ class LabelUtilsTest {
 
     @Test
     fun locationUrl() {
-        val url = toLocationUrl(toPath(listOf("Module", "test")))
+        val url = toLocationUrl(toPath("Module", "test"))
         assertEquals("elmTestTest://Module/test", url)
     }
 
     @Test
     fun suiteLocationUrl() {
-        val url = toLocationUrl(toPath(listOf("Module", "test")), isSuite = true)
+        val url = toLocationUrl(toPath("Module", "test"), isSuite = true)
         assertEquals("elmTestDescribe://Module/test", url)
     }
 
     @Test
     fun locationUrlWithSlash() {
-        val url = toLocationUrl(toPath(listOf("Nested.Module", "test / stuff")))
+        val url = toLocationUrl(toPath("Nested.Module", "test / stuff"))
         assertEquals("elmTestTest://Nested.Module/test+%2F+stuff", url)
     }
 
     @Test
     fun useLocationUrl() {
-        val url = toLocationUrl(toPath(listOf("Nested.Module", "test")))
+        val url = toLocationUrl(toPath("Nested.Module", "test"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -42,7 +42,7 @@ class LabelUtilsTest {
 
     @Test
     fun useNestedLocationUrl() {
-        val url = toLocationUrl(toPath(listOf("Nested.Module", "suite", "test")))
+        val url = toLocationUrl(toPath("Nested.Module", "suite", "test"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -52,7 +52,7 @@ class LabelUtilsTest {
 
     @Test
     fun useLocationUrlWithSlash() {
-        val url = toLocationUrl(toPath(listOf("Module", "test / stuff")))
+        val url = toLocationUrl(toPath("Module", "test / stuff"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -62,7 +62,7 @@ class LabelUtilsTest {
 
     @Test
     fun useLocationModuleOnly() {
-        val url = toLocationUrl(toPath(listOf("Module")))
+        val url = toLocationUrl(toPath("Module"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -72,8 +72,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentSameSuite() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("Module/suite", pathString(parent))
@@ -81,8 +81,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentDifferentSuite() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite2", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("Module", pathString(parent))
@@ -93,8 +93,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentDifferentSuite2() {
-        val from = toPath(listOf("Module", "suite", "deep", "test"))
-        val to = toPath(listOf("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "deep", "test")
+        val to = toPath("Module", "suite2", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("Module", pathString(parent))
@@ -105,8 +105,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentNoParent() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module2", "suite2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module2", "suite2", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("", pathString(parent))
@@ -114,8 +114,8 @@ class LabelUtilsTest {
 
     @Test
     fun parentPaths() {
-        val path = toPath(listOf("Module", "suite", "test"))
-        val parent = toPath(listOf("Module"))
+        val path = toPath("Module", "suite", "test")
+        val parent = toPath("Module")
 
         val parents = subParents(path, parent).toList().map { pathString(it) }
 

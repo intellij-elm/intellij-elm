@@ -90,8 +90,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun closeNoSuites() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite", "test2")
         val paths = closeSuitePaths(from, to)
                 .toList()
         assertEquals(emptyList<String>(), paths)
@@ -99,8 +99,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun closeOneSuite() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite2", "test2")
         val paths = closeSuitePaths(from, to)
                 .map { pathString(it) }
                 .toList()
@@ -109,8 +109,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun closeTwoSuites() {
-        val from = toPath(listOf("Module", "suite", "deep", "test"))
-        val to = toPath(listOf("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "deep", "test")
+        val to = toPath("Module", "suite2", "test2")
         val paths = closeSuitePaths(from, to)
                 .map { pathString(it) }
                 .toList()
@@ -119,7 +119,7 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun closeInitialSuite() {
-        val to = toPath(listOf("Module", "suite", "test"))
+        val to = toPath("Module", "suite", "test")
         val paths = closeSuitePaths(LabelUtils.EMPTY_PATH, to)
                 .map { pathString(it) }
                 .toList()
@@ -128,8 +128,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun openNoSuites() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite", "test2")
         val paths = openSuitePaths(from, to)
                 .map { pathString(it) }
                 .toList()
@@ -138,8 +138,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun openOneSuite() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite2", "test2")
         val paths = openSuitePaths(from, to)
                 .map { pathString(it) }
                 .toList()
@@ -148,8 +148,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun openTwoSuites() {
-        val from = toPath(listOf("Module", "suite", "test"))
-        val to = toPath(listOf("Module", "suite2", "deep2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite2", "deep2", "test2")
         val paths = openSuitePaths(from, to)
                 .map { pathString(it) }
                 .toList()
@@ -158,7 +158,7 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun openInitialSuites() {
-        val to = toPath(listOf("Module", "suite", "test"))
+        val to = toPath("Module", "suite", "test")
         val paths = openSuitePaths(LabelUtils.EMPTY_PATH, to)
                 .map { pathString(it) }
                 .toList()
@@ -167,8 +167,8 @@ class ElmTestJsonProcessorTest {
 
     @Test
     fun openSuiteWithSlash() {
-        val from = toPath(listOf("Module"))
-        val to = toPath(listOf("Module", "suite / stuff", "test"))
+        val from = toPath("Module")
+        val to = toPath("Module", "suite / stuff", "test")
         val paths = openSuitePaths(from, to)
                 .map { pathString(it) }
                 .toList()

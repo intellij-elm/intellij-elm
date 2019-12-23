@@ -33,7 +33,7 @@ object LabelUtils {
         return URLDecoder.decode(encoded, "utf8")
     }
 
-    fun toPath(labels: List<String>): Path {
+    fun toPath(vararg labels: String): Path {
         if (labels.isEmpty()) return EMPTY_PATH
         val encoded = labels.map { encodeLabel(it) }
         return Paths.get(encoded.first(), *encoded.drop(1).toList().toTypedArray())

@@ -216,9 +216,10 @@ class ElmTestJsonProcessor {
 
         fun toPath(element: JsonObject): Path {
             return LabelUtils.toPath(
-                    element.get("labels").asJsonArray.iterator().asSequence()
+                    *element.get("labels").asJsonArray.iterator().asSequence()
                             .map { it.asString }
                             .toList()
+                            .toTypedArray()
             )
         }
 
