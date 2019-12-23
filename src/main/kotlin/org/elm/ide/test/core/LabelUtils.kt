@@ -1,19 +1,17 @@
 package org.elm.ide.test.core
 
 import com.intellij.openapi.util.io.FileUtil
-import org.elm.ide.test.core.LabelProtocol.*
+import org.elm.ide.test.core.LabelUtils.ERROR_PROTOCOL
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Path
 import java.nio.file.Paths
 
-enum class LabelProtocol(val protocol: String) {
-    DESCRIBE_PROTOCOL("elmTestDescribe"),
-    TEST_PROTOCOL("elmTestTest"),
-    ERROR_PROTOCOL("elmTestError")
-}
-
 object LabelUtils {
+
+    val DESCRIBE_PROTOCOL = "elmTestDescribe"
+    val TEST_PROTOCOL = "elmTestTest"
+    val ERROR_PROTOCOL = "elmTestError"
 
     val EMPTY_PATH = Paths.get("")
 
@@ -48,8 +46,8 @@ object LabelUtils {
     }
 
     fun toLocationUrl(path: Path, isSuite: Boolean = false): String {
-        val p = if (isSuite) DESCRIBE_PROTOCOL else TEST_PROTOCOL
-        return String.format("%s://%s", p.protocol, pathString(path))
+        val protocol = if (isSuite) DESCRIBE_PROTOCOL else TEST_PROTOCOL
+        return String.format("%s://%s", protocol, pathString(path))
     }
 
     fun fromLocationUrlPath(path: String): Pair<String, String> {
@@ -105,7 +103,7 @@ data class ErrorLabelLocation(
         val column: Int
 ) {
     fun toUrl() =
-            String.format("%s://%s::%d::%d", ERROR_PROTOCOL.protocol, file, line, column)
+            String.format("%s://%s::%d::%d", ERROR_PROTOCOL, file, line, column)
 
     companion object {
         fun fromUrl(spec: String): ErrorLabelLocation {
