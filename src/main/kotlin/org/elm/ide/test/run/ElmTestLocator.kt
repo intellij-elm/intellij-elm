@@ -12,41 +12,31 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import org.elm.ide.test.core.ElmPluginHelper
 import org.elm.ide.test.core.ErrorLabelLocation
+import org.elm.ide.test.core.LabelProtocol
+import org.elm.ide.test.core.LabelProtocol.*
 import org.elm.ide.test.core.LabelUtils
 
 
 class ElmTestLocator private constructor() : FileUrlProvider() {
 
     override fun getLocation(protocol: String, path: String, metainfo: String?, project: Project, scope: GlobalSearchScope): List<Location<*>> {
-        when (protocol) {
-            LabelUtils.ERROR_PROTOCOL -> {
+        when (val p = LabelProtocol.valueOf(protocol)) {
+            ERROR_PROTOCOL -> {
                 val label = ErrorLabelLocation.fromUrl(path)
                 val systemIndependentPath = FileUtil.toSystemIndependentName(label.file)
                 val virtualFiles = TestsLocationProviderUtil.findSuitableFilesFor(systemIndependentPath, project)
-                return if (virtualFiles.isEmpty()) {
-                    emptyList()
-                } else virtualFiles
+                return virtualFiles
                         .mapNotNull { getErrorLocation(label.line, label.column, project, it) }
-                        .map { it!! }
             }
 
-            LabelUtils.DESCRIBE_PROTOCOL, LabelUtils.TEST_PROTOCOL -> {
-                val pair = LabelUtils.fromLocationUrlPath(path)
-                val filePath = pair.first
-                val labels = pair.second
+            DESCRIBE_PROTOCOL, TEST_PROTOCOL -> {
+                val (filePath, labels) = LabelUtils.fromLocationUrlPath(path)
 
                 val systemIndependentPath = FileUtil.toSystemIndependentName(filePath)
-                val virtualFiles = TestsLocationProviderUtil.findSuitableFilesFor(systemIndependentPath, project)
-                if (virtualFiles.isEmpty()) {
-                    return emptyList()
-                }
-
-                val isDescribe = LabelUtils.DESCRIBE_PROTOCOL == protocol
-
-                return virtualFiles
-                        .map { getLocation(isDescribe, labels, project, it) }
-                        .filter { it != null }
-                        .map { it!! }
+                return TestsLocationProviderUtil.findSuitableFilesFor(systemIndependentPath, project)
+                        .mapNotNull {
+                            getLocation(p == DESCRIBE_PROTOCOL, labels, project, it)
+                        }
             }
 
             else -> {
