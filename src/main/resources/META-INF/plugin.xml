@@ -36,6 +36,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.4.6</b> <em>(2019-12-23)</em>
+                <ul>
+                    <li>Live templates are now suggested in appropriate contexts only</li>
+                    <li>Fixed a type inference bug (ConcurrentModificationException)</li>
+                </ul>
+            </li>
             <li><b>3.4.5</b> <em>(2019-11-30)</em>
                 <ul>
                     <li>Added nested functions/values to Structure View</li>
