@@ -17,7 +17,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -53,7 +53,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                             "src",
                             "../src"
                         ],
-                        "elm-version": "0.19.0",
+                        "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {},
                             "indirect": {}
@@ -78,7 +78,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "source-directories": [
                         "src"
                     ],
-                    "elm-version": "0.19.0",
+                    "elm-version": "0.19.1",
                     "dependencies": {
                         "direct": {},
                         "indirect": {}
@@ -134,7 +134,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -172,7 +172,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
                         "elm/time": "1.0.0"
@@ -206,7 +206,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
                         "elm/parser": "1.0.0"
@@ -243,7 +243,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                         "source-directories": [
                             "src"
                         ],
-                        "elm-version": "0.19.0",
+                        "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {
                                 "elm/parser": "1.0.0"
@@ -270,7 +270,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                         "source-directories": [
                             "src"
                         ],
-                        "elm-version": "0.19.0",
+                        "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {
                                 "elm/parser": "1.1.0"
@@ -332,7 +332,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -366,7 +366,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -401,7 +401,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -436,7 +436,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 //                "source-directories": [
 //                    "src"
 //                ],
-//                "elm-version": "0.19.0",
+//                "elm-version": "0.19.1",
 //                "dependencies": {
 //                    "direct": {},
 //                    "indirect": {

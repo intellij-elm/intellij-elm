@@ -22,7 +22,7 @@ class ImportScope(val elmFile: ElmFile) {
          * Returns an [ImportScope] for the module which is being imported by [importDecl].
          */
         fun fromImportDecl(importDecl: ElmImportClause): ImportScope? {
-            val moduleName = importDecl.moduleQID.text
+            val moduleName = importDecl.referenceName
             return ElmModulesIndex.get(moduleName, importDecl.elmFile)
                     ?.let { ImportScope(it.elmFile) }
         }

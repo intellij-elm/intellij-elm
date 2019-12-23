@@ -20,7 +20,7 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -70,7 +70,7 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
                 "source-directories": [
                     "src"
                 ],
-                "elm-version": "0.19.0",
+                "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
                         "elm/parser": "1.0.0"

@@ -22,7 +22,7 @@ abstract class ElmLineMarkerProviderTestBase : ElmTestBase() {
         myFixture.doHighlighting()
         val expected = markersFrom(source)
         val actual = markersFrom(myFixture.editor, myFixture.project)
-        LightPlatformCodeInsightFixtureTestCase.assertEquals(expected.joinToString(COMPARE_SEPARATOR), actual.joinToString(COMPARE_SEPARATOR))
+        assertEquals(expected.joinToString(COMPARE_SEPARATOR), actual.joinToString(COMPARE_SEPARATOR))
     }
 
     private fun markersFrom(text: String) =
@@ -40,7 +40,7 @@ abstract class ElmLineMarkerProviderTestBase : ElmTestBase() {
                     .sortedBy { it.first }
 
     private companion object {
-        val MARKER = "--> "
-        val COMPARE_SEPARATOR = " | "
+        const val MARKER = "--> "
+        const val COMPARE_SEPARATOR = " | "
     }
 }

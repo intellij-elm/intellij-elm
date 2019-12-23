@@ -35,6 +35,25 @@ class ConstraintTest {
     }
 
     @Test
+    fun `can determine whether a version satisfies a SemVer constraint`() {
+        val c = Constraint(
+                low = v(1, 0, 0),
+                high = v(2, 0, 0),
+                lowOp = Constraint.Op.LESS_THAN_OR_EQUAL,
+                highOp = Constraint.Op.LESS_THAN
+        )
+        assertFalse(c.contains(Version(0, 9, 0)))
+        assertFalse(c.contains(Version(0, 9, 0, preReleaseFields = listOf("alpha"))))
+        assertTrue(c.contains(Version(1, 0, 0)))
+        assertTrue(c.contains(Version(1, 0, 0, preReleaseFields = listOf("alpha"))))
+        assertTrue(c.contains(Version(1, 1, 0)))
+        assertTrue(c.contains(Version(1, 1, 0, preReleaseFields = listOf("alpha"))))
+        assertFalse(c.contains(Version(2, 0, 0)))
+        assertFalse(c.contains(Version(2, 0, 0, preReleaseFields = listOf("alpha"))))
+    }
+
+
+    @Test
     fun `parse works on good input`() {
         assertEquals(Constraint(
                 low = v(1, 0, 0),

@@ -31,6 +31,18 @@ f x =
 """
     )
 
+    fun `test case-of pattern union type constructor with constructor parameter`() = checkByCode(
+            """
+type Foo = Foo
+           --X
+f x =
+    case x of
+        Nothing -> 0
+        Just Foo -> 1
+             --^
+"""
+    )
+
 
     fun `test case-of that should not resolve`() = checkByCode(
             """

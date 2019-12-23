@@ -9,6 +9,7 @@ import com.intellij.psi.search.GlobalSearchScopesCore
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
+import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.lang.core.types.moduleName
@@ -42,7 +43,7 @@ object ElmLookup {
             if (log.isDebugEnabled) log.debug("Cannot lookup '$name' when Elm project context is unknown")
             return emptyList()
         }
-        return ElmNamedElementIndex.find(name, clientLocation.intellijProject, ElmLookup.searchScopeAt(clientLocation))
+        return ElmNamedElementIndex.find(name, clientLocation.intellijProject, searchScopeAt(clientLocation))
                 .filterIsInstance<T>()
     }
 
@@ -62,12 +63,28 @@ object ElmLookup {
             name: String,
             module: String,
             clientLocation: ClientLocation
-    ): List<T> =
-            findByName<T>(name, clientLocation).filter { it.moduleName == module }
+    ): List<T> = findByName<T>(name, clientLocation).filter { it.moduleName == module }
 
+    /** Like [findByNameAndModule], but in the case of ambiguity, returns the first match located in the [file] */
+    inline fun <reified T : ElmNamedElement> findFirstByNameAndModule(
+            name: String,
+            module: String,
+            file: ElmFile
+    ): T? {
+        val candidates = findByNameAndModule<T>(name, module, file)
+        return if (candidates.size < 2) {
+            candidates.firstOrNull()
+        } else {
+            // Multiple modules have the same name and define a type of the same name.
+            // Since the Elm compiler forbids you from importing a module whose name
+            // is ambiguous, the only way for this to be valid is if they are actually
+            // the *same* module.
+            candidates.firstOrNull { it.elmFile == file }
+        }
+    }
 
     /**
-     * Returns a [GlobalSearchScope] which includes all Elm files that belong to [elmProject]
+     * Returns a [GlobalSearchScope] which includes all Elm files that belong to [ElmProject]
      * taking into consideration:
      *
      *  - which source roots the [ElmProject] defines

@@ -15,6 +15,7 @@
     elementTypeFactory("UnionVariant")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("InfixDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("InfixFuncRef")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -23,6 +24,21 @@
     elementTypeFactory("ExposedUnionConstructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+
+    // stubs necessary to make type inference work using stubs
+    elementTypeFactory("TypeExpression")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("RecordType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("FieldType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TupleType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UnitExpr")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeRef")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeVariable")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("LowerTypeName")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("RecordBaseIdentifier")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ImportClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("AsClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UpperCaseQID")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     // TODO [drop 0.18] remove this stub
     elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
@@ -281,23 +297,11 @@ private OperatorAsFunction_inner ::=
     LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
 
 private CallOrAtom ::=
-    FunctionCallExpr
-    | Atom
+    Atom FunctionCallExpr?
 
-FunctionCallExpr ::=
-    FunctionCallTarget Atom+
-    { pin = 2
-      hooks = [ rightBinder="GREEDY_RIGHT_BINDER" ]
-    }
+left FunctionCallExpr ::=
+    Atom+
 
-private FunctionCallTarget ::=
-    FieldAccessExpr
-    | ValueExpr
-    | FieldAccessorFunctionExpr
-    | OperatorAsFunctionExpr
-    | ParenthesizedExpr
-    | TupleConstructorExpr
-    | AnonymousFunctionExpr
 
 // NOTE: all descendants must be:
 //       either a private group (such as `LiteralExprGroup`)
@@ -308,14 +312,13 @@ private FunctionCallTarget ::=
 private Atom ::=
     LiteralExprGroup
     | NegateExpr
-    | FieldAccessExpr
-    | ValueExpr
-    | FieldAccessorFunctionExpr
     | OperatorAsFunctionExpr
-    | ParenthesizedExpr
     | TupleConstructorExpr
     | UnitExpr
-    | TupleExpr
+    | FieldAccessExpr
+    | TupleOrParenExpr
+    | ValueExpr
+    | FieldAccessorFunctionExpr
     | ListExpr
     | RecordExpr
     | IfElseExpr
@@ -329,28 +332,16 @@ private Atom ::=
 private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
 
 
+external TupleOrParenExpr ::= parseTupleOrParenExpr Expression
+
+
 FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+
 
 private FieldAccessStart ::= ValueExpr | ParenthesizedExpr | RecordExpr
 
 left FieldAccessSegment ::=
-    /*
-    Technically the '.' token should not be followed by any whitespace either, but in order
-    to support parse error recovery of expressions like "user.\n", we must relax the restriction.
-
-    Likewise, the LOWER_CASE_IDENTIFIER should only match if it is not preceded by whitespace.
-    Unfortunately, I was not able to figure out how to get the parser to require no whitespace
-    before the identifier, and so expressions like "foo. bar" will parse as a FieldAccessExpr
-    whereas it would be better if it parsed as a FunctionCallExpr with "foo." as the target
-    and "bar" as a function argument. Our usual trick for working with whitespace in the parser--
-    using an external/manual parse rule--did not work in this case.
-
-    TODO re-visit this once we have time to really understand how PsiBuilder works.
-     */
-    DotWithoutLeadingWhitespace LOWER_CASE_IDENTIFIER
-    { pin = 1
-      elementType = FieldAccessExpr
-    }
+    DotWithoutWhitespace LOWER_CASE_IDENTIFIER
+    { elementType = FieldAccessExpr }
 
 
 NegateExpr ::= MinusWithoutTrailingWhitespace Atom
@@ -500,6 +491,8 @@ RecordPattern ::=
 ListPattern ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
 
+NullaryConstructorArgumentPattern ::= UpperCaseQID
+
 UnionPattern ::=
     UpperCaseQID UnionArgumentPattern*
 
@@ -507,7 +500,7 @@ private UnionArgumentPattern ::=
     AnythingPattern
     | LowerPattern
     | TuplePattern
-    | UpperCaseQID
+    | NullaryConstructorArgumentPattern
     | UnitExpr
     | ListPattern
     | RecordPattern
@@ -526,9 +519,11 @@ private ParenthesizedPattern ::=
 
 
 InfixDeclaration ::=
-    INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ ValueExpr
+    INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ InfixFuncRef
     { pin = 'EQ' }
 
+InfixFuncRef ::=
+    LOWER_CASE_IDENTIFIER
 
 GlslCodeExpr ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
 

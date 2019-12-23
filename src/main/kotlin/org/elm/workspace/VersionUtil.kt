@@ -34,6 +34,11 @@ data class Version(
                 else -> 0
             }
 
+    /**
+     * Returns a "loose" form that ignores suffixes like alpha, rc-1, etc.
+     */
+    val xyz: Version by lazy { Version(x, y, z) }
+
     companion object {
         val UNKNOWN: Version = Version(0, 0, 0)
         val ELM_18: Version = Version(0, 18, 0) // TODO [drop 0.18]
@@ -137,8 +142,17 @@ data class Constraint(
         }
     }
 
-    fun contains(version: Version): Boolean =
+    /**
+     * Returns true if the constraint is satisfied using SemVer ordering (namely "1.0-beta" < "1.0")
+     */
+    fun semVerContains(version: Version): Boolean =
             (lowOp.evaluate(low, version) && highOp.evaluate(version, high))
+
+    /**
+     * Returns true if the constraint is satisfied solely by comparing x.y.z (so "1.0-beta" == "1.0")
+     */
+    fun contains(version: Version): Boolean =
+            copy(low = low.xyz, high = high.xyz).semVerContains(version.xyz)
 
     override fun toString() =
             "$low $lowOp v $highOp $high"

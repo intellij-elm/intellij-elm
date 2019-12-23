@@ -1,0 +1,13 @@
+import Json.Encode as Encode
+
+type alias Person =
+    { name : String
+    , age : Int
+    }
+
+personEncoder : Person -> Encode.Value
+<spot>personEncoder person =
+    Encode.object <|
+        [ ( "name", Encode.string person.name )
+        , ( "age", Encode.int person.age )
+        ]</spot>

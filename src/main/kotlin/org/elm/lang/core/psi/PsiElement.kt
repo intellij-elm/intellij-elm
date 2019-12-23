@@ -26,13 +26,14 @@ SOFTWARE.
 
 package org.elm.lang.core.psi
 
-import com.intellij.psi.PsiComment
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiErrorElement
-import com.intellij.psi.PsiWhiteSpace
+import com.intellij.extapi.psi.StubBasedPsiElementBase
+import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiFileImpl
+import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
+import com.intellij.util.SmartList
 import org.elm.lang.core.lexer.ElmLayoutLexer
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
@@ -72,11 +73,105 @@ fun <T : PsiElement> PsiElement.parentOfType(vararg classes: KClass<out T>): T? 
 inline fun <reified T : PsiElement> PsiElement.contextOfType(strict: Boolean = true): T? =
         PsiTreeUtil.getContextOfType(this, T::class.java, strict)
 
-inline fun <reified T : PsiElement> PsiElement.childOfType(strict: Boolean = true): T? =
-        PsiTreeUtil.findChildOfType(this, T::class.java, strict)
+inline fun <reified T : PsiElement> PsiElement.descendantOfType(): T? =
+        PsiTreeUtil.findChildrenOfType(this, T::class.java).find { it is T }
 
 inline fun <reified T : PsiElement> PsiElement.descendantsOfType(): Collection<T> =
         PsiTreeUtil.findChildrenOfType(this, T::class.java)
+
+/** Returns direct children of the specified type */
+inline fun <reified T : PsiElement> PsiElement.directChildrenOfType(): List<T> =
+        PsiTreeUtil.getChildrenOfTypeAsList(this, T::class.java)
+
+/** Returns direct children stubs (or AST, if necessary) of the specified type */
+inline fun <reified T : PsiElement> PsiElement.stubDirectChildrenOfType(): List<T> {
+    return if (this is PsiFileImpl) {
+        stub?.childrenStubs?.mapNotNull { it.psi as? T } ?: return directChildrenOfType()
+    } else {
+        PsiTreeUtil.getStubChildrenOfTypeAsList(this, T::class.java)
+    }
+}
+
+inline fun <reified T : PsiElement> PsiElement.stubDescendantsOfTypeStrict(): Collection<T> =
+        getStubDescendantsOfType(this, true, T::class.java)
+
+inline fun <reified T : PsiElement> PsiElement.stubDescendantsOfTypeOrSelf(): Collection<T> =
+        getStubDescendantsOfType(this, false, T::class.java)
+
+inline fun <reified T : PsiElement> PsiElement.stubDescendantOfTypeOrStrict(): T? =
+        getStubDescendantOfType(this, true, T::class.java)
+
+inline fun <reified T : PsiElement> PsiElement.stubDescendantOfTypeOrSelf(): T? =
+        getStubDescendantOfType(this, false, T::class.java)
+
+fun <T : PsiElement> getStubDescendantsOfType(
+        element: PsiElement?,
+        strict: Boolean,
+        aClass: Class<T>
+): Collection<T> {
+    if (element == null) return emptyList()
+    val stub = (element as? PsiFileImpl)?.greenStub
+            ?: (element as? StubBasedPsiElement<*>)?.greenStub
+            ?: return PsiTreeUtil.findChildrenOfAnyType<T>(element, strict, aClass)
+
+    val result = SmartList<T>()
+
+    fun go(childrenStubs: List<StubElement<PsiElement>>) {
+        for (childStub in childrenStubs) {
+            val child = childStub.psi
+            if (aClass.isInstance(child)) {
+                result.add(aClass.cast(child))
+            } else {
+                go(childStub.childrenStubs)
+            }
+        }
+
+    }
+
+    if (strict) {
+        go(stub.childrenStubs)
+    } else {
+        go(listOf(stub))
+    }
+
+    return result
+}
+
+fun <T : PsiElement> getStubDescendantOfType(
+        element: PsiElement?,
+        strict: Boolean,
+        aClass: Class<T>
+): T? {
+    if (element == null) return null
+    val stub = (element as? PsiFileImpl)?.greenStub
+            ?: (element as? StubBasedPsiElement<*>)?.greenStub
+            ?: return PsiTreeUtil.findChildOfType<T>(element, aClass, strict)
+
+    fun go(childrenStubs: List<StubElement<PsiElement>>): T? {
+        for (childStub in childrenStubs) {
+            val child = childStub.psi
+            if (aClass.isInstance(child)) {
+                return aClass.cast(child)
+            } else {
+                go(childStub.childrenStubs)?.let { return it }
+            }
+        }
+
+        return null
+    }
+
+    return if (strict) {
+        go(stub.childrenStubs)
+    } else {
+        go(listOf(stub))
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+inline val <T : StubElement<*>> StubBasedPsiElement<T>.greenStub: T?
+    get() = (this as? StubBasedPsiElementBase<T>)?.greenStub
+
+
 
 val PsiElement.startOffset: Int
     get() = textRange.startOffset

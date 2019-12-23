@@ -1,0 +1,12 @@
+import Json.Decode exposing (Decoder)
+
+type alias Person =
+    { name : String
+    , age : Int
+    }
+
+personDecoder: Decoder Person
+<spot>personDecoder =
+   Json.Decode.succeed Person
+       |> required "name" Json.Decode.string
+       |> required "age" Json.Decode.int</spot>

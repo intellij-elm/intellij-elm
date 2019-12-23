@@ -6,6 +6,9 @@ import com.intellij.psi.search.LocalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
+import org.elm.lang.core.resolve.ElmReferenceElement
+import org.elm.lang.core.resolve.reference.ElmReference
+import org.elm.lang.core.resolve.reference.RecordFieldReference
 
 
 /**
@@ -14,7 +17,8 @@ import org.elm.lang.core.psi.*
  * e.g. the `x` parameter in `f x = 0`
  * e.g. `a` and `b` in the declaration `(a, b) = (0, 0)`
  */
-class ElmLowerPattern(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER), ElmNameDeclarationPatternTag,
+class ElmLowerPattern(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.LOWER),
+        ElmReferenceElement, ElmNameDeclarationPatternTag,
         ElmFunctionParamTag, ElmPatternChildTag, ElmUnionPatternChildTag {
 
     val identifier: PsiElement
@@ -60,5 +64,15 @@ class ElmLowerPattern(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.
         }
 
         return LocalSearchScope(elmFile)
+    }
+
+    override val referenceNameElement: PsiElement
+        get() = identifier
+
+    override val referenceName: String
+        get() = identifier.text
+
+    override fun getReference(): ElmReference {
+        return RecordFieldReference.fromElement(this) { it.parent as? ElmRecordPattern }
     }
 }

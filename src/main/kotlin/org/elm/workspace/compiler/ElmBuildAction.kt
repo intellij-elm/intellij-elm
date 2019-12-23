@@ -18,7 +18,9 @@ import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
-import org.elm.lang.core.types.*
+import org.elm.lang.core.types.TyUnion
+import org.elm.lang.core.types.TyUnknown
+import org.elm.lang.core.types.findTy
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
@@ -88,7 +90,7 @@ class ElmBuildAction : AnAction() {
                             is TyUnknown -> ty.alias?.let { it.module to it.name }
                             else -> null
                         }
-                        key != null && key in elmMainTypes
+                        key != null && key in elmMainTypes && decl.isTopLevel
                     }
 
     private fun findActiveFile(e: AnActionEvent, project: Project): VirtualFile? =

@@ -1,13 +1,9 @@
 package org.elm.ide.actions
 
-import com.intellij.notification.Notification
-import com.intellij.notification.Notifications
-import com.intellij.notification.NotificationsAdapter
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
@@ -150,16 +146,6 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         return Pair(action, event)
     }
 
-    private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
-        val notificationRef = Ref<Notification>()
-        project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
-                object : NotificationsAdapter() {
-                    override fun notify(notification: Notification) =
-                            notificationRef.set(notification)
-                })
-        return notificationRef
-    }
-
 }
 
 
@@ -170,7 +156,7 @@ private val manifestElm19 = """
             "source-directories": [
                 "src"
             ],
-            "elm-version": "0.19.0",
+            "elm-version": "0.19.1",
             "dependencies": {
                 "direct": {},
                 "indirect": {}

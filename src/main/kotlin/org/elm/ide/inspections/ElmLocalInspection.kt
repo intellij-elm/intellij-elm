@@ -1,5 +1,6 @@
 package org.elm.ide.inspections
 
+import com.intellij.codeInsight.intention.PriorityAction
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
@@ -24,10 +25,12 @@ abstract class ElmLocalInspection : LocalInspectionTool() {
     protected inline fun quickFix(
             name: String,
             familyName: String = name,
+            priority: PriorityAction.Priority = PriorityAction.Priority.NORMAL,
             crossinline fix: (Project, ProblemDescriptor) -> Unit
-    ) = object : LocalQuickFix {
+    ): LocalQuickFix = object : LocalQuickFix, PriorityAction {
         override fun getName(): String = name
         override fun getFamilyName(): String = familyName
+        override fun getPriority(): PriorityAction.Priority = priority
         override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
             fix(project, descriptor)
         }

@@ -56,6 +56,39 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         bar = ()
     """.trimIndent())
 
+    fun `test with module alias`() = checkByFileTree("""
+        --@ Main.elm
+        import Foo <warning descr="Unused alias">as F</warning> exposing (foo)
+        main = foo
+        --^
+
+        --@ Foo.elm
+        module Foo exposing (..)
+        foo = ()
+    """.trimIndent())
+
+    fun `test ignores module aliases which are actively used (value)`() = checkByFileTree("""
+        --@ Main.elm
+        import Foo as F
+        main = F.foo
+        --^
+
+        --@ Foo.elm
+        module Foo exposing (..)
+        foo = ()
+    """.trimIndent())
+
+    fun `test ignores module aliases which are actively used (type)`() = checkByFileTree("""
+        --@ Main.elm
+        import Foo as F
+        main : F.Bar
+        main = ()
+        --^
+
+        --@ Foo.elm
+        module Foo exposing (..)
+        type alias Bar = ()
+    """.trimIndent())
 
     // https://github.com/klazuka/intellij-elm/issues/197
     fun `test issue 197 record update syntax also counts as usage of an exposed name`() = checkByFileTree("""

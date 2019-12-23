@@ -80,8 +80,8 @@ object ElmSuggest {
     private fun suggestionsFromPath(): Sequence<Path> {
         return System.getenv("PATH").orEmpty()
                 .splitToSequence(File.pathSeparator)
-                .filter { !it.isEmpty() }
-                .map { Paths.get(it) }
+                .filter { it.isNotEmpty() }
+                .map { Paths.get(it.trim()) }
                 .filter { it.isDirectory() }
     }
 
@@ -97,15 +97,14 @@ object ElmSuggest {
 
     private fun suggestionsForWindows(): Sequence<Path> {
         if (!SystemInfo.isWindows) return emptySequence()
-        return sequenceOf(
-                Paths.get("C:/Program Files (x86)/Elm Platform/0.19/bin"), // npm install -g elm
-                Paths.get("C:/Program Files/Elm Platform/0.19/bin"),
-                Paths.get("C:/Program Files (x86)/Elm/0.19/bin"), // choco install elm-platform
-                Paths.get("C:/Program Files/Elm/0.19/bin"),
-                Paths.get("C:/Program Files (x86)/Elm Platform/0.18/bin"), // TODO [drop 0.18]
-                Paths.get("C:/Program Files/Elm Platform/0.18/bin"),
-                Paths.get("C:/Program Files (x86)/Elm/0.18/bin"), // TODO [drop 0.18]
-                Paths.get("C:/Program Files/Elm/0.18/bin")
-        )
+        return sequenceOf("0.19.1", "0.19", "0.18") // TODO [drop 0.18]
+                .flatMap {
+                    sequenceOf(
+                            Paths.get("C:/Program Files (x86)/Elm Platform/$it/bin"), // npm install -g elm
+                            Paths.get("C:/Program Files/Elm Platform/$it/bin"),
+                            Paths.get("C:/Program Files (x86)/Elm/$it/bin"), // choco install elm-platform
+                            Paths.get("C:/Program Files/Elm/$it/bin")
+                    )
+                }
     }
 }

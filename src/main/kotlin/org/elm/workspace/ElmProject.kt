@@ -77,12 +77,24 @@ sealed class ElmProject(
             is ElmPackageProject -> elmVersion.contains(Version.ELM_18)
         }
 
+    /**
+     * Returns true if this project is compatible with Elm compiler [version].
+     *
+     * This is a looser form of a version check that allows for Elm compiler versions that include
+     * alpha/beta/rc suffixes. e.g. "0.19.1-alpha-4"
+     */
+    fun isCompatibleWith(version: Version) =
+            when (this) {
+                is ElmApplicationProject -> elmVersion.xyz == version.xyz
+                is ElmPackageProject -> elmVersion.contains(version.xyz)
+            }
+
     companion object {
 
-        fun parse(manifestPath: Path, toolchain: ElmToolchain, ignoreTestDeps: Boolean = false): ElmProject {
+        fun parse(manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {
             val inputStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
                     ?: throw ProjectLoadException("Could not find file $manifestPath. Is the package installed?")
-            return parse(inputStream, manifestPath, toolchain, ignoreTestDeps)
+            return parse(inputStream, manifestPath, repo, ignoreTestDeps)
         }
 
         /**
@@ -90,7 +102,7 @@ sealed class ElmProject(
          *
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
-        fun parse(inputStream: InputStream, manifestPath: Path, toolchain: ElmToolchain, ignoreTestDeps: Boolean = false): ElmProject {
+        fun parse(inputStream: InputStream, manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {
 
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
                 val elmStuffPath = manifestPath.resolveSibling("elm-stuff")
@@ -114,8 +126,8 @@ sealed class ElmProject(
                     ElmApplicationProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.depsToPackages(toolchain),
-                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.depsToPackages(toolchain),
+                            dependencies = dto.dependencies.depsToPackages(repo),
+                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.depsToPackages(repo),
                             sourceDirectories = dto.sourceDirectories
                     )
                 }
@@ -133,8 +145,8 @@ sealed class ElmProject(
                     ElmPackageProject(
                             manifestPath = manifestPath,
                             elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.constraintDepsToPackages(toolchain),
-                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.constraintDepsToPackages(toolchain),
+                            dependencies = dto.dependencies.constraintDepsToPackages(repo),
+                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.constraintDepsToPackages(repo),
                             sourceDirectories = listOf(Paths.get("src")),
                             name = dto.name,
                             version = dto.version,
@@ -210,34 +222,33 @@ class ElmPackageProject(
 ) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
 
 
-private fun ExactDependenciesDTO.depsToPackages(toolchain: ElmToolchain) =
-        direct.depsToPackages(toolchain) + indirect.depsToPackages(toolchain)
+private fun ExactDependenciesDTO.depsToPackages(repo: ElmPackageRepository) =
+        direct.depsToPackages(repo) + indirect.depsToPackages(repo)
 
 
-private fun Map<String, Version>.depsToPackages(toolchain: ElmToolchain) =
+private fun Map<String, Version>.depsToPackages(repo: ElmPackageRepository) =
         map { (name, version) ->
-            loadDependency(toolchain, name, version)
+            loadDependency(repo, name, version)
         }
 
-private fun Map<String, Constraint>.constraintDepsToPackages(toolchain: ElmToolchain) =
+private fun Map<String, Constraint>.constraintDepsToPackages(repo: ElmPackageRepository) =
         map { (name, constraint) ->
-            val version = toolchain.availableVersionsForPackage(name)
+            val version = repo.availableVersionsForPackage(name)
                     .filter { constraint.contains(it) }
-                    .sorted()
-                    .firstOrNull()
+                    .min()
                     ?: throw ProjectLoadException("Could not load $name ($constraint). Is it installed?")
 
-            loadDependency(toolchain, name, version)
+            loadDependency(repo, name, version)
         }
 
-fun loadDependency(toolchain: ElmToolchain, name: String, version: Version): ElmPackageProject {
-    val manifestPath = toolchain.findPackageManifest(name, version)
+private fun loadDependency(repo: ElmPackageRepository, name: String, version: Version): ElmPackageProject {
+    val manifestPath = repo.findPackageManifest(name, version)
             ?: throw ProjectLoadException("Could not load $name ($version): manifest not found")
     // TODO [kl] guard against circular dependencies
     // NOTE: we ignore the test dependencies of our dependencies because it is highly unlikely
     // that they have been installed by Elm in the local package cache (the user would have
     // to actually run the package's tests from within the package cache, which no one is going to do).
-    val elmProject = ElmProject.parse(manifestPath, toolchain, ignoreTestDeps = true) as? ElmPackageProject
+    val elmProject = ElmProject.parse(manifestPath, repo, ignoreTestDeps = true) as? ElmPackageProject
             ?: throw ProjectLoadException("Could not load $name ($version): expected a package!")
 
     return elmProject
@@ -245,7 +256,7 @@ fun loadDependency(toolchain: ElmToolchain, name: String, version: Version): Elm
 
 
 // TODO [drop 0.18] remove me
-fun loadPackageLegacy(elmStuffPath: Path, name: String, version: Version): ElmPackageProject {
+private fun loadPackageLegacy(elmStuffPath: Path, name: String, version: Version): ElmPackageProject {
     val manifestPath =
             elmStuffPath.resolve("packages")
                     .resolve(name)

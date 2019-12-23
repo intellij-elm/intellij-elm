@@ -43,7 +43,7 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
         PsiWhiteSpace(' ')
         PsiElement(EQ)('=')
-        PsiErrorElement:<expression> expected
+        PsiErrorElement:<expr> expected
           <empty list>
       PsiErrorElement:IN expected
         <empty list>
@@ -119,7 +119,7 @@ Elm File
       PsiElement(VIRTUAL_END_SECTION)('\n')
       PsiWhiteSpace('     ')
       PsiElement(IN)('in')
-      PsiErrorElement:<expression> expected
+      PsiErrorElement:<expr> expected
         <empty list>
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
@@ -138,7 +138,7 @@ Elm File
           PsiElement(LOWER_CASE_IDENTIFIER)('x')
         PsiWhiteSpace(' ')
         PsiElement(EQ)('=')
-        PsiErrorElement:<expression> expected, got 'import'
+        PsiErrorElement:<expr> expected, got 'import'
           <empty list>
       PsiWhiteSpace(' ')
       PsiElement(IMPORT)('import')

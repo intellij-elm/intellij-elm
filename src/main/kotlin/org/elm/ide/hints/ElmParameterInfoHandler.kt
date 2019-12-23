@@ -7,6 +7,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.TokenType
 import com.intellij.psi.util.PsiTreeUtil
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elementType
@@ -69,6 +70,7 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
         val ancestorsStrict = element.ancestorsStrict
         log.debug("findFuncCall for $element (${element.text}) ancestorsStrict=${ancestorsStrict.toList()}")
         return ancestorsStrict.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()
+                ?.takeIf { it.target is ElmFunctionCallTargetTag }
     }
 
     // receives the element as returned by findElementForParameterInfo
@@ -114,8 +116,8 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 class ElmParametersDescription(private val name: String?, private val ty: Ty) {
     val presentText: String
         get() =
-            if (name == null) ty.renderedText(false, false)
-            else "$name : ${ty.renderedText(false, false)}"
+            if (name == null) ty.renderedText()
+            else "$name : ${ty.renderedText()}"
 
     val rangeToHighlight: TextRange
         get() = TextRange(0, name?.length ?: 0)

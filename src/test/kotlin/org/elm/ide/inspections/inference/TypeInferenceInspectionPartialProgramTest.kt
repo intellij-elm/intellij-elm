@@ -27,7 +27,7 @@ main =
 main : ()
 main =
     let
-        foo =<error descr="<expression> expected, got '...'"> </error>...
+        foo =<error descr="<expr> expected, got '...'"> </error>...
     in
     foo
 """)
@@ -36,7 +36,7 @@ main =
 main : ()
 main =
     (let
-        foo =<error descr="<expression> expected, got '...'"> </error>...
+        foo =<error descr="<expr> expected, got '...'"> </error>...
     in
     foo)
 """)
@@ -49,7 +49,7 @@ main =
         foo =
             bar
 
-        bar =<EOLError descr="<expression> expected, got '...'"></EOLError>
+        bar =<EOLError descr="<expr> expected, got '...'"></EOLError>
             ...
     in
         foo
@@ -59,7 +59,7 @@ main =
 main : ()
 main =
     let
-        bar =<EOLError descr="<expression> expected, got '...'"></EOLError>
+        bar =<EOLError descr="<expr> expected, got '...'"></EOLError>
             ...
 
         foo : ()
@@ -72,15 +72,15 @@ main =
     fun `test case with no branches`() = checkByText("""
 main : ()
 main =
-    case ()<EOLError descr="OF or OPERATOR_IDENTIFIER expected"></EOLError>
+    case ()<EOLError descr="<expr>, OF or OPERATOR_IDENTIFIER expected"></EOLError>
 """)
 
     fun `test case branches with case error`() = checkByText("""
 main : ()
 main =
-    case<error descr="<expression> expected, got 'of'"> </error> of
+    case<error descr="<expr> expected, got 'of'"> </error> of
         1 -> <error descr="Type mismatch.Required: ()Found: String">""</error>
-        _ -> <error descr="Type mismatch.Required: StringFound: number">1</error>
+        _ -> <error descr="Type mismatch.Required: ()Found: number">1</error>
 """)
 
     fun `test case branch with pattern error`() = checkByText("""

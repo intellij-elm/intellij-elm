@@ -1,7 +1,6 @@
 package org.elm.lang.core.psi
 
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 
 /**
  * Marker interface for Qualified ID elements (QIDs)
@@ -13,14 +12,14 @@ import org.elm.lang.core.psi.elements.ElmUpperCaseQID
 interface ElmQID : ElmPsiElement {
     val upperCaseIdentifierList: List<PsiElement>
 
+    /**
+     * The upper-case identifiers (if any) that qualify this identifier.
+     *
+     * e.g. `Json` and `Decode` in the expression `Json.Decode.maybe`
+     */
+    val qualifiers: List<PsiElement>
+
     val qualifierPrefix: String
-        get() {
-            val frontParts = if (this is ElmUpperCaseQID)
-                upperCaseIdentifierList.dropLast(1)
-            else
-                upperCaseIdentifierList
-            return frontParts.joinToString(".") { it.text }
-        }
 
     /** Returns true if the qualified ID refers to Elm's "Kernel" modules,
      * which are defined in Javascript. This is useful since we don't (currently)
@@ -32,4 +31,6 @@ interface ElmQID : ElmPsiElement {
             return moduleName.startsWith("Elm.Kernel.")
                     || moduleName.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
         }
+
+    val isQualified: Boolean
 }

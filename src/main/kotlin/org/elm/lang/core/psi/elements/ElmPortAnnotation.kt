@@ -7,6 +7,7 @@ import org.elm.lang.core.psi.ElmExposableTag
 import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.psi.stubDirectChildrenOfType
 import org.elm.lang.core.stubs.ElmPortAnnotationStub
 
 
@@ -42,6 +43,6 @@ class ElmPortAnnotation : ElmStubbedNamedElementImpl<ElmPortAnnotationStub>, Elm
      * In a well-formed program, this will be non-null.
      */
     val typeExpression: ElmTypeExpression?
-        get() = findChildByClass(ElmTypeExpression::class.java)
+        get() = stubDirectChildrenOfType<ElmTypeExpression>().singleOrNull()
 
 }

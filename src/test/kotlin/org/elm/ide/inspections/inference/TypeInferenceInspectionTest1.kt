@@ -39,6 +39,14 @@ main: () -> ()
 main <error descr="The function expects 1 parameter, but it got 2 instead.">foo bar</error> = (foo, bar)
 """)
 
+    fun `test calling non-function with errors in argument`() = checkByText("""
+foo : () -> ()
+foo i = i
+main = 
+  <error descr="This value is not a function, but it was given 1 argument.">()</error> 
+  (foo <error descr="Type mismatch.Required: ()Found: String">""</error>)
+""")
+
     fun `test mismatched int value type`() = checkByText("""
 main : ()
 main = <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
@@ -228,7 +236,7 @@ foo : { r | x : ()} -> { r | x : ()}
 foo r = r
 
 main : R
-main = foo <error descr="Type mismatch.Required: { r | x : () }Found: { y : () }">{ y = () }</error>
+main = foo <error descr="Type mismatch.Required: { r | x : () }Found: { y : () }Missing fields: { x : () }">{ y = () }</error>
 """)
 
 
@@ -307,19 +315,19 @@ main a = <error descr="Type mismatch.Required: Foo IntFound: Bar">a</error>
     fun `test mismatched value type from parametric record alias`() = checkByText("""
 type alias A a = {x: a, y: ()}
 main : A ()
-main = <error descr="Type mismatch.Required: A ()Found: { x : Float, y : () }">{x = 1.0, y = ()}</error>
+main = <error descr="Type mismatch.Required: A ()Found: { x : Float, y : () }Mismatched fields: &nbsp;&nbsp;Field x:&nbsp;&nbsp;&nbsp;&nbsp;Required: ()&nbsp;&nbsp;&nbsp;&nbsp;Found: Float">{x = 1.0, y = ()}</error>
 """)
 
     fun `test mismatched value type from record subset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: { x : () }">{x = ()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x : () }Missing fields: { y : () }">{x = ()}</error>
 """)
 
     fun `test mismatched value type from record superset`() = checkByText("""
 type alias R = {x: (), y: ()}
 main : R
-main = <error descr="Type mismatch.Required: RFound: { x : (), y : (), z : () }">{x = (), y=(), z=()}</error>
+main = <error descr="Type mismatch.Required: RFound: { x : (), y : (), z : () }Extra fields: { z : () }">{x = (), y=(), z=()}</error>
 """)
 
     fun `test mismatched return type from propagated type vars`() = checkByText("""
@@ -391,14 +399,14 @@ main : Maybe a
 main = Nothing
 """)
 
-    fun `test mismatched value type from union case`() = checkByText("""
+    fun `test mismatched value type from union variant`() = checkByText("""
 type Foo = Bar
 main : Maybe a
 main = <error descr="Type mismatch.Required: Maybe aFound: Foo">Bar</error>
 """)
 
     fun `test invalid constructor as type annotation`() = checkByText("""
-main : <error descr="Unresolved reference 'Just'">Just</error> a -> ()
+main : Just a -> ()
 main a = ()
 """)
 
@@ -508,6 +516,19 @@ main <error descr="Conflicting name declaration">foo</error> = ()
 
     fun `test duplicate name in anonymous function`() = checkByText("""
 main a = (\<error descr="Conflicting name declaration">a</error> -> a)
+""")
+
+    fun `test allowed destructuring with same names in sibling contexts`() = checkByText("""
+main =
+    [ let
+        ( a, _ ) = ( "", "" )
+      in
+      a
+    , let
+        ( a, _ ) = ( (), () )
+      in
+      <error descr="Type mismatch.Required: StringFound: ()">a</error>
+    ]
 """)
 
     fun `test if-else with mismatched condition`() = checkByText("""

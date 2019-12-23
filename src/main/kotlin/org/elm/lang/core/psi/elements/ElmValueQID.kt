@@ -22,12 +22,18 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
     override val upperCaseIdentifierList: List<PsiElement>
         get() = findChildrenByType(UPPER_CASE_IDENTIFIER)
 
+    override val qualifiers: List<PsiElement>
+        get() = upperCaseIdentifierList
+
+    override val qualifierPrefix: String
+        get() = qualifiers.joinToString(".") { it.text }
+
     /**
      * The value identifier
      */
     val lowerCaseIdentifier: PsiElement
         get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
-    val isQualified: Boolean
+    override val isQualified: Boolean
         get() = findChildByType<PsiElement>(DOT) != null
 }

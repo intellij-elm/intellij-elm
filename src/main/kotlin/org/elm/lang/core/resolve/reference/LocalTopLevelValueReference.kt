@@ -5,8 +5,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 /**
- * A reference from the left-hand-side of a type annotation to a LOCALLY declared
- * value or function name.
+ * A reference to a value or a function name declared at the top level of the file containing [element]
  */
 class LocalTopLevelValueReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {

@@ -43,7 +43,7 @@ object ElmRecordFieldSuggestor : Suggestor {
             val ref = targetExpr.reference.resolve() ?: return null
             return ref.findTy() as? TyRecord
         } else if (targetExpr is ElmFieldAccessExpr) {
-            val field = targetExpr.lowerCaseIdentifier?.text ?: return null
+            val field = targetExpr.lowerCaseIdentifier.text ?: return null
             val base = resolveTarget(targetExpr.targetExpr) ?: return null
             return base.fields[field] as? TyRecord
         }
@@ -53,5 +53,5 @@ object ElmRecordFieldSuggestor : Suggestor {
 
 private fun CompletionResultSet.add(str: String, field: Ty) {
     addElement(LookupElementBuilder.create(str)
-            .withTypeText(field.renderedText(false, false)))
+            .withTypeText(field.renderedText()))
 }

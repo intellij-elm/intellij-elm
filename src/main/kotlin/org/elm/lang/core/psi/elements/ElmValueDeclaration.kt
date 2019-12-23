@@ -8,26 +8,27 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.*
-import org.elm.lang.core.stubs.ElmValueDeclarationStub
+import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
 /**
- * A top-level value/function declaration.
+ * A value/function declaration.
  *
  * Most of the time this is a simple value or function declaration
  * e.g. `x = 42` or `f x = 2 * x`
- * That case is covered by [ElmFunctionDeclarationLeft].
+ * That case is covered by [functionDeclarationLeft].
  *
- * The other case, and it's quite rare, is when you are binding a value
- * to a pattern, possibly introducing multiple top-level names.
+ * The other case is when you are binding a value to a pattern,
+ * possibly introducing multiple names.
  * e.g. `(x,y) = (0,0)`
+ * This case is covered by [pattern].
  */
-class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTarget {
+class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmValueDeclarationStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
     val modificationTracker = SimpleModificationTracker()
@@ -71,8 +72,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
      * @param includeParameters include names declared as parameters to the function
      *                          (also includes destructured names). The default is `true`
      */
-    fun declaredNames(includeParameters: Boolean = true): List<ElmNamedElement> {
-        val namedElements = mutableListOf<ElmNamedElement>()
+    fun declaredNames(includeParameters: Boolean = true): List<ElmNameIdentifierOwner> {
+        val namedElements = mutableListOf<ElmNameIdentifierOwner>()
 
         if (functionDeclarationLeft != null) {
             // the most common case, a named function or value declaration
@@ -88,29 +89,24 @@ class ElmValueDeclaration : ElmStubbedElement<ElmValueDeclarationStub>, ElmDocTa
 
         } else if (pattern != null) {
             // value destructuring assignment (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(pattern!!.descendantsOfType<ElmNamedElement>())
+            namedElements.addAll(pattern!!.descendantsOfType<ElmNameIdentifierOwner>())
         }
 
         return namedElements
     }
 
-    /**
-     * Names that are declared as parameters to a function
-     */
-    fun declaredParameters(): List<ElmNamedElement> {
-        return if (functionDeclarationLeft != null) {
-            functionDeclarationLeft!!.namedParameters
-        } else if (operatorDeclarationLeft != null) {
-            // TODO [drop 0.18] remove this case entirely
-            operatorDeclarationLeft!!.namedParameters
-        } else {
-            emptyList()
-        }
-    }
-
     /** The type annotation for this function, or `null` if there isn't one. */
     val typeAnnotation: ElmTypeAnnotation?
-        get() = prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+        get() {
+            // HACK: try to find the type annotation as best we can, keeping stub-safe.
+            // TODO [kl] Look into parsing the type annotation as part of the value declaration.
+            val fdl = functionDeclarationLeft
+            return if (stub != null && fdl != null) {
+                elmFile.getTypeAnnotations().firstOrNull { it.referenceName == fdl.name }
+            } else {
+                prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+            }
+        }
 
     override val docComment: PsiComment?
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)

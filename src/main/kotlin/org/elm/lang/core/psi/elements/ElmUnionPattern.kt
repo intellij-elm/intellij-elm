@@ -14,7 +14,7 @@ import org.elm.lang.core.resolve.reference.SimpleUnionConstructorReference
 /**
  * A pattern that matches on the value of a union type
  *
- * e.g. `Maybe a` or `Just` when used as a function parameter or case pattern
+ * e.g. `Just a` or `Nothing` when used as a function parameter or case pattern
  */
 class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement, ElmPatternChildTag {
 
@@ -24,7 +24,7 @@ class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
 
     /** pattern matching on the arguments (if any) to the union constructor */
     val argumentPatterns: Sequence<ElmUnionPatternChildTag>
-        get() = directChildren.filterIsInstance<ElmUnionPatternChildTag>().drop(1) // drop the constructor qid
+        get() = directChildren.filterIsInstance<ElmUnionPatternChildTag>()
 
     /** All named elements introduced by this pattern */
     val namedParameters: List<ElmNameDeclarationPatternTag>
@@ -42,7 +42,7 @@ class ElmUnionPattern(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElem
     override fun getReferences(): Array<ElmReference> =
             if (upperCaseQID.isQualified)
                 arrayOf(QualifiedConstructorReference(this, upperCaseQID),
-                        ModuleNameQualifierReference(this, upperCaseQID))
+                        ModuleNameQualifierReference(this, upperCaseQID, upperCaseQID.qualifierPrefix))
             else
                 arrayOf(SimpleUnionConstructorReference(this))
 

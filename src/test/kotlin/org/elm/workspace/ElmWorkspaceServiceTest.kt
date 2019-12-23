@@ -17,7 +17,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                     {
                       "type": "application",
                       "source-directories": [ "src" ],
-                      "elm-version": "0.19.0",
+                      "elm-version": "0.19.1",
                       "dependencies": {
                         "direct": {},
                         "indirect": {}
@@ -61,7 +61,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                     {
                         "type": "application",
                         "source-directories": [ "src", "vendor" ],
-                        "elm-version": "0.19.0",
+                        "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {
                                 "elm/core": "1.0.0",
@@ -106,7 +106,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             return
         }
 
-        checkEquals(Version(0, 19, 0), elmProject.elmVersion)
+        checkEquals(Version(0, 19, 1), elmProject.elmVersion)
         checkEquals(setOf(Paths.get("src"), Paths.get("vendor")), elmProject.sourceDirectories.toSet())
 
         checkEquals(setOf(
@@ -188,7 +188,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                     {
                       "type": "application",
                       "source-directories": [ "src" ],
-                      "elm-version": "0.19.0",
+                      "elm-version": "0.19.1",
                       "dependencies": {
                         "direct": {},
                         "indirect": {}
@@ -208,7 +208,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                     {
                       "type": "application",
                       "source-directories": [ "src" ],
-                      "elm-version": "0.19.0",
+                      "elm-version": "0.19.1",
                       "dependencies": {
                         "direct": {},
                         "indirect": {}
@@ -461,7 +461,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 {
                   "type": "application",
                   "source-directories": [ "src" ],
-                  "elm-version": "0.19.0",
+                  "elm-version": "0.19.1",
                   "dependencies": {
                     "direct": {},
                     "indirect": {}
@@ -503,7 +503,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                     {
                       "type": "application",
                       "source-directories": [ "src" ],
-                      "elm-version": "0.19.0",
+                      "elm-version": "0.19.1",
                       "dependencies": {
                         "direct": {},
                         "indirect": {}
@@ -531,7 +531,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
               <elmProjects>
                 <project path="$projectPathString" />
               </elmProjects>
-              <settings elmCompilerPath="/usr/local/bin/elm" elmFormatPath="/usr/local/bin/elm-format" elmTestPath="/usr/local/bin/elm-test" isElmFormatOnSaveEnabled="true" />
+              <settings elmCompilerPath="${toolchain.elmCompilerPath}" elmFormatPath="${toolchain.elmFormatPath}" elmTestPath="${toolchain.elmTestPath}" isElmFormatOnSaveEnabled="true" />
             </state>
             """.trimIndent()
 

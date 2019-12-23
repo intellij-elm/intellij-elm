@@ -1,6 +1,5 @@
 package org.elm.workspace
 
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

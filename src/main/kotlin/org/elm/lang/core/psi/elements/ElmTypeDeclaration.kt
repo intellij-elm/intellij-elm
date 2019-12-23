@@ -2,12 +2,8 @@ package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
-import org.elm.lang.core.psi.ElmDocTarget
-import org.elm.lang.core.psi.ElmExposableTag
-import org.elm.lang.core.psi.ElmStubbedNamedElementImpl
-import org.elm.lang.core.psi.IdentifierCase
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmTypeDeclarationStub
 
 
@@ -36,7 +32,7 @@ class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub>, E
      * Zero-or-more parametric type variables which may appear in the union variants.
      */
     val lowerTypeNameList: List<ElmLowerTypeName>
-        get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmLowerTypeName::class.java)
+        get() = stubDirectChildrenOfType()
 
     /**
      * The union variants which define the structure of the type.
@@ -44,5 +40,5 @@ class ElmTypeDeclaration : ElmStubbedNamedElementImpl<ElmTypeDeclarationStub>, E
      * In a well-formed program, this will contain at least one element.
      */
     val unionVariantList: List<ElmUnionVariant>
-        get() = PsiTreeUtil.getStubChildrenOfTypeAsList(this, ElmUnionVariant::class.java)
+        get() = stubDirectChildrenOfType()
 }

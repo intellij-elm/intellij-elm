@@ -14,7 +14,7 @@ class ElmStructureViewFactory : PsiStructureViewFactory {
         val elmFile = psiFile as ElmFile
         return object : TreeBasedStructureViewBuilder() {
             override fun createStructureViewModel(editor: Editor?) =
-                    ElmStructureViewModel(elmFile)
+                    ElmStructureViewModel(editor, elmFile)
         }
     }
 }

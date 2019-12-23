@@ -1,18 +1,27 @@
 package org.elm.lang.core.types
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil
+import com.intellij.openapi.util.text.StringUtil
+import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.toElmLowerId
 
 /**
  * Render a [Ty] to a string that can be shown to the user.
  *
  * @param linkify If true, add hyperlinks to union names
  * @param withModule If true, qualify union names with their module
+ * @param elmFile If given, [withModule] is ignored and this file will be used to determine module qualifiers
  */
-fun Ty.renderedText(linkify: Boolean, withModule: Boolean): String {
-    return TypeRenderer(linkify, withModule).render(this)
+fun Ty.renderedText(linkify: Boolean = false, withModule: Boolean = false, elmFile: ElmFile? = null): String {
+    return TypeRenderer(linkify, withModule, elmFile).render(this)
 }
 
-private class TypeRenderer(private val linkify: Boolean, private val withModule: Boolean) {
+private class TypeRenderer(
+        private val linkify: Boolean,
+        private val withModule: Boolean,
+        private val elmFile: ElmFile?
+) {
     private val varDisplayNames = mutableMapOf<TyVar, String>()
     private val possibleNames = varNames()
 
@@ -68,7 +77,11 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
                 }
             }
         }
-        return if (withModule && ty.module.isNotBlank()) "${ty.module}.$type" else type
+        return when {
+            elmFile != null -> "${ModuleScope.getQualifierForName(elmFile, ty.module, ty.name) ?: ""}$type"
+            withModule && ty.module.isNotBlank() -> "${ty.module}.$type"
+            else -> type
+        }
     }
 
     private fun renderRecord(ty: TyRecord): String {
@@ -94,10 +107,10 @@ private class TypeRenderer(private val linkify: Boolean, private val withModule:
 
 /** Render a name or destructuring pattern to use as a parameter for a function or case branch */
 fun Ty.renderParam(): String {
-    return alias?.name?.toFirstCharLowerCased() ?: when (this) {
+    return alias?.name?.toElmLowerId() ?: when (this) {
         is TyFunction -> "function"
         TyShader -> "shader"
-        is TyUnion -> name.toFirstCharLowerCased()
+        is TyUnion -> renderParam()
         is TyRecord, is MutableTyRecord -> "record"
         is TyTuple -> renderParam()
         is TyVar -> name
@@ -106,13 +119,21 @@ fun Ty.renderParam(): String {
     }
 }
 
-fun TyTuple.renderParam(): String {
-    return types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
+fun TyUnion.renderParam(): String {
+    val singleParam = when (val p = parameters.singleOrNull()) {
+        is TyUnion -> p.name
+        is TyRecord, is MutableTyRecord -> p.alias?.name
+        else -> null
+    }
+    return when {
+        isTyList -> singleParam?.let { StringUtil.pluralize(it) } ?: "list"
+        module == "Maybe" && name == "Maybe" -> singleParam?.let { "maybe$it" } ?: "maybe"
+        else -> name
+    }.toElmLowerId()
 }
 
-private fun String.toFirstCharLowerCased(): String =
-        if (isEmpty()) ""
-        else first().toLowerCase() + substring(1)
+fun TyTuple.renderParam(): String =
+        types.joinToString(", ", prefix = "(", postfix = ")") { it.renderParam() }
 
 /** An infinite sequence of possible type variable names: (a, b, ... z, a1, b1, ...) */
 fun varNames(): Sequence<String> = (0..Int.MAX_VALUE).asSequence().map { nthVarName(it) }

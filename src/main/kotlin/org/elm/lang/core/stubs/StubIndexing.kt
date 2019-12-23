@@ -39,6 +39,10 @@ fun IndexSink.indexPortAnnotation(stub: ElmPortAnnotationStub) {
     indexNamedStub(stub)
 }
 
+fun IndexSink.indexRecordField(stub: ElmFieldTypeStub) {
+    indexNamedStub(stub)
+}
+
 
 private fun IndexSink.indexNamedStub(stub: ElmNamedStub) {
     occurrence(ElmNamedElementIndex.KEY, stub.name)

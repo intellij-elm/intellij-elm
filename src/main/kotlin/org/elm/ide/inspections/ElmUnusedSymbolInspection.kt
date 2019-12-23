@@ -21,7 +21,11 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
         val name = element.name
 
         // ignore certain kinds of declarations which we don't want to inspect
-        if (element is ElmTypeAliasDeclaration || element is ElmTypeDeclaration || element is ElmTypeVariable) {
+        if (element is ElmTypeAliasDeclaration ||
+                element is ElmTypeDeclaration ||
+                element is ElmTypeVariable ||
+                element is ElmFieldType ||
+                element is ElmLowerPattern && element.parent is ElmRecordPattern) {
             // TODO revisit: implementation for types is a little tricky since
             //      type annotations are optional; punting for now
             return
@@ -54,10 +58,18 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
 
 
     private fun markAsUnused(holder: ProblemsHolder, element: ElmNameIdentifierOwner, name: String) {
+        val fixes = if (element is ElmLowerPattern) {
+            arrayOf(quickFix("Rename to _") { project, _ ->
+                element.replace(ElmPsiFactory(project).createAnythingPattern())
+            })
+        } else {
+            emptyArray()
+        }
         holder.registerProblem(
                 element.nameIdentifier,
                 "'$name' is never used",
-                ProblemHighlightType.LIKE_UNUSED_SYMBOL
+                ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+                *fixes
         )
     }
 }

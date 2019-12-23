@@ -56,6 +56,7 @@ class ElmPsiFactory(private val project: Project) {
                     IF_ELSE_EXPR -> ElmIfElseExpr(node)
                     IMPORT_CLAUSE -> ElmImportClause(node)
                     INFIX_DECLARATION -> ElmInfixDeclaration(node)
+                    INFIX_FUNC_REF -> ElmInfixFuncRef(node)
                     LET_IN_EXPR -> ElmLetInExpr(node)
                     LIST_EXPR -> ElmListExpr(node)
                     LIST_PATTERN -> ElmListPattern(node)
@@ -64,6 +65,7 @@ class ElmPsiFactory(private val project: Project) {
                     MODULE_DECLARATION -> ElmModuleDeclaration(node)
                     NEGATE_EXPR -> ElmNegateExpr(node)
                     NUMBER_CONSTANT_EXPR -> ElmNumberConstantExpr(node)
+                    NULLARY_CONSTRUCTOR_ARGUMENT_PATTERN -> ElmNullaryConstructorArgumentPattern(node)
                     OPERATOR -> ElmOperator(node)
                     OPERATOR_AS_FUNCTION_EXPR -> ElmOperatorAsFunctionExpr(node)
                     TYPE_REF -> ElmTypeRef(node)
@@ -105,22 +107,23 @@ class ElmPsiFactory(private val project: Project) {
                     ?: error("Invalid upper-case identifier: `$text`")
 
     fun createUpperCaseQID(text: String): ElmUpperCaseQID =
-            createFromText<ElmModuleDeclaration>("module $text exposing (..)")
-                    ?.upperCaseQID
+            createFromText("module $text exposing (..)")
                     ?: error("Invalid upper-case QID: `$text`")
 
     fun createValueQID(text: String): ElmValueQID =
-            createFromText<ElmValueDeclaration>("f = $text")
-                    ?.expression
-                    ?.childOfType()
+            createFromText("f = $text")
                     ?: error("Invalid value QID: `$text`")
 
+    fun createAnythingPattern(): ElmAnythingPattern =
+            createFromText("f _ = 1")
+                    ?: error("Invalid anything pattern")
+
     fun createOperatorIdentifier(text: String): PsiElement =
-            createFromText("foo = x $text y", OPERATOR_IDENTIFIER)
+            createFromText("f = x $text y", OPERATOR_IDENTIFIER)
                     ?: error("Invalid operator identifier: `$text`")
 
     fun createGlslExpr(text: String): ElmGlslCodeExpr =
-            createFromText("foo = x $text y")
+            createFromText("f = x $text y")
                     ?: error("Invalid glsl expression: `$text`")
 
     fun createImport(moduleName: String, alias: String?): ElmImportClause {
@@ -130,15 +133,31 @@ class ElmPsiFactory(private val project: Project) {
     }
 
     fun createImportExposing(moduleName: String, exposedNames: List<String>): ElmImportClause =
-            "import $moduleName exposing (${exposedNames.joinToString(", ")})"
-                    .let { createFromText<ElmImportClause>(it) }
+            createFromText("import $moduleName exposing (${exposedNames.joinToString(", ")})")
                     ?: error("Failed to create import of $moduleName exposing $exposedNames")
 
     fun createCaseOfBranches(indent: String, patterns: List<String>): List<ElmCaseOfBranch> =
             patterns.joinToString("\n\n$indent", prefix = "foo = case 1 of\n\n$indent") { "$it ->\n$indent    " }
                     .let { createFromText<ElmValueDeclaration>(it) }
-                    ?.childOfType<ElmCaseOfExpr>()?.branches
+                    ?.descendantOfType<ElmCaseOfExpr>()?.branches
                     ?: error("Failed to create case of branches from $patterns")
+
+    fun createLetInWrapper(indent: String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
+        // NOTE: Assumes that each line in newDeclBody has had its indent normalized to match the indent of the first line.
+        //       Each line of newDeclBody must start with a non-whitespace character.
+        val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$indent        $it" }
+        val code = """
+        |foo =
+        |${indent}let
+        |${indent}    $newDeclName =
+        |$newDeclBodyIndented
+        |${indent}in
+        |${indent}$bodyText
+        """.trimMargin()
+        return createFromText<ElmValueDeclaration>(code)
+                ?.descendantOfType()
+                ?: error("Failed to create let/in wrapper")
+    }
 
     fun createNewline(): PsiElement = createWhitespace("\n")
 
@@ -153,7 +172,7 @@ class ElmPsiFactory(private val project: Project) {
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)
-                    .childOfType()
+                    .descendantOfType()
 
     private fun createFromText(code: String, elementType: IElementType): PsiElement? =
             PsiFileFactory.getInstance(project)

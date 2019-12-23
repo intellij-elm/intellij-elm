@@ -46,6 +46,12 @@ foo e = ()
 main = foo { field = (), field2 = () }
 """)
 
+    fun `test record pattern parameter for record type literal`() = checkByText("""
+main : { field : () } -> Int
+main { field } = 
+  <error descr="Type mismatch.Required: IntFound: ()">field</error>
+""")
+
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
 main : ()
 main =
@@ -269,6 +275,15 @@ main =
     ()
 """)
 
+    fun `test mapping over recursive container in annotated function`() = checkByText("""
+type Box a = Box a
+type Tree a = Node (List (Tree a))
+
+main : Tree (Box a) -> Box (Tree a)
+main (Node trees) =
+    <error descr="Type mismatch.Required: Box (Tree a)Found: List (Box (Tree a))">List.map main trees</error>
+""")
+
     fun `test uncurrying function passed as argument`() = checkByText("""
 foo : a -> a
 foo a = a
@@ -326,11 +341,45 @@ main =
         _ -> ()
 """)
 
+    fun `test case branches with multiple mismatched types`() = checkByText("""
+main : ()
+main =
+    case () of
+        "" -> <error descr="Type mismatch.Required: ()Found: String">""</error>
+        "x" -> <error descr="Type mismatch.Required: ()Found: String">""</error>
+        _ -> ()
+""")
+
     fun `test case branches with mismatched types from pattern`() = checkByText("""
 main =
     case Just 42 of
         Nothing -> ""
         Just x -> <error descr="Type mismatch.Required: StringFound: number">x</error>
+""")
+
+    fun `test case branches with mismatched types in lambda`() = checkByText("""
+main =
+    \_ ->
+        case "" of
+            "" ->
+                ()
+
+            _ ->
+                <error descr="Type mismatch.Required: ()Found: String">""</error>
+""")
+
+    fun `test case branches with mismatched types in let`() = checkByText("""
+main =
+    let
+        f =
+            ()
+    in
+    case "" of
+        "" ->
+            ()
+
+        _ ->
+            <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/113
@@ -379,6 +428,15 @@ main arg =
          <error descr="Type mismatch.Required: BazFound: Foo">Qux</error> -> ()
 """)
 
+    fun `test case branches with mismatched record pattern`() = checkByText("""
+type alias Foo = { a : (), b : ()}
+
+main : Foo -> ()
+main arg =
+    case arg of
+         <error descr="Invalid pattern.Required type: FooPattern type: { b : a, c : b }Extra fields: { c : b }">{ b, c }</error> -> ()
+""")
+
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Foo
     = Bar ()
@@ -424,8 +482,8 @@ main arg =
 -- binding the parameters so that we can infer the branch expressions.
 main arg =
     case arg of
-        <error descr="Unresolved reference 'Bar'">Bar (Just {x})</error> -> x
-        <error descr="Unresolved reference 'Baz'">Baz x</error> -> x
+        Bar (Just {x}) -> x
+        Baz x -> x
         _ -> ()
 """)
 
@@ -437,7 +495,8 @@ main : Qux -> ()
 main arg =
     case arg of
         <error descr="Type mismatch.Required: Foo aFound: Qux">Bar (Just {x})</error> -> x
-        Baz x -> x
+        <error descr="Type mismatch.Required: Foo aFound: Qux">Baz x</error> -> x
+        Qux -> ()
         _ -> ()
 """)
 
@@ -459,7 +518,7 @@ main =
 """)
 
     fun `test function parameters using union patterns to unresolved type`() = checkByText("""
-<error descr="<module declaration> expected, got 'main'">main</error> <error descr="Unresolved reference 'Foo'">Foo bar</error> = <error descr="Value cannot be defined in terms of itself">bar</error>
+<error descr="<module declaration> expected, got 'main'">main</error> Foo bar = <error descr="Value cannot be defined in terms of itself">bar</error>
 """)
 
     fun `test case branch with cons pattern head`() = checkByText("""
@@ -505,6 +564,30 @@ foo f =
        Baz x -> bar x
        Qux x -> bar x
        Quz x -> bar x
+""")
+
+    fun `test case branches with record pattern on different field than previously accessed through pipeline`() = checkByText("""
+foo : (a -> ()) -> a -> a
+foo _ a = a
+
+main : String
+main =
+    case { f1 = (), f2 = () } |> foo .f2 of
+        { f1 }  ->
+            <error descr="Type mismatch.Required: StringFound: ()">f1</error>
+""")
+
+    fun `test case branch with record pattern from previous mutable record`() = checkByText("""
+foo r =
+    let
+        f = r.f1
+    in
+    case r of
+        { f2 } -> r
+
+main : ()
+main = 
+  <error descr="Type mismatch.Required: ()Found: { f1 : (), f2 : String }">foo { f1 = (), f2 = "" }</error>
 """)
 
     fun `test invalid return value from cons pattern`() = checkByText("""

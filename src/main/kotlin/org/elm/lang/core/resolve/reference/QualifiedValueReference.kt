@@ -9,7 +9,7 @@ import org.elm.lang.core.resolve.scope.ImportScope
 /**
  * Qualified reference to a value in an expression scope
  */
-class QualifiedValueReference(element: ElmReferenceElement, val valueQID: ElmValueQID
+class QualifiedValueReference(element: ElmReferenceElement, valueQID: ElmValueQID
 ) : ElmReferenceCached<ElmReferenceElement>(element), QualifiedReference {
 
     override fun getVariants(): Array<ElmNamedElement> =
@@ -21,9 +21,8 @@ class QualifiedValueReference(element: ElmReferenceElement, val valueQID: ElmVal
     override val qualifierPrefix = valueQID.qualifierPrefix
     override val nameWithoutQualifier = element.referenceName
 
-    private fun getCandidates(): Array<ElmNamedElement> {
+    private fun getCandidates(): List<ElmNamedElement> {
         return ImportScope.fromQualifierPrefixInModule(qualifierPrefix, element.elmFile)
                 .flatMap { it.getExposedValues() }
-                .toTypedArray()
     }
 }

@@ -1,0 +1,46 @@
+# TODO factor out the duplicated parts using template YAML
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops
+#
+# TODO install elm-format on the CI server
+
+trigger:
+    - master
+
+jobs:
+    -   job: Linux
+        pool:
+            vmImage: 'ubuntu-latest'
+        steps:
+            -   script: |
+                    wget -q https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz
+                    gunzip binary-for-linux-64-bit.gz
+                    chmod +x binary-for-linux-64-bit
+                    sudo mv binary-for-linux-64-bit /usr/local/bin/elm
+            -   task: Gradle@2
+                inputs:
+                    workingDirectory: ''
+                    gradleWrapperFile: 'gradlew'
+                    gradleOptions: '-Xmx3072m'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: true
+                    testResultsFiles: '**/TEST-*.xml'
+                    tasks: 'check --info --console=plain --max-workers=1 --no-daemon'
+
+    -   job: Windows
+        pool:
+            vmImage: 'windows-latest'
+        steps:
+            -   script: choco install --yes elm-platform
+            -   task: Gradle@2
+                inputs:
+                    workingDirectory: ''
+                    gradleWrapperFile: 'gradlew'
+                    gradleOptions: '-Xmx3072m'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: true
+                    testResultsFiles: '**/TEST-*.xml'
+                    tasks: 'check --info --console=plain --max-workers=1 --no-daemon'

@@ -11,7 +11,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
 import org.elm.lang.core.resolve.reference.ExposedValueImportReference
 import org.elm.lang.core.resolve.reference.ExposedValueModuleReference
-import org.elm.lang.core.stubs.ElmExposedValueStub
+import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 
 /**
@@ -19,12 +19,12 @@ import org.elm.lang.core.stubs.ElmExposedValueStub
  *
  * e.g. `bar` in `import Foo exposing (bar)`
  */
-class ElmExposedValue : ElmStubbedElement<ElmExposedValueStub>, ElmReferenceElement, ElmExposedItemTag {
+class ElmExposedValue : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement, ElmExposedItemTag {
 
     constructor(node: ASTNode) :
             super(node)
 
-    constructor(stub: ElmExposedValueStub, stubType: IStubElementType<*, *>) :
+    constructor(stub: ElmPlaceholderRefStub, stubType: IStubElementType<*, *>) :
             super(stub, stubType)
 
 
@@ -36,14 +36,11 @@ class ElmExposedValue : ElmStubbedElement<ElmExposedValueStub>, ElmReferenceElem
         get() = lowerCaseIdentifier
 
     override val referenceName: String
-        get() = getStub()?.refName ?: referenceNameElement.text
+        get() = stub?.refName ?: referenceNameElement.text
 
-    override fun getReference(): ElmReference {
-        // TODO [kl] cleanup
-        val moduleDecl = parentOfType<ElmModuleDeclaration>()
-        return if (moduleDecl != null)
-            ExposedValueModuleReference(this)
-        else
-            ExposedValueImportReference(this)
-    }
+    override fun getReference(): ElmReference =
+            if (parentOfType<ElmModuleDeclaration>() != null)
+                ExposedValueModuleReference(this)
+            else
+                ExposedValueImportReference(this)
 }

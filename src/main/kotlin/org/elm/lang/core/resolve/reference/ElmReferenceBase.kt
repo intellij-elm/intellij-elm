@@ -1,17 +1,20 @@
 package org.elm.lang.core.resolve.reference
 
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReferenceBase
-import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ElmTypes
-import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.offsetIn
+import com.intellij.psi.*
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 
 
 abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
-    : ElmReference, PsiReferenceBase<T>(element) {
+    : ElmReference, PsiPolyVariantReferenceBase<T>(element) {
+
+    override fun resolve(): ElmNamedElement? = super.resolve() as? ElmNamedElement
+
+    override fun multiResolve(incompleteCode: Boolean): Array<out ResolveResult> {
+        val elements = multiResolve()
+        return Array(elements.size) { PsiElementResolveResult(elements[it]) }
+    }
 
     override fun calculateDefaultRangeInElement(): TextRange {
         val nameElement = element.referenceNameElement
@@ -53,5 +56,4 @@ abstract class ElmReferenceBase<T : ElmReferenceElement>(element: T)
         result = 31 * result + javaClass.hashCode()
         return result
     }
-
 }
