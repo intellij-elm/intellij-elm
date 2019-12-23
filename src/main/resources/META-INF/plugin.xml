@@ -281,6 +281,7 @@
         <lang.smartEnterProcessor language="Elm" implementationClass="org.elm.ide.typing.ElmSmartEnterProcessor"/>
         <extendWordSelectionHandler implementation="org.elm.ide.wordSelection.ElmDeclAnnotationSelectionHandler"/>
         <lang.importOptimizer language="Elm" implementationClass="org.elm.ide.refactoring.ElmImportOptimizer"/>
+        <colorProvider language="Elm" implementation="org.elm.ide.color.ElmColorProvider" />
 
         <!-- Inspections -->
 
