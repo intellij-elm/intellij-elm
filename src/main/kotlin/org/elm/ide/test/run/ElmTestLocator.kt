@@ -17,7 +17,7 @@ import org.elm.ide.test.core.LabelProtocol.*
 import org.elm.ide.test.core.LabelUtils
 
 
-class ElmTestLocator private constructor() : FileUrlProvider() {
+object ElmTestLocator : FileUrlProvider() {
 
     override fun getLocation(protocol: String, path: String, metainfo: String?, project: Project, scope: GlobalSearchScope): List<Location<*>> {
         when (val p = LabelProtocol.valueOf(protocol)) {
@@ -62,9 +62,5 @@ class ElmTestLocator private constructor() : FileUrlProvider() {
         val element = psiFile.findElementAt(offset) ?: return PsiLocation.fromPsiElement(project, psiFile)
 
         return PsiLocation.fromPsiElement(project, element)
-    }
-
-    companion object {
-        val INSTANCE = ElmTestLocator()
     }
 }

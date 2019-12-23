@@ -15,58 +15,50 @@ import com.intellij.execution.testframework.sm.SMCustomMessagesParsing
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties
-import com.intellij.execution.testframework.sm.runner.SMTestLocator
 import com.intellij.execution.testframework.sm.runner.events.*
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView
 import com.intellij.execution.ui.ConsoleView
-import com.intellij.notification.NotificationAction
-import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
-import com.intellij.notification.Notifications
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor
+import org.elm.ide.notifications.showBalloon
 import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.ide.test.core.ElmTestJsonProcessor
-import org.elm.workspace.ElmWorkspaceService
+import org.elm.workspace.elmWorkspace
 import java.nio.file.Files
 
-class ElmTestRunProfileState internal constructor(environment: ExecutionEnvironment, private val configuration: ElmTestRunConfiguration) : CommandLineState(environment) {
+class ElmTestRunProfileState internal constructor(
+        environment: ExecutionEnvironment,
+        configuration: ElmTestRunConfiguration
+) : CommandLineState(environment) {
 
-    private val elmFolder: String?
-        get() = if (configuration.options.elmFolder == null || configuration.options.elmFolder!!.isEmpty())
-            this.environment.project.basePath
-        else
-            configuration.options.elmFolder
+    private val elmFolder =
+            configuration.options.elmFolder?.takeIf { it.isNotEmpty() }
+                    ?: environment.project.basePath
 
     @Throws(ExecutionException::class)
     override fun startProcess(): ProcessHandler {
         FileDocumentManager.getInstance().saveAllDocuments()
         val project = environment.project
-        val workspaceService = ServiceManager.getService(project, ElmWorkspaceService::class.java)
+        val toolchain = project.elmWorkspace.settings.toolchain
 
-        val toolchain = workspaceService.settings.toolchain
         val elmTestCLI = toolchain.elmTestCLI
+                ?: return handleBadConfiguration(project, "Missing path to elm-test")
+
         val elmCompilerBinary = toolchain.elmCompilerPath
+                ?: return handleBadConfiguration(project, "Missing path to the Elm compiler")
 
-        if (elmTestCLI == null) {
-            return handleBadConfiguration(workspaceService, "Could not find elm-test")
-        }
-        if (elmCompilerBinary == null) {
-            return handleBadConfiguration(workspaceService, "Could not find the Elm compiler")
-        }
-
-        val elmFolder = elmFolder
+        if (elmFolder == null) return handleBadConfiguration(project, "Missing path to elmFolder")
 
         val adjusted = ElmProjectTestsHelper(project)
-                .adjustElmCompilerProjectDirPath(elmFolder!!, elmCompilerBinary)
+                .adjustElmCompilerProjectDirPath(elmFolder, elmCompilerBinary)
+        if (!Files.exists(adjusted)) {
+            return handleBadConfiguration(project, "Could not find the Elm compiler ")
+        }
 
-        return if (!Files.exists(adjusted)) {
-            handleBadConfiguration(workspaceService, "Could not find the Elm compiler (elm-make)")
-        } else elmTestCLI.runTestsProcessHandler(adjusted, elmFolder)
-
+        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolder)
     }
 
     @Throws(ExecutionException::class)
@@ -81,21 +73,17 @@ class ElmTestRunProfileState internal constructor(environment: ExecutionEnvironm
     }
 
     @Throws(ExecutionException::class)
-    private fun handleBadConfiguration(workspaceService: ElmWorkspaceService, errorMessage: String): ProcessHandler {
-        // TODO when this code gets ported to Kotlin, use org.elm.ide.notifications.UtilsKt.showBalloon
-        val group = NotificationGroup.balloonGroup("Elm Plugin")
-        val notification = group.createNotification(errorMessage, NotificationType.ERROR)
-        notification.addAction(NotificationAction.createSimple("Fix"
-        ) {
-            notification.hideBalloon()
-            workspaceService.showConfigureToolchainUI()
-        })
-        Notifications.Bus.notify(notification, environment.project)
+    private fun handleBadConfiguration(project: Project, errorMessage: String): ProcessHandler {
+        project.showBalloon(
+                errorMessage,
+                NotificationType.ERROR,
+                "Fix" to { project.elmWorkspace.showConfigureToolchainUI() }
+        )
         throw ExecutionException(errorMessage)
     }
 
     override fun createConsole(executor: Executor): ConsoleView? {
-        val runConfiguration = this.environment.runProfile as RunConfiguration
+        val runConfiguration = environment.runProfile as RunConfiguration
         val properties = ConsoleProperties(runConfiguration, executor)
         val consoleView = SMTRunnerConsoleView(properties)
         SMTestRunnerConnectionUtil.initConsoleView(consoleView, properties.testFrameworkName)
@@ -134,25 +122,18 @@ class ElmTestRunProfileState internal constructor(environment: ExecutionEnvironm
                 }
 
                 private fun processEvent(event: TreeNodeEvent) {
-                    if (event is TestStartedEvent) {
-                        this.getProcessor().onTestStarted(event)
-                    } else if (event is TestFinishedEvent) {
-                        this.getProcessor().onTestFinished(event)
-                    } else if (event is TestFailedEvent) {
-                        this.getProcessor().onTestFailure(event)
-                    } else if (event is TestIgnoredEvent) {
-                        this.getProcessor().onTestIgnored(event)
-                    } else if (event is TestSuiteStartedEvent) {
-                        this.getProcessor().onSuiteStarted(event)
-                    } else if (event is TestSuiteFinishedEvent) {
-                        this.getProcessor().onSuiteFinished(event)
+                    when (event) {
+                        is TestStartedEvent -> this.getProcessor().onTestStarted(event)
+                        is TestFinishedEvent -> this.getProcessor().onTestFinished(event)
+                        is TestFailedEvent -> this.getProcessor().onTestFailure(event)
+                        is TestIgnoredEvent -> this.getProcessor().onTestIgnored(event)
+                        is TestSuiteStartedEvent -> this.getProcessor().onSuiteStarted(event)
+                        is TestSuiteFinishedEvent -> this.getProcessor().onSuiteFinished(event)
                     }
                 }
             }
         }
 
-        override fun getTestLocator(): SMTestLocator? {
-            return ElmTestLocator.INSTANCE
-        }
+        override fun getTestLocator() = ElmTestLocator
     }
 }

@@ -46,6 +46,7 @@ class ElmProjectTestsHelper(project: Project) {
     }
 
     fun adjustElmCompilerProjectDirPath(elmFolder: String, compilerPath: Path): Path {
+        // TODO [drop 0.18] this function can be removed
         return if (elmProjectByProjectDirPath(elmFolder)?.isElm18 == true) {
             compilerPath.resolveSibling("elm-make")
         } else {
