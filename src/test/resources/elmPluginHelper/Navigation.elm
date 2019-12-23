@@ -18,6 +18,12 @@ suite2 =
         , describe "nested1"
             [ test "test1" <|
                 \_ -> Expect.pass
-            ,
+            , fuzz fuzzer "fuzz1" <|
+                \_ -> Expect.pass
             ]
         ]
+
+fuzz1 : Test
+fuzz1 =
+    fuzz fuzzer "fuzz1" <|
+        \_ -> Expect.pass

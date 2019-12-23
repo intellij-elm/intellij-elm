@@ -371,10 +371,10 @@
         <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$ValueDecl"/>
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider"/>
 
-        <configurationType implementation="org.frawa.elmtest.run.ElmTestRunConfigurationType"/>
-        <programRunner implementation="org.frawa.elmtest.run.ElmTestProgramRunner"/>
-        <runConfigurationProducer implementation="org.frawa.elmtest.run.ElmTestRunConfigurationProducer"/>
-        <projectService serviceImplementation="org.frawa.elmtest.run.ElmTestAutoTestManager"/>
+        <configurationType implementation="org.elm.ide.test.run.ElmTestRunConfigurationType"/>
+        <programRunner implementation="org.elm.ide.test.run.ElmTestProgramRunner"/>
+        <runConfigurationProducer implementation="org.elm.ide.test.run.ElmTestRunConfigurationProducer"/>
+        <projectService serviceImplementation="org.elm.ide.test.run.ElmTestAutoTestManager"/>
     </extensions>
 
     <project-components>
