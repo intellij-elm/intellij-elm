@@ -5,7 +5,6 @@ import org.elm.fileTree
 import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.ide.test.core.ElmProjectTestsHelper.Companion.elmFolderForTesting
 import org.elm.openapiext.pathAsPath
-import java.util.*
 
 class ElmProjectHelperTest : ElmWorkspaceTestBase() {
 
@@ -13,7 +12,7 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         testProject()
 
         val helper = ElmProjectTestsHelper(project)
-        checkEquals(Arrays.asList("a", "b"), helper.allNames().toList())
+        checkEquals(listOf("a", "b"), helper.allNames())
     }
 
     fun `test by name`() {

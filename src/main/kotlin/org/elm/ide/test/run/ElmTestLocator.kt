@@ -11,52 +11,41 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import org.elm.ide.test.core.ElmPluginHelper
+import org.elm.ide.test.core.ErrorLabelLocation
 import org.elm.ide.test.core.LabelUtils
+import org.elm.ide.test.core.LabelUtils.DESCRIBE_PROTOCOL
+import org.elm.ide.test.core.LabelUtils.ERROR_PROTOCOL
+import org.elm.ide.test.core.LabelUtils.TEST_PROTOCOL
 
 
-class ElmTestLocator private constructor() : FileUrlProvider() {
+object ElmTestLocator : FileUrlProvider() {
 
     override fun getLocation(protocol: String, path: String, metainfo: String?, project: Project, scope: GlobalSearchScope): List<Location<*>> {
-        if (!protocol.startsWith(LabelUtils.ELM_TEST_PROTOCOL)) {
-            return super.getLocation(protocol, path, metainfo, project, scope)
+        return when (protocol) {
+            ERROR_PROTOCOL -> {
+                val label = ErrorLabelLocation.fromUrl(path)
+                val fileName = FileUtil.toSystemIndependentName(label.file)
+                TestsLocationProviderUtil.findSuitableFilesFor(fileName, project)
+                        .mapNotNull {
+                            getErrorLocation(label.line, label.column, project, it)
+                        }
+            }
+
+            DESCRIBE_PROTOCOL, TEST_PROTOCOL -> {
+                val (filePath, labels) = LabelUtils.fromLocationUrlPath(path)
+                val fileName = FileUtil.toSystemIndependentName(filePath)
+                TestsLocationProviderUtil.findSuitableFilesFor(fileName, project)
+                        .mapNotNull {
+                            getLocation(protocol == DESCRIBE_PROTOCOL, labels, project, it)
+                        }
+            }
+
+            else -> super.getLocation(protocol, path, metainfo, project, scope)
         }
-
-        if (protocol.startsWith(LabelUtils.ERROR_PROTOCOL)) {
-            val pair = LabelUtils.fromErrorLocationUrlPath(path)
-            val filePath = pair.first
-            val line = pair.second.first
-            val column = pair.second.second
-
-            val systemIndependentPath = FileUtil.toSystemIndependentName(filePath)
-            val virtualFiles = TestsLocationProviderUtil.findSuitableFilesFor(systemIndependentPath, project)
-            return if (virtualFiles.isEmpty()) {
-                emptyList()
-            } else virtualFiles
-                    .mapNotNull { getErrorLocation(line, column, project, it) }
-                    .map { it!! }
-        }
-
-        val pair = LabelUtils.fromLocationUrlPath(path)
-        val filePath = pair.first
-        val labels = pair.second
-
-        val systemIndependentPath = FileUtil.toSystemIndependentName(filePath)
-        val virtualFiles = TestsLocationProviderUtil.findSuitableFilesFor(systemIndependentPath, project)
-        if (virtualFiles.isEmpty()) {
-            return emptyList()
-        }
-
-        val isDescribe = LabelUtils.DESCRIBE_PROTOCOL == protocol
-
-        return virtualFiles
-                .map { getLocation(isDescribe, labels, project, it) }
-                .filter { it != null }
-                .map { it!! }
     }
 
     private fun getLocation(isDescribe: Boolean, labels: String, project: Project, virtualFile: VirtualFile): Location<*>? {
         val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return null
-
         val found = ElmPluginHelper.getPsiElement(isDescribe, labels, psiFile)
         return PsiLocation.fromPsiElement(project, found)
     }
@@ -71,9 +60,5 @@ class ElmTestLocator private constructor() : FileUrlProvider() {
         val element = psiFile.findElementAt(offset) ?: return PsiLocation.fromPsiElement(project, psiFile)
 
         return PsiLocation.fromPsiElement(project, element)
-    }
-
-    companion object {
-        internal val INSTANCE = ElmTestLocator()
     }
 }

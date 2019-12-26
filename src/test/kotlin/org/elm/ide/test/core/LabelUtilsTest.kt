@@ -2,41 +2,37 @@ package org.elm.ide.test.core
 
 import com.intellij.openapi.vfs.VirtualFileManager.extractPath
 import org.elm.ide.test.core.LabelUtils.commonParent
-import org.elm.ide.test.core.LabelUtils.fromErrorLocationUrlPath
 import org.elm.ide.test.core.LabelUtils.fromLocationUrlPath
 import org.elm.ide.test.core.LabelUtils.pathString
 import org.elm.ide.test.core.LabelUtils.subParents
-import org.elm.ide.test.core.LabelUtils.toErrorLocationUrl
+import org.elm.ide.test.core.LabelUtils.toLocationUrl
 import org.elm.ide.test.core.LabelUtils.toPath
-import org.elm.ide.test.core.LabelUtils.toSuiteLocationUrl
-import org.elm.ide.test.core.LabelUtils.toTestLocationUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.*
 
 class LabelUtilsTest {
 
     @Test
     fun locationUrl() {
-        val url = toTestLocationUrl(toPath(Arrays.asList("Module", "test")))
+        val url = toLocationUrl(toPath("Module", "test"))
         assertEquals("elmTestTest://Module/test", url)
     }
 
     @Test
     fun suiteLocationUrl() {
-        val url = toSuiteLocationUrl(toPath(Arrays.asList("Module", "suite")))
-        assertEquals("elmTestDescribe://Module/suite", url)
+        val url = toLocationUrl(toPath("Module", "test"), isSuite = true)
+        assertEquals("elmTestDescribe://Module/test", url)
     }
 
     @Test
     fun locationUrlWithSlash() {
-        val url = toTestLocationUrl(toPath(Arrays.asList("Nested.Module", "test / stuff")))
+        val url = toLocationUrl(toPath("Nested.Module", "test / stuff"))
         assertEquals("elmTestTest://Nested.Module/test+%2F+stuff", url)
     }
 
     @Test
     fun useLocationUrl() {
-        val url = toTestLocationUrl(toPath(Arrays.asList("Nested.Module", "test")))
+        val url = toLocationUrl(toPath("Nested.Module", "test"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -46,7 +42,7 @@ class LabelUtilsTest {
 
     @Test
     fun useNestedLocationUrl() {
-        val url = toTestLocationUrl(toPath(Arrays.asList("Nested.Module", "suite", "test")))
+        val url = toLocationUrl(toPath("Nested.Module", "suite", "test"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -56,7 +52,7 @@ class LabelUtilsTest {
 
     @Test
     fun useLocationUrlWithSlash() {
-        val url = toTestLocationUrl(toPath(Arrays.asList("Module", "test / stuff")))
+        val url = toLocationUrl(toPath("Module", "test / stuff"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -66,7 +62,7 @@ class LabelUtilsTest {
 
     @Test
     fun useLocationModuleOnly() {
-        val url = toTestLocationUrl(toPath(listOf("Module")))
+        val url = toLocationUrl(toPath("Module"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
         val pair = fromLocationUrlPath(urlPath)
@@ -76,8 +72,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentSameSuite() {
-        val from = toPath(Arrays.asList("Module", "suite", "test"))
-        val to = toPath(Arrays.asList("Module", "suite", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("Module/suite", pathString(parent))
@@ -85,8 +81,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentDifferentSuite() {
-        val from = toPath(Arrays.asList("Module", "suite", "test"))
-        val to = toPath(Arrays.asList("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module", "suite2", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("Module", pathString(parent))
@@ -97,8 +93,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentDifferentSuite2() {
-        val from = toPath(Arrays.asList("Module", "suite", "deep", "test"))
-        val to = toPath(Arrays.asList("Module", "suite2", "test2"))
+        val from = toPath("Module", "suite", "deep", "test")
+        val to = toPath("Module", "suite2", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("Module", pathString(parent))
@@ -109,8 +105,8 @@ class LabelUtilsTest {
 
     @Test
     fun commonParentNoParent() {
-        val from = toPath(Arrays.asList("Module", "suite", "test"))
-        val to = toPath(Arrays.asList("Module2", "suite2", "test2"))
+        val from = toPath("Module", "suite", "test")
+        val to = toPath("Module2", "suite2", "test2")
 
         val parent = commonParent(from, to)
         assertEquals("", pathString(parent))
@@ -118,32 +114,25 @@ class LabelUtilsTest {
 
     @Test
     fun parentPaths() {
-        val path = toPath(Arrays.asList("Module", "suite", "test"))
-        val parent = toPath(listOf("Module"))
+        val path = toPath("Module", "suite", "test")
+        val parent = toPath("Module")
 
-        val parents = subParents(path, parent)
-                .asSequence()
-                .map { pathString(it) }
-                .toList()
+        val parents = subParents(path, parent).toList().map { pathString(it) }
 
         assertEquals(listOf("Module/suite"), parents)
     }
 
     @Test
     fun errorLocationUrl() {
-        val url = toErrorLocationUrl("my/path/file", 1313, 13)
+        val url = ErrorLabelLocation("my/path/file", 1313, 13).toUrl()
         assertEquals("elmTestError://my/path/file::1313::13", url)
 
         val path = extractPath(url)
-        val pair = fromErrorLocationUrlPath(path)
+        val location = ErrorLabelLocation.fromUrl(path)
 
-        val file = pair.first
-        val line = pair.second.first
-        val column = pair.second.second
-
-        assertEquals("my/path/file", file)
-        assertEquals(1313, line.toLong())
-        assertEquals(13, column.toLong())
+        assertEquals("my/path/file", location.file)
+        assertEquals(1313, location.line)
+        assertEquals(13, location.column)
     }
 
 }
