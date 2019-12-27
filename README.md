@@ -32,6 +32,9 @@ You can install the plugin from within the JetBrains IDE by going to **Settings 
 
 Want to see it in action? This [10 minute video](https://www.youtube.com/watch?v=CC2TdNuZztI) demonstrates many of the features and how they work together.
 
+_Note_: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), please see the
+related information [here](docs/nvm.md).
+
 ## FAQ
 
 - Is this free?
