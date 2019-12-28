@@ -9,7 +9,7 @@ then, depending on how IntelliJ is launched, this might not be the case.
 
 
 ## Symptoms
-The Elm plugin's _Settings screen allows you to specify a path to various Elm tools.
+The Elm plugin's _Settings_ screen allows you to specify a path to various Elm tools.
 
 - Pressing the _Auto Discover_ button should find the appropriate tool, but it may fail to find tools installed by `nvm`
 - Even if a valid path to a tool is provided, you may see an error like: `/usr/bin/env: 'node': No such file or directory`
