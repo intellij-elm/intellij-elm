@@ -75,8 +75,9 @@ class ElmWorkspaceConfigurable(
                 row("Version:", elmTestVersionLabel)
             }
             block("nvm") {
-                val url = "https://github.com/klazuka/intellij-elm/blob/master/docs/nvm.md"
-                noteRow("""If your Node installation is managed by nvm please see <a href="$url">here</a> for some related information""")
+                val nvmUrl = "https://github.com/nvm-sh/nvm"
+                val docsUrl = "https://github.com/klazuka/intellij-elm/blob/master/docs/nvm.md"
+                noteRow("""Using <a href="$nvmUrl">nvm</a>? Please read <a href="$docsUrl">our troubleshooting tips</a>.""")
             }
         }
 
