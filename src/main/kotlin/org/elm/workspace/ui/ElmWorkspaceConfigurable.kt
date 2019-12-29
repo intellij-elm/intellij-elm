@@ -74,6 +74,11 @@ class ElmWorkspaceConfigurable(
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmTestPathField, "elm-test"))
                 row("Version:", elmTestVersionLabel)
             }
+            block("nvm") {
+                val nvmUrl = "https://github.com/nvm-sh/nvm"
+                val docsUrl = "https://github.com/klazuka/intellij-elm/blob/master/docs/nvm.md"
+                noteRow("""Using <a href="$nvmUrl">nvm</a>? Please read <a href="$docsUrl">our troubleshooting tips</a>.""")
+            }
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
