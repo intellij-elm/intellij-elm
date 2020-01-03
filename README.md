@@ -28,6 +28,7 @@ You can install the plugin from within the JetBrains IDE by going to **Settings 
 * [WebGL/GLSL support](docs/features/webgl.md)
 * [Code Folding](docs/features/code-folding.md)
 * [Manage the Exposing List](docs/features/exposure.md)
+* Add missing case branches
 * Plus the usual IDE stuff: code completion, go-to-declaration, spell-checking, etc.
 
 Want to see it in action? This [10 minute video](https://www.youtube.com/watch?v=CC2TdNuZztI) demonstrates many of the features and how they work together.
