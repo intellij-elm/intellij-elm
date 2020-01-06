@@ -310,6 +310,11 @@
                          implementationClass="org.elm.ide.inspections.ElmIncompletePatternInspection"/>
 
         <localInspection language="Elm" groupName="Elm"
+                         displayName="Tuple too large"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmTupleSizeInspection"/>
+
+        <localInspection language="Elm" groupName="Elm"
                          displayName="Unused symbol"
                          enabledByDefault="true" level="WARNING"
                          implementationClass="org.elm.ide.inspections.ElmUnusedSymbolInspection"/>
