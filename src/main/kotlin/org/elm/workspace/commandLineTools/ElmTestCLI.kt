@@ -9,7 +9,7 @@ import com.intellij.openapi.diagnostic.logger
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
-import org.elm.workspace.DEFAULT_TESTS_DIR_NAME
+import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
 import java.nio.file.Path
@@ -27,25 +27,23 @@ class ElmTestCLI(private val executablePath: Path) {
      * JSON format on stdout.
      *
      * @param elmCompilerPath The path to the Elm compiler.
-     * @param elmProjectDirPath The path to the directory containing the Elm project.
-     * @param testsDirPath The path to the directory containing the tests.
+     * @param elmProject The [ElmProject] containing the tests to be run.
      */
-    fun runTestsProcessHandler(elmCompilerPath: Path, elmProjectDirPath: Path, testsDirPath: Path): ProcessHandler {
+    fun runTestsProcessHandler(elmCompilerPath: Path, elmProject: ElmProject): ProcessHandler {
         val commandLine = GeneralCommandLine(executablePath.toString(), "--report=json")
-                .withWorkDirectory(elmProjectDirPath.toString())
+                .withWorkDirectory(elmProject.projectDirPath.toString())
                 .withParameters("--compiler", elmCompilerPath.toString())
                 .withRedirectErrorStream(true)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
         // By default elm-test will process tests in a folder called "tests", under the current working directory
-        // (in this case elmProjectDirPath). If testsDir points at that folder, we don't need to pass anything else in.
-        // In other cases we need to supply a path to that folder.
-        if (elmProjectDirPath.resolve(DEFAULT_TESTS_DIR_NAME) == testsDirPath) {
-            log.debug("""Tests are in default location ("tests") so will run elm-test without argument specifying path.""")
+        // (in this case elmProject.projectDirPath). If the project has a custom location for tests we need to supply a
+        // path to that folder.
+        if (elmProject.isCustomTestsDir) {
+            log.debug { """Tests are in custom location: "${elmProject.testsRelativeDirPath}". Will specify this path as argument to elm-test.""" }
+            commandLine.withParameters(elmProject.testsRelativeDirPath)
         } else {
-            val relativePath = elmProjectDirPath.relativize(testsDirPath).toString()
-            log.debug { """Tests are in non-default location: "$relativePath". Will specify this path as argument to elm-test.""" }
-            commandLine.withParameters(relativePath)
+            log.debug("""Tests are in default location ("tests") so will run elm-test without argument specifying path.""")
         }
 
         return ColoredProcessHandler(commandLine)

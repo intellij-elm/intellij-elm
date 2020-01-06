@@ -28,7 +28,6 @@ import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.ide.test.core.ElmTestJsonProcessor
 import org.elm.workspace.elmWorkspace
 import java.nio.file.Files
-import java.nio.file.Paths
 
 class ElmTestRunProfileState internal constructor(
         environment: ExecutionEnvironment,
@@ -38,6 +37,11 @@ class ElmTestRunProfileState internal constructor(
     private val elmFolder =
             configuration.options.elmFolder?.takeIf { it.isNotEmpty() }
                     ?: environment.project.basePath
+
+    private val elmProject =
+            elmFolder?.let {
+                ElmProjectTestsHelper(environment.project).elmProjectByProjectDirPath(elmFolder)
+            }
 
     @Throws(ExecutionException::class)
     override fun startProcess(): ProcessHandler {
@@ -52,6 +56,7 @@ class ElmTestRunProfileState internal constructor(
                 ?: return handleBadConfiguration(project, "Missing path to the Elm compiler")
 
         if (elmFolder == null) return handleBadConfiguration(project, "Missing path to elmFolder")
+        if (elmProject == null) return handleBadConfiguration(project, "Could not find the Elm project for these tests")
 
         val adjusted = ElmProjectTestsHelper(project)
                 .adjustElmCompilerProjectDirPath(elmFolder, elmCompilerBinary)
@@ -59,12 +64,7 @@ class ElmTestRunProfileState internal constructor(
             return handleBadConfiguration(project, "Could not find the Elm compiler ")
         }
 
-        // Find the ElmProject containing the tests to be executed.
-        val elmFolderPath = Paths.get(elmFolder).normalize()
-        val elmProject = project.elmWorkspace.allProjects.firstOrNull { it.projectDirPath.normalize() == elmFolderPath }
-                ?: return handleBadConfiguration(project, "Could not find the Elm project for these tests")
-
-        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolderPath, elmProject.testsDirPath)
+        return elmTestCLI.runTestsProcessHandler(adjusted, elmProject)
     }
 
     @Throws(ExecutionException::class)
@@ -89,14 +89,22 @@ class ElmTestRunProfileState internal constructor(
     }
 
     override fun createConsole(executor: Executor): ConsoleView? {
+        if (elmProject == null)
+            // Should never happen as we only start a test (causing this method to be called) if we found a project.
+            throw IllegalStateException("Elm project not found")
+
         val runConfiguration = environment.runProfile as RunConfiguration
-        val properties = ConsoleProperties(runConfiguration, executor)
+        val properties = ConsoleProperties(runConfiguration, executor, elmProject.testsRelativeDirPath)
         val consoleView = SMTRunnerConsoleView(properties)
         SMTestRunnerConnectionUtil.initConsoleView(consoleView, properties.testFrameworkName)
         return consoleView
     }
 
-    private class ConsoleProperties internal constructor(config: RunConfiguration, executor: Executor) : SMTRunnerConsoleProperties(config, "elm-test", executor), SMCustomMessagesParsing {
+    private class ConsoleProperties internal constructor(
+            config: RunConfiguration,
+            executor: Executor,
+            private val testsRelativeDirPath: String
+    ) : SMTRunnerConsoleProperties(config, "elm-test", executor), SMCustomMessagesParsing {
 
         init {
 
@@ -140,6 +148,6 @@ class ElmTestRunProfileState internal constructor(
             }
         }
 
-        override fun getTestLocator() = ElmTestLocator
+        override fun getTestLocator() = ElmTestLocator(testsRelativeDirPath)
     }
 }

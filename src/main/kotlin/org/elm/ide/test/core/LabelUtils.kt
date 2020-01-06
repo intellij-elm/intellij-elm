@@ -50,10 +50,10 @@ object LabelUtils {
         return String.format("%s://%s", protocol, pathString(path))
     }
 
-    fun fromLocationUrlPath(path: String): Pair<String, String> {
+    fun fromLocationUrlPath(path: String, testsRelativeDirPath: String): Pair<String, String> {
         val path1 = Paths.get(path)
         val moduleName = getModuleName(path1)
-        val moduleFile = String.format("tests/%s.elm", moduleName.replace(".", "/"))
+        val moduleFile = "$testsRelativeDirPath/${moduleName.replace(".", "/")}.elm"
         val label = if (path1.nameCount > 1) decodeLabel(path1.subpath(1, path1.nameCount)) else ""
         return Pair(moduleFile, label)
     }

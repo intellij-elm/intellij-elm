@@ -27,7 +27,7 @@ private val objectMapper = ObjectMapper()
  * @param dependencies Additional Elm packages that this project depends on
  * @param testDependencies Additional Elm packages that this project's **tests** depends on
  * @param sourceDirectories The relative paths to one-or-more directories containing Elm source files belonging to this project.
- * @param testsRelativeDirPath The path, relative to the [projectDirPath], to the directory containing unit tests.
+ * @param testsRelativeDirPath The path to the directory containing unit tests, relative to the [projectDirPath].
  * Typically this will be "tests": see [testsDirPath] for more info.
  */
 sealed class ElmProject(
@@ -44,17 +44,29 @@ sealed class ElmProject(
     val projectDirPath: Path = manifestPath.parent
 
     /**
+     * The path to the directory containing unit tests, relative to the [projectDirPath]. Typically this will be "tests":
+     * see [testsDirPath] for more info.
+     *
+     * Note that this path is normalized (see [Path.normalize]) so can safely be compared to [DEFAULT_TESTS_DIR_NAME].
+     * For example, if the user specifies a value such as `"./foo/"` in some config file, this property will return `"foo"`.
+     */
+    val testsRelativeDirPath = Paths.get(testsRelativeDirPath).normalize().toString()
+
+    /**
      * The path to the directory containing unit tests.
      *
      * For packages this will be a directory called "tests", as elm-test requires packages to have tests in a top-level
      * "tests" directory. For applications the default behaviour is the same as for packages, but optionally tests can
      * be put in some other directory, as long as when elm-test is called, the path to those tests is specified as a
      * cmd-line argument.
-     *
-     * This path is already normalized (see [Path.normalize]) so this doesn't need to be done be done when comparing this
-     * to other paths.
      */
-    val testsDirPath: Path = projectDirPath.resolve(testsRelativeDirPath).normalize()
+    val testsDirPath: Path = projectDirPath.resolve(this.testsRelativeDirPath)
+
+    /**
+     * A flag indicating whether this project use a custom folder for unit tests (i.e. where the tests are any folder other
+     * than the default `"tests"`).
+     */
+    val isCustomTestsDir = this.testsRelativeDirPath != DEFAULT_TESTS_DIR_NAME
 
     /**
      * A name which can be shown in the UI. Note that while Elm packages have user-assigned
@@ -143,7 +155,8 @@ sealed class ElmProject(
                             dependencies = dto.dependencies.depsToPackages(repo),
                             testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.depsToPackages(repo),
                             sourceDirectories = dto.sourceDirectories
-                            // TODO [tests-folder]: allow a value for testsRelativeDirPath to be specified, by reading from some config file.
+                            // TODO [tests-folder]: allow a value for testsRelativeDirPath to be specified, by reading
+                            //  from some config file.
                     )
                 }
                 "package" -> {
