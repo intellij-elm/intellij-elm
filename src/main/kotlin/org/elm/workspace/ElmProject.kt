@@ -27,12 +27,15 @@ private val objectMapper = ObjectMapper()
  * @param dependencies Additional Elm packages that this project depends on
  * @param testDependencies Additional Elm packages that this project's **tests** depends on
  * @param sourceDirectories The relative paths to one-or-more directories containing Elm source files belonging to this project.
+ * @param testsRelativeDirPath The path, relative to the [projectDirPath], to the directory containing unit tests.
+ * Typically this will be "tests": see [testsDirPath] for more info.
  */
 sealed class ElmProject(
         val manifestPath: Path,
         val dependencies: List<ElmPackageProject>,
         val testDependencies: List<ElmPackageProject>,
-        val sourceDirectories: List<Path>
+        val sourceDirectories: List<Path>,
+        testsRelativeDirPath: String
 ) : UserDataHolderBase() {
 
     /**
@@ -42,8 +45,16 @@ sealed class ElmProject(
 
     /**
      * The path to the directory containing unit tests.
+     *
+     * For packages this will be a directory called "tests", as elm-test requires packages to have tests in a top-level
+     * "tests" directory. For applications the default behaviour is the same as for packages, but optionally tests can
+     * be put in some other directory, as long as when elm-test is called, the path to those tests is specified as a
+     * cmd-line argument.
+     *
+     * This path is already normalized (see [Path.normalize]) so this doesn't need to be done be done when comparing this
+     * to other paths.
      */
-    val testsDirPath: Path = projectDirPath.resolve("tests")
+    val testsDirPath: Path = projectDirPath.resolve(testsRelativeDirPath).normalize()
 
     /**
      * A name which can be shown in the UI. Note that while Elm packages have user-assigned
@@ -61,6 +72,9 @@ sealed class ElmProject(
     val absoluteSourceDirectories: List<Path> =
             sourceDirectories.map { projectDirPath.resolve(it).normalize() }
 
+    /**
+     * Returns all the source directories, i.e. the [absoluteSourceDirectories] and the [testsDirPath].
+     */
     val allSourceDirs: Sequence<Path> =
             absoluteSourceDirectories.asSequence() + sequenceOf(testsDirPath)
 
@@ -129,6 +143,7 @@ sealed class ElmProject(
                             dependencies = dto.dependencies.depsToPackages(repo),
                             testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.depsToPackages(repo),
                             sourceDirectories = dto.sourceDirectories
+                            // TODO [tests-folder]: allow a value for testsRelativeDirPath to be specified, by reading from some config file.
                     )
                 }
                 "package" -> {
@@ -203,8 +218,9 @@ class ElmApplicationProject(
         val elmVersion: Version,
         dependencies: List<ElmPackageProject>,
         testDependencies: List<ElmPackageProject>,
-        sourceDirectories: List<Path>
-) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
+        sourceDirectories: List<Path>,
+        testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
 
 
 /**
@@ -219,7 +235,7 @@ class ElmPackageProject(
         val name: String,
         val version: Version,
         val exposedModules: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, DEFAULT_TESTS_DIR_NAME)
 
 
 private fun ExactDependenciesDTO.depsToPackages(repo: ElmPackageRepository) =
@@ -360,3 +376,8 @@ private fun JsonNode.toExposedModuleMap(): List<String> {
         }
     }
 }
+
+/**
+ * The default name of the directory which contains unit tests.
+ */
+const val DEFAULT_TESTS_DIR_NAME = "tests"

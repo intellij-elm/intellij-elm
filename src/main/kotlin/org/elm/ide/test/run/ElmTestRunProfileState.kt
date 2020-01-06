@@ -28,6 +28,7 @@ import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.ide.test.core.ElmTestJsonProcessor
 import org.elm.workspace.elmWorkspace
 import java.nio.file.Files
+import java.nio.file.Paths
 
 class ElmTestRunProfileState internal constructor(
         environment: ExecutionEnvironment,
@@ -58,7 +59,12 @@ class ElmTestRunProfileState internal constructor(
             return handleBadConfiguration(project, "Could not find the Elm compiler ")
         }
 
-        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolder)
+        // Find the ElmProject containing the tests to be executed.
+        val elmFolderPath = Paths.get(elmFolder).normalize()
+        val elmProject = project.elmWorkspace.allProjects.firstOrNull { it.projectDirPath.normalize() == elmFolderPath }
+                ?: return handleBadConfiguration(project, "Could not find the Elm project for these tests")
+
+        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolderPath, elmProject.testsDirPath)
     }
 
     @Throws(ExecutionException::class)
