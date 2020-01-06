@@ -324,6 +324,11 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmUnresolvedReferenceInspection"/>
 
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Invalid (..) on alias import"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmExposingAliasVariantsInspection"/>
+
         <!-- Intentions -->
 
         <intentionAction>

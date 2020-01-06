@@ -48,10 +48,11 @@ class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElemen
     override val referenceName: String
         get() = stub?.refName ?: referenceNameElement.text
 
-    override fun getReference() =
-            if (parentOfType<ElmModuleDeclaration>() != null) ExposedTypeReferenceFromModuleDecl(this)
-            else if (parentOfType<ElmImportClause>() != null) ExposedTypeReferenceFromImport(this)
-            else error("unexpected exposed type context: reference cannot be determined")
+    override fun getReference() = when (parent?.parent) {
+        is ElmModuleDeclaration -> ExposedTypeReferenceFromModuleDecl(this)
+        is ElmImportClause -> ExposedTypeReferenceFromImport(this)
+        else -> error("unexpected exposed type context: reference cannot be determined")
+    }
 }
 
 
