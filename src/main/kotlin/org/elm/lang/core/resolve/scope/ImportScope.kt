@@ -1,12 +1,20 @@
 package org.elm.lang.core.resolve.scope
 
+import com.intellij.openapi.util.Key
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.globalModificationTracker
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
+private val EXPOSED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("EXPOSED_VALUES_KEY")
+private val EXPOSED_TYPES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("EXPOSED_TYPES_KEY")
+private val EXPOSED_CONSTRUCTORS_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("EXPOSED_CONSTRUCTORS_KEY")
 
 /**
  * A scope that allows exposed values and types from the module named [elmFile]
@@ -43,7 +51,7 @@ class ImportScope(val elmFile: ElmFile) {
                     .map { ImportScope(it.elmFile) }
 
             val explicitScopes = ModuleScope.importDeclsForQualifierPrefix(clientFile, qualifierPrefix)
-                    .mapNotNull { ImportScope.fromImportDecl(it) }
+                    .mapNotNull { fromImportDecl(it) }
 
             return if (importsOnly) {
                 implicitScopes + explicitScopes
@@ -61,6 +69,12 @@ class ImportScope(val elmFile: ElmFile) {
      * Returns all value declarations exposed by this module.
      */
     fun getExposedValues(): List<ElmNamedElement> {
+        return CachedValuesManager.getCachedValue(elmFile, EXPOSED_VALUES_KEY) {
+            CachedValueProvider.Result.create(produceExposedValues(), elmFile.globalModificationTracker)
+        }
+    }
+
+    private fun produceExposedValues(): List<ElmNamedElement> {
         val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
@@ -76,13 +90,18 @@ class ImportScope(val elmFile: ElmFile) {
         exposingList.exposedOperatorList.mapTo(exposedNames) { it.referenceName }
 
         return declaredValues.filter { it.name in exposedNames }
-
     }
 
     /**
      * Returns all union type and type alias declarations exposed by this module.
      */
     fun getExposedTypes(): List<ElmNamedElement> {
+        return CachedValuesManager.getCachedValue(elmFile, EXPOSED_TYPES_KEY) {
+            CachedValueProvider.Result.create(produceExposedTypes(), elmFile.globalModificationTracker)
+        }
+    }
+
+    private fun produceExposedTypes(): List<ElmNamedElement> {
         val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
@@ -100,6 +119,12 @@ class ImportScope(val elmFile: ElmFile) {
      * Returns all union and record constructors exposed by this module.
      */
     fun getExposedConstructors(): List<ElmNamedElement> {
+        return CachedValuesManager.getCachedValue(elmFile, EXPOSED_CONSTRUCTORS_KEY) {
+            CachedValueProvider.Result.create(produceExposedConstructors(), elmFile.globalModificationTracker)
+        }
+    }
+
+    private fun produceExposedConstructors(): List<ElmNamedElement> {
         val moduleDecl = elmFile.getModuleDecl()
                 ?: return emptyList()
 
