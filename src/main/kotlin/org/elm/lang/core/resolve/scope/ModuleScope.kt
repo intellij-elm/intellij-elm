@@ -9,7 +9,6 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.globalModificationTracker
-import org.elm.lang.core.psi.modificationTracker
 
 private val DECLARED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("DECLARED_VALUES_KEY")
 private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
@@ -35,7 +34,29 @@ data class VisibleNames(
      * 2. if not found, check if it has been exposed by an import
      * 3. if you still haven't found it, check the implicit, global imports
      */
-    val all: List<ElmNamedElement> get() = listOf(topLevel, imported, global).flatten()
+    val all: List<ElmNamedElement> = listOf(topLevel, imported, global).flatten()
+
+    /**
+     * A map of [all] visible names to their elements.
+     *
+     * In the case of ambiguity, only the highest precedence element is present.
+     */
+    val allByName: Map<String?, ElmNamedElement> =
+            all.asReversed().associateByTo(mutableMapOf()) { it.name }
+                    .apply { remove(null) }
+}
+
+/** A collection of named elements declared in a scope */
+class DeclaredNames(
+        /** The elements stored in an array */
+        val array: Array<ElmNamedElement>
+) {
+    /** The elements stored in a list */
+    val list get() = array.asList()
+
+    /** The elements associated by element name */
+    val byName = array.associateByTo(mutableMapOf()) { it.name }
+            .apply { remove(null) }
 }
 
 /**
@@ -118,6 +139,14 @@ object ModuleScope {
             val values = listOf(valueDecls, elmFile.getPortAnnotations(), elmFile.getInfixDeclarations())
                     .flatten()
             Result.create(values, elmFile.globalModificationTracker)
+        }
+    }
+
+    fun getDeclaredValuesByName(elmFile: ElmFile): Map<String?, ElmNamedElement> {
+        return CachedValuesManager.getCachedValue(elmFile, DECLARED_VALUES_BY_NAME_KEY) {
+            val map = getDeclaredValues(elmFile).associateByTo(mutableMapOf()) { it.name }
+            map.remove(null)
+            Result.create(map, elmFile.globalModificationTracker)
         }
     }
 
@@ -244,6 +273,14 @@ object ModuleScope {
             val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
                     (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
             Result.create(declaredTypes, elmFile.globalModificationTracker)
+        }
+    }
+
+    fun getDeclaredTypesByName(elmFile: ElmFile): Map<String?, ElmNamedElement> {
+        return CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_BY_NAME_KEY) {
+            val map = getDeclaredTypes(elmFile).associateByTo(mutableMapOf()) { it.name }
+            map.remove(null)
+            Result.create(map, elmFile.globalModificationTracker)
         }
     }
 

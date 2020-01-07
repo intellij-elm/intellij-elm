@@ -54,8 +54,7 @@ class ExposedOperatorModuleReference(exposedValue: ElmExposedOperator
 ) : ElmReferenceCached<ElmExposedOperator>(exposedValue) {
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+        return ModuleScope.getDeclaredValuesByName(element.elmFile)[element.referenceName]
     }
 
     override fun getVariants(): Array<ElmNamedElement> {

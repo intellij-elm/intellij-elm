@@ -5,16 +5,16 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 
 /**
- * A reference to a value or a function name declared at the top level of the file containing [element]
+ * A reference to a value or a function name declared at the top level of the file containing an `element`
  */
 class LocalTopLevelValueReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+        return ModuleScope.getDeclaredValuesByName(element.elmFile)[element.referenceName]
     }
 
-    override fun getVariants() =
-            ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
+    override fun getVariants(): Array<ElmNamedElement> {
+        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
+    }
 }

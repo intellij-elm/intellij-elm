@@ -11,8 +11,7 @@ class SimpleOperatorReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+       return ModuleScope.getVisibleValues(element.elmFile).allByName[element.referenceName]
     }
 
     override fun getVariants(): Array<ElmNamedElement> {

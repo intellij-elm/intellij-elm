@@ -12,8 +12,7 @@ class ExposedTypeReferenceFromModuleDecl(exposedType: ElmExposedType)
     : ElmReferenceCached<ElmExposedType>(exposedType) {
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+        return ModuleScope.getDeclaredTypesByName(element.elmFile)[element.referenceName]
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
