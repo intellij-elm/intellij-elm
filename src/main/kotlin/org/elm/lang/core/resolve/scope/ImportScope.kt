@@ -70,12 +70,13 @@ class ImportScope(val elmFile: ElmFile) {
         val exposingList = moduleDecl.exposingList
                 ?: return emptyList()
 
-        val exposedValues = listOf(
-                exposingList.exposedValueList,
-                exposingList.exposedOperatorList)
+        val declaredValues = ModuleScope.getDeclaredValues(elmFile)
+        val exposedNames = mutableSetOf<String>()
+        exposingList.exposedValueList.mapTo(exposedNames) { it.referenceName }
+        exposingList.exposedOperatorList.mapTo(exposedNames) { it.referenceName }
 
-        return exposedValues.flatten()
-                .mapNotNull { it.reference?.resolve() as? ElmNamedElement }
+        return declaredValues.filter { it.name in exposedNames }
+
     }
 
     /**
@@ -88,9 +89,11 @@ class ImportScope(val elmFile: ElmFile) {
         if (moduleDecl.exposesAll)
             return ModuleScope.getDeclaredTypes(elmFile)
 
-        return moduleDecl.exposingList?.exposedTypeList
-                ?.mapNotNull { it.reference.resolve() }
-                ?: emptyList()
+        val exposedTypeList = moduleDecl.exposingList?.exposedTypeList
+                ?: return emptyList()
+
+        val exposedNames = exposedTypeList.mapTo(mutableSetOf()) { it.referenceName }
+        return ModuleScope.getDeclaredTypes(elmFile).filter { it.name in exposedNames }
     }
 
     /**
@@ -103,29 +106,34 @@ class ImportScope(val elmFile: ElmFile) {
         if (moduleDecl.exposesAll)
             return ModuleScope.getDeclaredConstructors(elmFile)
 
-        return moduleDecl.exposingList
-                ?.exposedTypeList
-                ?.flatMap {
-                    val ctors = it.exposedUnionConstructors
-                    when {
-                        it.exposesAll ->
-                            // It's a union type that exposes all of its constructors
-                            (it.reference.resolve() as? ElmTypeDeclaration)?.unionVariantList ?: emptyList()
+        val exposedTypeList = moduleDecl.exposingList?.exposedTypeList
+                ?: return emptyList()
 
-                        ctors != null ->
-                            // It's a union type that exposes one or more constructors
-                            ctors.exposedUnionConstructors.mapNotNull { it.reference.resolve() }
+        val types = ModuleScope.getDeclaredTypes(elmFile)
 
-                        else -> {
-                            // It's either a record type or a union type without any exposed constructors
-                            val targetType = it.reference.resolve() as? ElmTypeAliasDeclaration
-                            if (targetType != null && targetType.isRecordAlias)
-                                listOf(targetType)
-                            else
-                                emptyList<ElmNamedElement>()
-                        }
-                    }
+        return exposedTypeList.flatMap { exposedType ->
+            val type = types.find { t -> t.name == exposedType.referenceName }
+            val ctors = exposedType.exposedUnionConstructors
+            when {
+                exposedType.exposesAll -> {
+                    // It's a union type that exposes all of its constructors
+                    (type as? ElmTypeDeclaration)?.unionVariantList
                 }
-                ?: emptyList()
+
+                ctors != null -> {
+                    // It's a union type that exposes one or more constructors
+                    (type as? ElmTypeDeclaration)?.unionVariantList
+                            ?.associateBy { it.name }
+                            ?.let { variants ->
+                                ctors.exposedUnionConstructors.mapNotNull { variants[it.referenceName] }
+                            }
+                }
+                else -> {
+                    // It's either a record type or a union type without any exposed constructors
+                    if (type is ElmTypeAliasDeclaration && type.isRecordAlias) listOf(type)
+                    else null
+                }
+            } ?: emptyList()
+        }
     }
 }

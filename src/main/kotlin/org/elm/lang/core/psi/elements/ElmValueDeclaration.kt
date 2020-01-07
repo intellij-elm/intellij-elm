@@ -75,21 +75,25 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
     fun declaredNames(includeParameters: Boolean = true): List<ElmNameIdentifierOwner> {
         val namedElements = mutableListOf<ElmNameIdentifierOwner>()
 
-        if (functionDeclarationLeft != null) {
+        val fdl = functionDeclarationLeft
+        if (fdl != null) {
             // the most common case, a named function or value declaration
-            namedElements.add(functionDeclarationLeft!!)
-            if (includeParameters)
-                namedElements.addAll(functionDeclarationLeft!!.namedParameters)
+            namedElements.add(fdl)
+            if (includeParameters) namedElements.addAll(fdl.namedParameters)
+            return namedElements
 
-        } else if (operatorDeclarationLeft != null) {
+        }
+        val odl = operatorDeclarationLeft
+        if (odl != null) {
             // an operator declaration
-            namedElements.add(operatorDeclarationLeft!!)
-            if (includeParameters)
-                namedElements.addAll(operatorDeclarationLeft!!.namedParameters)
-
-        } else if (pattern != null) {
+            namedElements.add(odl)
+            if (includeParameters) namedElements.addAll(odl.namedParameters)
+            return namedElements
+        }
+        val pat = pattern
+        if (pat != null) {
             // value destructuring assignment (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(pattern!!.descendantsOfType<ElmNameIdentifierOwner>())
+            namedElements.addAll(pat.descendantsOfType())
         }
 
         return namedElements
