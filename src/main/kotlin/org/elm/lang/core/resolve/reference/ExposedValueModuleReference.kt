@@ -11,7 +11,8 @@ class ExposedValueModuleReference(exposedValue: ElmExposedValue)
     : ElmReferenceCached<ElmExposedValue>(exposedValue) {
 
     override fun resolveInner(): ElmNamedElement? {
-        return variants.find { it.name == element.referenceName }
+        val referenceName = element.referenceName
+        return variants.find { it.name == referenceName }
     }
 
     override fun getVariants(): Array<ElmNamedElement> {

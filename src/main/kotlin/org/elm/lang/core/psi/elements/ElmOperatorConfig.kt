@@ -50,7 +50,8 @@ class LocalOperatorReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun resolveInner(): ElmNamedElement? {
-        return getVariants().find { it.name == element.referenceName }
+        val referenceName = element.referenceName
+        return variants.find { it.name == referenceName }
     }
 
     override fun getVariants(): Array<ElmNamedElement> {

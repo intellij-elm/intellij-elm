@@ -24,7 +24,8 @@ class LexicalValueReference(element: ElmReferenceElement)
      * will only resolve the first level of reference.
      */
     fun resolveShallow(): ElmNamedElement? {
-        return getCandidates().find { it.name == element.referenceName }
+        val referenceName = element.referenceName
+        return getCandidates().find { it.name == referenceName }
     }
 
     private fun getCandidates(): List<ElmNamedElement> {

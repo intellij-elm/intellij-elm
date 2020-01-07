@@ -57,8 +57,10 @@ class TypeVariableReference(
                 .flatten()
     }
 
-    override fun resolveInner(): ElmNamedElement? =
-            variants.find { it.name == element.referenceName }
+    override fun resolveInner(): ElmNamedElement? {
+        val referenceName = element.referenceName
+        return variants.find { it.name == referenceName }
+    }
 
     private fun declaration(): PsiElement? {
         return element.ancestorsStrict.takeWhile { it !is ElmFile }.firstOrNull {

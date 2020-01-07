@@ -15,7 +15,8 @@ class ExposedUnionConstructorReference(exposedUnionConstructor: ElmExposedUnionC
     : ElmReferenceCached<ElmExposedUnionConstructor>(exposedUnionConstructor) {
 
     override fun resolveInner(): ElmNamedElement? {
-        return variants.find { it.name == element.referenceName }
+        val referenceName = element.referenceName
+        return variants.find { it.name == referenceName }
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
