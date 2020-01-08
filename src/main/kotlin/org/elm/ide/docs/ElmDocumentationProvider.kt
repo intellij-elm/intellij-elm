@@ -8,8 +8,8 @@ import com.intellij.psi.PsiManager
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.resolve.scope.QualifiedImportScope
 import org.elm.lang.core.types.*
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
@@ -47,9 +47,7 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         } else {
             val qualifierPrefix = link.substring(0, lastDot)
             val name = link.substring(lastDot + 1)
-            ImportScope.fromQualifierPrefixInModule(qualifierPrefix, context.elmFile)
-                    .flatMap { it.getExposedTypes() }
-                    .find { it.name == name }
+            QualifiedImportScope(qualifierPrefix, context.elmFile).getExposedType(name)
         }
     }
 }

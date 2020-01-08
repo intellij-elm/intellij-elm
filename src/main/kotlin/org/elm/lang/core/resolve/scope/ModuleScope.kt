@@ -222,7 +222,7 @@ object ModuleScope {
 
     private fun getVisibleImportValues(importClause: ElmImportClause): List<ExposedElement> {
         val allExposedValues = ImportScope.fromImportDecl(importClause)
-                ?.getExposedValues()
+                ?.getExposedValues()?.elements
                 ?: return emptyList()
 
         if (importClause.exposesAll)
@@ -244,21 +244,21 @@ object ModuleScope {
 
     private fun getAllImportValues(importClause: ElmImportClause): List<ExposedElement> {
         return ImportScope.fromImportDecl(importClause)
-                ?.getExposedValues()
+                ?.getExposedValues()?.elements
                 ?.map { ExposedElement(importClause.exposesAll, it) }
                 ?: return emptyList()
     }
 
     private fun getAllImportTypes(importClause: ElmImportClause): List<ExposedElement> {
         return ImportScope.fromImportDecl(importClause)
-                ?.getExposedTypes()
+                ?.getExposedTypes()?.elements
                 ?.map { ExposedElement(importClause.exposesAll, it) }
                 ?: return emptyList()
     }
 
     private fun getAllImportConstructors(importClause: ElmImportClause): List<ExposedElement> {
         return ImportScope.fromImportDecl(importClause)
-                ?.getExposedConstructors()
+                ?.getExposedConstructors()?.elements
                 ?.map { ExposedElement(importClause.exposesAll, it) }
                 ?: return emptyList()
     }
@@ -289,11 +289,11 @@ object ModuleScope {
 
     private fun getVisibleImportTypes(importClause: ElmImportClause): List<ElmNamedElement> {
         val allExposedTypes = ImportScope.fromImportDecl(importClause)
-                ?.getExposedTypes()
+                ?.getExposedTypes()?.elements
                 ?: return emptyList()
 
         if (importClause.exposesAll)
-            return allExposedTypes
+            return allExposedTypes.asList()
 
         // intersect the names exposed by the module with the names declared
         // in this import clause's exposing list.
@@ -332,11 +332,11 @@ object ModuleScope {
 
     private fun getVisibleImportConstructors(importClause: ElmImportClause): List<ElmNamedElement> {
         val allExposedConstructors = ImportScope.fromImportDecl(importClause)
-                ?.getExposedConstructors()
+                ?.getExposedConstructors()?.elements
                 ?: return emptyList()
 
         if (importClause.exposesAll)
-            return allExposedConstructors
+            return allExposedConstructors.asList()
 
         val exposedTypes = importClause.exposingList?.exposedTypeList
                 ?: return emptyList()

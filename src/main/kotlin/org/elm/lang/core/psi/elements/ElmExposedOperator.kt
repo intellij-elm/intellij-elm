@@ -7,8 +7,8 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
+import org.elm.lang.core.resolve.scope.ExposedNames
 import org.elm.lang.core.resolve.scope.ImportScope
-import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.resolve.scope.ModuleScope.getDeclaredValues
 import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
@@ -71,17 +71,18 @@ class ExposedOperatorImportReference(exposedValue: ElmExposedOperator
 ) : ElmReferenceCached<ElmExposedOperator>(exposedValue) {
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+        return getCandidates()?.get(element.referenceName)
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
+        return getCandidates()?.elements ?: emptyArray()
+    }
+
+    private fun getCandidates(): ExposedNames? {
         // TODO [kl] verify: this was copied from ElmExposedValue's ref
         val importClause = element.parentOfType<ElmImportClause>()
                 ?: error("should never happen: this ref must be in an import")
 
-        return ImportScope.fromImportDecl(importClause)
-                ?.getExposedValues()?.toTypedArray()
-                ?: emptyArray()
+        return ImportScope.fromImportDecl(importClause)?.getExposedValues()
     }
 }

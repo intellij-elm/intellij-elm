@@ -6,10 +6,7 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.PsiReference
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.scope.ExpressionScope
-import org.elm.lang.core.resolve.scope.GlobalScope
-import org.elm.lang.core.resolve.scope.ImportScope
-import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.resolve.scope.*
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
 
@@ -48,9 +45,9 @@ object ElmQualifiableRefSuggestor : Suggestor {
                                 and those that are not. When selecting a completion that is not yet imported,
                                 the import declaration should be automatically added.
                         */
-                        val importScopes = ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
-                        importScopes.flatMap { it.getExposedValues() }.forEach { result.add(it) }
-                        importScopes.flatMap { it.getExposedConstructors() }.forEach { result.add(it) }
+                        val importScopes = QualifiedImportScope(qualifierPrefix, file, importsOnly = false)
+                        importScopes.getExposedValues().forEach { result.add(it) }
+                        importScopes.getExposedConstructors().forEach { result.add(it) }
                     }
                 }
                 is ElmUnionPattern -> {
@@ -59,8 +56,8 @@ object ElmQualifiableRefSuggestor : Suggestor {
                                 .filterIsInstance<ElmUnionVariant>()
                                 .forEach { result.add(it) }
                     } else {
-                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
-                                .flatMap { it.getExposedConstructors() }
+                        QualifiedImportScope(qualifierPrefix, file, importsOnly = false)
+                                .getExposedConstructors()
                                 .filterIsInstance<ElmUnionVariant>()
                                 .forEach { result.add(it) }
                     }
@@ -70,8 +67,8 @@ object ElmQualifiableRefSuggestor : Suggestor {
                         ModuleScope.getVisibleTypes(file).all.forEach { result.add(it) }
                         GlobalScope.builtInTypes.forEach { result.add(it) }
                     } else {
-                        ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
-                                .flatMap { it.getExposedTypes() }
+                        QualifiedImportScope(qualifierPrefix, file, importsOnly = false)
+                                .getExposedTypes()
                                 .forEach { result.add(it) }
                     }
                 }

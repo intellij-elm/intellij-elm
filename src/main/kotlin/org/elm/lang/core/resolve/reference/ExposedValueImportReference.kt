@@ -4,6 +4,7 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmExposedValue
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.resolve.scope.ExposedNames
 import org.elm.lang.core.resolve.scope.ImportScope
 
 /**
@@ -13,17 +14,17 @@ class ExposedValueImportReference(exposedValue: ElmExposedValue)
     : ElmReferenceCached<ElmExposedValue>(exposedValue) {
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+        return getCandidates()?.get(element.referenceName)
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
+        return getCandidates()?.elements ?: emptyArray()
+    }
+
+    private fun getCandidates(): ExposedNames? {
         val importClause = element.parentOfType<ElmImportClause>()
                 ?: error("should never happen: this ref must be in an import")
 
-        return ImportScope.fromImportDecl(importClause)
-                ?.getExposedValues()?.toTypedArray()
-                ?: emptyArray()
+        return ImportScope.fromImportDecl(importClause)?.getExposedValues()
     }
-
 }

@@ -12,13 +12,75 @@ import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.globalModificationTracker
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
-private val EXPOSED_VALUES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("EXPOSED_VALUES_KEY")
-private val EXPOSED_TYPES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("EXPOSED_TYPES_KEY")
-private val EXPOSED_CONSTRUCTORS_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("EXPOSED_CONSTRUCTORS_KEY")
+private val EXPOSED_VALUES_KEY: Key<ParameterizedCachedValue<ExposedNames, ElmFile>> = Key.create("EXPOSED_VALUES_KEY")
+private val EXPOSED_TYPES_KEY: Key<ParameterizedCachedValue<ExposedNames, ElmFile>> = Key.create("EXPOSED_TYPES_KEY")
+private val EXPOSED_CONSTRUCTORS_KEY: Key<ParameterizedCachedValue<ExposedNames, ElmFile>> = Key.create("EXPOSED_CONSTRUCTORS_KEY")
 
-data class ExposedNames(val elements: List<ElmNamedElement>) {
+class ExposedNames(val elements: Array<ElmNamedElement>) {
+    constructor(elements: List<ElmNamedElement>) : this(elements.toTypedArray())
+
     private val byName = elements.associateByTo(mutableMapOf()) { it.name }.apply { remove(null) }
     operator fun get(key: String?) = byName[key]
+}
+
+/**
+ * A scope of exposed names for the module named by [qualifierPrefix] reachable
+ * via [clientFile]. By default, the import scopes will be found by crawling the
+ * explicit import declarations in [clientFile] and automatically adding the
+ * implicit imports from Elm's Core standard library.
+ *
+ * @param qualifierPrefix The name of a module or an alias
+ * @param clientFile The Elm file from which the search should be performed
+ * @param importsOnly If true, include only modules reachable via imports (implicit and explicit).
+ *                    Otherwise, include all modules which could be reached by the file's [ElmProject]
+ */
+class QualifiedImportScope(
+        private val qualifierPrefix: String,
+        private val clientFile: ElmFile,
+        private val importsOnly: Boolean = true
+) {
+    fun getExposedValue(name: String): ElmNamedElement? {
+        return scopes().mapNotNull { it.getExposedValues()[name] }.firstOrNull()
+    }
+
+    fun getExposedValues(): Sequence<ElmNamedElement> {
+        return scopes().flatMap { it.getExposedValues().elements.asSequence() }
+    }
+
+    fun getExposedType(name: String): ElmNamedElement? {
+        return scopes().mapNotNull { it.getExposedTypes()[name] }.firstOrNull()
+    }
+
+    fun getExposedTypes(): Sequence<ElmNamedElement> {
+        return scopes().flatMap { it.getExposedTypes().elements.asSequence() }
+    }
+
+    fun getExposedConstructor(name: String): ElmNamedElement? {
+        return scopes().mapNotNull { it.getExposedConstructors()[name] }.firstOrNull()
+    }
+
+    fun getExposedConstructors(): Sequence<ElmNamedElement> {
+        return scopes().flatMap { it.getExposedConstructors().elements.asSequence() }
+    }
+
+    /** Lazily yield all individual scopes that can contain exposed names with this prefix */
+    private fun scopes(): Sequence<ImportScope> = sequence {
+        if (importsOnly) {
+            yieldAll(implicitScopes())
+            yieldAll(explicitScopes())
+        } else {
+            val projectWideScopes = ElmModulesIndex.getAll(listOf(qualifierPrefix), clientFile)
+                    .asSequence().map { ImportScope(it.elmFile) }
+            val allScopes = projectWideScopes + implicitScopes() + explicitScopes()
+            yieldAll(allScopes.distinctBy { it.elmFile.virtualFile.path })
+        }
+    }
+
+    private fun implicitScopes() = GlobalScope.implicitModulesMatching(qualifierPrefix, clientFile)
+            .asSequence().map { ImportScope(it.elmFile) }
+
+    private fun explicitScopes() = ModuleScope.importDeclsForQualifierPrefix(clientFile, qualifierPrefix)
+            .asSequence().mapNotNull { ImportScope.fromImportDecl(it) }
 }
 
 /**
@@ -30,7 +92,6 @@ data class ExposedNames(val elements: List<ElmNamedElement>) {
 class ImportScope(val elmFile: ElmFile) {
 
     companion object {
-
         /**
          * Returns an [ImportScope] for the module which is being imported by [importDecl].
          */
@@ -39,43 +100,14 @@ class ImportScope(val elmFile: ElmFile) {
             return ElmModulesIndex.get(moduleName, importDecl.elmFile)
                     ?.let { ImportScope(it.elmFile) }
         }
-
-        /**
-         * Returns an [ImportScope] for the module named by [qualifierPrefix] reachable
-         * via [clientFile]. By default, the import scopes will be found by crawling the
-         * explicit import declarations in [clientFile] and automatically adding the
-         * implicit imports from Elm's Core standard library.
-         *
-         * @param qualifierPrefix The name of a module or an alias
-         * @param clientFile The Elm file from which the search should be performed
-         * @param importsOnly If true, include only modules reachable via imports (implicit and explicit).
-         *                    Otherwise, include all modules which could be reached by the file's [ElmProject]
-         */
-        fun fromQualifierPrefixInModule(qualifierPrefix: String, clientFile: ElmFile, importsOnly: Boolean = true): List<ImportScope> {
-            val implicitScopes = GlobalScope.implicitModulesMatching(qualifierPrefix, clientFile)
-                    .map { ImportScope(it.elmFile) }
-
-            val explicitScopes = ModuleScope.importDeclsForQualifierPrefix(clientFile, qualifierPrefix)
-                    .mapNotNull { fromImportDecl(it) }
-
-            return if (importsOnly) {
-                implicitScopes + explicitScopes
-            } else {
-                val projectWideScopes = ElmModulesIndex.getAll(listOf(qualifierPrefix), clientFile)
-                        .map { ImportScope(it.elmFile) }
-                val allScopes = projectWideScopes + implicitScopes + explicitScopes
-                allScopes.distinctBy { it.elmFile.virtualFile.path }
-            }
-        }
     }
-
 
     /**
      * Returns all value declarations exposed by this module.
      */
-    fun getExposedValues(): List<ElmNamedElement> {
+    fun getExposedValues(): ExposedNames {
         return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_VALUES_KEY, {
-            CachedValueProvider.Result.create(produceExposedValues(), elmFile.globalModificationTracker)
+            CachedValueProvider.Result.create(ExposedNames(produceExposedValues()), elmFile.globalModificationTracker)
         }, /*trackValue*/ false, /*parameter*/ elmFile)
     }
 
@@ -100,9 +132,9 @@ class ImportScope(val elmFile: ElmFile) {
     /**
      * Returns all union type and type alias declarations exposed by this module.
      */
-    fun getExposedTypes(): List<ElmNamedElement> {
+    fun getExposedTypes(): ExposedNames {
         return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_TYPES_KEY, {
-            CachedValueProvider.Result.create(produceExposedTypes(), elmFile.globalModificationTracker)
+            CachedValueProvider.Result.create(ExposedNames(produceExposedTypes()), elmFile.globalModificationTracker)
         }, false, elmFile)
     }
 
@@ -123,9 +155,9 @@ class ImportScope(val elmFile: ElmFile) {
     /**
      * Returns all union and record constructors exposed by this module.
      */
-    fun getExposedConstructors(): List<ElmNamedElement> {
+    fun getExposedConstructors(): ExposedNames {
         return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_CONSTRUCTORS_KEY, {
-            CachedValueProvider.Result.create(produceExposedConstructors(), elmFile.globalModificationTracker)
+            CachedValueProvider.Result.create(ExposedNames(produceExposedConstructors()), elmFile.globalModificationTracker)
         }, false, elmFile)
     }
 
