@@ -10,11 +10,9 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 class LocalTopLevelValueReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {
 
-    override fun resolveInner(): ElmNamedElement? {
-        return ModuleScope.getDeclaredValuesByName(element.elmFile)[element.referenceName]
-    }
+    override fun resolveInner(): ElmNamedElement? = getCandidates()[element.referenceName]
 
-    override fun getVariants(): Array<ElmNamedElement> {
-        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
-    }
+    override fun getVariants(): Array<ElmNamedElement> = getCandidates().array
+
+    private fun getCandidates() = ModuleScope.getDeclaredValues(element.elmFile)
 }

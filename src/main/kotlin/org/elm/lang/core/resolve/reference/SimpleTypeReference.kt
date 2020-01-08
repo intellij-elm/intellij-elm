@@ -14,11 +14,6 @@ class SimpleTypeReference(element: ElmReferenceElement)
             emptyArray()
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return getCandidates().find { it.name == referenceName }
-    }
-
-    private fun getCandidates(): List<ElmNamedElement> {
-        return ModuleScope.getVisibleTypes(element.elmFile).all
+        return ModuleScope.getVisibleTypes(element.elmFile)[element.referenceName]
     }
 }

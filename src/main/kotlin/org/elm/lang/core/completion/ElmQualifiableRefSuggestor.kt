@@ -3,6 +3,7 @@ package org.elm.lang.core.completion
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.psi.PsiReference
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ExpressionScope
@@ -55,12 +56,12 @@ object ElmQualifiableRefSuggestor : Suggestor {
                 is ElmUnionPattern -> {
                     if (qualifierPrefix.isEmpty()) {
                         ModuleScope.getVisibleConstructors(file).all
-                                .filter { it is ElmUnionVariant }
+                                .filterIsInstance<ElmUnionVariant>()
                                 .forEach { result.add(it) }
                     } else {
                         ImportScope.fromQualifierPrefixInModule(qualifierPrefix, file, importsOnly = false)
                                 .flatMap { it.getExposedConstructors() }
-                                .filter { it is ElmUnionVariant }
+                                .filterIsInstance<ElmUnionVariant>()
                                 .forEach { result.add(it) }
                     }
                 }

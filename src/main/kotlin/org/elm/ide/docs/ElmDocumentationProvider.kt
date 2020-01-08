@@ -41,8 +41,8 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         val lastDot = link.indexOfLast { it == '.' }
         return if (lastDot <= 0) {
             with(ModuleScope) {
-                getVisibleTypes(context.elmFile).all.find { it.name == link }
-                        ?: getDeclaredValues(context.elmFile).find { it.name == link }
+                getVisibleTypes(context.elmFile)[link]
+                        ?: getDeclaredValues(context.elmFile)[link]
             }
         } else {
             val qualifierPrefix = link.substring(0, lastDot)
@@ -190,8 +190,7 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
         html.replace(Regex("<p>@docs (.+?)</p>", RegexOption.DOT_MATCHES_ALL)) { match ->
             val names = match.groupValues[1].split(Regex(",\\s+"))
             names.joinToString(", ") { name ->
-                val target = declarations.find { it.name == name }
-                target?.let { buildString { renderLink(name, name) } } ?: name
+                declarations[name]?.let { buildString { renderLink(name, name) } } ?: name
             }
         }
     }

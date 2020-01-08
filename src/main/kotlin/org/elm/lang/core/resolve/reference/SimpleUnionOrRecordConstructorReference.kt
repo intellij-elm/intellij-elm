@@ -3,6 +3,7 @@ package org.elm.lang.core.resolve.reference
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.resolve.scope.VisibleNames
 
 
 class SimpleUnionOrRecordConstructorReference(element: ElmReferenceElement)
@@ -12,11 +13,6 @@ class SimpleUnionOrRecordConstructorReference(element: ElmReferenceElement)
             emptyArray()
 
     override fun resolveInner(): ElmNamedElement? {
-        val referenceName = element.referenceName
-        return getCandidates().find { it.name == referenceName }
-    }
-
-    private fun getCandidates(): List<ElmNamedElement> {
-        return ModuleScope.getVisibleConstructors(element.elmFile).all
+        return ModuleScope.getVisibleConstructors(element.elmFile)[element.referenceName]
     }
 }

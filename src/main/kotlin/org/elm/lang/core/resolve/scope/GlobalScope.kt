@@ -75,7 +75,7 @@ class GlobalScope private constructor(val clientFile: ElmFile) {
         // function.
         fun helper(moduleName: String) =
                 ElmModulesIndex.get(moduleName, clientFile)
-                        ?.let { ModuleScope.getDeclaredValues(it.elmFile) }
+                        ?.let { ModuleScope.getDeclaredValues(it.elmFile).list }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
@@ -93,7 +93,7 @@ class GlobalScope private constructor(val clientFile: ElmFile) {
     fun getVisibleTypes(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModulesIndex.get(moduleName, clientFile)
-                        ?.let { ModuleScope.getDeclaredTypes(it.elmFile) }
+                        ?.let { ModuleScope.getDeclaredTypes(it.elmFile).list }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()
@@ -112,7 +112,7 @@ class GlobalScope private constructor(val clientFile: ElmFile) {
     fun getVisibleConstructors(): List<ElmNamedElement> {
         fun helper(moduleName: String) =
                 ElmModulesIndex.get(moduleName, clientFile)
-                        ?.let { ModuleScope.getDeclaredConstructors(it.elmFile) }
+                        ?.let { ModuleScope.getDeclaredConstructors(it.elmFile).list }
                         ?: emptyList()
 
         val rest = mutableListOf<ElmNamedElement>()

@@ -9,6 +9,7 @@ import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReferenceCached
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.resolve.scope.ModuleScope.getDeclaredValues
 import org.elm.lang.core.stubs.ElmPlaceholderRefStub
 
 
@@ -54,12 +55,12 @@ class ExposedOperatorModuleReference(exposedValue: ElmExposedOperator
 ) : ElmReferenceCached<ElmExposedOperator>(exposedValue) {
 
     override fun resolveInner(): ElmNamedElement? {
-        return ModuleScope.getDeclaredValuesByName(element.elmFile)[element.referenceName]
+        return getDeclaredValues(element.elmFile)[element.referenceName]
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] verify: this was copied from ElmExposedValue's ref
-        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
+        return getDeclaredValues(element.elmFile).array
     }
 }
 

@@ -79,12 +79,12 @@ class ImportScope(val elmFile: ElmFile) {
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope.getDeclaredValues(elmFile)
+            return ModuleScope.getDeclaredValues(elmFile).list
 
         val exposingList = moduleDecl.exposingList
                 ?: return emptyList()
 
-        val declaredValues = ModuleScope.getDeclaredValues(elmFile)
+        val declaredValues = ModuleScope.getDeclaredValues(elmFile).array
         val exposedNames = mutableSetOf<String>()
         exposingList.exposedValueList.mapTo(exposedNames) { it.referenceName }
         exposingList.exposedOperatorList.mapTo(exposedNames) { it.referenceName }
@@ -106,13 +106,13 @@ class ImportScope(val elmFile: ElmFile) {
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope.getDeclaredTypes(elmFile)
+            return ModuleScope.getDeclaredTypes(elmFile).list
 
         val exposedTypeList = moduleDecl.exposingList?.exposedTypeList
                 ?: return emptyList()
 
         val exposedNames = exposedTypeList.mapTo(mutableSetOf()) { it.referenceName }
-        return ModuleScope.getDeclaredTypes(elmFile).filter { it.name in exposedNames }
+        return ModuleScope.getDeclaredTypes(elmFile).array.filter { it.name in exposedNames }
     }
 
     /**
@@ -129,7 +129,7 @@ class ImportScope(val elmFile: ElmFile) {
                 ?: return emptyList()
 
         if (moduleDecl.exposesAll)
-            return ModuleScope.getDeclaredConstructors(elmFile)
+            return ModuleScope.getDeclaredConstructors(elmFile).list
 
         val exposedTypeList = moduleDecl.exposingList?.exposedTypeList
                 ?: return emptyList()
@@ -137,7 +137,7 @@ class ImportScope(val elmFile: ElmFile) {
         val types = ModuleScope.getDeclaredTypes(elmFile)
 
         return exposedTypeList.flatMap { exposedType ->
-            val type = types.find { t -> t.name == exposedType.referenceName }
+            val type = types[exposedType.referenceName]
             val ctors = exposedType.exposedUnionConstructors
             when {
                 exposedType.exposesAll -> {

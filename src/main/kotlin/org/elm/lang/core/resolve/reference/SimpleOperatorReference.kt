@@ -11,11 +11,13 @@ class SimpleOperatorReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun resolveInner(): ElmNamedElement? {
-       return ModuleScope.getVisibleValues(element.elmFile).allByName[element.referenceName]
+       return getCandidates()[element.referenceName]
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] filter the variants to just include binary operators
-        return ModuleScope.getVisibleValues(element.elmFile).all.toTypedArray()
+        return getCandidates().all.toTypedArray()
     }
+
+    private fun getCandidates() = ModuleScope.getVisibleValues(element.elmFile)
 }
