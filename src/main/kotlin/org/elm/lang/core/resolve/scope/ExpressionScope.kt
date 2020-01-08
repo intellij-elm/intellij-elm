@@ -15,6 +15,7 @@ class ExpressionScope(val element: PsiElement) {
     fun getVisibleValues(): List<ElmNamedElement> {
 
         val results = mutableListOf<ElmNamedElement>()
+        val declAncestors = mutableListOf<ElmValueDeclaration>()
 
         treeWalkUp(element) {
             if (it is ElmFile) {
@@ -27,12 +28,13 @@ class ExpressionScope(val element: PsiElement) {
             }
 
             if (it is ElmValueDeclaration) {
+                declAncestors += it
                 results.addAll(it.declaredNames())
             }
 
             if (it is ElmLetInExpr) {
                 for (innerDecl in it.valueDeclarationList) {
-                    val includeParameters = element.ancestors.any { it === innerDecl }
+                    val includeParameters = innerDecl in declAncestors
                     results.addAll(innerDecl.declaredNames(includeParameters))
                 }
             }
@@ -52,7 +54,7 @@ class ExpressionScope(val element: PsiElement) {
     }
 }
 
-fun treeWalkUp(start: PsiElement, callback: (PsiElement) -> Boolean) {
+private fun treeWalkUp(start: PsiElement, callback: (PsiElement) -> Boolean) {
     var current: PsiElement? = start
     while (current != null) {
         val keepGoing = callback(current)

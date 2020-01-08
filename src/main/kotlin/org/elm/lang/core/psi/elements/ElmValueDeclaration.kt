@@ -105,10 +105,14 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
             // HACK: try to find the type annotation as best we can, keeping stub-safe.
             // TODO [kl] Look into parsing the type annotation as part of the value declaration.
             val fdl = functionDeclarationLeft
-            return if (stub != null && fdl != null) {
-                elmFile.getTypeAnnotations().firstOrNull { it.referenceName == fdl.name }
-            } else {
-                prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+            return when {
+                fdl == null -> null
+                stub != null -> {
+                    elmFile.stubDirectChildrenOfType<ElmTypeAnnotation>().firstOrNull { it.referenceName == fdl.name }
+                }
+                else -> {
+                    prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+                }
             }
         }
 

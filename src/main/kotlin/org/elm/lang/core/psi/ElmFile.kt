@@ -76,25 +76,6 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
                 .toList()
     }
 
-    fun getValueDeclarations() =
-            stubDirectChildrenOfType<ElmValueDeclaration>()
-
-    fun getTypeDeclarations() =
-            stubDirectChildrenOfType<ElmTypeDeclaration>()
-
-    fun getTypeAliasDeclarations() =
-            stubDirectChildrenOfType<ElmTypeAliasDeclaration>()
-
-    fun getTypeAnnotations() =
-            stubDirectChildrenOfType<ElmTypeAnnotation>()
-
-    fun getPortAnnotations() =
-            stubDirectChildrenOfType<ElmPortAnnotation>()
-
-    fun getInfixDeclarations() =
-            stubDirectChildrenOfType<ElmInfixDeclaration>()
-
-
     companion object {
         fun fromVirtualFile(file: VirtualFile, project: Project): ElmFile? =
                 file.toPsiFile(project) as? ElmFile

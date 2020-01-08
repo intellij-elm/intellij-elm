@@ -4,11 +4,8 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider.Result
 import com.intellij.psi.util.CachedValuesManager
-import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.psi.elements.ElmTypeDeclaration
-import org.elm.lang.core.psi.globalModificationTracker
+import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.elements.*
 
 private val DECLARED_VALUES_KEY: Key<CachedValue<DeclaredNames>> = Key.create("DECLARED_VALUES_KEY")
 private val VISIBLE_VALUES_KEY: Key<CachedValue<VisibleNames>> = Key.create("VISIBLE_VALUES_KEY")
@@ -140,11 +137,15 @@ object ModuleScope {
 
     fun getDeclaredValues(elmFile: ElmFile): DeclaredNames {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_VALUES_KEY) {
-            val valueDecls = elmFile.getValueDeclarations().flatMap {
-                it.declaredNames(includeParameters = false)
-            }
-            val values = listOf(valueDecls, elmFile.getPortAnnotations(), elmFile.getInfixDeclarations())
-                    .flatten()
+            val values = elmFile.stubDirectChildrenOfType<ElmPsiElement>()
+                    .flatMap<ElmPsiElement, ElmNamedElement> {
+                        when (it) {
+                            is ElmValueDeclaration -> it.declaredNames(includeParameters = false)
+                            is ElmPortAnnotation -> listOf(it)
+                            is ElmInfixDeclaration -> listOf(it)
+                            else -> emptyList()
+                        }
+                    }
             Result.create(DeclaredNames(values), elmFile.globalModificationTracker)
         }
     }
@@ -269,8 +270,8 @@ object ModuleScope {
 
     fun getDeclaredTypes(elmFile: ElmFile): DeclaredNames {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_TYPES_KEY) {
-            val declaredTypes = (elmFile.getTypeDeclarations() as List<ElmNamedElement>) +
-                    (elmFile.getTypeAliasDeclarations() as List<ElmNamedElement>)
+            val declaredTypes = elmFile.stubDirectChildrenOfType<ElmNamedElement>()
+                    .filter { it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration }
             Result.create(DeclaredNames(declaredTypes), elmFile.globalModificationTracker)
         }
     }
@@ -309,10 +310,14 @@ object ModuleScope {
 
     fun getDeclaredConstructors(elmFile: ElmFile): DeclaredNames {
         return CachedValuesManager.getCachedValue(elmFile, DECLARED_CONSTRUCTORS_KEY) {
-            val declaredConstructors = listOf(
-                    elmFile.getTypeDeclarations().flatMap { it.unionVariantList },
-                    elmFile.getTypeAliasDeclarations().filter { it.isRecordAlias }
-            ).flatten()
+            val declaredConstructors = elmFile.stubDirectChildrenOfType<ElmNameIdentifierOwner>()
+                    .flatMap {
+                        when {
+                            it is ElmTypeDeclaration -> it.unionVariantList
+                            it is ElmTypeAliasDeclaration && it.isRecordAlias -> listOf(it)
+                            else -> emptyList()
+                        }
+                    }
             Result.create(DeclaredNames(declaredConstructors), elmFile.globalModificationTracker)
         }
     }
