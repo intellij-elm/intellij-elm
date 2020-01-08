@@ -30,10 +30,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     override fun toString() =
             "Elm File"
 
-    override fun getIcon(flags: Int) =
-            super.getIcon(flags)
-
-    override fun getStub() =
+    override fun getStub(): ElmFileStub? =
             super.getStub() as ElmFileStub?
 
     fun isCore(): Boolean {
@@ -66,11 +63,22 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
             }
         }
 
-    fun getModuleDecl() =
-            stubDirectChildrenOfType<ElmModuleDeclaration>().firstOrNull()
+    fun getModuleDecl(): ElmModuleDeclaration? {
+        if (stub != null) return stubDirectChildrenOfType<ElmModuleDeclaration>().firstOrNull()
+        // No need to generate the list of all children if we aren't a stub
+        return directChildren.filterIsInstance<ElmModuleDeclaration>().firstOrNull()
+    }
 
-    fun getImportClauses() =
-            stubDirectChildrenOfType<ElmImportClause>()
+    fun getImportClauses(): List<ElmImportClause> {
+        if (stub != null) return stubDirectChildrenOfType()
+
+        // If we aren't a stub, we can optimize this search to take advantage of the fact that
+        // imports can't occur after declarations, so we don't need to look through the whole tree.
+        return directChildren.withoutWsOrComments
+                .takeWhile { it is ElmModuleDeclaration || it is ElmImportClause }
+                .filterIsInstance<ElmImportClause>()
+                .toList()
+    }
 
     fun getValueDeclarations() =
             stubDirectChildrenOfType<ElmValueDeclaration>()
