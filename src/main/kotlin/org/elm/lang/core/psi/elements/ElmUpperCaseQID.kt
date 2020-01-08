@@ -6,7 +6,6 @@ import com.intellij.psi.stubs.IStubElementType
 import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmUnionPatternChildTag
 import org.elm.lang.core.stubs.ElmUpperCaseQIDStub
 
 /**
@@ -56,7 +55,12 @@ class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID {
      * e.g. `"Foo.Bar.Quux"` for QID `Foo.Bar.Quux`
      */
     val fullName: String
-        get() = if (isQualified) "$qualifierPrefix.$refName" else refName
+        get() = when {
+            stub == null -> text
+            isQualified -> "$qualifierPrefix.$refName"
+            else -> refName
+        }
+
     /**
      * True if the identifier is qualified by a module name (in the case of union or
      * record constructors) or the module exists in a hierarchy (in the case of a pure
