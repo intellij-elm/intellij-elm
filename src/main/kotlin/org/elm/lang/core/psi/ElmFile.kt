@@ -2,9 +2,13 @@ package org.elm.lang.core.psi
 
 import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lookup.ClientLocation
@@ -16,6 +20,7 @@ import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
 
+private val IS_IN_TESTS_DIRECTORY_KEY: Key<CachedValue<Boolean>> = Key.create("IS_IN_TESTS_DIRECTORY_KEY")
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), ClientLocation {
 
@@ -52,10 +57,13 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         get() = project.elmWorkspace.findProjectForFile(originalFile.virtualFile)
 
     override val isInTestsDirectory: Boolean
-        get() {
-            val elmProj = elmProject ?: return false
-            val vfile = originalFile.virtualFile ?: return false
-            return vfile.pathAsPath.startsWith(elmProj.testsDirPath)
+        // This is call often during reference resolve, and the system-independent path comparison
+        // is slow enough that the result is worth caching
+        get() = CachedValuesManager.getCachedValue(this, IS_IN_TESTS_DIRECTORY_KEY) {
+            elmProject?.let { elmProj ->
+                val res = originalFile.virtualFile?.pathAsPath?.startsWith(elmProj.testsDirPath)
+                CachedValueProvider.Result.create(res, globalModificationTracker)
+            }
         }
 
     fun getModuleDecl() =
