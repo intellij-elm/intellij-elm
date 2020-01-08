@@ -15,8 +15,7 @@ class GlobalScope private constructor(val clientFile: ElmFile) {
     companion object {
 
         fun forElmFile(elmFile: ElmFile): GlobalScope? {
-            if (elmFile.elmProject == null) return null
-            if (elmFile.isCore()) {
+            if (elmFile.elmProject?.isCore() != false) {
                 // The `elm/core` standard library does not have an implicit global scope. It must explicitly
                 // import modules like `List`, `String`, etc.
                 return null

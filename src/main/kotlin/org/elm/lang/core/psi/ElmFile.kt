@@ -33,11 +33,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     override fun getStub(): ElmFileStub? =
             super.getStub() as ElmFileStub?
 
-    fun isCore(): Boolean {
-        val pkgName = (elmProject as? ElmPackageProject)?.name
-                ?: return false
-        return (pkgName == "elm/core" || pkgName == "elm-lang/core") // TODO [drop 0.18] remove "elm-core/lang" clause
-    }
+    fun isCore(): Boolean = elmProject?.isCore() ?: false
 
     override fun setName(name: String): PsiElement {
         val nameWithExtension = if (name.endsWith(".elm")) name else "$name.elm"

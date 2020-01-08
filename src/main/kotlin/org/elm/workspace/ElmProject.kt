@@ -89,6 +89,11 @@ sealed class ElmProject(
                 is ElmPackageProject -> elmVersion.contains(version.xyz)
             }
 
+    /**
+     * Return `true` iff this package is the core package for the current version of Elm.
+     */
+    open fun isCore(): Boolean = false
+
     companion object {
 
         fun parse(manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {
@@ -219,7 +224,11 @@ class ElmPackageProject(
         val name: String,
         val version: Version,
         val exposedModules: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories)
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories) {
+    override fun isCore(): Boolean {
+        return (name == "elm/core" || name == "elm-lang/core") // TODO [drop 0.18] remove "elm-core/lang" clause
+    }
+}
 
 
 private fun ExactDependenciesDTO.depsToPackages(repo: ElmPackageRepository) =
