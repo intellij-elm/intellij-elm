@@ -1,9 +1,9 @@
 package org.elm.lang.core.resolve.scope
 
 import com.intellij.openapi.util.Key
-import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.ParameterizedCachedValue
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmImportClause
@@ -12,9 +12,14 @@ import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.globalModificationTracker
 import org.elm.lang.core.stubs.index.ElmModulesIndex
 
-private val EXPOSED_VALUES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("EXPOSED_VALUES_KEY")
-private val EXPOSED_TYPES_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("EXPOSED_TYPES_KEY")
-private val EXPOSED_CONSTRUCTORS_KEY: Key<CachedValue<List<ElmNamedElement>>> = Key.create("EXPOSED_CONSTRUCTORS_KEY")
+private val EXPOSED_VALUES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("EXPOSED_VALUES_KEY")
+private val EXPOSED_TYPES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("EXPOSED_TYPES_KEY")
+private val EXPOSED_CONSTRUCTORS_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("EXPOSED_CONSTRUCTORS_KEY")
+
+data class ExposedNames(val elements: List<ElmNamedElement>) {
+    private val byName = elements.associateByTo(mutableMapOf()) { it.name }.apply { remove(null) }
+    operator fun get(key: String?) = byName[key]
+}
 
 /**
  * A scope that allows exposed values and types from the module named [elmFile]
@@ -69,9 +74,9 @@ class ImportScope(val elmFile: ElmFile) {
      * Returns all value declarations exposed by this module.
      */
     fun getExposedValues(): List<ElmNamedElement> {
-        return CachedValuesManager.getCachedValue(elmFile, EXPOSED_VALUES_KEY) {
+        return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_VALUES_KEY, {
             CachedValueProvider.Result.create(produceExposedValues(), elmFile.globalModificationTracker)
-        }
+        }, /*trackValue*/ false, /*parameter*/ elmFile)
     }
 
     private fun produceExposedValues(): List<ElmNamedElement> {
@@ -96,9 +101,9 @@ class ImportScope(val elmFile: ElmFile) {
      * Returns all union type and type alias declarations exposed by this module.
      */
     fun getExposedTypes(): List<ElmNamedElement> {
-        return CachedValuesManager.getCachedValue(elmFile, EXPOSED_TYPES_KEY) {
+        return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_TYPES_KEY, {
             CachedValueProvider.Result.create(produceExposedTypes(), elmFile.globalModificationTracker)
-        }
+        }, false, elmFile)
     }
 
     private fun produceExposedTypes(): List<ElmNamedElement> {
@@ -119,9 +124,9 @@ class ImportScope(val elmFile: ElmFile) {
      * Returns all union and record constructors exposed by this module.
      */
     fun getExposedConstructors(): List<ElmNamedElement> {
-        return CachedValuesManager.getCachedValue(elmFile, EXPOSED_CONSTRUCTORS_KEY) {
+        return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_CONSTRUCTORS_KEY, {
             CachedValueProvider.Result.create(produceExposedConstructors(), elmFile.globalModificationTracker)
-        }
+        }, false, elmFile)
     }
 
     private fun produceExposedConstructors(): List<ElmNamedElement> {
