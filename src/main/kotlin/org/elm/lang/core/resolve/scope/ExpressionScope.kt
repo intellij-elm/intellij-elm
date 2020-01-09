@@ -23,10 +23,6 @@ class ExpressionScope(val element: PsiElement) {
                 return@treeWalkUp false // stop
             }
 
-            if (it is ElmNamedElement) {
-                results.add(it)
-            }
-
             if (it is ElmValueDeclaration) {
                 declAncestors += it
                 results.addAll(it.declaredNames())

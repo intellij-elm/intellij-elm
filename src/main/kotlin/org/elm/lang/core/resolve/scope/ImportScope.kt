@@ -107,7 +107,7 @@ class ImportScope(val elmFile: ElmFile) {
      */
     fun getExposedValues(): ExposedNames {
         return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_VALUES_KEY, {
-            CachedValueProvider.Result.create(ExposedNames(produceExposedValues()), elmFile.globalModificationTracker)
+            CachedValueProvider.Result.create(ExposedNames(produceExposedValues()), it.globalModificationTracker)
         }, /*trackValue*/ false, /*parameter*/ elmFile)
     }
 
@@ -134,7 +134,7 @@ class ImportScope(val elmFile: ElmFile) {
      */
     fun getExposedTypes(): ExposedNames {
         return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_TYPES_KEY, {
-            CachedValueProvider.Result.create(ExposedNames(produceExposedTypes()), elmFile.globalModificationTracker)
+            CachedValueProvider.Result.create(ExposedNames(produceExposedTypes()), it.globalModificationTracker)
         }, false, elmFile)
     }
 
@@ -157,7 +157,7 @@ class ImportScope(val elmFile: ElmFile) {
      */
     fun getExposedConstructors(): ExposedNames {
         return CachedValuesManager.getManager(elmFile.project).getParameterizedCachedValue(elmFile, EXPOSED_CONSTRUCTORS_KEY, {
-            CachedValueProvider.Result.create(ExposedNames(produceExposedConstructors()), elmFile.globalModificationTracker)
+            CachedValueProvider.Result.create(ExposedNames(produceExposedConstructors()), it.globalModificationTracker)
         }, false, elmFile)
     }
 

@@ -1,16 +1,26 @@
 package org.elm.lang.core.resolve.scope
 
+import com.intellij.openapi.util.Key
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.ParameterizedCachedValue
+import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
+import org.elm.lang.core.psi.globalModificationTracker
 import org.elm.lang.core.stubs.index.ElmModulesIndex
+import org.elm.workspace.elmWorkspace
 
+private val VISIBLE_VALUES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("VISIBLE_VALUES_KEY")
+private val VISIBLE_TYPES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("VISIBLE_TYPES_KEY")
+private val VISIBLE_CTORS_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("VISIBLE_CTORS_KEY")
 
 /**
  * The subset of implicitly exposed values, types and constructors provided by Elm's
  * standard library ("Core").
  */
-class GlobalScope private constructor(val clientFile: ElmFile) {
+class GlobalScope private constructor(private val clientFile: ElmFile) {
 
     companion object {
 
@@ -67,57 +77,82 @@ class GlobalScope private constructor(val clientFile: ElmFile) {
             return ElmModulesIndex.getAll(listOf(implicitModuleName), clientFile)
                     .filter { it.elmFile.isCore() }
         }
+
+
+        private fun produceVisibleValues(clientFile: ClientLocation): List<ElmNamedElement> {
+            fun helper(moduleName: String) =
+                    ElmModulesIndex.get(moduleName, clientFile)
+                            ?.let { ModuleScope.getDeclaredValues(it.elmFile) }
+
+            val rest = mutableListOf<ElmNamedElement>()
+            helper("Basics")?.list?.let { rest.addAll(it) }
+            helper("List")?.get("::")?.let { rest.add(it) }
+
+            // TODO [drop 0.18] remove this line (the `!` operator was removed in 0.19)
+            helper("Platform.Cmd")?.get("!")?.let { rest.add(it) }
+
+            return rest
+        }
+
+
+        // this function should also return List, but, unlike all the other global types, Elm doesn't
+        // define it anywhere, so there's no element to return
+        private fun produceVisibleTypes(location: ClientLocation): List<ElmNamedElement> {
+            fun helper(moduleName: String) =
+                    ElmModulesIndex.get(moduleName, location)
+                            ?.let { ModuleScope.getDeclaredTypes(it.elmFile) }
+
+            val rest = mutableListOf<ElmNamedElement>()
+            helper("Basics")?.list?.let { rest.addAll(it) }
+            helper("Char")?.get("Char")?.let { rest.add(it) }
+            helper("Maybe")?.get("Maybe")?.let { rest.add(it) }
+            helper("Result")?.get("Result")?.let { rest.add(it) }
+            helper("String")?.get("String")?.let { rest.add(it) }
+            helper("Platform")?.get("Program")?.let { rest.add(it) }
+            helper("Platform.Cmd")?.get("Cmd")?.let { rest.add(it) }
+            helper("Platform.Sub")?.get("Sub")?.let { rest.add(it) }
+            return rest
+        }
+
+        private fun produceVisibleConstructors(location: ClientLocation): List<ElmNamedElement> {
+            fun helper(moduleName: String) =
+                    ElmModulesIndex.get(moduleName, location)
+                            ?.let { ModuleScope.getDeclaredConstructors(it.elmFile) }
+
+            val rest = mutableListOf<ElmNamedElement>()
+            helper("Basics")?.list?.let { rest.addAll(it) }
+            helper("Maybe")?.let { ctors ->
+                ctors["Just"]?.let { rest.add(it) }
+                ctors["Nothing"]?.let { rest.add(it) }
+            }
+            helper("Result")?.let { ctors ->
+                ctors["Ok"]?.let { rest.add(it) }
+                ctors["Err"]?.let { rest.add(it) }
+            }
+            return rest
+        }
     }
 
     fun getVisibleValues(): List<ElmNamedElement> {
-        // ModuleScope.getDeclaredValues is cached, so there's no need to cache the results of this
-        // function.
-        fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, clientFile)
-                        ?.let { ModuleScope.getDeclaredValues(it.elmFile).list }
-                        ?: emptyList()
-
-        val rest = mutableListOf<ElmNamedElement>()
-        rest.addAll(helper("Basics"))
-        rest.addAll(helper("List").filter { it.name == "::" })
-
-        // TODO [drop 0.18] remove this line (the `!` operator was removed in 0.19)
-        rest.addAll(helper("Platform.Cmd").filter { it.name == "!" })
-
-        return rest
+        val elmProject = clientFile.elmProject ?: return produceVisibleValues(clientFile)
+        return CachedValuesManager.getManager(clientFile.project).getParameterizedCachedValue(elmProject, VISIBLE_VALUES_KEY, {
+            CachedValueProvider.Result.create(produceVisibleValues(it), it.globalModificationTracker)
+        }, /*trackValue*/ false, /*parameter*/ clientFile)
     }
 
-    // this function should also return List, but, unlike all the other global types, Elm doesn't
-    // define it anywhere, so there's no element to return
-    fun getVisibleTypes(): List<ElmNamedElement> {
-        fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, clientFile)
-                        ?.let { ModuleScope.getDeclaredTypes(it.elmFile).list }
-                        ?: emptyList()
 
-        val rest = mutableListOf<ElmNamedElement>()
-        rest.addAll(helper("Basics"))
-        rest.addAll(helper("Char").filter { it.name == "Char" })
-        rest.addAll(helper("Maybe").filter { it.name == "Maybe" })
-        rest.addAll(helper("Result").filter { it.name == "Result" })
-        rest.addAll(helper("String").filter { it.name == "String" })
-        rest.addAll(helper("Platform").filter { it.name == "Program" })
-        rest.addAll(helper("Platform.Cmd").filter { it.name == "Cmd" })
-        rest.addAll(helper("Platform.Sub").filter { it.name == "Sub" })
-        return rest
+    fun getVisibleTypes(): List<ElmNamedElement> {
+        val elmProject = clientFile.elmProject ?: return produceVisibleTypes(clientFile)
+        return CachedValuesManager.getManager(clientFile.project).getParameterizedCachedValue(elmProject, VISIBLE_TYPES_KEY, {
+            CachedValueProvider.Result.create(produceVisibleTypes(it), it.globalModificationTracker)
+        }, /*trackValue*/ false, /*parameter*/ clientFile)
     }
 
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
-        fun helper(moduleName: String) =
-                ElmModulesIndex.get(moduleName, clientFile)
-                        ?.let { ModuleScope.getDeclaredConstructors(it.elmFile).list }
-                        ?: emptyList()
-
-        val rest = mutableListOf<ElmNamedElement>()
-        rest.addAll(helper("Basics"))
-        rest.addAll(helper("Maybe").filter { it.name == "Just" || it.name == "Nothing" })
-        rest.addAll(helper("Result").filter { it.name == "Ok" || it.name == "Err" })
-        return rest
+        val elmProject = clientFile.elmProject ?: return produceVisibleConstructors(clientFile)
+        return CachedValuesManager.getManager(clientFile.project).getParameterizedCachedValue(elmProject, VISIBLE_CTORS_KEY, {
+            CachedValueProvider.Result.create(produceVisibleConstructors(it), it.globalModificationTracker)
+        }, /*trackValue*/ false, /*parameter*/ clientFile)
     }
 }
