@@ -33,10 +33,6 @@ class ElmOperatorDeclarationLeft : ElmStubbedNamedElementImpl<ElmOperatorDeclara
         get() = PsiTreeUtil.getChildrenOfTypeAsList(this, ElmPattern::class.java)
 
 
-    val namedParameters: List<ElmNameIdentifierOwner>
-        get() {
-            val results = mutableListOf<ElmNameIdentifierOwner>()
-            results.addAll(PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java))
-            return results
-        }
+    val namedParameters: Collection<ElmNameIdentifierOwner>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmLowerPattern::class.java)
 }

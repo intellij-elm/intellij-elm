@@ -54,8 +54,8 @@ class ElmFunctionDeclarationLeft : ElmStubbedNamedElementImpl<ElmFunctionDeclara
      *
      * e.g. `a`, `b`, `c`, `d`, and `e` in `foo a (b, (c, d)) {e} = 42`
      */
-    val namedParameters: List<ElmNameDeclarationPatternTag>
-        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java).toList()
+    val namedParameters: Collection<ElmNameDeclarationPatternTag>
+        get() = PsiTreeUtil.collectElementsOfType(this, ElmNameDeclarationPatternTag::class.java)
 
 
     /** Return true if this declaration is not nested in a let-in expression */
