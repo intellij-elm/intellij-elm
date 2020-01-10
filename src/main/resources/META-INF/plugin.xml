@@ -314,6 +314,7 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmTupleSizeInspection"/>
 
+
         <localInspection language="Elm" groupName="Elm"
                          displayName="Unused symbol"
                          enabledByDefault="true" level="WARNING"
@@ -333,6 +334,11 @@
                          displayName="Invalid (..) on alias import"
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmExposingAliasVariantsInspection"/>
+
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Conflicting declarations"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmDuplicateDeclarationInspection"/>
 
         <!-- Intentions -->
 
