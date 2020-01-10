@@ -18,29 +18,23 @@ class ExpressionScope(val element: PsiElement) {
         val declAncestors = mutableListOf<ElmValueDeclaration>()
 
         treeWalkUp(element) {
-            if (it is ElmFile) {
-                results.addAll(ModuleScope.getVisibleValues(it).all)
-                return@treeWalkUp false // stop
-            }
-
-            if (it is ElmValueDeclaration) {
-                declAncestors += it
-                results.addAll(it.declaredNames())
-            }
-
-            if (it is ElmLetInExpr) {
-                for (innerDecl in it.valueDeclarationList) {
-                    val includeParameters = innerDecl in declAncestors
-                    results.addAll(innerDecl.declaredNames(includeParameters))
+            when (it) {
+                is ElmFile -> {
+                    results.addAll(ModuleScope.getVisibleValues(it).all)
+                    return@treeWalkUp false // stop
                 }
-            }
-
-            if (it is ElmCaseOfBranch) {
-                results.addAll(it.destructuredNames)
-            }
-
-            if (it is ElmAnonymousFunctionExpr) {
-                results.addAll(it.namedParameters)
+                is ElmValueDeclaration -> {
+                    declAncestors += it
+                    results.addAll(it.declaredNames())
+                }
+                is ElmLetInExpr -> {
+                    for (innerDecl in it.valueDeclarationList) {
+                        val includeParameters = innerDecl in declAncestors
+                        results.addAll(innerDecl.declaredNames(includeParameters))
+                    }
+                }
+                is ElmCaseOfBranch -> results.addAll(it.destructuredNames)
+                is ElmAnonymousFunctionExpr -> results.addAll(it.namedParameters)
             }
 
             return@treeWalkUp true // keep going
