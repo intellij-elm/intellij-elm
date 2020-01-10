@@ -25,10 +25,6 @@ class LexicalValueReference(element: ElmReferenceElement)
      */
     fun resolveShallow(): ElmNamedElement? {
         val referenceName = element.referenceName
-        return getCandidates().find { it.name == referenceName }
-    }
-
-    private fun getCandidates(): List<ElmNamedElement> {
-        return ExpressionScope(element).getVisibleValues()
+        return ExpressionScope(element).getVisibleValues().find { it.name == referenceName }
     }
 }
