@@ -6,7 +6,6 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.SmartList
 import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.stubs.ElmPlaceholderStub
@@ -52,7 +51,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
 
     /** The element on the left-hand side of the `=` */
     val assignee: ElmValueAssigneeTag?
-        get() = PsiTreeUtil.getStubChildOfType(this, ElmValueAssigneeTag::class.java) ?: pattern
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmValueAssigneeTag::class.java)
 
     /**
      * The 'body' of the declaration. This is the right-hand side which is bound
@@ -73,31 +72,19 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
      * @param includeParameters include names declared as parameters to the function
      *                          (also includes destructured names). The default is `true`
      */
-    fun declaredNames(includeParameters: Boolean = true): List<ElmNameIdentifierOwner> {
-        val namedElements = mutableListOf<ElmNameIdentifierOwner>()
-
-        val fdl = functionDeclarationLeft
-        if (fdl != null) {
-            // the most common case, a named function or value declaration
-            namedElements.add(fdl)
-            if (includeParameters) namedElements.addAll(fdl.namedParameters)
-            return namedElements
-
+    fun declaredNames(includeParameters: Boolean = true): Collection<ElmNameIdentifierOwner> {
+        return when (val assignee = assignee) {
+            is ElmFunctionDeclarationLeft -> when {
+                includeParameters -> assignee + assignee.namedParameters
+                else -> listOf(assignee)
+            }
+            is ElmPattern -> descendantsOfType()
+            is ElmOperatorDeclarationLeft -> when {
+                includeParameters -> assignee + assignee.namedParameters
+                else -> listOf(assignee)
+            }
+            else -> emptyList()
         }
-        val odl = operatorDeclarationLeft
-        if (odl != null) {
-            // an operator declaration
-            namedElements.add(odl)
-            if (includeParameters) namedElements.addAll(odl.namedParameters)
-            return namedElements
-        }
-        val pat = pattern
-        if (pat != null) {
-            // value destructuring assignment (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(pat.descendantsOfType())
-        }
-
-        return namedElements
     }
 
     /** The type annotation for this function, or `null` if there isn't one. */
@@ -123,4 +110,12 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
 
     /** The `=` element. In a well-formed program, this will not be null */
     val eqElement: PsiElement? get() = findChildByType(ElmTypes.EQ)
+}
+
+private operator fun <T> T.plus(rest: Collection<T>): List<T> = when {
+    rest.isEmpty() -> listOf(this)
+    else -> ArrayList<T>(rest.size + 1).apply {
+        add(this@plus)
+        addAll(rest)
+    }
 }
