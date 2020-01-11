@@ -28,7 +28,7 @@ class ElmDuplicateDeclarationInspection : LocalInspectionTool() {
                         .flatten()
                         .forEach {
                             val target = if (it is ElmNameIdentifierOwner) it.nameIdentifier else it
-                            holder.registerProblem(target, "Multiple declarations with name ${it.name}")
+                            holder.registerProblem(target, "Multiple declarations with name '${it.name}'")
                         }
             }
         }
