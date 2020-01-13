@@ -8,6 +8,7 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.icons.ElmIcons
 import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmTypes.DOC_COMMENT
 import org.elm.lang.core.stubs.ElmPlaceholderStub
 
 
@@ -110,7 +111,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
 
     override val docComment: PsiComment?
         get() = (prevSiblings.withoutWs.filter { it !is ElmTypeAnnotation }.firstOrNull() as? PsiComment)
-                ?.takeIf { it.text.startsWith("{-|") }
+                ?.takeIf { it.elementType == DOC_COMMENT }
 
     /** The `=` element. In a well-formed program, this will not be null */
     val eqElement: PsiElement? get() = findChildByType(ElmTypes.EQ)

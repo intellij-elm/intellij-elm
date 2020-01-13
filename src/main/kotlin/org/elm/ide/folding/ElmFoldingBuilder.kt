@@ -21,7 +21,7 @@ class ElmFoldingBuilder : FoldingBuilderEx(), DumbAware {
 
     override fun getPlaceholderText(node: ASTNode): String? {
         return when (node.elementType) {
-            BLOCK_COMMENT -> {
+            BLOCK_COMMENT, DOC_COMMENT -> {
                 val nl = node.text.indexOf('\n')
                 if (nl > 0) node.text.substring(0, nl) + " ...-}"
                 else "{-...-}"
@@ -34,7 +34,7 @@ class ElmFoldingBuilder : FoldingBuilderEx(), DumbAware {
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {
         return with(CodeFoldingSettings.getInstance()) {
-            COLLAPSE_DOC_COMMENTS && node.elementType == BLOCK_COMMENT
+            COLLAPSE_DOC_COMMENTS && node.elementType == DOC_COMMENT
                     || COLLAPSE_IMPORTS && node.elementType == IMPORT_CLAUSE
         }
     }
@@ -69,7 +69,7 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
                 foldBetween(element, exposingList.openParen, exposingList.closeParen, false, false)
             }
             is PsiComment -> {
-                if (element.elementType == BLOCK_COMMENT) fold(element)
+                if (element.elementType == BLOCK_COMMENT || element.elementType == DOC_COMMENT) fold(element)
             }
             is ElmRecordType, is ElmRecordExpr -> {
                 fold(element)

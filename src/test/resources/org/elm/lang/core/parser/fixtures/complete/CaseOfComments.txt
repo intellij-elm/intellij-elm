@@ -27,7 +27,7 @@ Elm File
           PsiElement(NUMBER_LITERAL)('2')
   PsiElement(VIRTUAL_END_DECL)('\n')
   PsiWhiteSpace('\n')
-  PsiComment(BLOCK_COMMENT)('{-| comment -}')
+  PsiComment(DOC_COMMENT)('{-| comment -}')
   PsiWhiteSpace('\n')
   ElmValueDeclaration(VALUE_DECLARATION)
     ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)

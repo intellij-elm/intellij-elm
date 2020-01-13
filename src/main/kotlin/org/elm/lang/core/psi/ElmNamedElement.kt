@@ -6,9 +6,7 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
 import com.intellij.util.IncorrectOperationException
 import org.elm.ide.presentation.getPresentation
-import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.IdentifierCase.LOWER
 import org.elm.lang.core.psi.IdentifierCase.OPERATOR
 import org.elm.lang.core.psi.IdentifierCase.UPPER
@@ -27,7 +25,7 @@ interface ElmNameIdentifierOwner : ElmNamedElement, PsiNameIdentifierOwner {
 interface ElmDocTarget: ElmPsiElement {
     /** The doc comment for this element, or `null` if there isn't one. */
     val docComment: PsiComment?
-        get() = (prevSiblings.withoutWs.firstOrNull() as? PsiComment)?.takeIf { it.text.startsWith("{-|") }
+        get() = (prevSiblings.withoutWs.firstOrNull() as? PsiComment)?.takeIf { it.elementType == DOC_COMMENT }
 }
 
 

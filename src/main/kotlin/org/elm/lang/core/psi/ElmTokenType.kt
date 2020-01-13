@@ -14,7 +14,8 @@ fun tokenSetOf(vararg tokens: IElementType) = TokenSet.create(*tokens)
 
 val ELM_COMMENTS = tokenSetOf(
         LINE_COMMENT,
-        BLOCK_COMMENT
+        BLOCK_COMMENT,
+        DOC_COMMENT
 )
 
 val ELM_KEYWORDS = tokenSetOf(

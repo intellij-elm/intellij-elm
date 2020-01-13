@@ -9,7 +9,9 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
 
     KEYWORD("Keyword", Default.KEYWORD),
     BAD_CHAR("Bad Character", HighlighterColors.BAD_CHARACTER),
-    COMMENT("Comment", Default.LINE_COMMENT),
+    LINE_COMMENT("Comments//Line comment", Default.LINE_COMMENT),
+    BLOCK_COMMENT("Comments//Block comment", Default.BLOCK_COMMENT),
+    DOC_COMMENT("Comments//Doc comment", Default.DOC_COMMENT),
     STRING("String//String text", Default.STRING),
     VALID_STRING_ESCAPE("String//Valid escape sequence", Default.VALID_STRING_ESCAPE),
     INVALID_STRING_ESCAPE("String//Invalid escape sequence", Default.INVALID_STRING_ESCAPE),
