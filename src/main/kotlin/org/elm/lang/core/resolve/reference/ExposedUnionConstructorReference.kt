@@ -16,19 +16,20 @@ class ExposedUnionConstructorReference(exposedUnionConstructor: ElmExposedUnionC
 
     override fun resolveInner(): ElmNamedElement? {
         val referenceName = element.referenceName
-        return variants.find { it.name == referenceName }
+        return getCandidates().find { it.name == referenceName }
     }
 
-    override fun getVariants(): Array<ElmNamedElement> {
+    override fun getVariants(): Array<ElmNamedElement> = getCandidates().toTypedArray()
+
+    private fun getCandidates(): List<ElmNamedElement> {
         // TODO [kl] maybe I should move this code into a new UnionTypeScope class for consistency?
         val parent = element.parentOfType<ElmExposedType>() ?: error("bad context")
-        val unionType = parent.reference.resolve() ?: return emptyArray()
+        val unionType = parent.reference.resolve() ?: return emptyList()
 
         if (unionType is ElmTypeDeclaration) {
-            return unionType.unionVariantList.toTypedArray()
+            return unionType.unionVariantList
         } else {
             error("resolved to unexpected element")
         }
     }
-
 }
