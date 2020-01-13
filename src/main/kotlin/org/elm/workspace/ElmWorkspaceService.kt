@@ -316,8 +316,8 @@ class ElmWorkspaceService(
                         // don't need to register the 'tests' directory in this case.
                     } else {
                         // Register the directory containing the tests as a source root if it exists.
-                        if (project.testsDirPath.exists())
-                            put(project.testsDirPath, project)
+                        // (Existence check done in `put` method above.)
+                        put(project.testsDirPath, project)
                     }
                 }
             })
