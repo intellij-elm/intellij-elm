@@ -134,7 +134,7 @@ class GlobalScope private constructor(private val clientFile: ElmFile) {
     }
 
     fun getVisibleValues(): List<ElmNamedElement> {
-        val elmProject = clientFile.elmProject ?: return produceVisibleValues(clientFile)
+        val elmProject = clientFile.elmProject ?: return emptyList()
         return CachedValuesManager.getManager(clientFile.project).getParameterizedCachedValue(elmProject, VISIBLE_VALUES_KEY, {
             CachedValueProvider.Result.create(produceVisibleValues(it), it.globalModificationTracker)
         }, /*trackValue*/ false, /*parameter*/ clientFile)
@@ -142,7 +142,7 @@ class GlobalScope private constructor(private val clientFile: ElmFile) {
 
 
     fun getVisibleTypes(): List<ElmNamedElement> {
-        val elmProject = clientFile.elmProject ?: return produceVisibleTypes(clientFile)
+        val elmProject = clientFile.elmProject ?: return emptyList()
         return CachedValuesManager.getManager(clientFile.project).getParameterizedCachedValue(elmProject, VISIBLE_TYPES_KEY, {
             CachedValueProvider.Result.create(produceVisibleTypes(it), it.globalModificationTracker)
         }, /*trackValue*/ false, /*parameter*/ clientFile)
@@ -150,7 +150,7 @@ class GlobalScope private constructor(private val clientFile: ElmFile) {
 
 
     fun getVisibleConstructors(): List<ElmNamedElement> {
-        val elmProject = clientFile.elmProject ?: return produceVisibleConstructors(clientFile)
+        val elmProject = clientFile.elmProject ?: return emptyList()
         return CachedValuesManager.getManager(clientFile.project).getParameterizedCachedValue(elmProject, VISIBLE_CTORS_KEY, {
             CachedValueProvider.Result.create(produceVisibleConstructors(it), it.globalModificationTracker)
         }, /*trackValue*/ false, /*parameter*/ clientFile)

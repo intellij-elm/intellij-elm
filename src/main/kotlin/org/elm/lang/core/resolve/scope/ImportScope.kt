@@ -66,12 +66,12 @@ class QualifiedImportScope(
     /** Lazily yield all individual scopes that can contain exposed names with this prefix */
     private fun scopes(): Sequence<ImportScope> = sequence {
         if (importsOnly) {
-            yieldAll(implicitScopes())
             yieldAll(explicitScopes())
+            yieldAll(implicitScopes())
         } else {
             val projectWideScopes = ElmModulesIndex.getAll(listOf(qualifierPrefix), clientFile)
                     .asSequence().map { ImportScope(it.elmFile) }
-            val allScopes = projectWideScopes + implicitScopes() + explicitScopes()
+            val allScopes = explicitScopes() + implicitScopes() + projectWideScopes
             yieldAll(allScopes.distinctBy { it.elmFile.virtualFile.path })
         }
     }
