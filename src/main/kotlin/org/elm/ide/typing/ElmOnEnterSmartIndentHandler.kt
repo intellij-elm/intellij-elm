@@ -97,7 +97,7 @@ class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
         }
 
         if (elementAtCaretType == ElmTypes.EQ
-                && elementAtCaret.parentOfType(ElmRecordExpr::class, ElmTypeDeclaration::class) != null) {
+                && elementAtCaret.parentOfType(ElmRecordExpr::class.java, ElmTypeDeclaration::class.java) != null) {
             return Result.Continue
         }
 

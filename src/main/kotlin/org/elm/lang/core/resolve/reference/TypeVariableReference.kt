@@ -5,6 +5,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 
 /**
@@ -36,18 +37,18 @@ class TypeVariableReference(
         return decl == null || element is ElmRecordBaseIdentifier && decl is ElmTypeAnnotation
     }
 
-    override fun getVariants(): Array<ElmNamedElement> {
-        val decl = declaration()
+    override fun getVariants(): Array<ElmNamedElement> = getCandidates().toTypedArray()
 
-        return when (decl) {
+    private fun getCandidates(): List<ElmNamedElement> {
+        return when (val decl = declaration()) {
             is ElmTypeAliasDeclaration -> decl.lowerTypeNameList
             is ElmTypeDeclaration -> decl.lowerTypeNameList
-            is ElmTypeAnnotation -> typeAnnotationVariants(decl)
+            is ElmTypeAnnotation -> typeAnnotationVariables(decl)
             else -> emptyList()
-        }.toTypedArray()
+        }
     }
 
-    private fun typeAnnotationVariants(annotation: ElmTypeAnnotation): List<ElmNamedElement> {
+    private fun typeAnnotationVariables(annotation: ElmTypeAnnotation): List<ElmNamedElement> {
         val parents = annotation.ancestorsStrict.takeWhile { it !is ElmFile }
                 .filterIsInstance<ElmValueDeclaration>()
                 .mapNotNull { it.typeAnnotation }
@@ -63,8 +64,10 @@ class TypeVariableReference(
     }
 
     private fun declaration(): PsiElement? {
-        return element.ancestorsStrict.takeWhile { it !is ElmFile }.firstOrNull {
-            it is ElmTypeAliasDeclaration || it is ElmTypeDeclaration || it is ElmTypeAnnotation
-        }
+        return element.parentOfType(
+                ElmTypeAliasDeclaration::class.java,
+                ElmTypeDeclaration::class.java,
+                ElmTypeAnnotation::class.java
+        )
     }
 }

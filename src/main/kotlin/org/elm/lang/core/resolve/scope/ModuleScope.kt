@@ -56,7 +56,7 @@ class DeclaredNames(
     val list get() = array.asList()
 
     /** The elements associated by element name */
-    val byName = array.associateByTo(mutableMapOf()) { it.name }
+    private val byName = array.associateByTo(mutableMapOf()) { it.name }
             .apply { remove(null) }
 
     operator fun get(key: String?): ElmNamedElement? = byName[key]
