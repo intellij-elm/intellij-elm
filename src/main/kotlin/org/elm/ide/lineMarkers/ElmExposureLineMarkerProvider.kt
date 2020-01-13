@@ -1,5 +1,6 @@
 package org.elm.ide.lineMarkers
 
+import com.intellij.codeInsight.daemon.GutterIconDescriptor
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
@@ -20,6 +21,9 @@ import org.elm.lang.core.psi.elements.findMatchingItemFor
  * that are exposed by the containing module.
  */
 class ElmExposureLineMarkerProvider : LineMarkerProvider {
+    companion object {
+        val OPTION = GutterIconDescriptor.Option("elm.exposed", "Exposed declaration", ElmIcons.EXPOSED_GUTTER)
+    }
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<PsiElement>? {
         if (element.elementType !in listOf(LOWER_CASE_IDENTIFIER, UPPER_CASE_IDENTIFIER)) return null
@@ -41,10 +45,6 @@ class ElmExposureLineMarkerProvider : LineMarkerProvider {
             else ->
                 null
         }
-    }
-
-    override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<LineMarkerInfo<PsiElement>>) {
-        // we don't need to add anything here
     }
 }
 
