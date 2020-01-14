@@ -34,9 +34,8 @@ object ElmTestLocator : FileUrlProvider() {
             }
 
             DESCRIBE_PROTOCOL, TEST_PROTOCOL -> {
-                // TODO [tests-folder]: replace hard-coded string with constant defined in `ElmProject` when that change
-                //  is merged in.
-                val (filePath, labels) = LabelUtils.fromLocationUrlPath(path, metainfo ?: "tests")
+                val (filePath, labels) = LabelUtils.fromLocationUrlPath(path,
+                        metainfo ?: error("missing path to tests dir"))
                 val fileName = FileUtil.toSystemIndependentName(filePath)
                 TestsLocationProviderUtil.findSuitableFilesFor(fileName, project)
                         .mapNotNull {
