@@ -20,7 +20,7 @@ import org.junit.Test
 
 class ElmTestJsonProcessorTest {
 
-    private val processor = ElmTestJsonProcessor()
+    private val processor = ElmTestJsonProcessor("tests")
 
     @Test
     fun junk() {
@@ -242,7 +242,7 @@ class ElmTestJsonProcessorTest {
         val obj = getObject(text)
         val path = ElmTestJsonProcessor.toPath(obj)
 
-        val list = ElmTestJsonProcessor.testEvents(path, obj).toList()
+        val list = processor.testEvents(path, obj).toList()
 
         assertEquals(2, list.size.toLong())
         assertTrue(list[1] is TestFailedEvent)
@@ -401,7 +401,7 @@ class ElmTestJsonProcessorTest {
 
         assertTrue(list[0] is TestStartedEvent)
         assertTrue(list[1] is TestFailedEvent)
-        assertEquals("elmTestError://PATH/tests/UiTests.elm::131::33", (list[0] as TestStartedEvent).locationUrl)
+        assertEquals("elmTestError://tests/PATH/tests/UiTests.elm::131::33", (list[0] as TestStartedEvent).locationUrl)
         assertEquals("TOO FEW ARGS", list[0].name)
         assertEquals("TOO FEW ARGS", list[1].name)
     }

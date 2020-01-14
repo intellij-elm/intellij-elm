@@ -22,6 +22,7 @@ class ElmDuplicateDeclarationInspection : LocalInspectionTool() {
                 super.visitElement(element)
                 if (element !is ElmFile) return
                 (ModuleScope.getDeclaredTypes(element) + ModuleScope.getDeclaredValues(element))
+                        .array
                         .groupBy { it.name }
                         .values
                         .filter { it.size > 1 }
