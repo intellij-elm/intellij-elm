@@ -1,12 +1,12 @@
 package org.elm.ide.inspections.import
 
-import com.intellij.codeInspection.LocalQuickFixOnPsiElement
+import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import org.elm.ide.inspections.NamedQuickFix
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.elements.Flavor.*
@@ -18,7 +18,7 @@ import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
 import org.jetbrains.annotations.TestOnly
 
-class AddQualifierFix(element: ElmPsiElement) : LocalQuickFixOnPsiElement(element) {
+class AddQualifierFix : NamedQuickFix("Qualify name") {
 
     data class Context(
             val candidates: List<String>,
@@ -26,51 +26,49 @@ class AddQualifierFix(element: ElmPsiElement) : LocalQuickFixOnPsiElement(elemen
             val qid: ElmQID
     )
 
-    override fun getText() = "Qualify name"
-    override fun getFamilyName() = text
-
-    public override fun isAvailable(): Boolean {
-        return super.isAvailable() && findApplicableContext() != null
-    }
-
-    private fun findApplicableContext(): Context? {
-        val element = startElement as? ElmPsiElement ?: return null
-
-        if (element.ancestors.any { it is ElmModuleDeclaration || it is ElmPortAnnotation || it is ElmImportClause }) {
-            return null
+    companion object {
+        fun isAvailable(psiElement: PsiElement?): Boolean {
+            return findApplicableContext(psiElement) != null
         }
 
-        val file = element.elmFile
+        private fun findApplicableContext(psiElement: PsiElement?): Context? {
+            val element = psiElement as? ElmPsiElement ?: return null
 
-        return when (element) {
-            is ElmTypeRef -> makeContext(file, element.upperCaseQID, element, ModuleScope.getReferencableTypes(file))
-            is ElmUnionPattern -> makeContext(file, element.upperCaseQID, element, ModuleScope.getReferencableConstructors(file))
-            is ElmValueExpr -> when (element.flavor) {
-                QualifiedValue, QualifiedConstructor -> null
-                BareValue -> {
-                    makeContext(file, element.qid, element, ModuleScope.getReferencableValues(file))
-                }
-                BareConstructor -> {
-                    makeContext(file, element.qid, element, ModuleScope.getReferencableConstructors(file))
-                }
+            if (element.ancestors.any { it is ElmModuleDeclaration || it is ElmPortAnnotation || it is ElmImportClause }) {
+                return null
             }
-            else -> null
+
+            val file = element.elmFile
+
+            return when (element) {
+                is ElmTypeRef -> makeContext(file, element.upperCaseQID, element, ModuleScope.getReferencableTypes(file))
+                is ElmUnionPattern -> makeContext(file, element.upperCaseQID, element, ModuleScope.getReferencableConstructors(file))
+                is ElmValueExpr -> when (element.flavor) {
+                    QualifiedValue, QualifiedConstructor -> null
+                    BareValue -> {
+                        makeContext(file, element.qid, element, ModuleScope.getReferencableValues(file))
+                    }
+                    BareConstructor -> {
+                        makeContext(file, element.qid, element, ModuleScope.getReferencableConstructors(file))
+                    }
+                }
+                else -> null
+            }
+        }
+
+        private fun makeContext(file: ElmFile, qid: ElmQID, ref: ElmReferenceElement, names: VisibleNames): Context? {
+            val name = ref.referenceName
+            val candidates = (names.global + names.imported)
+                    .filter { it.name == name }
+                    .mapNotNull { ModuleScope.getQualifierForName(file, it.moduleName, name) }
+                    .filter { it != "" }
+            if (candidates.isEmpty()) return null
+            return Context(candidates, name, qid)
         }
     }
 
-    private fun makeContext(file: ElmFile, qid: ElmQID, ref: ElmReferenceElement, names: VisibleNames): Context? {
-        val name = ref.referenceName
-        val candidates = (names.global + names.imported)
-                .filter { it.name == name }
-                .mapNotNull { ModuleScope.getQualifierForName(file, it.moduleName, name) }
-                .filter { it != "" }
-        if (candidates.isEmpty()) return null
-        return Context(candidates, name, qid)
-    }
-
-    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
-        if (file !is ElmFile) return
-        val context = findApplicableContext() ?: return
+    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        val context = findApplicableContext(descriptor.psiElement) ?: return
 
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")

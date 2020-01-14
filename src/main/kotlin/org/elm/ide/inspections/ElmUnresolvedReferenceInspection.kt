@@ -52,8 +52,8 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
 
             val description = "Unresolved reference '${ref.canonicalText}'"
             val fixes = mutableListOf<LocalQuickFix>()
-            if (AddImportFix(element).isAvailable) fixes += AddImportFix(element)
-            if (AddQualifierFix(element).isAvailable) fixes += AddQualifierFix(element)
+            if (AddImportFix.isAvailable(element)) fixes += AddImportFix()
+            if (AddQualifierFix.isAvailable(element)) fixes += AddQualifierFix()
             holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL, errorRange, *fixes.toTypedArray())
         }
     }

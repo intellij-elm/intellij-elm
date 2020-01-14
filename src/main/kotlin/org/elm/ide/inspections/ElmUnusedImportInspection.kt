@@ -54,9 +54,7 @@ private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
     registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix())
 }
 
-private class OptimizeImportsFix : LocalQuickFix {
-    override fun getName() = "Optimize imports"
-    override fun getFamilyName() = name
+private class OptimizeImportsFix : NamedQuickFix("Optimize imports") {
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
         val file = descriptor.psiElement.containingFile as? ElmFile ?: return
         OptimizeImportsProcessor(project, file).run()

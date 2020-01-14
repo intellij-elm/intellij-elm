@@ -1,14 +1,14 @@
 package org.elm.ide.inspections.import
 
-import com.intellij.codeInspection.LocalQuickFixOnPsiElement
+import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
+import org.elm.ide.inspections.NamedQuickFix
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.imports.ImportAdder.addImport
 import org.elm.lang.core.lookup.ElmLookup
@@ -43,43 +43,40 @@ fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
 }
 
 
-class AddImportFix(element: ElmPsiElement) : LocalQuickFixOnPsiElement(element) {
+class AddImportFix : NamedQuickFix("Import") {
     data class Context(
             val refName: String,
             val candidates: List<Import>,
             val isQualified: Boolean
     )
 
-    override fun getText() = "Import"
-    override fun getFamilyName() = text
+    companion object {
+        fun isAvailable(psiElement: PsiElement): Boolean = findApplicableContext(psiElement) != null
 
-    public override fun isAvailable(): Boolean {
-        return super.isAvailable() && findApplicableContext() != null
+        private fun findApplicableContext(psiElement: PsiElement): Context? {
+            val element = psiElement as? ElmPsiElement ?: return null
+            if (element.parentOfType<ElmImportClause>() != null) return null
+            val refElement = element.parentOfType<ElmReferenceElement>(strict = false) ?: return null
+            val ref = refElement.reference
+
+            // we can't import the function we're annotating
+            if (refElement is ElmTypeAnnotation) return null
+
+            val name = refElement.referenceName
+            val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
+                    .mapNotNull { fromExposableElement(it, ref) }
+                    .toMutableList()
+
+            if (candidates.isEmpty())
+                return null
+
+            return Context(name, candidates, ref is QualifiedReference)
+        }
     }
 
-    private fun findApplicableContext(): Context? {
-        val element = startElement as? ElmPsiElement ?: return null
-        if (element.parentOfType<ElmImportClause>() != null) return null
-        val refElement = element.parentOfType<ElmReferenceElement>(strict = false) ?: return null
-        val ref = refElement.reference
-
-        // we can't import the function we're annotating
-        if (refElement is ElmTypeAnnotation) return null
-
-        val name = refElement.referenceName
-        val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
-                .mapNotNull { fromExposableElement(it, ref) }
-                .toMutableList()
-
-        if (candidates.isEmpty())
-            return null
-
-        return Context(name, candidates, ref is QualifiedReference)
-    }
-
-    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
-        if (file !is ElmFile) return
-        val context = findApplicableContext() ?: return
+    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        val file = descriptor.psiElement.containingFile as? ElmFile ?: return
+        val context = findApplicableContext(descriptor.psiElement) ?: return
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
             1 -> {
