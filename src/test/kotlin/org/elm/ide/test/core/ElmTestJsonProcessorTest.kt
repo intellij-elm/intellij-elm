@@ -401,7 +401,7 @@ class ElmTestJsonProcessorTest {
 
         assertTrue(list[0] is TestStartedEvent)
         assertTrue(list[1] is TestFailedEvent)
-        assertEquals("elmTestError://tests/PATH/tests/UiTests.elm::131::33", (list[0] as TestStartedEvent).locationUrl)
+        assertEquals("elmTestError://PATH/tests/UiTests.elm::131::33", (list[0] as TestStartedEvent).locationUrl)
         assertEquals("TOO FEW ARGS", list[0].name)
         assertEquals("TOO FEW ARGS", list[1].name)
     }

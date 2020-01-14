@@ -12,7 +12,6 @@ import org.elm.ide.test.core.LabelUtils.toLocationUrl
 import org.elm.ide.test.core.json.CompileErrors
 import org.elm.ide.test.core.json.Error
 import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Processes events from a test run by elm-test.
@@ -123,7 +122,7 @@ class ElmTestJsonProcessor(private val testsRelativeDirPath: String) {
                 ?.flatMap { problem ->
                     sequenceOf(
                             TestStartedEvent(problem.title!!, ErrorLabelLocation(
-                                    file = Paths.get(testsRelativeDirPath, error.path!!).toString(),
+                                    file = error.path!!,
                                     line = problem.region?.start!!.line,
                                     column = problem.region?.start!!.column
                             ).toUrl()),
