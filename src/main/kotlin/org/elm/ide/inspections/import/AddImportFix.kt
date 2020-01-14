@@ -74,9 +74,9 @@ class AddImportFix : NamedQuickFix("Import") {
         }
     }
 
-    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val file = descriptor.psiElement.containingFile as? ElmFile ?: return
-        val context = findApplicableContext(descriptor.psiElement) ?: return
+    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+        val file = element.containingFile as? ElmFile ?: return
+        val context = findApplicableContext(element) ?: return
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
             1 -> {

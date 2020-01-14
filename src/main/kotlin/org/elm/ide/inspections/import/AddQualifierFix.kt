@@ -67,8 +67,8 @@ class AddQualifierFix : NamedQuickFix("Qualify name") {
         }
     }
 
-    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val context = findApplicableContext(descriptor.psiElement) ?: return
+    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+        val context = findApplicableContext(element) ?: return
 
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")

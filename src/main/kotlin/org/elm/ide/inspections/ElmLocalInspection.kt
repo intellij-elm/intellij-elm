@@ -1,10 +1,8 @@
 package org.elm.ide.inspections
 
 import com.intellij.codeInsight.intention.PriorityAction
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.LocalQuickFix
-import com.intellij.codeInspection.LocalQuickFixOnPsiElement
-import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.codeInspection.*
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.elm.lang.core.psi.ElmPsiElement
@@ -29,10 +27,8 @@ abstract class ElmLocalInspection : LocalInspectionTool() {
  * PSI may change between the time that they're created and called, causing the elements to be
  * invalid or leak memory.
  *
- * You can get the element this quick fix is applied to with `descriptor.psiElement`.
- *
  * If you really need a reference to an element other than the one this fix is shown on, you can implement
- * [LocalQuickFixOnPsiElement], which holds weak references to one or two elements.
+ * [LocalQuickFixOnPsiElement], which holds a weak reference to an element.
  */
 abstract class NamedQuickFix(
         private val fixName: String,
@@ -41,4 +37,9 @@ abstract class NamedQuickFix(
     override fun getName(): String = fixName
     override fun getFamilyName(): String = name
     override fun getPriority(): PriorityAction.Priority = fixPriority
+    final override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        applyFix(descriptor.psiElement ?: return, project, descriptor)
+    }
+
+    abstract fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor)
 }

@@ -4,6 +4,7 @@ import com.intellij.codeInsight.intention.PriorityAction.Priority.LOW
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import org.elm.ide.inspections.MissingCaseBranchAdder.Result.MissingVariants
 import org.elm.ide.inspections.MissingCaseBranchAdder.Result.NoMissing
 import org.elm.lang.core.psi.ElmPsiElement
@@ -26,15 +27,15 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
 }
 
 private class AddMissingBranchesFix : NamedQuickFix("Add missing case branches") {
-    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val element = descriptor.psiElement.parent as? ElmCaseOfExpr ?: return
-        MissingCaseBranchAdder(element).addMissingBranches()
+    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+        val parent = element.parent as? ElmCaseOfExpr ?: return
+        MissingCaseBranchAdder(parent).addMissingBranches()
     }
 }
 
 private class AddWildcardBranchFix : NamedQuickFix("Add '_' branch", LOW) {
-    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        val element = descriptor.psiElement.parent as? ElmCaseOfExpr ?: return
-        MissingCaseBranchAdder(element).addWildcardBranch()
+    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+        val parent = descriptor.psiElement.parent as? ElmCaseOfExpr ?: return
+        MissingCaseBranchAdder(parent).addWildcardBranch()
     }
 }

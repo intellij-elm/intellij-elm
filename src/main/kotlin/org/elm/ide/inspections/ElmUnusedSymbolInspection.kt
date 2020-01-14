@@ -4,6 +4,7 @@ import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.TOO_MANY_OCCURRENCES
@@ -74,8 +75,8 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
 }
 
 private class RenameToWildcardFix : NamedQuickFix("Rename to _") {
-    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        (descriptor.psiElement.parent as? ElmLowerPattern)
+    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+        (element.parent as? ElmLowerPattern)
                 ?.replace(ElmPsiFactory(project).createAnythingPattern())
     }
 }
