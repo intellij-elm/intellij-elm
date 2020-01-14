@@ -1,6 +1,6 @@
 package org.elm.ide.inspections
 
-import com.intellij.codeInspection.LocalQuickFixOnPsiElement
+import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemHighlightType.LIKE_UNKNOWN_SYMBOL
 import com.intellij.codeInspection.ProblemHighlightType.WEAK_WARNING
 import com.intellij.codeInspection.ProblemsHolder
@@ -51,7 +51,7 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             val errorRange = (element as? ElmTypeRef)?.upperCaseQID?.textRangeInParent
 
             val description = "Unresolved reference '${ref.canonicalText}'"
-            val fixes = mutableListOf<LocalQuickFixOnPsiElement>()
+            val fixes = mutableListOf<LocalQuickFix>()
             if (AddImportFix(element).isAvailable) fixes += AddImportFix(element)
             if (AddQualifierFix(element).isAvailable) fixes += AddQualifierFix(element)
             holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL, errorRange, *fixes.toTypedArray())

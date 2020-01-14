@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.PsiFile
 import org.elm.lang.core.psi.ElmExposedItemTag
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmAsClause
@@ -52,14 +51,14 @@ class ElmUnusedImportInspection : LocalInspectionTool() {
 
 
 private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
-    val file = elem.containingFile as? ElmFile ?: return
-    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix(file))
+    registerProblem(elem, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, OptimizeImportsFix())
 }
 
-private class OptimizeImportsFix(file: ElmFile) : LocalQuickFixOnPsiElement(file)  {
-    override fun getText() = "Optimize imports"
+private class OptimizeImportsFix : LocalQuickFix {
+    override fun getName() = "Optimize imports"
     override fun getFamilyName() = name
-    override fun invoke(project: Project, file: PsiFile, startElement: PsiElement, endElement: PsiElement) {
+    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        val file = descriptor.psiElement.containingFile as? ElmFile ?: return
         OptimizeImportsProcessor(project, file).run()
     }
 }
