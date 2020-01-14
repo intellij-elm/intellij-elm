@@ -1,7 +1,6 @@
 package org.elm.ide.lineMarkers
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
-import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.codeInsight.daemon.LineMarkerProviderDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
@@ -11,7 +10,11 @@ import org.elm.lang.core.psi.parentOfType
 
 class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
     companion object {
-        private val OPTIONS = arrayOf(ElmExposureLineMarkerProvider.OPTION, ElmRecursiveCallLineMarkerProvider.OPTION)
+        private val optionProviders = mapOf(
+                ElmExposureLineMarkerProvider.OPTION to { ElmExposureLineMarkerProvider() },
+                ElmRecursiveCallLineMarkerProvider.OPTION to { ElmRecursiveCallLineMarkerProvider() }
+        )
+        private val OPTIONS = optionProviders.keys.toTypedArray()
     }
 
     override fun getName(): String? = "Elm line markers"
@@ -20,22 +23,22 @@ class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
     // This provides the options to show in Settings > Editor > General > Gutter Icons
     override fun getOptions(): Array<Option> = OPTIONS
 
-    override fun collectSlowLineMarkers(elements: MutableList<PsiElement>, result: MutableCollection<LineMarkerInfo<PsiElement>>) {
+    override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<LineMarkerInfo<PsiElement>>) {
         val first = elements.firstOrNull() ?: return
         if (DumbService.getInstance(first.project).isDumb || first.parentOfType<ElmFile>()?.elmProject == null) return
 
         // Create the providers each time this function is called, since they may have internal state
-        val providers = mutableListOf<LineMarkerProvider>()
-        if (ElmExposureLineMarkerProvider.OPTION.isEnabled) providers.add(ElmExposureLineMarkerProvider())
-        if (ElmRecursiveCallLineMarkerProvider.OPTION.isEnabled) providers.add(ElmRecursiveCallLineMarkerProvider())
+        val providers = optionProviders.filter { it.key.isEnabled }.values.map { it() }
 
         if (providers.isEmpty()) return
 
         for (element in elements) {
             ProgressManager.checkCanceled()
-            for (provider in providers) {
-                provider.getLineMarkerInfo(element)?.let { result.add(it) }
-            }
+
+            // See the docs of LineMarkerProvider for why we can only add markers to leaf nodes
+            if (element.firstChild != null) continue
+
+            providers.mapNotNullTo(result) { it.getLineMarkerInfo(element) }
         }
     }
 }
