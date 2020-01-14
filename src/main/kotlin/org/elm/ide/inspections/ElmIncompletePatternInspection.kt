@@ -1,7 +1,11 @@
 package org.elm.ide.inspections
 
 import com.intellij.codeInsight.intention.PriorityAction.Priority.LOW
+import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.openapi.project.Project
+import org.elm.ide.inspections.MissingCaseBranchAdder.Result.MissingVariants
+import org.elm.ide.inspections.MissingCaseBranchAdder.Result.NoMissing
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 
@@ -10,17 +14,27 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
         if (element !is ElmCaseOfExpr) return
         val fixer = MissingCaseBranchAdder(element)
 
-        if (fixer.result == MissingCaseBranchAdder.Result.NoMissing) return
+        if (fixer.result == NoMissing) return
 
-        val extraFixes = if (fixer.result is MissingCaseBranchAdder.Result.MissingVariants) {
-            arrayOf(quickFix("Add missing case branches") { _, _ -> fixer.addMissingBranches() })
-        } else emptyArray()
+        val fixes = when (fixer.result) {
+            is MissingVariants -> arrayOf(AddMissingBranchesFix(), AddWildcardBranchFix())
+            else -> arrayOf(AddWildcardBranchFix())
+        }
 
-        val fixes = extraFixes + arrayOf(quickFix("Add '_' branch", priority = LOW) { _, _ -> fixer.addWildcardBranch() })
+        holder.registerProblem(element.firstChild, "Case expression is not exhaustive", *fixes)
+    }
+}
 
-        holder.registerProblem(element.firstChild,
-                "Case expression is not exhaustive",
-                *fixes
-        )
+private class AddMissingBranchesFix : NamedQuickFix("Add missing case branches") {
+    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        val element = descriptor.psiElement.parent as? ElmCaseOfExpr ?: return
+        MissingCaseBranchAdder(element).addMissingBranches()
+    }
+}
+
+private class AddWildcardBranchFix : NamedQuickFix("Add '_' branch", LOW) {
+    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        val element = descriptor.psiElement.parent as? ElmCaseOfExpr ?: return
+        MissingCaseBranchAdder(element).addWildcardBranch()
     }
 }

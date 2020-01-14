@@ -1,7 +1,9 @@
 package org.elm.ide.inspections
 
+import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.TOO_MANY_OCCURRENCES
@@ -48,22 +50,19 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
         }
     }
 
-    private fun isProgramEntryPoint(element: ElmNameIdentifierOwner): Boolean =
-            when {
-                element is ElmFunctionDeclarationLeft ->
-                    element.name == "main" || element.isElmTestEntryPoint()
-                element is ElmPortAnnotation -> isExposed(element)
-                else -> false
-            }
+    private fun isProgramEntryPoint(element: ElmNameIdentifierOwner): Boolean {
+        return when (element) {
+            is ElmFunctionDeclarationLeft -> element.name == "main" || element.isElmTestEntryPoint()
+            is ElmPortAnnotation -> isExposed(element)
+            else -> false
+        }
+    }
 
 
     private fun markAsUnused(holder: ProblemsHolder, element: ElmNameIdentifierOwner, name: String) {
-        val fixes = if (element is ElmLowerPattern) {
-            arrayOf(quickFix("Rename to _") { project, _ ->
-                element.replace(ElmPsiFactory(project).createAnythingPattern())
-            })
-        } else {
-            emptyArray()
+        val fixes = when (element) {
+            is ElmLowerPattern -> arrayOf(RenameToWildcardFix())
+            else -> emptyArray()
         }
         holder.registerProblem(
                 element.nameIdentifier,
@@ -74,6 +73,12 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
     }
 }
 
+private class RenameToWildcardFix : NamedQuickFix("Rename to _") {
+    override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        (descriptor.psiElement.parent as? ElmLowerPattern)
+                ?.replace(ElmPsiFactory(project).createAnythingPattern())
+    }
+}
 
 private fun ElmFunctionDeclarationLeft.isElmTestEntryPoint(): Boolean {
     val decl = parentOfType<ElmValueDeclaration>() ?: return false
