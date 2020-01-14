@@ -35,7 +35,7 @@ class LabelUtilsTest {
         val url = toLocationUrl(toPath("Nested.Module", "test"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
-        val pair = fromLocationUrlPath(urlPath)
+        val pair = fromLocationUrlPath(urlPath, "tests")
         assertEquals("tests/Nested/Module.elm", pair.first)
         assertEquals("test", pair.second)
     }
@@ -45,7 +45,7 @@ class LabelUtilsTest {
         val url = toLocationUrl(toPath("Nested.Module", "suite", "test"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
-        val pair = fromLocationUrlPath(urlPath)
+        val pair = fromLocationUrlPath(urlPath, "tests")
         assertEquals("tests/Nested/Module.elm", pair.first)
         assertEquals("suite/test", pair.second)
     }
@@ -55,7 +55,7 @@ class LabelUtilsTest {
         val url = toLocationUrl(toPath("Module", "test / stuff"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
-        val pair = fromLocationUrlPath(urlPath)
+        val pair = fromLocationUrlPath(urlPath, "tests")
         assertEquals("tests/Module.elm", pair.first)
         assertEquals("test / stuff", pair.second)
     }
@@ -65,7 +65,7 @@ class LabelUtilsTest {
         val url = toLocationUrl(toPath("Module"))
         val urlPath = url.substring(url.indexOf("://") + 3)
 
-        val pair = fromLocationUrlPath(urlPath)
+        val pair = fromLocationUrlPath(urlPath, "tests")
         assertEquals("tests/Module.elm", pair.first)
         assertEquals("", pair.second)
     }

@@ -50,10 +50,14 @@ object LabelUtils {
         return String.format("%s://%s", protocol, pathString(path))
     }
 
-    fun fromLocationUrlPath(path: String): Pair<String, String> {
+    /**
+     * @param testsRelativeDirPath The path to the directory containing the tests, relative to the project's root (i.e.
+     * the folder containing `elm.json`). The supplied `path` is the location of the test file, relative to this directory.
+     */
+    fun fromLocationUrlPath(path: String, testsRelativeDirPath: String): Pair<String, String> {
         val path1 = Paths.get(path)
         val moduleName = getModuleName(path1)
-        val moduleFile = String.format("tests/%s.elm", moduleName.replace(".", "/"))
+        val moduleFile = "$testsRelativeDirPath/${moduleName.replace(".", "/")}.elm"
         val label = if (path1.nameCount > 1) decodeLabel(path1.subpath(1, path1.nameCount)) else ""
         return Pair(moduleFile, label)
     }

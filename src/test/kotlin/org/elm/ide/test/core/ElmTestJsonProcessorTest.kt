@@ -20,7 +20,7 @@ import org.junit.Test
 
 class ElmTestJsonProcessorTest {
 
-    private val processor = ElmTestJsonProcessor()
+    private val processor = ElmTestJsonProcessor("tests")
 
     @Test
     fun junk() {
@@ -242,7 +242,7 @@ class ElmTestJsonProcessorTest {
         val obj = getObject(text)
         val path = ElmTestJsonProcessor.toPath(obj)
 
-        val list = ElmTestJsonProcessor.testEvents(path, obj).toList()
+        val list = processor.testEvents(path, obj).toList()
 
         assertEquals(2, list.size.toLong())
         assertTrue(list[1] is TestFailedEvent)

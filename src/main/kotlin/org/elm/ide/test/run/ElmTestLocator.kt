@@ -17,7 +17,9 @@ import org.elm.ide.test.core.LabelUtils.DESCRIBE_PROTOCOL
 import org.elm.ide.test.core.LabelUtils.ERROR_PROTOCOL
 import org.elm.ide.test.core.LabelUtils.TEST_PROTOCOL
 
-
+/**
+ * Provides a way to locate a test (group of functions in a test) in the IDE from the test results pane.
+ */
 object ElmTestLocator : FileUrlProvider() {
 
     override fun getLocation(protocol: String, path: String, metainfo: String?, project: Project, scope: GlobalSearchScope): List<Location<*>> {
@@ -32,7 +34,8 @@ object ElmTestLocator : FileUrlProvider() {
             }
 
             DESCRIBE_PROTOCOL, TEST_PROTOCOL -> {
-                val (filePath, labels) = LabelUtils.fromLocationUrlPath(path)
+                val (filePath, labels) = LabelUtils.fromLocationUrlPath(path,
+                        metainfo ?: error("missing path to tests dir"))
                 val fileName = FileUtil.toSystemIndependentName(filePath)
                 TestsLocationProviderUtil.findSuitableFilesFor(fileName, project)
                         .mapNotNull {
