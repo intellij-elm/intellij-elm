@@ -3,60 +3,75 @@ package org.elm.lang.core.resolve.scope
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.ancestorsStrict
 import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmLetInExpr
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 
-class ExpressionScope(val element: PsiElement) {
-
-    fun getVisibleValues(): List<ElmNamedElement> {
-
-        val results = mutableListOf<ElmNamedElement>()
-
-        treeWalkUp(element) {
-            if (it is ElmFile) {
-                results.addAll(ModuleScope.getVisibleValues(it).all)
-                return@treeWalkUp false // stop
-            }
-
-            if (it is ElmNamedElement) {
-                results.add(it)
-            }
-
-            if (it is ElmValueDeclaration) {
-                results.addAll(it.declaredNames())
-            }
-
-            if (it is ElmLetInExpr) {
-                for (innerDecl in it.valueDeclarationList) {
-                    val includeParameters = element.ancestors.any { it === innerDecl }
-                    results.addAll(innerDecl.declaredNames(includeParameters))
+class ExpressionScope(private val element: PsiElement) {
+    /** Return a lazy sequence of all names visible to the [element] */
+    fun getVisibleValues(): Sequence<ElmNamedElement> {
+        val declAncestors = mutableListOf<ElmValueDeclaration>()
+        return element.ancestorsStrict
+                .takeUntil { it is ElmFile }
+                .flatMap {
+                    when (it) {
+                        is ElmFile -> {
+                            ModuleScope.getVisibleValues(it).all.asSequence()
+                        }
+                        is ElmValueDeclaration -> {
+                            declAncestors += it
+                            it.declaredNames(includeParameters = true).asSequence()
+                        }
+                        is ElmLetInExpr -> {
+                            it.valueDeclarationList.asSequence()
+                                    .filter { innerDecl -> innerDecl !in declAncestors } // already visited
+                                    .flatMap { innerDecl ->
+                                        innerDecl.declaredNames(includeParameters = false).asSequence()
+                                    }
+                        }
+                        is ElmCaseOfBranch -> {
+                            it.destructuredNames.asSequence()
+                        }
+                        is ElmAnonymousFunctionExpr -> {
+                            it.namedParameters.asSequence()
+                        }
+                        else -> {
+                            emptySequence()
+                        }
+                    }
                 }
-            }
-
-            if (it is ElmCaseOfBranch) {
-                results.addAll(it.destructuredNames)
-            }
-
-            if (it is ElmAnonymousFunctionExpr) {
-                results.addAll(it.namedParameters)
-            }
-
-            return@treeWalkUp true // keep going
-        }
-
-        return results
     }
 }
 
-fun treeWalkUp(start: PsiElement, callback: (PsiElement) -> Boolean) {
-    var current: PsiElement? = start
-    while (current != null) {
-        val keepGoing = callback(current)
-        if (!keepGoing) break
-        current = current.parent
+private class TakeUntilSequence<T> (
+        private val sequence: Sequence<T>,
+        private val predicate: (T) -> Boolean
+) : Sequence<T> {
+    override fun iterator(): Iterator<T> = object : Iterator<T> {
+        val iterator = sequence.iterator()
+        var done = false
+
+        override fun next(): T {
+            if (!done && iterator.hasNext()) {
+                val item = iterator.next()
+                if (predicate(item)) {
+                    done = true
+                }
+                return item
+            }
+            throw NoSuchElementException()
+        }
+
+        override fun hasNext(): Boolean {
+            return !done && iterator.hasNext()
+        }
     }
+}
+
+/** Return elements of this sequence up to and including the first element for which [predicate] returns true */
+private fun <T> Sequence<T>.takeUntil(predicate: (T) -> Boolean): Sequence<T> {
+    return TakeUntilSequence(this, predicate)
 }

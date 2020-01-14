@@ -14,10 +14,8 @@ class SimpleUnionConstructorReference(element: ElmReferenceElement)
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolveInner(): ElmNamedElement? =
-            getCandidates().find { it.name == element.referenceName }
+    override fun resolveInner(): ElmNamedElement? {
+        return ModuleScope.getVisibleConstructors(element.elmFile)[element.referenceName] as? ElmUnionVariant
+    }
 
-    private fun getCandidates(): List<ElmNamedElement> =
-            ModuleScope.getVisibleConstructors(element.elmFile).all
-                    .filterIsInstance<ElmUnionVariant>()
 }

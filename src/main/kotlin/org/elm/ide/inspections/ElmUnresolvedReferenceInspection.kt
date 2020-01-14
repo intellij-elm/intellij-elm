@@ -112,7 +112,7 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             else -> error("Unexpected qualified ref type: $ref")
         }
 
-        if (exposedNames.none { it.name == ref.nameWithoutQualifier })
+        if (exposedNames.elements.none { it.name == ref.nameWithoutQualifier })
             return false
 
         // Success! The reference would have succeeded were it not for the alias.

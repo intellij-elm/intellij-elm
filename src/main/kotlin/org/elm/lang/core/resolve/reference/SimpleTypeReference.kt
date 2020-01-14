@@ -13,10 +13,7 @@ class SimpleTypeReference(element: ElmReferenceElement)
     override fun getVariants(): Array<ElmNamedElement> =
             emptyArray()
 
-    override fun resolveInner(): ElmNamedElement? =
-            getCandidates().find { it.name == element.referenceName }
-
-    private fun getCandidates(): List<ElmNamedElement> {
-        return ModuleScope.getVisibleTypes(element.elmFile).all
+    override fun resolveInner(): ElmNamedElement? {
+        return ModuleScope.getVisibleTypes(element.elmFile)[element.referenceName]
     }
 }

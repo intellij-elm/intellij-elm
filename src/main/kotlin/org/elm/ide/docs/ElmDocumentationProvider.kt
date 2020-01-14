@@ -8,8 +8,8 @@ import com.intellij.psi.PsiManager
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.resolve.scope.QualifiedImportScope
 import org.elm.lang.core.types.*
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
@@ -41,15 +41,13 @@ class ElmDocumentationProvider : AbstractDocumentationProvider() {
         val lastDot = link.indexOfLast { it == '.' }
         return if (lastDot <= 0) {
             with(ModuleScope) {
-                getVisibleTypes(context.elmFile).all.find { it.name == link }
-                        ?: getDeclaredValues(context.elmFile).find { it.name == link }
+                getVisibleTypes(context.elmFile)[link]
+                        ?: getDeclaredValues(context.elmFile)[link]
             }
         } else {
             val qualifierPrefix = link.substring(0, lastDot)
             val name = link.substring(lastDot + 1)
-            ImportScope.fromQualifierPrefixInModule(qualifierPrefix, context.elmFile)
-                    .flatMap { it.getExposedTypes() }
-                    .find { it.name == name }
+            QualifiedImportScope(qualifierPrefix, context.elmFile).getExposedType(name)
         }
     }
 }
@@ -190,8 +188,7 @@ private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString 
         html.replace(Regex("<p>@docs (.+?)</p>", RegexOption.DOT_MATCHES_ALL)) { match ->
             val names = match.groupValues[1].split(Regex(",\\s+"))
             names.joinToString(", ") { name ->
-                val target = declarations.find { it.name == name }
-                target?.let { buildString { renderLink(name, name) } } ?: name
+                declarations[name]?.let { buildString { renderLink(name, name) } } ?: name
             }
         }
     }
