@@ -251,7 +251,7 @@
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ElmDarcula.xml"/>
         <annotator language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlightAnnotator"/>
         <colorSettingsPage implementation="org.elm.ide.color.ElmColorSettingsPage"/>
-        <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterSmartIndentHandler"/>
+        <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterIndentHandler"/>
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
         <internalFileTemplate name="Elm Module"/>
         <moduleType id="ELM_MODULE" implementationClass="org.elm.ide.project.ElmModuleType"/>
