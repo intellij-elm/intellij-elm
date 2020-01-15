@@ -1,9 +1,10 @@
 package org.elm.ide.typing
 
+import com.intellij.application.options.CodeStyle
 import org.intellij.lang.annotations.Language
 
 
-class ElmOnEnterSmartIndentHandlerTest: ElmTypingTestBase() {
+class ElmOnEnterIndentHandlerTest : ElmTypingTestBase() {
 
 
     fun `test after function equals at EOF`() = doTest("""
@@ -149,10 +150,19 @@ type Foo =
 {-caret-}
 """)
 
+    fun `test indentation code style settings`() {
+        checkByText("f ={-caret-}", """
+            |f =
+            |  {-caret-}
+            """.trimMargin()) {
+            CodeStyle.getIndentOptions(myFixture.file).INDENT_SIZE = 2
+            myFixture.type('\n')
+        }
+    }
 
     fun doTest(@Language("Elm") before: String, @Language("Elm") after: String) {
-        InlineFile(before).withCaret()
-        myFixture.type('\n')
-        myFixture.checkResult(replaceCaretMarker(after))
+        checkByText(before, after) {
+            myFixture.type('\n')
+        }
     }
 }

@@ -208,7 +208,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         }
     }
 
-    protected fun replaceCaretMarker(text: String) =
+    protected fun replaceCaretMarker(@Language("Elm") text: String) =
             text.replace("{-caret-}", "<caret>")
 
     protected fun applyQuickFix(name: String) {

@@ -1,5 +1,6 @@
 package org.elm.ide.typing
 
+import com.intellij.application.options.CodeStyle
 import com.intellij.openapi.actionSystem.IdeActions
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
@@ -225,10 +226,36 @@ foo =
         ()
 """)
 
-    private fun doTest(@Language("Elm") before: String, @Language("Elm") after: String) =
-            // We use the --EOL marker to avoid editors trimming trailing whitespace, which is
-            // significant for this test.
-            checkByText(before, after.replace("--EOL", "")) {
-                myFixture.performEditorAction(IdeActions.ACTION_EDITOR_COMPLETE_STATEMENT)
-            }
+    fun `test case expression with custom indent`() = checkByText("""
+type Foo = Bar | Baz | Qux
+
+foo : Foo -> ()
+foo it =
+  case it of{-caret-}
+""", """
+type Foo = Bar | Baz | Qux
+
+foo : Foo -> ()
+foo it =
+  case it of
+    Bar ->
+      {-caret-}
+
+    Baz ->
+      --EOL
+
+    Qux ->
+
+""".replace("--EOL", "")) {
+        CodeStyle.getIndentOptions(myFixture.file).INDENT_SIZE = 2
+        myFixture.performEditorAction(IdeActions.ACTION_EDITOR_COMPLETE_STATEMENT)
+    }
+
+    private fun doTest(@Language("Elm") before: String, @Language("Elm") after: String) {
+        // We use the --EOL marker to avoid editors trimming trailing whitespace, which is
+        // significant for this test.
+        checkByText(before, after.replace("--EOL", "")) {
+            myFixture.performEditorAction(IdeActions.ACTION_EDITOR_COMPLETE_STATEMENT)
+        }
+    }
 }

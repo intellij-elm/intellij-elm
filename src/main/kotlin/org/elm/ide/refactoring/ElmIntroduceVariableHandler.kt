@@ -1,5 +1,6 @@
 package org.elm.ide.refactoring
 
+import com.intellij.application.options.CodeStyle
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -121,14 +122,15 @@ private class ExpressionReplacer(
      * Wrap the existing function body in a `let` expression
      */
     fun introduceLet(elementToReplace: PsiElement) {
-        val indent = DocumentUtil.getIndent(editor.document, elementToReplace.startOffset).toString()
+        val existingIndent = DocumentUtil.getIndent(editor.document, elementToReplace.startOffset).toString()
+        val indent = " ".repeat(CodeStyle.getIndentOptions(elementToReplace.containingFile).INDENT_SIZE)
         val newDeclBodyText = chosenExpr.textWithNormalizedIndents
         val newIdentifierElement = project.runWriteCommandAction {
             val newLetExpr = if (elementToReplace !== chosenExpr) {
                 chosenExpr.replace(identifier)
-                psiFactory.createLetInWrapper(indent, identifier.text, newDeclBodyText, elementToReplace.text)
+                psiFactory.createLetInWrapper(existingIndent, indent, identifier.text, newDeclBodyText, elementToReplace.text)
             } else {
-                psiFactory.createLetInWrapper(indent, identifier.text, newDeclBodyText, identifier.text)
+                psiFactory.createLetInWrapper(existingIndent, indent, identifier.text, newDeclBodyText, identifier.text)
             }
             val newLetElement = elementToReplace.replace(newLetExpr) as ElmLetInExpr
             moveEditorToNameElement(editor, newLetElement.valueDeclarationList.first())
@@ -146,10 +148,11 @@ private class ExpressionReplacer(
     fun extendExistingLet(letExpr: ElmLetInExpr) {
         val file = letExpr.elmFile
         val anchor = letExpr.valueDeclarationList.last()
-        val indent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
+        val existingIndent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
+        val indent = " ".repeat(CodeStyle.getIndentOptions(file).INDENT_SIZE)
         val indentedDeclExpr = chosenExpr.textWithNormalizedIndents.lines()
-                .joinToString("\n") { "$indent    $it" }
-        val textToInsert = "\n\n$indent${identifier.text} =\n$indentedDeclExpr"
+                .joinToString("\n") { "$existingIndent$indent$it" }
+        val textToInsert = "\n\n$existingIndent${identifier.text} =\n$indentedDeclExpr"
         val offsetOfNewDecl = anchor.endOffset + textToInsert.indexOf(identifier.text)
 
         /*

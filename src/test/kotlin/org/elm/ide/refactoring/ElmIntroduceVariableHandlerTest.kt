@@ -1,5 +1,6 @@
 package org.elm.ide.refactoring
 
+import com.intellij.application.options.CodeStyle
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmExpressionTag
@@ -472,6 +473,22 @@ f number =
     number1
 """)
 
+    // CODE STYLE
+
+    fun `test creates let-in with custom code style`() = checkByText("""
+f =
+  4 + {-caret-}3
+""", """
+f =
+  let
+    number =
+      3
+  in
+  4 + number
+""") {
+        CodeStyle.getIndentOptions(myFixture.file).INDENT_SIZE = 2
+        doIntroduceVariable(listOf("3", "4 + 3"), 0)
+    }
 
     // HELPERS
 

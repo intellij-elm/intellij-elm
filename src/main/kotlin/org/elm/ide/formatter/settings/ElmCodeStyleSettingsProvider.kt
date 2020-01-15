@@ -37,17 +37,17 @@ class ElmLanguageCodeStyleSettingsProvider : LanguageCodeStyleSettingsProvider()
     // no setting other than indent yet
     override fun customizeSettings(consumer: CodeStyleSettingsCustomizable, settingsType: SettingsType) {}
 
+    // If we ever add formatting support, we'll probably want to return a plain
+    // `SmartIndentOptionsEditor()` rather than this custom one.
     override fun getIndentOptionsEditor(): IndentOptionsEditor? = ElmOptionsEditor()
 }
 
 
 private class ElmOptionsEditor : IndentOptionsEditor() {
-    // Only expose the indent field. Setting this in customizeSettings doesn't seem to have an effect.
+    // Only expose the indent field. Setting this in `customizeSettings` doesn't seem to have an
+    // effect.
     override fun addComponents() {
         super.addComponents()
         showStandardOptions("INDENT_SIZE")
     }
 }
-
-
-
