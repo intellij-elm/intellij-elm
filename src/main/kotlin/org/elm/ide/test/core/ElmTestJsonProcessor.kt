@@ -13,7 +13,13 @@ import org.elm.ide.test.core.json.CompileErrors
 import org.elm.ide.test.core.json.Error
 import java.nio.file.Path
 
-class ElmTestJsonProcessor {
+/**
+ * Processes events from a test run by elm-test.
+ *
+ * @param testsRelativeDirPath The path to the directory containing the tests, relative to the project's root (i.e. the
+ * folder containing `elm.json`). All events reported by elm-test will supply paths which are relative to this path.
+ */
+class ElmTestJsonProcessor(private val testsRelativeDirPath: String) {
 
     private var currentPath = LabelUtils.EMPTY_PATH
 
@@ -64,11 +70,40 @@ class ElmTestJsonProcessor {
             }
             return null
         }
-
     }
 
+    fun testEvents(path: Path, obj: JsonObject): Sequence<TreeNodeEvent> {
+        return when (getStatus(obj)) {
+            "pass" -> {
+                val duration = java.lang.Long.parseLong(obj.get("duration").asString)
+                sequenceOf(newTestStartedEvent(path))
+                        .plus(newTestFinishedEvent(path, duration))
+            }
+            "todo" -> {
+                val comment = getComment(obj)
+                sequenceOf(newTestIgnoredEvent(path, comment))
+            }
+            else -> try {
+                val message = getMessage(obj)
+                val actual = getActual(obj)
+                val expected = getExpected(obj)
+
+                sequenceOf(newTestStartedEvent(path))
+                        .plus(newTestFailedEvent(path, actual, expected, message
+                                ?: ""))
+            } catch (e: Throwable) {
+                val failures = GsonBuilder().setPrettyPrinting().create().toJson(obj.get("failures"))
+                sequenceOf(newTestStartedEvent(path))
+                        .plus(newTestFailedEvent(path, null, null, failures))
+            }
+        }
+    }
+
+    private fun newTestStartedEvent(path: Path) =
+            TestStartedEvent(getName(path), toLocationUrl(path), testsRelativeDirPath)
+
     private fun newTestSuiteStartedEvent(path: Path) =
-            TestSuiteStartedEvent(getName(path), toLocationUrl(path, isSuite = true))
+            TestSuiteStartedEvent(getName(path), toLocationUrl(path, isSuite = true), testsRelativeDirPath)
 
     private fun newTestSuiteFinishedEvent(path: Path) =
             TestSuiteFinishedEvent(getName(path))
@@ -101,34 +136,6 @@ class ElmTestJsonProcessor {
 
         private val gson = GsonBuilder().setPrettyPrinting().create()
 
-        fun testEvents(path: Path, obj: JsonObject): Sequence<TreeNodeEvent> {
-            return when (getStatus(obj)) {
-                "pass" -> {
-                    val duration = java.lang.Long.parseLong(obj.get("duration").asString)
-                    sequenceOf(newTestStartedEvent(path))
-                            .plus(newTestFinishedEvent(path, duration))
-                }
-                "todo" -> {
-                    val comment = getComment(obj)
-                    sequenceOf(newTestIgnoredEvent(path, comment))
-                }
-                else -> try {
-                    val message = getMessage(obj)
-                    val actual = getActual(obj)
-                    val expected = getExpected(obj)
-
-                    sequenceOf(newTestStartedEvent(path))
-                            .plus(newTestFailedEvent(path, actual, expected, message
-                                    ?: ""))
-                } catch (e: Throwable) {
-                    val failures = GsonBuilder().setPrettyPrinting().create().toJson(obj.get("failures"))
-                    sequenceOf(newTestStartedEvent(path))
-                            .plus(newTestFailedEvent(path, null, null, failures))
-                }
-            }
-
-        }
-
         private fun newTestIgnoredEvent(path: Path, comment: String?) =
                 TestIgnoredEvent(getName(path), comment ?: "", null)
 
@@ -137,9 +144,6 @@ class ElmTestJsonProcessor {
 
         private fun newTestFailedEvent(path: Path, actual: String?, expected: String?, message: String) =
                 TestFailedEvent(getName(path), message, null, false, actual, expected)
-
-        private fun newTestStartedEvent(path: Path) =
-                TestStartedEvent(getName(path), toLocationUrl(path))
 
         fun getComment(obj: JsonObject): String? {
             return if (getFirstFailure(obj).isJsonPrimitive)

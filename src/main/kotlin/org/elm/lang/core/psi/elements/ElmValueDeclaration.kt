@@ -51,7 +51,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
 
     /** The element on the left-hand side of the `=` */
     val assignee: ElmValueAssigneeTag?
-        get() = PsiTreeUtil.getStubChildOfType(this, ElmValueAssigneeTag::class.java) ?: pattern
+        get() = PsiTreeUtil.getStubChildOfType(this, ElmValueAssigneeTag::class.java)
 
     /**
      * The 'body' of the declaration. This is the right-hand side which is bound
@@ -72,27 +72,19 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
      * @param includeParameters include names declared as parameters to the function
      *                          (also includes destructured names). The default is `true`
      */
-    fun declaredNames(includeParameters: Boolean = true): List<ElmNameIdentifierOwner> {
-        val namedElements = mutableListOf<ElmNameIdentifierOwner>()
-
-        if (functionDeclarationLeft != null) {
-            // the most common case, a named function or value declaration
-            namedElements.add(functionDeclarationLeft!!)
-            if (includeParameters)
-                namedElements.addAll(functionDeclarationLeft!!.namedParameters)
-
-        } else if (operatorDeclarationLeft != null) {
-            // an operator declaration
-            namedElements.add(operatorDeclarationLeft!!)
-            if (includeParameters)
-                namedElements.addAll(operatorDeclarationLeft!!.namedParameters)
-
-        } else if (pattern != null) {
-            // value destructuring assignment (e.g. `(x,y) = (0,0)` in a let/in declaration)
-            namedElements.addAll(pattern!!.descendantsOfType<ElmNameIdentifierOwner>())
+    fun declaredNames(includeParameters: Boolean = true): Collection<ElmNameIdentifierOwner> {
+        return when (val assignee = assignee) {
+            is ElmFunctionDeclarationLeft -> when {
+                includeParameters -> assignee + assignee.namedParameters
+                else -> listOf(assignee)
+            }
+            is ElmPattern -> descendantsOfType()
+            is ElmOperatorDeclarationLeft -> when {
+                includeParameters -> assignee + assignee.namedParameters
+                else -> listOf(assignee)
+            }
+            else -> emptyList()
         }
-
-        return namedElements
     }
 
     /** The type annotation for this function, or `null` if there isn't one. */
@@ -101,10 +93,14 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
             // HACK: try to find the type annotation as best we can, keeping stub-safe.
             // TODO [kl] Look into parsing the type annotation as part of the value declaration.
             val fdl = functionDeclarationLeft
-            return if (stub != null && fdl != null) {
-                elmFile.getTypeAnnotations().firstOrNull { it.referenceName == fdl.name }
-            } else {
-                prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+            return when {
+                fdl == null -> null
+                stub != null -> {
+                    elmFile.stubDirectChildrenOfType<ElmTypeAnnotation>().firstOrNull { it.referenceName == fdl.name }
+                }
+                else -> {
+                    prevSiblings.withoutWsOrComments.firstOrNull() as? ElmTypeAnnotation
+                }
             }
         }
 
@@ -114,4 +110,12 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
 
     /** The `=` element. In a well-formed program, this will not be null */
     val eqElement: PsiElement? get() = findChildByType(ElmTypes.EQ)
+}
+
+private operator fun <T> T.plus(rest: Collection<T>): List<T> = when {
+    rest.isEmpty() -> listOf(this)
+    else -> ArrayList<T>(rest.size + 1).apply {
+        add(this@plus)
+        addAll(rest)
+    }
 }

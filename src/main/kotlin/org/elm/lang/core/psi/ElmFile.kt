@@ -2,9 +2,13 @@ package org.elm.lang.core.psi
 
 import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lookup.ClientLocation
@@ -16,6 +20,7 @@ import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
 
+private val IS_IN_TESTS_DIRECTORY_KEY: Key<CachedValue<Boolean>> = Key.create("IS_IN_TESTS_DIRECTORY_KEY")
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), ClientLocation {
 
@@ -25,17 +30,10 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
     override fun toString() =
             "Elm File"
 
-    override fun getIcon(flags: Int) =
-            super.getIcon(flags)
-
-    override fun getStub() =
+    override fun getStub(): ElmFileStub? =
             super.getStub() as ElmFileStub?
 
-    fun isCore(): Boolean {
-        val pkgName = (elmProject as? ElmPackageProject)?.name
-                ?: return false
-        return (pkgName == "elm/core" || pkgName == "elm-lang/core") // TODO [drop 0.18] remove "elm-core/lang" clause
-    }
+    fun isCore(): Boolean = elmProject?.isCore() ?: false
 
     override fun setName(name: String): PsiElement {
         val nameWithExtension = if (name.endsWith(".elm")) name else "$name.elm"
@@ -52,36 +50,31 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         get() = project.elmWorkspace.findProjectForFile(originalFile.virtualFile)
 
     override val isInTestsDirectory: Boolean
-        get() {
-            val elmProj = elmProject ?: return false
-            val vfile = originalFile.virtualFile ?: return false
-            return vfile.pathAsPath.startsWith(elmProj.testsDirPath)
+        // This is call often during reference resolve, and the system-independent path comparison
+        // is slow enough that the result is worth caching
+        get() = CachedValuesManager.getCachedValue(this, IS_IN_TESTS_DIRECTORY_KEY) {
+            elmProject?.let { elmProj ->
+                val res = originalFile.virtualFile?.pathAsPath?.startsWith(elmProj.testsDirPath)
+                CachedValueProvider.Result.create(res, globalModificationTracker)
+            }
         }
 
-    fun getModuleDecl() =
-            stubDirectChildrenOfType<ElmModuleDeclaration>().firstOrNull()
+    fun getModuleDecl(): ElmModuleDeclaration? {
+        if (stub != null) return stubDirectChildrenOfType<ElmModuleDeclaration>().firstOrNull()
+        // No need to generate the list of all children if we aren't a stub
+        return directChildren.filterIsInstance<ElmModuleDeclaration>().firstOrNull()
+    }
 
-    fun getImportClauses() =
-            stubDirectChildrenOfType<ElmImportClause>()
+    fun getImportClauses(): List<ElmImportClause> {
+        if (stub != null) return stubDirectChildrenOfType()
 
-    fun getValueDeclarations() =
-            stubDirectChildrenOfType<ElmValueDeclaration>()
-
-    fun getTypeDeclarations() =
-            stubDirectChildrenOfType<ElmTypeDeclaration>()
-
-    fun getTypeAliasDeclarations() =
-            stubDirectChildrenOfType<ElmTypeAliasDeclaration>()
-
-    fun getTypeAnnotations() =
-            stubDirectChildrenOfType<ElmTypeAnnotation>()
-
-    fun getPortAnnotations() =
-            stubDirectChildrenOfType<ElmPortAnnotation>()
-
-    fun getInfixDeclarations() =
-            stubDirectChildrenOfType<ElmInfixDeclaration>()
-
+        // If we aren't a stub, we can optimize this search to take advantage of the fact that
+        // imports can't occur after declarations, so we don't need to look through the whole tree.
+        return directChildren.withoutWsOrComments
+                .takeWhile { it is ElmModuleDeclaration || it is ElmImportClause }
+                .filterIsInstance<ElmImportClause>()
+                .toList()
+    }
 
     companion object {
         fun fromVirtualFile(file: VirtualFile, project: Project): ElmFile? =

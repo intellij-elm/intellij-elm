@@ -40,9 +40,10 @@ class ModuleNameQualifierReference<T : ElmReferenceElement>(
         val importDecls = ModuleScope.getImportDecls(clientFile)
 
         // First, check to see if it resolves to an aliased import
-        importDecls.mapNotNull { it.asClause }
-                .find { it.name == refText }
-                ?.let { return it }
+        for (decl in importDecls) {
+            val asClause = decl.asClause
+            if (asClause?.name == refText) return asClause
+        }
 
         // Otherwise, try to resolve the import directly
         val targetModuleName = GlobalScope.defaultAliases[refText] ?: refText

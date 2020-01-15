@@ -23,7 +23,7 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 class ElmOperatorConfig(node: ASTNode) : ElmPsiElementImpl(node), ElmReferenceElement {
 
     val associativityKeyword: PsiElement
-        get() = findNotNullChildByType<PsiElement>(tokenSetOf(INFIX, INFIXL, INFIXR))
+        get() = findNotNullChildByType(tokenSetOf(INFIX, INFIXL, INFIXR))
 
     val precedence: PsiElement
         get() = findNotNullChildByType(NUMBER_LITERAL)
@@ -50,11 +50,11 @@ class LocalOperatorReference(element: ElmReferenceElement)
     : ElmReferenceCached<ElmReferenceElement>(element) {
 
     override fun resolveInner(): ElmNamedElement? {
-        return getVariants().find { it.name == element.referenceName }
+        return ModuleScope.getDeclaredValues(element.elmFile)[element.referenceName]
     }
 
     override fun getVariants(): Array<ElmNamedElement> {
         // TODO [kl] filter the variants to just include binary operators
-        return ModuleScope.getDeclaredValues(element.elmFile).toTypedArray()
+        return ModuleScope.getDeclaredValues(element.elmFile).array
     }
 }

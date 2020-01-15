@@ -121,7 +121,8 @@ class ElmTestRunProfileState internal constructor(
 
         override fun createTestEventsConverter(testFrameworkName: String, consoleProperties: TestConsoleProperties): OutputToGeneralTestEventsConverter {
             return object : OutputToGeneralTestEventsConverter(testFrameworkName, consoleProperties) {
-                var processor = ElmTestJsonProcessor()
+                // TODO [tests-folder]: replace hard-coded string with value read from ElmProject.
+                var processor = ElmTestJsonProcessor("tests")
 
                 @Synchronized
                 override fun finishTesting() {
