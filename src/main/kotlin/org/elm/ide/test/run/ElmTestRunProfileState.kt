@@ -121,8 +121,7 @@ class ElmTestRunProfileState internal constructor(
 
         override fun createTestEventsConverter(testFrameworkName: String, consoleProperties: TestConsoleProperties): OutputToGeneralTestEventsConverter {
             return object : OutputToGeneralTestEventsConverter(testFrameworkName, consoleProperties) {
-                // TODO [tests-folder]: replace hard-coded string with value read from ElmProject.
-                var processor = ElmTestJsonProcessor("tests")
+                var processor = ElmTestJsonProcessor(testsRelativeDirPath)
 
                 @Synchronized
                 override fun finishTesting() {
@@ -148,6 +147,6 @@ class ElmTestRunProfileState internal constructor(
             }
         }
 
-        override fun getTestLocator() = ElmTestLocator(testsRelativeDirPath)
+        override fun getTestLocator() = ElmTestLocator
     }
 }
