@@ -11,11 +11,12 @@ import org.elm.workspace.ElmProject
  * `source-directories` are valid roots.
  *
  * Starting in Elm 0.19, the Elm project's `test-dependencies`
- * are only "import-able" from within "$ProjectRoot/tests" directory.
+ * are normally "import-able" from within "$ProjectRoot/tests" directory,
+ * although a different path can be configured. See [ElmProject.testsDirPath].
  *
  * @property intellijProject The IntelliJ project
  * @property elmProject The Elm project from which we want to look for something
- * @property isInTestsDirectory True if the place we are searching from is within the "tests" directory
+ * @property isInTestsDirectory True if the place we are searching from is within the directory containing unit tests.
  */
 interface ClientLocation {
     val intellijProject: Project

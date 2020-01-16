@@ -1,9 +1,9 @@
 package org.elm.ide.test.core
 
 import com.intellij.openapi.project.Project
+import com.intellij.util.io.exists
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
-import java.nio.file.Files
 import java.nio.file.Path
 
 class ElmProjectTestsHelper(project: Project) {
@@ -12,7 +12,7 @@ class ElmProjectTestsHelper(project: Project) {
 
     private val testableProjects: List<ElmProject>
         get() = elmWorkspace.allProjects
-                .filter { Files.exists(it.projectDirPath.resolve("tests")) }
+                .filter { it.testsDirPath.exists() }
 
     fun allNames() = testableProjects.map { it.presentableName }
 

@@ -135,4 +135,33 @@ class LabelUtilsTest {
         assertEquals(13, location.column)
     }
 
+    @Test
+    fun useCustomTestsFolder() {
+        val url = toLocationUrl(toPath("Module", "test"))
+        val urlPath = url.substring(url.indexOf("://") + 3)
+
+        val pair = fromLocationUrlPath(urlPath, "custom-tests")
+        assertEquals("custom-tests/Module.elm", pair.first)
+        assertEquals("test", pair.second)
+    }
+
+    @Test
+    fun useCustomTestsFolderWithSubfolder() {
+        val url = toLocationUrl(toPath("Module", "test"))
+        val urlPath = url.substring(url.indexOf("://") + 3)
+
+        val pair = fromLocationUrlPath(urlPath, "custom-tests/foo/bar")
+        assertEquals("custom-tests/foo/bar/Module.elm", pair.first)
+        assertEquals("test", pair.second)
+    }
+
+    @Test
+    fun useCustomTestsFolderWithSubfolderAndNestedModule() {
+        val url = toLocationUrl(toPath("Nested.Module", "test"))
+        val urlPath = url.substring(url.indexOf("://") + 3)
+
+        val pair = fromLocationUrlPath(urlPath, "custom-tests/foo/bar")
+        assertEquals("custom-tests/foo/bar/Nested/Module.elm", pair.first)
+        assertEquals("test", pair.second)
+    }
 }

@@ -14,6 +14,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtil
 import org.elm.openapiext.pathAsPath
 import org.elm.utils.layout
+import org.elm.workspace.DEFAULT_TESTS_DIR_NAME
 import org.elm.workspace.asyncAutoDiscoverWorkspace
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
@@ -113,8 +114,8 @@ private class ElmProjectWizardStep(val context: WizardContext) : ModuleWizardSte
 
             // Mark the source roots, etc.
             with(contentEntry) {
-                addSourceFolder(FileUtil.join(root.url, "src"),   /* test = */ false)
-                addSourceFolder(FileUtil.join(root.url, "tests"), /* test = */ true)
+                addSourceFolder(FileUtil.join(root.url, "src"), /* test = */ false)
+                addSourceFolder(FileUtil.join(root.url, DEFAULT_TESTS_DIR_NAME), /* test = */ true)
                 addExcludeFolder(FileUtil.join(root.url, "elm-stuff"))
             }
 

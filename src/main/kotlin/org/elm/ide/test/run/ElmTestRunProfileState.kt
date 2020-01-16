@@ -38,6 +38,11 @@ class ElmTestRunProfileState internal constructor(
             configuration.options.elmFolder?.takeIf { it.isNotEmpty() }
                     ?: environment.project.basePath
 
+    private val elmProject =
+            elmFolder?.let {
+                ElmProjectTestsHelper(environment.project).elmProjectByProjectDirPath(elmFolder)
+            }
+
     @Throws(ExecutionException::class)
     override fun startProcess(): ProcessHandler {
         FileDocumentManager.getInstance().saveAllDocuments()
@@ -51,6 +56,7 @@ class ElmTestRunProfileState internal constructor(
                 ?: return handleBadConfiguration(project, "Missing path to the Elm compiler")
 
         if (elmFolder == null) return handleBadConfiguration(project, "Missing path to elmFolder")
+        if (elmProject == null) return handleBadConfiguration(project, "Could not find the Elm project for these tests")
 
         val adjusted = ElmProjectTestsHelper(project)
                 .adjustElmCompilerProjectDirPath(elmFolder, elmCompilerBinary)
@@ -58,7 +64,7 @@ class ElmTestRunProfileState internal constructor(
             return handleBadConfiguration(project, "Could not find the Elm compiler ")
         }
 
-        return elmTestCLI.runTestsProcessHandler(adjusted, elmFolder)
+        return elmTestCLI.runTestsProcessHandler(adjusted, elmProject)
     }
 
     @Throws(ExecutionException::class)
@@ -83,14 +89,21 @@ class ElmTestRunProfileState internal constructor(
     }
 
     override fun createConsole(executor: Executor): ConsoleView? {
+        // Should always have an Elm project as we only start a test (causing this method to be called) if we found a project.
+        if (elmProject == null) throw IllegalStateException("Elm project not found")
+
         val runConfiguration = environment.runProfile as RunConfiguration
-        val properties = ConsoleProperties(runConfiguration, executor)
+        val properties = ConsoleProperties(runConfiguration, executor, elmProject.testsRelativeDirPath)
         val consoleView = SMTRunnerConsoleView(properties)
         SMTestRunnerConnectionUtil.initConsoleView(consoleView, properties.testFrameworkName)
         return consoleView
     }
 
-    private class ConsoleProperties internal constructor(config: RunConfiguration, executor: Executor) : SMTRunnerConsoleProperties(config, "elm-test", executor), SMCustomMessagesParsing {
+    private class ConsoleProperties internal constructor(
+            config: RunConfiguration,
+            executor: Executor,
+            private val testsRelativeDirPath: String
+    ) : SMTRunnerConsoleProperties(config, "elm-test", executor), SMCustomMessagesParsing {
 
         init {
 
@@ -108,8 +121,7 @@ class ElmTestRunProfileState internal constructor(
 
         override fun createTestEventsConverter(testFrameworkName: String, consoleProperties: TestConsoleProperties): OutputToGeneralTestEventsConverter {
             return object : OutputToGeneralTestEventsConverter(testFrameworkName, consoleProperties) {
-                // TODO [tests-folder]: replace hard-coded string with value read from ElmProject.
-                var processor = ElmTestJsonProcessor("tests")
+                var processor = ElmTestJsonProcessor(testsRelativeDirPath)
 
                 @Synchronized
                 override fun finishTesting() {
