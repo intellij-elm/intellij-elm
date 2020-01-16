@@ -89,8 +89,7 @@ class ElmTestRunProfileState internal constructor(
     }
 
     override fun createConsole(executor: Executor): ConsoleView? {
-        // Should always have an Elm project as we only start a test (causing this method to be called) if we found a project.
-        if (elmProject == null) throw IllegalStateException("Elm project not found")
+        if (elmProject == null) error("Missing ElmProject")
 
         val runConfiguration = environment.runProfile as RunConfiguration
         val properties = ConsoleProperties(runConfiguration, executor, elmProject.testsRelativeDirPath)

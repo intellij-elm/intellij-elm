@@ -315,8 +315,7 @@ class ElmWorkspaceService(
                         // Elm 0.18 requires a separate manifest/project for the test code, so we
                         // don't need to register the 'tests' directory in this case.
                     } else {
-                        // Register the directory containing the tests as a source root if it exists.
-                        // (Existence check done in `put` method above.)
+                        log.debug("Registering tests directory ${project.testsDirPath} for $project")
                         put(project.testsDirPath, project)
                     }
                 }
