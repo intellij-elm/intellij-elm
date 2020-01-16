@@ -613,7 +613,7 @@ type Foo a b = Foo
 type Bar c = Bar
 
 foo : Foo d (e -> f) -> Bar e -> Foo d f
-foo a = Debug.todo ""
+foo a b = Foo
 
 bar : Foo g g
 bar = Foo
