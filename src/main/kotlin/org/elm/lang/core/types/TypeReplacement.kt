@@ -1,8 +1,5 @@
 package org.elm.lang.core.types
 
-import com.intellij.codeInspection.SmartHashMap
-import com.intellij.util.SmartFMap
-
 /**
  * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
  * which could also be [TyVar]s.
@@ -80,7 +77,7 @@ class TypeReplacement(
          * when calling functions.
          */
         fun flexify(ty: Ty): Ty {
-            if (ty.allVars(true).none()) return ty
+            if (ty.containsNoVars()) return ty
             return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = false, keepRecordsMutable = false).replace(ty)
         }
 
@@ -90,20 +87,12 @@ class TypeReplacement(
          * Use this to prevent cached values from being altered.
          */
         fun freeze(ty: Ty): Ty {
-            if (ty.traverse(true).none { it.isUnfrozenRecord() }) return ty
+            if (ty.containsUnfrozenRecord()) return ty
             return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = true, keepRecordsMutable = false).replace(ty)
         }
 
         private fun tyWouldChange(ty: Ty, freeze: Boolean): Boolean {
-            return ty.traverse(true).any {
-                it is TyVar || freeze && it.isUnfrozenRecord()
-            }
-        }
-
-        private fun Ty.isUnfrozenRecord() = when (this) {
-            is TyRecord -> !fieldReferences.frozen
-            is MutableTyRecord -> !fieldReferences.frozen
-            else -> false
+            return ty.anyVar(freeze) { true }
         }
     }
 
@@ -111,7 +100,9 @@ class TypeReplacement(
     private val replacements = replacements.mapValuesTo(mutableMapOf()) { (_, v) -> false to v }
 
     fun replace(ty: Ty): Ty {
-        val replaced = when (ty) {
+        // If we wouldn't change anything, return the original ty to avoid duplicating the object
+        if (!tyWouldChange(ty, freeze)) return ty
+        return when (ty) {
             is TyVar -> getReplacement(ty) ?: ty
             is TyTuple -> replaceTuple(ty)
             is TyFunction -> replaceFunction(ty)
@@ -121,8 +112,6 @@ class TypeReplacement(
             is TyUnit, TyInProgressBinding -> ty
             is MutableTyRecord -> replaceRecord(ty.fields, ty.baseTy, null, ty.fieldReferences, wasMutable = true)
         }
-        // If we didn't change anything, return the original ty to avoid duplicating the object
-        return if (replaced == ty) ty else replaced
     }
 
     /*

@@ -819,7 +819,7 @@ private class InferenceScope(
         if (typeRefTy is TyFunction) {
             patterns.zip(typeRefTy.parameters) { pat, ty -> bindPattern(pat, ty, true) }
         }
-        annotationVars = typeRefTy.allVars().toList()
+        annotationVars = typeRefTy.allVars()
         return ParameterBindingResult.Annotated(typeRefTy, patterns.size)
     }
 
@@ -1262,7 +1262,7 @@ private class InferenceScope(
         if (ty1 === ty2) return
 
         fun assign(k: TyVar, v: Ty) {
-            if (v.allVars(includeAlias = true).any { it == k }) throw InfiniteTypeException()
+            if (v.anyVar { it == k }) throw InfiniteTypeException()
             replacements[k] = v
         }
 

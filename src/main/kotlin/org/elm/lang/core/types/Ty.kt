@@ -224,35 +224,59 @@ object TyInProgressBinding : Ty() {
 data class AliasInfo(val module: String, val name: String, val parameters: List<Ty>)
 
 
-/** Create a lazy sequence of all [TyVar]s referenced within this ty. */
-fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = traverse(includeAlias).filterIsInstance<TyVar>()
+/** Return a list of all [TyVar]s in this ty, including itself */
+fun Ty.allVars(): List<TyVar> = mutableListOf<TyVar>().also { allVars(it) }
 
-fun Ty.traverse(includeAlias: Boolean = false): Sequence<Ty> = sequence {
-    yield(this@traverse)
-    when (this@traverse) {
-        is TyTuple -> types.forEach { yieldAll(it.traverse(includeAlias)) }
+private fun Ty.allVars(result: MutableList<TyVar>) {
+    when (this) {
+        is TyVar -> result.add(this)
+        is TyTuple -> types.forEach { it.allVars(result) }
         is TyRecord -> {
-            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
+            fields.values.forEach { it.allVars(result) };
+            baseTy?.allVars(result)
         }
         is MutableTyRecord -> {
-            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
+            fields.values.forEach { it.allVars(result) };
+            baseTy?.allVars(result)
         }
+        is TyUnion -> parameters.forEach { it.allVars(result) }
         is TyFunction -> {
-            yieldAll(ret.traverse(includeAlias))
-            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
+            ret.allVars(result)
+            parameters.forEach { it.allVars(result) }
         }
-        is TyUnion -> {
-            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
+        is TyUnit -> {
         }
-        is TyVar, is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        is TyUnknown -> {
         }
-    }
-    if (includeAlias) {
-        alias?.parameters?.forEach { yieldAll(it.traverse(includeAlias)) }
+        TyInProgressBinding -> {
+        }
     }
 }
+
+/**
+ * Return `true` if this [Ty] or any of its children match the [predicate], or is an unfrozen
+ * record if [orIsUnfrozenRecord] is `true`
+ */
+fun Ty.anyVar(orIsUnfrozenRecord: Boolean = false, predicate: (TyVar) -> Boolean): Boolean {
+    return when (this) {
+        is TyVar -> predicate(this)
+        is TyTuple -> types.any { it.anyVar(orIsUnfrozenRecord, predicate) }
+        is TyRecord -> (orIsUnfrozenRecord && !fieldReferences.frozen) ||
+                fields.values.any { it.anyVar(orIsUnfrozenRecord, predicate) } ||
+                baseTy?.anyVar(orIsUnfrozenRecord, predicate) == true
+        is MutableTyRecord -> (orIsUnfrozenRecord && !fieldReferences.frozen) ||
+                fields.values.any { it.anyVar(orIsUnfrozenRecord, predicate) } ||
+                baseTy?.anyVar(orIsUnfrozenRecord, predicate) == true
+        is TyUnion -> parameters.any { it.anyVar(orIsUnfrozenRecord, predicate) }
+        is TyFunction -> ret.anyVar(orIsUnfrozenRecord, predicate) || parameters.any { it.anyVar(orIsUnfrozenRecord, predicate) }
+        is TyUnit -> false
+        is TyUnknown -> false
+        TyInProgressBinding -> false
+    } || alias?.parameters?.any { it.anyVar(orIsUnfrozenRecord, predicate) } == true
+}
+
+fun Ty.containsNoVars() = !anyVar { true }
+fun Ty.containsUnfrozenRecord() = anyVar(orIsUnfrozenRecord = true) { false }
 
 data class DeclarationInTy(val module: String, val name: String, val isUnion: Boolean)
 
