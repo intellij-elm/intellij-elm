@@ -275,9 +275,6 @@ fun Ty.anyVar(orIsUnfrozenRecord: Boolean = false, predicate: (TyVar) -> Boolean
     } || alias?.parameters?.any { it.anyVar(orIsUnfrozenRecord, predicate) } == true
 }
 
-fun Ty.containsNoVars() = !anyVar { true }
-fun Ty.containsUnfrozenRecord() = anyVar(orIsUnfrozenRecord = true) { false }
-
 data class DeclarationInTy(val module: String, val name: String, val isUnion: Boolean)
 
 /** Create a lazy sequence of all union and alias instances within a [Ty]. */

@@ -27,15 +27,24 @@ data class RecordFieldReferenceTable(
 
     /** Create a new table with references from this table and [other] */
     operator fun plus(other: RecordFieldReferenceTable): RecordFieldReferenceTable {
-        return copy(frozen = false).apply { addAll(other) }
+        val newRefs = LinkedHashMap<String, MutableSet<ElmNamedElement>>(refsByField.size + other.refsByField.size, 1f)
+        refsByField.mapValuesTo(newRefs) { (field, set) ->
+            val otherSet = other.refsByField[field].orEmpty()
+            HashSet<ElmNamedElement>(set.size + (otherSet.size), 1f).apply { addAll(otherSet) }
+        }
+        other.refsByField.forEach { (k, s) ->
+            newRefs.getOrPut(k) { HashSet<ElmNamedElement>(s.size, 1f).apply { addAll(s) } }
+        }
+        return RecordFieldReferenceTable(newRefs, frozen = false)
     }
 
-    fun copy(frozen: Boolean = this.frozen): RecordFieldReferenceTable {
+    fun freeze(): RecordFieldReferenceTable {
+        if (frozen) return this
         return RecordFieldReferenceTable(
                 refsByField.mapValuesTo(LinkedHashMap(refsByField.size)) { (_, v) ->
                     HashSet<ElmNamedElement>(v.size, 1f).apply { addAll(v) }
                 },
-                frozen
+                frozen = true
         )
     }
 
