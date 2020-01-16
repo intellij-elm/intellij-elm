@@ -300,8 +300,6 @@ private class InferenceScope(
     }
 
     private fun inferBinOpExpr(expr: ElmBinOpExpr): Ty {
-        if (expr.hasErrors) return TyUnknown()
-
         val parts: List<ElmBinOpPartTag> = expr.parts.toList()
 
         // Get the operator types and precedences. We don't have to worry about invalid
@@ -366,8 +364,6 @@ private class InferenceScope(
             }
 
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
-        if (expr.hasErrors) return TyUnknown()
-
         val target = expr.target
         val arguments = expr.arguments.toList()
 
