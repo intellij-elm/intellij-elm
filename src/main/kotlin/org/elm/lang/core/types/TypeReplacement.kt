@@ -1,5 +1,8 @@
 package org.elm.lang.core.types
 
+import com.intellij.codeInspection.SmartHashMap
+import com.intellij.util.SmartFMap
+
 /**
  * This class performs deep replacement of a set of [TyVar]s in a [Ty] with a set of new types,
  * which could also be [TyVar]s.
@@ -169,7 +172,7 @@ class TypeReplacement(
             else -> replacedBase
         }
 
-        val declaredFields = fields.mapValues { (_, it) -> replace(it) }
+        val declaredFields = fields.mapValuesTo(HashMap(fields.size, 1f)) { (_, it) -> replace(it) }
         val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
         val baseFieldRefs = (replacedBase as? TyRecord)?.fieldReferences
 
@@ -196,7 +199,7 @@ class TypeReplacement(
     // When we replace a var, the new ty may itself contain vars, and so we need to recursively
     // replace the ty before we can replace the var we were given as an argument.
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
-    // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
+    // of the fact that its replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
         if (key !in replacements && (freshen || varsToRemainRigid != null)) {
             if (key.rigid && (varsToRemainRigid == null || key in varsToRemainRigid)) return null // never freshen rigid vars

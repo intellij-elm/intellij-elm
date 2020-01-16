@@ -10,6 +10,7 @@ import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import kotlin.math.max
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -256,8 +257,8 @@ class TypeExpression(
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val fieldElements = record.fieldTypeList
         val fieldTys = fieldElements.associate { it.name to typeExpressionType(it.typeExpression) }
-        val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(mutableMapOf()) {
-            it.name to mutableSetOf<ElmNamedElement>(it)
+        val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(HashMap(max(4, fieldElements.size), 1f)) {
+            it.name to HashSet<ElmNamedElement>(1, 1f).apply { add(it) }
         })
         val baseId = record.baseTypeIdentifier
         val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.referenceName) }

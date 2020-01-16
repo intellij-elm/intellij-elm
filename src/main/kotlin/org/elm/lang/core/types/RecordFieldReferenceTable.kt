@@ -6,7 +6,7 @@ import org.elm.lang.core.psi.ElmNamedElement
  * A table that tracks references for [TyRecord] fields. Can be [frozen] to prevent updates.
  */
 data class RecordFieldReferenceTable(
-        private var refsByField: MutableMap<String, MutableSet<ElmNamedElement>> = mutableMapOf(),
+        private var refsByField: MutableMap<String, MutableSet<ElmNamedElement>> = HashMap(4, 1f),
         val frozen: Boolean = false
 ) {
     /** Get all references for a [field], or an empty list if there are none. */
@@ -18,7 +18,7 @@ data class RecordFieldReferenceTable(
     fun addAll(other: RecordFieldReferenceTable) {
         if (frozen || other.refsByField === this.refsByField) return
         for ((field, refs) in other.refsByField) {
-            refsByField.getOrPut(field) { mutableSetOf() } += refs
+            refsByField.getOrPut(field) { HashSet(refs.size, 1f) } += refs
         }
     }
 
@@ -32,7 +32,9 @@ data class RecordFieldReferenceTable(
 
     fun copy(frozen: Boolean = this.frozen): RecordFieldReferenceTable {
         return RecordFieldReferenceTable(
-                refsByField.mapValuesTo(mutableMapOf()) { (_, v) -> v.toMutableSet() },
+                refsByField.mapValuesTo(HashMap(refsByField.size)) { (_, v) ->
+                    HashSet<ElmNamedElement>(v.size, 1f).apply { addAll(v) }
+                },
                 frozen
         )
     }
