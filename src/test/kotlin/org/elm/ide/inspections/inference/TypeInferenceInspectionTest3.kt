@@ -981,7 +981,7 @@ type Baz c d = Baz { f3 : c , f4 : Foo d -> Foo d }
 main : Baz (e -> ()) e -> Bar e
 main (Baz baz) =
     Bar
-        <error descr="Type mismatch.Required: { f1 : e → (), f2 : Foo ((), e) }Found: { f1 : e → (), f2 : Foo e }Mismatched fields: &nbsp;&nbsp;Field f2:&nbsp;&nbsp;&nbsp;&nbsp;Required: Foo ((), e)&nbsp;&nbsp;&nbsp;&nbsp;Found: Foo e">{ f1 = baz.f3
+        <error descr="Type mismatch.Required: { f2 : Foo ((), e), f1 : e → () }Found: { f2 : Foo e, f1 : e → () }Mismatched fields: &nbsp;&nbsp;Field f2:&nbsp;&nbsp;&nbsp;&nbsp;Required: Foo ((), e)&nbsp;&nbsp;&nbsp;&nbsp;Found: Foo e">{ f1 = baz.f3
         , f2 = baz.f4 Foo
         }</error>
 """)

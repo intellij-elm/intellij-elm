@@ -33,7 +33,7 @@ class TypeReplacement(
                 freeze: Boolean = false,
                 keepRecordsMutable: Boolean = false
         ): Ty {
-            if (varsToRemainRigid == null && replacements.isEmpty() || !tyWouldChange(ty, freeze)) return ty
+            if (varsToRemainRigid == null && replacements.isEmpty()) return ty
             return TypeReplacement(
                     replacements,
                     freshen = false,
@@ -65,7 +65,6 @@ class TypeReplacement(
          * `f`, the ty of `a` and `b` have to be the same.
          */
         fun freshenVars(ty: Ty, freeze: Boolean = false): Ty {
-            if (!tyWouldChange(ty, freeze)) return ty
             return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null, freeze = freeze, keepRecordsMutable = false).replace(ty)
         }
 
@@ -77,7 +76,6 @@ class TypeReplacement(
          * when calling functions.
          */
         fun flexify(ty: Ty): Ty {
-            if (ty.containsNoVars()) return ty
             return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = false, keepRecordsMutable = false).replace(ty)
         }
 
@@ -87,13 +85,13 @@ class TypeReplacement(
          * Use this to prevent cached values from being altered.
          */
         fun freeze(ty: Ty): Ty {
-            if (ty.containsUnfrozenRecord()) return ty
-            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = true, keepRecordsMutable = false).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = null, freeze = true, keepRecordsMutable = false).replace(ty)
         }
+    }
 
-        private fun tyWouldChange(ty: Ty, freeze: Boolean): Boolean {
-            return ty.anyVar(freeze) { true }
-        }
+    private fun Ty.wouldChange(): Boolean {
+        val changeAllVars = freshen || varsToRemainRigid != null
+        return anyVar(orIsUnfrozenRecord = freeze) { changeAllVars || it in replacements }
     }
 
     /** A map of var to (has been accessed, ty) */
@@ -101,7 +99,7 @@ class TypeReplacement(
 
     fun replace(ty: Ty): Ty {
         // If we wouldn't change anything, return the original ty to avoid duplicating the object
-        if (!tyWouldChange(ty, freeze)) return ty
+        if (!ty.wouldChange()) return ty
         return when (ty) {
             is TyVar -> getReplacement(ty) ?: ty
             is TyTuple -> replaceTuple(ty)
