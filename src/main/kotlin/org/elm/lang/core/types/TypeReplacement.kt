@@ -91,7 +91,7 @@ class TypeReplacement(
 
     private fun Ty.wouldChange(): Boolean {
         val changeAllVars = freshen || varsToRemainRigid != null
-        return anyVar(orIsUnfrozenRecord = freeze) { changeAllVars || it in replacements }
+        return anyVar(orIsMutableRecord = !keepRecordsMutable, orIsUnfrozenRecord = freeze) { changeAllVars || it in replacements }
     }
 
     /** A map of var to (has been accessed, ty) */
