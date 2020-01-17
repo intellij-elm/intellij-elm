@@ -14,6 +14,7 @@ import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.types.TypeReplacement.Companion.freeze
 
 private val TYPE_INFERENCE_KEY: Key<ParameterizedCachedValue<InferenceResult, Set<ElmValueDeclaration>>> =
         Key.create("TYPE_INFERENCE_KEY")
@@ -272,12 +273,15 @@ private class InferenceScope(
     private fun toTopLevelResult(ty: Ty, replaceExpressionTypes: Boolean = true): InferenceResult {
         val exprs = when {
             replaceExpressionTypes -> {
-                expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements, freeze = replaceExpressionTypes) }
+                expressionTypes.mapValues { (_, t) ->
+                    TypeReplacement.replace(t, replacements).also { freeze(it) }
+                }
             }
             else -> expressionTypes
         }
         val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
-        val ret = TypeReplacement.replace(ty, replacements, outerVars, freeze = replaceExpressionTypes)
+        val ret = TypeReplacement.replace(ty, replacements, outerVars)
+        if (replaceExpressionTypes) freeze(ret)
         return InferenceResult(exprs, diagnostics, ret)
     }
 

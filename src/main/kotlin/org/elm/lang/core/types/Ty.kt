@@ -253,27 +253,17 @@ private fun Ty.allVars(result: MutableList<TyVar>) {
     }
 }
 
-/**
- * Return `true` if this [Ty] or any of its children match the [predicate], or is an unfrozen
- * record if [orIsUnfrozenRecord] is `true`
- */
-fun Ty.anyVar(orIsMutableRecord: Boolean = false, orIsUnfrozenRecord: Boolean = false, predicate: (TyVar) -> Boolean): Boolean {
+/** Return `true` if this [Ty] or any of its children match the [predicate] */
+fun Ty.anyVar(predicate: (TyVar) -> Boolean): Boolean {
     return when (this) {
         is TyVar -> predicate(this)
-        is TyTuple -> types.any { it.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) }
-        is TyRecord -> (orIsUnfrozenRecord && !fieldReferences.frozen) ||
-                fields.values.any { it.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) } ||
-                baseTy?.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) == true
-        is MutableTyRecord -> orIsMutableRecord ||
-                (orIsUnfrozenRecord && !fieldReferences.frozen) ||
-                fields.values.any { it.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) } ||
-                baseTy?.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) == true
-        is TyUnion -> parameters.any { it.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) }
-        is TyFunction -> ret.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) || parameters.any { it.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) }
-        is TyUnit -> false
-        is TyUnknown -> false
-        TyInProgressBinding -> false
-    } || alias?.parameters?.any { it.anyVar(orIsMutableRecord, orIsUnfrozenRecord, predicate) } == true
+        is TyTuple -> types.any { it.anyVar(predicate) }
+        is TyRecord -> fields.values.any { it.anyVar(predicate) } || baseTy?.anyVar(predicate) == true
+        is MutableTyRecord -> fields.values.any { it.anyVar(predicate) } || baseTy?.anyVar(predicate) == true
+        is TyUnion -> parameters.any { it.anyVar(predicate) }
+        is TyFunction -> ret.anyVar(predicate) || parameters.any { it.anyVar(predicate) }
+        is TyUnit, is TyUnknown, TyInProgressBinding -> false
+    } || alias?.parameters?.any { it.anyVar(predicate) } == true
 }
 
 data class DeclarationInTy(val module: String, val name: String, val isUnion: Boolean)
