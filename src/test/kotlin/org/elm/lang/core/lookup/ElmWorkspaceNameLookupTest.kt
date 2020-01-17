@@ -3,7 +3,7 @@ package org.elm.lang.core.lookup
 import org.elm.TestClientLocation
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
-import org.elm.lang.core.types.moduleName
+import org.elm.lang.core.psi.moduleName
 import org.elm.workspace.CustomElmStdlibVariant
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.Version

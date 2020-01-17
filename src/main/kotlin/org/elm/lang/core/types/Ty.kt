@@ -314,3 +314,13 @@ fun Ty.allDeclarations(
         it.parameters.forEach { p -> yieldAll(p.allDeclarations()) }
     }
 }
+
+/** Extract the typeclass for a var name if it is one, or null if it's a normal var */
+fun TyVar.typeclassName(): String? = when {
+    name.length < 6 -> null // "number".length == 6
+    name.startsWith("number") -> "number"
+    name.startsWith("appendable") -> "appendable"
+    name.startsWith("comparable") -> "comparable"
+    name.startsWith("compappend") -> "compappend"
+    else -> null
+}

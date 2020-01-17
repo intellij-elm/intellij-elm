@@ -226,3 +226,10 @@ fun PsiElement.outermostDeclaration(strict: Boolean): ElmValueDeclaration? =
                 .takeWhile { it !is ElmFile }
                 .filterIsInstance<ElmValueDeclaration>()
                 .firstOrNull { it.isTopLevel }
+
+/**
+ * Return the name from module declaration of the file containing this element, or the empty string
+ * if there isn't one.
+ */
+val ElmPsiElement.moduleName: String
+    get() = elmFile.getModuleDecl()?.name ?: ""

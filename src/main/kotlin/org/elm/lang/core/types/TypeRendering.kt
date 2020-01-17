@@ -45,7 +45,7 @@ private class TypeRenderer(
         // avoid confusion. This is common with multiple unannotated functions, where they'll each
         // have types inferred as `a`, `b`, etc.
         val takenNames = varDisplayNames.values
-        if (getTypeclassName(ty) == null && ty.name in takenNames) {
+        if (ty.typeclassName() == null && ty.name in takenNames) {
             val displayName = possibleNames.first { it !in takenNames }
             varDisplayNames[ty] = displayName
             return displayName

@@ -1168,8 +1168,8 @@ private class InferenceScope(
      * Check if a [ty2] can that compares unequal to a [ty1] can be unified with it
      */
     private fun varsAssignable(ty1: TyVar, ty2: TyVar): Boolean {
-        val tc1 = getTypeclassName(ty1)
-        val tc2 = getTypeclassName(ty2)
+        val tc1 = ty1.typeclassName()
+        val tc2 = ty2.typeclassName()
 
         return when {
             !ty1.rigid && tc1 == null -> true
@@ -1265,8 +1265,8 @@ private class InferenceScope(
         // assigning anything to a variable constrains the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             if (ty1 is TyVar) {
-                val tc1 = getTypeclassName(ty1)
-                val tc2 = getTypeclassName(ty2)
+                val tc1 = ty1.typeclassName()
+                val tc2 = ty2.typeclassName()
                 if (tc1 == null && tc2 != null) {
                     // There's an edge case where an assignment like `a => number`
                     // should constrain `a` to be a `number`, rather than `number` to be an `a`.
@@ -1338,10 +1338,6 @@ data class ParameterizedInferenceResult<T>(
         val value: T
 )
 
-val ElmPsiElement.moduleName: String
-    get() = elmFile.getModuleDecl()?.name ?: ""
-
-
 /** Return [count] [TyVar]s named a, b, ... z, a1, b1, ... */
 private fun uniqueVars(count: Int): List<TyVar> {
     return varNames().take(count).map { TyVar(it) }.toList()
@@ -1369,15 +1365,6 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 }
 
 fun isInferable(ty: Ty): Boolean = ty !is TyUnknown
-
-/** Extract the typeclass for a var name if it is one, or null if it's a normal var*/
-fun getTypeclassName(ty: TyVar): String? = when {
-    ty.name.startsWith("number") -> "number"
-    ty.name.startsWith("appendable") -> "appendable"
-    ty.name.startsWith("comparable") -> "comparable"
-    ty.name.startsWith("compappend") -> "compappend"
-    else -> null
-}
 
 /** Throw an [IllegalStateException] with [message] augmented with information about [element] */
 fun error(element: ElmPsiElement, message: String): Nothing {
