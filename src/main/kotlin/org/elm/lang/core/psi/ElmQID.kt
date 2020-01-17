@@ -19,6 +19,11 @@ interface ElmQID : ElmPsiElement {
      */
     val qualifiers: List<PsiElement>
 
+    /**
+     * The text of the span of elements that make up [qualifiers]
+     *
+     * e.g. `Json.Decode` in the expression `Json.Decode.maybe`
+     */
     val qualifierPrefix: String
 
     /** Returns true if the qualified ID refers to Elm's "Kernel" modules,
@@ -27,9 +32,9 @@ interface ElmQID : ElmPsiElement {
      */
     val isKernelModule: Boolean
         get() {
-            val moduleName = upperCaseIdentifierList.joinToString(".") { it.text }
-            return moduleName.startsWith("Elm.Kernel.")
-                    || moduleName.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
+            val text = text
+            return text.startsWith("Elm.Kernel.")
+                    || text.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
         }
 
     val isQualified: Boolean

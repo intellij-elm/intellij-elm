@@ -31,7 +31,7 @@ class ElmRecursiveCallLineMarkerProvider : LineMarkerProvider {
         // We only call this from ElmLineMarkerProvider.collectSlowLineMarkers, so it's ok to resolve references
         if (el.elementType != LOWER_CASE_IDENTIFIER) return null
         val qid = el.parent as? ElmValueQID ?: return null
-        if (qid.qualifiers.isNotEmpty()) return null
+        if (qid.isQualified) return null
         val valueExpr = qid.parent as? ElmValueExpr ?: return null
         val functionCall = valueExpr.parent as? ElmFunctionCallExpr ?: return null
         if (functionCall.target != valueExpr) return null
