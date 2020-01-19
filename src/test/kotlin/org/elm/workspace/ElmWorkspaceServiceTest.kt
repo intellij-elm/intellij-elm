@@ -613,6 +613,6 @@ private const val BASIC_PACKAGE_MANIFEST = """
  */
 private fun getCustomManifest(testDir: String): String = """
 {
-  "test-directory": "$testDir"
+  "test-directory": "${testDir.replace("\\", "\\\\")}"
 }
 """
