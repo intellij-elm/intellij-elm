@@ -5,6 +5,7 @@ import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
+import java.io.File
 import java.nio.file.Paths
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
@@ -491,11 +492,16 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     fun `test uses default tests location when custom manifest specifies default location`() =
             testCustomManifest(getCustomManifest("tests"), "tests", false)
 
-    fun `test handles nested custom tests location`() =
-            testCustomManifest(getCustomManifest("custom/tests/location"), "custom/tests/location", true)
+    private val nestedTestsLocation = listOf("custom", "tests", "location").joinToString(File.separator)
 
-    fun `test normalizes custom tests location`() =
-            testCustomManifest(getCustomManifest("./custom/tests/location/."), "custom/tests/location", true)
+    fun `test handles nested custom tests location`() =
+            testCustomManifest(getCustomManifest(nestedTestsLocation), nestedTestsLocation, true)
+
+    fun `test normalizes custom tests location`() {
+        // Repeat above test with path like "./custom/tests/location/." (i.e. leading and trailing dot).
+        val denormalizedNestedTestsLocation = listOf(".", "custom", "tests", "location", ".").joinToString(File.separator)
+        testCustomManifest(getCustomManifest(denormalizedNestedTestsLocation), nestedTestsLocation, true)
+    }
 
     fun `test uses default tests location when no custom manifest exists (package project)`() =
             testCustomManifest(null, "tests", expectedIsCustomTestsDir = false, isApplicationProject = false)
