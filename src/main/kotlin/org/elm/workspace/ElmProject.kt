@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.LocalFileSystem
+import org.elm.workspace.ElmToolchain.Companion.ELM_INTELLIJ_JSON
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
 import java.io.FileNotFoundException
@@ -123,17 +124,30 @@ sealed class ElmProject(
     companion object {
 
         fun parse(manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {
-            val inputStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
+            val manifestStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
                     ?: throw ProjectLoadException("Could not find file $manifestPath. Is the package installed?")
-            return parse(inputStream, manifestPath, repo, ignoreTestDeps)
+            val customManifestStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(
+                    manifestPath.resolveSibling(ELM_INTELLIJ_JSON).toString())?.inputStream
+            return parse(manifestStream, manifestPath, repo, ignoreTestDeps, customManifestStream)
         }
 
         /**
-         * Attempts to parse an `elm.json` file.
+         * Attempts to parse an `elm.json` file and, if it exists, the sibling `elm.intellij.json` file (see
+         * [ElmToolchain.ELM_INTELLIJ_JSON]).
          *
+         * @param customManifestStream The stream to the `elm.intellij.json` file, if one exists. This is only used for
+         * Elm 19+ projects. Currently it is only read for projects which are marked in `elm.json` as an _application_
+         * (i.e. not for _packages_) as it is only applications which allow a custom test directory to be set (and that's
+         * the only thing we currently store in `elm.intellij.json`). In future this maybe change if more data is added
+         * into the custom manifest.
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
-        fun parse(inputStream: InputStream, manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {
+        fun parse(manifestStream: InputStream,
+                  manifestPath: Path,
+                  repo: ElmPackageRepository,
+                  ignoreTestDeps: Boolean = false,
+                  customManifestStream: InputStream? = null
+        ): ElmProject {
 
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
                 val elmStuffPath = manifestPath.resolveSibling("elm-stuff")
@@ -141,7 +155,7 @@ sealed class ElmProject(
             }
 
             val node = try {
-                objectMapper.readTree(inputStream)
+                objectMapper.readTree(manifestStream)
             } catch (e: JsonProcessingException) {
                 throw ProjectLoadException("Bad JSON: ${e.message}")
             }
@@ -149,19 +163,28 @@ sealed class ElmProject(
             val type = node.get("type")?.textValue()
             return when (type) {
                 "application" -> {
-                    val dto = try {
+                    val manifestDto = try {
                         objectMapper.treeToValue(node, ElmApplicationProjectDTO::class.java)
                     } catch (e: JsonProcessingException) {
                         throw ProjectLoadException("Invalid elm.json: ${e.message}")
                     }
+
+                    // If specified, read the custom manfiest (elm.intellij.json)
+                    val customManifestDto = customManifestStream?.let {
+                        try {
+                            objectMapper.readValue(it, ElmCustomManifestDTO::class.java)
+                        } catch (e: JsonProcessingException) {
+                            throw ProjectLoadException("Invalid elm.intellij.json: ${e.message}")
+                        }
+                    }
+
                     ElmApplicationProject(
                             manifestPath = manifestPath,
-                            elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.depsToPackages(repo),
-                            testDependencies = if (ignoreTestDeps) emptyList() else dto.testDependencies.depsToPackages(repo),
-                            sourceDirectories = dto.sourceDirectories
-                            // TODO [tests-folder]: allow a value for testsRelativeDirPath to be specified, by reading
-                            //  from some config file.
+                            elmVersion = manifestDto.elmVersion,
+                            dependencies = manifestDto.dependencies.depsToPackages(repo),
+                            testDependencies = if (ignoreTestDeps) emptyList() else manifestDto.testDependencies.depsToPackages(repo),
+                            sourceDirectories = manifestDto.sourceDirectories,
+                            testsRelativeDirPath = customManifestDto?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
                     )
                 }
                 "package" -> {
@@ -331,6 +354,19 @@ private class ElmApplicationProjectDTO(
         @JsonProperty("dependencies") val dependencies: ExactDependenciesDTO,
         @JsonProperty("test-dependencies") val testDependencies: ExactDependenciesDTO
 ) : ElmProjectDTO
+
+
+/**
+ * DTO used to wrap the data in `elm.intellij.json`.
+ *
+ * @see [ElmToolchain.ELM_INTELLIJ_JSON]
+ */
+private class ElmCustomManifestDTO(
+        /**
+         * The path to the directory containing the unit tests, relative to the root of the Elm project.
+         */
+        @JsonProperty("test-directory") val testDirectory: String?
+)
 
 
 private class ExactDependenciesDTO(

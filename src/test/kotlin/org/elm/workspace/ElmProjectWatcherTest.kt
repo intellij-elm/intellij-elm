@@ -16,7 +16,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import org.elm.lang.ElmTestBase
 
 
-class ElmProjectWatcherTest: ElmTestBase() {
+class ElmProjectWatcherTest : ElmTestBase() {
 
 
     private var counter = 0
@@ -29,30 +29,40 @@ class ElmProjectWatcherTest: ElmTestBase() {
     }
 
 
-    fun `test detects a change involving elm json project manifest file`() {
-        val vFile = newVirtualFile(ElmToolchain.ELM_JSON)
-        watcher.checkTriggered(newCreateEvent(vFile))
-        watcher.checkTriggered(newChangeEvent(vFile))
-        watcher.checkTriggered(newDeleteEvent(vFile))
-        runWriteAction { vFile.delete(this) }
-    }
+    fun `test detects a change involving elm json project manifest file`() =
+            testVFileWatching(ElmToolchain.ELM_JSON)
+
+
+    fun `test detects a change involving elm intellij json project manifest file`() =
+            testVFileWatching(ElmToolchain.ELM_INTELLIJ_JSON)
 
 
     // TODO [drop 0.18] remove this test
-    fun `test detects a change involving legacy elm json project manifest file`() {
-        val vFile = newVirtualFile(ElmToolchain.ELM_LEGACY_JSON)
-        watcher.checkTriggered(newCreateEvent(vFile))
-        watcher.checkTriggered(newChangeEvent(vFile))
-        watcher.checkTriggered(newDeleteEvent(vFile))
-        runWriteAction { vFile.delete(this) }
-    }
+    fun `test detects a change involving legacy elm json project manifest file`() =
+            testVFileWatching(ElmToolchain.ELM_LEGACY_JSON)
 
 
-    fun `test ignores files other than elm json`() {
-        val vFile = newVirtualFile("foo.json")
-        watcher.checkNotTriggered(newCreateEvent(vFile))
-        watcher.checkNotTriggered(newChangeEvent(vFile))
-        watcher.checkNotTriggered(newDeleteEvent(vFile))
+    fun `test ignores files other than elm json`() =
+            testVFileWatching("foo.json", false)
+
+
+    /**
+     * Tests that events related to the file with the passed in `fileName` are/aren't triggered, as defined by `expectTriggered`.
+     */
+    private fun testVFileWatching(fileName: String, expectTriggered: Boolean = true) {
+        // Define the function we'll call to check whether the event has/hasn't been triggered as expected (checkTriggered
+        // or checkNotTriggered).
+        // Need to create lambdas here as can't directly reference the checkTriggered/checkNotTriggered extension methods
+        // as they aren't top-level functions (as they reference `counter` so need to be class members). See fourth comment
+        // here: https://stackoverflow.com/a/46562791/10326373
+        val watchingFn =
+                if (expectTriggered) { event: VFileEvent -> watcher.checkTriggered(event) }
+                else { event: VFileEvent -> watcher.checkNotTriggered(event) }
+
+        val vFile = newVirtualFile(fileName)
+        watchingFn(newCreateEvent(vFile))
+        watchingFn(newChangeEvent(vFile))
+        watchingFn(newDeleteEvent(vFile))
         runWriteAction { vFile.delete(this) }
     }
 

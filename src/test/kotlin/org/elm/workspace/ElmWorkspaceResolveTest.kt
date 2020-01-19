@@ -321,9 +321,19 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    fun `test resolves modules provided by packages which are direct test dependencies`() {
+    fun `test resolves modules provided by packages which are direct test dependencies`() =
+            testTestDependencyResolution(true)
+
+
+    fun `test resolves modules provided by packages which are direct test dependencies in custom tests folder`() =
+            testTestDependencyResolution(false)
+
+
+    private fun testTestDependencyResolution(useDefaultTestsLocation: Boolean) {
 
         ensureElmStdlibInstalled(FullElmStdlibVariant)
+
+        val testsFolder = if (useDefaultTestsLocation) "tests" else "custom-tests"
 
         buildProject {
             project("elm.json", """
@@ -345,13 +355,15 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 }
             }
             """.trimIndent())
-            dir("tests") {
+            if (!useDefaultTestsLocation)
+                file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
+            dir(testsFolder) {
                 elm("MyTests.elm", """
                     import Test
                            --^
                 """.trimIndent())
             }
-        }.checkReferenceIsResolved<ElmImportClause>("tests/MyTests.elm", toPackage = "elm-explorations/test 1.0.0")
+        }.checkReferenceIsResolved<ElmImportClause>("$testsFolder/MyTests.elm", toPackage = "elm-explorations/test 1.0.0")
     }
 
 
@@ -390,9 +402,19 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     // See https://github.com/klazuka/intellij-elm/issues/189
-    fun `test resolves companion modules inside the 'tests' directory`() {
+    fun `test resolves companion modules inside the default tests directory`() =
+            testTestCompanionModulesResolution(true)
+
+
+    fun `test resolves companion modules inside a custom tests directory`() =
+            testTestCompanionModulesResolution(false)
+
+
+    private fun testTestCompanionModulesResolution(useDefaultTestsLocation: Boolean) {
 
         ensureElmStdlibInstalled(FullElmStdlibVariant)
+
+        val testsFolder = if (useDefaultTestsLocation) "tests" else "custom-tests"
 
         buildProject {
             project("elm.json", """
@@ -414,7 +436,9 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 }
             }
             """.trimIndent())
-            dir("tests") {
+            if (!useDefaultTestsLocation)
+                file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
+            dir(testsFolder) {
                 elm("MyTests.elm", """
                     import Helper
                            --^
@@ -423,7 +447,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     module Helper exposing (..)
                 """.trimIndent())
             }
-        }.checkReferenceIsResolved<ElmImportClause>("tests/MyTests.elm")
+        }.checkReferenceIsResolved<ElmImportClause>("$testsFolder/MyTests.elm")
     }
 
 
