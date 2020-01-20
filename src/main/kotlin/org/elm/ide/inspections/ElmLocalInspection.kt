@@ -1,10 +1,7 @@
 package org.elm.ide.inspections
 
 import com.intellij.codeInsight.intention.PriorityAction
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.LocalQuickFix
-import com.intellij.codeInspection.ProblemDescriptor
-import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.codeInspection.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
@@ -21,18 +18,28 @@ abstract class ElmLocalInspection : LocalInspectionTool() {
     }
 
     abstract fun visitElement(element: ElmPsiElement, holder: ProblemsHolder, isOnTheFly: Boolean)
+}
 
-    protected inline fun quickFix(
-            name: String,
-            familyName: String = name,
-            priority: PriorityAction.Priority = PriorityAction.Priority.NORMAL,
-            crossinline fix: (Project, ProblemDescriptor) -> Unit
-    ): LocalQuickFix = object : LocalQuickFix, PriorityAction {
-        override fun getName(): String = name
-        override fun getFamilyName(): String = familyName
-        override fun getPriority(): PriorityAction.Priority = priority
-        override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-            fix(project, descriptor)
-        }
+/**
+ * A [LocalQuickFix] base class that takes care of some of the boilerplate
+ *
+ * Note: [LocalQuickFix] implementations should never store a reference to a [PsiElement], since the
+ * PSI may change between the time that they're created and called, causing the elements to be
+ * invalid or leak memory.
+ *
+ * If you really need a reference to an element other than the one this fix is shown on, you can implement
+ * [LocalQuickFixOnPsiElement], which holds a weak reference to an element.
+ */
+abstract class NamedQuickFix(
+        private val fixName: String,
+        private val fixPriority: PriorityAction.Priority = PriorityAction.Priority.NORMAL
+) : LocalQuickFix, PriorityAction {
+    override fun getName(): String = fixName
+    override fun getFamilyName(): String = name
+    override fun getPriority(): PriorityAction.Priority = fixPriority
+    final override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
+        applyFix(descriptor.psiElement ?: return, project, descriptor)
     }
+
+    abstract fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor)
 }
