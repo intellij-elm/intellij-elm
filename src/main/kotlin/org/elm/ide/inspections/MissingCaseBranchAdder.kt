@@ -8,6 +8,8 @@ import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
+import org.elm.lang.core.psi.indentStyle
+import org.elm.lang.core.psi.oneLevelOfIndentation
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
@@ -53,7 +55,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     }
 
     private fun addPatterns(patterns: List<String>) {
-        val indent = " ".repeat(CodeStyle.getIndentOptions(element.containingFile).INDENT_SIZE)
+        val indent = element.indentStyle.oneLevelOfIndentation
         val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
         val existingIndent = document!!.getIndent(element.startOffset)

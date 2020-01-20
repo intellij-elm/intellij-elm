@@ -55,7 +55,7 @@ class ElmSmartEnterProcessor : SmartEnterProcessorWithFixers() {
 
 private class ElmEnterProcessor : SmartEnterProcessorWithFixers.FixEnterProcessor() {
     override fun doEnter(atCaret: PsiElement, file: PsiFile, editor: Editor, modified: Boolean): Boolean {
-        val indent = CodeStyle.getIndentOptions(file).INDENT_SIZE
+        val indent = file.indentStyle.INDENT_SIZE
 
         if (modified && atCaret is ElmCaseOfExpr && atCaret.branches.isNotEmpty()) {
             val branch = atCaret.branches.first()
@@ -94,8 +94,7 @@ private class ElmEnterProcessor : SmartEnterProcessorWithFixers.FixEnterProcesso
 
 private abstract class ElmSmartEnterFixer : SmartEnterProcessorWithFixers.Fixer<ElmSmartEnterProcessor>() {
     final override fun apply(editor: Editor, processor: ElmSmartEnterProcessor, element: PsiElement) {
-        val indent = " ".repeat(CodeStyle.getIndentOptions(element.containingFile).INDENT_SIZE)
-        apply(editor, processor, element, indent)
+        apply(editor, processor, element, element.indentStyle.oneLevelOfIndentation)
     }
 
     abstract fun apply(editor: Editor, processor: ElmSmartEnterProcessor, element: PsiElement, indent: String)

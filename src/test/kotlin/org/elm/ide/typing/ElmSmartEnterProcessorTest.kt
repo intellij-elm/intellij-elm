@@ -3,6 +3,7 @@ package org.elm.ide.typing
 import com.intellij.application.options.CodeStyle
 import com.intellij.openapi.actionSystem.IdeActions
 import org.elm.lang.ElmTestBase
+import org.elm.lang.core.psi.indentStyle
 import org.intellij.lang.annotations.Language
 
 class ElmSmartEnterProcessorTest : ElmTestBase() {
@@ -247,7 +248,7 @@ foo it =
     Qux ->
 
 """.replace("--EOL", "")) {
-        CodeStyle.getIndentOptions(myFixture.file).INDENT_SIZE = 2
+        myFixture.file.indentStyle.INDENT_SIZE = 2
         myFixture.performEditorAction(IdeActions.ACTION_EDITOR_COMPLETE_STATEMENT)
     }
 

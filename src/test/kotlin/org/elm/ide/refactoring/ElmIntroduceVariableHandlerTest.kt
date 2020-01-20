@@ -4,6 +4,7 @@ import com.intellij.application.options.CodeStyle
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmExpressionTag
+import org.elm.lang.core.psi.indentStyle
 import org.intellij.lang.annotations.Language
 
 class ElmIntroduceVariableHandlerTest : ElmTestBase() {
@@ -486,7 +487,7 @@ f =
   in
   4 + number
 """) {
-        CodeStyle.getIndentOptions(myFixture.file).INDENT_SIZE = 2
+        myFixture.file.indentStyle.INDENT_SIZE = 2
         doIntroduceVariable(listOf("3", "4 + 3"), 0)
     }
 

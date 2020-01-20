@@ -104,7 +104,7 @@ class ElmOnEnterIndentHandler : EnterHandlerDelegateAdapter() {
 
         // IntelliJ will match leading whitespace of previous lines, so we only need
         // to indent one level, even for deeply nested let-in declarations.
-        val textToInsert = " ".repeat(CodeStyle.getIndentOptions(file).INDENT_SIZE)
+        val textToInsert = file.indentStyle.oneLevelOfIndentation
         document.insertString(caretOffset, textToInsert)
         caretAdvanceRef.set(textToInsert.length)
 

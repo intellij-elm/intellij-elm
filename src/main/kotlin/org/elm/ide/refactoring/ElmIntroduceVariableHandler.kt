@@ -123,7 +123,7 @@ private class ExpressionReplacer(
      */
     fun introduceLet(elementToReplace: PsiElement) {
         val existingIndent = DocumentUtil.getIndent(editor.document, elementToReplace.startOffset).toString()
-        val indent = " ".repeat(CodeStyle.getIndentOptions(elementToReplace.containingFile).INDENT_SIZE)
+        val indent = elementToReplace.indentStyle.oneLevelOfIndentation
         val newDeclBodyText = chosenExpr.textWithNormalizedIndents
         val newIdentifierElement = project.runWriteCommandAction {
             val newLetExpr = if (elementToReplace !== chosenExpr) {
@@ -149,7 +149,7 @@ private class ExpressionReplacer(
         val file = letExpr.elmFile
         val anchor = letExpr.valueDeclarationList.last()
         val existingIndent = DocumentUtil.getIndent(editor.document, anchor.startOffset)
-        val indent = " ".repeat(CodeStyle.getIndentOptions(file).INDENT_SIZE)
+        val indent = file.indentStyle.oneLevelOfIndentation
         val indentedDeclExpr = chosenExpr.textWithNormalizedIndents.lines()
                 .joinToString("\n") { "$existingIndent$indent$it" }
         val textToInsert = "\n\n$existingIndent${identifier.text} =\n$indentedDeclExpr"

@@ -26,8 +26,15 @@ SOFTWARE.
 
 package org.elm.lang.core.psi
 
+import com.intellij.application.options.CodeStyle
 import com.intellij.extapi.psi.StubBasedPsiElementBase
-import com.intellij.psi.*
+import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiErrorElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.StubBasedPsiElement
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.psi.impl.source.PsiFileImpl
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.tree.IElementType
@@ -38,7 +45,6 @@ import org.elm.lang.core.lexer.ElmLayoutLexer
 import org.elm.lang.core.psi.ElmTypes.VIRTUAL_END_DECL
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
-import kotlin.reflect.KClass
 
 
 val PsiElement.descendants: Sequence<PsiElement> get() = directChildren.flatMap { sequenceOf(it) + it.descendants }
@@ -172,7 +178,6 @@ inline val <T : StubElement<*>> StubBasedPsiElement<T>.greenStub: T?
     get() = (this as? StubBasedPsiElementBase<T>)?.greenStub
 
 
-
 val PsiElement.startOffset: Int
     get() = textRange.startOffset
 
@@ -187,8 +192,21 @@ val PsiElement.endOffset: Int
 fun PsiElement.offsetIn(owner: PsiElement): Int =
         ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
 
-val PsiElement.hasErrors : Boolean
+val PsiElement.hasErrors: Boolean
     get() = PsiTreeUtil.hasErrorElements(this)
+
+val PsiFile.indentStyle: CommonCodeStyleSettings.IndentOptions
+    get() = CodeStyle.getIndentOptions(this)
+
+val PsiElement.indentStyle: CommonCodeStyleSettings.IndentOptions
+    get() = containingFile.indentStyle
+
+/**
+ * Return a string containing a number of spaces equal to the current
+ * [indent size][CommonCodeStyleSettings.IndentOptions.INDENT_SIZE]
+ */
+val CommonCodeStyleSettings.IndentOptions.oneLevelOfIndentation: String
+    get() = " ".repeat(INDENT_SIZE)
 
 // Elm-specific helpers
 
