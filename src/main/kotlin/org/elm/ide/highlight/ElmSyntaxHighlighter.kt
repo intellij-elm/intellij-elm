@@ -35,7 +35,9 @@ class ElmSyntaxHighlighter : SyntaxHighlighterBase() {
                     DOT -> ElmColor.DOT
                     NUMBER_LITERAL -> ElmColor.NUMBER
                     PIPE -> ElmColor.PIPE
-                    in ELM_COMMENTS -> ElmColor.COMMENT
+                    LINE_COMMENT -> ElmColor.LINE_COMMENT
+                    BLOCK_COMMENT -> ElmColor.BLOCK_COMMENT
+                    DOC_COMMENT -> ElmColor.DOC_COMMENT
                     in ELM_KEYWORDS -> ElmColor.KEYWORD
                     in ELM_OPERATORS -> ElmColor.OPERATOR
                     TokenType.BAD_CHARACTER -> ElmColor.BAD_CHAR

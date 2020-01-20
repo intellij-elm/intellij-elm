@@ -7,6 +7,7 @@ import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.presentation.getPresentation
 import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmTypes.DOC_COMMENT
 import org.elm.lang.core.stubs.ElmModuleDeclarationStub
 import org.elm.lang.core.stubs.ElmNamedStub
 
@@ -74,5 +75,5 @@ class ElmModuleDeclaration : ElmStubbedElement<ElmModuleDeclarationStub>, ElmNam
             getPresentation(this)
 
     override val docComment: PsiComment?
-        get() = (nextSiblings.withoutWs.firstOrNull() as? PsiComment)?.takeIf { it.text.startsWith("{-|") }
+        get() = (nextSiblings.withoutWs.firstOrNull() as? PsiComment)?.takeIf { it.elementType == DOC_COMMENT }
 }

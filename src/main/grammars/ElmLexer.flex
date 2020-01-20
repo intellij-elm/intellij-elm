@@ -23,6 +23,7 @@ import static org.elm.lang.core.psi.ElmTypes.*;
 %{
     private int commentLevel = 0;
     private int charLength = 0;
+    private boolean docComment = false;
 
     private void startComment() {
         commentLevel = 1;
@@ -99,11 +100,11 @@ ThreeQuotes = \"\"\"
     "-}" {
             if (--commentLevel == 0) {
                 yybegin(YYINITIAL);
-                return BLOCK_COMMENT;
+                return docComment ? DOC_COMMENT : BLOCK_COMMENT;
             }
         }
 
-    <<EOF>> { commentLevel = 0; yybegin(YYINITIAL); return BLOCK_COMMENT; }
+    <<EOF>> { commentLevel = 0; yybegin(YYINITIAL); return docComment ? DOC_COMMENT : BLOCK_COMMENT; }
 
     [^] { }
 }
@@ -170,10 +171,12 @@ ThreeQuotes = \"\"\"
             yybegin(GLSL_CODE);
             return START_GLSL_CODE;
         }
-    "{-" {
+    "{-|" {
+        docComment = true;
         startComment();
     }
-    "{-|" {
+    "{-" {
+        docComment = false;
         startComment();
     }
 

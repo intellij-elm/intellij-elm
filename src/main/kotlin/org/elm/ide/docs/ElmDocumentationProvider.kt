@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
+import org.elm.lang.core.psi.ElmTypes.DOC_COMMENT
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.resolve.scope.QualifiedImportScope
@@ -245,9 +246,7 @@ private fun StringBuilder.renderLink(refText: String, text: String) {
 }
 
 private fun StringBuilder.renderDocContent(element: ElmDocTarget?, transform: (String) -> String = { it }) {
-    val doc = element?.docComment
-
-    if (doc == null || doc.elementType != BLOCK_COMMENT) return
+    val doc = element?.docComment ?: return
 
     // strip the comment markers
     val content = doc.text?.let { text ->
