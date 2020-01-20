@@ -58,8 +58,8 @@ data class ElmToolchain(
          * Here we put extra information which isn't in the normal `elm.json`, but which this plugin requires, such as
          * the path to the directory containing tests.
          *
-         * The `elm.json` file is referred to elsewhere as the _manifest_. This `elm.intellij.json` file is therefore
-         * referred to as the _custom manifest_.
+         * The `elm.json` file is referred to elsewhere as the _manifest_. This `elm.intellij.json` file is referred to
+         * as the _sidecar manifest_.
          */
         const val ELM_INTELLIJ_JSON = "elm.intellij.json"
         const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]

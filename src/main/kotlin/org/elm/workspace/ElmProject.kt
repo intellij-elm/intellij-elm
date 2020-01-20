@@ -126,27 +126,27 @@ sealed class ElmProject(
         fun parse(manifestPath: Path, repo: ElmPackageRepository, ignoreTestDeps: Boolean = false): ElmProject {
             val manifestStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(manifestPath.toString())?.inputStream
                     ?: throw ProjectLoadException("Could not find file $manifestPath. Is the package installed?")
-            val customManifestStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(
+            val sidecarManifestStream = LocalFileSystem.getInstance().refreshAndFindFileByPath(
                     manifestPath.resolveSibling(ELM_INTELLIJ_JSON).toString())?.inputStream
-            return parse(manifestStream, manifestPath, repo, ignoreTestDeps, customManifestStream)
+            return parse(manifestStream, manifestPath, repo, ignoreTestDeps, sidecarManifestStream)
         }
 
         /**
          * Attempts to parse an `elm.json` file and, if it exists, the sibling `elm.intellij.json` file (see
          * [ElmToolchain.ELM_INTELLIJ_JSON]).
          *
-         * @param customManifestStream The stream to the `elm.intellij.json` file, if one exists. This is only used for
+         * @param sidecarManifestStream The stream to the `elm.intellij.json` file, if one exists. This is only used for
          * Elm 19+ projects. Currently it is only read for projects which are marked in `elm.json` as an _application_
          * (i.e. not for _packages_) as it is only applications which allow a custom test directory to be set (and that's
          * the only thing we currently store in `elm.intellij.json`). In future this maybe change if more data is added
-         * into the custom manifest.
+         * into the sidecar manifest.
          * @throws ProjectLoadException if the JSON cannot be parsed
          */
         fun parse(manifestStream: InputStream,
                   manifestPath: Path,
                   repo: ElmPackageRepository,
                   ignoreTestDeps: Boolean = false,
-                  customManifestStream: InputStream? = null
+                  sidecarManifestStream: InputStream? = null
         ): ElmProject {
 
             if (manifestPath.endsWith(ELM_LEGACY_JSON)) {
@@ -170,9 +170,9 @@ sealed class ElmProject(
                     }
 
                     // If specified, read the custom manfiest (elm.intellij.json)
-                    val customManifestDto = customManifestStream?.let {
+                    val sidecarManifestDto = sidecarManifestStream?.let {
                         try {
-                            objectMapper.readValue(it, ElmCustomManifestDTO::class.java)
+                            objectMapper.readValue(it, ElmSidecarManifestDTO::class.java)
                         } catch (e: JsonProcessingException) {
                             throw ProjectLoadException("Invalid elm.intellij.json: ${e.message}")
                         }
@@ -184,7 +184,7 @@ sealed class ElmProject(
                             dependencies = manifestDto.dependencies.depsToPackages(repo),
                             testDependencies = if (ignoreTestDeps) emptyList() else manifestDto.testDependencies.depsToPackages(repo),
                             sourceDirectories = manifestDto.sourceDirectories,
-                            testsRelativeDirPath = customManifestDto?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
+                            testsRelativeDirPath = sidecarManifestDto?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
                     )
                 }
                 "package" -> {
@@ -361,11 +361,11 @@ private class ElmApplicationProjectDTO(
  *
  * @see [ElmToolchain.ELM_INTELLIJ_JSON]
  */
-private class ElmCustomManifestDTO(
+private class ElmSidecarManifestDTO(
         /**
          * The path to the directory containing the unit tests, relative to the root of the Elm project.
          */
-        @JsonProperty("test-directory") val testDirectory: String?
+        @JsonProperty("test-directory") val testDirectory: String
 )
 
 
