@@ -7,7 +7,8 @@
 
 package org.elm.ide.typing
 
-import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegate
+import com.intellij.application.options.CodeStyle
+import com.intellij.codeInsight.CodeInsightSettings
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegate.Result
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegateAdapter
 import com.intellij.openapi.actionSystem.DataContext
@@ -35,7 +36,7 @@ import org.elm.lang.core.psi.elements.ElmTypeDeclaration
  * "smart" indentation to make it easy to write Elm code, especially
  * since Elm's parser depends on indentation as an implicit delimiter.
  */
-class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
+class ElmOnEnterIndentHandler : EnterHandlerDelegateAdapter() {
 
     override fun preprocessEnter(
             file: PsiFile,
@@ -44,11 +45,10 @@ class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
             caretAdvanceRef: Ref<Int>,
             dataContext: DataContext,
             originalHandler: EditorActionHandler?
-    ): EnterHandlerDelegate.Result {
+    ): Result {
+        if (file !is ElmFile) return Result.Continue
+        if (!CodeInsightSettings.getInstance()!!.SMART_INDENT_ON_ENTER) return Result.Continue
 
-        if (file !is ElmFile) {
-            return Result.Continue
-        }
 
         // get current document and commit any changes, so we'll get latest PSI
         val document = editor.document
@@ -102,10 +102,9 @@ class ElmOnEnterSmartIndentHandler : EnterHandlerDelegateAdapter() {
         }
 
 
-        // TODO [kl] stop assuming that the user wants 4-space indents
         // IntelliJ will match leading whitespace of previous lines, so we only need
         // to indent one level, even for deeply nested let-in declarations.
-        val textToInsert = "    "
+        val textToInsert = file.indentStyle.oneLevelOfIndentation
         document.insertString(caretOffset, textToInsert)
         caretAdvanceRef.set(textToInsert.length)
 

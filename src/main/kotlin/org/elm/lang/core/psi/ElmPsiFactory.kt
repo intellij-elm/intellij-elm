@@ -144,23 +144,26 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("import $moduleName exposing (${exposedNames.joinToString(", ")})")
                     ?: error("Failed to create import of $moduleName exposing $exposedNames")
 
-    fun createCaseOfBranches(indent: String, patterns: List<String>): List<ElmCaseOfBranch> =
-            patterns.joinToString("\n\n$indent", prefix = "foo = case 1 of\n\n$indent") { "$it ->\n$indent    " }
-                    .let { createFromText<ElmValueDeclaration>(it) }
-                    ?.descendantOfType<ElmCaseOfExpr>()?.branches
-                    ?: error("Failed to create case of branches from $patterns")
+    fun createCaseOfBranches(existingIndent: String, indent: String, patterns: List<String>): List<ElmCaseOfBranch> {
+        val text = patterns.joinToString("\n\n$existingIndent$indent", prefix = "foo = case 1 of\n\n$existingIndent$indent") {
+            "$it ->\n$existingIndent$indent$indent"
+        }
+        return createFromText<ElmValueDeclaration>(text)
+                ?.descendantOfType<ElmCaseOfExpr>()?.branches
+                ?: error("Failed to create case of branches from $patterns")
+    }
 
-    fun createLetInWrapper(indent: String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
+    fun createLetInWrapper(existingIndent: String, indent:String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
         // NOTE: Assumes that each line in newDeclBody has had its indent normalized to match the indent of the first line.
         //       Each line of newDeclBody must start with a non-whitespace character.
-        val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$indent        $it" }
+        val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$existingIndent$indent$indent$it" }
         val code = """
         |foo =
-        |${indent}let
-        |${indent}    $newDeclName =
+        |${existingIndent}let
+        |${existingIndent}$indent$newDeclName =
         |$newDeclBodyIndented
-        |${indent}in
-        |${indent}$bodyText
+        |${existingIndent}in
+        |${existingIndent}$bodyText
         """.trimMargin()
         return createFromText<ElmValueDeclaration>(code)
                 ?.descendantOfType()

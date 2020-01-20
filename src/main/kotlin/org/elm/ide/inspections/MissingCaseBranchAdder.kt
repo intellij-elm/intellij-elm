@@ -1,5 +1,6 @@
 package org.elm.ide.inspections
 
+import com.intellij.application.options.CodeStyle
 import com.intellij.psi.PsiDocumentManager
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmPsiFactory
@@ -7,6 +8,8 @@ import org.elm.lang.core.psi.elements.ElmAnythingPattern
 import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmUnionPattern
+import org.elm.lang.core.psi.indentStyle
+import org.elm.lang.core.psi.oneLevelOfIndentation
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.types.*
@@ -52,10 +55,11 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
     }
 
     private fun addPatterns(patterns: List<String>) {
+        val indent = element.indentStyle.oneLevelOfIndentation
         val factory = ElmPsiFactory(element.project)
         val existingBranches = element.branches
-        val indent = document!!.getIndent(element.startOffset) + "    "
-        val elements = factory.createCaseOfBranches(indent, patterns)
+        val existingIndent = document!!.getIndent(element.startOffset)
+        val elements = factory.createCaseOfBranches(existingIndent, indent, patterns)
         // Add the two or first generated branch, which are the indent
         // and newline
         var start = elements.first().prevSibling.prevSibling
@@ -69,7 +73,7 @@ class MissingCaseBranchAdder(val element: ElmCaseOfExpr) {
 
         // Without a value in the last branch, the virtual end token ends up before the trailing
         // whitespace, so we can't grab it from the factory element and need to add it separately.
-        val trailingWs = factory.createElements("\n$indent    ")
+        val trailingWs = factory.createElements("\n$existingIndent$indent$indent")
         element.addRange(trailingWs.first(), trailingWs.last())
     }
 
