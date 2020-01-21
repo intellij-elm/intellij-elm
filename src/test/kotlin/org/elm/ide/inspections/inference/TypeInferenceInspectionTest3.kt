@@ -126,6 +126,16 @@ main =
     <error descr="Type mismatch.Required: ()Found: List String → List String">appL map foo</error>
 """)
 
+    fun `test field access on rigid var`() = checkByText("""
+main : a -> a
+main a = <error descr="Type must be a record.Found: a">a</error>.foo
+""")
+
+    fun `test field accessor function on rigid var`() = checkByText("""
+main : a -> a
+main a = .foo <error descr="Type mismatch.Required: { a | foo : b }Found: a">a</error>
+""")
+
     fun `test passing function type with vars to operator`() = checkByText("""
 appL : (a -> b) -> a -> b
 appL f x = f x

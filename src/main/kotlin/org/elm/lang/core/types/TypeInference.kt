@@ -477,6 +477,10 @@ private class InferenceScope(
         val fieldName = fieldIdentifier.text
 
         if (targetTy is TyVar) {
+            if (targetTy.rigid) {
+                diagnostics += RecordBaseIdError(target, targetTy)
+                return TyUnknown()
+            }
             val ty = TyVar("b")
             trackReplacement(targetTy, MutableTyRecord(mutableMapOf(fieldName to ty), TyVar("a")))
             expressionTypes[expr] = ty
