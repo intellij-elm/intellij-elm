@@ -23,3 +23,27 @@ Once you have configured the path to `elm-test` (see above), right-click anywher
 ## Demo
 
 ![elm-test GUI](../assets/elm_test_runner.jpg)
+
+
+## Custom Tests Location
+By default, `elm-test` expects unit tests to exist in a folder called `tests` at the root of the Elm project, i.e. as a
+sibling of `elm.json`. For _application_ projects (as opposed to _package_ projects) using _Elm 19_ (or later) a custom
+location can be used, as discussed [here](https://github.com/rtfeldman/node-test-runner/pull/306#issuecomment-432835586).
+In order for the Elm plugin to take advantage of this feature, the custom location must be specified as follows:
+
+1. Create a file called `elm.intellij.json` as a sibling of `elm.json`.
+
+1. Populate this file with the following content:
+    ```
+    {
+      "test-directory": "..."
+    }
+    ```
+   The value for `test-directory` should be the path to the folder containing the unit tests, relative to `elm.json`,
+   e.g. `src/test/elm`.
+   This folder can contain subfolders - all tests anywhere under this folder will be executed.
+
+1. Update `elm.json` and add the value you used for `test-directory` above to the `source-directories` array.
+
+As mentioned above, note that this only works for _applications_, not _packages_, i.e. only for projects where `elm.json`
+has a `type` field with a value of `application`.

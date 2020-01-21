@@ -5,6 +5,7 @@ import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
+import java.io.File
 import java.nio.file.Paths
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
@@ -13,21 +14,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     fun `test finds Elm project for source file`() {
         val testProject = fileTree {
             dir("a") {
-                project("elm.json", """
-                    {
-                      "type": "application",
-                      "source-directories": [ "src" ],
-                      "elm-version": "0.19.1",
-                      "dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      },
-                      "test-dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      }
-                    }
-                    """)
+                project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
                     elm("Main.elm", "")
                     elm("Utils.elm", "")
@@ -184,41 +171,13 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     fun `test can attach multiple Elm projects`() {
         val testProject = fileTree {
             dir("a") {
-                project("elm.json", """
-                    {
-                      "type": "application",
-                      "source-directories": [ "src" ],
-                      "elm-version": "0.19.1",
-                      "dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      },
-                      "test-dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      }
-                    }
-                    """)
+                project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
                     elm("Main.elm", "")
                 }
             }
             dir("b") {
-                project("elm.json", """
-                    {
-                      "type": "application",
-                      "source-directories": [ "src" ],
-                      "elm-version": "0.19.1",
-                      "dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      },
-                      "test-dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      }
-                    }
-                    """)
+                project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
                     elm("Main.elm", "")
                 }
@@ -457,21 +416,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
     fun `test auto discover Elm project at root level`() {
         val testProject = fileTree {
-            project("elm.json", """
-                {
-                  "type": "application",
-                  "source-directories": [ "src" ],
-                  "elm-version": "0.19.1",
-                  "dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                  },
-                  "test-dependencies": {
-                    "direct": {},
-                    "indirect": {}
-                  }
-                }
-                """)
+            project("elm.json", BASIC_APPLICATION_MANIFEST)
             dir("src") {
                 elm("Main.elm", "")
             }
@@ -499,21 +444,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         // setup real files on disk
         val testProject = fileTree {
             dir("a") {
-                project("elm.json", """
-                    {
-                      "type": "application",
-                      "source-directories": [ "src" ],
-                      "elm-version": "0.19.1",
-                      "dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      },
-                      "test-dependencies": {
-                        "direct": {},
-                        "indirect": {}
-                      }
-                    }
-                    """)
+                project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
                     elm("Main.elm", "")
                 }
@@ -545,6 +476,85 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         val actualXml = workspace.state.toXmlString()
         checkEquals(xml, actualXml)
     }
+
+
+    // START OF TESTS RELATED TO SIDECAR MANIFEST (elm.intellij.json)
+
+    fun `test uses default tests location when no sidecar manifest exists (application project)`() =
+            testSidecarManifest(null, "tests", false)
+
+    fun `test uses custom tests location when sidecar manifest exists`() =
+            testSidecarManifest(getSidecarManifest("custom-tests"), "custom-tests", true)
+
+    fun `test uses default tests location when sidecar manifest specifies default location`() =
+            testSidecarManifest(getSidecarManifest("tests"), "tests", false)
+
+    private val nestedTestsLocation = listOf("custom", "tests", "location").joinToString(File.separator)
+
+    fun `test handles nested custom tests location`() =
+            testSidecarManifest(getSidecarManifest(nestedTestsLocation), nestedTestsLocation, true)
+
+    fun `test normalizes custom tests location`() {
+        // Repeat above test with path like "./custom/tests/location/." (i.e. leading and trailing dot).
+        val denormalizedNestedTestsLocation = listOf(".", "custom", "tests", "location", ".").joinToString(File.separator)
+        testSidecarManifest(getSidecarManifest(denormalizedNestedTestsLocation), nestedTestsLocation, true)
+    }
+
+    fun `test uses default tests location when no sidecar manifest exists (package project)`() =
+            testSidecarManifest(null, "tests", expectedIsCustomTestsDir = false, isApplicationProject = false)
+
+    fun `test ignores custom tests location for packages`() =
+            testSidecarManifest(getSidecarManifest("custom-tests"), "tests", expectedIsCustomTestsDir = false, isApplicationProject = false)
+
+    fun `test auto discover Elm project skips project with bad sidecar manifest`() {
+        fileTree {
+            project("elm.json", BASIC_APPLICATION_MANIFEST)
+            file("elm.intellij.json", """ { "BOGUS": "INVALID ELM.INTELLIJ.JSON" } """)
+            dir("src") {
+                elm("Main.elm", "")
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val elmProjects = project.elmWorkspace.asyncDiscoverAndRefresh().get()
+        check(elmProjects.isEmpty()) { "Should have found zero Elm projects but found ${elmProjects.size}" }
+    }
+
+    /**
+     * Executes a test related to the sidecar manifest (`elm.intellij.json`). Creates a project, adding a sidecar manifest
+     * with the specified `sidecarManifestContent` if not null. Then verifies that the [ElmProject] generated by attaching
+     * the manifest has the expected data related to the sidecar manifest, i.e. information about the tests directory.
+     */
+    private fun testSidecarManifest(
+            sidecarManifestContent: String?,
+            expectedTestsRelativeDirPath: String,
+            expectedIsCustomTestsDir: Boolean,
+            isApplicationProject: Boolean = true
+    ) {
+
+        val testProject = fileTree {
+            dir("a") {
+                project("elm.json", if (isApplicationProject) BASIC_APPLICATION_MANIFEST else BASIC_PACKAGE_MANIFEST)
+                if (sidecarManifestContent != null)
+                    file("elm.intellij.json", sidecarManifestContent)
+                dir("src") {
+                    elm("Main.elm", "")
+                }
+            }
+        }.create(project, elmWorkspaceDirectory)
+
+        val rootPath = testProject.root.pathAsPath
+        val workspace = project.elmWorkspace.apply {
+            asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
+        }
+
+        val elmProject = workspace.allProjects.firstOrNull() ?: error("No Elm project found")
+
+        checkEquals(expectedTestsRelativeDirPath, elmProject.testsRelativeDirPath)
+        checkEquals(expectedIsCustomTestsDir, elmProject.isCustomTestsDir)
+        checkEquals(elmProject.projectDirPath.resolve(expectedTestsRelativeDirPath).normalize(), elmProject.testsDirPath)
+    }
+
+    // END OF TESTS RELATED TO SIDECAR MANIFEST (elm.intellij.json)
 }
 
 
@@ -557,3 +567,49 @@ private fun makeConstraint(low: Version, high: Version): Constraint {
     )
 }
 
+/**
+ * A basic minimal `elm.json` file for an application project, with no dependencies.
+ * Used in tests which don't really care about the content of the file, just that it's a valid manifest.
+ */
+private const val BASIC_APPLICATION_MANIFEST = """
+{
+  "type": "application",
+  "source-directories": [ "src" ],
+  "elm-version": "0.19.1",
+  "dependencies": {
+    "direct": {},
+    "indirect": {}
+  },
+  "test-dependencies": {
+    "direct": {},
+    "indirect": {}
+  }
+}
+"""
+
+/**
+ * A basic minimal `elm.json` file for a package project, with no dependencies.
+ * Used in tests which don't really care about the content of the file, just that it's a valid manifest.
+ */
+private const val BASIC_PACKAGE_MANIFEST = """
+{
+  "type": "package",
+  "name": "test",
+  "summary": "Test",
+  "license": "Test",
+  "version": "1.2.3",
+  "exposed-modules": [],
+  "elm-version": "0.19.0 <= v < 0.20.0",
+  "dependencies": { },
+  "test-dependencies": { }
+}
+"""
+
+/**
+ * Builds a sidecar manifest (i.e. `elm.intellij.json`) with the specified test directory.
+ */
+private fun getSidecarManifest(testDir: String): String = """
+{
+  "test-directory": "${testDir.replace("\\", "\\\\")}"
+}
+"""
