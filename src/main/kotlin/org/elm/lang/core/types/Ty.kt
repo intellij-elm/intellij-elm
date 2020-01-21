@@ -68,6 +68,12 @@ data class TyRecord(
         override val alias: AliasInfo? = null,
         val fieldReferences: RecordFieldReferenceTable = RecordFieldReferenceTable()
 ) : Ty() {
+    companion object {
+        // Empty records occur in code like `foo : BaseRecord {}`, where they create a type from an
+        // extension record with no extra fields.
+        val emptyRecord = TyRecord(emptyMap(), null, null, RecordFieldReferenceTable().apply { freeze() })
+    }
+
     /** true if this record has a base name, and will match a subset of a record's fields */
     val isSubset: Boolean get() = baseTy != null
 
@@ -232,11 +238,11 @@ private fun Ty.allVars(result: MutableList<TyVar>) {
         is TyVar -> result.add(this)
         is TyTuple -> types.forEach { it.allVars(result) }
         is TyRecord -> {
-            fields.values.forEach { it.allVars(result) };
+            fields.values.forEach { it.allVars(result) }
             baseTy?.allVars(result)
         }
         is MutableTyRecord -> {
-            fields.values.forEach { it.allVars(result) };
+            fields.values.forEach { it.allVars(result) }
             baseTy?.allVars(result)
         }
         is TyUnion -> parameters.forEach { it.allVars(result) }
@@ -244,11 +250,7 @@ private fun Ty.allVars(result: MutableList<TyVar>) {
             ret.allVars(result)
             parameters.forEach { it.allVars(result) }
         }
-        is TyUnit -> {
-        }
-        is TyUnknown -> {
-        }
-        TyInProgressBinding -> {
+        is TyUnit, is TyUnknown, TyInProgressBinding -> {
         }
     }
 }
