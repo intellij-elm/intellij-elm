@@ -262,9 +262,7 @@ class TypeExpression(
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val fieldElements = record.fieldTypeList
         val fieldTys = fieldElements.associate { it.name to typeExpressionType(it.typeExpression) }
-        val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(LinkedHashMap(max(4, fieldElements.size), 1f)) {
-            it.name to HashSet<ElmNamedElement>(1, 1f).apply { add(it) }
-        })
+        val fieldReferences = RecordFieldReferenceTable.fromElements(fieldElements)
         val baseId = record.baseTypeIdentifier
         val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.referenceName) }
         return TyRecord(fieldTys, baseTy, fieldReferences = fieldReferences)

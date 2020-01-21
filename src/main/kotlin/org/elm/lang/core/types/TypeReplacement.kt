@@ -189,8 +189,13 @@ class TypeReplacement(
         val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
         val baseFieldRefs = (replacedBase as? TyRecord)?.fieldReferences
 
-        val newFields = LinkedHashMap<String, Ty>(baseFields.size + fields.size, 1f)
-        newFields.putAll(baseFields)
+        // Make the new map as small as we can for these fields. HashMap always uses a power of two
+        // element array, so we can't avoid all wasted memory.
+        val initialCapacity = baseFields.size + fields.keys.count { it !in baseFields }
+        val newFields = LinkedHashMap<String, Ty>(initialCapacity, 1f)
+
+        // Don't use putAll here, since that function will resize the table to hold (size + 1) elements
+        baseFields.forEach { (k,v) -> newFields[k] = v }
         fields.mapValuesTo(newFields) { (_, it) -> replace(it) }
 
         val newFieldReferences = when {

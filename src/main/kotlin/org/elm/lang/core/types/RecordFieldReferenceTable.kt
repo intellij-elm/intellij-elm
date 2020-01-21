@@ -1,13 +1,25 @@
 package org.elm.lang.core.types
 
+import com.intellij.util.containers.SmartHashSet
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.elements.ElmFieldType
 
 /**
  * A table that tracks references for [TyRecord] fields. Can be [frozen] to prevent updates.
  */
-class RecordFieldReferenceTable(
-        private var refsByField: MutableMap<String, MutableSet<ElmNamedElement>> = LinkedHashMap(4, 1f)
+class RecordFieldReferenceTable private constructor(
+        private var refsByField: MutableMap<String, MutableSet<ElmNamedElement>>
 ) {
+    constructor() : this(HashMap(4, 1f))
+
+    companion object {
+        fun fromElements(fieldElements: Collection<ElmFieldType>): RecordFieldReferenceTable {
+            return RecordFieldReferenceTable(fieldElements.associateTo(HashMap(fieldElements.size, 1f)) {
+                it.name to newSet(1).apply { add(it) }
+            })
+        }
+    }
+
     var frozen = false
         private set
 
@@ -20,7 +32,9 @@ class RecordFieldReferenceTable(
     fun addAll(other: RecordFieldReferenceTable) {
         if (frozen || other.refsByField === this.refsByField) return
         for ((field, refs) in other.refsByField) {
-            refsByField.getOrPut(field) { HashSet(refs.size, 1f) } += refs
+            // Don't use putAll here, since that function will resize the table to hold (size + 1) elements
+            val set = refsByField.getOrPut(field) { newSet(refs.size) }
+            refs.forEach { set.add(it) }
         }
     }
 
@@ -29,13 +43,15 @@ class RecordFieldReferenceTable(
 
     /** Create a new table with references from this table and [other] */
     operator fun plus(other: RecordFieldReferenceTable): RecordFieldReferenceTable {
-        val newRefs = LinkedHashMap<String, MutableSet<ElmNamedElement>>(refsByField.size + other.refsByField.size, 1f)
+        val initialCapacity = refsByField.size + other.refsByField.keys.count { it !in refsByField }
+        val newRefs = HashMap<String, MutableSet<ElmNamedElement>>(initialCapacity, 1f)
         refsByField.mapValuesTo(newRefs) { (field, set) ->
             val otherSet = other.refsByField[field].orEmpty()
-            HashSet<ElmNamedElement>(set.size + (otherSet.size), 1f).apply { addAll(otherSet) }
+            val initialSetCapacity = set.size + otherSet.count { it !in set }
+            newSet(initialSetCapacity).apply { otherSet.forEach { add(it) } }
         }
         other.refsByField.forEach { (k, s) ->
-            newRefs.getOrPut(k) { HashSet<ElmNamedElement>(s.size, 1f).apply { addAll(s) } }
+            newRefs.getOrPut(k) { newSet(s.size).apply { s.forEach { add(it) } } }
         }
         return RecordFieldReferenceTable(newRefs)
     }
@@ -48,4 +64,9 @@ class RecordFieldReferenceTable(
     override fun toString(): String {
         return "<RecordFieldReferenceTable frozen=$frozen, refs=${refsByField.keys}>"
     }
+}
+
+private fun newSet(initialCapacity: Int): MutableSet<ElmNamedElement> {
+    // > 99% of these sets have 1 element, so we use a set optimized for that use case
+    return if (initialCapacity <= 1) SmartHashSet(-1, 1f) else SmartHashSet(initialCapacity, 1f)
 }
