@@ -56,6 +56,15 @@ main a b =
     (bar.f2, baz.b, b)
 """)
 
+    fun `test modifying extension record in lambda`() = doTest("""
+type alias R a = {a | f : ()}
+type alias S = { g: () }
+
+main : R S -> R S
+main r = 
+    (\s -> { s | g = () }) r
+""")
+
     private fun doTest(@Language("Elm") code: String) {
         InlineFile(code)
         myFixture.file.directChildrenOfType<ElmPsiElement>().forEach { elem ->

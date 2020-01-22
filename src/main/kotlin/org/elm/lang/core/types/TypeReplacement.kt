@@ -176,18 +176,22 @@ class TypeReplacement(
             fieldReferences: RecordFieldReferenceTable,
             wasMutable: Boolean
     ): Ty {
-        val replacedBase = if (baseTy == null || baseTy !is TyVar) null else getReplacement(baseTy)
-        val newBaseTy = when (replacedBase) {
+        val oldBase = if (baseTy == null || baseTy !is TyVar) null else getReplacement(baseTy)
+        val newBase = when (oldBase) {
             // If the base ty of the argument is a record, use its base ty, which might be null.
-            is TyRecord -> replacedBase.baseTy
+            is TyRecord -> oldBase.baseTy
             // If it wasn't substituted, leave it as-is
-            null -> baseTy
+            null -> when {
+                // Although if it's a record, we might need to make it immutable
+                baseTy is MutableTyRecord && !keepRecordsMutable -> replace(baseTy)
+                else -> baseTy
+            }
             // If it's another variable, use it
-            else -> replacedBase
+            else -> oldBase
         }
 
-        val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
-        val baseFieldRefs = (replacedBase as? TyRecord)?.fieldReferences
+        val baseFields = (oldBase as? TyRecord)?.fields.orEmpty()
+        val baseFieldRefs = (oldBase as? TyRecord)?.fieldReferences
 
         // Make the new map as small as we can for these fields. HashMap always uses a power of two
         // element array, so we can't avoid all wasted memory.
@@ -195,7 +199,7 @@ class TypeReplacement(
         val newFields = LinkedHashMap<String, Ty>(initialCapacity, 1f)
 
         // Don't use putAll here, since that function will resize the table to hold (size + 1) elements
-        baseFields.forEach { (k,v) -> newFields[k] = v }
+        baseFields.forEach { (k, v) -> newFields[k] = v }
         fields.mapValuesTo(newFields) { (_, it) -> replace(it) }
 
         val newFieldReferences = when {
@@ -209,8 +213,8 @@ class TypeReplacement(
             }
         }
 
-        return if (wasMutable && keepRecordsMutable) MutableTyRecord(newFields, newBaseTy, newFieldReferences)
-        else TyRecord(newFields, newBaseTy, replace(alias), newFieldReferences)
+        return if (wasMutable && keepRecordsMutable) MutableTyRecord(newFields, newBase, newFieldReferences)
+        else TyRecord(newFields, newBase, replace(alias), newFieldReferences)
     }
 
     // When we replace a var, the new ty may itself contain vars, and so we need to recursively

@@ -5,10 +5,11 @@ import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.documentation.DocumentationMarkup
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
-import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.ElmTypes.BLOCK_COMMENT
-import org.elm.lang.core.psi.ElmTypes.DOC_COMMENT
+import org.elm.lang.core.psi.ElmDocTarget
+import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.parentOfType
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.resolve.scope.QualifiedImportScope
 import org.elm.lang.core.types.*
