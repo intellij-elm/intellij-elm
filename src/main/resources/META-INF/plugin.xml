@@ -36,6 +36,21 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.5.0</b> <em>(2020-01-23)</em>
+                <ul>
+                    <li>Major performance optimizations</li>
+                    <li>CSS colors are now shown in the gutter and can be edited using a color picker</li>
+                    <li>Added "breadcrumbs" UI</li>
+                    <li>Syntax highlighting can now distinguish between doc comments and other comments</li>
+                    <li>Generated code now honors your indent size config</li>
+                    <li>Tests can now be run from non-standard locations</li>
+                    <li>Line markers can now be disabled individually</li>
+                    <li>Duplicate function/type definitions are now marked as an error</li>
+                    <li>Tuples with more than 3 elements are now marked as an error</li>
+                    <li>Attempting to use `(..)` on a type alias is now marked as an error</li>
+                    <li>Added troubleshooting instructions for `nvm` configurations</li>
+                </ul>
+            </li>
             <li><b>3.4.6</b> <em>(2019-12-23)</em>
                 <ul>
                     <li>Live templates are now suggested in appropriate contexts only</li>
