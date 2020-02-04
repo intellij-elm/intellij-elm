@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.util.indexing.LightDirectoryIndex
 import org.elm.workspace.ElmToolchain.Companion.ELM_INTELLIJ_JSON
 import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 import java.io.File
@@ -33,11 +34,17 @@ private val objectMapper = ObjectMapper()
  */
 sealed class ElmProject(
         val manifestPath: Path,
-        val dependencies: List<ElmPackageProject>,
-        val testDependencies: List<ElmPackageProject>,
+        val dependencies: Dependencies,
+        val testDependencies: Dependencies,
         val sourceDirectories: List<Path>,
         testsRelativeDirPath: String
 ) : UserDataHolderBase() {
+    data class Dependencies(val direct: List<ElmPackageProject>, val indirect: List<ElmPackageProject>) {
+        companion object {
+            val EMPTY = Dependencies(emptyList(), emptyList())
+        }
+        val all get() = direct + indirect
+    }
 
     /**
      * The path to the directory containing the Elm project JSON file.
@@ -92,11 +99,11 @@ sealed class ElmProject(
             absoluteSourceDirectories.asSequence() + sequenceOf(testsDirPath)
 
     /**
-     * Returns all packages which this project depends on, whether it be for normal,
+     * Returns all packages which this project depends on directly, whether it be for normal,
      * production code or for tests.
      */
     val allResolvedDependencies: Sequence<ElmPackageProject> =
-            sequenceOf(dependencies, testDependencies).flatten()
+            sequenceOf(dependencies.direct, testDependencies.direct).flatten()
 
     val isElm18: Boolean
         get() = when (this) {
@@ -182,7 +189,7 @@ sealed class ElmProject(
                             manifestPath = manifestPath,
                             elmVersion = manifestDto.elmVersion,
                             dependencies = manifestDto.dependencies.depsToPackages(repo),
-                            testDependencies = if (ignoreTestDeps) emptyList() else manifestDto.testDependencies.depsToPackages(repo),
+                            testDependencies = if (ignoreTestDeps) Dependencies.EMPTY else manifestDto.testDependencies.depsToPackages(repo),
                             sourceDirectories = manifestDto.sourceDirectories,
                             testsRelativeDirPath = sidecarManifestDto?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
                     )
@@ -226,8 +233,8 @@ sealed class ElmProject(
                 ElmApplicationProject(
                         manifestPath = manifestPath,
                         elmVersion = Version(0, 18, 0),
-                        dependencies = dto.depsToPackages(elmStuffPath),
-                        testDependencies = emptyList(),
+                        dependencies = Dependencies(dto.depsToPackages(elmStuffPath), emptyList()),
+                        testDependencies = Dependencies.EMPTY,
                         sourceDirectories = dto.sourceDirectories)
             } else {
                 ElmPackageProject(
@@ -257,8 +264,8 @@ sealed class ElmProject(
 class ElmApplicationProject(
         manifestPath: Path,
         val elmVersion: Version,
-        dependencies: List<ElmPackageProject>,
-        testDependencies: List<ElmPackageProject>,
+        dependencies: Dependencies,
+        testDependencies: Dependencies,
         sourceDirectories: List<Path>,
         testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
 ) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
@@ -276,7 +283,13 @@ class ElmPackageProject(
         val name: String,
         val version: Version,
         val exposedModules: List<String>
-) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, DEFAULT_TESTS_DIR_NAME) {
+) : ElmProject(
+        manifestPath = manifestPath,
+        dependencies = Dependencies(dependencies, emptyList()),
+        testDependencies = Dependencies(testDependencies, emptyList()),
+        sourceDirectories = sourceDirectories,
+        testsRelativeDirPath = DEFAULT_TESTS_DIR_NAME
+) {
     override fun isCore(): Boolean {
         return (name == "elm/core" || name == "elm-lang/core") // TODO [drop 0.18] remove "elm-core/lang" clause
     }
@@ -284,7 +297,7 @@ class ElmPackageProject(
 
 
 private fun ExactDependenciesDTO.depsToPackages(repo: ElmPackageRepository) =
-        direct.depsToPackages(repo) + indirect.depsToPackages(repo)
+        ElmProject.Dependencies(direct.depsToPackages(repo), indirect.depsToPackages(repo))
 
 
 private fun Map<String, Version>.depsToPackages(repo: ElmPackageRepository) =
@@ -335,8 +348,8 @@ private fun loadPackageLegacy(elmStuffPath: Path, name: String, version: Version
 val noProjectSentinel = ElmApplicationProject(
         manifestPath = Paths.get("/elm.json"),
         elmVersion = Version(0, 0, 0),
-        dependencies = emptyList(),
-        testDependencies = emptyList(),
+        dependencies = ElmProject.Dependencies.EMPTY,
+        testDependencies = ElmProject.Dependencies.EMPTY,
         sourceDirectories = emptyList()
 )
 

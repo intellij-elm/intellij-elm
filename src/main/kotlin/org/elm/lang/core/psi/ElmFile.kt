@@ -50,7 +50,7 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
         get() = project.elmWorkspace.findProjectForFile(originalFile.virtualFile)
 
     override val isInTestsDirectory: Boolean
-        // This is call often during reference resolve, and the system-independent path comparison
+        // This is called often during reference resolve, and the system-independent path comparison
         // is slow enough that the result is worth caching
         get() = CachedValuesManager.getCachedValue(this, IS_IN_TESTS_DIRECTORY_KEY) {
             elmProject?.let { elmProj ->

@@ -129,10 +129,10 @@ private fun buildSearchScope(includeTests: Boolean, p: ElmProject, intellijProje
      *  NOTE: if the inputs to this function change (e.g. adding a parameter),
      *        you must take that into account when retrieving the cached value.
      */
-    val (srcDirPaths, dependencies) = if (includeTests)
-        Pair(p.allSourceDirs, p.allResolvedDependencies)
-    else
-        Pair(p.absoluteSourceDirectories.asSequence(), p.dependencies.asSequence())
+    val (srcDirPaths, dependencies) = when {
+        includeTests -> p.allSourceDirs to p.allResolvedDependencies
+        else -> p.absoluteSourceDirectories.asSequence() to p.dependencies.direct.asSequence()
+    }
 
     val srcDirs = srcDirPaths.mapNotNull { findFileByPathTestAware(it) }.toList()
     val srcDirScope = GlobalSearchScopesCore.directoriesScope(intellijProject, true, *(srcDirs.toTypedArray()))
