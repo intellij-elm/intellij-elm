@@ -36,6 +36,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.5.1</b> <em>(2020-02-05)</em>
+                <ul>
+                    <li>Fixed 2 bugs related to function/type name resolution</li>
+                    <li>Enable support for IntelliJ 2020.1 EAP</li>
+                </ul>
+            </li>
             <li><b>3.5.0</b> <em>(2020-01-23)</em>
                 <ul>
                     <li>Major performance optimizations</li>
