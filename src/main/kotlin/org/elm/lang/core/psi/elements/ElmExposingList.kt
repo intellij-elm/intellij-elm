@@ -26,7 +26,7 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
         get() = findChildByType(DOUBLE_DOT)
 
     val exposesAll: Boolean
-        get() = stub?.exposesAll ?: doubleDot != null
+        get() = stub?.exposesAll ?: (doubleDot != null)
 
     /**
      * Returns the opening parenthesis element.

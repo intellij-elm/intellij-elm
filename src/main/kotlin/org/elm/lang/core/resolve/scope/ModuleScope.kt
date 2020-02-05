@@ -299,7 +299,7 @@ object ModuleScope {
         // intersect the names exposed by the module with the names declared
         // in this import clause's exposing list.
         val locallyExposedNames = importClause.exposingList?.exposedTypeList
-                ?.mapTo(mutableSetOf<String>()) { it.upperCaseIdentifier.text }
+                ?.mapTo(mutableSetOf<String>()) { it.referenceName }
                 ?: return emptyList()
         return allExposedTypes.filter { locallyExposedNames.contains(it.name) }
     }

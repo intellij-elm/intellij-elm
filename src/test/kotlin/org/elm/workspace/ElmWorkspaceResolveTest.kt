@@ -27,7 +27,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             dir("src") {
                 elm("Main.elm", """
                     import Foo
@@ -63,7 +63,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                             "indirect": {}
                         }
                     }
-                    """.trimIndent())
+                    """)
                 dir("src") {
                     elm("Main.elm", """
                     module Main exposing (..)
@@ -88,7 +88,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                         "indirect": {}
                     }
                 }
-                """.trimIndent())
+                """)
             dir("src") {
                 elm("FooBar.elm", """
                     module FooBar exposing (x)
@@ -144,7 +144,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             dir("src") {
                 elm("Main.elm", """
                     import Foo
@@ -184,7 +184,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             dir("src") {
                 elm("Main.elm", """
                     import Time
@@ -218,7 +218,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             dir("src") {
                 elm("Main.elm", """
                     import Parser.Advanced -- this module is part of elm/parser, but it's not exposed
@@ -255,7 +255,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                             "indirect": {}
                         }
                     }
-                    """.trimIndent())
+                    """)
                 dir("src") {
                     elm("Main.elm", """
                     import Parser
@@ -282,7 +282,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                             "indirect": {}
                         }
                     }
-                    """.trimIndent())
+                    """)
                 dir("src") {
                     elm("Main.elm", """
                     import Parser
@@ -354,7 +354,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             if (!useDefaultTestsLocation)
                 file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
             dir(testsFolder) {
@@ -390,7 +390,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             dir("src") {
                 elm("Main.elm", """
                     import Test
@@ -435,7 +435,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     "indirect": {}
                 }
             }
-            """.trimIndent())
+            """)
             if (!useDefaultTestsLocation)
                 file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
             dir(testsFolder) {
@@ -451,36 +451,33 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    // TODO [kl] re-enable once a distinction is made between direct and indirect deps
-//    fun `test does not resolve modules which are not direct dependencies`() {
-//        buildProject {
-//            project("elm.json", """
-//            {
-//                "type": "application",
-//                "source-directories": [
-//                    "src"
-//                ],
-//                "elm-version": "0.19.1",
-//                "dependencies": {
-//                    "direct": {},
-//                    "indirect": {
-//                        "elm/time": "1.0.0"
-//                    }
-//                },
-//                "test-dependencies": {
-//                    "direct": {},
-//                    "indirect": {}
-//                }
-//            }
-//            """.trimIndent())
-//            dir("src") {
-//                elm("Main.elm", """
-//                    import Time
-//                           --^
-//                """.trimIndent())
-//            }
-//        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
-//    }
-
-
+    fun `test does not resolve modules which are not direct dependencies`() {
+        buildProject {
+            project("elm.json", """
+            {
+                "type": "application",
+                "source-directories": [
+                    "src"
+                ],
+                "elm-version": "0.19.1",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {
+                        "elm/time": "1.0.0"
+                    }
+                },
+                "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                }
+            }
+            """)
+            dir("src") {
+                elm("Main.elm", """
+                    import Time
+                           --^
+                """.trimIndent())
+            }
+        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", shouldNotResolve = true)
+    }
 }

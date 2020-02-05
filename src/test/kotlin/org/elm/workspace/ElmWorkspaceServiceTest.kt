@@ -96,16 +96,25 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         checkEquals(Version(0, 19, 1), elmProject.elmVersion)
         checkEquals(setOf(Paths.get("src"), Paths.get("vendor")), elmProject.sourceDirectories.toSet())
 
-        checkEquals(setOf(
-                "elm/core" to Version(1, 0, 0),
-                "elm/html" to Version(1, 0, 0),
-                "elm/virtual-dom" to Version(1, 0, 2)
-        ), elmProject.dependencies.map { it.name to it.version }.toSet())
+        checkDependencies(elmProject.dependencies,
+                direct = mapOf(
+                        "elm/core" to Version(1, 0, 0),
+                        "elm/html" to Version(1, 0, 0)
+                ),
+                indirect = mapOf(
+                        "elm/virtual-dom" to Version(1, 0, 2)
+                )
+        )
 
-        checkEquals(setOf(
-                "elm-explorations/test" to Version(1, 0, 0),
-                "elm/random" to Version(1, 0, 0)
-        ), elmProject.testDependencies.map { it.name to it.version }.toSet())
+        checkDependencies(elmProject.testDependencies,
+                direct = mapOf(
+                        "elm-explorations/test" to Version(1, 0, 0)
+                ),
+                indirect = mapOf(
+                        "elm/random" to Version(1, 0, 0)
+                )
+
+        )
     }
 
     fun `test can attach package json files`() {
@@ -157,16 +166,17 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         // The source directory for Elm 0.19 packages is implicitly "src". It cannot be changed.
         checkEquals(setOf(Paths.get("src")), elmProject.sourceDirectories.toSet())
 
-        checkEquals(setOf("elm/core" to Version(1, 0, 0)),
-                elmProject.dependencies.map { it.name to it.version }.toSet())
+        checkDependencies(elmProject.dependencies,
+                direct = mapOf("elm/core" to Version(1, 0, 0))
+        )
 
-        checkEquals(setOf("elm-explorations/test" to Version(1, 0, 0)),
-                elmProject.testDependencies.map { it.name to it.version }.toSet())
+        checkDependencies(elmProject.testDependencies,
+                direct = mapOf("elm-explorations/test" to Version(1, 0, 0))
+        )
 
         checkEquals(setOf("Json.Decode", "Json.Encode"),
                 elmProject.exposedModules.toSet())
     }
-
 
     fun `test can attach multiple Elm projects`() {
         val testProject = fileTree {
@@ -301,8 +311,9 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
         checkEquals(Version(0, 18, 0), elmProject.elmVersion)
 
-        checkEquals(setOf("elm-lang/core" to Version(5, 1, 1)),
-                elmProject.dependencies.map { it.name to it.version }.toSet())
+        checkDependencies(elmProject.dependencies,
+                direct = mapOf("elm-lang/core" to Version(5, 1, 1))
+        )
     }
 
     // TODO [drop 0.18] remove this test
@@ -405,8 +416,9 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         // Elm 0.18 packages can specify a source directory (unlike Elm 0.19)
         checkEquals(setOf(Paths.get(".")), elmProject.sourceDirectories.toSet())
 
-        checkEquals(setOf("elm-lang/core" to Version(5, 1, 1)),
-                elmProject.dependencies.map { it.name to it.version }.toSet())
+        checkDependencies(elmProject.dependencies,
+                direct = mapOf("elm-lang/core" to Version(5, 1, 1))
+        )
 
         checkEquals(listOf("Foo", "Bar"), elmProject.exposedModules)
     }
@@ -555,6 +567,11 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
     // END OF TESTS RELATED TO SIDECAR MANIFEST (elm.intellij.json)
+
+    private fun checkDependencies(actual: ElmProject.Dependencies, direct: Map<String, Version>, indirect: Map<String, Version> = emptyMap()) {
+        checkEquals(actual.direct.associate { it.name to it.version }, direct)
+        checkEquals(actual.indirect.associate { it.name to it.version }, indirect)
+    }
 }
 
 
