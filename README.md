@@ -48,5 +48,5 @@ related information [here](docs/nvm.md).
     - and others (untested)
 
 ## Did you know?
- - [That IntelliJ splash screens are generated using Elm?](https://youtu.be/he1t3uXvl7o)
+ - [That IntelliJ splash screens are generated using Elm?](https://youtu.be/he1t3uXvl7o?t=794)
  - [There is a podcast on Elm Town with authors of this plugin?](https://elmtown.simplecast.fm/it-just-goes-on-and-on)
