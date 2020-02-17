@@ -46,3 +46,7 @@ related information [here](docs/nvm.md).
     - PyCharm Community (**free!**)
     - WebStorm (amazing JS and CSS support)
     - and others (untested)
+
+## Did you know?
+ - [That IntelliJ splash screens are generated using Elm?](https://youtu.be/he1t3uXvl7o)
+ - [There is a podcast on Elm Town with authors of this plugin?](https://elmtown.simplecast.fm/it-just-goes-on-and-on)
