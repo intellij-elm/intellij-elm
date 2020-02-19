@@ -32,9 +32,8 @@ class RecordFieldReferenceTable private constructor(
     fun addAll(other: RecordFieldReferenceTable) {
         if (frozen || other.refsByField === this.refsByField) return
         for ((field, refs) in other.refsByField) {
-            // Don't use putAll here, since that function will resize the table to hold (size + 1) elements
             val set = refsByField.getOrPut(field) { newSet(refs.size) }
-            refs.forEach { set.add(it) }
+            set.addAll(refs)
         }
     }
 
@@ -48,10 +47,10 @@ class RecordFieldReferenceTable private constructor(
         refsByField.mapValuesTo(newRefs) { (field, set) ->
             val otherSet = other.refsByField[field].orEmpty()
             val initialSetCapacity = set.size + otherSet.count { it !in set }
-            newSet(initialSetCapacity).apply { otherSet.forEach { add(it) } }
+            newSet(initialSetCapacity).apply { addAll(otherSet) }
         }
         other.refsByField.forEach { (k, s) ->
-            newRefs.getOrPut(k) { newSet(s.size).apply { s.forEach { add(it) } } }
+            newRefs.getOrPut(k) { newSet(s.size).apply { addAll(s) } }
         }
         return RecordFieldReferenceTable(newRefs)
     }
@@ -68,5 +67,5 @@ class RecordFieldReferenceTable private constructor(
 
 private fun newSet(initialCapacity: Int): MutableSet<ElmNamedElement> {
     // > 99% of these sets have 1 element, so we use a set optimized for that use case
-    return if (initialCapacity <= 1) SmartHashSet(-1, 1f) else SmartHashSet(initialCapacity, 1f)
+    return  SmartHashSet(initialCapacity, 1f)
 }
