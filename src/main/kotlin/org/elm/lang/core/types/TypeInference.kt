@@ -14,6 +14,7 @@ import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.LexicalValueReference
 import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.types.TypeReplacement.Companion.freeze
 
 private val TYPE_INFERENCE_KEY: Key<ParameterizedCachedValue<InferenceResult, Set<ElmValueDeclaration>>> =
         Key.create("TYPE_INFERENCE_KEY")
@@ -272,12 +273,15 @@ private class InferenceScope(
     private fun toTopLevelResult(ty: Ty, replaceExpressionTypes: Boolean = true): InferenceResult {
         val exprs = when {
             replaceExpressionTypes -> {
-                expressionTypes.mapValues { (_, t) -> TypeReplacement.replace(t, replacements, freeze = replaceExpressionTypes) }
+                expressionTypes.mapValues { (_, t) ->
+                    TypeReplacement.replace(t, replacements).also { freeze(it) }
+                }
             }
             else -> expressionTypes
         }
         val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
-        val ret = TypeReplacement.replace(ty, replacements, outerVars, freeze = replaceExpressionTypes)
+        val ret = TypeReplacement.replace(ty, replacements, outerVars)
+        if (replaceExpressionTypes) freeze(ret)
         return InferenceResult(exprs, diagnostics, ret)
     }
 
@@ -300,8 +304,6 @@ private class InferenceScope(
     }
 
     private fun inferBinOpExpr(expr: ElmBinOpExpr): Ty {
-        if (expr.hasErrors) return TyUnknown()
-
         val parts: List<ElmBinOpPartTag> = expr.parts.toList()
 
         // Get the operator types and precedences. We don't have to worry about invalid
@@ -366,8 +368,6 @@ private class InferenceScope(
             }
 
     private fun inferFunctionCall(expr: ElmFunctionCallExpr): Ty {
-        if (expr.hasErrors) return TyUnknown()
-
         val target = expr.target
         val arguments = expr.arguments.toList()
 
@@ -477,6 +477,10 @@ private class InferenceScope(
         val fieldName = fieldIdentifier.text
 
         if (targetTy is TyVar) {
+            if (targetTy.rigid) {
+                diagnostics += RecordBaseIdError(target, targetTy)
+                return TyUnknown()
+            }
             val ty = TyVar("b")
             trackReplacement(targetTy, MutableTyRecord(mutableMapOf(fieldName to ty), TyVar("a")))
             expressionTypes[expr] = ty
@@ -819,7 +823,7 @@ private class InferenceScope(
         if (typeRefTy is TyFunction) {
             patterns.zip(typeRefTy.parameters) { pat, ty -> bindPattern(pat, ty, true) }
         }
-        annotationVars = typeRefTy.allVars().toList()
+        annotationVars = typeRefTy.allVars()
         return ParameterBindingResult.Annotated(typeRefTy, patterns.size)
     }
 
@@ -1172,8 +1176,8 @@ private class InferenceScope(
      * Check if a [ty2] can that compares unequal to a [ty1] can be unified with it
      */
     private fun varsAssignable(ty1: TyVar, ty2: TyVar): Boolean {
-        val tc1 = getTypeclassName(ty1)
-        val tc2 = getTypeclassName(ty2)
+        val tc1 = ty1.typeclassName()
+        val tc2 = ty2.typeclassName()
 
         return when {
             !ty1.rigid && tc1 == null -> true
@@ -1262,15 +1266,15 @@ private class InferenceScope(
         if (ty1 === ty2) return
 
         fun assign(k: TyVar, v: Ty) {
-            if (v.allVars(includeAlias = true).any { it == k }) throw InfiniteTypeException()
+            if (v.anyVar { it == k }) throw InfiniteTypeException()
             replacements[k] = v
         }
 
         // assigning anything to a variable constrains the type of that variable
         if (ty2 is TyVar && (ty2 !in replacements || ty1 !is TyVar && replacements[ty2] is TyVar)) {
             if (ty1 is TyVar) {
-                val tc1 = getTypeclassName(ty1)
-                val tc2 = getTypeclassName(ty2)
+                val tc1 = ty1.typeclassName()
+                val tc2 = ty2.typeclassName()
                 if (tc1 == null && tc2 != null) {
                     // There's an edge case where an assignment like `a => number`
                     // should constrain `a` to be a `number`, rather than `number` to be an `a`.
@@ -1342,10 +1346,6 @@ data class ParameterizedInferenceResult<T>(
         val value: T
 )
 
-val ElmPsiElement.moduleName: String
-    get() = elmFile.getModuleDecl()?.name ?: ""
-
-
 /** Return [count] [TyVar]s named a, b, ... z, a1, b1, ... */
 private fun uniqueVars(count: Int): List<TyVar> {
     return varNames().take(count).map { TyVar(it) }.toList()
@@ -1373,12 +1373,6 @@ private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
 }
 
 fun isInferable(ty: Ty): Boolean = ty !is TyUnknown
-
-/** extracts the typeclass from a [TyVar] name if it is a typeclass */
-private val TYPECLASS_REGEX = Regex("^(number|appendable|comparable|compappend).*")
-
-/** Extract the typeclass for a var name if it is one, or null if it's a normal var*/
-fun getTypeclassName(ty: TyVar): String? = TYPECLASS_REGEX.matchEntire(ty.name)?.groups?.get(1)?.value
 
 /** Throw an [IllegalStateException] with [message] augmented with information about [element] */
 fun error(element: ElmPsiElement, message: String): Nothing {

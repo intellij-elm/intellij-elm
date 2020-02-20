@@ -10,6 +10,7 @@ import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import kotlin.math.max
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -27,9 +28,10 @@ private val TY_VARIANT_CACHE_KEY: Key<CachedValue<ParameterizedInferenceResult<V
 fun ElmTypeDeclaration.typeExpressionInference(): ParameterizedInferenceResult<TyUnion> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_UNION_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = false).beginTypeDeclarationInference(this)
+        TypeReplacement.freeze(inferenceResult.value)
         CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     }
-    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true) as TyUnion)
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value) as TyUnion)
 }
 
 fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceResult<Ty> = typeExpressionInference(mutableSetOf())
@@ -37,26 +39,29 @@ fun ElmTypeAliasDeclaration.typeExpressionInference(): ParameterizedInferenceRes
 private fun ElmTypeAliasDeclaration.typeExpressionInference(activeAliases: MutableSet<ElmTypeAliasDeclaration>): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getManager(project).getParameterizedCachedValue(this, TY_ALIAS_CACHE_KEY, { useActiveAliases ->
         val inferenceResult = TypeExpression(this, rigidVars = false, activeAliases = useActiveAliases).beginTypeAliasDeclarationInference(this)
+        TypeReplacement.freeze(inferenceResult.value)
         CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     },  /*trackValue*/ false, /*parameter*/ activeAliases)
-    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true))
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
 
 
 fun ElmPortAnnotation.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = false).beginPortAnnotationInference(this)
+        TypeReplacement.freeze(inferenceResult.value)
         CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     }
-    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true))
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
 
 fun ElmUnionVariant.typeExpressionInference(): ParameterizedInferenceResult<Ty> {
     val cachedValue = CachedValuesManager.getCachedValue(this, TY_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = false).beginUnionConstructorInference(this)
+        TypeReplacement.freeze(inferenceResult.value)
         CachedValueProvider.Result.create(inferenceResult, globalModificationTracker)
     }
-    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value, freeze = true))
+    return cachedValue.copy(value = TypeReplacement.freshenVars(cachedValue.value))
 }
 
 /**
@@ -74,7 +79,8 @@ fun ElmTypeAnnotation.typeExpressionInference(rigid: Boolean = true): InferenceR
 
     val cachedValue = CachedValuesManager.getCachedValue(typeRef, TY_ANNOTATION_CACHE_KEY) {
         val inferenceResult = TypeExpression(this, rigidVars = true).beginTypeRefInference(typeRef)
-        val frozenResult =  inferenceResult.copy(ty = TypeReplacement.freeze(inferenceResult.ty))
+        val frozenResult =  inferenceResult.copy(ty = TypeReplacement.replace(inferenceResult.ty, emptyMap()))
+        TypeReplacement.freeze(inferenceResult.ty)
 
         val trackers = when (parentModificationTracker) {
             null -> arrayOf(globalModificationTracker)
@@ -194,8 +200,8 @@ class TypeExpression(
     /** Get the type for an entire type expression */
     private fun typeExpressionType(typeExpr: ElmTypeExpression): Ty {
         val segments = typeExpr.allSegments.map { typeSignatureDeclType(it) }
-        return when {
-            segments.size == 1 -> segments.last()
+        return when (segments.size) {
+            1 -> segments.last()
             else -> TyFunction(segments.dropLast(1), segments.last()).uncurry()
         }
     }
@@ -255,10 +261,9 @@ class TypeExpression(
 
     private fun recordTypeDeclType(record: ElmRecordType): TyRecord {
         val fieldElements = record.fieldTypeList
+        if (fieldElements.isEmpty()) return TyRecord.emptyRecord
         val fieldTys = fieldElements.associate { it.name to typeExpressionType(it.typeExpression) }
-        val fieldReferences = RecordFieldReferenceTable(fieldElements.associateTo(mutableMapOf()) {
-            it.name to mutableSetOf<ElmNamedElement>(it)
-        })
+        val fieldReferences = RecordFieldReferenceTable.fromElements(fieldElements)
         val baseId = record.baseTypeIdentifier
         val baseTy = baseId?.reference?.resolve()?.let { getTyVar(it) } ?: baseId?.let { TyVar(it.referenceName) }
         return TyRecord(fieldTys, baseTy, fieldReferences = fieldReferences)

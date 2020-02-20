@@ -14,7 +14,6 @@ class TypeReplacement(
         replacements: Map<TyVar, Ty>,
         private val freshen: Boolean,
         private val varsToRemainRigid: Collection<TyVar>?,
-        private val freeze: Boolean,
         private val keepRecordsMutable: Boolean
 ) {
     companion object {
@@ -23,22 +22,19 @@ class TypeReplacement(
          *
          * @param varsToRemainRigid If given, all [TyVar]s will be replaced with flexible copies,
          *  except for vars that occur in this collection, which will be left unchanged.
-         * @param freeze If true, make all record field reference tables frozen
          * @param keepRecordsMutable If false, [MutableTyRecord]s will be replaces with [TyRecord]s
          */
         fun replace(
                 ty: Ty,
                 replacements: Map<TyVar, Ty>,
                 varsToRemainRigid: Collection<TyVar>? = null,
-                freeze: Boolean = false,
                 keepRecordsMutable: Boolean = false
         ): Ty {
-            if (varsToRemainRigid == null && replacements.isEmpty() || !tyWouldChange(ty, freeze)) return ty
+            if (varsToRemainRigid == null && replacements.isEmpty()) return ty
             return TypeReplacement(
                     replacements,
                     freshen = false,
                     varsToRemainRigid = varsToRemainRigid,
-                    freeze = freeze,
                     keepRecordsMutable = keepRecordsMutable
             ).replace(ty)
         }
@@ -47,9 +43,8 @@ class TypeReplacement(
                 ty: Ty,
                 replacements: DisjointSet,
                 varsToRemainRigid: Collection<TyVar>? = null,
-                freeze: Boolean = false,
                 keepRecordsMutable: Boolean = false
-        ): Ty = replace(ty, replacements.asMap(), varsToRemainRigid, freeze, keepRecordsMutable)
+        ): Ty = replace(ty, replacements.asMap(), varsToRemainRigid, keepRecordsMutable)
 
         /**
          * Replace all [TyVar]s in a [ty] with new copies with the same names.
@@ -64,9 +59,8 @@ class TypeReplacement(
          * `f : (a -> b) -> a -> b`, every time you call the `(a -> b)` parameter within the body of
          * `f`, the ty of `a` and `b` have to be the same.
          */
-        fun freshenVars(ty: Ty, freeze: Boolean = false): Ty {
-            if (!tyWouldChange(ty, freeze)) return ty
-            return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null, freeze = freeze, keepRecordsMutable = false).replace(ty)
+        fun freshenVars(ty: Ty): Ty {
+            return TypeReplacement(emptyMap(), freshen = true, varsToRemainRigid = null, keepRecordsMutable = false).replace(ty)
         }
 
         /**
@@ -77,38 +71,63 @@ class TypeReplacement(
          * when calling functions.
          */
         fun flexify(ty: Ty): Ty {
-            if (ty.allVars(true).none()) return ty
-            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = false, keepRecordsMutable = false).replace(ty)
+            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), keepRecordsMutable = false).replace(ty)
         }
 
         /**
          * Freeze any fields references present in records in a [ty].
          *
-         * Use this to prevent cached values from being altered.
+         * Use this to prevent cached values from being altered. Note that this is an in-place
+         * change rather than a copy.
          */
-        fun freeze(ty: Ty): Ty {
-            if (ty.traverse(true).none { it.isUnfrozenRecord() }) return ty
-            return TypeReplacement(emptyMap(), freshen = false, varsToRemainRigid = emptyList(), freeze = true, keepRecordsMutable = false).replace(ty)
-        }
-
-        private fun tyWouldChange(ty: Ty, freeze: Boolean): Boolean {
-            return ty.traverse(true).any {
-                it is TyVar || freeze && it.isUnfrozenRecord()
+        fun freeze(ty: Ty) {
+            when (ty) {
+                is TyVar -> Unit
+                is TyTuple -> ty.types.forEach { freeze(it) }
+                is TyRecord -> {
+                    (ty.baseTy as? TyRecord)?.fieldReferences?.freeze()
+                    ty.fields.values.forEach { freeze(it) }
+                    ty.fieldReferences.freeze()
+                }
+                is MutableTyRecord -> {
+                    (ty.baseTy as? TyRecord)?.fieldReferences?.freeze()
+                    ty.fields.values.forEach { freeze(it) }
+                    ty.fieldReferences.freeze()
+                }
+                is TyUnion -> ty.parameters.forEach { freeze(it) }
+                is TyFunction -> {
+                    freeze(ty.ret)
+                    ty.parameters.forEach { freeze(it) }
+                }
+                is TyUnit -> Unit
+                is TyUnknown -> Unit
+                TyInProgressBinding -> Unit
             }
+            ty.alias?.parameters?.forEach { freeze(it) }
         }
+    }
 
-        private fun Ty.isUnfrozenRecord() = when (this) {
-            is TyRecord -> !fieldReferences.frozen
-            is MutableTyRecord -> !fieldReferences.frozen
-            else -> false
-        }
+    private fun wouldChange(ty: Ty): Boolean {
+        val changeAllVars = freshen || varsToRemainRigid != null
+        fun Ty.f(): Boolean = when (this) {
+            is TyVar -> changeAllVars || this in replacements
+            is TyTuple -> types.any { it.f() }
+            is TyRecord -> fields.values.any { it.f() } || baseTy?.f() == true
+            is MutableTyRecord -> !keepRecordsMutable || fields.values.any { it.f() } || baseTy?.f() == true
+            is TyUnion -> parameters.any { it.f() }
+            is TyFunction -> ret.f() || parameters.any { it.f() }
+            is TyUnit, is TyUnknown, TyInProgressBinding -> false
+        } || alias?.parameters?.any { it.f() } == true
+        return ty.f()
     }
 
     /** A map of var to (has been accessed, ty) */
     private val replacements = replacements.mapValuesTo(mutableMapOf()) { (_, v) -> false to v }
 
     fun replace(ty: Ty): Ty {
-        val replaced = when (ty) {
+        // If we wouldn't change anything, return the original ty to avoid duplicating the object
+        if (!wouldChange(ty)) return ty
+        return when (ty) {
             is TyVar -> getReplacement(ty) ?: ty
             is TyTuple -> replaceTuple(ty)
             is TyFunction -> replaceFunction(ty)
@@ -118,8 +137,6 @@ class TypeReplacement(
             is TyUnit, TyInProgressBinding -> ty
             is MutableTyRecord -> replaceRecord(ty.fields, ty.baseTy, null, ty.fieldReferences, wasMutable = true)
         }
-        // If we didn't change anything, return the original ty to avoid duplicating the object
-        return if (replaced == ty) ty else replaced
     }
 
     /*
@@ -159,21 +176,33 @@ class TypeReplacement(
             fieldReferences: RecordFieldReferenceTable,
             wasMutable: Boolean
     ): Ty {
-        val replacedBase = if (baseTy == null || baseTy !is TyVar) null else getReplacement(baseTy)
-        val newBaseTy = when (replacedBase) {
-            // If the base ty of the argument is a record, use it's base ty, which might be null.
-            is TyRecord -> replacedBase.baseTy
+        val oldBase = if (baseTy == null || baseTy !is TyVar) null else getReplacement(baseTy)
+        val newBase = when (oldBase) {
+            // If the base ty of the argument is a record, use its base ty, which might be null.
+            is TyRecord -> oldBase.baseTy
             // If it wasn't substituted, leave it as-is
-            null -> baseTy
+            null -> when {
+                // Although if it's a record, we might need to make it immutable
+                baseTy is MutableTyRecord && !keepRecordsMutable -> replace(baseTy)
+                else -> baseTy
+            }
             // If it's another variable, use it
-            else -> replacedBase
+            else -> oldBase
         }
 
-        val declaredFields = fields.mapValues { (_, it) -> replace(it) }
-        val baseFields = (replacedBase as? TyRecord)?.fields.orEmpty()
-        val baseFieldRefs = (replacedBase as? TyRecord)?.fieldReferences
+        val baseFields = (oldBase as? TyRecord)?.fields.orEmpty()
+        val baseFieldRefs = (oldBase as? TyRecord)?.fieldReferences
 
-        var newFieldReferences = when {
+        // Make the new map as small as we can for these fields. HashMap always uses a power of two
+        // element array, so we can't avoid all wasted memory.
+        val initialCapacity = baseFields.size + fields.keys.count { it !in baseFields }
+        val newFields = LinkedHashMap<String, Ty>(initialCapacity, 1f)
+
+        // Don't use putAll here, since that function will resize the table to hold (size + 1) elements
+        baseFields.forEach { (k, v) -> newFields[k] = v }
+        fields.mapValuesTo(newFields) { (_, it) -> replace(it) }
+
+        val newFieldReferences = when {
             baseFieldRefs == null || baseFieldRefs.isEmpty() -> fieldReferences
             fieldReferences.frozen -> fieldReferences + baseFieldRefs
             else -> {
@@ -184,30 +213,23 @@ class TypeReplacement(
             }
         }
 
-        if (freeze && !newFieldReferences.frozen) {
-            newFieldReferences = newFieldReferences.copy(frozen = true)
-        }
-        val newFields = baseFields + declaredFields
-        val newAlias = replace(alias)
-        return if (wasMutable && keepRecordsMutable) MutableTyRecord(newFields.toMutableMap(), newBaseTy, newFieldReferences)
-        else TyRecord(newFields, newBaseTy, newAlias, newFieldReferences)
+        return if (wasMutable && keepRecordsMutable) MutableTyRecord(newFields, newBase, newFieldReferences)
+        else TyRecord(newFields, newBase, replace(alias), newFieldReferences)
     }
 
     // When we replace a var, the new ty may itself contain vars, and so we need to recursively
     // replace the ty before we can replace the var we were given as an argument.
     // After the recursive replacement, we avoid repeating work by storing the final ty and tracking
-    // of the fact that it's replacement is complete with the `hasBeenAccessed` flag.
+    // of the fact that its replacement is complete with the `hasBeenAccessed` flag.
     private fun getReplacement(key: TyVar): Ty? {
-        if (key !in replacements && (freshen || varsToRemainRigid != null)) {
-            if (key.rigid && (varsToRemainRigid == null || key in varsToRemainRigid)) return null // never freshen rigid vars
-
-            val ty = TyVar(key.name, rigid = false)
-            replacements[key] = true to ty
-            return ty
+        val (hasBeenAccessed, storedTy) = replacements[key] ?: return when {
+            freshen || varsToRemainRigid != null -> {
+                if (key.rigid && (varsToRemainRigid == null || key in varsToRemainRigid)) null // never freshen rigid vars
+                else TyVar(key.name, rigid = false).also { replacements[key] = true to it }
+            }
+            else -> null
         }
 
-        val v = replacements[key] ?: return null
-        val (hasBeenAccessed, storedTy) = v
         if (hasBeenAccessed) return storedTy
 
         val replacedVal = replace(storedTy)

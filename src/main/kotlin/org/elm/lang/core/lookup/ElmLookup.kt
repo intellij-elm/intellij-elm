@@ -12,7 +12,7 @@ import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.stubs.index.ElmNamedElementIndex
-import org.elm.lang.core.types.moduleName
+import org.elm.lang.core.psi.moduleName
 import org.elm.openapiext.findFileByPathTestAware
 import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject

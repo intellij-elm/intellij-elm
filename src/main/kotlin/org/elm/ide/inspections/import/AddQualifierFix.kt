@@ -13,7 +13,7 @@ import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.resolve.scope.VisibleNames
-import org.elm.lang.core.types.moduleName
+import org.elm.lang.core.psi.moduleName
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
 import org.jetbrains.annotations.TestOnly

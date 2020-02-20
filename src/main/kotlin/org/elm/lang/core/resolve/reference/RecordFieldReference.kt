@@ -31,8 +31,7 @@ abstract class RecordFieldReference<T : ElmReferenceElement>(
     override fun isSoft(): Boolean = true
 
     final override fun multiResolve(): List<ElmNamedElement> {
-        val ty1 = getTy()
-        val ty = ty1 as? TyRecord ?: return emptyList()
+        val ty = getTy() as? TyRecord ?: return emptyList()
         return ty.fieldReferences.get(element.referenceName)
     }
 

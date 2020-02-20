@@ -5,8 +5,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
 import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ElmStubbedElement
+import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.stubs.ElmUpperCaseQIDStub
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * An identifier that refers to a Module, Union Constructor, or Record Constructor,
@@ -38,7 +41,7 @@ class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID {
      * e.g. `""` for QID `Foo`
      */
     override val qualifierPrefix: String
-        get() = stub?.qualifierPrefix ?: qualifiers.joinToString(".") { it.text }
+        get() = stub?.qualifierPrefix ?: text.let { it.take(max(0, it.lastIndexOf('.'))) }
 
     /**
      * The right-most name in a potentially qualified name.
@@ -47,7 +50,7 @@ class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID {
      * e.g. `"Foo"` for QID `Foo`
      */
     val refName: String
-        get() = stub?.refName ?: upperCaseIdentifierList.last().text
+        get() = stub?.refName ?: text.let { it.drop(it.lastIndexOf(".") + 1) }
 
     /**
      * The fully qualified name. Equivalent to `PsiElement#text` but stub-safe.
@@ -69,5 +72,5 @@ class ElmUpperCaseQID : ElmStubbedElement<ElmUpperCaseQIDStub>, ElmQID {
      * TODO [kl] this double-duty is a bit strange. Maybe make a separate Psi element?
      */
     override val isQualified: Boolean
-        get() = qualifierPrefix != ""
+        get() = stub?.let { it.qualifierPrefix != "" } ?: (findChildByType<PsiElement>(ElmTypes.DOT) != null)
 }

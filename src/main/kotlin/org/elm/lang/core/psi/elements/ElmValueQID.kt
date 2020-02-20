@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiElementImpl
 import org.elm.lang.core.psi.ElmQID
 import org.elm.lang.core.psi.ElmTypes.*
+import kotlin.math.max
 
 /**
  * A value identifier, possibly qualified by the module/alias that contains the value.
@@ -26,7 +27,7 @@ class ElmValueQID(node: ASTNode) : ElmPsiElementImpl(node), ElmQID {
         get() = upperCaseIdentifierList
 
     override val qualifierPrefix: String
-        get() = qualifiers.joinToString(".") { it.text }
+        get() = text.let { it.take(max(0, it.lastIndexOf('.'))) }
 
     /**
      * The value identifier

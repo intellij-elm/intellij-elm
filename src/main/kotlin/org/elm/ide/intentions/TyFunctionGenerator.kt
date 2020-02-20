@@ -11,7 +11,7 @@ import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.allDeclarations
 import org.elm.lang.core.types.findTy
-import org.elm.lang.core.types.moduleName
+import org.elm.lang.core.psi.moduleName
 
 
 abstract class TyFunctionGenerator(

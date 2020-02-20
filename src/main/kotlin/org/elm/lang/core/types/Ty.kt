@@ -68,6 +68,12 @@ data class TyRecord(
         override val alias: AliasInfo? = null,
         val fieldReferences: RecordFieldReferenceTable = RecordFieldReferenceTable()
 ) : Ty() {
+    companion object {
+        // Empty records occur in code like `foo : BaseRecord {}`, where they create a type from an
+        // extension record with no extra fields.
+        val emptyRecord = TyRecord(emptyMap(), null, null, RecordFieldReferenceTable().apply { freeze() })
+    }
+
     /** true if this record has a base name, and will match a subset of a record's fields */
     val isSubset: Boolean get() = baseTy != null
 
@@ -224,34 +230,42 @@ object TyInProgressBinding : Ty() {
 data class AliasInfo(val module: String, val name: String, val parameters: List<Ty>)
 
 
-/** Create a lazy sequence of all [TyVar]s referenced within this ty. */
-fun Ty.allVars(includeAlias: Boolean = false): Sequence<TyVar> = traverse(includeAlias).filterIsInstance<TyVar>()
+/** Return a list of all [TyVar]s in this ty, including itself */
+fun Ty.allVars(): List<TyVar> = mutableListOf<TyVar>().also { allVars(it) }
 
-fun Ty.traverse(includeAlias: Boolean = false): Sequence<Ty> = sequence {
-    yield(this@traverse)
-    when (this@traverse) {
-        is TyTuple -> types.forEach { yieldAll(it.traverse(includeAlias)) }
+private fun Ty.allVars(result: MutableList<TyVar>) {
+    when (this) {
+        is TyVar -> result.add(this)
+        is TyTuple -> types.forEach { it.allVars(result) }
         is TyRecord -> {
-            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
+            fields.values.forEach { it.allVars(result) }
+            baseTy?.allVars(result)
         }
         is MutableTyRecord -> {
-            fields.values.forEach { yieldAll(it.traverse(includeAlias)) }
-            if (baseTy != null) yieldAll(baseTy.traverse(includeAlias))
+            fields.values.forEach { it.allVars(result) }
+            baseTy?.allVars(result)
         }
+        is TyUnion -> parameters.forEach { it.allVars(result) }
         is TyFunction -> {
-            yieldAll(ret.traverse(includeAlias))
-            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
+            ret.allVars(result)
+            parameters.forEach { it.allVars(result) }
         }
-        is TyUnion -> {
-            parameters.forEach { yieldAll(it.traverse(includeAlias)) }
-        }
-        is TyVar, is TyUnit, is TyUnknown, TyInProgressBinding -> {
+        is TyUnit, is TyUnknown, TyInProgressBinding -> {
         }
     }
-    if (includeAlias) {
-        alias?.parameters?.forEach { yieldAll(it.traverse(includeAlias)) }
-    }
+}
+
+/** Return `true` if this [Ty] or any of its children match the [predicate] */
+fun Ty.anyVar(predicate: (TyVar) -> Boolean): Boolean {
+    return when (this) {
+        is TyVar -> predicate(this)
+        is TyTuple -> types.any { it.anyVar(predicate) }
+        is TyRecord -> fields.values.any { it.anyVar(predicate) } || baseTy?.anyVar(predicate) == true
+        is MutableTyRecord -> fields.values.any { it.anyVar(predicate) } || baseTy?.anyVar(predicate) == true
+        is TyUnion -> parameters.any { it.anyVar(predicate) }
+        is TyFunction -> ret.anyVar(predicate) || parameters.any { it.anyVar(predicate) }
+        is TyUnit, is TyUnknown, TyInProgressBinding -> false
+    } || alias?.parameters?.any { it.anyVar(predicate) } == true
 }
 
 data class DeclarationInTy(val module: String, val name: String, val isUnion: Boolean)
@@ -292,4 +306,14 @@ fun Ty.allDeclarations(
         yield(DeclarationInTy(it.module, it.name, isUnion = false))
         it.parameters.forEach { p -> yieldAll(p.allDeclarations()) }
     }
+}
+
+/** Extract the typeclass for a var name if it is one, or null if it's a normal var */
+fun TyVar.typeclassName(): String? = when {
+    name.length < 6 -> null // "number".length == 6
+    name.startsWith("number") -> "number"
+    name.startsWith("appendable") -> "appendable"
+    name.startsWith("comparable") -> "comparable"
+    name.startsWith("compappend") -> "compappend"
+    else -> null
 }
