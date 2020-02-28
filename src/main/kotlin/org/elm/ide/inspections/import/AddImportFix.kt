@@ -59,8 +59,14 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
             // we can't import the function we're annotating
             if (refElement is ElmTypeAnnotation) return null
 
+            val typeAllowed = element.parentOfType<ElmTypeExpression>() != null
+
             val name = refElement.referenceName
             val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
+                    .filter {
+                        val isType = it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration
+                        typeAllowed == isType
+                    }
                     .mapNotNull { fromExposableElement(it, ref) }
                     .toMutableList()
 

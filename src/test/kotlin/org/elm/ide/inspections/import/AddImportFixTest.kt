@@ -97,6 +97,32 @@ import Foo exposing (Bar(..))
 main = BarVariant
 """)
 
+    fun `test importing a union variant constructor with same name as union in value expression`() = check(
+            """
+--@ main.elm
+main = Bar{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = Bar
+""",
+            """
+import Foo exposing (Bar(..))
+main = Bar
+""")
+
+    fun `test importing a union with same name as constructor in type expression`() = check(
+            """
+--@ main.elm
+main : Bar{-caret-}
+--@ Foo.elm
+module Foo exposing (Bar(..))
+type Bar = Bar
+""",
+            """
+import Foo exposing (Bar)
+main : Bar
+""")
+
 
     fun `test multiple import candidates`() = checkAutoImportFixByTextWithMultipleChoice(
             """
