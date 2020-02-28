@@ -1,6 +1,6 @@
 package org.elm.ide.inspections.import
 
-import com.intellij.codeInspection.ProblemDescriptor
+import com.intellij.codeInsight.intention.PriorityAction.Priority
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
@@ -42,8 +42,7 @@ fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
     }
 }
 
-
-class AddImportFix : NamedQuickFix("Import") {
+class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
     data class Context(
             val refName: String,
             val candidates: List<Import>,
@@ -51,9 +50,7 @@ class AddImportFix : NamedQuickFix("Import") {
     )
 
     companion object {
-        fun isAvailable(psiElement: PsiElement): Boolean = findApplicableContext(psiElement) != null
-
-        private fun findApplicableContext(psiElement: PsiElement): Context? {
+        fun findApplicableContext(psiElement: PsiElement): Context? {
             val element = psiElement as? ElmPsiElement ?: return null
             if (element.parentOfType<ElmImportClause>() != null) return null
             val refElement = element.parentOfType<ElmReferenceElement>(strict = false) ?: return null
@@ -74,8 +71,13 @@ class AddImportFix : NamedQuickFix("Import") {
         }
     }
 
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
-        val file = element.containingFile as? ElmFile ?: return
+    private var invoked = false
+    override val isAvailable: Boolean get() = !invoked
+
+    override fun applyFix(element: PsiElement, project: Project) {
+        invoked = true
+        if (element !is ElmPsiElement) return
+        val file = element.elmFile
         val context = findApplicableContext(element) ?: return
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
@@ -86,7 +88,9 @@ class AddImportFix : NamedQuickFix("Import") {
                 // they know what they're getting into. See https://github.com/klazuka/intellij-elm/issues/309
                 when {
                     candidate.moduleAlias != null -> promptToSelectCandidate(project, context, file)
-                    else -> addImport(candidate, file, context.isQualified)
+                    else -> project.runWriteCommandAction {
+                        addImport(candidate, file, context.isQualified)
+                    }
                 }
             }
             else -> promptToSelectCandidate(project, context, file)

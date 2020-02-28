@@ -1,6 +1,5 @@
 package org.elm.ide.inspections.import
 
-import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
@@ -13,7 +12,6 @@ import org.elm.lang.core.psi.elements.Flavor.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
 import org.elm.lang.core.resolve.scope.VisibleNames
-import org.elm.lang.core.psi.moduleName
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
 import org.jetbrains.annotations.TestOnly
@@ -27,11 +25,7 @@ class AddQualifierFix : NamedQuickFix("Qualify name") {
     )
 
     companion object {
-        fun isAvailable(psiElement: PsiElement?): Boolean {
-            return findApplicableContext(psiElement) != null
-        }
-
-        private fun findApplicableContext(psiElement: PsiElement?): Context? {
+        fun findApplicableContext(psiElement: PsiElement?): Context? {
             val element = psiElement as? ElmPsiElement ?: return null
 
             if (element.ancestors.any { it is ElmModuleDeclaration || it is ElmPortAnnotation || it is ElmImportClause }) {
@@ -61,18 +55,24 @@ class AddQualifierFix : NamedQuickFix("Qualify name") {
             val candidates = (names.global + names.imported)
                     .filter { it.name == name }
                     .mapNotNull { ModuleScope.getQualifierForName(file, it.moduleName, name) }
-                    .filter { it != "" }
+                    .filter { it.isNotEmpty() }
             if (candidates.isEmpty()) return null
             return Context(candidates, name, qid)
         }
     }
 
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+    private var invoked = false
+    override val isAvailable: Boolean get() = !invoked
+
+    override fun applyFix(element: PsiElement, project: Project) {
+        invoked = true
         val context = findApplicableContext(element) ?: return
 
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
-            1 -> addQualifier(project, context, context.candidates.first())
+            1 -> project.runWriteCommandAction {
+                addQualifier(project, context, context.candidates.first())
+            }
             else -> promptToSelectCandidate(project, context)
         }
     }

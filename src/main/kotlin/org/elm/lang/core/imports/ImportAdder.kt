@@ -22,7 +22,9 @@ object ImportAdder {
             val moduleName: String,
             val moduleAlias: String?,
             val nameToBeExposed: String
-    )
+    ) {
+        val displayName get() = "$moduleName exposing ($nameToBeExposed)"
+    }
 
     /**
      * Merge an import [candidate] to the imports in [file], including exposing values if [isQualified] is true.
