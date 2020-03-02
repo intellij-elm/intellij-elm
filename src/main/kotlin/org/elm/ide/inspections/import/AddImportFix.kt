@@ -1,6 +1,7 @@
 package org.elm.ide.inspections.import
 
 import com.intellij.codeInsight.intention.PriorityAction.Priority
+import com.intellij.codeInsight.navigation.NavigationUtil
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
@@ -122,7 +123,7 @@ class AddImportFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Import",
             val picker = if (isUnitTestMode) {
                 MOCK ?: error("You must set mock UI via `withMockImportPickerUI`")
             } else {
-                RealImportPickerUI(dataContext, context.refName)
+                RealImportPickerUI(dataContext, context.refName, project)
             }
             picker.choose(context.candidates) { candidate ->
                 project.runWriteCommandAction {
@@ -133,14 +134,20 @@ class AddImportFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Import",
     }
 }
 
-private class RealImportPickerUI(private val dataContext: DataContext, private val refName: String) : ImportPickerUI {
+private class RealImportPickerUI(
+        private val dataContext: DataContext,
+        private val refName: String,
+        private val project: Project
+) : ImportPickerUI {
     override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
-        JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
+        val popup = JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
                 .setTitle("Import '$refName' from module:")
                 .setItemChosenCallback { callback(it) }
                 .setNamerForFiltering { it.moduleName }
                 .setRenderer(CandidateRenderer())
-                .createPopup().showInBestPositionFor(dataContext)
+                .createPopup()
+        NavigationUtil.hidePopupIfDumbModeStarts(popup, project)
+        popup.showInBestPositionFor(dataContext)
     }
 }
 
