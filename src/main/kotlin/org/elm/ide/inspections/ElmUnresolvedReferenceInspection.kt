@@ -67,12 +67,15 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             }
             if (importContext != null) {
                 if (qualifierContext != null) fixes += AddImportFix(invocationTracker)
-                else fixes += NamedQuickFixHint(
-                        element = element,
-                        delegate = AddImportFix(invocationTracker),
-                        hint = importContext.candidates[0].displayName,
-                        multiple = importContext.candidates.size > 1
-                )
+                else {
+                    val t = importContext.candidates[0]
+                    fixes += NamedQuickFixHint(
+                            element = element,
+                            delegate = AddImportFix(invocationTracker),
+                            hint = "${t.moduleName} exposing (${t.nameToBeExposed})",
+                            multiple = importContext.candidates.size > 1
+                    )
+                }
             }
             val description = "Unresolved reference '${ref.canonicalText}'"
             holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL, errorRange, *fixes.toTypedArray())
