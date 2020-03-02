@@ -241,6 +241,22 @@ import FooTooLongToType as Foo
 main = Foo.bar
 """)
 
+    fun `test adding aias to existing import`() = checkAutoImportFixByTextWithMultipleChoice(
+            """
+--@ main.elm
+import Foo
+main = Fob.bar{-caret-}
+--@ Foo.elm
+module Foo exposing (bar)
+bar = 42
+""",
+            listOf("Foo"),
+            "Foo",
+            """
+import Foo as Fob
+main = Fob.bar
+""")
+
 
     fun `test binary infix operator`() = check(
             """
