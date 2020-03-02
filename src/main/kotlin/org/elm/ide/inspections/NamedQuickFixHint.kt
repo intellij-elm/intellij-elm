@@ -13,6 +13,10 @@ import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.endOffset
 
 
+/**
+ * A hint is a popup that shows up automatically and can apply a quick fix even if the cursor is not
+ * on the targeted element.
+ */
 class NamedQuickFixHint(
         element: ElmPsiElement,
         private val delegate: NamedQuickFix,

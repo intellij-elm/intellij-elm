@@ -1,11 +1,13 @@
 package org.elm.ide.inspections.import
 
+import com.intellij.codeInsight.intention.PriorityAction.Priority
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import org.elm.ide.inspections.NamedQuickFix
+import org.elm.ide.inspections.QuickFixInvocationTracker
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.elements.Flavor.*
@@ -16,7 +18,7 @@ import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
 import org.jetbrains.annotations.TestOnly
 
-class AddQualifierFix : NamedQuickFix("Qualify name") {
+class AddQualifierFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Qualify name", Priority.HIGH, tracker) {
 
     data class Context(
             val candidates: List<String>,
@@ -61,11 +63,7 @@ class AddQualifierFix : NamedQuickFix("Qualify name") {
         }
     }
 
-    private var invoked = false
-    override val isAvailable: Boolean get() = !invoked
-
-    override fun applyFix(element: PsiElement, project: Project) {
-        invoked = true
+    override fun invoke(element: PsiElement, project: Project) {
         val context = findApplicableContext(element) ?: return
 
         when (context.candidates.size) {

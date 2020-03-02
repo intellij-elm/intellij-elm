@@ -10,6 +10,7 @@ import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.util.text.EditDistance
 import org.elm.ide.inspections.NamedQuickFix
+import org.elm.ide.inspections.QuickFixInvocationTracker
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.imports.ImportAdder.addImport
 import org.elm.lang.core.lookup.ElmLookup
@@ -43,7 +44,7 @@ fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
     }
 }
 
-class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
+class AddImportFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Import", Priority.HIGH, tracker) {
     data class Context(
             val refName: String,
             val candidates: List<Import>,
@@ -61,46 +62,39 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
             if (refElement is ElmTypeAnnotation) return null
 
             val typeAllowed = element.parentOfType<ElmTypeExpression>() != null
-
             val name = refElement.referenceName
-            val qualifier = (ref as? QualifiedReference)?.qualifierPrefix
-
-            // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
-            var comparitor = compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
-
-            if (!qualifier.isNullOrBlank()) {
-                comparitor = comparitor
-                        // Next prefer modules containing the qualifier
-                        .thenByDescending { qualifier in it.moduleName }
-                        // Next sort by the case-insensitive edit distance
-                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/false) }
-                        // Finally sort by case-sensitive edit distance, so exact case matches sort higher
-                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/true) }
-            } else {
-                // With no qualifier, just sort lexicographically
-                comparitor = comparitor.thenBy { it.moduleName }
-            }
-
             val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
                     .filter {
                         val isType = it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration
                         typeAllowed == isType
                     }
                     .mapNotNull { fromExposableElement(it, ref) }
-                    .sortedWith(comparitor)
+                    .sortedWith(referenceComparitor(ref))
 
             if (candidates.isEmpty())
                 return null
 
             return Context(name, candidates, ref is QualifiedReference)
         }
+
+        private fun referenceComparitor(ref: ElmReference): Comparator<Import> {
+            val qualifier = (ref as? QualifiedReference)?.qualifierPrefix
+            val comparator = compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
+            return when {
+                // With no qualifier, just sort lexicographically
+                qualifier.isNullOrBlank() -> comparator.thenBy { it.moduleName }
+                else -> comparator
+                        // Sort by modules containing the qualifier exactly
+                        .thenByDescending { qualifier in it.moduleName }
+                        // Next sort by the case-insensitive edit distance
+                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/false) }
+                        // Finally sort by case-sensitive edit distance, so exact case matches sort higher
+                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/true) }
+            }
+        }
     }
 
-    private var invoked = false
-    override val isAvailable: Boolean get() = !invoked
-
-    override fun applyFix(element: PsiElement, project: Project) {
-        invoked = true
+    override fun invoke(element: PsiElement, project: Project) {
         if (element !is ElmPsiElement) return
         val file = element.elmFile
         val context = findApplicableContext(element) ?: return

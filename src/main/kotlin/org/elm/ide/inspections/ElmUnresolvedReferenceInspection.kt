@@ -53,27 +53,26 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             val fixes = mutableListOf<LocalQuickFix>()
             val qualifierContext = AddQualifierFix.findApplicableContext(element)
             val importContext = AddImportFix.findApplicableContext(element)
+            // Share the tracker between both fixes so that invoking one will hide the hint from the other
+            val invocationTracker = QuickFixInvocationTracker()
 
+            // Only show the hint for the qualifier fix if both are available.
+            if (qualifierContext != null) {
+                fixes += NamedQuickFixHint(
+                        element = element,
+                        delegate = AddQualifierFix(invocationTracker),
+                        hint = qualifierContext.candidates[0] + qualifierContext.qid.text,
+                        multiple = qualifierContext.candidates.size > 1
+                )
+            }
             if (importContext != null) {
-                if (qualifierContext != null) fixes += AddImportFix()
+                if (qualifierContext != null) fixes += AddImportFix(invocationTracker)
                 else fixes += NamedQuickFixHint(
                         element = element,
-                        delegate = AddImportFix(),
+                        delegate = AddImportFix(invocationTracker),
                         hint = importContext.candidates[0].displayName,
                         multiple = importContext.candidates.size > 1
                 )
-            }
-            if (qualifierContext != null) {
-                if (importContext != null) fixes += AddQualifierFix()
-                else {
-                    fixes += NamedQuickFixHint(
-                            element = element,
-                            delegate = AddQualifierFix(),
-                            hint = qualifierContext.candidates[0] + qualifierContext.qid.text,
-                            multiple = qualifierContext.candidates.size > 1
-                    )
-                }
-
             }
             val description = "Unresolved reference '${ref.canonicalText}'"
             holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL, errorRange, *fixes.toTypedArray())

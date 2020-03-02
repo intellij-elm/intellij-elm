@@ -55,7 +55,7 @@ private fun ProblemsHolder.markUnused(elem: PsiElement, message: String) {
 }
 
 private class OptimizeImportsFix : NamedQuickFix("Optimize imports") {
-    override fun applyFix(element: PsiElement, project: Project) {
+    override fun invoke(element: PsiElement, project: Project) {
         val file = element.containingFile as? ElmFile ?: return
         OptimizeImportsProcessor(project, file).run()
     }
