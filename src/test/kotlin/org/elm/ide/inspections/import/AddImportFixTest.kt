@@ -138,11 +138,89 @@ quux = ()
 module Baz exposing (somethingElse)
 somethingElse = ()
 """,
-            setOf("Foo", "Bar"),
+            listOf("Bar", "Foo"),
             "Foo",
             """
 import Foo exposing (quux)
 main = quux
+""")
+
+    fun `test multiple import candidates sort order, exact match`() = checkAutoImportFixByTextWithMultipleChoice(
+            """
+--@ main.elm
+main = Two.foo{-caret-}
+--@ Utils/One.elm
+module Utils.One exposing (foo)
+foo = ()
+--@ Two.elm
+module Two exposing (foo)
+foo = ()
+--@ Three.elm
+module Three exposing (foo)
+foo = ()
+""",
+            listOf("Two", "Three", "Utils.One"),
+            "Two",
+            """
+import Two
+main = Two.foo
+""")
+
+    fun `test multiple import candidates sort order, substring match`() = checkAutoImportFixByTextWithMultipleChoice(
+            """
+--@ main.elm
+main = One.foo{-caret-}
+--@ Utils/One.elm
+module Utils.One exposing (foo)
+foo = ()
+--@ Utils/Two.elm
+module Utils.Two exposing (foo)
+foo = ()
+--@ Three.elm
+module Three exposing (foo)
+foo = ()
+""",
+            listOf("Utils.One", "Three", "Utils.Two"),
+            "Utils.One",
+            """
+import Utils.One as One
+main = One.foo
+""")
+
+    fun `test multiple import candidates sort order, subsequence match 1`() = checkAutoImportFixByTextWithMultipleChoice(
+            """
+--@ main.elm
+main : JD.Value{-caret-}
+--@ Json/Encode.elm
+module Json.Encode exposing (Value)
+type Value = V
+--@ Json/Decode.elm
+module Json.Decode exposing (Value)
+type Value = V
+""",
+            listOf("Json.Decode", "Json.Encode"),
+            "Json.Decode",
+            """
+import Json.Decode as JD
+main : JD.Value
+""")
+
+    fun `test multiple import candidates sort order, subsequence match 2`() = checkAutoImportFixByTextWithMultipleChoice(
+            """
+--@ main.elm
+main : JE.Value{-caret-}
+--@ Json/Encode.elm
+module Json.Encode exposing (Value)
+type Value = V
+--@ Json/Decode.elm
+module Json.Decode exposing (Value)
+type Value = V
+""",
+            listOf("Json.Encode", "Json.Decode"),
+            "Json.Encode",
+            """
+import Json.Encode as JE
+main : JE.Value
 """)
 
 
@@ -156,7 +234,7 @@ main = Foo.bar{-caret-}
 module FooTooLongToType exposing (bar)
 bar = 42
 """,
-            setOf("FooTooLongToType"),
+            listOf("FooTooLongToType"),
             "FooTooLongToType",
             """
 import FooTooLongToType as Foo
@@ -360,7 +438,7 @@ main = 2 |. 3
 
     private fun checkAutoImportFixByTextWithMultipleChoice(
             @Language("Elm") before: String,
-            expectedElements: Set<String>,
+            expectedElements: List<String>,
             choice: String,
             @Language("Elm") after: String
     ) {
@@ -369,7 +447,7 @@ main = 2 |. 3
         withMockImportPickerUI(object : ImportPickerUI {
             override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
                 chooseItemWasCalled = true
-                val actualItems = candidates.map { it.moduleName }.toSet()
+                val actualItems = candidates.map { it.moduleName }
                 assertEquals(expectedElements, actualItems)
                 val selectedValue = candidates.find { it.moduleName == choice }
                         ?: error("Can't find `$choice` in `$actualItems`")

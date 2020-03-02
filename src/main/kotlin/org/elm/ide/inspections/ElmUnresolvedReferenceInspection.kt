@@ -53,6 +53,7 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             val fixes = mutableListOf<LocalQuickFix>()
             val qualifierContext = AddQualifierFix.findApplicableContext(element)
             val importContext = AddImportFix.findApplicableContext(element)
+
             if (importContext != null) {
                 if (qualifierContext != null) fixes += AddImportFix()
                 else fixes += NamedQuickFixHint(

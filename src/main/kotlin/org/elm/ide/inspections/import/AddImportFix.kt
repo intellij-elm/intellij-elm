@@ -8,6 +8,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
+import com.intellij.util.text.EditDistance
 import org.elm.ide.inspections.NamedQuickFix
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.imports.ImportAdder.addImport
@@ -62,13 +63,31 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
             val typeAllowed = element.parentOfType<ElmTypeExpression>() != null
 
             val name = refElement.referenceName
+            val qualifier = (ref as? QualifiedReference)?.qualifierPrefix
+
+            // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
+            var comparitor = compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
+
+            if (!qualifier.isNullOrBlank()) {
+                comparitor = comparitor
+                        // Next prefer modules containing the qualifier
+                        .thenByDescending { qualifier in it.moduleName }
+                        // Next sort by the case-insensitive edit distance
+                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/false) }
+                        // Finally sort by case-sensitive edit distance, so exact case matches sort higher
+                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/true) }
+            } else {
+                // With no qualifier, just sort lexicographically
+                comparitor = comparitor.thenBy { it.moduleName }
+            }
+
             val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
                     .filter {
                         val isType = it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration
                         typeAllowed == isType
                     }
                     .mapNotNull { fromExposableElement(it, ref) }
-                    .toMutableList()
+                    .sortedWith(comparitor)
 
             if (candidates.isEmpty())
                 return null
@@ -105,20 +124,13 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
 
     private fun promptToSelectCandidate(project: Project, context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
-
-        // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
-        val candidates = context.candidates.sortedWith(
-                compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
-                        .thenBy { it.moduleName }
-        )
-
         DataManager.getInstance().dataContextFromFocusAsync.onSuccess { dataContext ->
             val picker = if (isUnitTestMode) {
                 MOCK ?: error("You must set mock UI via `withMockImportPickerUI`")
             } else {
                 RealImportPickerUI(dataContext, context.refName)
             }
-            picker.choose(candidates) { candidate ->
+            picker.choose(context.candidates) { candidate ->
                 project.runWriteCommandAction {
                     addImport(candidate, file, context.isQualified)
                 }
