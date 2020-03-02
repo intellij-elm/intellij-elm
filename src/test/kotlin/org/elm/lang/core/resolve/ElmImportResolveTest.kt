@@ -229,6 +229,22 @@ module App exposing (Page)
 type Page = Home
 """)
 
+    fun `test union constructor ref preceeded by incomplete import`() = stubOnlyResolve(
+            """
+--@ main.elm
+import Foo as
+import App exposing (Page(..))
+defaultPage = Home
+              --^App.elm
+
+--@ App.elm
+module App exposing (Page(Home))
+type Page = Home
+
+--@Foo.elm
+module Foo exposing(..)
+""")
+
 
 
     fun `test union constructor ref in pattern destructuring`() = stubOnlyResolve(

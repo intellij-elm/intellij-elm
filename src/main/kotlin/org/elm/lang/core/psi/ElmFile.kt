@@ -70,8 +70,8 @@ class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLan
 
         // If we aren't a stub, we can optimize this search to take advantage of the fact that
         // imports can't occur after declarations, so we don't need to look through the whole tree.
-        return directChildren.withoutWsOrComments
-                .takeWhile { it is ElmModuleDeclaration || it is ElmImportClause }
+        return directChildren.withoutWsOrComments.withoutErrors
+                .takeWhile { it is ElmModuleDeclaration || it is ElmImportClause || it.elementType == ElmTypes.AS }
                 .filterIsInstance<ElmImportClause>()
                 .toList()
     }
