@@ -241,7 +241,7 @@ import FooTooLongToType as Foo
 main = Foo.bar
 """)
 
-    fun `test adding aias to existing import`() = checkAutoImportFixByTextWithMultipleChoice(
+    fun `test adding alias to existing import`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
 import Foo

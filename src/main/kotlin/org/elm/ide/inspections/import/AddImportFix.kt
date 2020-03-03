@@ -11,7 +11,6 @@ import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.util.text.EditDistance
 import org.elm.ide.inspections.NamedQuickFix
-import org.elm.ide.inspections.QuickFixInvocationTracker
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.imports.ImportAdder.addImport
 import org.elm.lang.core.lookup.ElmLookup
@@ -70,7 +69,7 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
                         typeAllowed == isType
                     }
                     .mapNotNull { fromExposableElement(it, ref) }
-                    .sortedWith(referenceComparitor(ref))
+                    .sortedWith(referenceComparator(ref))
 
             if (candidates.isEmpty())
                 return null
@@ -78,7 +77,7 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
             return Context(name, candidates, ref is QualifiedReference)
         }
 
-        private fun referenceComparitor(ref: ElmReference): Comparator<Import> {
+        private fun referenceComparator(ref: ElmReference): Comparator<Import> {
             val qualifier = (ref as? QualifiedReference)?.qualifierPrefix
             val comparator = compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
             return when {
