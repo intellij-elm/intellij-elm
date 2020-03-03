@@ -1,7 +1,6 @@
 package org.elm.ide.inspections
 
 import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -28,7 +27,7 @@ class ElmExposingAliasVariantsInspection : LocalInspectionTool() {
 }
 
 private class RemoveExposingListQuickFix : NamedQuickFix("Remove (..)") {
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+    override fun applyFix(element: PsiElement, project: Project) {
         (element as? ElmExposedType)?.exposedUnionConstructors?.delete()
     }
 }

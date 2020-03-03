@@ -109,7 +109,11 @@ private fun mergeImports(sourceFile: ElmFile, import1: ElmImportClause, import2:
     // generate the new, merged import statement
     val moduleName = import1.moduleQID.text
     val modulePlusAlias = moduleName + mergeAliasClause(import1, import2)
-    return ElmPsiFactory(project).createImportExposing(modulePlusAlias, exposedNames)
+    val factory = ElmPsiFactory(project)
+    return when {
+        exposedNames.isEmpty() -> factory.createImport(modulePlusAlias, null)
+        else -> factory.createImportExposing(modulePlusAlias, exposedNames)
+    }
 }
 
 private fun mergeAliasClause(import1: ElmImportClause, import2: ElmImportClause): String {

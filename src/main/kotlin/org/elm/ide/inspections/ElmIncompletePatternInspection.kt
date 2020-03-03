@@ -1,7 +1,6 @@
 package org.elm.ide.inspections
 
 import com.intellij.codeInsight.intention.PriorityAction.Priority.LOW
-import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -27,15 +26,15 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
 }
 
 private class AddMissingBranchesFix : NamedQuickFix("Add missing case branches") {
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+    override fun applyFix(element: PsiElement, project: Project) {
         val parent = element.parent as? ElmCaseOfExpr ?: return
         MissingCaseBranchAdder(parent).addMissingBranches()
     }
 }
 
 private class AddWildcardBranchFix : NamedQuickFix("Add '_' branch", LOW) {
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
-        val parent = descriptor.psiElement.parent as? ElmCaseOfExpr ?: return
+    override fun applyFix(element: PsiElement, project: Project) {
+        val parent = element.parent as? ElmCaseOfExpr ?: return
         MissingCaseBranchAdder(parent).addWildcardBranch()
     }
 }

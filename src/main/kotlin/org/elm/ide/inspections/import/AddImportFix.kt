@@ -1,6 +1,7 @@
 package org.elm.ide.inspections.import
 
-import com.intellij.codeInspection.ProblemDescriptor
+import com.intellij.codeInsight.intention.PriorityAction.Priority
+import com.intellij.codeInsight.navigation.NavigationUtil
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
@@ -8,6 +9,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
+import com.intellij.util.text.EditDistance
 import org.elm.ide.inspections.NamedQuickFix
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.imports.ImportAdder.addImport
@@ -42,8 +44,7 @@ fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
     }
 }
 
-
-class AddImportFix : NamedQuickFix("Import") {
+class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
     data class Context(
             val refName: String,
             val candidates: List<Import>,
@@ -51,9 +52,7 @@ class AddImportFix : NamedQuickFix("Import") {
     )
 
     companion object {
-        fun isAvailable(psiElement: PsiElement): Boolean = findApplicableContext(psiElement) != null
-
-        private fun findApplicableContext(psiElement: PsiElement): Context? {
+        fun findApplicableContext(psiElement: PsiElement): Context? {
             val element = psiElement as? ElmPsiElement ?: return null
             if (element.parentOfType<ElmImportClause>() != null) return null
             val refElement = element.parentOfType<ElmReferenceElement>(strict = false) ?: return null
@@ -62,20 +61,42 @@ class AddImportFix : NamedQuickFix("Import") {
             // we can't import the function we're annotating
             if (refElement is ElmTypeAnnotation) return null
 
+            val typeAllowed = element.parentOfType<ElmTypeExpression>() != null
             val name = refElement.referenceName
             val candidates = ElmLookup.findByName<ElmExposableTag>(name, refElement.elmFile)
+                    .filter {
+                        val isType = it is ElmTypeDeclaration || it is ElmTypeAliasDeclaration
+                        typeAllowed == isType
+                    }
                     .mapNotNull { fromExposableElement(it, ref) }
-                    .toMutableList()
+                    .sortedWith(referenceComparator(ref))
 
             if (candidates.isEmpty())
                 return null
 
             return Context(name, candidates, ref is QualifiedReference)
         }
+
+        private fun referenceComparator(ref: ElmReference): Comparator<Import> {
+            val qualifier = (ref as? QualifiedReference)?.qualifierPrefix
+            val comparator = compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
+            return when {
+                // With no qualifier, just sort lexicographically
+                qualifier.isNullOrBlank() -> comparator.thenBy { it.moduleName }
+                else -> comparator
+                        // Sort by modules containing the qualifier exactly
+                        .thenByDescending { qualifier in it.moduleName }
+                        // Next sort by the case-insensitive edit distance
+                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/false) }
+                        // Finally sort by case-sensitive edit distance, so exact case matches sort higher
+                        .thenBy { EditDistance.levenshtein(qualifier, it.moduleName, /*caseSensitive=*/true) }
+            }
+        }
     }
 
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
-        val file = element.containingFile as? ElmFile ?: return
+    override fun applyFix(element: PsiElement, project: Project) {
+        if (element !is ElmPsiElement) return
+        val file = element.elmFile
         val context = findApplicableContext(element) ?: return
         when (context.candidates.size) {
             0 -> error("should not happen: must be at least one candidate")
@@ -86,7 +107,9 @@ class AddImportFix : NamedQuickFix("Import") {
                 // they know what they're getting into. See https://github.com/klazuka/intellij-elm/issues/309
                 when {
                     candidate.moduleAlias != null -> promptToSelectCandidate(project, context, file)
-                    else -> addImport(candidate, file, context.isQualified)
+                    else -> project.runWriteCommandAction {
+                        addImport(candidate, file, context.isQualified)
+                    }
                 }
             }
             else -> promptToSelectCandidate(project, context, file)
@@ -95,20 +118,13 @@ class AddImportFix : NamedQuickFix("Import") {
 
     private fun promptToSelectCandidate(project: Project, context: Context, file: ElmFile) {
         require(context.candidates.isNotEmpty())
-
-        // Put exact matches (i.e. those with `moduleAlias == null`) at the top of the list
-        val candidates = context.candidates.sortedWith(
-                compareBy<Import, String?>(nullsFirst()) { it.moduleAlias }
-                        .thenBy { it.moduleName }
-        )
-
         DataManager.getInstance().dataContextFromFocusAsync.onSuccess { dataContext ->
             val picker = if (isUnitTestMode) {
                 MOCK ?: error("You must set mock UI via `withMockImportPickerUI`")
             } else {
-                RealImportPickerUI(dataContext, context.refName)
+                RealImportPickerUI(dataContext, context.refName, project)
             }
-            picker.choose(candidates) { candidate ->
+            picker.choose(context.candidates) { candidate ->
                 project.runWriteCommandAction {
                     addImport(candidate, file, context.isQualified)
                 }
@@ -117,14 +133,20 @@ class AddImportFix : NamedQuickFix("Import") {
     }
 }
 
-private class RealImportPickerUI(private val dataContext: DataContext, private val refName: String) : ImportPickerUI {
+private class RealImportPickerUI(
+        private val dataContext: DataContext,
+        private val refName: String,
+        private val project: Project
+) : ImportPickerUI {
     override fun choose(candidates: List<Import>, callback: (Import) -> Unit) {
-        JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
+        val popup = JBPopupFactory.getInstance().createPopupChooserBuilder(candidates)
                 .setTitle("Import '$refName' from module:")
                 .setItemChosenCallback { callback(it) }
                 .setNamerForFiltering { it.moduleName }
                 .setRenderer(CandidateRenderer())
-                .createPopup().showInBestPositionFor(dataContext)
+                .createPopup()
+        NavigationUtil.hidePopupIfDumbModeStarts(popup, project)
+        popup.showInBestPositionFor(dataContext)
     }
 }
 

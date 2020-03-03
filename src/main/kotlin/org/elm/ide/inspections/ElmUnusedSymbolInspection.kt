@@ -1,6 +1,5 @@
 package org.elm.ide.inspections
 
-import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
@@ -75,7 +74,7 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
 }
 
 private class RenameToWildcardFix : NamedQuickFix("Rename to _") {
-    override fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor) {
+    override fun applyFix(element: PsiElement, project: Project) {
         (element.parent as? ElmLowerPattern)
                 ?.replace(ElmPsiFactory(project).createAnythingPattern())
     }

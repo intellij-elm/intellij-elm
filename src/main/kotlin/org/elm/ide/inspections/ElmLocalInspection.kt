@@ -38,8 +38,8 @@ abstract class NamedQuickFix(
     override fun getFamilyName(): String = name
     override fun getPriority(): PriorityAction.Priority = fixPriority
     final override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        applyFix(descriptor.psiElement ?: return, project, descriptor)
+        this.applyFix(descriptor.psiElement ?: return, project)
     }
 
-    abstract fun applyFix(element: PsiElement, project: Project, descriptor: ProblemDescriptor)
+    abstract fun applyFix(element: PsiElement, project: Project)
 }
