@@ -18,7 +18,7 @@ import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.runWriteCommandAction
 import org.jetbrains.annotations.TestOnly
 
-class AddQualifierFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Qualify name", Priority.HIGH, tracker) {
+class AddQualifierFix : NamedQuickFix("Qualify name", Priority.HIGH) {
 
     data class Context(
             val candidates: List<String>,
@@ -63,7 +63,7 @@ class AddQualifierFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Quali
         }
     }
 
-    override fun invoke(element: PsiElement, project: Project) {
+    override fun applyFix(element: PsiElement, project: Project) {
         val context = findApplicableContext(element) ?: return
 
         when (context.candidates.size) {

@@ -32,21 +32,14 @@ abstract class ElmLocalInspection : LocalInspectionTool() {
  */
 abstract class NamedQuickFix(
         private val fixName: String,
-        private val fixPriority: PriorityAction.Priority = PriorityAction.Priority.NORMAL,
-        private val invocationTracker: QuickFixInvocationTracker = QuickFixInvocationTracker()
+        private val fixPriority: PriorityAction.Priority = PriorityAction.Priority.NORMAL
 ) : LocalQuickFix, PriorityAction {
-    open val isAvailable: Boolean get() = !invocationTracker.invoked
     override fun getName(): String = fixName
     override fun getFamilyName(): String = name
     override fun getPriority(): PriorityAction.Priority = fixPriority
     final override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-        applyFix(descriptor.psiElement ?: return, project)
+        this.applyFix(descriptor.psiElement ?: return, project)
     }
 
-    fun applyFix(element: PsiElement, project: Project) {
-        invocationTracker.invoke()
-        invoke(element, project)
-    }
-
-    protected abstract fun invoke(element: PsiElement, project: Project)
+    abstract fun applyFix(element: PsiElement, project: Project)
 }

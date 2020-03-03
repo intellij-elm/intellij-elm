@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiModificationTracker
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.endOffset
 
@@ -27,15 +28,16 @@ class NamedQuickFixHint(
     override fun getText(): String = delegate.name
     override fun getPriority(): PriorityAction.Priority = delegate.priority
     override fun startInWriteAction() = delegate.startInWriteAction()
+    override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?): Boolean = super.isAvailable()
 
-    // The delegates need to track if they've been invoked so that the hint doesn't continue to show
-    // after they've already applied their changes.
-    override fun isAvailable(project: Project, editor: Editor?, file: PsiFile?): Boolean {
-        return super.isAvailable() && delegate.isAvailable
-    }
+    private val project = element.project
+    private val modificationCountOnCreate = project.currentModCount()
+
+    private fun isOutdated() = modificationCountOnCreate != project.currentModCount()
 
     override fun showHint(editor: Editor): Boolean {
         if (HintManager.getInstance().hasShownHintsThatWillHideByOtherHint(true)) return false
+        if (isOutdated()) return false
 
         val message = ShowAutoImportPass.getMessage(multiple, hint)
         val element = startElement
@@ -58,3 +60,4 @@ class NamedQuickFixHint(
     }
 }
 
+private fun Project.currentModCount() = PsiModificationTracker.SERVICE.getInstance(this).modificationCount

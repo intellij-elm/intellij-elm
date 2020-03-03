@@ -26,14 +26,14 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
 }
 
 private class AddMissingBranchesFix : NamedQuickFix("Add missing case branches") {
-    override fun invoke(element: PsiElement, project: Project) {
+    override fun applyFix(element: PsiElement, project: Project) {
         val parent = element.parent as? ElmCaseOfExpr ?: return
         MissingCaseBranchAdder(parent).addMissingBranches()
     }
 }
 
 private class AddWildcardBranchFix : NamedQuickFix("Add '_' branch", LOW) {
-    override fun invoke(element: PsiElement, project: Project) {
+    override fun applyFix(element: PsiElement, project: Project) {
         val parent = element.parent as? ElmCaseOfExpr ?: return
         MissingCaseBranchAdder(parent).addWildcardBranch()
     }

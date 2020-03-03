@@ -45,7 +45,7 @@ fun withMockImportPickerUI(mockUi: ImportPickerUI, action: () -> Unit) {
     }
 }
 
-class AddImportFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Import", Priority.HIGH, tracker) {
+class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
     data class Context(
             val refName: String,
             val candidates: List<Import>,
@@ -95,7 +95,7 @@ class AddImportFix(tracker: QuickFixInvocationTracker) : NamedQuickFix("Import",
         }
     }
 
-    override fun invoke(element: PsiElement, project: Project) {
+    override fun applyFix(element: PsiElement, project: Project) {
         if (element !is ElmPsiElement) return
         val file = element.elmFile
         val context = findApplicableContext(element) ?: return

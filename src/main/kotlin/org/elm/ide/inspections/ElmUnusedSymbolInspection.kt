@@ -74,7 +74,7 @@ class ElmUnusedSymbolInspection : ElmLocalInspection() {
 }
 
 private class RenameToWildcardFix : NamedQuickFix("Rename to _") {
-    override fun invoke(element: PsiElement, project: Project) {
+    override fun applyFix(element: PsiElement, project: Project) {
         (element.parent as? ElmLowerPattern)
                 ?.replace(ElmPsiFactory(project).createAnythingPattern())
     }

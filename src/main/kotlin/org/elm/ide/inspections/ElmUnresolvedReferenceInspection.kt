@@ -53,25 +53,23 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             val fixes = mutableListOf<LocalQuickFix>()
             val qualifierContext = AddQualifierFix.findApplicableContext(element)
             val importContext = AddImportFix.findApplicableContext(element)
-            // Share the tracker between both fixes so that invoking one will hide the hint from the other
-            val invocationTracker = QuickFixInvocationTracker()
 
             // Only show the hint for the qualifier fix if both are available.
             if (qualifierContext != null) {
                 fixes += NamedQuickFixHint(
                         element = element,
-                        delegate = AddQualifierFix(invocationTracker),
+                        delegate = AddQualifierFix(),
                         hint = qualifierContext.candidates[0] + qualifierContext.qid.text,
                         multiple = qualifierContext.candidates.size > 1
                 )
             }
             if (importContext != null) {
-                if (qualifierContext != null) fixes += AddImportFix(invocationTracker)
+                if (qualifierContext != null) fixes += AddImportFix()
                 else {
                     val t = importContext.candidates[0]
                     fixes += NamedQuickFixHint(
                             element = element,
-                            delegate = AddImportFix(invocationTracker),
+                            delegate = AddImportFix(),
                             hint = "${t.moduleName} exposing (${t.nameToBeExposed})",
                             multiple = importContext.candidates.size > 1
                     )

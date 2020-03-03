@@ -27,7 +27,7 @@ class ElmExposingAliasVariantsInspection : LocalInspectionTool() {
 }
 
 private class RemoveExposingListQuickFix : NamedQuickFix("Remove (..)") {
-    override fun invoke(element: PsiElement, project: Project) {
+    override fun applyFix(element: PsiElement, project: Project) {
         (element as? ElmExposedType)?.exposedUnionConstructors?.delete()
     }
 }
