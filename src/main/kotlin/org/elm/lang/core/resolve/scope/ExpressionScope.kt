@@ -1,9 +1,7 @@
 package org.elm.lang.core.resolve.scope
 
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.ancestorsStrict
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmCaseOfBranch
 import org.elm.lang.core.psi.elements.ElmLetInExpr
@@ -23,7 +21,11 @@ class ExpressionScope(private val element: PsiElement) {
                         }
                         is ElmValueDeclaration -> {
                             declAncestors += it
+                            val isTopLevel = it.isTopLevel
+                            // Don't include top-level assignees here, since they'll be included in
+                            // ModuleScope.getVisibleValues
                             it.declaredNames(includeParameters = true).asSequence()
+                                    .filter { n -> !isTopLevel || n !is ElmValueAssigneeTag  }
                         }
                         is ElmLetInExpr -> {
                             it.valueDeclarationList.asSequence()
