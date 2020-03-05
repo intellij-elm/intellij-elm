@@ -22,4 +22,56 @@ type Bar = Foo
 type alias <error descr="Multiple declarations with name 'Foo'">Foo</error> = ()
 type alias <error descr="Multiple declarations with name 'Foo'">Foo</error> = ()
 """)
+
+    fun `test nested dupe of top level`() = checkByText("""
+<error descr="Multiple declarations with name 'foo'">foo</error> = 1
+main =
+    let
+        <error descr="Multiple declarations with name 'foo'">foo</error> = 2
+    in
+    foo
+""")
+
+    fun `test nested dupe of param`() = checkByText("""
+main <error descr="Multiple declarations with name 'foo'">foo</error> =
+    let
+        <error descr="Multiple declarations with name 'foo'">foo</error> = 1
+    in
+    foo
+""")
+
+
+    fun `test nested dupe of sibling`() = checkByText("""
+main =
+    let
+        <error descr="Multiple declarations with name 'foo'">foo</error> = 1
+        <error descr="Multiple declarations with name 'foo'">foo</error> = 2
+    in
+    foo
+""")
+
+    fun `test nested dupe outer`() = checkByText("""
+main =
+    let
+        <error descr="Multiple declarations with name 'foo'">foo</error> = 1
+        mid =
+            let
+               <error descr="Multiple declarations with name 'foo'">foo</error> = 2
+            in
+            foo
+    in
+    foo
+""")
+
+    fun `test nested dupe parent`() = checkByText("""
+main =
+    let
+        <error descr="Multiple declarations with name 'foo'">foo</error> =
+            let
+               <error descr="Multiple declarations with name 'foo'">foo</error> = 2
+            in
+            foo
+    in
+    foo
+""")
 }
