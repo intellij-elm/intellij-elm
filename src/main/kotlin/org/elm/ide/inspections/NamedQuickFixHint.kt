@@ -48,9 +48,6 @@ class NamedQuickFixHint(
         return true
     }
 
-    // Even though we have to implement these, it seems like intellij will call `applyFix` on the
-    // delegate directly (somehow) if they're invoked from the intention popup rather than this
-    // hint. So the delegates need to track if they've been invoked themselves; we can't do it here.
     override fun invoke(project: Project, editor: Editor?, file: PsiFile?) {
         delegate.applyFix(startElement, project)
     }
