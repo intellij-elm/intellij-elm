@@ -15,7 +15,11 @@ import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeRef
 import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.resolve.reference.*
+import org.elm.lang.core.resolve.reference.ModuleNameQualifierReference
+import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
+import org.elm.lang.core.resolve.reference.QualifiedReference
+import org.elm.lang.core.resolve.reference.QualifiedTypeReference
+import org.elm.lang.core.resolve.reference.QualifiedValueReference
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -54,26 +58,17 @@ class ElmUnresolvedReferenceInspection : ElmLocalInspection() {
             val qualifierContext = AddQualifierFix.findApplicableContext(element)
             val importContext = AddImportFix.findApplicableContext(element)
 
-            // Only show the hint for the qualifier fix if both are available.
-            if (qualifierContext != null) {
+            if (importContext != null) {
+                val t = importContext.candidates[0]
                 fixes += NamedQuickFixHint(
                         element = element,
-                        delegate = AddQualifierFix(),
-                        hint = qualifierContext.candidates[0] + qualifierContext.qid.text,
-                        multiple = qualifierContext.candidates.size > 1
+                        delegate = AddImportFix(),
+                        hint = "${t.moduleName}.${t.nameToBeExposed}",
+                        multiple = importContext.candidates.size > 1
                 )
             }
-            if (importContext != null) {
-                if (qualifierContext != null) fixes += AddImportFix()
-                else {
-                    val t = importContext.candidates[0]
-                    fixes += NamedQuickFixHint(
-                            element = element,
-                            delegate = AddImportFix(),
-                            hint = "${t.moduleName} exposing (${t.nameToBeExposed})",
-                            multiple = importContext.candidates.size > 1
-                    )
-                }
+            if (qualifierContext != null) {
+                fixes += AddQualifierFix()
             }
             val description = "Unresolved reference '${ref.canonicalText}'"
             holder.registerProblem(element, description, LIKE_UNKNOWN_SYMBOL, errorRange, *fixes.toTypedArray())
