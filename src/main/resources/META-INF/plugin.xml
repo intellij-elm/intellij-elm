@@ -36,6 +36,15 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.5.2</b> <em>(2020-04-08)</em>
+                <ul>
+                    <li>Improved sorting of modules when performing 'add import'.</li>
+                    <li>Added a hint popup to add an import to fix an unresolved reference.</li>
+                    <li>Fixed a 'add import' bug where types and values were mixed up in some cases.</li>
+                    <li>Fixed a shadowing error false negative involving `let/in` expressions.</li>
+                    <li>Type Inference optimizations: reduced memory usage, etc.</li>
+                </ul>
+            </li>
             <li><b>3.5.1</b> <em>(2020-02-05)</em>
                 <ul>
                     <li>Fixed 2 bugs related to function/type name resolution</li>
