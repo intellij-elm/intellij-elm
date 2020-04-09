@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElementVisitor
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNameIdentifierOwner
 import org.elm.lang.core.psi.ElmNamedElement
+import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmLetInExpr
 import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.lang.core.resolve.scope.ModuleScope
@@ -42,7 +43,12 @@ private fun checkLetIn(element: ElmLetInExpr, holder: ProblemsHolder) {
     // individually. The values visible to all children are the same, so we only need to call
     // ExpressionScope once. This also prevents duplicate errors when sibling declarations have the
     // same name.
-    checkValues(holder, ExpressionScope(decls[0]).getVisibleValues())
+    //
+    // Elm lets you shadow imported names, including auto-imported names, so only count names
+    // declared in this file as shadowable.
+    val values = ExpressionScope(decls[0]).getVisibleValues()
+            .filter { it.containingFile == holder.file }
+    checkValues(holder, values)
 }
 
 private fun checkValues(holder: ProblemsHolder, values: Sequence<ElmNamedElement>) {
