@@ -79,7 +79,7 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
                 includeParameters -> assignee + assignee.namedParameters
                 else -> listOf(assignee)
             }
-            is ElmPattern -> descendantsOfType()
+            is ElmPattern -> assignee.descendantsOfType()
             is ElmOperatorDeclarationLeft -> when {
                 includeParameters -> assignee + assignee.namedParameters
                 else -> listOf(assignee)
