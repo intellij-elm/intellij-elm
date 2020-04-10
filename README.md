@@ -1,7 +1,5 @@
 # Elm Plugin for IntelliJ IDEs (WebStorm, IDEA, PyCharm, etc.)
 
-[![CircleCI](https://circleci.com/gh/klazuka/intellij-elm.svg?style=svg)](https://circleci.com/gh/klazuka/intellij-elm)
-
 ## Install
 
 You can install the plugin from within the JetBrains IDE by going to **Settings -> Plugins** and then searching for "Elm". After installing the plugin, restart the IDE and then [open your existing Elm project](docs/existing-project.md) or [create a new project](docs/new-project.md).
