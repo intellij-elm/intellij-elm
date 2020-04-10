@@ -21,20 +21,20 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
             else -> arrayOf(AddWildcardBranchFix())
         }
 
-        holder.registerProblem(element.firstChild, "Case expression is not exhaustive", *fixes)
+        holder.registerProblem(element, "Case expression is not exhaustive", *fixes)
     }
 }
 
 private class AddMissingBranchesFix : NamedQuickFix("Add missing case branches") {
     override fun applyFix(element: PsiElement, project: Project) {
-        val parent = element.parent as? ElmCaseOfExpr ?: return
-        MissingCaseBranchAdder(parent).addMissingBranches()
+        val caseExpr = element as? ElmCaseOfExpr ?: return
+        MissingCaseBranchAdder(caseExpr).addMissingBranches()
     }
 }
 
 private class AddWildcardBranchFix : NamedQuickFix("Add '_' branch", LOW) {
     override fun applyFix(element: PsiElement, project: Project) {
-        val parent = element.parent as? ElmCaseOfExpr ?: return
-        MissingCaseBranchAdder(parent).addWildcardBranch()
+        val caseExpr = element as? ElmCaseOfExpr ?: return
+        MissingCaseBranchAdder(caseExpr).addWildcardBranch()
     }
 }
