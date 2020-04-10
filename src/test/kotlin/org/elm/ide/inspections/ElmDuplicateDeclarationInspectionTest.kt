@@ -74,4 +74,45 @@ main =
     in
     foo
 """)
+
+    fun `test nested dupe of top-level in destructured assignment`() = checkByText("""
+<error descr="Multiple declarations with name 'foo'">foo</error> = 0
+main =
+    let
+        (<error descr="Multiple declarations with name 'foo'">foo</error>, bar) = (1, 2)
+    in
+    foo
+""")
+
+    fun `test no dupes in right-hand-side of destructured assignment`() = checkByText("""
+main =
+    let
+        (x, y) =
+            case (0, 0) of
+                (a, 0) -> (1, 2)
+                (0, a) -> (3, 4)
+    in
+    x
+""")
+
+    fun `test no dupes of imported names`() = checkByFileTree("""
+        --@ Main.elm
+        import Foo exposing (foo)
+        import Bar exposing (..)
+        main =
+            let
+                foo = 0
+                bar = 1
+            in
+            2
+          --^
+
+        --@ Foo.elm
+        module Foo exposing (..)
+        foo = ()
+
+        --@ Bar.elm
+        module Bar exposing (..)
+        bar = ()
+        """.trimIndent())
 }
