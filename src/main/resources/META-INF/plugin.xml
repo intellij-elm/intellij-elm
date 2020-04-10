@@ -445,14 +445,14 @@
         <action id="Elm.AttachElmProject"
                 class="org.elm.workspace.ElmAttachProjectAction"
                 text="Attach Elm JSON project file"
-                icon="AllIcons.ToolbarDecorator.Add">
+                icon="AllIcons.General.Add">
         </action>
 
         <!-- TODO [drop 0.18] change "Detach Elm JSON..." to "Detach elm.json ..."-->
         <action id="Elm.DetachElmProject"
                 class="org.elm.workspace.ElmDetachProjectAction"
                 text="Detach Elm JSON project file"
-                icon="AllIcons.ToolbarDecorator.Remove"/>
+                icon="AllIcons.General.Remove"/>
 
         <action id="Elm.RefreshElmProjects"
                 class="org.elm.workspace.ElmRefreshProjectsAction"
