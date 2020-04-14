@@ -36,6 +36,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.5.3</b> <em>(2020-04-14)</em>
+                <ul>
+                    <li>Fixed missing icons in the Elm tool window when running IntelliJ 2020.1</li>
+                    <li>Fixed a regression in the 'add import' feature related to types in union variants.</li>
+                </ul>
+            </li>
             <li><b>3.5.2</b> <em>(2020-04-08)</em>
                 <ul>
                     <li>Improved sorting of modules when performing 'add import'.</li>
