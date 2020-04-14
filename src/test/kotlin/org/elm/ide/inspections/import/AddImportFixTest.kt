@@ -123,6 +123,31 @@ import Foo exposing (Bar)
 main : Bar
 """)
 
+    fun `test importing a type on the RHS of a type alias declaration`() = check(
+            """
+--@ main.elm
+type alias Foo = Bar{-caret-}
+--@ Foo.elm
+module Foo exposing (..)
+type Bar = ()
+""",
+            """
+import Foo exposing (Bar)
+type alias Foo = Bar
+""")
+
+    fun `test importing a type on the RHS of a union type declaration`() = check(
+            """
+--@ main.elm
+type Foo = Foo Bar{-caret-}
+--@ Foo.elm
+module Foo exposing (..)
+type Bar = ()
+""",
+            """
+import Foo exposing (Bar)
+type Foo = Foo Bar
+""")
 
     fun `test multiple import candidates`() = checkAutoImportFixByTextWithMultipleChoice(
             """
