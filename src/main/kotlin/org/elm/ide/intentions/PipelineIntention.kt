@@ -30,9 +30,9 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
-            val (arg1, arg2) = context.functionCall.arguments.toList()
-            arg2.delete()
-            val thing = ElmPsiFactory(project).createPipe(arg2.text, context.functionCall.text)
+            val last = context.functionCall.arguments.last()
+            last.delete()
+            val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
             context.functionCall.replace(thing)
         }
     }
