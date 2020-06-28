@@ -12,7 +12,9 @@ import org.elm.lang.core.psi.elements.*
  */
 class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Context>() {
 
-    data class Context(val functionCall: ElmFunctionCallExpr)
+    abstract class Context()
+
+    data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
 
     override fun getText() = "Pipeline"
     override fun getFamilyName() = text
@@ -20,7 +22,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
             is ElmFunctionCallExpr -> {
-                Context(functionCall)
+                NoPipes(functionCall)
             }
             else -> {
                 null
@@ -30,10 +32,15 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
-            val last = context.functionCall.arguments.last()
-            last.delete()
-            val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
-            context.functionCall.replace(thing)
+            when (context) {
+                is NoPipes -> {
+                    val last = context.functionCall.arguments.last()
+                    last.delete()
+                    val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
+                    context.functionCall.replace(thing)
+                }
+
+            }
         }
     }
 }
