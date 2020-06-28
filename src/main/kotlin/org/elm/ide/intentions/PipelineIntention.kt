@@ -16,13 +16,25 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
 
+    data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments : Sequence<PsiElement>) : Context()
+
     override fun getText() = "Pipeline"
     override fun getFamilyName() = text
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
             is ElmFunctionCallExpr -> {
-                NoPipes(functionCall)
+                if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
+
+                    val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
+                    if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
+                        HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, functionCall.arguments.plus(argument))
+                    } else {
+                        NoPipes(functionCall)
+                    }
+                } else {
+                    NoPipes(functionCall)
+                }
             }
             else -> {
                 null
@@ -38,6 +50,13 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     last.delete()
                     val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
                     context.functionCall.replace(thing)
+                }
+
+                is HasRightPipes -> {
+                    val functionCallWithNoPipes = ElmPsiFactory(project)
+                            .createParens(sequenceOf(context.functionCall.target).plus(context.arguments)
+                            .map { it.text }.joinToString(separator = " "))
+                    context.functionCall.parent.replace(functionCallWithNoPipes)
                 }
 
             }

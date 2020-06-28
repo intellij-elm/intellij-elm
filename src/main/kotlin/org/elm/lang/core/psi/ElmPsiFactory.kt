@@ -118,6 +118,10 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = ($text\n    |> $after\n\n        )")
                     ?: error("Invalid value ElmBinOpExpr: `$text |> $after`")
 
+    fun createParens(text: String): ElmParenthesizedExpr =
+            createFromText("f = ($text)")
+                    ?: error("Invalid value Paren Expression: `($text)`")
+
     fun createStringConstant(text: String): ElmStringConstantExpr =
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")
