@@ -114,6 +114,10 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid value QID: `$text`")
 
+    fun createPipe(text: String, after: String): ElmBinOpExpr =
+            createFromText("f = $text |> $after")
+                    ?: error("Invalid value ElmBinOpExpr: `$text |> $after`")
+
     fun createStringConstant(text: String): ElmStringConstantExpr =
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")

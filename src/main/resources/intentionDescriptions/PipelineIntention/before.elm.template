@@ -1,0 +1,5 @@
+module Example exposing (..)
+
+list = List.map times2 <spot>[1, 2, 3, 4]</spot>
+
+times2 m n = m * n

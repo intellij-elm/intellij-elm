@@ -383,6 +383,10 @@
             <category>Elm</category>
         </intentionAction>
         <intentionAction>
+            <className>org.elm.ide.intentions.PipelineIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
             <className>org.elm.ide.intentions.RemoveExposureIntention</className>
             <category>Elm</category>
         </intentionAction>
