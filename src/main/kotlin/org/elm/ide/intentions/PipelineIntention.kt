@@ -52,25 +52,8 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
                         context.functionCall.replace(thing)
                     } else {
-                        val nestedFunctionCall = context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr
-                        val funcCallChildren = nestedFunctionCall.arguments.first().children
-
-                        if (funcCallChildren.size == 1 && funcCallChildren[0] is ElmFunctionCallExpr) {
-                            val thing2 = funcCallChildren[0] as ElmFunctionCallExpr
-                            thing2.arguments.first().text
-                            thing2.target.text
-                            val newThing = nestedFunctionCall.target.text
-
-                            val topLevelFunctionTarget = context.functionCall.target.text
-                            val thing = ElmPsiFactory(project).createPipeChain(arrayOf(thing2.arguments.first().text, thing2.target.text, newThing, topLevelFunctionTarget))
-                            context.functionCall.replace(thing)
-                        } else {
-                            val initialValue = nestedFunctionCall.arguments.first().text
-                            val chain1 = nestedFunctionCall.target.text
-                            val topLevelFunctionTarget = context.functionCall.target.text
-                            val thing = ElmPsiFactory(project).createPipeChain(arrayOf(initialValue, chain1, topLevelFunctionTarget))
-                            context.functionCall.replace(thing)
-                        }
+                        val thing = ElmPsiFactory(project).createPipeChain(something(context.functionCall))
+                        context.functionCall.replace(thing)
                     }
                 }
 
@@ -84,4 +67,24 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             }
         }
     }
+}
+
+fun something (nestedFunctionCall : ElmFunctionCallExpr): List<String> {
+    if (nestedFunctionCall.arguments.toList().size != 1) {
+        return listOf(nestedFunctionCall.text)
+    }
+    if (nestedFunctionCall.arguments.first().children.size != 1 ) {
+        return listOf(
+                nestedFunctionCall.arguments.first().text,
+                nestedFunctionCall.target.text
+        )
+    }
+    val thing2 = nestedFunctionCall.arguments.first().children.first()
+
+    return if (thing2 is ElmFunctionCallExpr) {
+        something(thing2).plus(nestedFunctionCall.target.text)
+    } else {
+        listOf(nestedFunctionCall.target.text)
+    }
+
 }

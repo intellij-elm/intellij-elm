@@ -118,7 +118,7 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = ($text\n    |> $after\n\n        )")
                     ?: error("Invalid value ElmBinOpExpr: `$text |> $after`")
 
-    fun createPipeChain(valueAndunctionApplications: Array<String>): ElmParenthesizedExpr {
+    fun createPipeChain(valueAndunctionApplications: List<String>): ElmParenthesizedExpr {
         val s2 = valueAndunctionApplications.joinToString(separator = "\n    |> ")
         return createFromText("f = ($s2\n\n        )")
                 ?: error("Invalid value ElmBinOpExpr: `($s2\n\n        )`")
