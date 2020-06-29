@@ -70,27 +70,29 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 }
 
 fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): List<String> {
-    if (nestedFunctionCall.arguments.toList().size != 1) {
+    if (nestedFunctionCall.arguments.count() == 0) {
         return listOf(nestedFunctionCall.text)
     }
-    val firstArgument = unwrapParens(nestedFunctionCall.arguments.first())
+    nestedFunctionCall.arguments.map(::unwrapParens)
+    return processArgument(nestedFunctionCall.arguments.first()).plus(nestedFunctionCall.target.text)
+
+}
+
+private fun processArgument(argument: ElmAtomTag): List<String> {
+    val firstArgument = unwrapParens(argument)
     if (firstArgument is ElmFunctionCallExpr) {
-        return splitArgAndFunctionApplications(firstArgument).plus(nestedFunctionCall.target.text)
+        return splitArgAndFunctionApplications(firstArgument)
     }
-    if (firstArgument.children.size != 1 ) {
-        return listOf(
-                firstArgument.text,
-                nestedFunctionCall.target.text
-        )
+    if (firstArgument.children.size != 1) {
+        return listOf( firstArgument.text )
     }
     val thing2 = firstArgument.children.first()
 
     return if (thing2 is ElmFunctionCallExpr) {
-        splitArgAndFunctionApplications(thing2).plus(nestedFunctionCall.target.text)
+        splitArgAndFunctionApplications(thing2)
     } else {
-        listOf(nestedFunctionCall.target.text)
+        listOf()
     }
-
 }
 
 fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {
