@@ -52,7 +52,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
                         context.functionCall.replace(thing)
                     } else {
-                        val thing = ElmPsiFactory(project).createPipeChain(something(context.functionCall))
+                        val thing = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall))
                         context.functionCall.replace(thing)
                     }
                 }
@@ -69,7 +69,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     }
 }
 
-fun something (nestedFunctionCall : ElmFunctionCallExpr): List<String> {
+fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): List<String> {
     if (nestedFunctionCall.arguments.toList().size != 1) {
         return listOf(nestedFunctionCall.text)
     }
@@ -82,7 +82,7 @@ fun something (nestedFunctionCall : ElmFunctionCallExpr): List<String> {
     val thing2 = nestedFunctionCall.arguments.first().children.first()
 
     return if (thing2 is ElmFunctionCallExpr) {
-        something(thing2).plus(nestedFunctionCall.target.text)
+        splitArgAndFunctionApplications(thing2).plus(nestedFunctionCall.target.text)
     } else {
         listOf(nestedFunctionCall.target.text)
     }
