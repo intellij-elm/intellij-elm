@@ -52,20 +52,21 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
                         context.functionCall.replace(thing)
                     } else {
-                        val funcCallChildren = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).arguments.first().children
+                        val nestedFunctionCall = context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr
+                        val funcCallChildren = nestedFunctionCall.arguments.first().children
 
                         if (funcCallChildren.size == 1 && funcCallChildren[0] is ElmFunctionCallExpr) {
                             val thing2 = funcCallChildren[0] as ElmFunctionCallExpr
                             thing2.arguments.first().text
                             thing2.target.text
-                            val newThing = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).target.text
+                            val newThing = nestedFunctionCall.target.text
 
                             val topLevelFunctionTarget = context.functionCall.target.text
                             val thing = ElmPsiFactory(project).createPipeChain(arrayOf(thing2.arguments.first().text, thing2.target.text, newThing, topLevelFunctionTarget))
                             context.functionCall.replace(thing)
                         } else {
-                            val initialValue = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).arguments.first().text
-                            val chain1 = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).target.text
+                            val initialValue = nestedFunctionCall.arguments.first().text
+                            val chain1 = nestedFunctionCall.target.text
                             val topLevelFunctionTarget = context.functionCall.target.text
                             val thing = ElmPsiFactory(project).createPipeChain(arrayOf(initialValue, chain1, topLevelFunctionTarget))
                             context.functionCall.replace(thing)
