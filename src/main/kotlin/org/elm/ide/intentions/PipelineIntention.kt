@@ -119,10 +119,10 @@ private fun processArgument(argument: ElmAtomTag): List<String> {
     if (firstArgument.children.size != 1) {
         return listOf(firstArgument.text)
     }
-    val thing2 = firstArgument.children.first()
+    val singleArgument = firstArgument.children.first()
 
-    return if (thing2 is ElmFunctionCallExpr) {
-        splitArgAndFunctionApplications(thing2)
+    return if (singleArgument is ElmFunctionCallExpr) {
+        splitArgAndFunctionApplications(singleArgument)
     } else {
         listOf()
     }
