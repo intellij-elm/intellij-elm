@@ -73,18 +73,35 @@ fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): 
     if (nestedFunctionCall.arguments.toList().size != 1) {
         return listOf(nestedFunctionCall.text)
     }
-    if (nestedFunctionCall.arguments.first().children.size != 1 ) {
+    val firstArgument = unwrapParens(nestedFunctionCall.arguments.first())
+    if (firstArgument is ElmFunctionCallExpr) {
+        return splitArgAndFunctionApplications(firstArgument).plus(nestedFunctionCall.target.text)
+    }
+    if (firstArgument.children.size != 1 ) {
         return listOf(
-                nestedFunctionCall.arguments.first().text,
+                firstArgument.text,
                 nestedFunctionCall.target.text
         )
     }
-    val thing2 = nestedFunctionCall.arguments.first().children.first()
+    val thing2 = firstArgument.children.first()
 
     return if (thing2 is ElmFunctionCallExpr) {
         splitArgAndFunctionApplications(thing2).plus(nestedFunctionCall.target.text)
     } else {
         listOf(nestedFunctionCall.target.text)
     }
+
+}
+
+fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {
+    return when (expression) {
+        is ElmParenthesizedExpr -> {
+            unwrapParens(expression.expression!!)
+        }
+        else -> {
+            expression
+        }
+    }
+//    (nestedFunctionCall.arguments.first() as ElmParenthesizedExpr).expression
 
 }

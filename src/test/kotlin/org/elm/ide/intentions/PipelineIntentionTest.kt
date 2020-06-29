@@ -83,4 +83,26 @@ value = (123.45
         )
 """)
 
+
+    fun `test with nested parentheses`() = doAvailableTest(
+            """
+module Foo exposing (value)
+
+import Html
+
+value = List.singlet{-caret-}on ((Html.text (String.fromInt (floor 123.45))))
+""", """
+module Foo exposing (value)
+
+import Html
+
+value = (123.45
+    |> floor
+    |> String.fromInt
+    |> Html.text
+    |> List.singleton
+
+        )
+""")
+
 }
