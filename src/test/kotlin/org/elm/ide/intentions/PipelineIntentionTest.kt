@@ -68,13 +68,14 @@ module Foo exposing (value)
 
 import Html
 
-value = Html.tex{-caret-}t (String.fromInt 123)
+value = Html.tex{-caret-}t (String.fromInt (floor 123.45))
 """, """
 module Foo exposing (value)
 
 import Html
 
-value = (123
+value = (123.45
+    |> floor
     |> String.fromInt
     |> Html.text
 
