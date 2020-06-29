@@ -127,4 +127,30 @@ value =
 
 """)
 
+    fun `test pipe with multiple arguments`() = doAvailableTest(
+            """
+module Foo exposing (value)
+
+value =
+    List.singlet{-caret-}on
+        (List.singleton
+            (String.fromInt
+                (clamp 1 100 42)
+            )
+        )
+
+""", """
+module Foo exposing (value)
+
+value =
+    (42
+    |> clamp 1 100
+    |> String.fromInt
+    |> List.singleton
+    |> List.singleton
+
+        )
+
+""")
+
 }

@@ -81,7 +81,17 @@ fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): 
             processArgument(nestedFunctionCall.arguments.last()).plus(nestedFunctionCall.target.text)
         }
         else -> {
-            processArgument(nestedFunctionCall.arguments.last()).plus(nestedFunctionCall.target.text + " " + nestedFunctionCall.arguments.first().text)
+
+
+            val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
+                    .joinToString(separator = " ")
+
+            processArgument(nestedFunctionCall.arguments.last()).plus(
+                    joinToString
+
+//                    nestedFunctionCall.target.text +
+//                    " " + nestedFunctionCall.arguments.first().text
+            )
         }
 
     }
