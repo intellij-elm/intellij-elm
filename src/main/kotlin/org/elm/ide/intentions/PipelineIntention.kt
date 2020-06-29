@@ -54,8 +54,8 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     } else {
                         val initialValue = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).arguments.first().text
                         val chain1 = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).target.text
-                        val chain2 = context.functionCall.target.text
-                        val thing = ElmPsiFactory(project).createPipeChain(arrayOf(initialValue, chain1, chain2))
+                        val topLevelFunctionTarget = context.functionCall.target.text
+                        val thing = ElmPsiFactory(project).createPipeChain(arrayOf(initialValue, chain1, topLevelFunctionTarget))
                         context.functionCall.replace(thing)
                     }
                 }
