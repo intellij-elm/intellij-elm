@@ -105,4 +105,26 @@ value = (123.45
         )
 """)
 
+
+    fun `test new thing`() = doAvailableTest(
+            """
+module Foo exposing (value)
+
+
+value =
+    List.ma{-caret-}p String.fromInt (List.map times2 [ 1, 2, 3, 4 ])
+
+""", """
+module Foo exposing (value)
+
+
+value =
+    ([ 1, 2, 3, 4 ]
+    |> List.map times2
+    |> List.map String.fromInt
+
+        )
+
+""")
+
 }

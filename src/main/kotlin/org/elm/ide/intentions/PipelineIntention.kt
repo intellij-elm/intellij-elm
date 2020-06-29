@@ -73,7 +73,18 @@ fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): 
     if (nestedFunctionCall.arguments.count() == 0) {
         return listOf(nestedFunctionCall.text)
     }
-    return nestedFunctionCall.arguments.toList().flatMap(::processArgument).plus(nestedFunctionCall.target.text)
+    return when (nestedFunctionCall.arguments.count()) {
+        0 -> {
+            listOf(nestedFunctionCall.target.text)
+        }
+        1 -> {
+            processArgument(nestedFunctionCall.arguments.last()).plus(nestedFunctionCall.target.text)
+        }
+        else -> {
+            processArgument(nestedFunctionCall.arguments.last()).plus(nestedFunctionCall.target.text + " " + nestedFunctionCall.arguments.first().text)
+        }
+
+    }
 
 }
 
@@ -103,6 +114,5 @@ fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {
             expression
         }
     }
-//    (nestedFunctionCall.arguments.first() as ElmParenthesizedExpr).expression
 
 }
