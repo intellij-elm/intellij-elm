@@ -73,8 +73,7 @@ fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): 
     if (nestedFunctionCall.arguments.count() == 0) {
         return listOf(nestedFunctionCall.text)
     }
-    nestedFunctionCall.arguments.map(::unwrapParens)
-    return processArgument(nestedFunctionCall.arguments.first()).plus(nestedFunctionCall.target.text)
+    return nestedFunctionCall.arguments.toList().flatMap(::processArgument).plus(nestedFunctionCall.target.text)
 
 }
 
