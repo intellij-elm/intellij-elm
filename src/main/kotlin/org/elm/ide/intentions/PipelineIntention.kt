@@ -2,10 +2,15 @@ package org.elm.ide.intentions
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.elmSettings
+import org.elm.workspace.elmToolchain
 
 /**
  * An intention action that transforms a series of function applications to/from a pipeline.
@@ -59,15 +64,31 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 is Context.HasRightPipes -> {
                     val functionCallWithNoPipes = ElmPsiFactory(project)
                             .createParens(sequenceOf(context.functionCall.target).plus(context.arguments)
-                            .map { it.text }.joinToString(separator = " "))
+                                    .map { it.text }.joinToString(separator = " "))
                     context.functionCall.parent.replace(functionCallWithNoPipes)
                 }
             }
+
+            if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
+                tryElmFormat(project, editor)
+            }
+        }
+    }
+
+    private fun tryElmFormat(project: Project, editor: Editor) {
+        PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(editor.document)
+
+        try {
+            val vFile = FileDocumentManager.getInstance().getFile(editor.document)
+            val elmVersion = ElmFormatCLI.getElmVersion(project, vFile!!)
+            val elmFormat = project.elmToolchain.elmFormatCLI
+            elmFormat!!.formatDocumentAndSetText(project, editor.document, elmVersion!!, addToUndoStack = false)
+        } catch (e: Throwable) {
         }
     }
 }
 
-fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): List<String> {
+fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<String> {
     if (nestedFunctionCall.arguments.count() == 0) {
         return listOf(nestedFunctionCall.text)
     }
@@ -95,7 +116,7 @@ private fun processArgument(argument: ElmAtomTag): List<String> {
         return splitArgAndFunctionApplications(firstArgument)
     }
     if (firstArgument.children.size != 1) {
-        return listOf( firstArgument.text )
+        return listOf(firstArgument.text)
     }
     val thing2 = firstArgument.children.first()
 
