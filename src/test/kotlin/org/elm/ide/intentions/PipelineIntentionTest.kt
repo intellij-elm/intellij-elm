@@ -62,4 +62,23 @@ list = (List.map times2 [1, 2, 3, 4])
 times2 m n = m * n
 """)
 
+    fun `test multiple pipes in one chain`() = doAvailableTest(
+            """
+module Foo exposing (value)
+
+import Html
+
+value = Html.tex{-caret-}t (String.fromInt 123)
+""", """
+module Foo exposing (value)
+
+import Html
+
+value = (123
+    |> String.fromInt
+    |> Html.text
+
+        )
+""")
+
 }

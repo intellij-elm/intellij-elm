@@ -46,10 +46,18 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is NoPipes -> {
-                    val last = context.functionCall.arguments.last()
-                    last.delete()
-                    val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
-                    context.functionCall.replace(thing)
+                    if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
+                        val last = context.functionCall.arguments.last()
+                        last.delete()
+                        val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
+                        context.functionCall.replace(thing)
+                    } else {
+                        val initialValue = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).arguments.first().text
+                        val chain1 = (context.functionCall.arguments.last().children.first() as ElmFunctionCallExpr).target.text
+                        val chain2 = context.functionCall.target.text
+                        val thing = ElmPsiFactory(project).createPipeChain(arrayOf(initialValue, chain1, chain2))
+                        context.functionCall.replace(thing)
+                    }
                 }
 
                 is HasRightPipes -> {
