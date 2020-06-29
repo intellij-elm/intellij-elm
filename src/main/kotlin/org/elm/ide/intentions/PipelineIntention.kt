@@ -8,15 +8,14 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 
 /**
- * An intention action that adds a function/type to a module's `exposing` list.
+ * An intention action that transforms a series of function applications to/from a pipeline.
  */
 class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Context>() {
 
-    abstract class Context()
-
-    data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
-
-    data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments : Sequence<PsiElement>) : Context()
+    sealed class Context {
+        data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
+        data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>) : Context()
+    }
 
     override fun getText() = "Pipeline"
     override fun getFamilyName() = text
@@ -28,12 +27,12 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, functionCall.arguments.plus(argument))
+                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, functionCall.arguments.plus(argument))
                     } else {
-                        NoPipes(functionCall)
+                        Context.NoPipes(functionCall)
                     }
                 } else {
-                    NoPipes(functionCall)
+                    Context.NoPipes(functionCall)
                 }
             }
             else -> {
@@ -45,7 +44,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     override fun invoke(project: Project, editor: Editor, context: Context) {
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
-                is NoPipes -> {
+                is Context.NoPipes -> {
                     if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
                         val last = context.functionCall.arguments.last()
                         last.delete()
@@ -57,13 +56,12 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     }
                 }
 
-                is HasRightPipes -> {
+                is Context.HasRightPipes -> {
                     val functionCallWithNoPipes = ElmPsiFactory(project)
                             .createParens(sequenceOf(context.functionCall.target).plus(context.arguments)
                             .map { it.text }.joinToString(separator = " "))
                     context.functionCall.parent.replace(functionCallWithNoPipes)
                 }
-
             }
         }
     }
@@ -81,17 +79,10 @@ fun splitArgAndFunctionApplications (nestedFunctionCall : ElmFunctionCallExpr): 
             processArgument(nestedFunctionCall.arguments.last()).plus(nestedFunctionCall.target.text)
         }
         else -> {
-
-
             val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
                     .joinToString(separator = " ")
 
-            processArgument(nestedFunctionCall.arguments.last()).plus(
-                    joinToString
-
-//                    nestedFunctionCall.target.text +
-//                    " " + nestedFunctionCall.arguments.first().text
-            )
+            processArgument(nestedFunctionCall.arguments.last()).plus(joinToString)
         }
 
     }
