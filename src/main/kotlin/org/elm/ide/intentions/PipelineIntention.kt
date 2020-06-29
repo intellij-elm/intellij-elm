@@ -51,21 +51,22 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             when (context) {
                 is Context.NoPipes -> {
                     if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
-                        val last = context.functionCall.arguments.last()
-                        last.delete()
-                        val thing = ElmPsiFactory(project).createPipe(last.text, context.functionCall.text)
-                        context.functionCall.replace(thing)
+                        val lastArgument = context.functionCall.arguments.last()
+                        lastArgument.delete()
+                        val rewrittenWithPipes = ElmPsiFactory(project).createPipe(lastArgument.text, context.functionCall.text)
+                        context.functionCall.replace(rewrittenWithPipes)
                     } else {
-                        val thing = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall))
-                        context.functionCall.replace(thing)
+                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall))
+                        context.functionCall.replace(rewrittenWithPipes)
                     }
                 }
 
                 is Context.HasRightPipes -> {
-                    val functionCallWithNoPipes = ElmPsiFactory(project)
-                            .createParens(sequenceOf(context.functionCall.target).plus(context.arguments)
+                    val rewrittenWithoutPipes = ElmPsiFactory(project).createParens(
+                            sequenceOf(context.functionCall.target)
+                                    .plus(context.arguments)
                                     .map { it.text }.joinToString(separator = " "))
-                    context.functionCall.parent.replace(functionCallWithNoPipes)
+                    context.functionCall.parent.replace(rewrittenWithoutPipes)
                 }
             }
 
