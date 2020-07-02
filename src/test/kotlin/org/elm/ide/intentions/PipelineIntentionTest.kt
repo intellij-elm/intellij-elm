@@ -153,4 +153,28 @@ value =
 
 """)
 
+
+    fun `test example from elm-spa-example`() = doAvailableTest(
+            """
+module Foo exposing (fetch)
+
+fetch : Maybe Cred -> Slug -> Http.Request (Article Full)
+fetch maybeCred articleSlug =
+    Decode.f{-caret-}ield "article" (fullDecoder maybeCred)
+        |> Api.get (Endpoint.article articleSlug) maybeCred
+
+""", """
+module Foo exposing (fetch)
+
+fetch : Maybe Cred -> Slug -> Http.Request (Article Full)
+fetch maybeCred articleSlug =
+    (maybeCred
+    |> fullDecoder
+    |> Decode.field "article"
+
+        )
+        |> Api.get (Endpoint.article articleSlug) maybeCred
+
+""")
+
 }

@@ -124,7 +124,7 @@ private fun processArgument(argument: ElmAtomTag): List<String> {
     return if (singleArgument is ElmFunctionCallExpr) {
         splitArgAndFunctionApplications(singleArgument)
     } else {
-        listOf()
+        listOf(singleArgument.text)
     }
 }
 
