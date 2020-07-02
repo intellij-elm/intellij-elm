@@ -15,7 +15,7 @@ import org.elm.workspace.elmToolchain
 /**
  * An intention action that transforms a series of function applications to/from a pipeline.
  */
-class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Context>() {
+class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
     sealed class Context {
         data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
