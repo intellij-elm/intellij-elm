@@ -18,11 +18,10 @@ import org.elm.workspace.elmToolchain
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
     sealed class Context {
-        data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
         data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>) : Context()
     }
 
-    override fun getText() = "Pipeline"
+    override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
@@ -34,10 +33,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
                         Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, functionCall.arguments.plus(argument))
                     } else {
-                        Context.NoPipes(functionCall)
+                        null
                     }
                 } else {
-                    Context.NoPipes(functionCall)
+                    null
                 }
             }
             else -> {
@@ -49,18 +48,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun invoke(project: Project, editor: Editor, context: Context) {
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
-                is Context.NoPipes -> {
-                    if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
-                        val lastArgument = context.functionCall.arguments.last()
-                        lastArgument.delete()
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipe(lastArgument.text, context.functionCall.text)
-                        context.functionCall.replace(rewrittenWithPipes)
-                    } else {
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall))
-                        context.functionCall.replace(rewrittenWithPipes)
-                    }
-                }
-
                 is Context.HasRightPipes -> {
                     val rewrittenWithoutPipes = ElmPsiFactory(project).createParens(
                             sequenceOf(context.functionCall.target)

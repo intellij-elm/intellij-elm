@@ -22,7 +22,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>) : Context()
     }
 
-    override fun getText() = "Pipeline"
+    override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {

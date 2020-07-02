@@ -162,4 +162,25 @@ fetch maybeCred articleSlug =
 
 """)
 
+
+    fun `test example2 from elm-spa-example`() = doAvailableTest(
+            """
+module Foo exposing (decoder)
+
+decoder =
+    Decode.suc{-caret-}ceed Viewer
+        |> custom (Decode.field "image" Avatar.decoder)
+
+""", """
+module Foo exposing (decoder)
+
+decoder =
+    (Viewer
+    |> Decode.succeed
+
+        )
+        |> custom (Decode.field "image" Avatar.decoder)
+
+""")
+
 }
