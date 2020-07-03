@@ -129,6 +129,17 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = ($text)")
                     ?: error("Invalid value Paren Expression: `($text)`")
 
+    fun createParensNew(expressions: Collection<PsiElement>): ElmParenthesizedExpr {
+        val first = expressions.first()
+        val rest = expressions.drop(1)
+        if (rest.isEmpty()) {
+            return createParens(first.text)
+        } else {
+            return createParens(first.text + " " + createParensNew(rest).text)
+        }
+
+    }
+
     fun createStringConstant(text: String): ElmStringConstantExpr =
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")

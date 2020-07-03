@@ -30,14 +30,16 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, sequenceOf(argument), false)
+                        val arguments = functionCall.prevSiblings.withoutWsOrComments.filter { it !is ElmOperator }
+                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, arguments, false)
                     } else {
                         null
                     }
                 } else if (functionCall.nextSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.nextSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, sequenceOf(argument), true)
+                        val arguments = functionCall.nextSiblings.withoutWsOrComments.filter { it !is ElmOperator }
+                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, arguments, true)
                     } else {
                         null
                     }
@@ -64,8 +66,9 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     )
                     val rewrittenWithoutPipes1 =
                                     context.arguments
-                                    .plus(createParens)
+//                                    .plus(createParens)
                                     .toList()
+//                    val correctSubExpression = ElmPsiFactory(project).createParens(context.arguments.toList().map { it.text }.joinToString(separator = " ")).text
 
                     val rewrittenWithoutPipes =
                             ElmPsiFactory(project).createParens(
@@ -80,8 +83,28 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                     .joinToString(separator = " ")
 
                     )
+                    val rewrittenWithoutPipesNew = ElmPsiFactory(project).createParensNew(
+                            sequenceOf(createParens)
+//                                    .plus(context.arguments)
+                                    .plus(
 
-                    context.functionCall.parent.replace(rewrittenWithoutPipes)
+                                            if (context.forward) {
+                                                rewrittenWithoutPipes1
+                                            } else {
+                                                rewrittenWithoutPipes1 // .reversed()
+
+                                            }
+                                    )
+                                    .toList()
+                    )
+                    val newThing =
+                            if (context.forward) {
+                                ElmPsiFactory(project).createParensNew(context.arguments.plus(createParens).toList())
+                            } else {
+                                ElmPsiFactory(project).createParensNew(sequenceOf(createParens).plus(context.arguments).toList())
+                            }
+
+                    context.functionCall.parent.replace(newThing)
                 }
             }
 
