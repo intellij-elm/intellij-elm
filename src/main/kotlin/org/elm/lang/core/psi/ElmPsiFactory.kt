@@ -129,10 +129,10 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = ($text)")
                     ?: error("Invalid value Paren Expression: `($text)`")
 
-    fun createParensNew(expressions: Collection<PsiElement>): ElmParenthesizedExpr {
+    fun createParensNew(expressions: Sequence<PsiElement>): ElmParenthesizedExpr {
         val first = expressions.first()
         val rest = expressions.drop(1)
-        if (rest.isEmpty()) {
+        if (rest.count() == 0) {
             return createParens(first.text)
         } else {
             return createParens(first.text + " " + createParensNew(rest).text)

@@ -67,9 +67,9 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
                     val newThing =
                             if (context.forward) {
-                                ElmPsiFactory(project).createParensNew(context.arguments.plus(createParens).toList())
+                                ElmPsiFactory(project).createParensNew(context.arguments.plus(createParens))
                             } else {
-                                ElmPsiFactory(project).createParensNew(sequenceOf(createParens).plus(context.arguments).toList())
+                                ElmPsiFactory(project).createParensNew(sequenceOf(createParens).plus(context.arguments))
                             }
 
                     context.functionCall.parent.replace(newThing)
