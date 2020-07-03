@@ -64,39 +64,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                     .toList()
                                     .joinToString(separator = " ")
                     )
-                    val rewrittenWithoutPipes1 =
-                                    context.arguments
-//                                    .plus(createParens)
-                                    .toList()
-//                    val correctSubExpression = ElmPsiFactory(project).createParens(context.arguments.toList().map { it.text }.joinToString(separator = " ")).text
 
-                    val rewrittenWithoutPipes =
-                            ElmPsiFactory(project).createParens(
-                                    (
-                                            if (context.forward) {
-                                                rewrittenWithoutPipes1
-                                            } else {
-                                                rewrittenWithoutPipes1.reversed()
-
-                                            }
-                                            ).map { it.text }
-                                    .joinToString(separator = " ")
-
-                    )
-                    val rewrittenWithoutPipesNew = ElmPsiFactory(project).createParensNew(
-                            sequenceOf(createParens)
-//                                    .plus(context.arguments)
-                                    .plus(
-
-                                            if (context.forward) {
-                                                rewrittenWithoutPipes1
-                                            } else {
-                                                rewrittenWithoutPipes1 // .reversed()
-
-                                            }
-                                    )
-                                    .toList()
-                    )
                     val newThing =
                             if (context.forward) {
                                 ElmPsiFactory(project).createParensNew(context.arguments.plus(createParens).toList())
