@@ -18,7 +18,7 @@ import org.elm.workspace.elmToolchain
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
     sealed class Context {
-        data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>) : Context()
+        data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>, val forward: Boolean) : Context()
     }
 
     override fun getText() = "Remove Pipes"
@@ -28,10 +28,16 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
             is ElmFunctionCallExpr -> {
                 if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
-
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, functionCall.arguments.plus(argument))
+                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, sequenceOf(argument), false)
+                    } else {
+                        null
+                    }
+                } else if (functionCall.nextSiblings.withoutWsOrComments.toList().size >= 2) {
+                    val (prev1, argument) = functionCall.nextSiblings.withoutWsOrComments.toList()
+                    if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
+                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, sequenceOf(argument), true)
                     } else {
                         null
                     }
@@ -49,17 +55,39 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
-                    val rewrittenWithoutPipes = ElmPsiFactory(project).createParens(
-                            sequenceOf(context.functionCall.target)
-                                    .plus(context.arguments)
-                                    .map { it.text }.joinToString(separator = " "))
+                    val createParens = ElmPsiFactory(project).createParens(
+                            listOf(context.functionCall.target)
+                                    .plus(context.functionCall.arguments)
+                                    .map { it.text }
+                                    .toList()
+                                    .joinToString(separator = " ")
+                    )
+                    val rewrittenWithoutPipes1 =
+                                    context.arguments
+                                    .plus(createParens)
+                                    .toList()
+
+                    val rewrittenWithoutPipes =
+                            ElmPsiFactory(project).createParens(
+                                    (
+                                            if (context.forward) {
+                                                rewrittenWithoutPipes1
+                                            } else {
+                                                rewrittenWithoutPipes1.reversed()
+
+                                            }
+                                            ).map { it.text }
+                                    .joinToString(separator = " ")
+
+                    )
+
                     context.functionCall.parent.replace(rewrittenWithoutPipes)
                 }
             }
 
-            if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
-                tryElmFormat(project, editor)
-            }
+//            if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
+//                tryElmFormat(project, editor)
+//            }
         }
     }
 
