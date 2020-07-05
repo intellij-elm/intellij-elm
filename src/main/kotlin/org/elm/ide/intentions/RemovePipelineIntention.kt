@@ -30,7 +30,15 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        val arguments = functionCall.prevSiblings.withoutWsOrComments.filter { it !is ElmOperator }
+                        var arguments = functionCall.prevSiblings.withoutWsOrComments.filter {
+                            !(it is ElmOperator && it.referenceName.equals("|>"))
+                        }
+                        if (arguments.count() == 3) {
+                            val psiElement = arguments.toList()[1]
+                            if (psiElement is ElmOperator && psiElement.referenceName.equals("::")) {
+                                arguments = arguments.toList().reversed().asSequence()
+                            }
+                        }
                         Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, arguments, false)
                     } else {
                         null
@@ -38,7 +46,9 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 } else if (functionCall.nextSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.nextSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        val arguments = functionCall.nextSiblings.withoutWsOrComments.filter { it !is ElmOperator }
+                        val arguments = functionCall.nextSiblings.withoutWsOrComments.filter {
+                            !(it is ElmOperator && it.referenceName.equals("|>"))
+                        }
                         Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, arguments, true)
                     } else {
                         null
@@ -71,14 +81,30 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                             } else {
                                 ElmPsiFactory(project).createParensNew(sequenceOf(createParens).plus(context.arguments))
                             }
+                    val newNewThingForward = ElmPsiFactory(project)
+                            .createParensNew(
+                                            sequenceOf(ElmPsiFactory(project)
+                                            .createParens(context.arguments.toList().map { it.text }.reversed().joinToString(separator = " ")))
+                                                    .plus(sequenceOf(createParens))
+                            )
+                    val newNewThingReverse = ElmPsiFactory(project)
+                            .createParensNew(sequenceOf(createParens)
+                                .plus(ElmPsiFactory(project)
+                                        .createParens(context.arguments.toList().map { it.text }.joinToString(separator = " "))
+                            ))
+                    val newNewThing = if (context.forward) {
+                        newNewThingForward
+                    } else {
+                        newNewThingReverse
+                    }
 
-                    context.functionCall.parent.replace(newThing)
+                    context.functionCall.parent.replace(newNewThing)
                 }
             }
 
-//            if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
-//                tryElmFormat(project, editor)
-//            }
+            if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
+                tryElmFormat(project, editor)
+            }
         }
     }
 

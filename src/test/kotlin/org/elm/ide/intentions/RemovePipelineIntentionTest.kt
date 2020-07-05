@@ -14,7 +14,7 @@ times2 m n = m * n
 """, """
 module Foo exposing (list)
 
-list = ((List.map times2) ([1, 2, 3, 4]))
+list = ((List.map times2) (([1, 2, 3, 4])))
 
 times2 m n = m * n
 """)
@@ -31,7 +31,7 @@ value =
 module Foo exposing (value)
 
 value =
-    (updateWith (Editor (Just slug)) GotEditorMsg model ((Editor.initEdit session slug)))
+    ((updateWith (Editor (Just slug)) GotEditorMsg model) ((Editor.initEdit session slug)))
 """)
 
     fun `test remove pipeline example 2 from elm-spa`() = doAvailableTest(
@@ -46,6 +46,22 @@ value msg =
 module Foo exposing (value)
 
 value msg =
-    ((stopPropagationOn "click") (Decode.succeed (( msg, True ))))
+    ((stopPropagationOn "click") ((Decode.succeed ( msg, True ))))
 """)
+
+    fun `test remove pipeline example 3 from elm-spa`() = doAvailableTest(
+            """
+module Foo exposing (toggleFavoriteButton)
+
+toggleFavoriteButton classStr msg attrs kids =
+    i [ class "ion-heart" ] []
+        :: kids
+        |> Html.but{-caret-}ton (class classStr :: onClickStopPropagation msg :: attrs)
+""", """
+module Foo exposing (toggleFavoriteButton)
+
+toggleFavoriteButton classStr msg attrs kids =
+    ((Html.button (class classStr :: onClickStopPropagation msg :: attrs)) ((i [ class "ion-heart" ] [] :: kids)))
+""")
+
 }
