@@ -18,7 +18,7 @@ import org.elm.workspace.elmToolchain
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
     sealed class Context {
-        data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>, val forward: Boolean) : Context()
+        data class HasRightPipes(val functionCall: ElmFunctionCallExpr) : Context()
     }
 
     override fun getText() = "Remove Pipes"
@@ -76,26 +76,14 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        var arguments = functionCall.prevSiblings.withoutWsOrComments.filter {
-                            !(it is ElmOperator && it.referenceName.equals("|>"))
-                        }
-                        if (arguments.count() == 3) {
-                            val psiElement = arguments.toList()[1]
-                            if (psiElement is ElmOperator && psiElement.referenceName.equals("::")) {
-                                arguments = arguments.toList().reversed().asSequence()
-                            }
-                        }
-                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, arguments, false)
+                        Context.HasRightPipes(functionCall)
                     } else {
                         null
                     }
                 } else if (functionCall.nextSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.nextSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        val arguments = functionCall.nextSiblings.withoutWsOrComments.filter {
-                            !(it is ElmOperator && it.referenceName.equals("|>"))
-                        }
-                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, arguments, true)
+                        Context.HasRightPipes(functionCall)
                     } else {
                         null
                     }
