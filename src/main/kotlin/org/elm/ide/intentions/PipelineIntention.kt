@@ -19,7 +19,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     sealed class Context {
         data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
-        data class HasRightPipes(val functionCall: ElmFunctionCallExpr, val target: ElmFunctionCallTargetTag, val arguments: Sequence<PsiElement>) : Context()
     }
 
     override fun getText() = "Use pipeline of |>"
@@ -32,7 +31,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        Context.HasRightPipes(functionCall, functionCall.target as ElmFunctionCallTargetTag, functionCall.arguments.plus(argument))
+                        null
                     } else {
                         Context.NoPipes(functionCall)
                     }
@@ -59,14 +58,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall))
                         context.functionCall.replace(rewrittenWithPipes)
                     }
-                }
-
-                is Context.HasRightPipes -> {
-                    val rewrittenWithoutPipes = ElmPsiFactory(project).createParens(
-                            sequenceOf(context.functionCall.target)
-                                    .plus(context.arguments)
-                                    .map { it.text }.joinToString(separator = " "))
-                    context.functionCall.parent.replace(rewrittenWithoutPipes)
                 }
             }
 
