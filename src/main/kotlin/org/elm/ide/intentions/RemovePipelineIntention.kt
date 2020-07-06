@@ -113,40 +113,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
-                    val rewrittenWithoutPipelines = findAndNormalize(context.functionCall, project)?.originalElement
-
-                    val createParens = ElmPsiFactory(project).createParens(
-                            listOf(context.functionCall.target)
-                                    .plus(context.functionCall.arguments)
-                                    .map { it.text }
-                                    .toList()
-                                    .joinToString(separator = " ")
-                    )
-
-                    val newThing =
-                            if (context.forward) {
-                                ElmPsiFactory(project).createParensNew(context.arguments.plus(createParens))
-                            } else {
-                                ElmPsiFactory(project).createParensNew(sequenceOf(createParens).plus(context.arguments))
-                            }
-                    val newNewThingForward = ElmPsiFactory(project)
-                            .createParensNew(
-                                            sequenceOf(ElmPsiFactory(project)
-                                            .createParens(context.arguments.toList().map { it.text }.reversed().joinToString(separator = " ")))
-                                                    .plus(sequenceOf(createParens))
-                            )
-                    val newNewThingReverse = ElmPsiFactory(project)
-                            .createParensNew(sequenceOf(createParens)
-                                .plus(ElmPsiFactory(project)
-                                        .createParens(context.arguments.toList().map { it.text }.joinToString(separator = " "))
-                            ))
-                    val newNewThing = if (context.forward) {
-                        newNewThingForward
-                    } else {
-                        newNewThingReverse
-                    }
-
-                    context.functionCall.parent.replace(rewrittenWithoutPipelines!!)
+                    context.functionCall.parent.replace(findAndNormalize(context.functionCall, project)?.originalElement!!)
                 }
             }
 
