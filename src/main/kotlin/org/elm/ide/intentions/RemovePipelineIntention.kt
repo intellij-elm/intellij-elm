@@ -24,11 +24,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
-    private fun findPipeline(element: PsiElement): ElmBinOpExpr? {
-        val firstOrNull = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
-        return firstOrNull
-    }
-
     private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
         var soFar: ElmParenthesizedExpr? = null
         var unprocessed = originalPipeline
