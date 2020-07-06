@@ -24,9 +24,55 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
+    private fun findPipeline(element: PsiElement): ElmBinOpExpr? {
+        val firstOrNull = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
+        return firstOrNull
+    }
+
+    private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
+        var soFar: ElmParenthesizedExpr? = null
+        var unprocessed = originalPipeline
+        while (true)  {
+            val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
+            unprocessed = unprocessed.drop(takeWhile.size + 1)
+            if (soFar == null) {
+                soFar = ElmPsiFactory(project).createParens(
+                        takeWhile
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
+                )
+            } else {
+                soFar = ElmPsiFactory(project).callFunctionWithArgument(
+                        takeWhile
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
+                        , soFar
+                )
+
+            }
+
+            if (takeWhile.isEmpty() || unprocessed.isEmpty()) {
+                return soFar!!
+            }
+
+        }
+    }
+
+    private fun findAndNormalize(element: PsiElement, project: Project): ElmPsiElement? {
+        val parts = findPipeline(element)?.parts
+        return if (parts != null) {
+            normalizePipeline(parts.toList(), project)
+        } else {
+            null
+        }
+    }
+
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
             is ElmFunctionCallExpr -> {
+
                 if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
                     if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
@@ -67,6 +113,8 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
+                    val rewrittenWithoutPipelines = findAndNormalize(context.functionCall, project)?.originalElement
+
                     val createParens = ElmPsiFactory(project).createParens(
                             listOf(context.functionCall.target)
                                     .plus(context.functionCall.arguments)
@@ -98,7 +146,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                         newNewThingReverse
                     }
 
-                    context.functionCall.parent.replace(newNewThing)
+                    context.functionCall.parent.replace(rewrittenWithoutPipelines!!)
                 }
             }
 
