@@ -183,4 +183,22 @@ decoder =
 
 """)
 
+    fun `test split pipeline with a list as last argument`() = doAvailableTest(
+            """
+module Foo exposing (foobar)
+
+foobar =
+    iden{-caret-}tity [ negate 1 ]
+
+""", """
+module Foo exposing (foobar)
+
+foobar =
+    ([ negate 1 ]
+    |> identity
+
+        )
+
+""")
+
 }
