@@ -54,19 +54,14 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             }
 
             if (takeWhile.isEmpty() || unprocessed.isEmpty()) {
-                return soFar!!
+                return soFar
             }
 
         }
     }
 
-    private fun findAndNormalize(element: PsiElement, project: Project): ElmPsiElement? {
-        val parts = findPipeline(element)?.parts
-        return if (parts != null) {
-            normalizePipeline(parts.toList(), project)
-        } else {
-            null
-        }
+    private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmPsiElement {
+        return normalizePipeline(element.parts.toList(), project)
     }
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
@@ -89,7 +84,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
-                    context.functionCall.replace(findAndNormalize(context.functionCall, project)?.originalElement!!)
+                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
                 }
             }
 
