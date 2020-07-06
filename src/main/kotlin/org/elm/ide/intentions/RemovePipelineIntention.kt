@@ -18,7 +18,7 @@ import org.elm.workspace.elmToolchain
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
     sealed class Context {
-        data class HasRightPipes(val functionCall: ElmFunctionCallExpr) : Context()
+        data class HasRightPipes(val functionCall: ElmBinOpExpr) : Context()
     }
 
     override fun getText() = "Remove Pipes"
@@ -70,28 +70,16 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     }
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-        return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
-            is ElmFunctionCallExpr -> {
 
-                if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
-                    val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
-                    if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        Context.HasRightPipes(functionCall)
-                    } else {
-                        null
-                    }
-                } else if (functionCall.nextSiblings.withoutWsOrComments.toList().size >= 2) {
-                    val (prev1, argument) = functionCall.nextSiblings.withoutWsOrComments.toList()
-                    if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        Context.HasRightPipes(functionCall)
-                    } else {
-                        null
-                    }
-                } else {
-                    null
-                }
-            }
-            else -> {
+        val firstOrNull = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
+
+        return if (firstOrNull == null) {
+            null
+        } else {
+            val hasRightPipe = firstOrNull.parts.any { it is ElmOperator && it.referenceName == "|>" }
+            if (hasRightPipe) {
+                Context.HasRightPipes(firstOrNull)
+            } else {
                 null
             }
         }
@@ -101,7 +89,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
-                    context.functionCall.parent.replace(findAndNormalize(context.functionCall, project)?.originalElement!!)
+                    context.functionCall.replace(findAndNormalize(context.functionCall, project)?.originalElement!!)
                 }
             }
 
