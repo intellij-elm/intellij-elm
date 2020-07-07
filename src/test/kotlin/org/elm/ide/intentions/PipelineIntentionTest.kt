@@ -156,9 +156,9 @@ fetch maybeCred articleSlug =
     (maybeCred
     |> fullDecoder
     |> Decode.field "article"
+    |> Api.get (Endpoint.article articleSlug) maybeCred
 
         )
-        |> Api.get (Endpoint.article articleSlug) maybeCred
 
 """)
 
@@ -177,9 +177,9 @@ module Foo exposing (decoder)
 decoder =
     (Viewer
     |> Decode.succeed
+    |> custom (Decode.field "image" Avatar.decoder)
 
         )
-        |> custom (Decode.field "image" Avatar.decoder)
 
 """)
 
@@ -199,6 +199,25 @@ foobar =
 
         )
 
+""")
+
+    fun `test to full pipeline from partial pipeline`() = doAvailableTest(
+            """
+module Foo exposing (initForm)
+
+initForm =
+    Api.g{-caret-}et Endpoint.user (Session.cred session) (Decode.field "user" formDecoder)
+            |> Http.send CompletedFormLoad
+""", """
+module Foo exposing (initForm)
+
+initForm =
+    (formDecoder
+    |> Decode.field "user"
+    |> Api.get Endpoint.user (Session.cred session)
+    |> Http.send CompletedFormLoad
+
+        )
 """)
 
 }

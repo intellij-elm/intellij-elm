@@ -19,14 +19,33 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     sealed class Context {
         data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
+        data class HasRightPipes(val pipelineExpression: ElmBinOpExpr) : Context()
     }
 
     override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
+
+        val firstOrNull = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
+
+        return if (firstOrNull == null) {
+            previousContextGatherer(element)
+        } else {
+            val hasRightPipe = firstOrNull.parts.any { it is ElmOperator && it.referenceName == "|>" }
+            if (hasRightPipe) {
+                Context.HasRightPipes(firstOrNull)
+            } else {
+                previousContextGatherer(element)
+            }
+        }
+    }
+
+    private fun previousContextGatherer(element: PsiElement): Context.NoPipes? {
         return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
             is ElmFunctionCallExpr -> {
+
+
                 if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
 
                     val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
@@ -59,12 +78,43 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         context.functionCall.replace(rewrittenWithPipes)
                     }
                 }
+                is Context.HasRightPipes -> {
+                    val segments = pipelineSegments(context.pipelineExpression).drop(1)
+                    val firstPartRewrittenWithPipeline = ElmPsiFactory(project).createPipeChain(
+                            splitArgAndFunctionApplications(context.pipelineExpression.parts.toList().first() as ElmFunctionCallExpr)
+                                    .plus(segments)
+                    )
+
+
+                    context.pipelineExpression.replace(firstPartRewrittenWithPipeline)
+                }
             }
 
             if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
                 tryElmFormat(project, editor)
             }
         }
+    }
+
+    private fun pipelineSegments(originalPipeline: ElmBinOpExpr): List<String> {
+        var segments: List<String> = emptyList()
+        var unprocessed = originalPipeline.parts
+        while (true)  {
+            val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
+            unprocessed = unprocessed.drop(takeWhile.count() + 1)
+                val nextToAdd =
+                        takeWhile
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
+                segments = segments.plus(nextToAdd)
+
+            if (takeWhile.count() == 0 || unprocessed.count() == 0) {
+                return segments
+            }
+
+        }
+//        originalPipeline.parts.fold({ })
     }
 
     private fun tryElmFormat(project: Project, editor: Editor) {
@@ -128,4 +178,35 @@ private fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {
         }
     }
 
+}
+
+private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
+    var soFar: ElmParenthesizedExpr? = null
+    var unprocessed = originalPipeline
+    while (true)  {
+        val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
+        unprocessed = unprocessed.drop(takeWhile.size + 1)
+        if (soFar == null) {
+            soFar = ElmPsiFactory(project).createParens(
+                    takeWhile
+                            .map { it.text }
+                            .toList()
+                            .joinToString(separator = " ")
+            )
+        } else {
+            soFar = ElmPsiFactory(project).callFunctionWithArgument(
+                    takeWhile
+                            .map { it.text }
+                            .toList()
+                            .joinToString(separator = " ")
+                    , soFar
+            )
+
+        }
+
+        if (takeWhile.isEmpty() || unprocessed.isEmpty()) {
+            return soFar
+        }
+
+    }
 }
