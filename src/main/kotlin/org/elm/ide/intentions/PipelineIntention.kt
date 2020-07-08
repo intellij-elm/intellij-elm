@@ -26,8 +26,12 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
+    private fun isRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
+        return (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" })
+    }
+
     private fun isNonNormalizedRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
-        return if (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" }) {
+        return if (isRightPipeline(possiblePipeline)) {
             val firstPart = possiblePipeline
                     .parts
                     .firstOrNull()
@@ -57,8 +61,8 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 }
                 is ElmFunctionCallExpr -> {
                     val parent = it.parent
-                    if (parent is ElmBinOpExpr && isNonNormalizedRightPipeline(parent)) {
-                        Context.HasRightPipes(parent)
+                    if (parent is ElmBinOpExpr && isRightPipeline(parent)) {
+                        null
                     } else {
                         if (it.arguments.count() > 0) {
                             Context.NoPipes(it)

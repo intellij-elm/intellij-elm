@@ -302,4 +302,14 @@ decoder =
         |> Decode.map Profile
 """)
 
+
+    fun `test not available when already fully piped with lambda`() = doUnavailableTest(
+            """
+module Foo exposing (decoder)
+
+decoder : Decoder Profile
+decoder =
+    Viewer.decoder
+        |> Api.{-caret-}viewerChanges (\maybeViewer -> toMsg (fromViewer key maybeViewer))
+""")
 }
