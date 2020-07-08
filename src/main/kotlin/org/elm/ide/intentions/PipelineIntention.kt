@@ -91,7 +91,9 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val rewrittenWithPipes = ElmPsiFactory(project).createPipe(lastArgument.text, context.functionCall.text)
                         context.functionCall.replace(rewrittenWithPipes)
                     } else {
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall))
+                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall)
+                                .map { "($it)"}
+                        )
                         context.functionCall.replace(rewrittenWithPipes)
                     }
                 }

@@ -59,11 +59,11 @@ module Foo exposing (value)
 
 import Html
 
-value = (123.45
-    |> floor
-    |> String.fromInt
-    |> Html.text
-    |> List.singleton
+value = ((123.45)
+    |> (floor)
+    |> (String.fromInt)
+    |> (Html.text)
+    |> (List.singleton)
 
         )
 """)
@@ -81,11 +81,11 @@ module Foo exposing (value)
 
 import Html
 
-value = (123.45
-    |> floor
-    |> String.fromInt
-    |> Html.text
-    |> List.singleton
+value = ((123.45)
+    |> (floor)
+    |> (String.fromInt)
+    |> (Html.text)
+    |> (List.singleton)
 
         )
 """)
@@ -104,9 +104,9 @@ module Foo exposing (value)
 
 
 value =
-    ([ 1, 2, 3, 4 ]
-    |> List.map times2
-    |> List.map String.fromInt
+    (([ 1, 2, 3, 4 ])
+    |> (List.map times2)
+    |> (List.map String.fromInt)
 
         )
 
@@ -128,11 +128,11 @@ value =
 module Foo exposing (value)
 
 value =
-    (42
-    |> clamp 1 100
-    |> String.fromInt
-    |> List.singleton
-    |> List.singleton
+    ((42)
+    |> (clamp 1 100)
+    |> (String.fromInt)
+    |> (List.singleton)
+    |> (List.singleton)
 
         )
 
@@ -194,8 +194,8 @@ foobar =
 module Foo exposing (foobar)
 
 foobar =
-    ([ negate 1 ]
-    |> identity
+    (([ negate 1 ])
+    |> (identity)
 
         )
 
@@ -285,6 +285,22 @@ initForm =
     (profile
     |> Profile.update subMsg
     |> updateWith (Profile username) GotProfileMsg model
+
+        )
+""")
+
+    fun `test lambda is wrapped in parens when pipelined`() = doAvailableTest(
+            """
+module Foo exposing (urlParser)
+
+urlParser =
+    Url.Parser.cust{-caret-}om "USERNAME" (\str -> Just (Username str))
+""", """
+module Foo exposing (urlParser)
+
+urlParser =
+    ((\str -> Just (Username str))
+    |> (Url.Parser.custom "USERNAME")
 
         )
 """)
