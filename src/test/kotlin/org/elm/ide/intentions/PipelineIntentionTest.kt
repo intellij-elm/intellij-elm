@@ -220,4 +220,53 @@ initForm =
         )
 """)
 
+    fun `test preseves comments`() = doAvailableTest(
+            """
+module Foo exposing (initForm)
+
+initForm =
+    Api.g{-caret-}et Endpoint.user (Session.cred session) (Decode.field "user" formDecoder)
+    -- this is a comment
+            |> Http.send CompletedFormLoad
+""", """
+module Foo exposing (initForm)
+
+initForm =
+    (formDecoder
+    |> Decode.field "user"
+    |> Api.get Endpoint.user (Session.cred session)
+-- this is a comment
+    |> Http.send CompletedFormLoad
+
+        )
+""")
+
+    fun `test preseves multiple comments`() = doAvailableTest(
+            """
+module Foo exposing (initForm)
+
+initForm =
+    (Decode.field "user" formDecoder
+-- comment 1
+    |> Api.get Endpoint.user (Session.cred session)
+-- comment 2
+    |> H{-caret-}ttp.send CompletedFormLoad
+-- comment 3
+
+        )
+""", """
+module Foo exposing (initForm)
+
+initForm =
+    ((formDecoder
+    |> Decode.field "user"
+-- comment 1
+    |> Api.get Endpoint.user (Session.cred session) -- comment 2
+    |> Http.send CompletedFormLoad
+
+        )
+-- comment 3
+
+        )
+""")
 }

@@ -1,6 +1,8 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.*
 
 
@@ -24,4 +26,5 @@ class ElmBinOpExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmExpressionTag {
      * [ElmFunctionCallExpr] followed by [ElmOperator] followed by [ElmAtomTag].
      */
     val parts: Sequence<ElmBinOpPartTag> get() = directChildren.filterIsInstance<ElmBinOpPartTag>()
+    val partsWithComments: Sequence<PsiElement> get() = directChildren.filter { it is PsiComment || it is ElmBinOpPartTag }
 }

@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
 import com.intellij.lang.PsiBuilder
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiParserFacade
@@ -118,7 +119,34 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = ($text\n    |> $after\n\n        )")
                     ?: error("Invalid value ElmBinOpExpr: `$text |> $after`")
 
-    fun createPipeChain(valueAndunctionApplications: List<String>): ElmParenthesizedExpr {
+    fun createPipeChain(valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
+        var s2 = ""
+        for ((index, thing) in valueAndunctionApplications.withIndex()) {
+            when (thing) {
+                is String -> {
+                    if (index < (valueAndunctionApplications.count() - 1)) {
+                        s2 += "$thing"
+                    } else {
+                        s2 += "$thing"
+                    }
+                }
+                is PsiComment -> {
+                    s2 += "\n" + thing.text
+                }
+            }
+
+            val next = valueAndunctionApplications.getOrNull(index + 1)
+            val notLast = index < (valueAndunctionApplications.count() - 1)
+            if (notLast && next != null && next !is PsiComment) {
+                s2 += "\n    |> "
+            }
+
+        }
+        return createFromText("f = ($s2\n\n        )")
+                ?: error("Invalid value ElmBinOpExpr: `($s2\n\n        )`")
+    }
+
+    fun createPipeChainWithComments(valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
         val s2 = valueAndunctionApplications.joinToString(separator = "\n    |> ")
         return createFromText("f = ($s2\n\n        )")
                 ?: error("Invalid value ElmBinOpExpr: `($s2\n\n        )`")

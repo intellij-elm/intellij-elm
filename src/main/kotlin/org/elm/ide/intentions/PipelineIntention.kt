@@ -4,6 +4,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.*
@@ -32,7 +33,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         return if (firstOrNull == null) {
             previousContextGatherer(element)
         } else {
-            val hasRightPipe = firstOrNull.parts.any { it is ElmOperator && it.referenceName == "|>" }
+            val hasRightPipe = firstOrNull.partsWithComments.any { it is ElmOperator && it.referenceName == "|>" }
             if (hasRightPipe) {
                 Context.HasRightPipes(firstOrNull)
             } else {
@@ -80,8 +81,18 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 }
                 is Context.HasRightPipes -> {
                     val segments = pipelineSegments(context.pipelineExpression).drop(1)
+                    val comments =
+                            context.pipelineExpression
+                                    .partsWithComments
+                                    .toList()
+                                    .takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
+                                    .filterIsInstance<PsiComment>()
+                    val splitThing =
+                            splitArgAndFunctionApplications(context.pipelineExpression.partsWithComments.toList().first() as ElmFunctionCallExpr)
+                    val splitThingTransformed = splitThing.plus(comments)
+
                     val firstPartRewrittenWithPipeline = ElmPsiFactory(project).createPipeChain(
-                            splitArgAndFunctionApplications(context.pipelineExpression.parts.toList().first() as ElmFunctionCallExpr)
+                            splitThingTransformed
                                     .plus(segments)
                     )
 
@@ -96,9 +107,9 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         }
     }
 
-    private fun pipelineSegments(originalPipeline: ElmBinOpExpr): List<String> {
+    private fun pipelineSegments(originalPipeline: ElmBinOpExpr): List<Any> {
         var segments: List<String> = emptyList()
-        var unprocessed = originalPipeline.parts
+        var unprocessed = originalPipeline.partsWithComments
         while (true)  {
             val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
             unprocessed = unprocessed.drop(takeWhile.count() + 1)
@@ -114,7 +125,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             }
 
         }
-//        originalPipeline.parts.fold({ })
     }
 
     private fun tryElmFormat(project: Project, editor: Editor) {
