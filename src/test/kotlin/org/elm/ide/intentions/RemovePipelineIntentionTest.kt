@@ -64,4 +64,17 @@ toggleFavoriteButton classStr msg attrs kids =
     (Html.button (class classStr :: onClickStopPropagation msg :: attrs) (i [ class "ion-heart" ] [] :: kids))
 """)
 
+    fun `test remove left pipeline`() = doAvailableTest(
+            """
+module Foo exposing (example)
+
+example =
+    flo{-caret-}or <| 1.3 + 4
+""", """
+module Foo exposing (example)
+
+example =
+    (floor (1.3 + 4))
+""")
+
 }

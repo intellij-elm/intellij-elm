@@ -19,6 +19,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
     sealed class Context {
         data class HasRightPipes(val functionCall: ElmBinOpExpr) : Context()
+        data class HasLeftPipes(val functionCall: ElmBinOpExpr) : Context()
     }
 
     override fun getText() = "Remove Pipes"
@@ -55,20 +56,58 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         }
     }
 
+    private fun normalizeLeftPipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
+        var soFar: ElmParenthesizedExpr? = null
+        var unprocessed = originalPipeline.reversed()
+        while (true)  {
+            val currentPipeExpression = unprocessed
+                    .takeWhile { !(it is ElmOperator && it.referenceName == "<|") }
+                    .reversed()
+            unprocessed = unprocessed.drop(currentPipeExpression.size + 1)
+            if (soFar == null) {
+                soFar = ElmPsiFactory(project).createParens(
+                        currentPipeExpression
+
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
+                )
+            } else {
+                soFar = ElmPsiFactory(project).callFunctionWithArgument(
+                        currentPipeExpression
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
+                        , soFar
+                )
+
+            }
+
+            if (currentPipeExpression.isEmpty() || unprocessed.isEmpty()) {
+                return soFar
+            }
+
+        }
+    }
+
     private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmPsiElement {
         return normalizePipeline(element.parts.toList(), project)
     }
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
 
-        val firstOrNull = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
 
-        return if (firstOrNull == null) {
+        val possiblePipeline = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
+
+        return if (possiblePipeline == null) {
             null
         } else {
-            val hasRightPipe = firstOrNull.parts.any { it is ElmOperator && it.referenceName == "|>" }
+            val hasRightPipe = possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" }
+            val hasLeftPipe = possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "<|" }
             if (hasRightPipe) {
-                Context.HasRightPipes(firstOrNull)
+                Context.HasRightPipes(possiblePipeline)
+            } else if (hasLeftPipe) {
+                Context.HasLeftPipes(possiblePipeline)
             } else {
                 null
             }
@@ -80,6 +119,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             when (context) {
                 is Context.HasRightPipes -> {
                     context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
+                }
+                is Context.HasLeftPipes -> {
+                    val normalizedLeftPipeline = normalizeLeftPipeline(context.functionCall.parts.toList(), project)
+                    context.functionCall.replace(normalizedLeftPipeline)
                 }
             }
 
