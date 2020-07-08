@@ -28,7 +28,8 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     private fun isNonNormalizedRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
         return if (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" }) {
-            val argCount = pipelineSegments(possiblePipeline)
+            val argCount = possiblePipeline
+                    .parts
                     .filterIsInstance<ElmFunctionCallExpr>()
                     .firstOrNull()
                     ?.arguments

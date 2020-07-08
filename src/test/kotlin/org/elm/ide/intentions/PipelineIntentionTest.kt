@@ -269,4 +269,25 @@ initForm =
 
         )
 """)
+
+
+    fun `test chain is merged into parent pipeline`() = doAvailableTest(
+            """
+module Foo exposing (initForm)
+
+initForm =
+    Profile.upd{-caret-}ate subMsg profile
+        |> updateWith (Profile username) GotProfileMsg model
+""", """
+module Foo exposing (initForm)
+
+initForm =
+    (profile
+    |> Profile.update subMsg
+    |> updateWith (Profile username) GotProfileMsg model
+
+        )
+""")
+
+
 }
