@@ -26,43 +26,53 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-
-        val firstOrNull = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
-
-        return if (firstOrNull == null) {
-            previousContextGatherer(element)
+    private fun isNonNormalizedRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
+        return if (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" }) {
+            val argCount = pipelineSegments(possiblePipeline)
+                    .filterIsInstance<ElmFunctionCallExpr>()
+                    .firstOrNull()
+                    ?.arguments
+                    ?.count()
+            return ( argCount != null && argCount > 0 )
         } else {
-            val hasRightPipe = firstOrNull.partsWithComments.any { it is ElmOperator && it.referenceName == "|>" }
-            if (hasRightPipe) {
-                Context.HasRightPipes(firstOrNull)
-            } else {
-                previousContextGatherer(element)
-            }
+            false
         }
     }
 
-    private fun previousContextGatherer(element: PsiElement): Context.NoPipes? {
-        return when (val functionCall = element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()) {
-            is ElmFunctionCallExpr -> {
+    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
 
-
-                if (functionCall.prevSiblings.withoutWsOrComments.toList().size >= 2) {
-
-                    val (prev1, argument) = functionCall.prevSiblings.withoutWsOrComments.toList()
-                    if (prev1 is ElmOperator && prev1.referenceName.equals("|>")) {
-                        null
+        // find nearest ancestor (or self) that is
+        // 1) a function call with at least one argument, or
+        // 2) a pipeline that isn't fully piped (first part of the pipe has at least one argument)
+        return element.ancestors.map {
+            when (it) {
+                is ElmBinOpExpr -> {
+                    if (isNonNormalizedRightPipeline(it)) {
+                        Context.HasRightPipes(it)
                     } else {
-                        Context.NoPipes(functionCall)
+                        null
                     }
-                } else {
-                    Context.NoPipes(functionCall)
                 }
-            }
-            else -> {
-                null
+                is ElmFunctionCallExpr -> {
+                    val parent = it.parent
+                    if (parent is ElmBinOpExpr && isNonNormalizedRightPipeline(parent)) {
+                        Context.HasRightPipes(parent)
+                    } else {
+                        if (it.arguments.count() > 0) {
+                            Context.NoPipes(it)
+                        } else {
+                            null
+                        }
+                    }
+                }
+                else -> {
+                    null
+                }
+
             }
         }
+                .filterNotNull()
+                .firstOrNull()
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
@@ -188,35 +198,4 @@ private fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {
         }
     }
 
-}
-
-private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
-    var soFar: ElmParenthesizedExpr? = null
-    var unprocessed = originalPipeline
-    while (true)  {
-        val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
-        unprocessed = unprocessed.drop(takeWhile.size + 1)
-        if (soFar == null) {
-            soFar = ElmPsiFactory(project).createParens(
-                    takeWhile
-                            .map { it.text }
-                            .toList()
-                            .joinToString(separator = " ")
-            )
-        } else {
-            soFar = ElmPsiFactory(project).callFunctionWithArgument(
-                    takeWhile
-                            .map { it.text }
-                            .toList()
-                            .joinToString(separator = " ")
-                    , soFar
-            )
-
-        }
-
-        if (takeWhile.isEmpty() || unprocessed.isEmpty()) {
-            return soFar
-        }
-
-    }
 }
