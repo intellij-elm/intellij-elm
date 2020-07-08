@@ -28,13 +28,14 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     private fun isNonNormalizedRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
         return if (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" }) {
-            val argCount = possiblePipeline
+            val firstPart = possiblePipeline
                     .parts
-                    .filterIsInstance<ElmFunctionCallExpr>()
                     .firstOrNull()
-                    ?.arguments
-                    ?.count()
-            return ( argCount != null && argCount > 0 )
+            if (firstPart is ElmFunctionCallExpr) {
+                firstPart.arguments.count() > 0
+            } else {
+                false
+            }
         } else {
             false
         }
@@ -99,7 +100,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                                     .takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
                                     .filterIsInstance<PsiComment>()
                     val splitThing =
-                            splitArgAndFunctionApplications(context.pipelineExpression.partsWithComments.toList().first() as ElmFunctionCallExpr)
+                            splitArgAndFunctionApplications(context.pipelineExpression.parts.filterIsInstance<ElmFunctionCallExpr>().first())
                     val splitThingTransformed = splitThing.plus(comments)
 
                     val firstPartRewrittenWithPipeline = ElmPsiFactory(project).createPipeChain(

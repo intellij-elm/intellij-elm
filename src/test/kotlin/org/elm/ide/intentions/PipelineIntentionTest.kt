@@ -289,5 +289,17 @@ initForm =
         )
 """)
 
+    fun `test not available when already fully piped`() = doUnavailableTest(
+            """
+module Foo exposing (decoder)
+
+decoder : Decoder Profile
+decoder =
+    Internals
+        |> D{-caret-}ecode.succeed
+        |> required "bio" (Decode.nullable Decode.string)
+        |> required "image" Avatar.decoder
+        |> Decode.map Profile
+""")
 
 }
