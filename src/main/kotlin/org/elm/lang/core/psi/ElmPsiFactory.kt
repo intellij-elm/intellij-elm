@@ -119,7 +119,7 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = ($text\n    |> $after\n\n        )")
                     ?: error("Invalid value ElmBinOpExpr: `$text |> $after`")
 
-    fun createPipeChain(valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
+    fun createPipeChain(existingIndent: String, indent: String, valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
         var s2 = ""
         for ((index, thing) in valueAndunctionApplications.withIndex()) {
             when (thing) {
@@ -131,19 +131,33 @@ class ElmPsiFactory(private val project: Project) {
                     }
                 }
                 is PsiComment -> {
-                    s2 += "\n" + thing.text
+                    s2 += "\n$existingIndent$indent" + thing.text
                 }
             }
 
             val next = valueAndunctionApplications.getOrNull(index + 1)
             val notLast = index < (valueAndunctionApplications.count() - 1)
             if (notLast && next != null && next !is PsiComment) {
-                s2 += "\n    |> "
+                s2 += "\n$existingIndent$indent|> "
             }
 
         }
-        return createFromText("f = ($s2\n\n        )")
-                ?: error("Invalid value ElmBinOpExpr: `($s2\n\n        )`")
+        val thing: ElmParenthesizedExpr? = createFromText("f = ($s2\n$indent)")
+        if (thing != null) {
+            return unwrapParens(thing)
+        } else {
+            return error("Invalid value ElmBinOpExpr: `($s2\n\n$indent)`")
+        }
+    }
+
+    private fun unwrapParens(expression: ElmParenthesizedExpr): ElmParenthesizedExpr {
+        val inner = expression.expression
+        return if (inner is ElmParenthesizedExpr) {
+            unwrapParens(inner)
+        } else {
+            expression
+        }
+
     }
 
     fun createPipeChainWithComments(valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {

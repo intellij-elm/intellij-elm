@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.workspace.commandLineTools.ElmFormatCLI
@@ -86,18 +87,25 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             when (context) {
                 is Context.NoPipes -> {
                     if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
+
                         val lastArgument = context.functionCall.arguments.last()
                         lastArgument.delete()
                         val rewrittenWithPipes = ElmPsiFactory(project).createPipe(lastArgument.text, context.functionCall.text)
                         context.functionCall.replace(rewrittenWithPipes)
                     } else {
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(splitArgAndFunctionApplications(context.functionCall)
+                        val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
+                        val indent = context.functionCall.indentStyle.oneLevelOfIndentation
+
+
+                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall)
                                 .map { "($it)"}
                         )
                         context.functionCall.replace(rewrittenWithPipes)
                     }
                 }
                 is Context.HasRightPipes -> {
+                    val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.startOffset).toString()
+                    val indent = context.pipelineExpression.indentStyle.oneLevelOfIndentation
                     val segments = pipelineSegments(context.pipelineExpression).drop(1)
                     val comments =
                             context.pipelineExpression
@@ -110,6 +118,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     val splitThingTransformed = splitThing.plus(comments)
 
                     val firstPartRewrittenWithPipeline = ElmPsiFactory(project).createPipeChain(
+                            existingIndent, indent,
                             splitThingTransformed
                                     .plus(segments)
                     )
