@@ -125,22 +125,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     context.functionCall.replace(normalizedLeftPipeline)
                 }
             }
-
-            if (project.elmSettings.toolchain.isElmFormatOnSaveEnabled) {
-                tryElmFormat(project, editor)
-            }
-        }
-    }
-
-    private fun tryElmFormat(project: Project, editor: Editor) {
-        PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(editor.document)
-
-        try {
-            val vFile = FileDocumentManager.getInstance().getFile(editor.document)
-            val elmVersion = ElmFormatCLI.getElmVersion(project, vFile!!)
-            val elmFormat = project.elmToolchain.elmFormatCLI
-            elmFormat!!.formatDocumentAndSetText(project, editor.document, elmVersion!!, addToUndoStack = false)
-        } catch (e: Throwable) {
         }
     }
 }
