@@ -64,8 +64,7 @@ value = ((123.45)
     |> (String.fromInt)
     |> (Html.text)
     |> (List.singleton)
-
-        )
+    )
 """)
 
 
@@ -86,8 +85,7 @@ value = ((123.45)
     |> (String.fromInt)
     |> (Html.text)
     |> (List.singleton)
-
-        )
+    )
 """)
 
 
@@ -105,10 +103,9 @@ module Foo exposing (value)
 
 value =
     (([ 1, 2, 3, 4 ])
-    |> (List.map times2)
-    |> (List.map String.fromInt)
-
-        )
+        |> (List.map times2)
+        |> (List.map String.fromInt)
+    )
 
 """)
 
@@ -129,12 +126,11 @@ module Foo exposing (value)
 
 value =
     ((42)
-    |> (clamp 1 100)
-    |> (String.fromInt)
-    |> (List.singleton)
-    |> (List.singleton)
-
-        )
+        |> (clamp 1 100)
+        |> (String.fromInt)
+        |> (List.singleton)
+        |> (List.singleton)
+    )
 
 """)
 
@@ -154,11 +150,10 @@ module Foo exposing (fetch)
 fetch : Maybe Cred -> Slug -> Http.Request (Article Full)
 fetch maybeCred articleSlug =
     (maybeCred
-    |> fullDecoder
-    |> Decode.field "article"
-    |> Api.get (Endpoint.article articleSlug) maybeCred
-
-        )
+        |> fullDecoder
+        |> Decode.field "article"
+        |> Api.get (Endpoint.article articleSlug) maybeCred
+    )
 
 """)
 
@@ -176,10 +171,9 @@ module Foo exposing (decoder)
 
 decoder =
     (Viewer
-    |> Decode.succeed
-    |> custom (Decode.field "image" Avatar.decoder)
-
-        )
+        |> Decode.succeed
+        |> custom (Decode.field "image" Avatar.decoder)
+    )
 
 """)
 
@@ -195,9 +189,8 @@ module Foo exposing (foobar)
 
 foobar =
     (([ negate 1 ])
-    |> (identity)
-
-        )
+        |> (identity)
+    )
 
 """)
 
@@ -213,11 +206,10 @@ module Foo exposing (initForm)
 
 initForm =
     (formDecoder
-    |> Decode.field "user"
-    |> Api.get Endpoint.user (Session.cred session)
-    |> Http.send CompletedFormLoad
-
-        )
+        |> Decode.field "user"
+        |> Api.get Endpoint.user (Session.cred session)
+        |> Http.send CompletedFormLoad
+    )
 """)
 
     fun `test preseves comments`() = doAvailableTest(
@@ -233,12 +225,11 @@ module Foo exposing (initForm)
 
 initForm =
     (formDecoder
-    |> Decode.field "user"
-    |> Api.get Endpoint.user (Session.cred session)
--- this is a comment
-    |> Http.send CompletedFormLoad
-
-        )
+        |> Decode.field "user"
+        |> Api.get Endpoint.user (Session.cred session)
+        -- this is a comment
+        |> Http.send CompletedFormLoad
+    )
 """)
 
     fun `test preseves multiple comments`() = doAvailableTest(
@@ -259,12 +250,11 @@ module Foo exposing (initForm)
 
 initForm =
     ((formDecoder
-    |> Decode.field "user"
--- comment 1
-    |> Api.get Endpoint.user (Session.cred session) -- comment 2
-    |> Http.send CompletedFormLoad
-
-        )
+        |> Decode.field "user"
+        -- comment 1
+        |> Api.get Endpoint.user (Session.cred session) -- comment 2
+        |> Http.send CompletedFormLoad
+    )
 -- comment 3
 
         )
@@ -283,10 +273,9 @@ module Foo exposing (initForm)
 
 initForm =
     (profile
-    |> Profile.update subMsg
-    |> updateWith (Profile username) GotProfileMsg model
-
-        )
+        |> Profile.update subMsg
+        |> updateWith (Profile username) GotProfileMsg model
+    )
 """)
 
     fun `test lambda is wrapped in parens when pipelined`() = doAvailableTest(
@@ -300,9 +289,8 @@ module Foo exposing (urlParser)
 
 urlParser =
     ((\str -> Just (Username str))
-    |> (Url.Parser.custom "USERNAME")
-
-        )
+        |> (Url.Parser.custom "USERNAME")
+    )
 """)
 
     fun `test not available when already fully piped`() = doUnavailableTest(
