@@ -79,13 +79,17 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
+            val psiFactory = ElmPsiFactory(project)
             when (context) {
                 is Context.NoPipes -> {
                     if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
+                        val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
+                        val indent = context.functionCall.indentStyle.oneLevelOfIndentation
 
                         val lastArgument = context.functionCall.arguments.last()
                         lastArgument.delete()
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipe(lastArgument.text, context.functionCall.text)
+                        val rewrittenWithPipes = psiFactory.createPipe(lastArgument.text, context.functionCall.text)
+
                         if (needsParensInParent(context.functionCall)) {
                             context.functionCall.replace(rewrittenWithPipes)
                         } else {
@@ -96,7 +100,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val indent = context.functionCall.indentStyle.oneLevelOfIndentation
 
 
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(existingIndent, needsParensInParent(context.functionCall), indent, splitArgAndFunctionApplications(context.functionCall)
+                        val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, needsParensInParent(context.functionCall), indent, splitArgAndFunctionApplications(context.functionCall)
                         )
 
                         replaceUnwrapped(context.functionCall, rewrittenWithPipes)
@@ -116,7 +120,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                             splitArgAndFunctionApplications(context.pipelineExpression.parts.filterIsInstance<ElmFunctionCallExpr>().first())
                     val splitThingTransformed = splitThing.plus(comments)
 
-                    val firstPartRewrittenWithPipeline = ElmPsiFactory(project).createPipeChain(
+                    val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
                             existingIndent,
                             needsParensInParent(context.pipelineExpression),
                             indent,
