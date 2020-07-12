@@ -25,7 +25,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
-    private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
+    private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
         var soFar: ElmParenthesizedExpr? = null
         var unprocessed = originalPipeline
         while (true)  {
