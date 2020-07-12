@@ -163,8 +163,9 @@ private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthe
 
 private fun needsParensInParent(element: ElmPsiElement): Boolean {
     return when (element.parent) {
-        is ElmValueDeclaration -> false
-        else -> true
+        is ElmBinOpExpr -> true
+        is ElmParenthesizedExpr -> true
+        else -> false
     }
 }
 
