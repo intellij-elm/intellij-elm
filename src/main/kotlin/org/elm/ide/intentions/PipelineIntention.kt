@@ -104,11 +104,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(existingIndent, needsParensInParent(context.functionCall), indent, splitArgAndFunctionApplications(context.functionCall)
                         )
 
-                        if (needsParensInParent(context.functionCall)) {
-                            context.functionCall.replace(rewrittenWithPipes)
-                        } else {
-                            context.functionCall.replace(rewrittenWithPipes.expression!!)
-                        }
+                        replaceUnwrapped(context.functionCall, rewrittenWithPipes)
                     }
                 }
                 is Context.HasRightPipes -> {
@@ -132,16 +128,18 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                             splitThingTransformed
                                     .plus(segments)
                     )
-                    if (needsParensInParent(context.pipelineExpression)) {
-                        context.pipelineExpression.replace(firstPartRewrittenWithPipeline)
-                    } else {
-                        context.pipelineExpression.replace(firstPartRewrittenWithPipeline.expression!!)
-                    }
-
-
+                    replaceUnwrapped(context.pipelineExpression, firstPartRewrittenWithPipeline)
                 }
             }
 
+        }
+    }
+
+    private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
+        if (needsParensInParent(expression)) {
+            expression.replace(replaceWith)
+        } else {
+            expression.replace(replaceWith.expression!!)
         }
     }
 
