@@ -25,19 +25,23 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
-    private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
-        var soFar: ElmParenthesizedExpr? = null
+    private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
+        var soFar: ElmPsiElement? = null
         var unprocessed = originalPipeline
         while (true)  {
             val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
             unprocessed = unprocessed.drop(takeWhile.size + 1)
             if (soFar == null) {
-                soFar = ElmPsiFactory(project).createParens(
-                        takeWhile
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
-                )
+                soFar =
+                        unwrapIfPossible(
+                                ElmPsiFactory(project).createParens(
+                                        takeWhile
+                                                .map { it.text }
+                                                .toList()
+                                                .joinToString(separator = " ")
+
+                                )
+                        )
             } else {
                 soFar = ElmPsiFactory(project).callFunctionWithArgument(
                         takeWhile
@@ -52,8 +56,16 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             if (takeWhile.isEmpty() || unprocessed.isEmpty()) {
                 return soFar
             }
-
         }
+    }
+
+    private fun unwrapIfPossible(element: ElmParenthesizedExpr): ElmPsiElement {
+        return when (element.expression) {
+            is ElmBinOpExpr -> element
+            is ElmFunctionCallExpr -> element
+            else -> element.expression!!
+        }
+
     }
 
     private fun normalizeLeftPipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
@@ -90,7 +102,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         }
     }
 
-    private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmParenthesizedExpr {
+    private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmPsiElement {
         return normalizePipeline(element.parts.toList(), project)
     }
 
@@ -133,7 +145,16 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 }
 
 
-private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
+private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
+    return if (replaceWith is ElmParenthesizedExpr) {
+        replaceUnwrappedHelper(expression, replaceWith)
+    } else {
+        expression.replace(replaceWith)
+        Unit
+
+    }
+}
+private fun replaceUnwrappedHelper(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
     if (needsParensInParent(expression)) {
         expression.replace(replaceWith)
     } else {
