@@ -175,15 +175,9 @@ private fun needsParensInParent(element: ElmPsiElement): Boolean {
 }
 
 private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<String> {
-    if (nestedFunctionCall.arguments.count() == 0) {
-        return listOf(nestedFunctionCall.text)
-    }
     return when (nestedFunctionCall.arguments.count()) {
         0 -> {
             listOf(nestedFunctionCall.target.text)
-        }
-        1 -> {
-            processArgument(nestedFunctionCall.arguments.last()).plus(nestedFunctionCall.target.text)
         }
         else -> {
             val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
@@ -191,9 +185,7 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
 
             processArgument(nestedFunctionCall.arguments.last()).plus(joinToString)
         }
-
     }
-
 }
 
 private fun processArgument(argument: ElmAtomTag): List<String> {
