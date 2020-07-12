@@ -14,10 +14,8 @@ times2 m n = m * n
 """, """
 module Foo exposing (list)
 
-list = ([1, 2, 3, 4]
+list = [1, 2, 3, 4]
     |> List.map times2
-
-        )
 
 times2 m n = m * n
 """)
@@ -59,12 +57,11 @@ module Foo exposing (value)
 
 import Html
 
-value = (123.45
+value = 123.45
     |> floor
     |> String.fromInt
     |> Html.text
     |> List.singleton
-    )
 """)
 
 
@@ -80,12 +77,11 @@ module Foo exposing (value)
 
 import Html
 
-value = (123.45
+value = 123.45
     |> floor
     |> String.fromInt
     |> Html.text
     |> List.singleton
-    )
 """)
 
 
@@ -102,10 +98,9 @@ module Foo exposing (value)
 
 
 value =
-    ([ 1, 2, 3, 4 ]
+    [ 1, 2, 3, 4 ]
         |> List.map times2
         |> List.map String.fromInt
-    )
 
 """)
 
@@ -125,12 +120,11 @@ value =
 module Foo exposing (value)
 
 value =
-    (42
+    42
         |> clamp 1 100
         |> String.fromInt
         |> List.singleton
         |> List.singleton
-    )
 
 """)
 
@@ -149,11 +143,10 @@ module Foo exposing (fetch)
 
 fetch : Maybe Cred -> Slug -> Http.Request (Article Full)
 fetch maybeCred articleSlug =
-    (maybeCred
+    maybeCred
         |> fullDecoder
         |> Decode.field "article"
         |> Api.get (Endpoint.article articleSlug) maybeCred
-    )
 
 """)
 
@@ -170,10 +163,9 @@ decoder =
 module Foo exposing (decoder)
 
 decoder =
-    (Viewer
+    Viewer
         |> Decode.succeed
         |> custom (Decode.field "image" Avatar.decoder)
-    )
 
 """)
 
@@ -188,9 +180,8 @@ foobar =
 module Foo exposing (foobar)
 
 foobar =
-    ([ negate 1 ]
+    [ negate 1 ]
         |> identity
-    )
 
 """)
 
@@ -205,11 +196,10 @@ initForm =
 module Foo exposing (initForm)
 
 initForm =
-    (formDecoder
+    formDecoder
         |> Decode.field "user"
         |> Api.get Endpoint.user (Session.cred session)
         |> Http.send CompletedFormLoad
-    )
 """)
 
     fun `test preseves comments`() = doAvailableTest(
@@ -224,12 +214,11 @@ initForm =
 module Foo exposing (initForm)
 
 initForm =
-    (formDecoder
+    formDecoder
         |> Decode.field "user"
         |> Api.get Endpoint.user (Session.cred session)
         -- this is a comment
         |> Http.send CompletedFormLoad
-    )
 """)
 
     fun `test preseves multiple comments`() = doAvailableTest(
@@ -272,10 +261,9 @@ initForm =
 module Foo exposing (initForm)
 
 initForm =
-    (profile
+    profile
         |> Profile.update subMsg
         |> updateWith (Profile username) GotProfileMsg model
-    )
 """)
 
     fun `test lambda is wrapped in parens when pipelined`() = doAvailableTest(
@@ -288,9 +276,8 @@ urlParser =
 module Foo exposing (urlParser)
 
 urlParser =
-    ((\str -> Just (Username str))
+    (\str -> Just (Username str))
         |> Url.Parser.custom "USERNAME"
-    )
 """)
 
     fun `test not available when already fully piped`() = doUnavailableTest(
@@ -327,13 +314,12 @@ value =
 module Foo exposing (value)
 
 value =
-    ((floor <| (123.45 / (toFloat 2)))
+    (floor <| (123.45 / (toFloat 2)))
         |> identity
         |> (\n -> n * 3)
         |> (modBy <| 2)
         |> List.singleton
         |> List.map (\n -> n * 2)
-    )
 """)
 
 }

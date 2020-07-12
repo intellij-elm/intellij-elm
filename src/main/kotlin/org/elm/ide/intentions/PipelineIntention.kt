@@ -91,15 +91,24 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         val lastArgument = context.functionCall.arguments.last()
                         lastArgument.delete()
                         val rewrittenWithPipes = ElmPsiFactory(project).createPipe(lastArgument.text, context.functionCall.text)
-                        context.functionCall.replace(rewrittenWithPipes)
+                        if (needsParensInParent(context.functionCall)) {
+                            context.functionCall.replace(rewrittenWithPipes)
+                        } else {
+                            context.functionCall.replace(rewrittenWithPipes.expression!!)
+                        }
                     } else {
                         val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                         val indent = context.functionCall.indentStyle.oneLevelOfIndentation
 
 
-                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall)
+                        val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(existingIndent, needsParensInParent(context.functionCall), indent, splitArgAndFunctionApplications(context.functionCall)
                         )
-                        context.functionCall.replace(rewrittenWithPipes)
+
+                        if (needsParensInParent(context.functionCall)) {
+                            context.functionCall.replace(rewrittenWithPipes)
+                        } else {
+                            context.functionCall.replace(rewrittenWithPipes.expression!!)
+                        }
                     }
                 }
                 is Context.HasRightPipes -> {
@@ -117,13 +126,19 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     val splitThingTransformed = splitThing.plus(comments)
 
                     val firstPartRewrittenWithPipeline = ElmPsiFactory(project).createPipeChain(
-                            existingIndent, indent,
+                            existingIndent,
+                            needsParensInParent(context.pipelineExpression),
+                            indent,
                             splitThingTransformed
                                     .plus(segments)
                     )
+                    if (needsParensInParent(context.pipelineExpression)) {
+                        context.pipelineExpression.replace(firstPartRewrittenWithPipeline)
+                    } else {
+                        context.pipelineExpression.replace(firstPartRewrittenWithPipeline.expression!!)
+                    }
 
 
-                    context.pipelineExpression.replace(firstPartRewrittenWithPipeline)
                 }
             }
 
@@ -149,6 +164,14 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
         }
     }
+}
+
+private fun needsParensInParent(element: ElmPsiElement): Boolean {
+    return when (element.parent) {
+        is ElmValueDeclaration -> false
+        else -> true
+    }
+
 }
 
 private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<String> {
