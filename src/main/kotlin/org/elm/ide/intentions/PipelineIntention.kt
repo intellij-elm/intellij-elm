@@ -90,11 +90,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                         lastArgument.delete()
                         val rewrittenWithPipes = psiFactory.createPipe(lastArgument.text, context.functionCall.text)
 
-                        if (needsParensInParent(context.functionCall)) {
-                            context.functionCall.replace(rewrittenWithPipes)
-                        } else {
-                            context.functionCall.replace(rewrittenWithPipes.expression!!)
-                        }
+                        replaceUnwrapped(context.functionCall, rewrittenWithPipes)
                     } else {
                         val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                         val indent = context.functionCall.indentStyle.oneLevelOfIndentation
