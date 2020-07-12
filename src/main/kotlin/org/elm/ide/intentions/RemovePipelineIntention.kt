@@ -56,7 +56,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         }
     }
 
-    private fun normalizeLeftPipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
+    private fun normalizeLeftPipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
         var soFar: ElmParenthesizedExpr? = null
         var unprocessed = originalPipeline.reversed()
         while (true)  {
@@ -90,7 +90,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         }
     }
 
-    private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmPsiElement {
+    private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmParenthesizedExpr {
         return normalizePipeline(element.parts.toList(), project)
     }
 
@@ -118,14 +118,34 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
-                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
+//                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
+                    replaceUnwrapped(context.functionCall, findAndNormalize(context.functionCall, project))
+//                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
                 }
                 is Context.HasLeftPipes -> {
                     val normalizedLeftPipeline = normalizeLeftPipeline(context.functionCall.parts.toList(), project)
-                    context.functionCall.replace(normalizedLeftPipeline)
+//                    context.functionCall.replace(normalizedLeftPipeline)
+                    replaceUnwrapped(context.functionCall, normalizedLeftPipeline)
                 }
             }
         }
     }
 }
 
+
+private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
+    if (needsParensInParent(expression)) {
+        expression.replace(replaceWith)
+    } else {
+        expression.replace(replaceWith.expression!!)
+    }
+}
+
+
+private fun needsParensInParent(element: ElmPsiElement): Boolean {
+    return when (element.parent) {
+        is ElmValueDeclaration -> false
+        else -> true
+    }
+
+}

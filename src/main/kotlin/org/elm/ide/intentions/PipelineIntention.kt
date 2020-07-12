@@ -130,14 +130,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         }
     }
 
-    private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
-        if (needsParensInParent(expression)) {
-            expression.replace(replaceWith)
-        } else {
-            expression.replace(replaceWith.expression!!)
-        }
-    }
-
     private fun pipelineSegments(originalPipeline: ElmBinOpExpr): List<Any> {
         var segments: List<String> = emptyList()
         var unprocessed = originalPipeline.partsWithComments
@@ -159,12 +151,21 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     }
 }
 
+
+private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
+    if (needsParensInParent(expression)) {
+        expression.replace(replaceWith)
+    } else {
+        expression.replace(replaceWith.expression!!)
+    }
+}
+
+
 private fun needsParensInParent(element: ElmPsiElement): Boolean {
     return when (element.parent) {
         is ElmValueDeclaration -> false
         else -> true
     }
-
 }
 
 private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<String> {
