@@ -36,9 +36,8 @@ module Foo exposing (exclaimGreeting)
 
 exclaimGreeting =
     ("Doe"
-    |> greet "John"
-
-        )
+        |> greet "John"
+    )
         ++ "!"
 
 greet first last = first ++ " " ++ last
