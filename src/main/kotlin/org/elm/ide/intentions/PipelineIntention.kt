@@ -84,20 +84,8 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 is Context.NoPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                     val indent = context.functionCall.indentStyle.oneLevelOfIndentation
-
-                    if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
-                        val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
-                                existingIndent,
-                                indent,
-                                splitArgAndFunctionApplications(context.functionCall)
-                        )
-                        replaceUnwrapped(context.functionCall, firstPartRewrittenWithPipeline)
-                    } else {
-                        val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall)
-                        )
-
-                        replaceUnwrapped(context.functionCall, rewrittenWithPipes)
-                    }
+                    val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall))
+                    replaceUnwrapped(context.functionCall, rewrittenWithPipes)
                 }
                 is Context.HasRightPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.startOffset).toString()
