@@ -98,7 +98,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
 
                         val rewrittenWithPipes = ElmPsiFactory(project).createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall)
-                                .map { "($it)"}
                         )
                         context.functionCall.replace(rewrittenWithPipes)
                     }
@@ -180,14 +179,32 @@ private fun processArgument(argument: ElmAtomTag): List<String> {
         return splitArgAndFunctionApplications(firstArgument)
     }
     if (firstArgument.children.size != 1) {
-        return listOf(firstArgument.text)
+        return listOf(addParensIfNeeded(firstArgument))
     }
 
     return if (firstArgument is ElmFunctionCallExpr) {
         splitArgAndFunctionApplications(firstArgument)
     } else {
-        listOf(firstArgument.text)
+        listOf(addParensIfNeeded(firstArgument))
     }
+}
+
+private fun addParensIfNeeded(element: ElmPsiElement): String {
+    return if (needsParens(element)) {
+        "(" + element.text + ")"
+    } else {
+        element.text
+    }
+}
+
+private fun needsParens(element: ElmPsiElement): Boolean {
+    return when (element) {
+        is ElmFunctionCallExpr -> true
+        is ElmBinOpExpr -> true
+        is ElmAnonymousFunctionExpr -> true
+        else -> false
+    }
+
 }
 
 private fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {

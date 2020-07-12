@@ -59,11 +59,11 @@ module Foo exposing (value)
 
 import Html
 
-value = ((123.45)
-    |> (floor)
-    |> (String.fromInt)
-    |> (Html.text)
-    |> (List.singleton)
+value = (123.45
+    |> floor
+    |> String.fromInt
+    |> Html.text
+    |> List.singleton
     )
 """)
 
@@ -80,11 +80,11 @@ module Foo exposing (value)
 
 import Html
 
-value = ((123.45)
-    |> (floor)
-    |> (String.fromInt)
-    |> (Html.text)
-    |> (List.singleton)
+value = (123.45
+    |> floor
+    |> String.fromInt
+    |> Html.text
+    |> List.singleton
     )
 """)
 
@@ -102,9 +102,9 @@ module Foo exposing (value)
 
 
 value =
-    (([ 1, 2, 3, 4 ])
-        |> (List.map times2)
-        |> (List.map String.fromInt)
+    ([ 1, 2, 3, 4 ]
+        |> List.map times2
+        |> List.map String.fromInt
     )
 
 """)
@@ -125,11 +125,11 @@ value =
 module Foo exposing (value)
 
 value =
-    ((42)
-        |> (clamp 1 100)
-        |> (String.fromInt)
-        |> (List.singleton)
-        |> (List.singleton)
+    (42
+        |> clamp 1 100
+        |> String.fromInt
+        |> List.singleton
+        |> List.singleton
     )
 
 """)
@@ -188,8 +188,8 @@ foobar =
 module Foo exposing (foobar)
 
 foobar =
-    (([ negate 1 ])
-        |> (identity)
+    ([ negate 1 ]
+        |> identity
     )
 
 """)
@@ -289,7 +289,7 @@ module Foo exposing (urlParser)
 
 urlParser =
     ((\str -> Just (Username str))
-        |> (Url.Parser.custom "USERNAME")
+        |> Url.Parser.custom "USERNAME"
     )
 """)
 
@@ -316,4 +316,24 @@ decoder =
     Viewer.decoder
         |> Api.{-caret-}viewerChanges (\maybeViewer -> toMsg (fromViewer key maybeViewer))
 """)
+
+    fun `test pipeline parts that need parens include it`() = doAvailableTest(
+            """
+module Foo exposing (value)
+
+value =
+    List.m{-caret-}ap (\n -> n * 2) (List.singleton ((modBy <| 2) ((\n -> n * 3) (identity (floor <| (123.45 / (toFloat 2)))))))
+""", """
+module Foo exposing (value)
+
+value =
+    ((floor <| (123.45 / (toFloat 2)))
+        |> identity
+        |> (\n -> n * 3)
+        |> (modBy <| 2)
+        |> List.singleton
+        |> List.map (\n -> n * 2)
+    )
+""")
+
 }
