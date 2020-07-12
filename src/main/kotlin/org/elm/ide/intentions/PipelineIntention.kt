@@ -88,13 +88,12 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     if (context.functionCall.descendantsOfType<ElmFunctionCallExpr>().isEmpty()) {
                         val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
                                 existingIndent,
-                                needsParensInParent(context.functionCall),
                                 indent,
                                 splitArgAndFunctionApplications(context.functionCall)
                         )
                         replaceUnwrapped(context.functionCall, firstPartRewrittenWithPipeline)
                     } else {
-                        val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, needsParensInParent(context.functionCall), indent, splitArgAndFunctionApplications(context.functionCall)
+                        val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall)
                         )
 
                         replaceUnwrapped(context.functionCall, rewrittenWithPipes)
@@ -116,7 +115,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
                     val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
                             existingIndent,
-                            needsParensInParent(context.pipelineExpression),
                             indent,
                             splitThingTransformed
                                     .plus(segments)

@@ -115,7 +115,7 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid value QID: `$text`")
 
-    fun createPipeChain(existingIndent: String, wrapInParens: Boolean, indent: String, valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
+    fun createPipeChain(existingIndent: String, indent: String, valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
         var s2 = ""
         for ((index, thing) in valueAndunctionApplications.withIndex()) {
             when (thing) {
@@ -138,12 +138,7 @@ class ElmPsiFactory(private val project: Project) {
             }
 
         }
-        val thing: ElmParenthesizedExpr? =
-                if (wrapInParens) {
-                    createFromText("f = ($s2\n$indent)")
-                } else {
-                    createFromText("f = ($s2\n$indent)")
-                }
+        val thing: ElmParenthesizedExpr? = createFromText("f = ($s2\n$indent)")
         if (thing != null) {
             return unwrapParens(thing)
         } else {
