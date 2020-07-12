@@ -2,17 +2,12 @@ package org.elm.ide.intentions
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.workspace.commandLineTools.ElmFormatCLI
-import org.elm.workspace.elmSettings
-import org.elm.workspace.elmToolchain
 
 /**
  * An intention action that transforms a series of function applications to/from a pipeline.
