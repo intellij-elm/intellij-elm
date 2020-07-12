@@ -115,10 +115,6 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid value QID: `$text`")
 
-    fun createPipe(text: String, after: String): ElmParenthesizedExpr =
-            createFromText("f = ($text\n    |> $after\n\n        )")
-                    ?: error("Invalid value ElmBinOpExpr: `$text |> $after`")
-
     fun createPipeChain(existingIndent: String, wrapInParens: Boolean, indent: String, valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
         var s2 = ""
         for ((index, thing) in valueAndunctionApplications.withIndex()) {
