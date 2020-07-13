@@ -77,4 +77,125 @@ example =
     floor (1.3 + 4)
 """)
 
+
+    fun `test paren is indented less than case statements to make valid whitespace`() = doAvailableTest(
+            """
+module Foo exposing (view)
+
+view : Model -> { title : String, content : Html Msg }
+view model =
+    { title = "Conduit"
+    , content =
+        div
+            [ "home-page"
+                |> class
+            ]
+            [ viewBanner
+            , div [ class "container page" ]
+                [ div [ class "row" ]
+                    [ div [ class "col-md-9" ] {-caret-}<|
+                        case model.feed of
+                            Loaded feed ->
+                                [ div [ class "feed-toggle" ]
+                                    (List.concat
+                                        [ [ viewTabs
+                                                (Session.cred model.session)
+                                                model.feedTab
+                                          ]
+                                        , List.map (Html.map GotFeedMsg) (Feed.viewArticles model.timeZone feed)
+                                        , [ Feed.viewPagination ClickedFeedPage model.feedPage feed ]
+                                        ]
+                                    )
+                                ]
+
+                            Loading ->
+                                []
+
+                            LoadingSlowly ->
+                                [ Loading.icon ]
+
+                            Failed ->
+                                [ Loading.error "feed" ]
+                    , div [ class "col-md-3" ] <|
+                        case model.tags of
+                            Loaded tags ->
+                                [ div [ class "sidebar" ] <|
+                                    [ p [] [ text "Popular Tags" ]
+                                    , viewTags tags
+                                    ]
+                                ]
+
+                            Loading ->
+                                []
+
+                            LoadingSlowly ->
+                                [ Loading.icon ]
+
+                            Failed ->
+                                [ Loading.error "tags" ]
+                    ]
+                ]
+            ]
+    }
+""", """
+module Foo exposing (view)
+
+view : Model -> { title : String, content : Html Msg }
+view model =
+    { title = "Conduit"
+    , content =
+        div
+            [ "home-page"
+                |> class
+            ]
+            [ viewBanner
+            , div [ class "container page" ]
+                [ div [ class "row" ]
+                    [ div [ class "col-md-9" ] (case model.feed of
+                            Loaded feed ->
+                                [ div [ class "feed-toggle" ]
+                                    (List.concat
+                                        [ [ viewTabs
+                                                (Session.cred model.session)
+                                                model.feedTab
+                                          ]
+                                        , List.map (Html.map GotFeedMsg) (Feed.viewArticles model.timeZone feed)
+                                        , [ Feed.viewPagination ClickedFeedPage model.feedPage feed ]
+                                        ]
+                                    )
+                                ]
+
+                            Loading ->
+                                []
+
+                            LoadingSlowly ->
+                                [ Loading.icon ]
+
+                            Failed ->
+                                [ Loading.error "feed" ]
+                    )                    , div [ class "col-md-3" ] <|
+                        case model.tags of
+                            Loaded tags ->
+                                [ div [ class "sidebar" ] <|
+                                    [ p [] [ text "Popular Tags" ]
+                                    , viewTags tags
+                                    ]
+                                ]
+
+                            Loading ->
+                                []
+
+                            LoadingSlowly ->
+                                [ Loading.icon ]
+
+                            Failed ->
+                                [ Loading.error "tags" ]
+                    ]
+                ]
+            ]
+    }
+""")
+
+
+
 }

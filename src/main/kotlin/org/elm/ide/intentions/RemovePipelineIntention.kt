@@ -6,6 +6,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.workspace.commandLineTools.ElmFormatCLI
@@ -68,7 +69,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
     }
 
-    private fun normalizeLeftPipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
+    private fun normalizeLeftPipeline(existingIndent: String, indent: String, originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
         var soFar: ElmParenthesizedExpr? = null
         var unprocessed = originalPipeline.reversed()
         while (true)  {
@@ -85,7 +86,9 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                 .joinToString(separator = " ")
                 )
             } else {
-                soFar = ElmPsiFactory(project).callFunctionWithArgument(
+                soFar = ElmPsiFactory(project).callFunctionWithArgumentWithIndent(
+                        existingIndent,
+                        indent,
                         currentPipeExpression
                                 .map { it.text }
                                 .toList()
@@ -135,7 +138,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 //                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
                 }
                 is Context.HasLeftPipes -> {
-                    val normalizedLeftPipeline = normalizeLeftPipeline(context.functionCall.parts.toList(), project)
+                    val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
+                    val indent = context.functionCall.indentStyle.oneLevelOfIndentation
+
+                    val normalizedLeftPipeline = normalizeLeftPipeline(existingIndent, indent, context.functionCall.parts.toList(), project)
 //                    context.functionCall.replace(normalizedLeftPipeline)
                     replaceUnwrapped(context.functionCall, normalizedLeftPipeline)
                 }

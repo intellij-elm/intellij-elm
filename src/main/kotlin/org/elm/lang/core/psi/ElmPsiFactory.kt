@@ -164,13 +164,33 @@ class ElmPsiFactory(private val project: Project) {
 
 
     fun createParens(text: String): ElmParenthesizedExpr =
-            createFromText("f = ($text)")
-                    ?: error("Invalid value Paren Expression: `($text)`")
+            createFromText("f = ($text)\n")
+                    ?: error("Invalid value Paren Expression: `(" +
+                            "$text\n    )`")
 
     fun callFunctionWithArgument(outer: String, inner: ElmPsiElement): ElmParenthesizedExpr {
+        val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
         val innerText = inner.text
-        return createFromText("f = ($outer $innerText)")
-                ?: error("Invalid value Paren Expression: `($outer $innerText)`")
+        return if (isMultiline) {
+            createFromText("f = ($outer $innerText\n    )")
+                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
+        } else {
+            createFromText("f = ($outer $innerText)")
+                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
+        }
+    }
+
+    fun callFunctionWithArgumentWithIndent(existingIndent: String, indent: String, outer: String, inner: ElmPsiElement): ElmParenthesizedExpr {
+        val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
+        val innerText = inner.text
+        if (isMultiline) {
+            return createFromText("f =\n$existingIndent($outer $innerText\n$existingIndent)\n")
+                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
+        } else {
+
+            return createFromText("f = ($outer $innerText)")
+                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
+        }
     }
 
     fun createParensNew(expressions: Sequence<PsiElement>): ElmParenthesizedExpr {
