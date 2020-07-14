@@ -13,10 +13,7 @@ import org.elm.lang.core.psi.elements.*
  */
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
-    sealed class Context {
-        data class HasRightPipes(val functionCall: ElmBinOpExpr) : Context()
-        data class HasLeftPipes(val functionCall: ElmBinOpExpr) : Context()
-    }
+    data class Context(val pipeline: ElmBinOpExpr.Pipeline)
 
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
@@ -110,30 +107,22 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 .filterIsInstance<ElmBinOpExpr>()
                 .firstOrNull()
                 ?.asPipeline()
-                ?.let {
-                    when (it) {
-                        is ElmBinOpExpr.Pipeline.LeftPipeline -> {
-                            Context.HasLeftPipes(it.pipeline)
-                        }
-                        is ElmBinOpExpr.Pipeline.RightPipeline -> {
-                            Context.HasRightPipes(it.pipeline)
-                        }
-                    }
-                }
+                ?.let { Context(it) }
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
-            when (context) {
-                is Context.HasRightPipes -> {
-                    replaceUnwrapped(context.functionCall, findAndNormalize(context.functionCall, project))
+            val pipeline = context.pipeline
+            when (pipeline) {
+                is ElmBinOpExpr.Pipeline.RightPipeline -> {
+                    replaceUnwrapped(pipeline.pipeline, findAndNormalize(pipeline.pipeline, project))
                 }
-                is Context.HasLeftPipes -> {
-                    val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
-                    val indent = context.functionCall.indentStyle.oneLevelOfIndentation
+                is ElmBinOpExpr.Pipeline.LeftPipeline -> {
+                    val existingIndent = DocumentUtil.getIndent(editor.document, pipeline.pipeline.startOffset).toString()
+                    val indent = pipeline.pipeline.indentStyle.oneLevelOfIndentation
 
-                    val normalizedLeftPipeline = normalizeLeftPipeline(existingIndent, indent, context.functionCall.parts.toList(), project)
-                    replaceUnwrapped(context.functionCall, normalizedLeftPipeline)
+                    val normalizedLeftPipeline = normalizeLeftPipeline(existingIndent, indent, pipeline.pipeline.parts.toList(), project)
+                    replaceUnwrapped(pipeline.pipeline, normalizedLeftPipeline)
                 }
             }
         }
