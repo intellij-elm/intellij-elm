@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.withoutParens
 
 /**
  * An intention action that transforms a series of function applications to/from a pipeline.
@@ -56,7 +57,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         return when (element.expression) {
             is ElmBinOpExpr -> element
             is ElmFunctionCallExpr -> element
-            else -> element.expression!!
+            else -> element.withoutParens
         }
 
     }
