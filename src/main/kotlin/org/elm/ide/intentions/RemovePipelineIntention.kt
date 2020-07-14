@@ -149,8 +149,5 @@ private fun replaceUnwrappedHelper(expression: ElmPsiElement, replaceWith: ElmPa
 
 
 private fun needsParensInParent(element: ElmPsiElement): Boolean {
-    return when (element.parent) {
-        is ElmBinOpExpr -> true
-        else -> false
-    }
+    return element.parent is ElmBinOpExpr
 }
