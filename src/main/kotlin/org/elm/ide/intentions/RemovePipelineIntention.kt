@@ -133,16 +133,13 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             when (context) {
                 is Context.HasRightPipes -> {
-//                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
                     replaceUnwrapped(context.functionCall, findAndNormalize(context.functionCall, project))
-//                    context.functionCall.replace(findAndNormalize(context.functionCall, project).originalElement!!)
                 }
                 is Context.HasLeftPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                     val indent = context.functionCall.indentStyle.oneLevelOfIndentation
 
                     val normalizedLeftPipeline = normalizeLeftPipeline(existingIndent, indent, context.functionCall.parts.toList(), project)
-//                    context.functionCall.replace(normalizedLeftPipeline)
                     replaceUnwrapped(context.functionCall, normalizedLeftPipeline)
                 }
             }
