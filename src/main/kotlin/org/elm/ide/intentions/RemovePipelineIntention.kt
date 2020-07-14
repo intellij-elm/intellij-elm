@@ -110,23 +110,21 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     }
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-
-
-        val possiblePipeline = element.ancestors.filterIsInstance<ElmBinOpExpr>().firstOrNull()
-
-        return if (possiblePipeline == null) {
-            null
-        } else {
-            val hasRightPipe = possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" }
-            val hasLeftPipe = possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "<|" }
-            if (hasRightPipe) {
-                Context.HasRightPipes(possiblePipeline)
-            } else if (hasLeftPipe) {
-                Context.HasLeftPipes(possiblePipeline)
-            } else {
-                null
-            }
-        }
+        return element
+                .ancestors
+                .filterIsInstance<ElmBinOpExpr>()
+                .firstOrNull()
+                ?.asPipeline()
+                ?.let {
+                    when (it) {
+                        is ElmBinOpExpr.Pipeline.LeftPipeline -> {
+                            Context.HasLeftPipes(it.thing)
+                        }
+                        is ElmBinOpExpr.Pipeline.RightPipeline -> {
+                            Context.HasRightPipes(it.thing)
+                        }
+                    }
+                }
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
