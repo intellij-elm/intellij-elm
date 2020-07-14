@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
 
 /**
@@ -54,10 +55,13 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     }
 
     private fun unwrapIfPossible(element: ElmParenthesizedExpr): ElmPsiElement {
-        return when (element.expression) {
-            is ElmBinOpExpr -> element
-            is ElmFunctionCallExpr -> element
-            else -> element.withoutParens
+        val wrapped = element.withoutExtraParens
+        val unwrapped = wrapped.withoutParens
+        return when (unwrapped) {
+            is ElmBinOpExpr -> wrapped
+            is ElmAnonymousFunctionExpr -> wrapped
+            is ElmFunctionCallExpr -> wrapped
+            else -> unwrapped
         }
 
     }

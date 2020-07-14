@@ -78,6 +78,20 @@ example =
 """)
 
 
+    fun `test keeps parens around lambdas`() = doAvailableTest(
+            """
+module Foo exposing (example)
+
+example =
+    (\fn -> fn [])
+        |> List.m{-caret-}ap
+""", """
+module Foo exposing (example)
+
+example =
+    List.map (\fn -> fn [])
+""")
+
     fun `test paren is indented less than case statements to make valid whitespace`() = doAvailableTest(
             """
 module Foo exposing (view)

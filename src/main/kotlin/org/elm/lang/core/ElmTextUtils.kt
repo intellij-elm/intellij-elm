@@ -39,6 +39,7 @@ val ElmPsiElement.textWithNormalizedIndents: String
     }
 
 val ElmPsiElement.withoutParens: ElmPsiElement get() { return unwrapParensHelp(this) }
+val ElmParenthesizedExpr.withoutExtraParens: ElmParenthesizedExpr get() { return unwrapNestedParensHelp(this) }
 
 private fun unwrapParensHelp(expression: ElmPsiElement): ElmPsiElement {
     return when (expression) {
@@ -53,5 +54,16 @@ private fun unwrapParensHelp(expression: ElmPsiElement): ElmPsiElement {
         else -> {
             expression
         }
+    }
+}
+
+private fun unwrapNestedParensHelp(expression: ElmParenthesizedExpr): ElmParenthesizedExpr {
+    val nestedExpression = expression.expression
+    return if (nestedExpression == null) {
+        expression
+    } else if (nestedExpression is ElmParenthesizedExpr) {
+        unwrapNestedParensHelp(nestedExpression)
+    } else {
+        expression
     }
 }
