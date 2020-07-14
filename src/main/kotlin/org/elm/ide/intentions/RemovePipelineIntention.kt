@@ -130,7 +130,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 }
 
 
-private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
+fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
     return if (replaceWith is ElmParenthesizedExpr) {
         replaceUnwrappedHelper(expression, replaceWith)
     } else {

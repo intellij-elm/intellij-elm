@@ -2,6 +2,10 @@ package org.elm.lang.core
 
 import com.intellij.openapi.util.text.StringUtil
 import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
+import org.elm.lang.core.psi.elements.ElmBinOpExpr
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
+import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
 import org.elm.lang.core.psi.startOffset
 
 /**
@@ -33,3 +37,21 @@ val ElmPsiElement.textWithNormalizedIndents: String
             if (index == 0) s else s.drop(firstColumn)
         }.joinToString("\n")
     }
+
+val ElmPsiElement.withoutParens: ElmPsiElement get() { return unwrapParensHelp(this) }
+
+private fun unwrapParensHelp(expression: ElmPsiElement): ElmPsiElement {
+    return when (expression) {
+        is ElmParenthesizedExpr -> {
+            val nestedExpression = expression.expression
+            if (nestedExpression == null) {
+               expression
+            } else {
+                unwrapParensHelp(nestedExpression)
+            }
+        }
+        else -> {
+            expression
+        }
+    }
+}

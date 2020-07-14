@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.withoutParens
 
 /**
  * An intention action that transforms a series of function applications to/from a pipeline.
@@ -136,7 +137,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 }
 
 
-private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
+fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
     if (needsParensInParent(expression)) {
         expression.replace(replaceWith)
     } else {
@@ -167,7 +168,7 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
 }
 
 private fun processArgument(argument: ElmAtomTag): List<String> {
-    val firstArgument = unwrapParens(argument)
+    val firstArgument = argument.withoutParens
     if (firstArgument is ElmFunctionCallExpr) {
         return splitArgAndFunctionApplications(firstArgument)
     }
@@ -197,17 +198,4 @@ private fun needsParens(element: ElmPsiElement): Boolean {
         is ElmAnonymousFunctionExpr -> true
         else -> false
     }
-
-}
-
-private fun unwrapParens(expression: ElmPsiElement): ElmPsiElement {
-    return when (expression) {
-        is ElmParenthesizedExpr -> {
-            unwrapParens(expression.expression!!)
-        }
-        else -> {
-            expression
-        }
-    }
-
 }
