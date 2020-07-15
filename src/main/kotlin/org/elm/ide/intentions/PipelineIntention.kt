@@ -35,8 +35,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 .map {
             when (it) {
                 is ElmBinOpExpr -> {
-                    val pipeline = it.asPipeline()
-                    pipeline?.let {
+                    it.asPipeline()?.let {
                         if (it is Pipeline.RightPipeline && it.isNonNormalizedRightPipeline()) {
                             Context.HasRightPipes(it)
                         } else {
