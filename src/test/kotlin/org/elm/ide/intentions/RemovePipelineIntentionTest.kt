@@ -187,7 +187,7 @@ view model =
 
                             Failed ->
                                 [ Loading.error "feed" ]
-                    )                    , div [ class "col-md-3" ] <|
+    )                    , div [ class "col-md-3" ] <|
                         case model.tags of
                             Loaded tags ->
                                 [ div [ class "sidebar" ] <|

@@ -5,8 +5,30 @@ import org.elm.lang.core.psi.ElmBinOpPartTag
 
 sealed class Pipeline {
     abstract val pipeline: ElmBinOpExpr
+    abstract fun pipelineSegments(): List<PipelineSegment>
 
-    data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline()
+        data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
+        override fun pipelineSegments(): List<PipelineSegment> {
+
+            var segments: List<PipelineSegment> = emptyList()
+            var unprocessed = pipeline.parts.toList().reversed()
+            while (true)  {
+                val currentPipeExpression = unprocessed
+                        .takeWhile { !(it is ElmOperator && it.referenceName == "<|") }
+                        .reversed()
+                unprocessed = unprocessed.drop(currentPipeExpression.size + 1)
+                val nextToAdd = PipelineSegment(
+                        currentPipeExpression.filterIsInstance<ElmBinOpPartTag>().toList(),
+                        currentPipeExpression.filterIsInstance<PsiComment>().toList()
+                )
+                segments = segments.plus(nextToAdd)
+
+                if (currentPipeExpression.isEmpty() || unprocessed.isEmpty()) {
+                    return segments
+                }
+            }
+        }
+    }
 
     data class RightPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
         fun isNonNormalizedRightPipeline(): Boolean {
@@ -24,7 +46,7 @@ sealed class Pipeline {
         }
 
 
-        fun pipelineSegments(): List<PipelineSegment> {
+        override fun pipelineSegments(): List<PipelineSegment> {
             var segments: List<PipelineSegment> = emptyList()
             var unprocessed = pipeline.partsWithComments
             while (true) {

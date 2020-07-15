@@ -21,20 +21,29 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getFamilyName() = text
 
 
-    private fun normalizePipeline(originalPipeline: Pipeline.RightPipeline, project: Project): ElmPsiElement {
+    private fun normalizePipeline(originalPipeline: Pipeline, project: Project): ElmPsiElement {
         var initial: ElmPsiElement? = null
         return originalPipeline
                 .pipelineSegments()
                 .fold(initial, { acc, segment ->
                     if (acc == null) {
-                        unwrapIfPossible(
-                                ElmPsiFactory(project).createParens(
-                                        segment.expressionParts
-                                                .map { it.text }
-                                                .toList()
-                                                .joinToString(separator = " ")
-                                )
-                        )
+                        if (originalPipeline is Pipeline.RightPipeline) {
+                            unwrapIfPossible(
+                                    ElmPsiFactory(project).createParens(
+                                            segment.expressionParts
+                                                    .map { it.text }
+                                                    .toList()
+                                                    .joinToString(separator = " ")
+                                    )
+                            )
+                        } else {
+                                    ElmPsiFactory(project).createParens(
+                                            segment.expressionParts
+                                                    .map { it.text }
+                                                    .toList()
+                                                    .joinToString(separator = " ")
+                                    )
+                        }
                     } else {
                         ElmPsiFactory(project).callFunctionWithArgument(
                                 segment.expressionParts
@@ -59,42 +68,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
     }
 
-    private fun normalizeLeftPipeline(existingIndent: String, indent: String, originalPipeline: List<ElmPsiElement>, project: Project): ElmParenthesizedExpr {
-        var soFar: ElmParenthesizedExpr? = null
-        var unprocessed = originalPipeline.reversed()
-        while (true)  {
-            val currentPipeExpression = unprocessed
-                    .takeWhile { !(it is ElmOperator && it.referenceName == "<|") }
-                    .reversed()
-            unprocessed = unprocessed.drop(currentPipeExpression.size + 1)
-            if (soFar == null) {
-                soFar = ElmPsiFactory(project).createParens(
-                        currentPipeExpression
-
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
-                )
-            } else {
-                soFar = ElmPsiFactory(project).callFunctionWithArgumentWithIndent(
-                        existingIndent,
-                        indent,
-                        currentPipeExpression
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
-                        , soFar
-                )
-
-            }
-
-            if (currentPipeExpression.isEmpty() || unprocessed.isEmpty()) {
-                return soFar
-            }
-
-        }
-    }
-
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         return element
                 .ancestors
@@ -112,11 +85,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project))
                 }
                 is Pipeline.LeftPipeline -> {
-                    val existingIndent = DocumentUtil.getIndent(editor.document, pipeline.pipeline.startOffset).toString()
-                    val indent = pipeline.pipeline.indentStyle.oneLevelOfIndentation
-
-                    val normalizedLeftPipeline = normalizeLeftPipeline(existingIndent, indent, pipeline.pipeline.parts.toList(), project)
-                    replaceUnwrapped(pipeline.pipeline, normalizedLeftPipeline)
+                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project))
                 }
             }
         }
