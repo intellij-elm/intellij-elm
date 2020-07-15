@@ -46,7 +46,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 }
                 is ElmFunctionCallExpr -> {
                     val parent = it.parent
-                    if (parent is ElmBinOpExpr && isRightPipeline(parent)) {
+                    if (parent is ElmBinOpExpr && parent.asPipeline() is Pipeline.RightPipeline) {
                         null
                     } else {
                         if (it.arguments.count() > 0) {
@@ -187,8 +187,4 @@ private fun needsParens(element: ElmPsiElement): Boolean {
         is ElmAnonymousFunctionExpr -> true
         else -> false
     }
-}
-
-fun isRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
-    return (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" })
 }
