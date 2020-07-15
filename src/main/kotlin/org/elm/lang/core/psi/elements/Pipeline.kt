@@ -1,5 +1,8 @@
 package org.elm.lang.core.psi.elements
 
+import com.intellij.psi.PsiComment
+import org.elm.lang.core.psi.ElmBinOpPartTag
+
 sealed class Pipeline {
     abstract val pipeline: ElmBinOpExpr
 
@@ -20,17 +23,17 @@ sealed class Pipeline {
             }
         }
 
-        fun pipelineSegments(): List<Any> {
-            var segments: List<String> = emptyList()
+
+        fun pipelineSegments(): List<PipelineSegment> {
+            var segments: List<PipelineSegment> = emptyList()
             var unprocessed = pipeline.partsWithComments
             while (true) {
                 val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
                 unprocessed = unprocessed.drop(takeWhile.count() + 1)
-                val nextToAdd =
-                        takeWhile
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
+                val nextToAdd = PipelineSegment(
+                        takeWhile.filterIsInstance<ElmBinOpPartTag>().toList(),
+                        takeWhile.filterIsInstance<PsiComment>().toList()
+                )
                 segments = segments.plus(nextToAdd)
 
                 if (takeWhile.count() == 0 || unprocessed.count() == 0) {
@@ -41,3 +44,5 @@ sealed class Pipeline {
     }
 
 }
+
+data class PipelineSegment(val expressionParts: List<ElmBinOpPartTag>, val comments: List<PsiComment>)

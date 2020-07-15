@@ -20,38 +20,31 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
-    private fun normalizePipeline(originalPipeline: List<ElmPsiElement>, project: Project): ElmPsiElement {
-        var soFar: ElmPsiElement? = null
-        var unprocessed = originalPipeline
-        while (true)  {
-            val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
-            unprocessed = unprocessed.drop(takeWhile.size + 1)
-            if (soFar == null) {
-                soFar =
+
+    private fun normalizePipeline(originalPipeline: Pipeline.RightPipeline, project: Project): ElmPsiElement {
+        var initial: ElmPsiElement? = null
+        return originalPipeline
+                .pipelineSegments()
+                .fold(initial, { acc, segment ->
+                    if (acc == null) {
                         unwrapIfPossible(
                                 ElmPsiFactory(project).createParens(
-                                        takeWhile
+                                        segment.expressionParts
                                                 .map { it.text }
                                                 .toList()
                                                 .joinToString(separator = " ")
-
                                 )
                         )
-            } else {
-                soFar = ElmPsiFactory(project).callFunctionWithArgument(
-                        takeWhile
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
-                        , soFar
-                )
-
-            }
-
-            if (takeWhile.isEmpty() || unprocessed.isEmpty()) {
-                return soFar
-            }
-        }
+                    } else {
+                        ElmPsiFactory(project).callFunctionWithArgument(
+                                segment.expressionParts
+                                        .map { it.text }
+                                        .toList()
+                                        .joinToString(separator = " ")
+                                , acc
+                        )
+                    }
+                })!!
     }
 
     private fun unwrapIfPossible(element: ElmParenthesizedExpr): ElmPsiElement {
@@ -102,10 +95,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         }
     }
 
-    private fun findAndNormalize(element: ElmBinOpExpr, project: Project): ElmPsiElement {
-        return normalizePipeline(element.parts.toList(), project)
-    }
-
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
         return element
                 .ancestors
@@ -120,7 +109,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             val pipeline = context.pipeline
             when (pipeline) {
                 is Pipeline.RightPipeline -> {
-                    replaceUnwrapped(pipeline.pipeline, findAndNormalize(pipeline.pipeline, project))
+                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project))
                 }
                 is Pipeline.LeftPipeline -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, pipeline.pipeline.startOffset).toString()
