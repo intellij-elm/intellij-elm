@@ -2,16 +2,11 @@ package org.elm.lang.core.psi.elements
 
 sealed class Pipeline {
     abstract val pipeline: ElmBinOpExpr
-    abstract fun isNonNormalizedRightPipeline(): Boolean
 
-    data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
-        override fun isNonNormalizedRightPipeline(): Boolean {
-            return false
-        }
-    }
+    data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline()
 
     data class RightPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
-        override fun isNonNormalizedRightPipeline(): Boolean {
+        fun isNonNormalizedRightPipeline(): Boolean {
             return run {
                 val firstPart =
                         pipeline

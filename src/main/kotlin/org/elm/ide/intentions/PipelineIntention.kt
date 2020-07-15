@@ -17,7 +17,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     sealed class Context {
         data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
-        data class HasRightPipes(val pipelineExpression: ElmBinOpExpr) : Context()
+        data class HasRightPipes(val pipelineExpression: Pipeline.RightPipeline) : Context()
     }
 
     override fun getText() = "Use pipeline of |>"
@@ -36,12 +36,12 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             when (it) {
                 is ElmBinOpExpr -> {
                     val pipeline = it.asPipeline()
-                    if (pipeline == null) {
-                        null
-                    } else if (pipeline.isNonNormalizedRightPipeline()) {
-                        Context.HasRightPipes(it)
-                    } else {
-                        null
+                    pipeline?.let {
+                        if (it is Pipeline.RightPipeline && it.isNonNormalizedRightPipeline()) {
+                            Context.HasRightPipes(it)
+                        } else {
+                            null
+                        }
                     }
                 }
                 is ElmFunctionCallExpr -> {
@@ -77,17 +77,18 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     replaceUnwrapped(context.functionCall, rewrittenWithPipes)
                 }
                 is Context.HasRightPipes -> {
-                    val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.startOffset).toString()
-                    val indent = context.pipelineExpression.indentStyle.oneLevelOfIndentation
-                    val segments = pipelineSegments(context.pipelineExpression).drop(1)
+                    val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.pipeline.startOffset).toString()
+                    val indent = context.pipelineExpression.pipeline.indentStyle.oneLevelOfIndentation
+                    val segments = pipelineSegments(context.pipelineExpression.pipeline).drop(1)
                     val comments =
                             context.pipelineExpression
+                                    .pipeline
                                     .partsWithComments
                                     .toList()
                                     .takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
                                     .filterIsInstance<PsiComment>()
                     val splitThing =
-                            splitArgAndFunctionApplications(context.pipelineExpression.parts.filterIsInstance<ElmFunctionCallExpr>().first())
+                            splitArgAndFunctionApplications(context.pipelineExpression.pipeline.parts.filterIsInstance<ElmFunctionCallExpr>().first())
                     val splitThingTransformed = splitThing.plus(comments)
 
                     val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
@@ -96,7 +97,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                             splitThingTransformed
                                     .plus(segments)
                     )
-                    replaceUnwrapped(context.pipelineExpression, firstPartRewrittenWithPipeline)
+                    replaceUnwrapped(context.pipelineExpression.pipeline, firstPartRewrittenWithPipeline)
                 }
             }
 
