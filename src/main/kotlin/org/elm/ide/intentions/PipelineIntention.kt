@@ -78,7 +78,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 is Context.HasRightPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.pipeline.startOffset).toString()
                     val indent = context.pipelineExpression.pipeline.indentStyle.oneLevelOfIndentation
-                    val segments = pipelineSegments(context.pipelineExpression.pipeline).drop(1)
+                    val segments = context.pipelineExpression.pipelineSegments().drop(1)
                     val comments =
                             context.pipelineExpression
                                     .pipeline
@@ -103,25 +103,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         }
     }
 
-    private fun pipelineSegments(originalPipeline: ElmBinOpExpr): List<Any> {
-        var segments: List<String> = emptyList()
-        var unprocessed = originalPipeline.partsWithComments
-        while (true)  {
-            val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
-            unprocessed = unprocessed.drop(takeWhile.count() + 1)
-                val nextToAdd =
-                        takeWhile
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
-                segments = segments.plus(nextToAdd)
-
-            if (takeWhile.count() == 0 || unprocessed.count() == 0) {
-                return segments
-            }
-
-        }
-    }
 }
 
 

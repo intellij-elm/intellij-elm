@@ -19,6 +19,25 @@ sealed class Pipeline {
                 }
             }
         }
+
+        fun pipelineSegments(): List<Any> {
+            var segments: List<String> = emptyList()
+            var unprocessed = pipeline.partsWithComments
+            while (true) {
+                val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
+                unprocessed = unprocessed.drop(takeWhile.count() + 1)
+                val nextToAdd =
+                        takeWhile
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
+                segments = segments.plus(nextToAdd)
+
+                if (takeWhile.count() == 0 || unprocessed.count() == 0) {
+                    return segments
+                }
+            }
+        }
     }
 
 }
