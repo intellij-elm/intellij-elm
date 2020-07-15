@@ -28,12 +28,6 @@ class ElmBinOpExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmExpressionTag {
     val parts: Sequence<ElmBinOpPartTag> get() = directChildren.filterIsInstance<ElmBinOpPartTag>()
     val partsWithComments: Sequence<PsiElement> get() = directChildren.filter { it is PsiComment || it is ElmBinOpPartTag }
 
-    sealed class Pipeline() {
-        abstract val pipeline: ElmBinOpExpr
-
-        data class LeftPipeline(override val pipeline: ElmBinOpExpr): Pipeline()
-        data class RightPipeline(override val pipeline: ElmBinOpExpr): Pipeline()
-    }
 
     fun asPipeline(): Pipeline? {
         parts.forEach {

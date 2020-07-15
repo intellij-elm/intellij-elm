@@ -15,7 +15,7 @@ import org.elm.lang.core.withoutParens
  */
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
-    data class Context(val pipeline: ElmBinOpExpr.Pipeline)
+    data class Context(val pipeline: Pipeline)
 
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
@@ -119,10 +119,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         WriteCommandAction.writeCommandAction(project).run<Throwable> {
             val pipeline = context.pipeline
             when (pipeline) {
-                is ElmBinOpExpr.Pipeline.RightPipeline -> {
+                is Pipeline.RightPipeline -> {
                     replaceUnwrapped(pipeline.pipeline, findAndNormalize(pipeline.pipeline, project))
                 }
-                is ElmBinOpExpr.Pipeline.LeftPipeline -> {
+                is Pipeline.LeftPipeline -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, pipeline.pipeline.startOffset).toString()
                     val indent = pipeline.pipeline.indentStyle.oneLevelOfIndentation
 

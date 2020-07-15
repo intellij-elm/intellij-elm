@@ -23,34 +23,22 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
-    private fun isRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
-        return (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" })
-    }
 
-    private fun isNonNormalizedRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
-        return if (isRightPipeline(possiblePipeline)) {
-            val firstPart = possiblePipeline
-                    .parts
-                    .firstOrNull()
-            if (firstPart is ElmFunctionCallExpr) {
-                firstPart.arguments.count() > 0
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
 
         // find nearest ancestor (or self) that is
         // 1) a function call with at least one argument, or
         // 2) a pipeline that isn't fully piped (first part of the pipe has at least one argument)
-        return element.ancestors.map {
+        return element
+                .ancestors
+                .map {
             when (it) {
                 is ElmBinOpExpr -> {
-                    if (isNonNormalizedRightPipeline(it)) {
+                    val pipeline = it.asPipeline()
+                    if (pipeline == null) {
+                        null
+                    } else if (pipeline.isNonNormalizedRightPipeline()) {
                         Context.HasRightPipes(it)
                     } else {
                         null
@@ -198,4 +186,8 @@ private fun needsParens(element: ElmPsiElement): Boolean {
         is ElmAnonymousFunctionExpr -> true
         else -> false
     }
+}
+
+fun isRightPipeline(possiblePipeline: ElmBinOpExpr): Boolean {
+    return (possiblePipeline.parts.any { it is ElmOperator && it.referenceName == "|>" })
 }
