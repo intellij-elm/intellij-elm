@@ -240,7 +240,8 @@ initForm =
     (formDecoder
         |> Decode.field "user"
         -- comment 1
-        |> Api.get Endpoint.user (Session.cred session) -- comment 2
+        |> Api.get Endpoint.user (Session.cred session)
+        -- comment 2
         |> Http.send CompletedFormLoad
 -- comment 3
 
