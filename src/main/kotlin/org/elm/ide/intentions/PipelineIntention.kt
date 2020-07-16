@@ -78,21 +78,15 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 is Context.HasRightPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.pipeline.startOffset).toString()
                     val indent = context.pipelineExpression.pipeline.indentStyle.oneLevelOfIndentation
+                    val firstSegment = context.pipelineExpression.pipelineSegments().first()
                     val segments = context.pipelineExpression.pipelineSegments().drop(1).map {
                        it.expressionParts.map { it.text }.joinToString(separator = " ") +
                                "\n" +
                                it.comments.map { existingIndent + indent + it.text }.joinToString(separator = "\n")
                     }
-                    val comments =
-                            context.pipelineExpression
-                                    .pipeline
-                                    .partsWithComments
-                                    .toList()
-                                    .takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
-                                    .filterIsInstance<PsiComment>()
                     val splitThing =
                             splitArgAndFunctionApplications(context.pipelineExpression.pipeline.parts.filterIsInstance<ElmFunctionCallExpr>().first())
-                    val splitThingTransformed = splitThing.plus(comments)
+                    val splitThingTransformed = splitThing.plus(firstSegment.comments)
 
                     val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
                             existingIndent,
