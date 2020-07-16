@@ -50,7 +50,7 @@ module Foo exposing (value)
 
 import Html
 
-value = List.singlet{-caret-}on (Html.text (String.fromInt (floor 123.45)))
+value = List.singlet{-caret-}on (Html.text (String.fromInt (floor 123.45))) -- this is a comment
 """, """
 module Foo exposing (value)
 
@@ -60,7 +60,7 @@ value = 123.45
     |> floor
     |> String.fromInt
     |> Html.text
-    |> List.singleton
+    |> List.singleton -- this is a comment
 """)
 
 
