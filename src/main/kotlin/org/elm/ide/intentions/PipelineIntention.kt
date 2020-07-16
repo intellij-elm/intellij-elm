@@ -78,7 +78,9 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 is Context.HasRightPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.pipeline.startOffset).toString()
                     val indent = context.pipelineExpression.pipeline.indentStyle.oneLevelOfIndentation
-                    val segments = context.pipelineExpression.pipelineSegments().drop(1)
+                    val segments = context.pipelineExpression.pipelineSegments().drop(1).map {
+                       it.expressionParts.map { it.text }.joinToString(separator = " ")
+                    }
                     val comments =
                             context.pipelineExpression
                                     .pipeline
