@@ -163,8 +163,8 @@ class ElmPsiFactory(private val project: Project) {
     }
 
 
-    fun createParens(text: String): ElmParenthesizedExpr =
-            createFromText("f = ($text)\n")
+    fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr =
+            createFromText("f = \n$indentation($text$indentation)\n")
                     ?: error("Invalid value Paren Expression: `(" +
                             "$text\n    )`")
 
@@ -172,7 +172,7 @@ class ElmPsiFactory(private val project: Project) {
         val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
         val innerText = inner.text
         return if (isMultiline) {
-            createFromText("f = ($outer\n    $innerText\n    )")
+            createFromText("f = ($outer\n$innerText\n    )")
                     ?: error("Invalid value Paren Expression: `($outer $innerText)`")
         } else {
             createFromText("f = ($outer $innerText)")

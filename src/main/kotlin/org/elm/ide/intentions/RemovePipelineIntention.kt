@@ -21,48 +21,53 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getFamilyName() = text
 
 
-    private fun normalizePipeline(originalPipeline: Pipeline, project: Project): ElmPsiElement {
+    private fun normalizePipeline(originalPipeline: Pipeline, project: Project, editor: Editor): ElmPsiElement {
         var initial: ElmPsiElement? = null
+        val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
         return originalPipeline
                 .pipelineSegments()
-                .fold(initial, { acc, segment ->
+                .withIndex()
+                .fold(initial, { acc, indexedSegment ->
+                    val segment = indexedSegment.value
+                    val index = indexedSegment.index + 1
+                    val indentation = existingIndent + " ".repeat(index + 1)
                     if (acc == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
-                            unwrapIfPossible(
+//                            unwrapIfPossible(
                                     ElmPsiFactory(project).createParens(
 
                                             segment.expressionParts
-                                                    .map { it.text }
+                                                    .map { indentation + it.text }
                                                     .toList()
                                                     .joinToString(separator = " ") +
                                                     "\n\n" +
                                                     segment.comments
-                                                            .map { it.text }
+                                                            .map { indentation + it.text }
                                                             .toList()
-                                                            .joinToString(separator = "\n")
-
+                                                            .joinToString(separator = "\n\n")
 
                                     )
-                            )
                         } else {
                             val innerText = segment.expressionParts
-                                    .map { it.text }
+                                    .map { indentation + it.text }
                                     .toList()
                                     .joinToString(separator = " ") + "\n" +
                                     segment.comments
-                                            .map { it.text }
+                                            .map { indentation + it.text }
                                             .toList()
                                             .joinToString(separator = "\n")
-                        ElmPsiFactory(project).createParens(innerText)
+                            ElmPsiFactory(project).createParens(innerText
+                            )
                         }
                     } else {
 
                         val innerText = segment.expressionParts
-                                .map { it.text }
+                                .map { indentation + it.text }
                                 .toList()
-                                .joinToString(separator = " ") + "\n" +
+                                .joinToString(separator = "\n") +
+                                "\n" +
                                 segment.comments
-                                        .map { it.text }
+                                        .map { indentation + it.text }
                                         .toList()
                                         .joinToString(separator = "\n")
                         ElmPsiFactory(project).callFunctionWithArgument(innerText , acc)
@@ -96,10 +101,11 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             val pipeline = context.pipeline
             when (pipeline) {
                 is Pipeline.RightPipeline -> {
-                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project))
+                    val replaceWith = normalizePipeline(pipeline, project, editor)
+                    replaceUnwrapped(pipeline.pipeline, replaceWith)
                 }
                 is Pipeline.LeftPipeline -> {
-                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project))
+                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project, editor))
                 }
             }
         }

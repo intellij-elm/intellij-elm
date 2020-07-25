@@ -122,6 +122,46 @@ example =
     List.map (\fn -> fn [])
 """)
 
+
+    fun `test preserves indentation as starting point`() = doAvailableTest(
+            """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            identity
+                (Asset.defaultAvatar
+                    -- asdf
+                    |> Asse{-caret-}t.src
+                ) 
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""", """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            identity
+                (Asset.src
+                    -- asdf
+                    Asset.defaultAvatar
+                )
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""")
+
     fun `test paren is indented less than case statements to make valid whitespace`() = doAvailableTest(
             """
 module Foo exposing (view)
