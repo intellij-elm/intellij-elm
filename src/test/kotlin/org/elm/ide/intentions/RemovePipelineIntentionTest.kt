@@ -20,6 +20,36 @@ times2 m n = m * n
 """)
 
 
+    fun `test preserves comments`() = doAvailableTest(
+            """
+module Foo exposing (list)
+
+list = 
+    -- comment 1
+    [1, 2, 3, 4] {- comment 2 -}
+        -- comment 3
+        {- comment 4 -}
+        |> List.ma{-caret-}p times2 -- comment 5
+        -- comment 6
+        |> identity -- comment 7
+
+times2 m n = m * n
+""", """
+module Foo exposing (list)
+
+list = 
+    -- comment 1
+    identity
+
+    (List.map times2
+-- comment 5
+-- comment 6
+    [1, 2, 3, 4]
+    ) -- comment 7
+
+times2 m n = m * n
+""")
+
     fun `test remove pipeline example from elm-spa`() = doAvailableTest(
             """
 module Foo exposing (value)

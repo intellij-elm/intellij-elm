@@ -30,28 +30,42 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                         if (originalPipeline is Pipeline.RightPipeline) {
                             unwrapIfPossible(
                                     ElmPsiFactory(project).createParens(
+
                                             segment.expressionParts
                                                     .map { it.text }
                                                     .toList()
-                                                    .joinToString(separator = " ")
+                                                    .joinToString(separator = " ") +
+                                                    "\n\n" +
+                                                    segment.comments
+                                                            .map { it.text }
+                                                            .toList()
+                                                            .joinToString(separator = "\n")
+
+
                                     )
                             )
                         } else {
-                                    ElmPsiFactory(project).createParens(
-                                            segment.expressionParts
-                                                    .map { it.text }
-                                                    .toList()
-                                                    .joinToString(separator = " ")
-                                    )
+                            val innerText = segment.expressionParts
+                                    .map { it.text }
+                                    .toList()
+                                    .joinToString(separator = " ") + "\n" +
+                                    segment.comments
+                                            .map { it.text }
+                                            .toList()
+                                            .joinToString(separator = "\n")
+                        ElmPsiFactory(project).createParens(innerText)
                         }
                     } else {
-                        ElmPsiFactory(project).callFunctionWithArgument(
-                                segment.expressionParts
+
+                        val innerText = segment.expressionParts
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ") + "\n" +
+                                segment.comments
                                         .map { it.text }
                                         .toList()
-                                        .joinToString(separator = " ")
-                                , acc
-                        )
+                                        .joinToString(separator = "\n")
+                        ElmPsiFactory(project).callFunctionWithArgument(innerText , acc)
                     }
                 })!!
     }
