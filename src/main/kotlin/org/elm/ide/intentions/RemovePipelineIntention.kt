@@ -41,11 +41,11 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                                     .map { indentation + it.text }
                                                     .toList()
                                                     .joinToString(separator = " ") +
-                                                    "\n\n" +
+                                                    "\n" +
                                                     segment.comments
                                                             .map { indentation + it.text }
                                                             .toList()
-                                                            .joinToString(separator = "\n\n")
+                                                            .joinToString(separator = "\n")
 
                                             , indentation
                                     )
@@ -54,7 +54,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                             val innerText = segment.expressionParts
                                     .map { indentation + it.text }
                                     .toList()
-                                    .joinToString(separator = " ") + "\n\n" +
+                                    .joinToString(separator = " ") + "\n" +
                                     segment.comments
                                             .map { indentation + it.text }
                                             .toList()
