@@ -33,6 +33,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     val indentation = existingIndent + " ".repeat(index + 1)
                     if (acc == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
+                            // TODO this removes the comments but they need to be preserved
 //                            unwrapIfPossible(
                                     ElmPsiFactory(project).createParens(
 
@@ -48,6 +49,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
                                             , indentation
                                     )
+//                            )
                         } else {
                             val innerText = segment.expressionParts
                                     .map { indentation + it.text }
@@ -118,20 +120,11 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
 fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement, project: Project) {
     return if (replaceWith is ElmParenthesizedExpr) {
-        val otherThing =
-                ElmPsiFactory(project).createParens(
-                        replaceWith.text
-
-//                        "    Asset.src\n" + "        (Asset.defaultAvatar\n" + "         -- asdf\n" + "        )"
-                )
-        expression.replace(replaceWith)
-//        expression.parent.replace(replaceWith)
-//        replaceUnwrappedHelper(expression, replaceWith)
+        expression.replace(replaceWith.withoutParens)
         Unit
     } else {
         expression.replace(replaceWith)
         Unit
-
     }
 }
 private fun replaceUnwrappedHelper(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {

@@ -150,10 +150,10 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             identity
-                ((Asset.src
+                (Asset.src
                     -- asdf
                     Asset.defaultAvatar
-                ))
+                )
 
         Just "" ->
             Asset.src Asset.defaultAvatar
