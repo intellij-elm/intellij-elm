@@ -46,17 +46,19 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                                             .toList()
                                                             .joinToString(separator = "\n\n")
 
+                                            , indentation
                                     )
                         } else {
                             val innerText = segment.expressionParts
                                     .map { indentation + it.text }
                                     .toList()
-                                    .joinToString(separator = " ") + "\n" +
+                                    .joinToString(separator = " ") + "\n\n" +
                                     segment.comments
                                             .map { indentation + it.text }
                                             .toList()
                                             .joinToString(separator = "\n")
                             ElmPsiFactory(project).createParens(innerText
+                            , indentation
                             )
                         }
                     } else {
@@ -65,12 +67,13 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                 .map { indentation + it.text }
                                 .toList()
                                 .joinToString(separator = "\n") +
-                                "\n" +
+                                "\n\n" +
                                 segment.comments
                                         .map { indentation + it.text }
                                         .toList()
                                         .joinToString(separator = "\n")
-                        ElmPsiFactory(project).callFunctionWithArgument(innerText , acc)
+                        val thing = ElmPsiFactory(project).callFunctionWithArgument(innerText , acc, indentation)
+                        thing
                     }
                 })!!
     }
@@ -102,10 +105,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             when (pipeline) {
                 is Pipeline.RightPipeline -> {
                     val replaceWith = normalizePipeline(pipeline, project, editor)
-                    replaceUnwrapped(pipeline.pipeline, replaceWith)
+                    replaceUnwrapped(pipeline.pipeline, replaceWith, project)
                 }
                 is Pipeline.LeftPipeline -> {
-                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project, editor))
+                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project, editor), project)
                 }
             }
         }
@@ -113,9 +116,18 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 }
 
 
-fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
+fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement, project: Project) {
     return if (replaceWith is ElmParenthesizedExpr) {
-        replaceUnwrappedHelper(expression, replaceWith)
+        val otherThing =
+                ElmPsiFactory(project).createParens(
+                        replaceWith.text
+
+//                        "    Asset.src\n" + "        (Asset.defaultAvatar\n" + "         -- asdf\n" + "        )"
+                )
+        expression.replace(replaceWith)
+//        expression.parent.replace(replaceWith)
+//        replaceUnwrappedHelper(expression, replaceWith)
+        Unit
     } else {
         expression.replace(replaceWith)
         Unit

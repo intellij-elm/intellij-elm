@@ -163,21 +163,24 @@ class ElmPsiFactory(private val project: Project) {
     }
 
 
-    fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr =
-            createFromText("f = \n$indentation($text$indentation)\n")
-                    ?: error("Invalid value Paren Expression: `(" +
-                            "$text\n    )`")
+    fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr {
+        val createFromText = createFromText<ElmParenthesizedExpr>("f = \n$indentation($text\n\n$indentation    )\n")
+        return createFromText
+                ?: error("Invalid value Paren Expression: `(" +
+                        "$text\n    )`")
+    }
 
-    fun callFunctionWithArgument(outer: String, inner: ElmPsiElement): ElmParenthesizedExpr {
+    fun callFunctionWithArgument(outer: String, inner: ElmPsiElement, indent: String = "    "): ElmParenthesizedExpr {
         val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
         val innerText = inner.text
-        return if (isMultiline) {
-            createFromText("f = ($outer\n$innerText\n    )")
+        val elmParenthesizedExpr: ElmParenthesizedExpr = if (isMultiline) {
+            createFromText("f = ($outer\n$indent$innerText\n$indent)")
                     ?: error("Invalid value Paren Expression: `($outer $innerText)`")
         } else {
             createFromText("f = ($outer $innerText)")
                     ?: error("Invalid value Paren Expression: `($outer $innerText)`")
         }
+        return elmParenthesizedExpr
     }
 
     fun callFunctionWithArgumentWithIndent(existingIndent: String, indent: String, outer: String, inner: ElmPsiElement): ElmParenthesizedExpr {
@@ -243,7 +246,7 @@ class ElmPsiFactory(private val project: Project) {
                 ?: error("Failed to create case of branches from $patterns")
     }
 
-    fun createLetInWrapper(existingIndent: String, indent:String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
+    fun createLetInWrapper(existingIndent: String, indent: String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
         // NOTE: Assumes that each line in newDeclBody has had its indent normalized to match the indent of the first line.
         //       Each line of newDeclBody must start with a non-whitespace character.
         val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$existingIndent$indent$indent$it" }
