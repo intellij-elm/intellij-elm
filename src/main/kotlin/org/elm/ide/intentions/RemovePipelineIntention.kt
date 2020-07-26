@@ -31,6 +31,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     val segment = indexedSegment.value
                     val index = indexedSegment.index + 1
                     val indentation = existingIndent + " ".repeat(index + 1)
+                    val commentsText = segment.comments
+                            .map { indentation + it.text }
+                            .toList()
+                            .joinToString(separator = "\n")
                     if (acc == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
                             // TODO this removes the comments but they need to be preserved
@@ -42,10 +46,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                                     .toList()
                                                     .joinToString(separator = " ") +
                                                     "\n" +
-                                                    segment.comments
-                                                            .map { indentation + it.text }
-                                                            .toList()
-                                                            .joinToString(separator = "\n")
+                                                    commentsText
 
                                             , indentation
                                     )
@@ -55,25 +56,20 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                     .map { indentation + it.text }
                                     .toList()
                                     .joinToString(separator = " ") + "\n" +
-                                    segment.comments
-                                            .map { indentation + it.text }
-                                            .toList()
-                                            .joinToString(separator = "\n")
+                                    commentsText
                             ElmPsiFactory(project).createParens(innerText
                             , indentation
                             )
                         }
                     } else {
 
-                        val innerText = segment.expressionParts
+                        val innerText = listOf(segment.expressionParts
                                 .map { indentation + it.text }
                                 .toList()
-                                .joinToString(separator = "\n") +
-                                "\n\n" +
-                                segment.comments
-                                        .map { indentation + it.text }
-                                        .toList()
-                                        .joinToString(separator = "\n")
+                                .joinToString(separator = "\n")
+                        , commentsText
+                        ).joinToString(separator = "\n")
+
                         val thing = ElmPsiFactory(project).callFunctionWithArgument(innerText , acc, indentation)
                         thing
                     }
