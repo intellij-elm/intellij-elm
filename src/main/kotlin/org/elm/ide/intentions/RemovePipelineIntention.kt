@@ -38,7 +38,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                     ElmPsiFactory(project).createParens(
 
                                             segment.expressionParts
-                                                    .map { indentation + it.text }
+                                                    .map { it.text }
                                                     .toList()
                                                     .joinToString(separator = " ") +
                                                     "\n" +
