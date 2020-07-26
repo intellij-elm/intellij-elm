@@ -120,21 +120,25 @@ private fun needsParensInParent(element: ElmPsiElement): Boolean {
     }
 }
 
-private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<String> {
+private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<Any> {
     return when (nestedFunctionCall.arguments.count()) {
         0 -> {
-            listOf(nestedFunctionCall.target.text)
+            val comments = nestedFunctionCall.comments.toList()
+            val commentsText = comments.toList().map { it.text }.joinToString(separator = " ")
+            listOf(comments, nestedFunctionCall.target.text)
         }
         else -> {
+            val comments = nestedFunctionCall.comments.toList()
+            val commentsText = comments.toList().map { it.text }.joinToString(separator = " ")
             val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
                     .joinToString(separator = " ")
 
-            processArgument(nestedFunctionCall.arguments.last()).plus(joinToString)
+            processArgument(nestedFunctionCall.arguments.last()).plus(comments).plus(joinToString)
         }
     }
 }
 
-private fun processArgument(argument: ElmAtomTag): List<String> {
+private fun processArgument(argument: ElmAtomTag): List<Any> {
     val firstArgument = argument.withoutParens
     if (firstArgument is ElmFunctionCallExpr) {
         return splitArgAndFunctionApplications(firstArgument)

@@ -13,6 +13,7 @@ import com.intellij.util.IncorrectOperationException
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.withoutExtraParens
 import org.intellij.lang.annotations.Language
 
 
@@ -138,9 +139,10 @@ class ElmPsiFactory(private val project: Project) {
             }
 
         }
-        val thing: ElmParenthesizedExpr? = createFromText("f = ($s2\n$indent)")
+        val thing: ElmParenthesizedExpr? = createFromText("f = \n$existingIndent$indent($s2\n$existingIndent$indent)")
         if (thing != null) {
-            return unwrapParens(thing)
+            return thing.withoutExtraParens
+//            return unwrapParens(thing)
         } else {
             return error("Invalid value ElmBinOpExpr: `($s2\n\n$indent)`")
         }

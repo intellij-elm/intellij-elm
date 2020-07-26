@@ -321,4 +321,84 @@ value =
         |> List.map (\n -> n * 2)
 """)
 
+    fun `test preserves comments`() = doAvailableTest(
+            """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            identity
+                (Asset.src
+                    -- asdf
+                    Asset.defaultA{-caret-}vatar
+                )
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""", """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            identity
+                -- asdf
+                (Asset.defaultAvatar
+                    |> Asset.src
+                )
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""")
+
+    fun `test preserves comments with ordering`() = doAvailableTest(
+            """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            -- identity
+            iden{-caret-}tity
+                -- Asset.src
+                (Asset.src
+                    -- Asset.defaultAvatar
+                    Asset.defaultAvatar
+                )
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""", """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            -- Asset.defaultAvatar
+            Asset.defaultAvatar
+                -- Asset.src
+                |> Asset.src
+                -- identity
+                |> identity
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""")
 }
