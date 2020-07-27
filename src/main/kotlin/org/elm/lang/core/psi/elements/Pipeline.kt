@@ -49,13 +49,16 @@ sealed class Pipeline {
         override fun pipelineSegments(): List<PipelineSegment> {
             var segments: List<PipelineSegment> = emptyList()
             var unprocessed = pipeline.partsWithComments
+            var nextComments = emptyList<PsiComment>()
             while (true) {
                 val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
                 unprocessed = unprocessed.drop(takeWhile.count() + 1)
                 val nextToAdd = PipelineSegment(
                         takeWhile.filterIsInstance<ElmBinOpPartTag>().toList(),
-                        takeWhile.filterIsInstance<PsiComment>().toList()
+//                        takeWhile.filterIsInstance<PsiComment>().toList()
+                        nextComments
                 )
+                nextComments = takeWhile.filterIsInstance<PsiComment>().toList()
                 segments = segments.plus(nextToAdd)
 
                 if (takeWhile.count() == 0 || unprocessed.count() == 0) {

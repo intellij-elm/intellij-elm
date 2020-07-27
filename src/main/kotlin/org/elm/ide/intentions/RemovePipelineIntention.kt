@@ -31,7 +31,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     val segment = indexedSegment.value
                     val index = indexedSegment.index + 1
                     val indentation = existingIndent + " ".repeat(index + 1)
-                    val commentsText = segment.comments
+                    val commentsText = "\n" + segment.comments
                             .map { indentation + it.text }
                             .toList()
                             .joinToString(separator = "\n")
@@ -41,33 +41,40 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 //                            unwrapIfPossible(
                                     ElmPsiFactory(project).createParens(
 
-                                            segment.expressionParts
-                                                    .map { it.text }
-                                                    .toList()
-                                                    .joinToString(separator = " ") +
-                                                    "\n" +
+
                                                     commentsText
+                                            + "\n" +
+                                                    segment.expressionParts
+                                                    .map { indentation +  it.text }
+                                                    .toList()
+                                                    .joinToString(separator = " ")
 
                                             , indentation
                                     )
 //                            )
                         } else {
-                            val innerText = segment.expressionParts
+                            val innerText =
+                                    commentsText + "\n" +
+                                    segment.expressionParts
                                     .map { indentation + it.text }
+//                                    .map { it.text }
                                     .toList()
-                                    .joinToString(separator = " ") + "\n" +
-                                    commentsText
+                                    .joinToString(separator = " ")
+
                             ElmPsiFactory(project).createParens(innerText
                             , indentation
                             )
                         }
                     } else {
 
-                        val innerText = listOf(segment.expressionParts
-                                .map { indentation + it.text }
-                                .toList()
+                        val innerText = listOf(
+                                commentsText,
+                                segment.expressionParts
+//                                .map { it.text }
+                                .map { indentation +  it.text }
+                                        .toList()
                                 .joinToString(separator = "\n")
-                        , commentsText
+
                         ).joinToString(separator = "\n")
 
                         val thing = ElmPsiFactory(project).callFunctionWithArgument(innerText , acc, indentation)
@@ -116,7 +123,8 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
 fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement, project: Project) {
     return if (replaceWith is ElmParenthesizedExpr) {
-        expression.replace(replaceWith.withoutParens)
+        expression.replace(replaceWith)
+//        expression.replace(replaceWith.withoutParens)
         Unit
     } else {
         expression.replace(replaceWith)

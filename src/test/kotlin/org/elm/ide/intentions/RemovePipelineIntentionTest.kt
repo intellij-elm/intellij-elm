@@ -280,6 +280,49 @@ view model =
     }
 """)
 
+    fun `test preserves comments with ordering`() = doAvailableTest(
+            """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            -- user isn't logged in - use guest avatar
+            Asset.defau{-caret-}ltAvatar
+                -- normalizes trailing and leading /'s
+                |> normalizeImageUrl
+                -- sets the HTML src
+                |> Asset.src
+
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""", """
+module Foo exposing (src)
+
+src : Avatar -> Attribute msg
+src (Avatar maybeUrl) =
+    case maybeUrl of
+        Nothing ->
+            -- user isn't logged in - use guest avatar
+            -- sets the HTML src
+            Asset.src
+                -- normalizes trailing and leading /'s
+                (normalizeImageUrl
+                    Asset.defaultAvatar
+                )
+
+
+        Just "" ->
+            Asset.src Asset.defaultAvatar
+
+        Just url ->
+            Html.Attributes.src url
+""")
 
 
 }
