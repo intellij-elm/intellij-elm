@@ -118,6 +118,10 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")
 
+    fun createFunctionCallExpr(text: String): ElmFunctionCallExpr =
+            createFromText("f = $text")
+                    ?: error("Invalid function call expr: `$text`")
+
     fun createNumberConstant(num: String): ElmNumberConstantExpr =
             createFromText("f = $num")
                     ?: error("Invalid number: `$num`")
