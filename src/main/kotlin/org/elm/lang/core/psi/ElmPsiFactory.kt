@@ -126,6 +126,11 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $num")
                     ?: error("Invalid number: `$num`")
 
+    fun createLambda(lambdaText: String): ElmParenthesizedExpr {
+        return createFromText("f = ($lambdaText)")
+                ?: error("Invalid lambda: `$lambdaText`")
+    }
+
     fun createAnythingPattern(): ElmAnythingPattern =
             createFromText("f _ = 1")
                     ?: error("Invalid anything pattern")

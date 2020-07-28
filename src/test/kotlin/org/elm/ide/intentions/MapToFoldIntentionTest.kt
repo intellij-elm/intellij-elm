@@ -4,7 +4,7 @@ package org.elm.ide.intentions
 class MapToFoldIntentionTest : ElmIntentionTestBase(MapToFoldIntention()) {
 
 
-    fun `test expose a function`() = doAvailableTest(
+    fun `test converts to fold`() = doAvailableTest(
             """
 module Foo exposing (f0)
 f0 = 
