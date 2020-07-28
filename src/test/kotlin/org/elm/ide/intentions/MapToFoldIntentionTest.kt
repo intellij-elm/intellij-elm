@@ -44,7 +44,7 @@ greet greetWord name =
 f0 = 
     List.foldr
         (\item result ->
-            greet
+            (greet
                 (case thing of
                     Hello ->
                         "Hello"
@@ -52,6 +52,7 @@ f0 =
                     Hi ->
                         "Hi"
                 )
+            )
                 item
                 :: result
         )

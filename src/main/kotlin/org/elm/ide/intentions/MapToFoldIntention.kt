@@ -42,24 +42,29 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
                 if (!multilineFunction) {
                     "$functionName (\\item result -> $innerFunctionName item :: result) [] $itemsExpression"
                 } else {
+                    val indentedFunction = addIndentLevels(1, innerFunctionName)
                     """List.foldr
         (\item result ->
-            greet
-                (case thing of
-                    Hello ->
-                        "Hello"
-
-                    Hi ->
-                        "Hi"
-                )
+        $indentedFunction
                 item
                 :: result
         )
         []
-        names
+        $itemsExpression
 """.trimIndent()
                 }
         context.mapInvocation.replace(elmPsiFactory.createFunctionCallExpr(functionCallText))
     }
 
+}
+
+fun addIndentLevels(indentBy: Int, original: String): String {
+    return original.lines().map {
+        if (it.isEmpty()) {
+            it
+        } else {
+            " ".repeat(indentBy * 4) + it
+        }
+    }
+            .joinToString(separator = "\n")
 }
