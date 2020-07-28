@@ -8,7 +8,6 @@ import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 
 class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Context>() {
-//    data class Context(val nameToExpose: String, val exposingList: ElmExposingList)
     data class Context(val mapInvocation: ElmFunctionCallExpr)
 
     override fun startInWriteAction(): Boolean {
@@ -38,7 +37,28 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
         val functionName = "List.foldr"
         val innerFunctionName = first.text
         val itemsExpression = second.text
-        val functionCallText = "$functionName (\\item result -> $innerFunctionName item :: result) [] $itemsExpression"
+        val multilineFunction = innerFunctionName.contains('\n')
+        val functionCallText =
+                if (!multilineFunction) {
+                    "$functionName (\\item result -> $innerFunctionName item :: result) [] $itemsExpression"
+                } else {
+                    """List.foldr
+        (\item result ->
+            greet
+                (case thing of
+                    Hello ->
+                        "Hello"
+
+                    Hi ->
+                        "Hi"
+                )
+                item
+                :: result
+        )
+        []
+        names
+""".trimIndent()
+                }
         context.mapInvocation.replace(elmPsiFactory.createFunctionCallExpr(functionCallText))
     }
 
