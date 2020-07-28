@@ -36,6 +36,11 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>3.5.4</b> <em>(2020-07-28)</em>
+                <ul>
+                    <li>Added support for IntelliJ 2020.2</li>
+                </ul>
+            </li>
             <li><b>3.5.3</b> <em>(2020-04-14)</em>
                 <ul>
                     <li>Fixed missing icons in the Elm tool window when running IntelliJ 2020.1</li>
