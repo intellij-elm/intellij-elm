@@ -675,9 +675,6 @@ private class InferenceScope(
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> ref.typeExpressionInference().value
             is ElmLowerPattern -> {
-                // TODO [drop 0.18] remove this check
-                if (elementIsInTopLevelPattern(ref)) return TyUnknown()
-
                 // Pattern declarations might not have been inferred yet
                 val parentPatternDecl = parentPatternDecl(ref)
                 if (parentPatternDecl != null) {
@@ -1348,12 +1345,6 @@ private fun uniqueVars(count: Int): List<TyVar> {
 private fun parentPatternDecl(element: ElmPsiElement): ElmValueDeclaration? {
     val decl = element.parentOfType<ElmValueDeclaration>()
     return if (decl?.pattern == null) null else decl
-}
-
-// TODO [drop 0.18] remove this refDecl check
-private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
-    // top-level patterns are unsupported after 0.18
-    return parentPatternDecl(element)?.parent is ElmFile
 }
 
 /** A [ty] and the [start] and [end] elements of the expression that created it */
