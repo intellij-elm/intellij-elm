@@ -46,9 +46,6 @@ class ElmBuildAction : AnAction() {
         val elmProject = project.elmWorkspace.findProjectForFile(activeFile)
                 ?: return showError(project, "Could not determine active Elm project")
 
-        if (elmProject.isElm18)
-            return showError(project, "The Elm 0.18 compiler is not supported.")
-
         val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
                 ?: return showError(project, "Could not determine active Elm project's path")
 

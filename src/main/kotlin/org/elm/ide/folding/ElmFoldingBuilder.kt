@@ -75,7 +75,7 @@ private class ElmFoldingVisitor : PsiElementVisitor() {
                 fold(element)
             }
             is ElmValueDeclaration -> {
-                foldToEnd(element) { functionDeclarationLeft ?: pattern ?: operatorDeclarationLeft }
+                foldToEnd(element) { functionDeclarationLeft ?: pattern }
             }
             is ElmTypeDeclaration -> {
                 foldToEnd(element) { lowerTypeNameList.lastOrNull() ?: nameIdentifier }

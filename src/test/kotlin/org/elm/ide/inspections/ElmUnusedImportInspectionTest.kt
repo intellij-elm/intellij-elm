@@ -123,12 +123,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
-    // TODO [drop 0.18] remove this test
-    fun `test imports of Elm 18 native JS modules are ignored`() = checkByText("""
-        import Native.Dom{-caret-}
-    """.trimIndent())
-
-
     // TODO we should support this eventually; punting for now
     fun `test unused union types in the exposing list are ignored, for now`() = checkByFileTree("""
         --@ Main.elm
@@ -189,9 +183,7 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
 //    """.trimIndent())
 
 
-    // TODO [drop 0.18] revisit this. 0.18 allows individual union variants to be exposed, but Elm 0.19
-    //                  requires that they be exposed using `(..)`. Once support for 0.18 is dropped,
-    //                  implementing this will be simpler.
+    // TODO we should support this eventually; punting for now
     fun `test unused union variants in the exposing list are ignored, for now`() = checkByFileTree("""
         --@ Main.elm
         import Foo exposing (Bar(..), Baz(..))

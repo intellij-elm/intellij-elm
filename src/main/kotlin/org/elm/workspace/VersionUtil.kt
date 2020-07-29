@@ -41,7 +41,6 @@ data class Version(
 
     companion object {
         val UNKNOWN: Version = Version(0, 0, 0)
-        val ELM_18: Version = Version(0, 18, 0) // TODO [drop 0.18]
 
         /** A weak definition of the version format defined in [the SemVer spec](https://semver.org) */
         private val PATTERN = Regex("""(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z\-.]+)?(\+[0-9A-Za-z\-.]+)?""")

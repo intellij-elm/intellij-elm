@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.io.exists
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
-import java.nio.file.Path
 
 class ElmProjectTestsHelper(project: Project) {
 
@@ -33,24 +32,5 @@ class ElmProjectTestsHelper(project: Project) {
     fun elmProjectByProjectDirPath(path: String): ElmProject? {
         return testableProjects
                 .firstOrNull { it.projectDirPath.toString() == path }
-    }
-
-    fun adjustElmCompilerProjectDirPath(elmFolder: String, compilerPath: Path): Path {
-        // TODO [drop 0.18] this function can be removed
-        return if (elmProjectByProjectDirPath(elmFolder)?.isElm18 == true) {
-            compilerPath.resolveSibling("elm-make")
-        } else {
-            compilerPath
-        }
-    }
-
-    companion object {
-        fun elmFolderForTesting(elmProject: ElmProject): Path {
-            // TODO [drop 0.18] this function can be removed
-            return if (elmProject.isElm18 && elmProject.presentableName == "tests")
-                elmProject.projectDirPath.parent
-            else
-                elmProject.projectDirPath
-        }
     }
 }

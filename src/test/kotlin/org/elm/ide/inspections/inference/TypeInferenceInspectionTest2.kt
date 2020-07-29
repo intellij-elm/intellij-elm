@@ -517,10 +517,6 @@ main =
         Nothing -> ""
 """)
 
-    fun `test function parameters using union patterns to unresolved type`() = checkByText("""
-<error descr="<module declaration> expected, got 'main'">main</error> Foo bar = <error descr="Value cannot be defined in terms of itself">bar</error>
-""")
-
     fun `test case branch with cons pattern head`() = checkByText("""
 main =
     case [()] of
@@ -595,17 +591,6 @@ main : ()
 main =
     case [""] of
         x :: xs -> <error descr="Type mismatch.Required: ()Found: String">x</error>
-""")
-
-    // TODO [drop 0.18] remove this test
-    fun `test 0_18 top-level pattern declarations`() = checkByText("""
-(a, b) = (1, ())
-{x} = {x = ()}
-foo : ()
-foo = b
-
-bar : ()
-bar = x
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/247

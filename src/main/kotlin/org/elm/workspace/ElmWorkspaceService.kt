@@ -37,7 +37,7 @@ import org.elm.utils.MyDirectoryIndex
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
 import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
-import org.elm.workspace.ElmToolchain.Companion.ELM_MANIFEST_FILE_NAMES
+import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
@@ -244,7 +244,7 @@ class ElmWorkspaceService(
         val guessManifest = intellijProject.modules
                 .asSequence()
                 .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
-                .mapNotNull { dir -> dir.findFileBreadthFirst { it.name in ELM_MANIFEST_FILE_NAMES } }
+                .mapNotNull { dir -> dir.findFileBreadthFirst { it.name == ELM_JSON } }
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 
@@ -311,13 +311,8 @@ class ElmWorkspaceService(
                         put(pkg.projectDirPath, pkg)
                     }
 
-                    if (project.isElm18) {
-                        // Elm 0.18 requires a separate manifest/project for the test code, so we
-                        // don't need to register the 'tests' directory in this case.
-                    } else {
-                        log.debug("Registering tests directory ${project.testsDirPath} for $project")
-                        put(project.testsDirPath, project)
-                    }
+                    log.debug("Registering tests directory ${project.testsDirPath} for $project")
+                    put(project.testsDirPath, project)
                 }
             })
 
@@ -393,10 +388,8 @@ class ElmWorkspaceService(
                             .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
                 }.joinAll()
                 .thenApply { rawProjects ->
-                    if (rawProjects.isNotEmpty() && rawProjects.none { it.isElm18 }) {
+                    if (rawProjects.isNotEmpty()) {
                         // Exclude `elm-stuff` directories to prevent pollution of open-by-filename, etc.
-                        // TODO [drop 0.18] always exclude `elm-stuff` and do this earlier in the
-                        //      process so that we don't have to jump back over to the EDT.
                         ApplicationManager.getApplication().invokeLater {
                             intellijProject.modules.asSequence()
                                     .flatMap { ModuleRootManager.getInstance(it).contentEntries.asSequence() }

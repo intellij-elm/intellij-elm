@@ -62,9 +62,7 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun AnnotationHolder.typeAnnotation(typeAnnotation: ElmTypeAnnotation) {
-        typeAnnotation.lowerCaseIdentifier?.let {
-            applyColor(it, ElmColor.DEFINITION_NAME)
-        }
+        applyColor(typeAnnotation.lowerCaseIdentifier, ElmColor.DEFINITION_NAME)
     }
 
     private fun AnnotationHolder.field(element: PsiElement?) {

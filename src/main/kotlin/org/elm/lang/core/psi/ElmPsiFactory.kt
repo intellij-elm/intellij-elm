@@ -50,8 +50,6 @@ class ElmPsiFactory(private val project: Project) {
                     FIELD_TYPE -> ElmFieldType(node)
                     FUNCTION_CALL_EXPR -> ElmFunctionCallExpr(node)
                     FUNCTION_DECLARATION_LEFT -> ElmFunctionDeclarationLeft(node)
-                    OPERATOR_DECLARATION_LEFT -> ElmOperatorDeclarationLeft(node) // TODO [drop 0.18] remove this line
-                    OPERATOR_CONFIG -> ElmOperatorConfig(node) // TODO [drop 0.18] remove this line
                     GLSL_CODE_EXPR -> ElmGlslCodeExpr(node)
                     IF_ELSE_EXPR -> ElmIfElseExpr(node)
                     IMPORT_CLAUSE -> ElmImportClause(node)
@@ -77,7 +75,6 @@ class ElmPsiFactory(private val project: Project) {
                     RECORD_PATTERN -> ElmRecordPattern(node)
                     RECORD_TYPE -> ElmRecordType(node)
                     STRING_CONSTANT_EXPR -> ElmStringConstantExpr(node)
-                    TUPLE_CONSTRUCTOR_EXPR -> ElmTupleConstructorExpr(node) // TODO [drop 0.18] remove this line
                     TUPLE_EXPR -> ElmTupleExpr(node)
                     TUPLE_PATTERN -> ElmTuplePattern(node)
                     TUPLE_TYPE -> ElmTupleType(node)

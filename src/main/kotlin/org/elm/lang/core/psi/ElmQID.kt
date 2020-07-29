@@ -31,11 +31,7 @@ interface ElmQID : ElmPsiElement {
      * support PsiReferences between JS and Elm
      */
     val isKernelModule: Boolean
-        get() {
-            val text = text
-            return text.startsWith("Elm.Kernel.")
-                    || text.startsWith("Native.") // TODO [drop 0.18] remove the "Native" clause
-        }
+        get() = text.startsWith("Elm.Kernel.")
 
     val isQualified: Boolean
 }

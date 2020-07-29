@@ -40,11 +40,6 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
 
-    /** Warning: Elm 0.18 only! will always be null in 0.19 */
-    // TODO [drop 0.18] remove this property
-    val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
-        get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
-
     /** The pattern if this declaration is binding multiple names. */
     // In Elm 0.19, this is only valid inside a let block
     val pattern: ElmPattern?
@@ -80,10 +75,6 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
                 else -> listOf(assignee)
             }
             is ElmPattern -> assignee.descendantsOfType()
-            is ElmOperatorDeclarationLeft -> when {
-                includeParameters -> assignee + assignee.namedParameters
-                else -> listOf(assignee)
-            }
             else -> emptyList()
         }
     }
