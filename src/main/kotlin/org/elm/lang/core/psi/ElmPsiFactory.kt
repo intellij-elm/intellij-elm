@@ -41,8 +41,6 @@ class ElmPsiFactory(private val project: Project) {
                     EXPOSED_OPERATOR -> ElmExposedOperator(node)
                     EXPOSED_TYPE -> ElmExposedType(node)
                     EXPOSED_VALUE -> ElmExposedValue(node)
-                    EXPOSED_UNION_CONSTRUCTORS -> ElmExposedUnionConstructors(node)
-                    EXPOSED_UNION_CONSTRUCTOR -> ElmExposedUnionConstructor(node)
                     EXPOSING_LIST -> ElmExposingList(node)
                     FIELD -> ElmField(node)
                     FIELD_ACCESS_EXPR -> ElmFieldAccessExpr(node)

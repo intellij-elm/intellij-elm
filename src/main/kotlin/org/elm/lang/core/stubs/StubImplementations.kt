@@ -18,7 +18,7 @@ class ElmFileStub(file: ElmFile?) : PsiFileStubImpl<ElmFile>(file) {
 
     object Type : IStubFileElementType<ElmFileStub>(ElmLanguage) {
 
-        override fun getStubVersion() = 27
+        override fun getStubVersion() = 28
 
         override fun getBuilder() =
                 object : DefaultStubBuilder() {
@@ -69,8 +69,6 @@ fun factory(name: String): ElmStubElementType<*, *> = when (name) {
     "EXPOSED_OPERATOR" -> ElmPlaceholderRefStub.Type(name, ::ElmExposedOperator)
     "EXPOSED_VALUE" -> ElmPlaceholderRefStub.Type(name, ::ElmExposedValue)
     "EXPOSED_TYPE" -> ElmExposedTypeStub.Type
-    "EXPOSED_UNION_CONSTRUCTOR" -> ElmPlaceholderRefStub.Type(name, ::ElmExposedUnionConstructor)
-    "EXPOSED_UNION_CONSTRUCTORS" -> ElmPlaceholderStub.Type(name, ::ElmExposedUnionConstructors)
     "VALUE_DECLARATION" -> ElmPlaceholderStub.Type(name, ::ElmValueDeclaration)
     "PORT_ANNOTATION" -> ElmPortAnnotationStub.Type
     "TYPE_EXPRESSION" -> ElmPlaceholderStub.Type(name, ::ElmTypeExpression)

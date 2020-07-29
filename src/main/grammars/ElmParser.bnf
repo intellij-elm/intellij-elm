@@ -20,8 +20,6 @@
     elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("ExposedUnionConstructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("ExposedUnionConstructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
@@ -133,13 +131,8 @@ private MoreExposedItems ::= (COMMA ExposedItem)+ {pin(".*")=1}
 ExposedValue ::= LOWER_CASE_IDENTIFIER
 
 ExposedType ::=
-    UPPER_CASE_IDENTIFIER [ExposedUnionConstructors]
-
-ExposedUnionConstructors ::=
-    LEFT_PARENTHESIS (DOUBLE_DOT | (<<non_empty_list ExposedUnionConstructor>>)) RIGHT_PARENTHESIS
-
-ExposedUnionConstructor ::=
-    UPPER_CASE_IDENTIFIER
+    UPPER_CASE_IDENTIFIER (LEFT_PARENTHESIS DOUBLE_DOT RIGHT_PARENTHESIS)?
+    { pin = 1 }
 
 ExposedOperator ::=
     OperatorAsFunction_inner

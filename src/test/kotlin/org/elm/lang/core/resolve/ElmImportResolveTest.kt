@@ -154,27 +154,15 @@ type Page = Home
 """)
 
 
-    fun `test union constructor ref in import exposing list`() = stubOnlyResolve(
-"""
---@ main.elm
-import App exposing (Page(Home))
-                          --^App.elm
-
---@ App.elm
-module App exposing (Page(Home))
-type Page = Home
-""")
-
-
     fun `test union constructor ref in expression`() = stubOnlyResolve(
 """
 --@ main.elm
-import App exposing (Page(Home))
+import App exposing (Page(..))
 defaultPage = Home
               --^App.elm
 
 --@ App.elm
-module App exposing (Page(Home))
+module App exposing (Page(..))
 type Page = Home
 """)
 
@@ -187,7 +175,7 @@ defaultPage = Home
               --^App.elm
 
 --@ App.elm
-module App exposing (Page(Home))
+module App exposing (Page(..))
 type Page = Home
 """)
 
@@ -195,7 +183,7 @@ type Page = Home
     fun `test union constructor ref in expression via module exposing all constructors`() = stubOnlyResolve(
 """
 --@ main.elm
-import App exposing (Page(Home))
+import App exposing (Page(..))
 defaultPage = Home
               --^App.elm
 
@@ -238,7 +226,7 @@ defaultPage = Home
               --^App.elm
 
 --@ App.elm
-module App exposing (Page(Home))
+module App exposing (Page(..))
 type Page = Home
 
 --@Foo.elm
@@ -250,14 +238,14 @@ module Foo exposing(..)
     fun `test union constructor ref in pattern destructuring`() = stubOnlyResolve(
 """
 --@ main.elm
-import App exposing (Page(Home))
+import App exposing (Page(..))
 title page =
     case page of
         Home -> "home"
         --^App.elm
 
 --@ App.elm
-module App exposing (Page(Home))
+module App exposing (Page(..))
 type Page = Home
 """)
 
