@@ -14,14 +14,18 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
         return ""
     }
 
-
     override fun getText(): String {
         return "Convert List.map to List.foldr"
     }
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-        // TODO return null if
-        return Context(element.ancestors.filterIsInstance<ElmFunctionCallExpr>().first())
+        return element.ancestors.filterIsInstance<ElmFunctionCallExpr>().firstOrNull()?.let {
+            if (it.target.text == "List.map") {
+                Context(it)
+            } else {
+                null
+            }
+        }
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {

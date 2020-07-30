@@ -60,4 +60,11 @@ f0 =
         names
 """)
 
+    fun `test not available for functions besides map`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    List.filt{-caret-}er f items
+""")
+
 }
