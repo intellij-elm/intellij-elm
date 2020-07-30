@@ -6,6 +6,8 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
+import org.elm.lang.core.psi.startOffset
+import org.elm.utils.getIndent
 
 class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Context>() {
     data class Context(val mapInvocation: ElmFunctionCallExpr)
@@ -38,32 +40,41 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
         val innerFunctionName = first.text
         val itemsExpression = second?.let { it.text }.orEmpty()
         val multilineFunction = innerFunctionName.contains('\n')
+        val existingIndent = editor.document!!.getIndent(context.mapInvocation.startOffset)
+
         val functionCallText =
                 if (!multilineFunction) {
                     "$functionName (\\item result -> $innerFunctionName item :: result) [] $itemsExpression"
                 } else {
-                    val indentedFunction = addIndentLevels(1, innerFunctionName)
-                    """List.foldr
-        (\item result ->
-        $indentedFunction
+                    val indentedFunction =  addIndentLevels("", 1, innerFunctionName)
+                    val thing = """List.foldr
+    (\item result ->
+"""
+                val thingAfter = """
                 item
                 :: result
         )
         []
-        $itemsExpression
 """.trimIndent()
+                    val result =
+                            addIndentLevels(existingIndent, 0, thing) +
+                                    addIndentLevels("", 0, "    $existingIndent$indentedFunction") + "\n" +
+                                    addIndentLevels(existingIndent, 1, thingAfter) + "\n" +
+                                    "    $existingIndent$itemsExpression"
+
+                            result
                 }
         context.mapInvocation.replace(elmPsiFactory.createFunctionCallExpr(functionCallText))
     }
 
 }
 
-fun addIndentLevels(indentBy: Int, original: String): String {
+fun addIndentLevels(existingIndent: String, indentBy: Int, original: String): String {
     return original.lines().map {
         if (it.isEmpty()) {
             it
         } else {
-            " ".repeat(indentBy * 4) + it
+            existingIndent + " ".repeat(indentBy * 4) + it
         }
     }
             .joinToString(separator = "\n")

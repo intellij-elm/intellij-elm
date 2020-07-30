@@ -82,4 +82,76 @@ f0 =
     |> List.foldr (\item result -> f item :: result) []
 """)
 
+
+    fun `test preserves indentation from surrounding context`() = doAvailableTest(
+            """
+module Foo exposing (view)
+
+view : Model -> { title : String, content : Html Msg }
+view model =
+    { title = "Conduit"
+    , content =
+        div [ class "home-page" ]
+            [ viewBanner
+            , div [ class "container page" ]
+                [ [ case model.feed of
+                        Loaded feed ->
+                                [ div [ class "feed-toggle" ] <|
+                                    List.concat
+                                        [ [ viewTabs
+                                                (Session.cred model.session)
+                                                model.feedTab
+                                          ]
+                                        , List.m{-caret-}ap
+                                            (Html.map
+                                                GotFeedMsg
+                                            )
+                                            (Feed.viewArticles model.timeZone
+                                                feed
+                                            )
+                                        , [ Feed.viewPagination ClickedFeedPage model.feedPage feed ]
+                                        ]
+                                ]
+
+                        Loading ->
+                            []
+""", """
+module Foo exposing (view)
+
+view : Model -> { title : String, content : Html Msg }
+view model =
+    { title = "Conduit"
+    , content =
+        div [ class "home-page" ]
+            [ viewBanner
+            , div [ class "container page" ]
+                [ [ case model.feed of
+                        Loaded feed ->
+                                [ div [ class "feed-toggle" ] <|
+                                    List.concat
+                                        [ [ viewTabs
+                                                (Session.cred model.session)
+                                                model.feedTab
+                                          ]
+                                        , List.foldr
+                                            (\item result ->
+                                                (Html.map
+                                                    GotFeedMsg
+                                                )
+                                                    item
+                                                    :: result
+                                            )
+                                            []
+                                            (Feed.viewArticles model.timeZone
+                                                feed
+                                            )
+                                        , [ Feed.viewPagination ClickedFeedPage model.feedPage feed ]
+                                        ]
+                                ]
+
+                        Loading ->
+                            []
+""")
+
+
 }
