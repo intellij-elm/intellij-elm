@@ -67,4 +67,19 @@ f0 =
     List.filt{-caret-}er f items
 """)
 
+
+
+    fun `test piped function`() = doAvailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    items
+    |> List.m{-caret-}ap f
+""", """
+module Foo exposing (f0)
+f0 = 
+    items
+    |> List.foldr (\item result -> f item :: result) []
+""")
+
 }

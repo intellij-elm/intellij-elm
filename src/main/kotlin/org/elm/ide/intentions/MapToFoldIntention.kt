@@ -32,11 +32,11 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
 
         val elmPsiFactory = ElmPsiFactory(project)
         val first = context.mapInvocation.arguments.toList().first()
-        val second = context.mapInvocation.arguments.toList().get(1)
+        val second = context.mapInvocation.arguments.toList().getOrNull(1)
 
         val functionName = "List.foldr"
         val innerFunctionName = first.text
-        val itemsExpression = second.text
+        val itemsExpression = second?.let { it.text }.orEmpty()
         val multilineFunction = innerFunctionName.contains('\n')
         val functionCallText =
                 if (!multilineFunction) {
