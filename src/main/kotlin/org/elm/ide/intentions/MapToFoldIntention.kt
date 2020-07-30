@@ -10,10 +10,6 @@ import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Context>() {
     data class Context(val mapInvocation: ElmFunctionCallExpr)
 
-    override fun startInWriteAction(): Boolean {
-        return true
-    }
-
     override fun getFamilyName(): String {
         return ""
     }
