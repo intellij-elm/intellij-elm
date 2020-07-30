@@ -202,7 +202,7 @@ bar = 0
             """
 --@ main.elm
 import Foo
-bar{-caret-} : Int -> Int
+bar{-caret-} : ()
 bar = ()
 --@ Foo.elm
 module Foo exposing (bar)

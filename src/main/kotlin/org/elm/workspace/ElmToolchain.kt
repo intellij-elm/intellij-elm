@@ -62,7 +62,6 @@ data class ElmToolchain(
          * as the _sidecar manifest_.
          */
         const val ELM_INTELLIJ_JSON = "elm.intellij.json"
-        const val ELM_LEGACY_JSON = "elm-package.json" // TODO [drop 0.18]
         const val DEFAULT_FORMAT_ON_SAVE = false
 
         /**
@@ -75,12 +74,7 @@ data class ElmToolchain(
                 isElmFormatOnSaveEnabled = ElmToolchain.DEFAULT_FORMAT_ON_SAVE
         )
 
-
-        // TODO [drop 0.18] this list will no longer be necessary once the migration to 0.19 is complete
-        val ELM_MANIFEST_FILE_NAMES = listOf(ElmToolchain.ELM_JSON, ElmToolchain.ELM_LEGACY_JSON)
-
-        // TODO [drop 0.18] set the min compiler version to 0.19
-        val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 18, 0)
+        val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 19, 0)
 
         /**
          * Suggest a default toolchain based on common locations where Elm tools are frequently installed.

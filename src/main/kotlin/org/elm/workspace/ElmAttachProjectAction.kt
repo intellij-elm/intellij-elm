@@ -9,7 +9,7 @@ import com.intellij.openapi.ui.Messages
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
 import org.elm.utils.handleError
-import org.elm.workspace.ElmToolchain.Companion.ELM_MANIFEST_FILE_NAMES
+import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 
 
 class ElmAttachProjectAction : AnAction() {
@@ -19,17 +19,17 @@ class ElmAttachProjectAction : AnAction() {
                 ?: return
         saveAllDocuments()
 
+        val manifestName = ELM_JSON
         val descriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
-                .withFileFilter { it.name in ELM_MANIFEST_FILE_NAMES }
-                .withTitle("Select elm.json (Elm 0.19) or elm-package.json (Elm 0.18)") // TODO [drop 0.18]
+                .withFileFilter { it.name == manifestName }
+                .withTitle("Select '$manifestName' file")
         descriptor.isForcedToUseIdeaFileChooser = true
 
         val file = FileChooser.chooseFile(descriptor, project, null)
                 ?: return
 
-        if (file.name !in ELM_MANIFEST_FILE_NAMES) {
-            // TODO [drop 0.18]
-            Messages.showErrorDialog("Expected elm.json or elm-package.json, got ${file.name}", "Invalid file type")
+        if (file.name != manifestName) {
+            Messages.showErrorDialog("Expected '$manifestName', got ${file.name}", "Invalid file type")
             return
         }
 

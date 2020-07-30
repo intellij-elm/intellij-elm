@@ -4,7 +4,6 @@ import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.LazyRunConfigurationProducer
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
-import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.workspace.elmWorkspace
 
 class ElmTestRunConfigurationProducer : LazyRunConfigurationProducer<ElmTestRunConfiguration>() {
@@ -27,6 +26,6 @@ class ElmTestRunConfigurationProducer : LazyRunConfigurationProducer<ElmTestRunC
     private fun getCandidateElmFolder(context: ConfigurationContext): String? {
         val vfile = context.location?.virtualFile ?: return null
         val elmProject = context.project.elmWorkspace.findProjectForFile(vfile) ?: return null
-        return ElmProjectTestsHelper.elmFolderForTesting(elmProject).toString()
+        return elmProject.projectDirPath.toString()
     }
 }

@@ -17,9 +17,6 @@ import org.elm.lang.core.stubs.ElmUnionVariantStub
  *     | Nothing
  * ```
  */
-// TODO [drop 0.18] in Elm 0.19, a union variant is not exposable directly
-//      so we MIGHT want to stop implementing the `ElmExposableTag` interface
-//      once we remove support for Elm 0.18. Or maybe there's a better way?
 class ElmUnionVariant : ElmStubbedNamedElementImpl<ElmUnionVariantStub>, ElmExposableTag {
 
     constructor(node: ASTNode) :

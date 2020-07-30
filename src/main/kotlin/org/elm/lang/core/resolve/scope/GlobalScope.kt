@@ -10,7 +10,6 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.psi.globalModificationTracker
 import org.elm.lang.core.stubs.index.ElmModulesIndex
-import org.elm.workspace.elmWorkspace
 
 private val VISIBLE_VALUES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("VISIBLE_VALUES_KEY")
 private val VISIBLE_TYPES_KEY: Key<ParameterizedCachedValue<List<ElmNamedElement>, ElmFile>> = Key.create("VISIBLE_TYPES_KEY")
@@ -59,11 +58,9 @@ class GlobalScope private constructor(private val clientFile: ElmFile) {
          * Values and Types that are built-in to the Elm compiler. Any occurrences of
          * these symbols should be treated as always resolved.
          */
-        // TODO [drop 0.18] replace with `emptySet<String>()`
-        val builtInValues = setOf("True", "False")
+        val builtInValues = emptySet<String>()
 
-        // TODO [drop 0.18] replace with `setOf("List")`
-        val builtInTypes = setOf("Bool", "String", "Char", "Int", "Float", "List")
+        val builtInTypes = setOf("List")
 
         val allBuiltInSymbols = builtInValues.union(builtInTypes)
 
@@ -87,10 +84,6 @@ class GlobalScope private constructor(private val clientFile: ElmFile) {
             val rest = mutableListOf<ElmNamedElement>()
             helper("Basics")?.list?.let { rest.addAll(it) }
             helper("List")?.get("::")?.let { rest.add(it) }
-
-            // TODO [drop 0.18] remove this line (the `!` operator was removed in 0.19)
-            helper("Platform.Cmd")?.get("!")?.let { rest.add(it) }
-
             return rest
         }
 

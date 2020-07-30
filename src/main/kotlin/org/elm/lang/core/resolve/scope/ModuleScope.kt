@@ -360,21 +360,18 @@ object ModuleScope {
                                     ?: emptyList()
 
                         else ->
-                            it.exposedUnionConstructors?.exposedUnionConstructors
-                                    ?.map { it.upperCaseIdentifier.text }
-                                    ?: emptyList()
+                            emptyList()
                     }
                 }
 
-        val locallyExposedRecordConstructorNames = exposedTypes
-                .mapNotNullTo(mutableSetOf()) {
-                    if (it.exposedUnionConstructors == null)
-                        it.upperCaseIdentifier.text
-                    else
-                        null
-                }
+        // Add record constructor names. Unfortunately this is a bit more lenient than
+        // I would like because it's impossible to syntactically distinguish between
+        // an exposed record constructor and an opaque union type.
+        val additionalNames = exposedTypes.mapTo(mutableSetOf()) {
+            it.upperCaseIdentifier.text
+        }
 
-        val allExposedNames = locallyExposedUnionConstructorNames.union(locallyExposedRecordConstructorNames)
+        val allExposedNames = locallyExposedUnionConstructorNames.union(additionalNames)
         return allExposedConstructors.filter { allExposedNames.contains(it.name) }
     }
 }

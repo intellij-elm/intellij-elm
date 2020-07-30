@@ -381,6 +381,12 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmDuplicateDeclarationInspection"/>
 
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Top-level destructuring is forbidden"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmTopLevelDestructuringInspection"/>
+
+
         <!-- Intentions -->
 
         <intentionAction>
@@ -452,17 +458,15 @@
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
         </action>
 
-        <!-- TODO [drop 0.18] change "Attach Elm JSON..." to "Attach elm.json ..."-->
         <action id="Elm.AttachElmProject"
                 class="org.elm.workspace.ElmAttachProjectAction"
-                text="Attach Elm JSON project file"
+                text="Attach elm.json project file"
                 icon="AllIcons.General.Add">
         </action>
 
-        <!-- TODO [drop 0.18] change "Detach Elm JSON..." to "Detach elm.json ..."-->
         <action id="Elm.DetachElmProject"
                 class="org.elm.workspace.ElmDetachProjectAction"
-                text="Detach Elm JSON project file"
+                text="Detach elm.json project file"
                 icon="AllIcons.General.Remove"/>
 
         <action id="Elm.RefreshElmProjects"

@@ -27,7 +27,6 @@ SOFTWARE.
 package org.elm.ide.refactoring
 
 import com.intellij.testFramework.UsefulTestCase
-import com.intellij.testFramework.exceptionCases.IncorrectOperationExceptionCase
 import com.intellij.util.IncorrectOperationException
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.descendantsOfType
@@ -83,16 +82,6 @@ f p =
 f p =
     case p of
         (z, y) -> z
-""")
-
-
-    // TODO [drop 0.18] top-level destructuring was removed in 0.19
-    fun `test top-level destructuring rename`() = doTest("z", """
-(x{-caret-}, y) = (0, 0)
-n = x + y
-""", """
-(z, y) = (0, 0)
-n = z + y
 """)
 
 

@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.LocalSearchScope
 import com.intellij.psi.search.SearchScope
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
@@ -51,18 +50,6 @@ class ElmLowerPattern(node: ASTNode) : ElmNamedElementImpl(node, IdentifierCase.
          *
          * TODO make more restrictive, being careful to handle all of the cases
          */
-
-        val decl = PsiTreeUtil.getParentOfType(this, ElmValueDeclaration::class.java)
-        val patternDecl = decl?.pattern
-        if (patternDecl != null && decl.isTopLevel && this in patternDecl.descendants) {
-            // This pattern is contained within a top-level destructuring assignment.
-            // Unlike all other pattern matching in Elm, these names are at the top-level
-            // and can be exposed to other modules. In this case, we must return the
-            // default `use scope` so that it is visible across the entire project.
-            // TODO [drop 0.18] top-level destructuring assignment was removed in 0.19
-            return super.getUseScope()
-        }
-
         return LocalSearchScope(elmFile)
     }
 

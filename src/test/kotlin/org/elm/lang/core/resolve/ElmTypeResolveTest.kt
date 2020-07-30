@@ -49,16 +49,6 @@ title page =
 """)
 
 
-    fun `test union constructor ref from module exposing list`() = checkByCode(
-"""
-module Main exposing (Page(Home))
-                           --^
-
-type Page = Home
-            --X
-""")
-
-
     fun `test type alias ref from module exposing list`() = checkByCode(
 """
 module Main exposing (Person)

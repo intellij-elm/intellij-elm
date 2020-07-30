@@ -5,7 +5,6 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
 import org.elm.workspace.ElmToolchain.Companion.ELM_INTELLIJ_JSON
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
-import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
 
 
 /**
@@ -13,20 +12,17 @@ import org.elm.workspace.ElmToolchain.Companion.ELM_LEGACY_JSON
  */
 class ElmProjectWatcher(val onChange: () -> Unit) : BulkFileListener {
 
-
     override fun after(events: List<VFileEvent>) {
         if (events.any(::isInterestingEvent)) {
             onChange()
         }
     }
-
 }
 
 
 private fun isInterestingEvent(event: VFileEvent) =
         event.pathEndsWith(ELM_JSON)
                 || event.pathEndsWith(ELM_INTELLIJ_JSON)
-                || event.pathEndsWith(ELM_LEGACY_JSON) // TODO [drop 0.18] remove the legacy clause
 
 
 private fun VFileEvent.pathEndsWith(suffix: String) =

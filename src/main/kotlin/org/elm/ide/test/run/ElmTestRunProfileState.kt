@@ -58,13 +58,11 @@ class ElmTestRunProfileState internal constructor(
         if (elmFolder == null) return handleBadConfiguration(project, "Missing path to elmFolder")
         if (elmProject == null) return handleBadConfiguration(project, "Could not find the Elm project for these tests")
 
-        val adjusted = ElmProjectTestsHelper(project)
-                .adjustElmCompilerProjectDirPath(elmFolder, elmCompilerBinary)
-        if (!Files.exists(adjusted)) {
+        if (!Files.exists(elmCompilerBinary)) {
             return handleBadConfiguration(project, "Could not find the Elm compiler ")
         }
 
-        return elmTestCLI.runTestsProcessHandler(adjusted, elmProject)
+        return elmTestCLI.runTestsProcessHandler(elmCompilerBinary, elmProject)
     }
 
     @Throws(ExecutionException::class)

@@ -10,10 +10,3 @@ g2 = 8 - f1
 g3 = (-f1 + 7)
 
 h1 = "hello" :: ["world"]
-
--- TODO [drop 0.18] remove this operator function decl
-(**) : number -> number -> number
-(**) = (^)
-
--- TODO [drop 0.18] remove this fixity decl
-infixl 0 **

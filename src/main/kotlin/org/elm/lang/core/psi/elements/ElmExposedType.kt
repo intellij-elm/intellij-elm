@@ -3,11 +3,8 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.IStubElementType
-import com.intellij.psi.util.PsiTreeUtil
-import org.elm.lang.core.psi.ElmExposedItemTag
-import org.elm.lang.core.psi.ElmStubbedElement
-import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.parentOfType
+import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ExposedTypeReferenceFromImport
 import org.elm.lang.core.resolve.reference.ExposedTypeReferenceFromModuleDecl
@@ -16,8 +13,8 @@ import org.elm.lang.core.stubs.ElmExposedTypeStub
 
 /**
  * Exposes a named type. The type can be one of 2 things:
- * 1) a Union Type, in which case [exposedUnionConstructors] may be non-null
- * 2) a Type Alias, in which case [exposedUnionConstructors] will be null
+ * 1) a Union Type
+ * 2) a Type Alias
  */
 class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElement, ElmExposedItemTag {
 
@@ -31,16 +28,22 @@ class ElmExposedType : ElmStubbedElement<ElmExposedTypeStub>, ElmReferenceElemen
     val upperCaseIdentifier: PsiElement
         get() = findNotNullChildByType(UPPER_CASE_IDENTIFIER)
 
-
-    // TODO [drop 0.18] starting with 0.19, only `..` is allowed when exposing a union type
-    //      the individual union variant constructors can no longer be exposed individually.
-    val exposedUnionConstructors: ElmExposedUnionConstructors?
-        get() = PsiTreeUtil.getStubChildOfType(this, ElmExposedUnionConstructors::class.java)
-
-
+    /**
+     * Returns true for union types which expose their constructors/variants.
+     */
     val exposesAll: Boolean
-        get() = stub?.exposesAll ?: (exposedUnionConstructors?.doubleDot != null)
+        get() = stub?.exposesAll ?: (findChildByType<PsiElement>(DOUBLE_DOT) != null)
 
+    /**
+     * Make an exposed union type opaque.
+     */
+    fun deleteParensAndDoubleDot() {
+        val leftParen = directChildren.find { it.elementType == LEFT_PARENTHESIS }
+        val rightParen = directChildren.find { it.elementType == RIGHT_PARENTHESIS }
+        if (leftParen == null || rightParen == null)
+            return
+        deleteChildRange(leftParen, rightParen)
+    }
 
     override val referenceNameElement: PsiElement
         get() = upperCaseIdentifier
@@ -63,11 +66,9 @@ fun ElmExposedType.exposes(variant: ElmUnionVariant): Boolean {
         return false
     }
 
-    if (exposesAll)
-        return true
-
-    val exposedCtors = exposedUnionConstructors?.exposedUnionConstructors ?: return false
-    return exposedCtors.any { it.name == variant.name }
+    return exposesAll
 }
+
+
 
 

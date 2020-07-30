@@ -175,20 +175,10 @@ class ImportScope(val elmFile: ElmFile) {
 
         return exposedTypeList.flatMap { exposedType ->
             val type = types[exposedType.referenceName]
-            val ctors = exposedType.exposedUnionConstructors
             when {
                 exposedType.exposesAll -> {
                     // It's a union type that exposes all of its constructors
                     (type as? ElmTypeDeclaration)?.unionVariantList
-                }
-
-                ctors != null -> {
-                    // It's a union type that exposes one or more constructors
-                    (type as? ElmTypeDeclaration)?.unionVariantList
-                            ?.associateBy { it.name }
-                            ?.let { variants ->
-                                ctors.exposedUnionConstructors.mapNotNull { variants[it.referenceName] }
-                            }
                 }
                 else -> {
                     // It's either a record type or a union type without any exposed constructors

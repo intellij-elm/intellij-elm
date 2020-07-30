@@ -6,7 +6,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.stubs.IStubElementType
 import org.elm.lang.core.psi.ElmStubbedElement
 import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
-import org.elm.lang.core.psi.ElmTypes.OPERATOR_IDENTIFIER
 import org.elm.lang.core.psi.stubDirectChildrenOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.reference.ElmReference
@@ -20,7 +19,6 @@ import org.elm.lang.core.stubs.ElmPlaceholderRefStub
  *
  * e.g. `length : String -> Int`
  *
- * Either [lowerCaseIdentifier] or [operatorIdentifier] is non-null
  */
 class ElmTypeAnnotation : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReferenceElement {
 
@@ -36,17 +34,8 @@ class ElmTypeAnnotation : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReference
      *
      * e.g. `length` in `length : String -> Int`
      */
-    val lowerCaseIdentifier: PsiElement?
-        get() = findChildByType(LOWER_CASE_IDENTIFIER)
-
-    /**
-     * The left-hand side when the value is a binary operator instead of a normal identifier.
-     *
-     * e.g. `(++)` in `(++) : String -> String -> String`
-     */
-    // TODO [drop 0.18] remove this property (and make lowerCaseIdentifier return non-null!)
-    val operatorIdentifier: PsiElement?
-        get() = findChildByType(OPERATOR_IDENTIFIER)
+    val lowerCaseIdentifier: PsiElement
+        get() = findNotNullChildByType(LOWER_CASE_IDENTIFIER)
 
     /**
      * The right-hand side of the type annotation which describes the type of the value.
@@ -61,8 +50,6 @@ class ElmTypeAnnotation : ElmStubbedElement<ElmPlaceholderRefStub>, ElmReference
 
     override val referenceNameElement: PsiElement
         get() = lowerCaseIdentifier
-                ?: operatorIdentifier
-                ?: throw RuntimeException("cannot determine type annotations's ref name element")
 
     override val referenceName: String
         get() = stub?.refName ?: referenceNameElement.text

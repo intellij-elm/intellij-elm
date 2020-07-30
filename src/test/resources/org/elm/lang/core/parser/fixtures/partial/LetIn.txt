@@ -92,7 +92,7 @@ Elm File
           PsiElement(NUMBER_LITERAL)('0')
       PsiElement(VIRTUAL_END_DECL)('\n')
       PsiWhiteSpace('        ')
-      PsiErrorElement:<type annotation> or <value declaration> expected, got 'in'
+      PsiErrorElement:<value declaration> or LOWER_CASE_IDENTIFIER expected, got 'in'
         PsiElement(IN)('in')
       PsiErrorElement:IN expected
         <empty list>

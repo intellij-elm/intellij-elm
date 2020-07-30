@@ -231,7 +231,7 @@ private class InferenceScope(
 
         // We need to keep track of declared function names and bound patterns so that other
         // children have access to them.
-        val functionName = decl.functionDeclarationLeft?.name ?: decl.operatorDeclarationLeft?.name
+        val functionName = decl.functionDeclarationLeft?.name
         if (functionName != null) {
             shadowableNames += functionName
         } else {
@@ -451,7 +451,6 @@ private class InferenceScope(
                 is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
                 is ElmRecordExpr -> inferRecord(atom)
                 is ElmStringConstantExpr -> TyString
-                is ElmTupleConstructorExpr -> TyUnknown()// TODO [drop 0.18] remove this case
                 is ElmUnitExpr -> TyUnit()
                 is ElmValueExpr -> inferReferenceElement(atom)
                 else -> error(atom, "unexpected atom type $atom")
@@ -676,9 +675,6 @@ private class InferenceScope(
             is ElmFunctionDeclarationLeft -> inferReferencedValueDeclaration(ref.parentOfType())
             is ElmPortAnnotation -> ref.typeExpressionInference().value
             is ElmLowerPattern -> {
-                // TODO [drop 0.18] remove this check
-                if (elementIsInTopLevelPattern(ref)) return TyUnknown()
-
                 // Pattern declarations might not have been inferred yet
                 val parentPatternDecl = parentPatternDecl(ref)
                 if (parentPatternDecl != null) {
@@ -765,7 +761,7 @@ private class InferenceScope(
     /** Cache the type for a pattern binding, and report an error if the name is shadowing something */
     fun setBinding(element: ElmNamedElement, ty: Ty) {
         val elementName = element.name
-        if (elementName != null && !shadowableNames.add(elementName) && !elementAllowsShadowing(element)) {
+        if (elementName != null && !shadowableNames.add(elementName)) {
             diagnostics += RedefinitionError(element)
         }
 
@@ -789,12 +785,6 @@ private class InferenceScope(
             valueDeclaration.pattern != null -> {
                 bindPatternDeclarationParameters(valueDeclaration, valueDeclaration.pattern!!)
                 ParameterBindingResult.Other(0)
-            }
-            valueDeclaration.operatorDeclarationLeft != null -> {
-                // TODO [drop 0.18] remove this case
-                // this is 0.18 only, so we aren't going to bother implementing it
-                valueDeclaration.declaredNames().associateWithTo(bindings) { TyUnknown() }
-                ParameterBindingResult.Other(2)
             }
             else -> ParameterBindingResult.Other(0)
         }
@@ -1357,19 +1347,9 @@ private fun parentPatternDecl(element: ElmPsiElement): ElmValueDeclaration? {
     return if (decl?.pattern == null) null else decl
 }
 
-// TODO [drop 0.18] remove this refDecl check
-private fun elementIsInTopLevelPattern(element: ElmPsiElement): Boolean {
-    // top-level patterns are unsupported after 0.18
-    return parentPatternDecl(element)?.parent is ElmFile
-}
-
 /** A [ty] and the [start] and [end] elements of the expression that created it */
 private data class TyAndRange(val start: ElmPsiElement, val end: ElmPsiElement, val ty: Ty) {
     constructor(element: ElmPsiElement, ty: Ty) : this(element, element, ty)
-}
-
-private fun elementAllowsShadowing(element: ElmPsiElement): Boolean {
-    return elementIsInTopLevelPattern(element) || (element.elmProject?.isElm18 ?: false)
 }
 
 fun isInferable(ty: Ty): Boolean = ty !is TyUnknown

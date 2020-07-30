@@ -444,7 +444,7 @@ bar = 0
     fun `test verify unavailable on type annotation when local function hides external name`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
-bar{-caret-} : Int -> Int
+bar{-caret-} : ()
 bar = ()
 --@ Foo.elm
 module Foo exposing (bar)
