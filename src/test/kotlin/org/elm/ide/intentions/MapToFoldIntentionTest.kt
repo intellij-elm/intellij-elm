@@ -153,5 +153,28 @@ view model =
                             []
 """)
 
+    fun `test introduces unique parameter names`() = doAvailableTest(
+            """
+module Foo exposing (f0)
+
+item = ()
+item1 = ()
+result = ()
+result1 = ()
+
+f0 = 
+    List.m{-caret-}ap f items
+""", """
+module Foo exposing (f0)
+
+item = ()
+item1 = ()
+result = ()
+result1 = ()
+
+f0 = 
+    List.foldr (\item2 result2 -> f item2 :: result2) [] items
+""")
+
 
 }

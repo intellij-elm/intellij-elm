@@ -2,11 +2,19 @@ package org.elm.ide.intentions
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Pair
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
+import com.intellij.refactoring.introduce.inplace.InplaceVariableIntroducer
+import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
+import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
 import org.elm.lang.core.psi.startOffset
+import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.utils.getIndent
 
 class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Context>() {
@@ -36,6 +44,8 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
         val first = context.mapInvocation.arguments.toList().first()
         val second = context.mapInvocation.arguments.toList().getOrNull(1)
 
+        val variableName = uniqueName(context.mapInvocation, "item")
+        val resultName = uniqueName(context.mapInvocation, "result")
         val functionName = "List.foldr"
         val innerFunctionName = first.text
         val itemsExpression = second?.let { it.text }.orEmpty()
@@ -44,15 +54,15 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
 
         val functionCallText =
                 if (!multilineFunction) {
-                    "$functionName (\\item result -> $innerFunctionName item :: result) [] $itemsExpression"
+                    "$functionName (\\$variableName $resultName -> $innerFunctionName $variableName :: $resultName) [] $itemsExpression"
                 } else {
-                    val indentedFunction =  addIndentLevels("", 1, innerFunctionName)
+                    val indentedFunction = addIndentLevels("", 1, innerFunctionName)
                     val thing = """List.foldr
-    (\item result ->
+    (\$variableName $resultName ->
 """
-                val thingAfter = """
-                item
-                :: result
+                    val thingAfter = """
+                $variableName
+                :: $resultName
         )
         []
 """.trimIndent()
@@ -62,9 +72,27 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
                                     addIndentLevels(existingIndent, 1, thingAfter) + "\n" +
                                     "    $existingIndent$itemsExpression"
 
-                            result
+                    result
                 }
-        context.mapInvocation.replace(elmPsiFactory.createFunctionCallExpr(functionCallText))
+
+        val createFunctionCallExpr = elmPsiFactory.createFunctionCallExpr(functionCallText)
+        context.mapInvocation.replace(createFunctionCallExpr)
+    }
+
+    private fun uniqueName(element: ElmFunctionCallExpr, variableName: String, number: Int = 0): String {
+        if (number == 0) {
+            return if (ExpressionScope(element).getVisibleValues().mapNotNullTo(HashSet()) { it.name }.contains(variableName)) {
+                return uniqueName(element, variableName, number + 1)
+            } else {
+                return variableName
+            }
+        }
+        val concat = "$variableName$number"
+        return if (ExpressionScope(element).getVisibleValues().mapNotNullTo(HashSet()) { it.name }.contains(concat)) {
+            uniqueName(element, variableName, number + 1)
+        } else {
+            concat
+        }
     }
 
 }
