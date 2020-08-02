@@ -83,6 +83,17 @@ example3 user =
 destructure ( { first }, age ) =
     first ++ ": " ++ String.fromInt age
 """)
+    fun `test as clause name overrides custom type variant name`() = checkByText("""module Foo exposing (..)
+
+example =
+    unfollowButton {-hint text="toMsg:"-}ClickedUnfollow {-hint text="cred:"-}cred {-hint text="author:"-}selected
+    
+unfollowButton toMsg cred ((FollowedAuthor uname _) as author) =
+    toggleFollowButton "Unfollow"
+        [ "btn-secondary" ]
+        (toMsg cred author)
+        uname
+""")
 
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {

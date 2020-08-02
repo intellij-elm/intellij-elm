@@ -36,25 +36,25 @@ object ElmInlayParameterHints {
                 } else {
                     emptyList()
                 }
-        val hints = elements.map {
-            if (it is ElmPattern ) {
-                it.unwrapped
-            } else {
-                it
-            }
-        }.zip(valueArgumentList.arguments.toList())
+        val hints = elements.zip(valueArgumentList.arguments.toList())
 
         return hints
                 .flatMap { (param, arg) ->
-                    val asText = ( param.parent as? ElmPattern )?.patternAs?.text
-                    if (asText != null) {
-                        return listOf(InlayInfo("$asText:", arg.startOffset))
+                    val unwrapped = if (param is ElmPattern ) {
+                        param.unwrapped
+                    } else {
+                        param
                     }
-                    when (param) {
+
+                    val asText = ( param as? ElmPattern )?.patternAs?.text
+                    if (asText != null) {
+                        return@flatMap listOf(InlayInfo("$asText:", arg.startOffset))
+                    }
+                    when (unwrapped) {
                         is ElmAnythingPattern -> emptyList()
                         is ElmTuplePattern -> {
                             if (arg is ElmTupleExpr) {
-                                param.patternList.zip(arg.expressionList).map { (tupleParam, tupleArg) ->
+                                unwrapped.patternList.zip(arg.expressionList).map { (tupleParam, tupleArg) ->
                                     InlayInfo(tupleParam.text + ":", tupleArg.startOffset)
                                 }
 
@@ -63,10 +63,10 @@ object ElmInlayParameterHints {
                             }
                         }
                         is ElmUnionPattern -> {
-                                listOf(InlayInfo(param.upperCaseQID.fullName + ":", arg.startOffset))
+                                listOf(InlayInfo(unwrapped.upperCaseQID.fullName + ":", arg.startOffset))
                         }
                         else -> {
-                            listOf(InlayInfo(param.text + ":", arg.startOffset))
+                            listOf(InlayInfo(unwrapped.text + ":", arg.startOffset))
                         }
                     }
                 }
