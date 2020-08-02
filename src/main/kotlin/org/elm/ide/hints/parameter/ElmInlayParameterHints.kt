@@ -45,7 +45,6 @@ object ElmInlayParameterHints {
                         return@map InlayInfo("$asText:", arg.startOffset)
                     }
                     when (param) {
-                        is ElmRecordPattern -> null
                         is ElmAnythingPattern -> null
                         is ElmPattern -> {
                             val child = param.unwrapped

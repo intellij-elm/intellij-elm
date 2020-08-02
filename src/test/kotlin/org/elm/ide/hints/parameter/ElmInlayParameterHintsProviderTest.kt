@@ -23,7 +23,7 @@ greeting =
 
 example =
     nameToString
-        { first = "Jane"
+        {-hint text="{ first, last }:"-}{ first = "Jane"
         , last = "Doe"
         }
 
@@ -73,6 +73,18 @@ example5 =
 destructureAs ((Bar n)) =
     "Foo"
 """)
+
+    fun `test record destructuring nested within tuple destructuring`() = checkByText("""module Foo exposing (..)
+
+
+example3 =
+    destructure {-hint text="( { first }, n ):"-}( { first = "first", last = "last" }, 123 )
+
+
+destructure ( { first }, n ) =
+    first
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
