@@ -50,11 +50,7 @@ object ElmInlayParameterHints {
                         is ElmPattern -> {
                             val child = param.child
                             if (child is ElmUnionPattern) {
-                                if (child.argumentPatterns.count() == 1) {
-                                    InlayInfo(child.argumentPatterns.first().text + ":", arg.startOffset)
-                                } else {
-                                    null
-                                }
+                                InlayInfo(child.upperCaseQID.fullName + ":", arg.startOffset)
                             } else {
                                 InlayInfo(param.text + ":", arg.startOffset)
                             }

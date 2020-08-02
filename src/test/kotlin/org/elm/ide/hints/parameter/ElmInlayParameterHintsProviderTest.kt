@@ -42,18 +42,6 @@ getUserId _ retry =
     getUserIdHttpRequest retry
 """)
 
-    fun `test single constructor argument destructure`() = checkByText("""module Foo exposing (..)
-
-example user =
-    tokenHeader <hint text="token:"/>user.credentials
-
-type Token = Token String
-
-tokenHeader : Token -> Cmd msg
-tokenHeader (Token token) =
-    header "token" token
-""")
-
     fun `test uses name from top-level as clause`() = checkByText("""module Foo exposing (..)
 example =
     coordinatesToString {-hint text="coordinates:"-}( 1, 2 )
@@ -62,6 +50,19 @@ coordinatesToString (( x, y ) as coordinates) =
     String.fromInt x ++ ", " ++ String.fromInt y
 """)
 
+    fun `test uses variant name when destructuring custom type`() = checkByText("""module Foo exposing (..)
+
+type Element = Element Internals
+
+type alias Internals = { x: Int, y: Int }
+
+example value=
+    destructureVariant {-hint text="Element:"-}value
+
+
+destructureVariant (Element internals) =
+    "Example"
+""")
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
