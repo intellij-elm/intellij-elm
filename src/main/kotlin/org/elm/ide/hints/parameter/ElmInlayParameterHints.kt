@@ -48,7 +48,7 @@ object ElmInlayParameterHints {
                         is ElmRecordPattern -> null
                         is ElmAnythingPattern -> null
                         is ElmPattern -> {
-                            val child = param.child
+                            val child = param.unwrapped
                             if (child is ElmUnionPattern) {
                                 InlayInfo(child.upperCaseQID.fullName + ":", arg.startOffset)
                             } else {

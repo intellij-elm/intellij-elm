@@ -63,6 +63,16 @@ example value=
 destructureVariant (Element internals) =
     "Example"
 """)
+
+    fun `test it discards nested parens in pattern expressions`() = checkByText("""module Foo exposing (..)
+
+example5 =
+    destructureAs {-hint text="Bar:"-}(Bar 123)
+
+
+destructureAs ((Bar n)) =
+    "Foo"
+""")
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
