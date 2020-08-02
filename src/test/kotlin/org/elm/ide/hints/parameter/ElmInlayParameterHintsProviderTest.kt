@@ -74,15 +74,14 @@ destructureAs ((Bar n)) =
     "Foo"
 """)
 
-    fun `test record destructuring nested within tuple destructuring`() = checkByText("""module Foo exposing (..)
-
+    fun `test show pattern matched value name inline`() = checkByText("""module Foo exposing (..)
 
 example3 =
-    destructure {-hint text="( { first }, n ):"-}( { first = "first", last = "last" }, 123 )
+    destructure ( { first = "first", last = "last" }, {-hint text="age:"-}123 )
 
 
-destructure ( { first }, n ) =
-    first
+destructure ( { first }, age ) =
+    first ++ ": " ++ String.fromInt age
 """)
 
     @Suppress("UnstableApiUsage")
