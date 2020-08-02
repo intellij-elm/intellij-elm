@@ -8,8 +8,7 @@ package org.elm.ide.hints.parameter
 import com.intellij.codeInsight.hints.InlayInfo
 import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
-import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.startOffset
 
 @Suppress("UnstableApiUsage")
@@ -33,14 +32,20 @@ object ElmInlayParameterHints {
         if (callInfo == null) return emptyList()
         val elements =
                 if (callInfo is ElmFunctionDeclarationLeft) {
-                    callInfo.namedParameters.map {
-                        it.name
-                    }.toList()
+                    callInfo.patterns.toList()
                 } else {
                     emptyList()
                 }
         val hints = elements.zip(valueArgumentList.arguments.toList())
 
-        return hints.map { (hint, arg) -> InlayInfo("$hint:", arg.startOffset) }
+        return hints
+                .filter { (param, arg) ->
+                    when (param) {
+                        is ElmRecordPattern -> false
+                        is ElmAnythingPattern -> false
+                        else -> true
+                    }
+                }
+                .map { (hint, arg) -> InlayInfo(hint.text + ":", arg.startOffset) }
     }
 }

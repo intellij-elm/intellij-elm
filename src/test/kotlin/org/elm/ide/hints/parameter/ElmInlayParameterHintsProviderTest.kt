@@ -19,6 +19,30 @@ greeting =
 
 """)
 
+    fun `test no hints for destructured record arguments`() = checkByText("""module Foo exposing (..)
+
+example =
+    nameToString
+        { first = "Jane"
+        , last = "Doe"
+        }
+
+
+nameToString { first, last } =
+    first ++ " " ++ last
+""")
+
+    fun `test no hints for discarded arguments`() = checkByText("""module Foo exposing (..)
+
+example =
+    getUserId token <hint text="retry:"/>True
+
+getUserId : Token -> Bool -> Cmd msg
+getUserId _ retry =
+    getUserIdHttpRequest retry
+""")
+
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
