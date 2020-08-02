@@ -76,8 +76,8 @@ destructureAs ((Bar n)) =
 
     fun `test show pattern matched value name inline`() = checkByText("""module Foo exposing (..)
 
-example3 =
-    destructure ( { first = "first", last = "last" }, {-hint text="age:"-}123 )
+example3 user =
+    destructure ( {-hint text="{ first }:"-}user.fullName, {-hint text="age:"-}123 )
 
 
 destructure ( { first }, age ) =

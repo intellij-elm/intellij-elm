@@ -36,35 +36,34 @@ object ElmInlayParameterHints {
                 } else {
                     emptyList()
                 }
-        val hints = elements.zip(valueArgumentList.arguments.toList())
+        val hints = elements.map {
+            if (it is ElmPattern ) {
+                it.unwrapped
+            } else {
+                it
+            }
+        }.zip(valueArgumentList.arguments.toList())
 
         return hints
                 .flatMap { (param, arg) ->
-                    val asText = ( param as? ElmPattern )?.patternAs?.text
+                    val asText = ( param.parent as? ElmPattern )?.patternAs?.text
                     if (asText != null) {
-                        return@flatMap listOf(InlayInfo("$asText:", arg.startOffset))
+                        return listOf(InlayInfo("$asText:", arg.startOffset))
                     }
                     when (param) {
                         is ElmAnythingPattern -> emptyList()
                         is ElmTuplePattern -> {
                             if (arg is ElmTupleExpr) {
-                                val lastTupleArg = arg.expressionList[1]
-                                val lastTupleParamName = (param.patternList.last().unwrapped as ElmLowerPattern).name
-                                param.patternList[1].name
-                                listOf(InlayInfo("$lastTupleParamName:", lastTupleArg.startOffset))
-
+                                param.patternList.zip(arg.expressionList).map { (tupleParam, tupleArg) ->
+                                    InlayInfo(tupleParam.text + ":", tupleArg.startOffset)
+                                }
 
                             } else {
                                 emptyList()
                             }
                         }
-                        is ElmPattern -> {
-                            val child = param.unwrapped
-                            if (child is ElmUnionPattern) {
-                                listOf(InlayInfo(child.upperCaseQID.fullName + ":", arg.startOffset))
-                            } else {
-                                listOf(InlayInfo(param.text + ":", arg.startOffset))
-                            }
+                        is ElmUnionPattern -> {
+                                listOf(InlayInfo(param.upperCaseQID.fullName + ":", arg.startOffset))
                         }
                         else -> {
                             listOf(InlayInfo(param.text + ":", arg.startOffset))
