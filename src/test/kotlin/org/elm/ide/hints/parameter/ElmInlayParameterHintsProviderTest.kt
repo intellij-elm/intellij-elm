@@ -42,6 +42,17 @@ getUserId _ retry =
     getUserIdHttpRequest retry
 """)
 
+    fun `test single constructor argument destructure`() = checkByText("""module Foo exposing (..)
+
+example user =
+    tokenHeader <hint text="token:"/>user.credentials
+
+type Token = Token String
+
+tokenHeader : Token -> Cmd msg
+tokenHeader (Token token) =
+    header "token" token
+""")
 
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {

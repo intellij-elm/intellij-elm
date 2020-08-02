@@ -39,13 +39,27 @@ object ElmInlayParameterHints {
         val hints = elements.zip(valueArgumentList.arguments.toList())
 
         return hints
-                .filter { (param, arg) ->
+                .map { (param, arg) ->
                     when (param) {
-                        is ElmRecordPattern -> false
-                        is ElmAnythingPattern -> false
-                        else -> true
+                        is ElmRecordPattern -> null
+                        is ElmAnythingPattern -> null
+                        is ElmPattern -> {
+                            val child = param.child
+                            if (child is ElmUnionPattern) {
+                                if (child.argumentPatterns.count() == 1) {
+                                    InlayInfo(child.argumentPatterns.first().text + ":", arg.startOffset)
+                                } else {
+                                    null
+                                }
+                            } else {
+                                InlayInfo(param.text + ":", arg.startOffset)
+                            }
+                        }
+                        else -> {
+                            InlayInfo(param.text + ":", arg.startOffset)
+                        }
                     }
                 }
-                .map { (hint, arg) -> InlayInfo(hint.text + ":", arg.startOffset) }
+                .filterNotNull()
     }
 }
