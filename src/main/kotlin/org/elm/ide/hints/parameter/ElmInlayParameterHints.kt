@@ -40,6 +40,10 @@ object ElmInlayParameterHints {
 
         return hints
                 .map { (param, arg) ->
+                    val asText = ( param as? ElmPattern )?.patternAs?.text
+                    if (asText != null) {
+                        return@map InlayInfo("$asText:", arg.startOffset)
+                    }
                     when (param) {
                         is ElmRecordPattern -> null
                         is ElmAnythingPattern -> null

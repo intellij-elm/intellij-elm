@@ -54,6 +54,14 @@ tokenHeader (Token token) =
     header "token" token
 """)
 
+    fun `test uses name from top-level as clause`() = checkByText("""module Foo exposing (..)
+example =
+    coordinatesToString {-hint text="coordinates:"-}( 1, 2 )
+
+coordinatesToString (( x, y ) as coordinates) =
+    String.fromInt x ++ ", " ++ String.fromInt y
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
