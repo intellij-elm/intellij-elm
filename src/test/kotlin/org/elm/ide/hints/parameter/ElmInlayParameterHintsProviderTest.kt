@@ -32,6 +32,17 @@ nameToString { first, last } =
     first ++ " " ++ last
 """)
 
+    fun `test no hints for nested record destructuring`() = checkByText("""module Foo exposing (..)
+
+example =
+    nameToString ( (), { first = "Jane" , last = "Doe" } )
+
+
+nameToString (_, { first, last }) =
+    first ++ " " ++ last
+""")
+
+
     fun `test no hints for discarded arguments`() = checkByText("""module Foo exposing (..)
 
 example =
@@ -76,7 +87,7 @@ toString (((x,y))) =
     fun `test show pattern matched value name inline`() = checkByText("""module Foo exposing (..)
 
 example3 user =
-    destructure ( {-hint text="{ first }:"-}user.fullName, {-hint text="age:"-}123 )
+    destructure ( user.fullName, {-hint text="age:"-}123 )
 
 
 destructure ( { first }, age ) =

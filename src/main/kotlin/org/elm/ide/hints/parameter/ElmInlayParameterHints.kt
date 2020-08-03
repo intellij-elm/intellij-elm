@@ -8,8 +8,8 @@ package org.elm.ide.hints.parameter
 import com.intellij.codeInsight.hints.InlayInfo
 import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.startOffset
 
 @Suppress("UnstableApiUsage")
 object ElmInlayParameterHints {
@@ -38,15 +38,19 @@ object ElmInlayParameterHints {
                 }
         val hints = elements.zip(valueArgumentList.arguments.toList())
 
+        return buildHints(hints)
+    }
+
+    private fun buildHints(hints: List<Pair<ElmFunctionParamOrPatternChildTag, ElmExpressionTag>>): List<InlayInfo> {
         return hints
                 .flatMap { (param, arg) ->
-                    val unwrapped = if (param is ElmPattern ) {
+                    val unwrapped = if (param is ElmPattern) {
                         param.unwrapped
                     } else {
                         param
                     }
 
-                    val asText = ( param as? ElmPattern )?.patternAs?.text
+                    val asText = (param as? ElmPattern)?.patternAs?.text
                     if (asText != null) {
                         return@flatMap listOf(InlayInfo("$asText:", arg.startOffset))
                     }
@@ -55,9 +59,7 @@ object ElmInlayParameterHints {
                         is ElmRecordPattern -> emptyList()
                         is ElmTuplePattern -> {
                             if (arg is ElmTupleExpr) {
-                                unwrapped.patternList.zip(arg.expressionList).map { (tupleParam, tupleArg) ->
-                                    InlayInfo(tupleParam.text + ":", tupleArg.startOffset)
-                                }
+                                buildHints(unwrapped.patternList.zip(arg.expressionList))
                             } else {
                                 emptyList()
                             }
