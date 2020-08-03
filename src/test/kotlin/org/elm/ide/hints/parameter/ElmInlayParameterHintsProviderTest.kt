@@ -23,7 +23,7 @@ greeting =
 
 example =
     nameToString
-        {-hint text="{ first, last }:"-}{ first = "Jane"
+        { first = "Jane"
         , last = "Doe"
         }
 

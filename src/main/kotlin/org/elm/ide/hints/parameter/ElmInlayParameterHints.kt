@@ -52,6 +52,7 @@ object ElmInlayParameterHints {
                     }
                     when (unwrapped) {
                         is ElmAnythingPattern -> emptyList()
+                        is ElmRecordPattern -> emptyList()
                         is ElmTuplePattern -> {
                             if (arg is ElmTupleExpr) {
                                 unwrapped.patternList.zip(arg.expressionList).map { (tupleParam, tupleArg) ->
