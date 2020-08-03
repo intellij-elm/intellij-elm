@@ -64,6 +64,9 @@ object ElmInlayParameterHints {
                                 emptyList()
                             }
                         }
+                        is ElmUnitExpr -> {
+                            emptyList()
+                        }
                         is ElmUnionPattern -> {
 //                                listOf(InlayInfo(unwrapped.upperCaseQID.fullName + ":", arg.startOffset))
                             emptyList()

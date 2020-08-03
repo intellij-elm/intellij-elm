@@ -105,6 +105,17 @@ unfollowButton toMsg cred ((FollowedAuthor uname _) as author) =
         uname
 """)
 
+
+    fun `test doesn't show hints for unit destructure`() = checkByText("""module Foo exposing (..)
+
+example =
+    destructureUnit ()
+
+
+destructureUnit () =
+    ()
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
