@@ -57,7 +57,7 @@ type Element = Element Internals
 type alias Internals = { x: Int, y: Int }
 
 example value=
-    destructureVariant {-hint text="Element:"-}value
+    destructureVariant value
 
 
 destructureVariant (Element internals) =
@@ -66,12 +66,11 @@ destructureVariant (Element internals) =
 
     fun `test it discards nested parens in pattern expressions`() = checkByText("""module Foo exposing (..)
 
-example5 =
-    destructureAs {-hint text="Bar:"-}(Bar 123)
+example3 =
+    toString ( {-hint text="x:"-}123, {-hint text="y:"-}456)
 
-
-destructureAs ((Bar n)) =
-    "Foo"
+toString (((x,y))) =
+    String.fromInt x ++ ", " ++ String.fromInt y
 """)
 
     fun `test show pattern matched value name inline`() = checkByText("""module Foo exposing (..)

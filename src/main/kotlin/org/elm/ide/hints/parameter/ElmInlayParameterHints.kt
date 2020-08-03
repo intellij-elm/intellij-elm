@@ -57,13 +57,13 @@ object ElmInlayParameterHints {
                                 unwrapped.patternList.zip(arg.expressionList).map { (tupleParam, tupleArg) ->
                                     InlayInfo(tupleParam.text + ":", tupleArg.startOffset)
                                 }
-
                             } else {
                                 emptyList()
                             }
                         }
                         is ElmUnionPattern -> {
-                                listOf(InlayInfo(unwrapped.upperCaseQID.fullName + ":", arg.startOffset))
+//                                listOf(InlayInfo(unwrapped.upperCaseQID.fullName + ":", arg.startOffset))
+                            emptyList()
                         }
                         else -> {
                             listOf(InlayInfo(unwrapped.text + ":", arg.startOffset))
