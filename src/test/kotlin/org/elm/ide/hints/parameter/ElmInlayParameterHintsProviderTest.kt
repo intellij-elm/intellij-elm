@@ -125,6 +125,16 @@ call fn value =
     fn value
 """)
 
+    fun `test let binding type hint`() = checkByText("""module Foo exposing (..)
+
+example =
+    let
+        foo ={-hint text=" -- Float"-}
+            3.14
+    in
+    foo
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))

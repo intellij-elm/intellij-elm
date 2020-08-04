@@ -12,6 +12,7 @@ import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
+import org.elm.utils.getIndent
 
 @Suppress("UnstableApiUsage")
 object ElmInlayParameterHints {
@@ -27,25 +28,35 @@ object ElmInlayParameterHints {
 
     @ExperimentalStdlibApi
     fun provideHints(elem: PsiElement): List<InlayInfo> {
-        if (elem is ElmAnonymousFunctionExpr) {
-            return elem.namedParameters.map { param ->
-                InlayInfo(": " + param.findTy()?.renderedText(), param.endOffset)
+        when (elem) {
+            is ElmAnonymousFunctionExpr -> {
+                return elem.namedParameters.map { param ->
+                    InlayInfo(": " + param.findTy()?.renderedText(), param.endOffset)
+                }
+            }
+            is ElmLetInExpr -> {
+                return elem.valueDeclarationList.map { param ->
+                    InlayInfo(" -- " + param.findTy()?.renderedText(), param.eqElement?.endOffset!!)
+                }
+            }
+            else -> {
+                val (callInfo, valueArgumentList) = when (elem) {
+                    is ElmFunctionCallExpr -> (elem.target.reference?.resolve() to elem)
+                    else -> return emptyList()
+                }
+                if (callInfo == null) return emptyList()
+                val elements =
+                        if (callInfo is ElmFunctionDeclarationLeft) {
+                            callInfo.patterns.toList()
+                        } else {
+                            emptyList()
+                        }
+                val hints = elements.zip(valueArgumentList.arguments.toList())
+
+                return buildHints(hints)
             }
         }
-        val (callInfo, valueArgumentList) = when (elem) {
-            is ElmFunctionCallExpr -> ( elem.target.reference?.resolve() to elem)
-            else -> return emptyList()
-        }
-        if (callInfo == null) return emptyList()
-        val elements =
-                if (callInfo is ElmFunctionDeclarationLeft) {
-                    callInfo.patterns.toList()
-                } else {
-                    emptyList()
-                }
-        val hints = elements.zip(valueArgumentList.arguments.toList())
 
-        return buildHints(hints)
     }
 
     private fun buildHints(hints: List<Pair<ElmFunctionParamOrPatternChildTag, ElmExpressionTag>>): List<InlayInfo> {
