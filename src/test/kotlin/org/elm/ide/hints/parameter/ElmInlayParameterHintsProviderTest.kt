@@ -116,6 +116,15 @@ destructureUnit () =
     ()
 """)
 
+    fun `test type hint`() = checkByText("""module Foo exposing (..)
+
+example () =
+    call {-hint text="fn:"-}(\(greeting{-hint text=": String"-}, name{-hint text=": String"-}) -> greeting ++ ", " ++ name ) {-hint text="value:"-}("Hello", "World")
+
+call fn value = 
+    fn value
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))

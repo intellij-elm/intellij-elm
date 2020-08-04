@@ -10,6 +10,8 @@ import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.types.findTy
+import org.elm.lang.core.types.renderedText
 
 @Suppress("UnstableApiUsage")
 object ElmInlayParameterHints {
@@ -25,6 +27,11 @@ object ElmInlayParameterHints {
 
     @ExperimentalStdlibApi
     fun provideHints(elem: PsiElement): List<InlayInfo> {
+        if (elem is ElmAnonymousFunctionExpr) {
+            return elem.namedParameters.map { param ->
+                InlayInfo(": " + param.findTy()?.renderedText(), param.endOffset)
+            }
+        }
         val (callInfo, valueArgumentList) = when (elem) {
             is ElmFunctionCallExpr -> ( elem.target.reference?.resolve() to elem)
             else -> return emptyList()
