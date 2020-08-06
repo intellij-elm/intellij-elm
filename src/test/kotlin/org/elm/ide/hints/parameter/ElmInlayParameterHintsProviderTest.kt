@@ -135,6 +135,17 @@ example =
     foo
 """)
 
+    fun `test no hint for annotated let binding`() = checkByText("""module Foo exposing (..)
+
+example =
+    let
+        foo : List Float
+        foo =
+            1 :: [ 2.3 ]
+    in
+    foo
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))

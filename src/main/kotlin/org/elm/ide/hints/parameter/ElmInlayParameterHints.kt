@@ -35,8 +35,12 @@ object ElmInlayParameterHints {
                 }
             }
             is ElmLetInExpr -> {
-                return elem.valueDeclarationList.map { param ->
-                    InlayInfo(" -- " + param.findTy()?.renderedText(), param.eqElement?.endOffset!!)
+                return elem.valueDeclarationList.mapNotNull { param ->
+                    if (param.typeAnnotation == null) {
+                        InlayInfo(" -- " + param.findTy()?.renderedText(), param.eqElement?.endOffset!!)
+                    } else {
+                        null
+                    }
                 }
             }
             else -> {
