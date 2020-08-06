@@ -29,81 +29,27 @@ object ElmInlayParameterHints {
 
     @ExperimentalStdlibApi
     fun provideHints(elem: PsiElement): List<InlayInfo> {
-        when (elem) {
+        return when (elem) {
             is ElmAnonymousFunctionExpr -> {
-                return elem.namedParameters.map { param ->
+                elem.namedParameters.map { param ->
                     InlayInfo(": " + param.findTy()?.renderedText(), param.endOffset)
                 }
             }
-            is ElmLetInExpr -> {
-                return elem.valueDeclarationList.mapNotNull { param ->
-                    if (param.typeAnnotation == null) {
-                        val findTy = param.findTy()
-                        if (findTy is TyUnknown || findTy == null) {
-                            null
-                        } else {
-                            InlayInfo(" -- " + findTy.renderedText(), param.eqElement?.endOffset!!)
-                        }
+            is ElmValueDeclaration -> {
+                return if (elem.typeAnnotation == null) {
+                    val findTy = elem.findTy()
+                    if (findTy is TyUnknown || findTy == null) {
+                        emptyList()
                     } else {
-                        null
+                        listOf(InlayInfo(" -- " + findTy.renderedText(), elem.eqElement?.endOffset!!))
                     }
+                } else {
+                    emptyList()
                 }
             }
             else -> {
-                val (callInfo, valueArgumentList) = when (elem) {
-                    is ElmFunctionCallExpr -> (elem.target.reference?.resolve() to elem)
-                    else -> return emptyList()
-                }
-                if (callInfo == null) return emptyList()
-                val elements =
-                        if (callInfo is ElmFunctionDeclarationLeft) {
-                            callInfo.patterns.toList()
-                        } else {
-                            emptyList()
-                        }
-                val hints = elements.zip(valueArgumentList.arguments.toList())
-
-                return buildHints(hints)
+                emptyList()
             }
         }
-
-    }
-
-    private fun buildHints(hints: List<Pair<ElmFunctionParamOrPatternChildTag, ElmExpressionTag>>): List<InlayInfo> {
-        return hints
-                .flatMap { (param, arg) ->
-                    val unwrapped = if (param is ElmPattern) {
-                        param.unwrapped
-                    } else {
-                        param
-                    }
-
-                    val asText = (param as? ElmPattern)?.patternAs?.text
-                    if (asText != null) {
-                        return@flatMap listOf(InlayInfo("$asText:", arg.startOffset))
-                    }
-                    when (unwrapped) {
-                        is ElmAnythingPattern -> emptyList()
-                        is ElmRecordPattern -> emptyList()
-                        is ElmTuplePattern -> {
-                            if (arg is ElmTupleExpr) {
-                                buildHints(unwrapped.patternList.zip(arg.expressionList))
-                            } else {
-                                emptyList()
-                            }
-                        }
-                        is ElmUnitExpr -> {
-                            emptyList()
-                        }
-                        is ElmUnionPattern -> {
-//                                listOf(InlayInfo(unwrapped.upperCaseQID.fullName + ":", arg.startOffset))
-                            emptyList()
-                        }
-                        else -> {
-                            listOf(InlayInfo(unwrapped.text + ":", arg.startOffset))
-                        }
-                    }
-                }
-                .filterNotNull()
     }
 }
