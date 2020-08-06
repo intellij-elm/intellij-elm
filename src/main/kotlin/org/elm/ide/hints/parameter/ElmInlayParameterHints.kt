@@ -8,12 +8,13 @@ package org.elm.ide.hints.parameter
 import com.intellij.codeInsight.hints.InlayInfo
 import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
+import org.elm.lang.core.psi.endOffset
+import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
-import org.elm.utils.getIndent
 
 @Suppress("UnstableApiUsage")
 object ElmInlayParameterHints {
@@ -26,16 +27,11 @@ object ElmInlayParameterHints {
     fun provideHints(elem: PsiElement): List<InlayInfo> {
         return when (elem) {
             is ElmNameDeclarationPatternTag -> {
-                listOf(InlayInfo(": " + elem.findTy()?.renderedText(), elem.endOffset))
+                listOfNotNull(typeHint(": ", elem.findTy(), elem.endOffset))
             }
             is ElmValueDeclaration -> {
                 return if (elem.typeAnnotation == null) {
-                    val findTy = elem.findTy()
-                    if (findTy is TyUnknown || findTy == null) {
-                        emptyList()
-                    } else {
-                        listOf(InlayInfo(" -- " + findTy.renderedText(), elem.eqElement?.endOffset!!))
-                    }
+                    listOfNotNull(typeHint(" -- ", elem.findTy(), elem.eqElement?.endOffset!!))
                 } else {
                     emptyList()
                 }
@@ -43,6 +39,16 @@ object ElmInlayParameterHints {
             else -> {
                 emptyList()
             }
+        }
+    }
+}
+
+fun typeHint(prefix: String, maybeType: Ty?, offset: Int): InlayInfo? {
+    return maybeType?.let {
+        if (it is TyUnknown) {
+            null
+        } else {
+            InlayInfo(prefix + it.renderedText(), offset)
         }
     }
 }
