@@ -61,8 +61,6 @@ example ={-hint text=" -- String"-}
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
 
         ElmInlayParameterHints.enabledOption.set(true)
-        ElmInlayParameterHints.smartOption.set(true)
-
         myFixture.testInlays({ (it.renderer as HintRenderer).text }) { it.renderer is HintRenderer }
     }
 

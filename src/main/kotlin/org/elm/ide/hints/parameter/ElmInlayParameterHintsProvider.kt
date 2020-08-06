@@ -15,7 +15,7 @@ import com.intellij.psi.PsiElement
 @Suppress("UnstableApiUsage")
 class ElmInlayParameterHintsProvider : InlayParameterHintsProvider {
     override fun getSupportedOptions(): List<Option> =
-            listOf(ElmInlayParameterHints.enabledOption, ElmInlayParameterHints.smartOption)
+            listOf(ElmInlayParameterHints.enabledOption)
 
     override fun getDefaultBlackList(): Set<String> = emptySet()
 

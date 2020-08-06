@@ -22,11 +22,6 @@ object ElmInlayParameterHints {
     val enabledOption: Option = Option("SHOW_PARAMETER_HINT", "Show argument name hints", true)
     val enabled: Boolean get() = enabledOption.get()
 
-    // BACKCOMPAT: 2020.1
-    @Suppress("DEPRECATION")
-    val smartOption: Option = Option("SMART_HINTS", "Show only smart hints", true)
-    val smart: Boolean get() = smartOption.get()
-
     @ExperimentalStdlibApi
     fun provideHints(elem: PsiElement): List<InlayInfo> {
         return when (elem) {
