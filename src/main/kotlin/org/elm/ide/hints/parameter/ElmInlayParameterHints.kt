@@ -10,6 +10,7 @@ import com.intellij.codeInsight.hints.Option
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
 import org.elm.utils.getIndent
@@ -37,7 +38,12 @@ object ElmInlayParameterHints {
             is ElmLetInExpr -> {
                 return elem.valueDeclarationList.mapNotNull { param ->
                     if (param.typeAnnotation == null) {
-                        InlayInfo(" -- " + param.findTy()?.renderedText(), param.eqElement?.endOffset!!)
+                        val findTy = param.findTy()
+                        if (findTy is TyUnknown || findTy == null) {
+                            null
+                        } else {
+                            InlayInfo(" -- " + findTy.renderedText(), param.eqElement?.endOffset!!)
+                        }
                     } else {
                         null
                     }

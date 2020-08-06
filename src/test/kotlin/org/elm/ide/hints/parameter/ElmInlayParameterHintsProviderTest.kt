@@ -146,6 +146,16 @@ example =
     foo
 """)
 
+    fun `test don't show type hint when unknown`() = checkByText("""module Foo exposing (..)
+
+example =
+    let
+        foo =
+            123 + ""
+    in
+    foo
+""")
+
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {
         InlineFile(code.replace(HINT_COMMENT_PATTERN, "<$1/>"))
