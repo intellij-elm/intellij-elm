@@ -55,6 +55,12 @@ example =
 example ={-hint text=" -- String"-}
     "Hello!"
 """)
+    fun `test show type annotation next to pattern matched values`() = checkByText("""module Foo exposing (..)
+ 
+greet : { first : String, last : String, age : Int } -> String
+greet { first{-hint text=": String"-}, age{-hint text=": Int"-} }=
+    "Hello " ++ first ++ "!"
+""")
 
     @Suppress("UnstableApiUsage")
     private fun checkByText(@Language("Elm") code: String) {

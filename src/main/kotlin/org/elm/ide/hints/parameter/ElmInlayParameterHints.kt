@@ -25,10 +25,8 @@ object ElmInlayParameterHints {
     @ExperimentalStdlibApi
     fun provideHints(elem: PsiElement): List<InlayInfo> {
         return when (elem) {
-            is ElmAnonymousFunctionExpr -> {
-                elem.namedParameters.map { param ->
-                    InlayInfo(": " + param.findTy()?.renderedText(), param.endOffset)
-                }
+            is ElmNameDeclarationPatternTag -> {
+                listOf(InlayInfo(": " + elem.findTy()?.renderedText(), elem.endOffset))
             }
             is ElmValueDeclaration -> {
                 return if (elem.typeAnnotation == null) {
