@@ -46,30 +46,17 @@ private class Solver(private val repo: Repository) {
     fun solve(deps: Map<PkgName, Constraint>, solutions: Map<PkgName, Version>): SolverResult {
         // Pick a dep to solve
         val (dep, restDeps) = deps.pick()
-        if (dep == null) {
-            // Base case: no more dependencies left to explore
-            return Proceed(deps, solutions)
-        }
+        if (dep == null) return Proceed(deps, solutions)
 
         // Figure out which versions of the dep actually exist
         var candidates = repo[dep.name]
                 .filter { it.version.satisfies(dep.constraint) }
                 .sortedByDescending { it.version }
-        println("${dep.name} has candidates ${candidates.map { it.version }}")
 
         // Further restrict the candidates if a pending solution has already bound the version of this dep.
         val solvedVersion = solutions[dep.name]
-        if (solvedVersion != null) {
-            if (candidates.any { it.version == solvedVersion }) {
-                // TODO [kl] shouldn't this never happen? or if it does, we should be able to immediately move on.
-                println("Already solved ${dep.name} as $solvedVersion")
-            }
+        if (solvedVersion != null)
             candidates = candidates.filter { it.version == solvedVersion }
-        }
-
-        if (candidates.isEmpty()) {
-            return DeadEnd
-        }
 
         // Speculatively try each candidate version to see if it is a partial solution
         loop@ for (candidate in candidates) {
