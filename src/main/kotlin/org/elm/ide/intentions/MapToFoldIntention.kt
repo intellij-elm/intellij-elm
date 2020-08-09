@@ -2,17 +2,10 @@ package org.elm.ide.intentions
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Pair
-import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
-import com.intellij.refactoring.introduce.inplace.InplaceVariableIntroducer
-import org.elm.lang.core.psi.ElmNameDeclarationPatternTag
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
-import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.resolve.scope.ExpressionScope
 import org.elm.utils.getIndent
@@ -44,25 +37,24 @@ class MapToFoldIntention : ElmAtCaretIntentionActionBase<MapToFoldIntention.Cont
         val first = context.mapInvocation.arguments.toList().first()
         val second = context.mapInvocation.arguments.toList().getOrNull(1)
 
-        val variableName = uniqueName(context.mapInvocation, "item")
-        val resultName = uniqueName(context.mapInvocation, "result")
-        val functionName = "List.foldr"
-        val innerFunctionName = first.text
+        val itemVariableName = uniqueName(context.mapInvocation, "item")
+        val accVariableName = uniqueName(context.mapInvocation, "result")
+        val mapFunctionExpression = first.text
         val itemsExpression = second?.let { it.text }.orEmpty()
-        val multilineFunction = innerFunctionName.contains('\n')
+        val multilineFunction = mapFunctionExpression.contains('\n')
         val existingIndent = editor.document!!.getIndent(context.mapInvocation.startOffset)
 
         val functionCallText =
                 if (!multilineFunction) {
-                    "$functionName (\\$variableName $resultName -> $innerFunctionName $variableName :: $resultName) [] $itemsExpression"
+                    "List.foldr (\\$itemVariableName $accVariableName -> $mapFunctionExpression $itemVariableName :: $accVariableName) [] $itemsExpression"
                 } else {
-                    val indentedFunction = addIndentLevels("", 1, innerFunctionName)
+                    val indentedFunction = addIndentLevels("", 1, mapFunctionExpression)
                     val thing = """List.foldr
-    (\$variableName $resultName ->
+    (\$itemVariableName $accVariableName ->
 """
                     val thingAfter = """
-                $variableName
-                :: $resultName
+                $itemVariableName
+                :: $accVariableName
         )
         []
 """.trimIndent()
