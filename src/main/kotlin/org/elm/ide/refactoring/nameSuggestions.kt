@@ -77,3 +77,4 @@ private fun LinkedHashSet<String>.addName(name: String?) {
     NameUtil.getSuggestionsByName(name, "", "", false, false, false)
             .mapTo(this) { it.toElmLowerId() }
 }
+
