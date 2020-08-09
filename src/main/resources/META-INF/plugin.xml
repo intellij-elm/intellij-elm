@@ -398,6 +398,10 @@
             <category>Elm</category>
         </intentionAction>
         <intentionAction>
+            <className>org.elm.ide.intentions.MapToFoldIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
             <className>org.elm.ide.intentions.MakeAnnotationIntention</className>
             <category>Elm</category>
         </intentionAction>

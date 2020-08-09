@@ -1,0 +1,4 @@
+module Example exposing (example)
+
+example numbers =
+    <spot>List.foldr (\item result -> (\n -> n * 2) item :: result) [] numbers</spot>
