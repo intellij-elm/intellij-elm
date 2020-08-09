@@ -321,6 +321,42 @@ value =
         |> List.map (\n -> n * 2)
 """)
 
+
+    fun `test to pipeline preserves comments above the right parts of the pipeline`() = doAvailableTest(
+            """
+module Foo exposing (value)
+
+value =
+    (-- This comment will apply to the whole expression so it stays up top
+     Api.g{-caret-}et (Endpoint.profiles uname)
+        maybeCred
+        -- Decode.field
+        (Decode.field "profile"
+            -- decoder
+            (decoder
+                -- maybeCred
+                maybeCred
+            )
+        )
+    )
+""", """
+module Foo exposing (value)
+
+value =
+    (-- This comment will apply to the whole expression so it stays up top
+     (
+    -- maybeCred
+     maybeCred
+        -- decoder
+        |> decoder
+        -- Decode.field
+        |> Decode.field "profile"
+        |> Api.get (Endpoint.profiles uname) maybeCred
+         )
+    )
+""")
+
+
     fun `test preserves comments`() = doAvailableTest(
             """
 module Foo exposing (src)
@@ -331,7 +367,7 @@ src (Avatar maybeUrl) =
         Nothing ->
             identity
                 (Asset.src
-                    -- asdf
+                    -- uses guest avatar if no avatar is present
                     Asset.defaultA{-caret-}vatar
                 )
 
@@ -348,7 +384,7 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             identity
-                -- asdf
+                -- uses guest avatar if no avatar is present
                 (Asset.defaultAvatar
                     |> Asset.src
                 )

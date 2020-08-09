@@ -106,7 +106,8 @@ fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExp
     if (needsParensInParent(expression)) {
         expression.replace(replaceWith)
     } else {
-        expression.replace(replaceWith.expression!!)
+        expression.replace(replaceWith)
+//        expression.replace(replaceWith.expression!!)
     }
 }
 
@@ -131,7 +132,8 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
             val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
                     .joinToString(separator = " ")
 
-            processArgument(nestedFunctionCall.arguments.last()).plus(comments).plus(joinToString)
+//            processArgument(nestedFunctionCall.arguments.last()).plus(comments).plus(joinToString)
+            comments.plus(processArgument(nestedFunctionCall.arguments.last())).plus(joinToString)
         }
     }
 }

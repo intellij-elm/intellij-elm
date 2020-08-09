@@ -13,7 +13,6 @@ import com.intellij.util.IncorrectOperationException
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.withoutExtraParens
 import org.intellij.lang.annotations.Language
 
 
@@ -118,30 +117,31 @@ class ElmPsiFactory(private val project: Project) {
 
     fun createPipeChain(existingIndent: String, indent: String, valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
         var s2 = ""
+        var visitedExpression = false
         for ((index, thing) in valueAndunctionApplications.withIndex()) {
+            val previous = valueAndunctionApplications.getOrNull(index - 1)
+            val next = valueAndunctionApplications.getOrNull(index + 1)
+            val notLast = index < (valueAndunctionApplications.count() - 1)
             when (thing) {
                 is String -> {
-                    if (index < (valueAndunctionApplications.count() - 1)) {
-                        s2 += "$thing"
+                    if (visitedExpression) {
+                        s2 += "\n$existingIndent$indent |> $thing"
                     } else {
-                        s2 += "$thing"
+                        s2 += "\n$existingIndent$indent $thing"
                     }
+                    visitedExpression = true
                 }
                 is PsiComment -> {
                     s2 += "\n$existingIndent$indent" + thing.text
                 }
             }
 
-            val next = valueAndunctionApplications.getOrNull(index + 1)
-            val notLast = index < (valueAndunctionApplications.count() - 1)
-            if (notLast && next != null && next !is PsiComment) {
-                s2 += "\n$existingIndent$indent|> "
-            }
-
         }
-        val thing: ElmParenthesizedExpr? = createFromText("f = \n$existingIndent$indent($s2\n$existingIndent$indent)")
+        val stringForExpression = "f = \n$existingIndent$indent($s2\n$existingIndent$indent)"
+        val thing: ElmParenthesizedExpr? = createFromText(stringForExpression)
         if (thing != null) {
-            return thing.withoutExtraParens
+            return thing
+//            return thing.withoutExtraParens
 //            return unwrapParens(thing)
         } else {
             return error("Invalid value ElmBinOpExpr: `($s2\n\n$indent)`")
