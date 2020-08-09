@@ -1,4 +1,4 @@
-module User exposing (<spot>name, age</spot>)
+module Example exposing (example)
 
-name = "Bob"
-age = 42
+example numbers =
+    <spot>List.foldr (\item result -> (\n -> n * 2) item :: result) [] numbers</spot>
