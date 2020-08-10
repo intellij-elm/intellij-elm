@@ -68,6 +68,13 @@ f0 =
 """)
 
 
+    fun `test not available when inner func call is not map but outer func call is map`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    List.map (\item -> List.singleton{-caret-} item) []
+""")
+
 
     fun `test piped function`() = doAvailableTest(
             """

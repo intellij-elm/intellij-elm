@@ -1,8 +1,12 @@
 package org.elm.lang.core
 
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.psi.PsiDocumentManager
 import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.indentStyle
 import org.elm.lang.core.psi.startOffset
+import org.elm.utils.getIndent
+import kotlin.math.ceil
 
 /**
  * Convert a string so that its first character is guaranteed to be lowercase.
@@ -33,3 +37,42 @@ val ElmPsiElement.textWithNormalizedIndents: String
             if (index == 0) s else s.drop(firstColumn)
         }.joinToString("\n")
     }
+
+/**
+ * Build a string of indented text lines. Useful for multi-line code generation.
+ *
+ * @see buildIndentedText
+ */
+class IndentedTextBuilder(startLevel: Int, val indentSize: Int) {
+    var level: Int = startLevel
+    private var buffer = StringBuilder()
+
+    fun appendLine(str: String = "") {
+        if (str.isBlank()) {
+            buffer.appendln()
+            return
+        }
+        buffer.append(" ".repeat(level * indentSize))
+        buffer.appendln(str)
+    }
+
+    fun build() = buffer.toString()
+}
+
+/**
+ * Build a string of indented text that can be used to replace [element] in the source editor.
+ *
+ * The indent size is determined based on the user's preference in IntelliJ code style settings.
+ *
+ * @see ElmPsiElement.textWithNormalizedIndents
+ */
+fun buildIndentedText(element: ElmPsiElement, builder: (IndentedTextBuilder).() -> Unit): String {
+    val doc = PsiDocumentManager.getInstance(element.project).getDocument(element.elmFile)
+            ?: error("Failed to find document for $element")
+    val existingIndent = doc.getIndent(element.startOffset)
+    val indentSize = element.indentStyle.INDENT_SIZE
+    val startLevel = ceil(existingIndent.length / indentSize.toDouble()).toInt()
+    val b = IndentedTextBuilder(startLevel, indentSize)
+    b.builder()
+    return b.build()
+}
