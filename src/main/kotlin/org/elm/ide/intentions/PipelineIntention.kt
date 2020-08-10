@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
@@ -119,12 +120,12 @@ private fun needsParensInParent(element: ElmPsiElement): Boolean {
     }
 }
 
-private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr): List<Any> {
+private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr, associatedComments: List<PsiComment> = emptyList()): List<Any> {
     return when (nestedFunctionCall.arguments.count()) {
         0 -> {
             val comments = nestedFunctionCall.comments.toList()
             val commentsText = comments.toList().map { it.text }.joinToString(separator = " ")
-            listOf(comments, nestedFunctionCall.target.text)
+            listOf(associatedComments, comments, nestedFunctionCall.target.text)
         }
         else -> {
             val comments = nestedFunctionCall.comments.toList()
@@ -132,25 +133,28 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
             val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
                     .joinToString(separator = " ")
 
+            val commentsForLastArg = nestedFunctionCall.arguments.last().prevSiblings.toList().takeWhile { it is PsiWhiteSpace || it is PsiComment }.filterIsInstance<PsiComment>()
+            val commentsForPreLastArg = nestedFunctionCall.comments.filter { !commentsForLastArg.contains(it) }
+
 //            processArgument(nestedFunctionCall.arguments.last()).plus(comments).plus(joinToString)
-            comments.plus(processArgument(nestedFunctionCall.arguments.last())).plus(joinToString)
+            processArgument(nestedFunctionCall.arguments.last(), commentsForLastArg).plus(associatedComments).plus(commentsForPreLastArg).plus(joinToString)
         }
     }
 }
 
-private fun processArgument(argument: ElmAtomTag): List<Any> {
+private fun processArgument(argument: ElmAtomTag, commentsForLastArg: List<PsiComment>): List<Any> {
     val firstArgument = argument.withoutParens
     if (firstArgument is ElmFunctionCallExpr) {
-        return splitArgAndFunctionApplications(firstArgument)
+        return splitArgAndFunctionApplications(firstArgument, commentsForLastArg)
     }
     if (firstArgument.children.size != 1) {
-        return listOf(addParensIfNeeded(firstArgument))
+        return listOf(addParensIfNeeded(firstArgument), commentsForLastArg)
     }
 
     return if (firstArgument is ElmFunctionCallExpr) {
-        splitArgAndFunctionApplications(firstArgument)
+        splitArgAndFunctionApplications(firstArgument, commentsForLastArg)
     } else {
-        listOf(addParensIfNeeded(firstArgument))
+        commentsForLastArg.plus(listOf(addParensIfNeeded(firstArgument)))
     }
 }
 

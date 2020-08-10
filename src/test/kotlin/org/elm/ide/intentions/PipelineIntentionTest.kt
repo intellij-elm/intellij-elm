@@ -345,13 +345,13 @@ module Foo exposing (value)
 value =
     (-- This comment will apply to the whole expression so it stays up top
      (
-    -- maybeCred
-     maybeCred
-        -- decoder
-        |> decoder
-        -- Decode.field
-        |> Decode.field "profile"
-        |> Api.get (Endpoint.profiles uname) maybeCred
+         -- maybeCred
+          maybeCred
+         -- decoder
+          |> decoder
+         -- Decode.field
+          |> Decode.field "profile"
+          |> Api.get (Endpoint.profiles uname) maybeCred
          )
     )
 """)
