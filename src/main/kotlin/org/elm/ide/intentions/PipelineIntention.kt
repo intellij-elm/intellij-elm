@@ -9,6 +9,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
 
 /**
@@ -74,7 +75,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                     val indent = context.functionCall.indentStyle.oneLevelOfIndentation
                     val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall))
-                    replaceUnwrapped(context.functionCall, rewrittenWithPipes)
+                    replaceUnwrapped(context.functionCall, rewrittenWithPipes, psiFactory)
                 }
                 is Context.HasRightPipes -> {
                     val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.pipeline.startOffset).toString()
@@ -93,7 +94,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                             splitThingTransformed
                                     .plus(segments)
                     )
-                    replaceUnwrapped(context.pipelineExpression.pipeline, firstPartRewrittenWithPipeline)
+                    replaceUnwrapped(context.pipelineExpression.pipeline, firstPartRewrittenWithPipeline, psiFactory)
                 }
             }
 
@@ -103,12 +104,14 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 }
 
 
-fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
-    if (needsParensInParent(expression)) {
-        expression.replace(replaceWith)
+fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr, psiFactory: ElmPsiFactory) {
+    val comments =replaceWith.directChildren.filterIsInstance<PsiComment>()
+    val hasComments = comments.toList().isNotEmpty()
+    if (needsParensInParent(expression) || hasComments) {
+        expression.replace(replaceWith.withoutExtraParens)
     } else {
-        expression.replace(replaceWith)
-//        expression.replace(replaceWith.expression!!)
+        val expression1 = replaceWith.withoutParens
+        expression.replace(expression1)
     }
 }
 

@@ -125,7 +125,7 @@ class ElmPsiFactory(private val project: Project) {
             when (thing) {
                 is String -> {
                     if (visitedExpression) {
-                        s2 += "\n$existingIndent$indent |> $thing"
+                        s2 += "\n$existingIndent$indent|> $thing"
                     } else {
                         s2 += "\n$existingIndent$indent $thing"
                     }

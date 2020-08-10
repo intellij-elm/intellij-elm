@@ -35,9 +35,10 @@ greet first last = first ++ " " ++ last
 module Foo exposing (exclaimGreeting)
 
 exclaimGreeting =
-    ("Doe"
+    (
+         "Doe"
         |> greet "John"
-    )
+        )
         ++ "!"
 
 greet first last = first ++ " " ++ last
@@ -348,10 +349,10 @@ value =
          -- maybeCred
           maybeCred
          -- decoder
-          |> decoder
+         |> decoder
          -- Decode.field
-          |> Decode.field "profile"
-          |> Api.get (Endpoint.profiles uname) maybeCred
+         |> Decode.field "profile"
+         |> Api.get (Endpoint.profiles uname) maybeCred
          )
     )
 """)
@@ -384,9 +385,11 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             identity
-                -- uses guest avatar if no avatar is present
-                (Asset.defaultAvatar
+                ((
+                    -- uses guest avatar if no avatar is present
+                     Asset.defaultAvatar
                     |> Asset.src
+                    )
                 )
 
         Just "" ->
@@ -424,12 +427,14 @@ src : Avatar -> Attribute msg
 src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
-            -- Asset.defaultAvatar
-            Asset.defaultAvatar
+            -- identity
+            (
+                -- Asset.defaultAvatar
+                 Asset.defaultAvatar
                 -- Asset.src
                 |> Asset.src
-                -- identity
                 |> identity
+                )
 
         Just "" ->
             Asset.src Asset.defaultAvatar
