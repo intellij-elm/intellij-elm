@@ -8,13 +8,15 @@ class RemovePipelineIntentionTest : ElmIntentionTestBase(RemovePipelineIntention
             """
 module Foo exposing (list)
 
-list = [1, 2, 3, 4] |> List.ma{-caret-}p times2
+list =
+    [1, 2, 3, 4] |> List.ma{-caret-}p times2
 
 times2 m n = m * n
 """, """
 module Foo exposing (list)
 
-list = List.map times2 [1, 2, 3, 4]
+list =
+    List.map times2 [1, 2, 3, 4]
 
 times2 m n = m * n
 """)
@@ -25,27 +27,32 @@ times2 m n = m * n
 module Foo exposing (list)
 
 list = 
-    -- comment 1
-    [1, 2, 3, 4] {- comment 2 -}
-        -- comment 3
-        {- comment 4 -}
-        |> List.ma{-caret-}p times2 -- comment 5
-        -- comment 6
-        |> identity -- comment 7
+    -- top-level
+    [1, 2, 3, 4] {- List.map 1 -}
+        -- List.map 2
+        {- List.map 3 -}
+        |> List.ma{-caret-}p times2 -- identity 1
+        -- identity 2
+        |> identity -- end of line
 
 times2 m n = m * n
 """, """
 module Foo exposing (list)
 
 list = 
-    -- comment 1
-    identity
-
-    (List.map times2
--- comment 5
--- comment 6
-    [1, 2, 3, 4]
-    ) -- comment 7
+    -- top-level
+    (
+        -- identity 1
+        -- identity 2
+        identity
+        (
+       {- List.map 1 -}
+       -- List.map 2
+       {- List.map 3 -}
+       List.map times2
+       [1, 2, 3, 4]
+       )
+        ) -- end of line
 
 times2 m n = m * n
 """)

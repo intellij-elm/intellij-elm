@@ -166,13 +166,17 @@ class ElmPsiFactory(private val project: Project) {
 
 
     fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr {
-        val createFromText = createFromText<ElmParenthesizedExpr>("f = ($text\n$indentation)\n")
+        val createFromText = if (text.lines().size > 1) {
+             createFromText<ElmParenthesizedExpr>("f = ($text\n$indentation)\n")
+        } else {
+            createFromText<ElmParenthesizedExpr>("f = ($text)")
+        }
         return createFromText
                 ?: error("Invalid value Paren Expression: `(" +
                         "$text\n    )`")
     }
 
-    fun callFunctionWithArgument(outer: String, inner: ElmPsiElement, indent: String = "    "): ElmParenthesizedExpr {
+    fun callFunctionWithArgument(outer: String, inner: ElmPsiElement, indent: String = ""): ElmParenthesizedExpr {
         val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
         val innerText = inner.text
         val elmParenthesizedExpr: ElmParenthesizedExpr = if (isMultiline) {

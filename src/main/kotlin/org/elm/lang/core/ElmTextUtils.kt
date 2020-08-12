@@ -1,7 +1,9 @@
 package org.elm.lang.core
 
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.psi.PsiComment
 import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmBinOpExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
@@ -41,6 +43,11 @@ val ElmPsiElement.textWithNormalizedIndents: String
 val ElmPsiElement.withoutParens: ElmPsiElement get() { return unwrapParensHelp(this) }
 val ElmParenthesizedExpr.withoutExtraParens: ElmParenthesizedExpr get() { return unwrapNestedParensHelp(this) }
 
+val ElmParenthesizedExpr.comments : Sequence<PsiComment>
+    get() {
+    return directChildren.filterIsInstance<PsiComment>()
+}
+
 private fun unwrapParensHelp(expression: ElmPsiElement): ElmPsiElement {
     return when (expression) {
         is ElmParenthesizedExpr -> {
@@ -48,7 +55,11 @@ private fun unwrapParensHelp(expression: ElmPsiElement): ElmPsiElement {
             if (nestedExpression == null) {
                expression
             } else {
-                unwrapParensHelp(nestedExpression)
+                if (expression.comments.count() == 0) {
+                    unwrapParensHelp(nestedExpression)
+                } else {
+                    expression
+                }
             }
         }
         else -> {
