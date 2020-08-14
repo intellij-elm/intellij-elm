@@ -27,7 +27,7 @@ object ElmRecordFieldSuggestor : Suggestor {
             val ty = targetExpr.findTy() as? TyRecord ?: resolveTarget(targetExpr) ?: return
 
             // provide each field as a completion result
-            ty.fields.forEach { fieldName, fieldTy ->
+            ty.fields.forEach { (fieldName, fieldTy) ->
                 result.add(fieldName, fieldTy)
             }
         }
@@ -39,15 +39,18 @@ object ElmRecordFieldSuggestor : Suggestor {
      * the body isn't.
      */
     private fun resolveTarget(targetExpr: ElmFieldAccessTargetTag): TyRecord? {
-        if (targetExpr is ElmValueExpr) {
-            val ref = targetExpr.reference.resolve() ?: return null
-            return ref.findTy() as? TyRecord
-        } else if (targetExpr is ElmFieldAccessExpr) {
-            val field = targetExpr.lowerCaseIdentifier.text ?: return null
-            val base = resolveTarget(targetExpr.targetExpr) ?: return null
-            return base.fields[field] as? TyRecord
+        return when (targetExpr) {
+            is ElmValueExpr -> {
+                val ref = targetExpr.reference.resolve() ?: return null
+                ref.findTy() as? TyRecord
+            }
+            is ElmFieldAccessExpr -> {
+                val field = targetExpr.lowerCaseIdentifier.text
+                val base = resolveTarget(targetExpr.targetExpr) ?: return null
+                base.fields[field] as? TyRecord
+            }
+            else -> null
         }
-        return null
     }
 }
 
