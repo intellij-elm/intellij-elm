@@ -244,7 +244,8 @@ view model =
             [ viewBanner
             , div [ class "container page" ]
                 [ div [ class "row" ]
-                    [ div [ class "col-md-9" ] (case model.feed of
+                    [ div [ class "col-md-9" ]
+                        case model.feed of
                             Loaded feed ->
                                 [ div [ class "feed-toggle" ]
                                     (List.concat
@@ -266,7 +267,7 @@ view model =
 
                             Failed ->
                                 [ Loading.error "feed" ]
-    )                    , div [ class "col-md-3" ] <|
+                    , div [ class "col-md-3" ] <|
                         case model.tags of
                             Loaded tags ->
                                 [ div [ class "sidebar" ] <|
@@ -318,12 +319,15 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             -- user isn't logged in - use guest avatar
-            -- sets the HTML src
-            Asset.src
+            (
+                    -- sets the HTML src
+                    Asset.src
+                    (
                 -- normalizes trailing and leading /'s
-                (normalizeImageUrl
-                    Asset.defaultAvatar
+                normalizeImageUrl
+                Asset.defaultAvatar
                 )
+                    )
 
 
         Just "" ->
