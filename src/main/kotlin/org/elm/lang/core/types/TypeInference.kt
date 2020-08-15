@@ -436,6 +436,7 @@ private class InferenceScope(
             atom is ElmLetInExpr -> inferChild { beginLetInInference(atom) }.ty
             atom is ElmCaseOfExpr -> inferCase(atom)
             atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
+            atom is ElmRecordExpr -> inferRecord(atom)
             atom.hasErrors -> TyUnknown()
             else -> when (atom) {
                 is ElmAnonymousFunctionExpr -> inferLambda(atom)
@@ -449,7 +450,6 @@ private class InferenceScope(
                 is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
                 is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number")
                 is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
-                is ElmRecordExpr -> inferRecord(atom)
                 is ElmStringConstantExpr -> TyString
                 is ElmUnitExpr -> TyUnit()
                 is ElmValueExpr -> inferReferenceElement(atom)
@@ -535,8 +535,6 @@ private class InferenceScope(
 
         // TODO: check patterns cover possibilities
         for (branch in caseOf.branches) {
-            if (branch.hasErrors) break
-
             val pat = branch.pattern
             val branchExpression = branch.expression ?: break
             val result = inferChild { beginCaseBranchInference(pat, caseOfExprTy, branchExpression) }

@@ -9,11 +9,11 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmTypes.*
-import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmCaseOfExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmIfElseExpr
 import org.elm.lang.core.psi.elements.ElmLetInExpr
+import org.elm.lang.core.psi.elementType
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.prevLeaves
 import org.elm.lang.core.psi.withoutErrors
 
@@ -63,8 +63,11 @@ object ElmKeywordSuggestor : Suggestor {
                 result.add("exposing")
             }
 
+            if(parent is ElmRecordExpr && prevVisibleLeaf?.elementType in listOf(COMMA, LEFT_SQUARE_BRACKET)) {
+                // When in a record field (e.g. `{n }` or `{ name = "", n }`) do not suggest keywords.
+            }
             // keywords that can appear at the beginning of an expression
-            if (prevVisibleLeaf?.elementType in listOf(EQ, ARROW, IN, COMMA, LEFT_SQUARE_BRACKET, LEFT_PARENTHESIS)) {
+            else if (prevVisibleLeaf?.elementType in listOf(EQ, ARROW, IN, COMMA, LEFT_SQUARE_BRACKET, LEFT_PARENTHESIS)) {
                 result.add("if")
                 result.add("case")
                 result.add("let")

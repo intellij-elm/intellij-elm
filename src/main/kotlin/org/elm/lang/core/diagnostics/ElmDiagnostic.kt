@@ -112,7 +112,7 @@ class TypeMismatchError(
         private val expected: Ty,
         endElement: PsiElement? = null,
         private val patternBinding: Boolean = false,
-        private val recordDiff: RecordDiff? = null
+        val recordDiff: RecordDiff? = null
 ) : ElmDiagnostic(element, endElement) {
     override val message: String
         get() {
