@@ -42,17 +42,17 @@ module Foo exposing (list)
 list = 
     -- top-level
     (
-        -- identity 1
-        -- identity 2
-        identity
-        (
-       {- List.map 1 -}
-       -- List.map 2
-       {- List.map 3 -}
-       List.map times2
-       [1, 2, 3, 4]
-       )
-        ) -- end of line
+            -- identity 1
+            -- identity 2
+            identity
+            (
+        {- List.map 1 -}
+        -- List.map 2
+        {- List.map 3 -}
+        List.map times2
+        [1, 2, 3, 4]
+        )
+            ) -- end of line
 
 times2 m n = m * n
 """)
@@ -157,9 +157,11 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             identity
-                (Asset.src
+                ((
                     -- asdf
+                    Asset.src
                     Asset.defaultAvatar
+                    )
                 )
 
         Just "" ->
