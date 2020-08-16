@@ -5,7 +5,7 @@ import org.elm.workspace.Version
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-private val repo = Repository(
+private val fixture = Repository(
         Pkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
         Pkg(name = "B", version = v(1, 0, 1), dependencies = emptyMap()),
         Pkg(name = "B", version = v(1, 0, 2), dependencies = emptyMap()),
@@ -75,6 +75,46 @@ class SolverTest {
             ))
 
     @Test
+    fun `resolve extended constraints can be merged`() = doTest(
+            deps = mapOf(
+                    "A" to r("1.0.0 <= v < 2.0.0"),
+                    "B" to r("1.0.0 <= v < 2.1.0")
+            ),
+            expect = mapOf(
+                    "A" to v(1, 0, 0),
+                    "B" to v(2, 0, 0)
+            ),
+            repo = Repository(
+                    Pkg(
+                            name = "A",
+                            version = v(1, 0, 0),
+                            dependencies = mapOf("B" to r("1.0.0 <= v < 3.0.0"))
+                    ),
+                    Pkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
+                    Pkg(name = "B", version = v(2, 0, 0), dependencies = emptyMap()),
+                    Pkg(name = "B", version = v(2, 1, 0), dependencies = emptyMap())
+            )
+    )
+
+    @Test
+    fun `resolve extended constraints cannot be merged - conflict on B`() = doTest(
+            deps = mapOf(
+                    "A" to r("1.0.0 <= v < 2.0.0"),
+                    "B" to r("1.0.0 <= v < 2.0.0")
+            ),
+            expect = null,
+            repo = Repository(
+                    Pkg(
+                            name = "A",
+                            version = v(1, 0, 0),
+                            dependencies = mapOf("B" to r("2.0.0 <= v < 3.0.0"))
+                    ),
+                    Pkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
+                    Pkg(name = "B", version = v(2, 0, 0), dependencies = emptyMap())
+            )
+    )
+
+    @Test
     fun `no solution because version constraint is lower than lowest version in repo`() = doTest(
             deps = mapOf("C" to r("0.0.0 <= v < 1.0.0")),
             expect = null)
@@ -93,7 +133,7 @@ class SolverTest {
             expect = null)
 }
 
-fun doTest(deps: Map<PkgName, Constraint>, expect: Map<PkgName, Version>?) {
+fun doTest(deps: Map<PkgName, Constraint>, expect: Map<PkgName, Version>?, repo: Repository = fixture) {
     assertEquals(expect, solve(deps, repo))
 }
 

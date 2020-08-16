@@ -60,13 +60,9 @@ private class Solver(private val repo: Repository) {
 
         // Speculatively try each candidate version to see if it is a partial solution
         loop@ for (candidate in candidates) {
-            // TODO [kl] check that constraints for the same key are compatible when combining
-            val tentativeDeps = restDeps + candidate.dependencies
-
-            // TODO [kl] check that solutions for the same key are equal when combining
+            val tentativeDeps = restDeps.combine(candidate.dependencies) ?: continue@loop
             val tentativeSolutions = solutions + (dep.name to candidate.version)
 
-            // TODO [kl] are we going to overflow the stack when recursing?
             when (val res = solve(tentativeDeps, tentativeSolutions)) {
                 DeadEnd -> continue@loop
                 is Proceed -> return solve(res.pending, res.solutions)
@@ -85,3 +81,18 @@ private fun Map<PkgName, Constraint>.pick(): Pair<Dep?, Map<PkgName, Constraint>
     val dep = minBy { it.key } ?: return (null to this)
     return Dep(dep.key, dep.value) to minus(dep.key)
 }
+
+private fun Map<PkgName, Constraint>.combine(other: Map<PkgName, Constraint>): Map<PkgName, Constraint>? =
+        keys.union(other.keys)
+                .associateWith { key ->
+                    val v1 = this[key]
+                    val v2 = other[key]
+                    when {
+                        v1 != null && v2 != null -> {
+                            v1.intersect(v2) ?: return null
+                        }
+                        v1 != null -> v1
+                        v2 != null -> v2
+                        else -> error("impossible")
+                    }
+                }
