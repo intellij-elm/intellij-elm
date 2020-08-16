@@ -7,23 +7,19 @@ import org.elm.workspace.solver.SolverResult.Proceed
 
 typealias PkgName = String
 
-data class Pkg(
-        val name: PkgName,
-        val version: Version,
-        val elmVersion: Constraint = elm19, // TODO: get rid of the default outside of test cases
-        val dependencies: Map<PkgName, Constraint>
-)
+// TODO [kl] consider getting rid of the interface and just unifying it with the rest of the ElmProject system
+
+interface Pkg {
+    val name: PkgName
+    val version: Version
+    val elmVersion: Constraint
+    val dependencies: Map<PkgName, Constraint>
+}
 
 fun Version.satisfies(constraint: Constraint): Boolean = constraint.contains(this)
 
-private val elm19 = Constraint.parse("0.19.0 <= v < 0.20.0")
-
-data class Repository(private val packagesByName: Map<PkgName, List<Pkg>>) {
-    constructor(vararg packages: Pkg) : this(packages.groupBy { it.name })
-
-    operator fun get(name: String): List<Pkg> {
-        return packagesByName[name] ?: emptyList()
-    }
+interface Repository {
+    operator fun get(name: PkgName): List<Pkg>
 }
 
 fun solve(deps: Map<PkgName, Constraint>, repo: Repository): Map<PkgName, Version>? {

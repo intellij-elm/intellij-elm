@@ -5,19 +5,34 @@ import org.elm.workspace.Version
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-private val fixture = Repository(
-        Pkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
-        Pkg(name = "B", version = v(1, 0, 1), dependencies = emptyMap()),
-        Pkg(name = "B", version = v(1, 0, 2), dependencies = emptyMap()),
-        Pkg(name = "B", version = v(1, 0, 3), dependencies = emptyMap()),
-        Pkg(
+data class SimplePkg(
+        override val name: PkgName,
+        override val version: Version,
+        override val elmVersion: Constraint = Constraint.parse("0.19.0 <= v < 0.20.0"),
+        override val dependencies: Map<PkgName, Constraint>
+) : Pkg
+
+data class SimpleRepository(private val packagesByName: Map<PkgName, List<Pkg>>) : Repository {
+    constructor(vararg packages: Pkg) : this(packages.groupBy { it.name })
+
+    override operator fun get(name: String): List<Pkg> {
+        return packagesByName[name] ?: emptyList()
+    }
+}
+
+private val fixture = SimpleRepository(
+        SimplePkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
+        SimplePkg(name = "B", version = v(1, 0, 1), dependencies = emptyMap()),
+        SimplePkg(name = "B", version = v(1, 0, 2), dependencies = emptyMap()),
+        SimplePkg(name = "B", version = v(1, 0, 3), dependencies = emptyMap()),
+        SimplePkg(
                 name = "C",
                 version = v(1, 0, 0),
                 dependencies = mapOf(
                         "B" to r("1.0.1 <= v < 1.0.3")
                 )
         ),
-        Pkg(
+        SimplePkg(
                 name = "D",
                 version = v(1, 0, 0),
                 dependencies = mapOf(
@@ -84,15 +99,15 @@ class SolverTest {
                     "A" to v(1, 0, 0),
                     "B" to v(2, 0, 0)
             ),
-            repo = Repository(
-                    Pkg(
+            repo = SimpleRepository(
+                    SimplePkg(
                             name = "A",
                             version = v(1, 0, 0),
                             dependencies = mapOf("B" to r("1.0.0 <= v < 3.0.0"))
                     ),
-                    Pkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
-                    Pkg(name = "B", version = v(2, 0, 0), dependencies = emptyMap()),
-                    Pkg(name = "B", version = v(2, 1, 0), dependencies = emptyMap())
+                    SimplePkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
+                    SimplePkg(name = "B", version = v(2, 0, 0), dependencies = emptyMap()),
+                    SimplePkg(name = "B", version = v(2, 1, 0), dependencies = emptyMap())
             )
     )
 
@@ -103,14 +118,14 @@ class SolverTest {
                     "B" to r("1.0.0 <= v < 2.0.0")
             ),
             expect = null,
-            repo = Repository(
-                    Pkg(
+            repo = SimpleRepository(
+                    SimplePkg(
                             name = "A",
                             version = v(1, 0, 0),
                             dependencies = mapOf("B" to r("2.0.0 <= v < 3.0.0"))
                     ),
-                    Pkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
-                    Pkg(name = "B", version = v(2, 0, 0), dependencies = emptyMap())
+                    SimplePkg(name = "B", version = v(1, 0, 0), dependencies = emptyMap()),
+                    SimplePkg(name = "B", version = v(2, 0, 0), dependencies = emptyMap())
             )
     )
 

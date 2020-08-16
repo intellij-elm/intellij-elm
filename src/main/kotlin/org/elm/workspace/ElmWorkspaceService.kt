@@ -43,6 +43,7 @@ import org.jdom.Element
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 
@@ -191,7 +192,8 @@ class ElmWorkspaceService(
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
                 val compilerVersion = settings.toolchain.elmCLI?.queryVersion()?.orNull()
                         ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
-                ElmProject.parse(manifestPath, ElmPackageRepository(compilerVersion))
+                val repo = ElmPackageRepository(compilerVersion) // not thread-safe; do not reuse across threads!
+                ElmProjectLoader.topLevelLoad(manifestPath, repo)
             }.whenComplete { _, error ->
                 // log the result
                 if (error == null) {
@@ -320,9 +322,12 @@ class ElmWorkspaceService(
     // INTEGRATION TEST SUPPORT
 
 
-    fun setupForTests(toolchain: ElmToolchain, elmProject: ElmProject) {
+    /// Configures the workspace for the Elm project described by [manifestFile]
+    fun setupForTests(toolchain: ElmToolchain, manifestFile: VirtualFile) {
         useToolchain(toolchain)
-        upsertProject(elmProject)
+        asyncLoadProject(manifestFile.pathAsPath)
+                .get(5, TimeUnit.SECONDS)
+                .run { upsertProject(this) }
     }
 
 

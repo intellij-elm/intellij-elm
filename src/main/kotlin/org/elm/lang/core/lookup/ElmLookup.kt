@@ -11,8 +11,8 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.lang.core.psi.moduleName
+import org.elm.lang.core.stubs.index.ElmNamedElementIndex
 import org.elm.openapiext.findFileByPathTestAware
 import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
@@ -131,7 +131,7 @@ private fun buildSearchScope(includeTests: Boolean, p: ElmProject, intellijProje
      */
     val (srcDirPaths, dependencies) = when {
         includeTests -> p.allSourceDirs to p.allResolvedDependencies
-        else -> p.absoluteSourceDirectories.asSequence() to p.dependencies.direct.asSequence()
+        else -> p.absoluteSourceDirectories.asSequence() to p.dependencies.asSequence()
     }
 
     val srcDirs = srcDirPaths.mapNotNull { findFileByPathTestAware(it) }.toList()

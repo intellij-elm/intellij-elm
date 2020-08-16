@@ -175,7 +175,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
-                        "elm/time": "1.0.0"
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0"
                     },
                     "indirect": {}
                 },
@@ -187,11 +188,11 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             dir("src") {
                 elm("Main.elm", """
-                    import Time
+                    import Json.Decode
                            --^
                 """.trimIndent())
             }
-        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", toPackage = "elm/time 1.0.0")
+        }.checkReferenceIsResolved<ElmImportClause>("src/Main.elm", toPackage = "elm/json 1.0.0")
     }
 
 
@@ -209,6 +210,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
                         "elm/parser": "1.0.0"
                     },
                     "indirect": {}
@@ -246,6 +249,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                         "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {
+                                "elm/core": "1.0.0",
+                                "elm/json": "1.0.0",
                                 "elm/parser": "1.0.0"
                             },
                             "indirect": {}
@@ -273,6 +278,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                         "elm-version": "0.19.1",
                         "dependencies": {
                             "direct": {
+                                "elm/core": "1.0.0",
+                                "elm/json": "1.0.0",
                                 "elm/parser": "1.1.0"
                             },
                             "indirect": {}
@@ -344,7 +351,12 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
+                        "elm/random": "1.0.0",
+                        "elm/time": "1.0.0"
+                    },
                     "indirect": {}
                 },
                 "test-dependencies": {
@@ -380,7 +392,12 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
+                        "elm/random": "1.0.0",
+                        "elm/time": "1.0.0"
+                    },
                     "indirect": {}
                 },
                 "test-dependencies": {
@@ -425,7 +442,12 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
+                        "elm/random": "1.0.0",
+                        "elm/time": "1.0.0"
+                    },
                     "indirect": {}
                 },
                 "test-dependencies": {
