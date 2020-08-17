@@ -18,8 +18,68 @@ import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 
-private val objectMapper = ObjectMapper()
 
+class ElmProjectLoader(
+        private val repo: ElmPackageRepository,
+        private val versionsByPackage: Map<String, Version>
+) {
+    private fun load(packageName: String): ElmPackageProject {
+        val version = versionsByPackage[packageName]
+                ?: throw ProjectLoadException("Could not find suitable version of $packageName")
+        val manifestPath = repo.findPackageManifest(packageName, version)
+        return when (val dto = parseDTO(manifestPath)) {
+            is ElmPackageProjectDTO ->
+                ElmPackageProject(
+                        manifestPath = manifestPath,
+                        elmVersion = dto.elmVersion,
+                        dependencies = dto.dependencies.keys.map { load(it) },
+                        testDependencies = dto.testDependencies.keys.map { load(it) },
+                        sourceDirectories = listOf(Paths.get("src")),
+                        name = dto.name,
+                        version = dto.version,
+                        exposedModules = dto.exposedModulesNode.toExposedModuleMap())
+            else -> error("should never happen")
+        }
+    }
+
+    companion object {
+        fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject =
+                when (val dto = parseDTO(manifestPath)) {
+                    is ElmApplicationProjectDTO -> {
+                        val deps = dto.dependencies.direct + dto.dependencies.indirect +
+                                dto.testDependencies.direct + dto.testDependencies.indirect
+                        val loader = ElmProjectLoader(repo, deps)
+                        ElmApplicationProject(
+                                manifestPath = manifestPath,
+                                elmVersion = dto.elmVersion,
+                                dependencies = dto.dependencies.direct.keys.map { loader.load(it) },
+                                testDependencies = dto.testDependencies.direct.keys.map { loader.load(it) },
+                                sourceDirectories = dto.sourceDirectories,
+                                testsRelativeDirPath = DEFAULT_TESTS_DIR_NAME
+                        )
+                    }
+                    is ElmPackageProjectDTO -> {
+                        val deps = solve(dto.dependencies + dto.testDependencies, repo)
+                                ?: throw ProjectLoadException("unsolvable constraints")
+                        val loader = ElmProjectLoader(repo, deps)
+                        ElmPackageProject(
+                                manifestPath = manifestPath,
+                                elmVersion = dto.elmVersion,
+                                dependencies = dto.dependencies.keys.map { loader.load(it) },
+                                testDependencies = dto.testDependencies.keys.map { loader.load(it) },
+                                sourceDirectories = listOf(Paths.get("src")),
+                                name = dto.name,
+                                version = dto.version,
+                                exposedModules = dto.exposedModulesNode.toExposedModuleMap())
+                    }
+                }
+    }
+}
+
+
+/**
+ * Provides access to the Elm packages stored on-disk by the Elm compiler in `~/.elm`
+ */
 class ElmPackageRepository(val elmCompilerVersion: Version) : Repository {
 
     private val inMemCache: MutableMap<String, List<Pkg>> = mutableMapOf()
@@ -29,18 +89,7 @@ class ElmPackageRepository(val elmCompilerVersion: Version) : Repository {
             /*
             The Elm compiler first checks the ELM_HOME environment variable. If not found,
             it will fallback to the path returned by Haskell's `System.Directory.getAppUserDataDirectory`
-            function. That function behaves as follows:
-
-            - On Unix-like systems, the path is ~/.<app>.
-            - On Windows, the path is %APPDATA%/<app> (e.g. C:/Users/<user>/AppData/Roaming/<app>)
-
-            IntelliJ's FileUtil.expandUserHome() uses the JVM's `user.home` system property to
-            determine the home directory.
-
-            - On Unix-like systems, the path is /Users/<user>
-            - on Windows, the path is C:/Users/<user>
-
-            Note that the Haskell and Java functions do slightly different things.
+            function.
             */
             val elmHomeVar = System.getenv("ELM_HOME")
             if (elmHomeVar != null && Paths.get(elmHomeVar).exists())
@@ -91,64 +140,7 @@ class ElmPackageRepository(val elmCompilerVersion: Version) : Repository {
 }
 
 
-class ElmProjectLoader(
-        private val repo: ElmPackageRepository,
-        private val versionsByPackage: Map<String, Version>
-) {
-    private fun load(packageName: String): ElmPackageProject {
-        val version = versionsByPackage[packageName]
-                ?: throw ProjectLoadException("Could not find suitable version of $packageName")
-        val manifestPath = repo.findPackageManifest(packageName, version)
-        return when (val dto = parseDTO(manifestPath)) {
-            is ElmPackageProjectDTO ->
-                ElmPackageProject(
-                        manifestPath = manifestPath,
-                        elmVersion = dto.elmVersion,
-                        dependencies = dto.dependencies.keys.map { load(it) },
-                        testDependencies = dto.testDependencies.keys.map { load(it) },
-                        sourceDirectories = listOf(Paths.get("src")),
-                        name = dto.name,
-                        version = dto.version,
-                        exposedModules = dto.exposedModulesNode.toExposedModuleMap())
-            else -> error("should never happen")
-        }
-    }
-
-    companion object {
-        fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject {
-            return when (val dto = parseDTO(manifestPath)) {
-                is ElmApplicationProjectDTO -> {
-                    val deps = dto.dependencies.direct + dto.dependencies.indirect +
-                            dto.testDependencies.direct + dto.testDependencies.indirect
-                    val loader = ElmProjectLoader(repo, deps)
-                    ElmApplicationProject(
-                            manifestPath = manifestPath,
-                            elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.direct.keys.map { loader.load(it) },
-                            testDependencies = dto.testDependencies.direct.keys.map { loader.load(it) },
-                            sourceDirectories = dto.sourceDirectories,
-                            testsRelativeDirPath = DEFAULT_TESTS_DIR_NAME
-                    )
-                }
-                is ElmPackageProjectDTO -> {
-                    val deps = solve(dto.dependencies + dto.testDependencies, repo)
-                            ?: throw ProjectLoadException("unsolvable constraints")
-                    val loader = ElmProjectLoader(repo, deps)
-                    ElmPackageProject(
-                            manifestPath = manifestPath,
-                            elmVersion = dto.elmVersion,
-                            dependencies = dto.dependencies.keys.map { loader.load(it) },
-                            testDependencies = dto.testDependencies.keys.map { loader.load(it) },
-                            sourceDirectories = listOf(Paths.get("src")),
-                            name = dto.name,
-                            version = dto.version,
-                            exposedModules = dto.exposedModulesNode.toExposedModuleMap())
-                }
-            }
-        }
-    }
-}
-
+// DTOs for JSON Decoding
 
 private fun parseDTO(manifestPath: Path): ElmProjectDTO {
     val manifestStream = findFileByPathTestAware(manifestPath)?.inputStream
@@ -165,7 +157,7 @@ private fun parseDTO(manifestPath: Path): ElmProjectDTO {
     }
 }
 
-// DTOs for JSON Decoding
+private val objectMapper = ObjectMapper()
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 private sealed class ElmProjectDTO

@@ -22,6 +22,10 @@ interface Repository {
     operator fun get(name: PkgName): List<Pkg>
 }
 
+/**
+ * Attempt to find a solution for the constraints given by [deps] using the Elm packages
+ * that we know about in [repo].
+ */
 fun solve(deps: Map<PkgName, Constraint>, repo: Repository): Map<PkgName, Version>? {
     val solutions = mapOf<PkgName, Version>()
     return when (val res = Solver(repo).solve(deps, solutions)) {
