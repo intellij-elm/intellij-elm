@@ -13,13 +13,11 @@ import javax.swing.Icon
 
 class ElmAdditionalLibraryRootsProvider : AdditionalLibraryRootsProvider() {
 
-    override fun getAdditionalProjectLibraries(project: Project): Collection<ElmLibrary> {
-        return project.elmWorkspace.allProjects.asSequence()
-                .flatMap { it.allResolvedDependencies }
-                .mapNotNull { ElmLibrary.fromPackage(it) }
-                .toList()
-    }
-
+    override fun getAdditionalProjectLibraries(project: Project): Collection<ElmLibrary> =
+            project.elmWorkspace.allProjects
+                    .flatMap { it.deepDeps() }
+                    .mapNotNull { ElmLibrary.fromPackage(it) }
+                    .toList()
 
     override fun getRootsToWatch(project: Project) =
             getAdditionalProjectLibraries(project).map { it.root }

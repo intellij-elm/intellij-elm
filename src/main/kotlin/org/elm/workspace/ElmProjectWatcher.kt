@@ -3,8 +3,8 @@ package org.elm.workspace
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
-import org.elm.workspace.ElmToolchain.Companion.ELM_INTELLIJ_JSON
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
+import org.elm.workspace.ElmToolchain.Companion.SIDECAR_FILENAME
 
 
 /**
@@ -22,7 +22,7 @@ class ElmProjectWatcher(val onChange: () -> Unit) : BulkFileListener {
 
 private fun isInterestingEvent(event: VFileEvent) =
         event.pathEndsWith(ELM_JSON)
-                || event.pathEndsWith(ELM_INTELLIJ_JSON)
+                || event.pathEndsWith(SIDECAR_FILENAME)
 
 
 private fun VFileEvent.pathEndsWith(suffix: String) =
