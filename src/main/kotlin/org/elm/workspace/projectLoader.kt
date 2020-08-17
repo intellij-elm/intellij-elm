@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.io.exists
 import org.elm.openapiext.findFileByPathTestAware
+import org.elm.workspace.ElmToolchain.Companion.SIDECAR_FILENAME
 import org.elm.workspace.solver.Pkg
 import org.elm.workspace.solver.PkgName
 import org.elm.workspace.solver.Repository
@@ -55,7 +57,8 @@ class ElmProjectLoader(
                                 dependencies = dto.dependencies.direct.keys.map { loader.load(it) },
                                 testDependencies = dto.testDependencies.direct.keys.map { loader.load(it) },
                                 sourceDirectories = dto.sourceDirectories,
-                                testsRelativeDirPath = DEFAULT_TESTS_DIR_NAME
+                                testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
+                                        ?: DEFAULT_TESTS_DIR_NAME
                         )
                     }
                     is ElmPackageProjectDTO -> {
@@ -171,19 +174,6 @@ private class ElmApplicationProjectDTO(
 ) : ElmProjectDTO()
 
 
-/**
- * DTO used to wrap the data in `elm.intellij.json`.
- *
- * @see [ElmToolchain.ELM_INTELLIJ_JSON]
- */
-private class ElmSidecarManifestDTO(
-        /**
-         * The path to the directory containing the unit tests, relative to the root of the Elm project.
-         */
-        @JsonProperty("test-directory") val testDirectory: String
-)
-
-
 private class ExactDependenciesDTO(
         @JsonProperty("direct") val direct: Map<String, Version>,
         @JsonProperty("indirect") val indirect: Map<String, Version>
@@ -219,3 +209,27 @@ private fun JsonNode.toExposedModuleMap(): List<String> {
         }
     }
 }
+
+private fun findAndParseSidecarFor(manifestPath: Path): ElmSidecarManifestDTO? =
+        LocalFileSystem.getInstance()
+                .refreshAndFindFileByPath(manifestPath.resolveSibling(SIDECAR_FILENAME).toString())
+                ?.inputStream
+                ?.let {
+                    try {
+                        objectMapper.readValue(it, ElmSidecarManifestDTO::class.java)
+                    } catch (e: JsonProcessingException) {
+                        throw ProjectLoadException("Invalid elm.intellij.json: ${e.message}")
+                    }
+                }
+
+/**
+ * DTO used to wrap the data in `elm.intellij.json`.
+ *
+ * @see [ElmToolchain.SIDECAR_FILENAME]
+ */
+private class ElmSidecarManifestDTO(
+        /**
+         * The path to the directory containing the unit tests, relative to the root of the Elm project.
+         */
+        @JsonProperty("test-directory") val testDirectory: String
+)

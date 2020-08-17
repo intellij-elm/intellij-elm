@@ -53,12 +53,13 @@ data class ElmToolchain(
         /**
          * The name of the file that contains information specific to an Elm project, but which is _not_ in `elm.json`.
          * Here we put extra information which isn't in the normal `elm.json`, but which this plugin requires, such as
-         * the path to the directory containing tests.
+         * a custom path to the directory containing tests.
          *
          * The `elm.json` file is referred to elsewhere as the _manifest_. This `elm.intellij.json` file is referred to
          * as the _sidecar manifest_.
          */
-        const val ELM_INTELLIJ_JSON = "elm.intellij.json"
+        const val SIDECAR_FILENAME = "elm.intellij.json"
+
         const val DEFAULT_FORMAT_ON_SAVE = false
 
         /**
