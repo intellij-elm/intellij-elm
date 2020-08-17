@@ -7,18 +7,17 @@ import org.elm.workspace.solver.SolverResult.Proceed
 
 typealias PkgName = String
 
-// TODO [kl] consider getting rid of the interface and just unifying it with the rest of the ElmProject system
-
 interface Pkg {
     val name: PkgName
     val version: Version
-    val elmVersion: Constraint
+    val elmConstraint: Constraint
     val dependencies: Map<PkgName, Constraint>
 }
 
 fun Version.satisfies(constraint: Constraint): Boolean = constraint.contains(this)
 
 interface Repository {
+    val elmCompilerVersion: Version
     operator fun get(name: PkgName): List<Pkg>
 }
 
@@ -60,6 +59,7 @@ private class Solver(private val repo: Repository) {
 
         // Speculatively try each candidate version to see if it is a partial solution
         loop@ for (candidate in candidates) {
+            if (repo.elmCompilerVersion !in candidate.elmConstraint) continue@loop
             val tentativeDeps = restDeps.combine(candidate.dependencies) ?: continue@loop
             val tentativeSolutions = solutions + (dep.name to candidate.version)
 

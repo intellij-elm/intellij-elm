@@ -84,7 +84,7 @@ class ElmProjectLoader(
 /**
  * Provides access to the Elm packages stored on-disk by the Elm compiler in `~/.elm`
  */
-class ElmPackageRepository(val elmCompilerVersion: Version) : Repository {
+class ElmPackageRepository(override val elmCompilerVersion: Version) : Repository {
 
     private val inMemCache: MutableMap<String, List<Pkg>> = mutableMapOf()
 
@@ -136,7 +136,7 @@ class ElmPackageRepository(val elmCompilerVersion: Version) : Repository {
                             object : Pkg {
                                 override val name: PkgName = name
                                 override val version: Version = version
-                                override val elmVersion: Constraint = proj.elmVersion
+                                override val elmConstraint: Constraint = proj.elmVersion
                                 override val dependencies: Map<PkgName, Constraint> = proj.deps
                             }
                         }

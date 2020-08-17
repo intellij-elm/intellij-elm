@@ -150,7 +150,7 @@ data class Constraint(
     /**
      * Returns true if the constraint is satisfied solely by comparing x.y.z (so "1.0-beta" == "1.0")
      */
-    fun contains(version: Version): Boolean =
+    operator fun contains(version: Version): Boolean =
             copy(low = low.xyz, high = high.xyz).semVerContains(version.xyz)
 
     /**

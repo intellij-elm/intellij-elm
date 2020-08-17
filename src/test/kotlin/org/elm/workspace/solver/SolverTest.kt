@@ -5,14 +5,18 @@ import org.elm.workspace.Version
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+fun compilerConstraint(v: Int) = Constraint.parse("0.${v}.0 <= v < 0.${v + 1}.0")
+
 data class SimplePkg(
         override val name: PkgName,
         override val version: Version,
-        override val elmVersion: Constraint = Constraint.parse("0.19.0 <= v < 0.20.0"),
-        override val dependencies: Map<PkgName, Constraint>
+        override val dependencies: Map<PkgName, Constraint>,
+        override val elmConstraint: Constraint = compilerConstraint(19)
 ) : Pkg
 
 data class SimpleRepository(private val packagesByName: Map<PkgName, List<Pkg>>) : Repository {
+    override var elmCompilerVersion: Version = v(0, 19, 1)
+
     constructor(vararg packages: Pkg) : this(packages.groupBy { it.name })
 
     override operator fun get(name: String): List<Pkg> {
@@ -146,6 +150,15 @@ class SolverTest {
                     "C" to r("1.0.0 <= v < 2.0.0")
             ),
             expect = null)
+
+    @Test
+    fun `no solution because Elm compiler version requirement cannot be satisfied`() = doTest(
+            deps = mapOf("A" to r("1.0.0 <= v < 2.0.0")),
+            expect = null,
+            repo = SimpleRepository(
+                    SimplePkg("A", v(1, 0, 0), emptyMap(), compilerConstraint(18))
+            ).apply { elmCompilerVersion = v(0, 19, 0) }
+    )
 }
 
 fun doTest(deps: Map<PkgName, Constraint>, expect: Map<PkgName, Version>?, repo: Repository = fixture) {
