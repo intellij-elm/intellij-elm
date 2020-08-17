@@ -34,8 +34,8 @@ class ElmProjectLoader(
                 ElmPackageProject(
                         manifestPath = manifestPath,
                         elmVersion = dto.elmVersion,
-                        dependencies = dto.dependencies.keys.map { load(it) },
-                        testDependencies = dto.testDependencies.keys.map { load(it) },
+                        dependencies = dto.deps.keys.map { load(it) },
+                        testDependencies = dto.testDeps.keys.map { load(it) },
                         sourceDirectories = listOf(Paths.get("src")),
                         name = dto.name,
                         version = dto.version,
@@ -48,28 +48,29 @@ class ElmProjectLoader(
         fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject =
                 when (val dto = parseDTO(manifestPath)) {
                     is ElmApplicationProjectDTO -> {
-                        val deps = dto.dependencies.direct + dto.dependencies.indirect +
-                                dto.testDependencies.direct + dto.testDependencies.indirect
+                        val deps = with(dto) {
+                            deps.direct + deps.indirect + testDeps.direct + testDeps.indirect
+                        }
                         val loader = ElmProjectLoader(repo, deps)
                         ElmApplicationProject(
                                 manifestPath = manifestPath,
                                 elmVersion = dto.elmVersion,
-                                dependencies = dto.dependencies.direct.keys.map { loader.load(it) },
-                                testDependencies = dto.testDependencies.direct.keys.map { loader.load(it) },
+                                dependencies = dto.deps.direct.keys.map { loader.load(it) },
+                                testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
                                 sourceDirectories = dto.sourceDirectories,
                                 testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
                                         ?: DEFAULT_TESTS_DIR_NAME
                         )
                     }
                     is ElmPackageProjectDTO -> {
-                        val deps = solve(dto.dependencies + dto.testDependencies, repo)
+                        val deps = solve(dto.deps + dto.testDeps, repo)
                                 ?: throw ProjectLoadException("unsolvable constraints")
                         val loader = ElmProjectLoader(repo, deps)
                         ElmPackageProject(
                                 manifestPath = manifestPath,
                                 elmVersion = dto.elmVersion,
-                                dependencies = dto.dependencies.keys.map { loader.load(it) },
-                                testDependencies = dto.testDependencies.keys.map { loader.load(it) },
+                                dependencies = dto.deps.keys.map { loader.load(it) },
+                                testDependencies = dto.testDeps.keys.map { loader.load(it) },
                                 sourceDirectories = listOf(Paths.get("src")),
                                 name = dto.name,
                                 version = dto.version,
@@ -136,7 +137,7 @@ class ElmPackageRepository(val elmCompilerVersion: Version) : Repository {
                                 override val name: PkgName = name
                                 override val version: Version = version
                                 override val elmVersion: Constraint = proj.elmVersion
-                                override val dependencies: Map<PkgName, Constraint> = proj.dependencies
+                                override val dependencies: Map<PkgName, Constraint> = proj.deps
                             }
                         }
             }
@@ -169,8 +170,8 @@ private sealed class ElmProjectDTO
 private class ElmApplicationProjectDTO(
         @JsonProperty("elm-version") val elmVersion: Version,
         @JsonProperty("source-directories") val sourceDirectories: List<Path>,
-        @JsonProperty("dependencies") val dependencies: ExactDependenciesDTO,
-        @JsonProperty("test-dependencies") val testDependencies: ExactDependenciesDTO
+        @JsonProperty("dependencies") val deps: ExactDependenciesDTO,
+        @JsonProperty("test-dependencies") val testDeps: ExactDependenciesDTO
 ) : ElmProjectDTO()
 
 
@@ -182,8 +183,8 @@ private class ExactDependenciesDTO(
 
 private class ElmPackageProjectDTO(
         @JsonProperty("elm-version") val elmVersion: Constraint,
-        @JsonProperty("dependencies") val dependencies: Map<String, Constraint>,
-        @JsonProperty("test-dependencies") val testDependencies: Map<String, Constraint>,
+        @JsonProperty("dependencies") val deps: Map<String, Constraint>,
+        @JsonProperty("test-dependencies") val testDeps: Map<String, Constraint>,
         @JsonProperty("name") val name: String,
         @JsonProperty("version") val version: Version,
         @JsonProperty("exposed-modules") val exposedModulesNode: JsonNode
