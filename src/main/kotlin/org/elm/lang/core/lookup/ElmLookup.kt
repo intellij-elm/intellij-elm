@@ -130,7 +130,7 @@ private fun buildSearchScope(includeTests: Boolean, p: ElmProject, intellijProje
      *        you must take that into account when retrieving the cached value.
      */
     val (srcDirPaths, dependencies) = when {
-        includeTests -> p.allSourceDirs to p.allResolvedDependencies
+        includeTests -> p.allSourceDirs to p.allDirectDeps
         else -> p.absoluteSourceDirectories.asSequence() to p.dependencies.asSequence()
     }
 

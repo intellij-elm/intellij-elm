@@ -81,8 +81,22 @@ sealed class ElmProject(
      * Returns all packages which this project depends on directly, whether it be for normal,
      * production code or for tests.
      */
-    val allResolvedDependencies: Sequence<ElmPackageProject> =
+    val allDirectDeps: Sequence<ElmPackageProject> =
             sequenceOf(dependencies, testDependencies).flatten()
+
+    /**
+     * Returns the direct and indirect dependencies of the receiver, recursively.
+     */
+    fun deepDeps(): List<ElmPackageProject> {
+        val stack = allDirectDeps.toMutableList()
+        val acc = mutableListOf<ElmPackageProject>()
+        while (stack.isNotEmpty()) {
+            val p = stack.removeAt(0)
+            acc.add(p)
+            stack.addAll(p.allDirectDeps)
+        }
+        return acc.distinctBy { it.manifestPath }
+    }
 
     /**
      * Returns true if this project is compatible with Elm compiler [version].

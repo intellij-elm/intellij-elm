@@ -308,7 +308,7 @@ class ElmWorkspaceService(
                         log.debug("Registering source directory $sourceDir for $project")
                         put(sourceDir, project)
                     }
-                    for (pkg in project.allResolvedDependencies) {
+                    for (pkg in project.deepDeps()) {
                         log.debug("Registering dependency directory ${pkg.projectDirPath} for $pkg")
                         put(pkg.projectDirPath, pkg)
                     }
