@@ -35,7 +35,7 @@ class ElmProjectLoader(
                         manifestPath = manifestPath,
                         elmVersion = dto.elmVersion,
                         dependencies = dto.deps.keys.map { load(it) },
-                        testDependencies = dto.testDeps.keys.map { load(it) },
+                        testDependencies = emptyList(), // we only use this for top-level packages
                         sourceDirectories = listOf(Paths.get("src")),
                         name = dto.name,
                         version = dto.version,
