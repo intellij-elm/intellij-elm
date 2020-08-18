@@ -36,6 +36,14 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.0.0</b> <em>(2020-08-18)</em>
+                <ul>
+                    <li>Removed support for Elm 0.18</li>
+                    <li>Added a quick-fix to convert List.map to List.foldr</li>
+                    <li>Major improvements to dependency version resolution</li>
+                    <li>Go-to-declaration now works for indirect dependencies</li>
+                </ul>
+            </li>
             <li><b>3.5.4</b> <em>(2020-07-28)</em>
                 <ul>
                     <li>Added support for IntelliJ 2020.2</li>
