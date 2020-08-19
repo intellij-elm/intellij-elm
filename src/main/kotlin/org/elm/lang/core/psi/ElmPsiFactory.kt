@@ -180,7 +180,7 @@ class ElmPsiFactory(private val project: Project) {
         val commentsText = comments
                 .map { indentation + it.text }
                 .toList()
-        val textWithComments = commentsText.plus(text).toList().joinToString(separator = "\n")
+        val textWithComments = commentsText.plus(text).toList().joinToString(separator = "\n").trimStart()
         val createFromText = if (textWithComments.lines().size > 1) {
             createFromText<ElmParenthesizedExpr>("f = ($textWithComments\n$indentation)\n")
         } else {
@@ -194,7 +194,7 @@ class ElmPsiFactory(private val project: Project) {
     fun callFunctionWithArgumentAndComments(comments: List<PsiComment>, outer: String, inner: ElmPsiElement, indent: String = ""): ElmParenthesizedExpr {
         val innerText = inner.text
         val commentsText = comments.map { indent + it.text }
-        val outerWithComments = commentsText.plus(outer).toList().joinToString(separator = "\n")
+        val outerWithComments = commentsText.plus(outer).toList().joinToString(separator = "\n").trimStart()
         val isMultiline = inner.text.lines().count() > 1 || outerWithComments.lines().count() > 1
 
 

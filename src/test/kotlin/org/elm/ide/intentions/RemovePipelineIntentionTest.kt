@@ -41,10 +41,10 @@ module Foo exposing (list)
 
 list = 
     -- top-level
-    (            -- identity 1
+    (-- identity 1
             -- identity 2
             identity
-            (        {- List.map 1 -}
+            ({- List.map 1 -}
         -- List.map 2
         {- List.map 3 -}
         List.map times2
@@ -155,7 +155,7 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             identity
-                ((                    -- asdf
+                ((-- asdf
                     Asset.src
                     Asset.defaultAvatar
                     )
@@ -316,9 +316,9 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             -- user isn't logged in - use guest avatar
-            (                    -- sets the HTML src
+            (-- sets the HTML src
                     Asset.src
-                    (                -- normalizes trailing and leading /'s
+                    (-- normalizes trailing and leading /'s
                 normalizeImageUrl
                 Asset.defaultAvatar
                 )
@@ -355,7 +355,7 @@ example =
             (identity
                 identity
             )
-            (        List.map
+            (List.map
             (identity
                 identity
             )
