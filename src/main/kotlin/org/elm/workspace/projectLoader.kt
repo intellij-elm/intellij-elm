@@ -27,7 +27,7 @@ class ElmProjectLoader(
 ) {
     private fun load(packageName: String): ElmPackageProject {
         val version = versionsByPackage[packageName]
-                ?: throw ProjectLoadException("Could not find suitable version of $packageName")
+                ?: throw ProjectLoadException.General("Could not find suitable version of $packageName")
         val manifestPath = repo.findPackageManifest(packageName, version)
         return when (val dto = parseDTO(manifestPath)) {
             is ElmPackageProjectDTO ->
@@ -45,38 +45,62 @@ class ElmProjectLoader(
     }
 
     companion object {
-        fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject =
-                when (val dto = parseDTO(manifestPath)) {
-                    is ElmApplicationProjectDTO -> {
-                        val deps = with(dto) {
-                            deps.direct + deps.indirect + testDeps.direct + testDeps.indirect
-                        }
-                        val loader = ElmProjectLoader(repo, deps)
-                        ElmApplicationProject(
-                                manifestPath = manifestPath,
-                                elmVersion = dto.elmVersion,
-                                dependencies = dto.deps.direct.keys.map { loader.load(it) },
-                                testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
-                                sourceDirectories = dto.sourceDirectories,
-                                testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
-                                        ?: DEFAULT_TESTS_DIR_NAME
-                        )
+        fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject {
+            val dto = parseDTO(manifestPath)
+            preFlightDeps(manifestPath, repo, dto)
+            return when (dto) {
+                is ElmApplicationProjectDTO -> {
+                    val deps = with(dto) {
+                        deps.direct + deps.indirect + testDeps.direct + testDeps.indirect
                     }
-                    is ElmPackageProjectDTO -> {
-                        val deps = solve(dto.deps + dto.testDeps, repo)
-                                ?: throw ProjectLoadException("unsolvable constraints")
-                        val loader = ElmProjectLoader(repo, deps)
-                        ElmPackageProject(
-                                manifestPath = manifestPath,
-                                elmVersion = dto.elmVersion,
-                                dependencies = dto.deps.keys.map { loader.load(it) },
-                                testDependencies = dto.testDeps.keys.map { loader.load(it) },
-                                sourceDirectories = listOf(Paths.get("src")),
-                                name = dto.name,
-                                version = dto.version,
-                                exposedModules = dto.exposedModulesNode.toExposedModuleMap())
-                    }
+                    val loader = ElmProjectLoader(repo, deps)
+                    ElmApplicationProject(
+                            manifestPath = manifestPath,
+                            elmVersion = dto.elmVersion,
+                            dependencies = dto.deps.direct.keys.map { loader.load(it) },
+                            testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
+                            sourceDirectories = dto.sourceDirectories,
+                            testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
+                                    ?: DEFAULT_TESTS_DIR_NAME
+                    )
                 }
+                is ElmPackageProjectDTO -> {
+                    val deps = solve(dto.deps + dto.testDeps, repo)
+                            ?: throw ProjectLoadException.General("unsolvable constraints")
+                    val loader = ElmProjectLoader(repo, deps)
+                    ElmPackageProject(
+                            manifestPath = manifestPath,
+                            elmVersion = dto.elmVersion,
+                            dependencies = dto.deps.keys.map { loader.load(it) },
+                            testDependencies = dto.testDeps.keys.map { loader.load(it) },
+                            sourceDirectories = packageProjectSourceDirs,
+                            name = dto.name,
+                            version = dto.version,
+                            exposedModules = dto.exposedModulesNode.toExposedModuleMap())
+                }
+            }
+        }
+
+        private fun preFlightDeps(manifestPath: Path, repo: ElmPackageRepository, dto: ElmProjectDTO) {
+            val newestArtifact = manifestPath.resolveSibling("elm-stuff")
+                    .resolve(repo.elmCompilerVersion.toString())
+                    .toFile()
+                    .listFiles()
+                    ?.maxBy { it.lastModified() }
+            if (newestArtifact == null || newestArtifact.lastModified() < manifestPath.toFile().lastModified()) {
+                throw ProjectLoadException.MissingDependencies(
+                        "elm.json has been modified without running 'elm make'",
+                        cause = null,
+                        sourceDirectories = when (dto) {
+                            is ElmApplicationProjectDTO -> dto.sourceDirectories
+                            is ElmPackageProjectDTO -> packageProjectSourceDirs
+                        }
+                )
+            }
+        }
+
+        // Elm 0.19.x package projects have only a single source root and it is called "src"
+        private val packageProjectSourceDirs = listOf(Paths.get("src"))
     }
 }
 
@@ -148,16 +172,16 @@ class ElmPackageRepository(override val elmCompilerVersion: Version) : Repositor
 
 private fun parseDTO(manifestPath: Path): ElmProjectDTO {
     val manifestStream = findFileByPathTestAware(manifestPath)?.inputStream
-            ?: throw ProjectLoadException("Manifest file not found: $manifestPath")
+            ?: throw ProjectLoadException.General("Manifest file not found: $manifestPath")
     return try {
         val node = objectMapper.readTree(manifestStream)
         when (val type = node.get("type")?.textValue()) {
             "application" -> objectMapper.treeToValue(node, ElmApplicationProjectDTO::class.java)
             "package" -> objectMapper.treeToValue(node, ElmPackageProjectDTO::class.java)
-            else -> throw ProjectLoadException("Invalid elm.json: unexpected type '$type'")
+            else -> throw ProjectLoadException.General("Invalid elm.json: unexpected type '$type'")
         }
     } catch (e: JsonProcessingException) {
-        throw ProjectLoadException("Invalid elm.json: ${e.message}")
+        throw ProjectLoadException.General("Invalid elm.json: ${e.message}")
     }
 }
 
@@ -219,7 +243,7 @@ private fun findAndParseSidecarFor(manifestPath: Path): ElmSidecarManifestDTO? =
                     try {
                         objectMapper.readValue(it, ElmSidecarManifestDTO::class.java)
                     } catch (e: JsonProcessingException) {
-                        throw ProjectLoadException("Invalid elm.intellij.json: ${e.message}")
+                        throw ProjectLoadException.General("Invalid elm.intellij.json: ${e.message}")
                     }
                 }
 

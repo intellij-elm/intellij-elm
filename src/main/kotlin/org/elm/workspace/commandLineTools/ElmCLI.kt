@@ -18,7 +18,10 @@ import java.nio.file.Path
 class ElmCLI(private val elmExecutablePath: Path) {
 
     fun make(owner: Disposable, elmProject: ElmProject, path: Path): ProcessOutput {
-        val workDir = elmProject.manifestPath.parent
+        return make(owner, elmProject.manifestPath.parent, path)
+    }
+
+    fun make(owner: Disposable, workDir: Path, path: Path): ProcessOutput {
         return GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
                 .withParameters("make", path.toString(), "--output=/dev/null", "--report=json")

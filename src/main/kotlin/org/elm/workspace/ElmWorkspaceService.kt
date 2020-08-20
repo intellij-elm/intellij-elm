@@ -191,7 +191,7 @@ class ElmWorkspaceService(
     private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
                 val compilerVersion = settings.toolchain.elmCLI?.queryVersion()?.orNull()
-                        ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
+                        ?: throw ProjectLoadException.General("Must specify a valid path to Elm binary in Settings")
                 val repo = ElmPackageRepository(compilerVersion) // not thread-safe; do not reuse across threads!
                 ElmProjectLoader.topLevelLoad(manifestPath, repo)
             }.whenComplete { _, error ->
@@ -360,10 +360,6 @@ class ElmWorkspaceService(
     }
 
     @VisibleForTesting
-    // TODO [kl] make this `internal` visibility...
-    // I can't do it right now because there's something wrong with Gradle where it treats the test source set
-    // as not belonging to the same Kotlin module as the code-under-test. But according to
-    // https://kotlinlang.org/docs/reference/visibility-modifiers.html#modules it *should* work!
     fun asyncLoadState(state: Element): CompletableFuture<Unit> {
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")
@@ -446,7 +442,18 @@ class ElmWorkspaceService(
 }
 
 
-class ProjectLoadException(msg: String, cause: Exception? = null) : RuntimeException(msg, cause)
+sealed class ProjectLoadException(msg: String, cause: Exception? = null) : RuntimeException(msg, cause) {
+    class General(
+            msg: String,
+            cause: Exception? = null
+    ) : ProjectLoadException(msg, cause)
+
+    class MissingDependencies(
+            msg: String,
+            cause: Exception? = null,
+            val sourceDirectories: List<Path>
+    ) : ProjectLoadException(msg, cause)
+}
 
 
 // AUTO-DISCOVER
