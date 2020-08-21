@@ -38,7 +38,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                         val indentation = existingIndent + "    ".repeat(indexedSegment.index)
                         if (acc == null) {
                             if (originalPipeline is Pipeline.RightPipeline) {
-                                // TODO this removes the comments but they need to be preserved
                                 unwrapIfPossible(
                                         ElmPsiFactory(project).createParens(
                                                 segment.expressionParts .map { it.text } .toList() .joinToString(separator = " ")
@@ -49,7 +48,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                 val innerText =
                                                 segment.expressionParts
                                                         .map { it.text }
-//                                    .map { it.text }
                                                         .toList()
                                                         .joinToString(separator = " ")
 
@@ -62,7 +60,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
                             val innerText = listOf(
                                     segment.expressionParts
-//                                .map { it.text }
                                             .map { it.text }
                                             .toList()
                                             .joinToString(separator = " ")
@@ -86,7 +83,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                             .joinToString(separator = "\n")
                     if (acc == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
-                            // TODO this removes the comments but they need to be preserved
                             unwrapIfPossible(
                                     ElmPsiFactory(project).createParensWithComments(
                                             segment.comments,
@@ -102,7 +98,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                             val innerText =
                                     segment.expressionParts
                                     .map { indentation + it.text }
-//                                    .map { it.text }
                                     .toList()
                                     .joinToString(separator = " ")
 
@@ -114,7 +109,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     } else {
 
                         val innerText = segment.expressionParts
-//                                .map { it.text }
                                 .map { indentation +  it.text }
                                         .toList()
                                 .joinToString(separator = "\n")
