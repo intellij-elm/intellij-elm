@@ -115,31 +115,31 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid value QID: `$text`")
 
-    fun createPipeChain(existingIndent: String, indent: String, valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
-        var s2 = ""
+    fun createPipeChain(existingIndent: String, indent: String, valueAndFunctionApplications: List<Any>): ElmParenthesizedExpr {
+        var pipeChainBuilder = ""
         var visitedExpression = false
-        for ((index, thing) in valueAndunctionApplications.withIndex()) {
-            when (thing) {
+        for (segment in valueAndFunctionApplications) {
+            when (segment) {
                 is String -> {
                     if (visitedExpression) {
-                        s2 += "\n$existingIndent$indent|> $thing"
+                        pipeChainBuilder += "\n$existingIndent$indent|> $segment"
                     } else {
-                        s2 += "\n$existingIndent$indent $thing"
+                        pipeChainBuilder += "\n$existingIndent$indent $segment"
                     }
                     visitedExpression = true
                 }
                 is PsiComment -> {
-                    s2 += "\n$existingIndent$indent" + thing.text
+                    pipeChainBuilder += "\n$existingIndent$indent" + segment.text
                 }
             }
 
         }
-        val stringForExpression = "f = \n$existingIndent$indent($s2\n$existingIndent$indent)"
+        val stringForExpression = "f = \n$existingIndent$indent($pipeChainBuilder\n$existingIndent$indent)"
         val thing: ElmParenthesizedExpr? = createFromText(stringForExpression)
         if (thing != null) {
             return thing
         } else {
-            return error("Invalid value ElmBinOpExpr: `($s2\n\n$indent)`")
+            return error("Invalid value ElmBinOpExpr: `($pipeChainBuilder\n\n$indent)`")
         }
     }
 
@@ -152,7 +152,7 @@ class ElmPsiFactory(private val project: Project) {
 
     fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr {
         val createFromText = if (text.lines().size > 1) {
-             createFromText<ElmParenthesizedExpr>("f = ($text\n$indentation)\n")
+             createFromText("f = ($text\n$indentation)\n")
         } else {
             createFromText<ElmParenthesizedExpr>("f = ($text)")
         }
