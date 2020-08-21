@@ -119,9 +119,6 @@ class ElmPsiFactory(private val project: Project) {
         var s2 = ""
         var visitedExpression = false
         for ((index, thing) in valueAndunctionApplications.withIndex()) {
-            val previous = valueAndunctionApplications.getOrNull(index - 1)
-            val next = valueAndunctionApplications.getOrNull(index + 1)
-            val notLast = index < (valueAndunctionApplications.count() - 1)
             when (thing) {
                 is String -> {
                     if (visitedExpression) {
@@ -141,21 +138,9 @@ class ElmPsiFactory(private val project: Project) {
         val thing: ElmParenthesizedExpr? = createFromText(stringForExpression)
         if (thing != null) {
             return thing
-//            return thing.withoutExtraParens
-//            return unwrapParens(thing)
         } else {
             return error("Invalid value ElmBinOpExpr: `($s2\n\n$indent)`")
         }
-    }
-
-    private fun unwrapParens(expression: ElmParenthesizedExpr): ElmParenthesizedExpr {
-        val inner = expression.expression
-        return if (inner is ElmParenthesizedExpr) {
-            unwrapParens(inner)
-        } else {
-            expression
-        }
-
     }
 
     fun createPipeChainWithComments(valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
@@ -219,30 +204,6 @@ class ElmPsiFactory(private val project: Project) {
                     ?: error("Invalid value Paren Expression: `($outer $innerText)`")
         }
         return elmParenthesizedExpr
-    }
-
-    fun callFunctionWithArgumentWithIndent(existingIndent: String, indent: String, outer: String, inner: ElmPsiElement): ElmParenthesizedExpr {
-        val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
-        val innerText = inner.text
-        if (isMultiline) {
-            return createFromText("f =\n$existingIndent($outer $innerText\n$existingIndent)\n")
-                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
-        } else {
-
-            return createFromText("f = ($outer $innerText)")
-                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
-        }
-    }
-
-    fun createParensNew(expressions: Sequence<PsiElement>): ElmParenthesizedExpr {
-        val first = expressions.first()
-        val rest = expressions.drop(1)
-        if (rest.count() == 0) {
-            return createParens(first.text)
-        } else {
-            return createParens(first.text + " " + createParensNew(rest).text)
-        }
-
     }
 
     fun createStringConstant(text: String): ElmStringConstantExpr =

@@ -74,12 +74,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 .withIndex()
                 .fold(initial, { acc, indexedSegment ->
                     val segment = indexedSegment.value
-                    val index = indexedSegment.index + 1
                     val indentation = existingIndent + "    ".repeat(indexedSegment.index)
-                    val commentsText = "\n" + segment.comments
-                            .map { indentation + it.text }
-                            .toList()
-                            .joinToString(separator = "\n")
                     if (acc == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
                             unwrapIfPossible(
