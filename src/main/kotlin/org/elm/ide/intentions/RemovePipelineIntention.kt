@@ -24,13 +24,9 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     private fun normalizePipeline(originalPipeline: Pipeline, project: Project, editor: Editor): ElmPsiElement {
         val initial: ElmPsiElement? = null
         val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
-        val pipelineSegments = originalPipeline.pipelineSegments()
-        val hasNewlines = pipelineSegments.any { it.expressionParts.any { it.textContains('\n') } }
-        val hasComments = pipelineSegments.any { it.comments.isNotEmpty() }
-        val multiline = hasNewlines || hasComments
+        val multiline = isMultiline(originalPipeline)
         if (!multiline) {
-
-            return pipelineSegments
+            return originalPipeline.pipelineSegments()
                     .withIndex()
                     .fold(initial, { acc, indexedSegment ->
                         val segment = indexedSegment.value
@@ -70,7 +66,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                         }
                     })!!
         }
-        return pipelineSegments
+        return originalPipeline.pipelineSegments()
                 .withIndex()
                 .fold(initial, { acc, indexedSegment ->
                     val segment = indexedSegment.value
@@ -113,6 +109,13 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 })!!
     }
 
+    private fun isMultiline(pipeline: Pipeline): Boolean {
+        val pipelineSegments = pipeline.pipelineSegments()
+        val hasNewlines = pipelineSegments.any { it.expressionParts.any { it.textContains('\n') } }
+        val hasComments = pipelineSegments.any { it.comments.isNotEmpty() }
+        return hasNewlines || hasComments
+    }
+
     private fun unwrapIfPossible(element: ElmParenthesizedExpr): ElmPsiElement {
         val wrapped = element.withoutExtraParens
         val unwrapped = wrapped.withoutParens
@@ -140,10 +143,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             when (pipeline) {
                 is Pipeline.RightPipeline -> {
                     val replaceWith = normalizePipeline(pipeline, project, editor)
-                    replaceUnwrapped(pipeline.pipeline, replaceWith, project)
+                    replaceUnwrapped(pipeline.pipeline, replaceWith)
                 }
                 is Pipeline.LeftPipeline -> {
-                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project, editor), project)
+                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project, editor))
                 }
             }
         }
@@ -151,7 +154,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 }
 
 
-fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement, project: Project) {
+fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
     return if (replaceWith is ElmParenthesizedExpr) {
         expression.replace(replaceWith.withoutParens)
         Unit
