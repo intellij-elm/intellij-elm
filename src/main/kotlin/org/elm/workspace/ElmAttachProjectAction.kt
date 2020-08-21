@@ -46,9 +46,8 @@ class ElmAttachProjectAction : AnAction() {
 
     private fun showError(error: Throwable, project: Project, manifestPath: Path) {
         ApplicationManager.getApplication().invokeLater {
-            // TODO [kl] double-check threading
             when (error) {
-                is ProjectLoadException.MissingDependencies -> {
+                is ProjectLoadException.StaleElmStuff -> {
                     val answer = Messages.showYesNoDialog(
                             "Run 'elm make' to install packages?",
                             "Project dependencies may not be installed",
@@ -63,7 +62,7 @@ class ElmAttachProjectAction : AnAction() {
         }
     }
 
-    private fun gracefullyRecover(project: Project, error: ProjectLoadException.MissingDependencies, manifestPath: Path) {
+    private fun gracefullyRecover(project: Project, error: ProjectLoadException.StaleElmStuff, manifestPath: Path) {
         val elmCLI = project.elmToolchain.elmCLI
         if (elmCLI == null) {
             showBalloon(project, "Please set the path to the 'elm' binary", includeFixAction = true)
@@ -82,14 +81,18 @@ class ElmAttachProjectAction : AnAction() {
                 .firstOrNull()
                 ?: return showBalloon(project, "Could not find a `.elm` file to compile")
 
-        val output = elmCLI.make(project, workDir = manifestPath.parent, path = arbitraryElmFilePath)
-
-        when {
-            !output.isSuccess -> showBalloon(project, "Failed to compile $arbitraryElmFilePath")
-            else -> {
-                // Retry the original action. Hopefully this will work now!
-                project.elmWorkspace.asyncAttachElmProject(manifestPath)
-                        .handleError { showError(it.cause!!, project, manifestPath) }
+        val app = ApplicationManager.getApplication()
+        app.executeOnPooledThread {
+            val output = elmCLI.make(project, workDir = manifestPath.parent, path = arbitraryElmFilePath)
+            app.invokeLater {
+                when {
+                    !output.isSuccess -> showBalloon(project, "Failed to compile $arbitraryElmFilePath")
+                    else -> {
+                        // Retry the original action. Hopefully this will work now!
+                        project.elmWorkspace.asyncAttachElmProject(manifestPath)
+                                .handleError { showError(it.cause!!, project, manifestPath) }
+                    }
+                }
             }
         }
     }

@@ -82,15 +82,18 @@ class ElmProjectLoader(
         }
 
         private fun preFlightDeps(manifestPath: Path, repo: ElmPackageRepository, dto: ElmProjectDTO) {
-            val newestArtifact = manifestPath.resolveSibling("elm-stuff")
+            // HACK: Peeking into the `elm-stuff` directory is brittle. We look at the
+            // last-modified time on the `i.dat` file (which I believe is the exposed
+            // interface of dependencies) to determine whether the user has actually
+            // installed the dependencies needed by the `elm.json` file.
+            val artifactLastModified = manifestPath.resolveSibling("elm-stuff")
                     .resolve(repo.elmCompilerVersion.toString())
+                    .resolve("i.dat")
                     .toFile()
-                    .listFiles()
-                    ?.maxBy { it.lastModified() }
-            if (newestArtifact == null || newestArtifact.lastModified() < manifestPath.toFile().lastModified()) {
-                throw ProjectLoadException.MissingDependencies(
-                        "elm.json has been modified without running 'elm make'",
-                        cause = null,
+                    .lastModified()
+
+            if (artifactLastModified < manifestPath.toFile().lastModified()) {
+                throw ProjectLoadException.StaleElmStuff(
                         sourceDirectories = when (dto) {
                             is ElmApplicationProjectDTO -> dto.sourceDirectories
                             is ElmPackageProjectDTO -> packageProjectSourceDirs

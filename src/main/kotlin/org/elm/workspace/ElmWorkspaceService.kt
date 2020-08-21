@@ -448,11 +448,9 @@ sealed class ProjectLoadException(msg: String, cause: Exception? = null) : Runti
             cause: Exception? = null
     ) : ProjectLoadException(msg, cause)
 
-    class MissingDependencies(
-            msg: String,
-            cause: Exception? = null,
+    class StaleElmStuff(
             val sourceDirectories: List<Path>
-    ) : ProjectLoadException(msg, cause)
+    ) : ProjectLoadException("the elm.json file appears to have been modified without running 'elm make'")
 }
 
 
