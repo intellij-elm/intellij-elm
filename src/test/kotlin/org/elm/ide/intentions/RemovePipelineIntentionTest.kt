@@ -364,4 +364,56 @@ example =
 
 """)
 
+    fun `test preserve comments right next to pipeline`() = doAvailableTest(
+            """
+module Foo exposing (example)
+
+example =
+    -- NotFound.view
+    NotFound.view
+        |> -- Page.view
+           Page.v{-caret-}iew
+            -- viewer
+            viewer
+            Page.Other
+
+""", """
+module Foo exposing (example)
+
+example =
+    -- NotFound.view
+    (-- Page.view
+        Page.view
+            -- viewer
+            viewer
+            Page.Other
+        NotFound.view
+        )
+
+""")
+
+
+    fun `test preserve comments right next to pipeline 2`() = doAvailableTest(
+            """
+module Foo exposing (example)
+
+example =
+    -- NotFound.view
+    -- Page.view
+    NotFound.vi{-caret-}ew
+        -- viewer
+        |> Page.view viewer Page.Other
+
+""", """
+module Foo exposing (example)
+
+example =
+    -- NotFound.view
+    -- Page.view
+    (-- viewer
+        Page.view viewer Page.Other
+        NotFound.view
+        )
+
+""")
 }
