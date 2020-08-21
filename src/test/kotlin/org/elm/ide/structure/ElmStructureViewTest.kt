@@ -18,13 +18,6 @@ main = 1
  main
 """)
 
-    fun `test destructuring declaration`() = doTest("""
-(foo, bar) = (1, 2)
-""", """
--Main.elm
- foo, bar
-""")
-
     fun `test nested value declaration`() = doTest("""
 main =
   let foo = 1 in foo
@@ -72,6 +65,17 @@ main =
     level3a
     level3b
 """)
+
+    fun `test nested declaration with destructuring`() = doTest("""
+main =
+    let (foo, bar) = (1, 2)
+    in foo
+""", """
+-Main.elm
+ -main
+  foo, bar
+""")
+
     private fun doTest(@Language("Elm") code: String, expected: String) {
         myFixture.configureByText("Main.elm", code)
         myFixture.testStructureView {

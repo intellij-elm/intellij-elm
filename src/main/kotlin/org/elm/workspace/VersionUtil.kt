@@ -41,7 +41,6 @@ data class Version(
 
     companion object {
         val UNKNOWN: Version = Version(0, 0, 0)
-        val ELM_18: Version = Version(0, 18, 0) // TODO [drop 0.18]
 
         /** A weak definition of the version format defined in [the SemVer spec](https://semver.org) */
         private val PATTERN = Regex("""(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z\-.]+)?(\+[0-9A-Za-z\-.]+)?""")
@@ -151,8 +150,33 @@ data class Constraint(
     /**
      * Returns true if the constraint is satisfied solely by comparing x.y.z (so "1.0-beta" == "1.0")
      */
-    fun contains(version: Version): Boolean =
+    operator fun contains(version: Version): Boolean =
             copy(low = low.xyz, high = high.xyz).semVerContains(version.xyz)
+
+    /**
+     * Returns the intersection with [other] or null if the intersection is empty.
+     */
+    infix fun intersect(other: Constraint): Constraint? {
+        fun merge(op1: Op, op2: Op) =
+                if (Op.LESS_THAN in listOf(op1, op2)) Op.LESS_THAN else Op.LESS_THAN_OR_EQUAL
+
+        val (newLo, newLop) = when (low.compareTo(other.low)) {
+            -1 -> other.low to other.lowOp
+            0 -> low to merge(lowOp, other.lowOp)
+            1 -> low to lowOp
+            else -> error("unexpected compare result")
+        }
+
+        val (newHi, newHop) = when (high.compareTo(other.high)) {
+            -1 -> high to highOp
+            0 -> high to merge(highOp, other.highOp)
+            1 -> other.high to other.highOp
+            else -> error("unexpected compare result")
+        }
+
+        if (newLo >= newHi) return null
+        return Constraint(newLo, newHi, newLop, newHop)
+    }
 
     override fun toString() =
             "$low $lowOp v $highOp $high"

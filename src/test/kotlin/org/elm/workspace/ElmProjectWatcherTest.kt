@@ -34,12 +34,7 @@ class ElmProjectWatcherTest : ElmTestBase() {
 
 
     fun `test detects a change involving elm intellij json project manifest file`() =
-            testVFileWatching(ElmToolchain.ELM_INTELLIJ_JSON)
-
-
-    // TODO [drop 0.18] remove this test
-    fun `test detects a change involving legacy elm json project manifest file`() =
-            testVFileWatching(ElmToolchain.ELM_LEGACY_JSON)
+            testVFileWatching(ElmToolchain.SIDECAR_FILENAME)
 
 
     fun `test ignores files other than elm json`() =

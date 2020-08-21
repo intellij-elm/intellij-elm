@@ -37,24 +37,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
                 """.trimIndent()
 
-
-    // TODO [drop 0.18] remove this test
-    fun `test ElmFormatOnFileSaveComponent should work with elm 18`() {
-
-        val fileWithCaret: String = buildProject {
-            project("elm-package.json", manifestElm18)
-            dir("src") {
-                elm("Main.elm", unformatted)
-            }
-            dir("elm-stuff") {
-                file("exact-dependencies.json", "{}")
-            }
-        }.fileWithCaret
-
-        testCorrectFormatting(fileWithCaret, unformatted, expectedFormatted)
-
-    }
-
     fun `test ElmFormatOnFileSaveComponent should work with elm 19`() {
 
         val fileWithCaret: String = buildProject {
@@ -188,21 +170,5 @@ private val manifestElm19 = """
                 "direct": {},
                 "indirect": {}
             }
-        }
-        """.trimIndent()
-
-
-// TODO [drop 0.18]
-@Language("JSON")
-private val manifestElm18 = """
-        {
-          "elm-version": "0.18.0 <= v < 0.19.0",
-          "version": "1.0.0",
-          "summary": "",
-          "repository": "",
-          "license": "",
-          "source-directories": [ "src" ],
-          "exposed-modules": [],
-          "dependencies": {}
         }
         """.trimIndent()

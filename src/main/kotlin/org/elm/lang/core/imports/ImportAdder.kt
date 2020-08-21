@@ -149,16 +149,8 @@ private fun mergeExposedTypes(exposing1: ElmExposingList?, exposing2: ElmExposin
 }
 
 private fun mergeExposedUnionConstructors(typeName: String, types: List<ElmExposedType>): String {
-    if (types.any { it.exposesAll }) {
-        return "$typeName(..)"
+    return when {
+        types.any { it.exposesAll } -> "$typeName(..)"
+        else -> typeName
     }
-
-    val body = types
-            .mapNotNull { it.exposedUnionConstructors }
-            .flatMap { it.exposedUnionConstructors }
-            .map { it.text }
-            .sorted()
-            .joinToString(", ")
-
-    return if (body.isEmpty()) typeName else "$typeName($body)"
 }

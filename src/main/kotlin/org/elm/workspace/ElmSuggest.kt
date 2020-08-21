@@ -97,7 +97,7 @@ object ElmSuggest {
 
     private fun suggestionsForWindows(): Sequence<Path> {
         if (!SystemInfo.isWindows) return emptySequence()
-        return sequenceOf("0.19.1", "0.19", "0.18") // TODO [drop 0.18]
+        return sequenceOf("0.19.1", "0.19")
                 .flatMap {
                     sequenceOf(
                             Paths.get("C:/Program Files (x86)/Elm Platform/$it/bin"), // npm install -g elm

@@ -184,10 +184,6 @@ private fun fromExposableElement(element: ElmExposableTag, ref: ElmReference): I
         is ElmInfixDeclaration ->
             "(${element.name})"
 
-        // TODO [drop 0.18] remove this clause
-        is ElmOperatorDeclarationLeft ->
-            "(${element.name})"
-
         else ->
             element.name
     }

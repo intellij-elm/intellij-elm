@@ -2,6 +2,7 @@ package org.elm.workspace
 
 import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertNull
 
 class ConstraintTest {
 
@@ -72,7 +73,29 @@ class ConstraintTest {
     fun `toString emits a readable string`() {
         assertEquals("1.0.0 <= v < 2.0.0", Constraint.parse("1.0.0 <= v < 2.0.0").toString())
     }
+
+    @Test
+    fun `empty intersection`() {
+        assertNull(c("1.0.0 <= v < 1.0.1") intersect c("1.0.1 <= v < 2.0.0"))
+        assertNull(c("1.0.0 <= v < 1.1.0") intersect c("1.1.0 <= v < 2.0.0"))
+        assertNull(c("1.0.0 <= v < 2.0.0") intersect c("2.0.0 <= v < 3.0.0"))
+    }
+
+    @Test
+    fun `non-empty intersections`() {
+        assertEquals(c("1.0.0 <= v < 2.0.0"), c("1.0.0 <= v < 2.0.0") intersect c("1.0.0 <= v < 3.0.0"))
+        assertEquals(c("2.0.0 <= v < 3.0.0"), c("1.0.0 <= v < 3.0.0") intersect c("2.0.0 <= v < 3.0.0"))
+        assertEquals(c("2.0.0 <= v < 3.0.0"), c("1.0.0 <= v < 3.0.0") intersect c("2.0.0 <= v < 4.0.0"))
+
+        assertEquals(c("1.0.0 <= v < 1.1.0"), c("1.0.0 <= v < 2.0.0") intersect c("1.0.0 <= v < 1.1.0"))
+        assertEquals(c("1.2.0 <= v < 1.3.0"), c("1.0.0 <= v < 1.3.0") intersect c("1.2.0 <= v < 1.4.0"))
+
+        assertEquals(c("1.2.3 <= v < 1.3.0"), c("1.2.3 <= v < 2.0.0") intersect c("1.1.1 <= v < 1.3.0"))
+    }
 }
+
+private fun c(str: String) =
+        Constraint.parse(str)
 
 private fun v(x: Int, y: Int, z: Int) =
         Version(x, y, z)

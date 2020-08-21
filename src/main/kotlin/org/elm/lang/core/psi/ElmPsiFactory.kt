@@ -42,8 +42,6 @@ class ElmPsiFactory(private val project: Project) {
                     EXPOSED_OPERATOR -> ElmExposedOperator(node)
                     EXPOSED_TYPE -> ElmExposedType(node)
                     EXPOSED_VALUE -> ElmExposedValue(node)
-                    EXPOSED_UNION_CONSTRUCTORS -> ElmExposedUnionConstructors(node)
-                    EXPOSED_UNION_CONSTRUCTOR -> ElmExposedUnionConstructor(node)
                     EXPOSING_LIST -> ElmExposingList(node)
                     FIELD -> ElmField(node)
                     FIELD_ACCESS_EXPR -> ElmFieldAccessExpr(node)
@@ -51,8 +49,6 @@ class ElmPsiFactory(private val project: Project) {
                     FIELD_TYPE -> ElmFieldType(node)
                     FUNCTION_CALL_EXPR -> ElmFunctionCallExpr(node)
                     FUNCTION_DECLARATION_LEFT -> ElmFunctionDeclarationLeft(node)
-                    OPERATOR_DECLARATION_LEFT -> ElmOperatorDeclarationLeft(node) // TODO [drop 0.18] remove this line
-                    OPERATOR_CONFIG -> ElmOperatorConfig(node) // TODO [drop 0.18] remove this line
                     GLSL_CODE_EXPR -> ElmGlslCodeExpr(node)
                     IF_ELSE_EXPR -> ElmIfElseExpr(node)
                     IMPORT_CLAUSE -> ElmImportClause(node)
@@ -78,7 +74,6 @@ class ElmPsiFactory(private val project: Project) {
                     RECORD_PATTERN -> ElmRecordPattern(node)
                     RECORD_TYPE -> ElmRecordType(node)
                     STRING_CONSTANT_EXPR -> ElmStringConstantExpr(node)
-                    TUPLE_CONSTRUCTOR_EXPR -> ElmTupleConstructorExpr(node) // TODO [drop 0.18] remove this line
                     TUPLE_EXPR -> ElmTupleExpr(node)
                     TUPLE_PATTERN -> ElmTuplePattern(node)
                     TUPLE_TYPE -> ElmTupleType(node)
@@ -210,9 +205,18 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")
 
+    fun createFunctionCallExpr(text: String): ElmFunctionCallExpr =
+            createFromText("f = $text")
+                    ?: error("Invalid function call expr: `$text`")
+
     fun createNumberConstant(num: String): ElmNumberConstantExpr =
             createFromText("f = $num")
                     ?: error("Invalid number: `$num`")
+
+    fun createLambda(lambdaText: String): ElmParenthesizedExpr {
+        return createFromText("f = ($lambdaText)")
+                ?: error("Invalid lambda: `$lambdaText`")
+    }
 
     fun createAnythingPattern(): ElmAnythingPattern =
             createFromText("f _ = 1")

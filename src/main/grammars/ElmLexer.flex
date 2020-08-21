@@ -48,7 +48,6 @@ Operator = ("!"|"$"|"^"|"|"|"*"|"/"|"?"|"+"|"~"|"."|-|=|@|#|%|&|<|>|:|€|¥|¢|
 
 ValidEscapeSequence = \\(u\{{HexChar}{4,6}\}|[nrt\"'\\])
 InvalidEscapeSequence = \\(u\{[^}]*\}|[^nrt\"'\\])
-LegacyEscapeSequence = \\x{HexChar}+ // TODO [drop 0.18] remove this
 ThreeQuotes = \"\"\"
 
 %%
@@ -85,7 +84,6 @@ ThreeQuotes = \"\"\"
 
 <STRING, RAW_STRING, CHAR> {
     {ValidEscapeSequence}   { return STRING_ESCAPE; }
-    {LegacyEscapeSequence}  { return STRING_ESCAPE; }
     {InvalidEscapeSequence} { return INVALID_STRING_ESCAPE; }
 }
 
@@ -150,8 +148,6 @@ ThreeQuotes = \"\"\"
     "type"                      { yybegin(TYPE_PENDING); return TYPE; }
     "port"                      { return PORT; }
     "infix"                     { return INFIX; }
-    "infixl"                    { return INFIXL; } // TODO [drop 0.18] remove infixl entirely
-    "infixr"                    { return INFIXR; } // TODO [drop 0.18] remove infixr entirely
     "("                         { return LEFT_PARENTHESIS; }
     ")"                         { return RIGHT_PARENTHESIS; }
     "["                         { return LEFT_SQUARE_BRACKET; }

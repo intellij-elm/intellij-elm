@@ -20,8 +20,6 @@
     elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ExposedType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("ExposedUnionConstructor")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-    elementTypeFactory("ExposedUnionConstructors")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
@@ -39,9 +37,6 @@
     elementTypeFactory("ImportClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("AsClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
     elementTypeFactory("UpperCaseQID")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
-
-    // TODO [drop 0.18] remove this stub
-    elementTypeFactory("OperatorDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
 
     tokens = [
         // tokens used by manual/external parse rules
@@ -136,13 +131,8 @@ private MoreExposedItems ::= (COMMA ExposedItem)+ {pin(".*")=1}
 ExposedValue ::= LOWER_CASE_IDENTIFIER
 
 ExposedType ::=
-    UPPER_CASE_IDENTIFIER [ExposedUnionConstructors]
-
-ExposedUnionConstructors ::=
-    LEFT_PARENTHESIS (DOUBLE_DOT | (<<non_empty_list ExposedUnionConstructor>>)) RIGHT_PARENTHESIS
-
-ExposedUnionConstructor ::=
-    UPPER_CASE_IDENTIFIER
+    UPPER_CASE_IDENTIFIER (LEFT_PARENTHESIS DOUBLE_DOT RIGHT_PARENTHESIS)?
+    { pin = 1 }
 
 ExposedOperator ::=
     OperatorAsFunction_inner
@@ -180,7 +170,6 @@ private Declaration ::=
     | TypeDeclaration
     | TypeAnnotation
     | PortAnnotation
-    | OperatorConfig
     | InfixDeclaration
 
 ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
@@ -188,15 +177,10 @@ ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
 
 private InternalValueDeclarationLeft ::=
     FunctionDeclarationLeft
-    | OperatorDeclarationLeft
     | Pattern
 
 FunctionDeclarationLeft ::=
     LOWER_CASE_IDENTIFIER FunctionDeclarationPattern*
-
- // TODO [drop 0.18] remove OperatorDeclarationLeft
-OperatorDeclarationLeft ::=
-    OperatorAsFunction_inner FunctionDeclarationPattern*
 
 private FunctionDeclarationPattern ::=
         AnythingPattern
@@ -264,9 +248,8 @@ TupleType ::=
     | LEFT_PARENTHESIS TypeExpression (COMMA TypeExpression)+ RIGHT_PARENTHESIS
 
 
- // TODO [drop 0.18] remove the OperatorAsFunction_inner clause
 TypeAnnotation ::=
-    (LOWER_CASE_IDENTIFIER|OperatorAsFunction_inner) COLON TypeExpression
+    LOWER_CASE_IDENTIFIER COLON TypeExpression
     { pin = 'COLON' }
 
 PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeExpression
@@ -314,7 +297,6 @@ private Atom ::=
     LiteralExprGroup
     | NegateExpr
     | OperatorAsFunctionExpr
-    | TupleConstructorExpr
     | UnitExpr
     | FieldAccessExpr
     | TupleOrParenExpr
@@ -376,10 +358,6 @@ ValueExpr ::=
 TupleExpr ::=
     LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
     {pin(".*")=2}
-
-// TODO [drop 0.18] remove this
-TupleConstructorExpr ::=
-    LEFT_PARENTHESIS COMMA+ RIGHT_PARENTHESIS
 
 UnitExpr ::=
     LEFT_PARENTHESIS RIGHT_PARENTHESIS
@@ -527,18 +505,6 @@ InfixFuncRef ::=
     LOWER_CASE_IDENTIFIER
 
 GlslCodeExpr ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
-
-
- // TODO [drop 0.18] remove OperatorConfig
-OperatorConfig ::=
-    OperatorConfigKeyword NUMBER_LITERAL OPERATOR_IDENTIFIER
-
- // TODO [drop 0.18] remove OperatorConfigKeyword
-private OperatorConfigKeyword ::=
-    INFIXL
-    | INFIX
-    | INFIXR
-
 
 
 

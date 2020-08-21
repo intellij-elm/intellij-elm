@@ -7,7 +7,6 @@ import org.elm.fileTree
 import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.intellij.lang.annotations.Language
-import java.nio.file.Paths
 
 /*
 Some of the Elm tests depend on having certain Elm packages installed in the global location.
@@ -24,10 +23,8 @@ interface ElmStdlibVariant {
 
     /**
      * Install Elm 0.19 stdlib in the default location ($HOME/.elm)
-     *
-     * @return An application Elm project which depends on the specified Stdlib packages
      */
-    fun ensureElmStdlibInstalled(project: Project, toolchain: ElmToolchain): ElmProject {
+    fun ensureElmStdlibInstalled(project: Project, toolchain: ElmToolchain) {
         val elmCLI = toolchain.elmCLI
                 ?: error("Must have a path to the Elm compiler to install Elm stdlib")
 
@@ -46,19 +43,37 @@ interface ElmStdlibVariant {
         }.create(project, onDiskTmpDir)
 
         elmCLI.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
-
-        // Now return an `ElmProject` with a manifest path suitable for IntelliJ's "light"
-        // integration tests which put everything at `/src` using the in-memory VFS.
-        val inMemManifestPath = Paths.get("/src/$ELM_JSON")
-        val repo = ElmPackageRepository(compilerVersion)
-        val elmProj = ElmProject.parse(jsonManifest.byteInputStream(), inMemManifestPath, repo)
-        require(Paths.get(".") in elmProj.sourceDirectories) {
-            "Since the elm.json file is stored in `/src` (in-memory VFS), `source-directories` must contain \".\""
-        }
-        return elmProj
     }
 }
 
+object EmptyElmStdlibVariant : ElmStdlibVariant {
+    override fun ensureElmStdlibInstalled(project: Project, toolchain: ElmToolchain) {
+        // Don't do anything. The Elm compiler would refuse to use this manifest
+        // since it's missing `elm/core` and other required packages. Also, it's
+        // faster if we short-circuit things here rather than invoking the Elm
+        // compiler in an external process.
+    }
+
+    override val jsonManifest: String
+        @Language("JSON")
+        get() = """
+            {
+                "type": "application",
+                "source-directories": [
+                    "."
+                ],
+                "elm-version": "0.19.1",
+                "dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                },
+                "test-dependencies": {
+                    "direct": {},
+                    "indirect": {}
+                }
+            }
+            """.trimIndent()
+}
 
 /**
  * Describes a "minimal" installation of the Elm stdlib. This is the bare minimum

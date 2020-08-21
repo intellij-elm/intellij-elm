@@ -73,6 +73,8 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
                 "elm-version": "0.19.1",
                 "dependencies": {
                     "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
                         "elm/parser": "1.0.0"
                     },
                     "indirect": {}

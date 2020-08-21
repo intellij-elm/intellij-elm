@@ -10,7 +10,6 @@ import org.elm.lang.core.diagnostics.ElmDiagnostic
 import org.elm.lang.core.diagnostics.TypeArgumentCountError
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import kotlin.math.max
 
 
 // Changes to type expressions always invalidate the whole project, since they influence inferred
@@ -279,16 +278,9 @@ class TypeExpression(
             // reference won't resolve. So we check for a reference to that type here. Note that users can
             // create their own List types that shadow the built-in, so we only want to do this check if the
             // reference is null.
-            // In 0.18, all the other basic types fail to resolve as well.
-            // TODO [drop 0.18] remove the checks for everything except List
             null -> {
                 when (typeRef.referenceName) {
                     "List" -> TyList(TyVar("a"))
-                    "String" -> TyString
-                    "Char" -> TyChar
-                    "Bool" -> TyBool
-                    "Int" -> TyInt
-                    "Float" -> TyFloat
                     else -> TyUnknown()
                 }
             }

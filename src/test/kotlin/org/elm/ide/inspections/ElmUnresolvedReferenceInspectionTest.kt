@@ -33,7 +33,7 @@ type alias MyList = List
 
 
     fun `test type annotation record extension base variables have no errors`() = checkByText("""
-foo : { a | name : String } -> String
+foo : { a | name : () } -> ()
 """)
 
     fun `test type annotation variables have no errors`() = checkByText("""
@@ -41,21 +41,14 @@ foo : a -> b -> c
 """)
 
     fun `test record extension base variables are checked for errors in type declarations`() = checkByText("""
-type alias Foo a = { <error descr="Unresolved reference 'b'">b</error> | name : String }
-type Bar c = Bar { <error descr="Unresolved reference 'd'">d</error> | name : String }
+type alias Foo a = { <error descr="Unresolved reference 'b'">b</error> | name : () }
+type Bar c = Bar { <error descr="Unresolved reference 'd'">d</error> | name : () }
 """)
 
 
     fun `test qualified Kernel refs have no errors`() = checkByText("""
 import Elm.Kernel.Scheduler
 f = Elm.Kernel.Scheduler.succeed
-""")
-
-
-    // TODO [drop 0.18] remove this test
-    fun `test qualified Native refs have no errors`() = checkByText("""
-import Native.Scheduler
-f = Native.Scheduler.succeed
 """)
 
 
@@ -94,24 +87,5 @@ type B c = ConstructorB c
 
 x : A
 x = ConstructorA
-""")
-
-
-    // LEGACY Elm 0.18 TESTS
-
-    // TODO [drop 0.18] remove this test
-    fun `test legacy built-in type refs have no errors`() = checkByText("""
-type alias MyStr = String
-type alias MyInt = Int
-type alias MyFloat = Float
-type alias MyBool = Bool
-type alias MyChar = Char
-type alias MyList = List
-""")
-
-    // TODO [drop 0.18] remove this test
-    fun `test legacy built-in value refs have no errors`() = checkByText("""
-x = True
-y = False
 """)
 }

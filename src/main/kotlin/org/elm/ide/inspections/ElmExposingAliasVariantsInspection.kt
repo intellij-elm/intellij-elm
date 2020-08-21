@@ -18,7 +18,7 @@ class ElmExposingAliasVariantsInspection : LocalInspectionTool() {
                 super.visitElement(element)
                 if (element !is ElmExposedType) return
 
-                if (element.exposedUnionConstructors != null && element.reference.resolve() is ElmTypeAliasDeclaration) {
+                if (element.exposesAll && element.reference.resolve() is ElmTypeAliasDeclaration) {
                     holder.registerProblem(element, "Invalid (..) on alias import", RemoveExposingListQuickFix())
                 }
             }
@@ -28,6 +28,7 @@ class ElmExposingAliasVariantsInspection : LocalInspectionTool() {
 
 private class RemoveExposingListQuickFix : NamedQuickFix("Remove (..)") {
     override fun applyFix(element: PsiElement, project: Project) {
-        (element as? ElmExposedType)?.exposedUnionConstructors?.delete()
+        if (element !is ElmExposedType) return
+        element.deleteParensAndDoubleDot()
     }
 }

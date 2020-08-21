@@ -37,7 +37,7 @@ defaultPage = A.Home
                 --^App.elm
 
 --@ App.elm
-module App exposing (Page(Home))
+module App exposing (Page(..))
 type Page = Home
 """)
 

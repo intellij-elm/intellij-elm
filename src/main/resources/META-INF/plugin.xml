@@ -36,6 +36,19 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.0.0</b> <em>(2020-08-18)</em>
+                <ul>
+                    <li>Removed support for Elm 0.18</li>
+                    <li>Added a quick-fix to convert List.map to List.foldr</li>
+                    <li>Major improvements to dependency version resolution</li>
+                    <li>Go-to-declaration now works for indirect dependencies</li>
+                </ul>
+            </li>
+            <li><b>3.5.4</b> <em>(2020-07-28)</em>
+                <ul>
+                    <li>Added support for IntelliJ 2020.2</li>
+                </ul>
+            </li>
             <li><b>3.5.3</b> <em>(2020-04-14)</em>
                 <ul>
                     <li>Fixed missing icons in the Elm tool window when running IntelliJ 2020.1</li>
@@ -277,7 +290,7 @@
     See http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html
     Note that the range is half-open: [since-build, until-build)
      -->
-    <idea-version since-build="191.4212.41" until-build="201.*"/>
+    <idea-version since-build="191.4212.41" until-build="202.*"/>
 
 
     <depends>com.intellij.modules.lang</depends>
@@ -376,6 +389,12 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmDuplicateDeclarationInspection"/>
 
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Top-level destructuring is forbidden"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="org.elm.ide.inspections.ElmTopLevelDestructuringInspection"/>
+
+
         <!-- Intentions -->
 
         <intentionAction>
@@ -392,6 +411,10 @@
         </intentionAction>
         <intentionAction>
             <className>org.elm.ide.intentions.RemoveExposureIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.MapToFoldIntention</className>
             <category>Elm</category>
         </intentionAction>
         <intentionAction>
@@ -455,17 +478,15 @@
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
         </action>
 
-        <!-- TODO [drop 0.18] change "Attach Elm JSON..." to "Attach elm.json ..."-->
         <action id="Elm.AttachElmProject"
                 class="org.elm.workspace.ElmAttachProjectAction"
-                text="Attach Elm JSON project file"
+                text="Attach elm.json project file"
                 icon="AllIcons.General.Add">
         </action>
 
-        <!-- TODO [drop 0.18] change "Detach Elm JSON..." to "Detach elm.json ..."-->
         <action id="Elm.DetachElmProject"
                 class="org.elm.workspace.ElmDetachProjectAction"
-                text="Detach Elm JSON project file"
+                text="Detach elm.json project file"
                 icon="AllIcons.General.Remove"/>
 
         <action id="Elm.RefreshElmProjects"

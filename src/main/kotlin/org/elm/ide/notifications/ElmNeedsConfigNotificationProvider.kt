@@ -129,8 +129,7 @@ class ElmNeedsConfigNotificationProvider(
     private fun noElmProjectPanel(message: String) =
             EditorNotificationPanel().apply {
                 setText(message)
-                // TODO [drop 0.18] remove the `(or elm-package.json)` part
-                createActionLabel("Attach elm.json (or elm-package.json)", "Elm.AttachElmProject")
+                createActionLabel("Attach elm.json", "Elm.AttachElmProject")
             }
 
 

@@ -31,7 +31,6 @@ class ElmBreadcrumbsProvider : BreadcrumbsProvider {
                 is ElmTypeAnnotation -> "${e.referenceName} :"
                 is ElmValueDeclaration -> when (val assignee = e.assignee) {
                     is ElmFunctionDeclarationLeft -> assignee.name
-                    is ElmOperatorDeclarationLeft -> "(${assignee.name})"
                     else -> assignee?.text?.truncate()
                 }
                 is ElmAnonymousFunctionExpr -> e.patternList.joinToString(" ", prefix = "\\") { it.text }.truncate() + " ->"

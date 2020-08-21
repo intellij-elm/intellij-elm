@@ -99,17 +99,6 @@ foo ( x, y ) = x + y
 """)
 
 
-    // TODO [drop 0.18] this becomes invalid at the top-level in 0.19
-    fun `test top-level value destructuring`() = checkByCode(
-            """
-( x, y ) = (0, 0)
-   --X
-
-f = y + 20
-  --^
-""")
-
-
     fun `test nested function parameter destructuring`() = checkByCode(
             """
 f =

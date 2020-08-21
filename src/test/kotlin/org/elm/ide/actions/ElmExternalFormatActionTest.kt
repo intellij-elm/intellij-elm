@@ -51,38 +51,6 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
-    // TODO [drop 0.18] remove this test
-    fun `test elm-format action with elm 18`() {
-        val fileWithCaret = buildProject {
-            project("elm-package.json", manifestElm18)
-            dir("src") {
-                elm("Main.elm", """
-                    module Main exposing (f)
-
-
-                    f x = x{-caret-}
-
-                """.trimIndent())
-            }
-            dir("elm-stuff") {
-                file("exact-dependencies.json", "{}")
-            }
-        }.fileWithCaret
-
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
-        val document = FileDocumentManager.getInstance().getDocument(file)!!
-        reformat(file)
-        val expected = """
-                    module Main exposing (f)
-
-
-                    f x =
-                        x
-
-                """.trimIndent()
-        TestCase.assertEquals(expected, document.text)
-    }
-
     fun `test elm-format action shouldn't be active on non-elm files`() {
         val fileWithCaret = buildProject {
             project("elm.json", manifestElm19.trimIndent())
@@ -165,21 +133,5 @@ private val manifestElm19 = """
                 "direct": {},
                 "indirect": {}
             }
-        }
-        """.trimIndent()
-
-
-// TODO [drop 0.18]
-@Language("JSON")
-private val manifestElm18 = """
-        {
-          "elm-version": "0.18.0 <= v < 0.19.0",
-          "version": "1.0.0",
-          "summary": "",
-          "repository": "",
-          "license": "",
-          "source-directories": [ "src" ],
-          "exposed-modules": [],
-          "dependencies": {}
         }
         """.trimIndent()

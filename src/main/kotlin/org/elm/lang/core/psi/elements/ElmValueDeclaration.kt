@@ -40,11 +40,6 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
     val functionDeclarationLeft: ElmFunctionDeclarationLeft?
         get() = PsiTreeUtil.getStubChildOfType(this, ElmFunctionDeclarationLeft::class.java)
 
-    /** Warning: Elm 0.18 only! will always be null in 0.19 */
-    // TODO [drop 0.18] remove this property
-    val operatorDeclarationLeft: ElmOperatorDeclarationLeft?
-        get() = PsiTreeUtil.getStubChildOfType(this, ElmOperatorDeclarationLeft::class.java)
-
     /** The pattern if this declaration is binding multiple names. */
     // In Elm 0.19, this is only valid inside a let block
     val pattern: ElmPattern?
@@ -70,6 +65,8 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
      * lower-case identifiers like you would normally expect in a function, but also
      * any destructured names caused by pattern matching.
      *
+     * Destructuring is only supported within a let-in expression, not at the top level.
+     *
      * @param includeParameters include names declared as parameters to the function
      *                          (also includes destructured names). The default is `true`
      */
@@ -79,10 +76,9 @@ class ElmValueDeclaration : ElmStubbedElement<ElmPlaceholderStub>, ElmDocTarget 
                 includeParameters -> assignee + assignee.namedParameters
                 else -> listOf(assignee)
             }
-            is ElmPattern -> assignee.descendantsOfType()
-            is ElmOperatorDeclarationLeft -> when {
-                includeParameters -> assignee + assignee.namedParameters
-                else -> listOf(assignee)
+            is ElmPattern -> when {
+                isTopLevel -> emptyList()
+                else -> assignee.descendantsOfType()
             }
             else -> emptyList()
         }
