@@ -179,7 +179,7 @@ class ElmPsiFactory(private val project: Project) {
 
 
         val elmParenthesizedExpr: ElmParenthesizedExpr = if (isMultiline) {
-            createFromText("f = ($outerWithComments\n$indent    $innerText\n$indent)")
+            createFromText("f = ($outerWithComments\n$indent$innerText\n$indent)")
                     ?: error("Invalid value Paren Expression: `($outer $innerText)`")
         } else {
             createFromText("f = ($outerWithComments $innerText)")

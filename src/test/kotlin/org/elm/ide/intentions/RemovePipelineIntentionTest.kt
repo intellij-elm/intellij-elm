@@ -359,7 +359,7 @@ example =
             (identity
                 identity
             )
-            []
+        []
         )
 
 """)
