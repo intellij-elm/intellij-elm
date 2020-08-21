@@ -34,7 +34,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     .withIndex()
                     .fold(initial, { acc, indexedSegment ->
                         val segment = indexedSegment.value
-                        val index = indexedSegment.index + 1
                         val indentation = existingIndent + "    ".repeat(indexedSegment.index)
                         if (acc == null) {
                             if (originalPipeline is Pipeline.RightPipeline) {
@@ -165,16 +164,4 @@ fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement, proj
         expression.replace(replaceWith)
         Unit
     }
-}
-private fun replaceUnwrappedHelper(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr) {
-    if (needsParensInParent(expression)) {
-        expression.replace(replaceWith)
-    } else {
-        expression.replace(replaceWith.expression!!)
-    }
-}
-
-
-private fun needsParensInParent(element: ElmPsiElement): Boolean {
-    return element.parent is ElmBinOpExpr
 }
