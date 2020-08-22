@@ -45,71 +45,44 @@ class ElmProjectLoader(
     }
 
     companion object {
-        fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject {
-            val dto = parseDTO(manifestPath)
-            preFlightDeps(manifestPath, repo, dto)
-            return when (dto) {
-                is ElmApplicationProjectDTO -> {
-                    val deps = with(dto) {
-                        deps.direct + deps.indirect + testDeps.direct + testDeps.indirect
-                    }
-                    val loader = ElmProjectLoader(repo, deps)
-                    ElmApplicationProject(
-                            manifestPath = manifestPath,
-                            elmVersion = dto.elmVersion,
-                            dependencies = dto.deps.direct.keys.map { loader.load(it) },
-                            testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
-                            sourceDirectories = dto.sourceDirectories,
-                            testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
-                                    ?: DEFAULT_TESTS_DIR_NAME
-                    )
-                }
-                is ElmPackageProjectDTO -> {
-                    val deps = solve(dto.deps + dto.testDeps, repo)
-                            ?: throw ProjectLoadException.General("unsolvable constraints")
-                    val loader = ElmProjectLoader(repo, deps)
-                    ElmPackageProject(
-                            manifestPath = manifestPath,
-                            elmVersion = dto.elmVersion,
-                            dependencies = dto.deps.keys.map { loader.load(it) },
-                            testDependencies = dto.testDeps.keys.map { loader.load(it) },
-                            sourceDirectories = packageProjectSourceDirs,
-                            name = dto.name,
-                            version = dto.version,
-                            exposedModules = dto.exposedModulesNode.toExposedModuleMap())
-                }
-            }
-        }
-
-        private fun preFlightDeps(manifestPath: Path, repo: ElmPackageRepository, dto: ElmProjectDTO) {
-            // We assume that all package dependencies have been installed in `~/.elm`
-            // But there are several scenarios where the dependencies might not actually have been installed:
-            //     1) user downloads an Elm project from Github but never ran `elm make` on it
-            //     2) user manually modified an `elm.json` file without running `elm make`
-            //     3) user nuked `~/.elm`
-            // So we try to detect these scenarios so that we can gracefully handle them.
-
-            // HACK: Peeking into the `elm-stuff` directory is brittle. We look at the
-            // last-modified time on the `i.dat` file (which I believe is the exposed
-            // interface of dependencies) to determine whether the user has actually
-            // installed the dependencies needed by the `elm.json` file.
-            val artifactLastModified = manifestPath.resolveSibling("elm-stuff")
-                    .resolve(repo.elmCompilerVersion.toString())
-                    .resolve("i.dat")
-                    .toFile()
-                    .lastModified()
-
-            // TODO: if the user nuked `~/.elm`, then we also need to nuke `elm-stuff` before compiling
-
-            if (artifactLastModified < manifestPath.toFile().lastModified() || repo.listPackages().isEmpty()) {
-                throw ProjectLoadException.StaleElmStuff(
-                        sourceDirectories = when (dto) {
-                            is ElmApplicationProjectDTO -> dto.sourceDirectories
-                            is ElmPackageProjectDTO -> packageProjectSourceDirs
+        fun topLevelLoad(manifestPath: Path, repo: ElmPackageRepository): ElmProject =
+                when (val dto = parseDTO(manifestPath)) {
+                    is ElmApplicationProjectDTO -> {
+                        val deps = with(dto) {
+                            deps.direct + deps.indirect + testDeps.direct + testDeps.indirect
                         }
-                )
-            }
-        }
+                        val loader = ElmProjectLoader(repo, deps)
+                        ElmApplicationProject(
+                                manifestPath = manifestPath,
+                                elmVersion = dto.elmVersion,
+                                dependencies = dto.deps.direct.keys.map { loader.load(it) },
+                                testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
+                                sourceDirectories = dto.sourceDirectories,
+                                testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
+                                        ?: DEFAULT_TESTS_DIR_NAME
+                        )
+                    }
+                    is ElmPackageProjectDTO -> {
+                        val deps = solve(dto.deps + dto.testDeps, repo)
+                                ?: throw ProjectLoadException.General("unsolvable constraints")
+                        val loader = ElmProjectLoader(repo, deps)
+                        ElmPackageProject(
+                                manifestPath = manifestPath,
+                                elmVersion = dto.elmVersion,
+                                dependencies = dto.deps.keys.map { loader.load(it) },
+                                testDependencies = dto.testDeps.keys.map { loader.load(it) },
+                                sourceDirectories = packageProjectSourceDirs,
+                                name = dto.name,
+                                version = dto.version,
+                                exposedModules = dto.exposedModulesNode.toExposedModuleMap())
+                    }
+                }
+
+        fun parseSourceDirs(manifestPath: Path): List<Path> =
+                when (val dto = parseDTO(manifestPath)) {
+                    is ElmApplicationProjectDTO -> dto.sourceDirectories
+                    is ElmPackageProjectDTO -> packageProjectSourceDirs
+                }
 
         // Elm 0.19.x package projects have only a single source root and it is called "src"
         private val packageProjectSourceDirs = listOf(Paths.get("src"))

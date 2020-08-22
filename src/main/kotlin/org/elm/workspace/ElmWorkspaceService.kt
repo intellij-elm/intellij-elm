@@ -29,10 +29,7 @@ import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.modificationTracker
-import org.elm.openapiext.findFileBreadthFirst
-import org.elm.openapiext.findFileByPathTestAware
-import org.elm.openapiext.modules
-import org.elm.openapiext.pathAsPath
+import org.elm.openapiext.*
 import org.elm.utils.MyDirectoryIndex
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
@@ -40,6 +37,7 @@ import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -188,11 +186,35 @@ class ElmWorkspaceService(
     /**
      * Asynchronously load an Elm project described by a manifest file (e.g. `elm.json`).
      */
-    private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
+    private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val compilerVersion = settings.toolchain.elmCLI?.queryVersion()?.orNull()
+                val elmCLI = settings.toolchain.elmCLI
                         ?: throw ProjectLoadException.General("Must specify a valid path to Elm binary in Settings")
-                val repo = ElmPackageRepository(compilerVersion) // not thread-safe; do not reuse across threads!
+
+                val compilerVersion = elmCLI.queryVersion().orNull()
+                        ?: throw ProjectLoadException.General("Could not determine version of the Elm compiler")
+
+                if (installDeps) {
+                    // Ensure that the project's dependencies have been installed by choosing
+                    // an arbitrary Elm source file and compiling it. Ideally the Elm compiler
+                    // would provide some kind of `elm install` command, but for now we will
+                    // work-around its absence.
+                    val sourceDirectories = ElmProjectLoader.parseSourceDirs(manifestPath)
+                    val arbitraryElmFilePath = sourceDirectories.asSequence()
+                            .map { manifestPath.parent.resolve(it).normalize() }
+                            .flatMap { Files.newDirectoryStream(it).asSequence() }
+                            .firstOrNull()
+
+                    if (arbitraryElmFilePath != null) {
+                        val output = elmCLI.make(intellijProject, workDir = manifestPath.parent, path = arbitraryElmFilePath)
+                        if (!output.isSuccess) log.error("Failed to compile project $manifestPath before load")
+                    }
+                }
+
+                // not thread-safe; do not reuse across threads!
+                val repo = ElmPackageRepository(compilerVersion)
+
+                // Load the project
                 ElmProjectLoader.topLevelLoad(manifestPath, repo)
             }.whenComplete { _, error ->
                 // log the result
@@ -211,7 +233,7 @@ class ElmWorkspaceService(
 
 
     fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> =
-            asyncLoadProject(manifestPath)
+            asyncLoadProject(manifestPath, installDeps = true)
                     .thenApply {
                         upsertProject(it)
                     }

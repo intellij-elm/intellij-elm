@@ -79,6 +79,12 @@ interface FileTreeBuilder {
     /* Creates an Elm source file */
     fun elm(name: String, @Language("Elm") code: String) = file(name, code)
 
+    /* Creates an Elm source file where the content doesn't matter but it does compile */
+    fun elm(name: String) = file(name, """
+        module ${name.removeSuffix(".elm")} exposing (..)
+        placeholderValue = 0
+    """.trimIndent())
+
     /* Creates an `elm.json` project file */
     fun project(name: String, @Language("JSON") code: String) = file(name, code)
 }
