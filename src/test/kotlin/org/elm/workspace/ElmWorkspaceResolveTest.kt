@@ -300,9 +300,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             asyncAttachElmProject(rootPath.resolve("b/elm.json")).get()
         }
 
-        val elmProjA = project.elmWorkspace.allProjects.find { it.presentableName == "a" }!!
-        val elmProjB = project.elmWorkspace.allProjects.find { it.presentableName == "b" }!!
-
         testProject.run {
             checkReferenceIsResolved<ElmImportClause>("a/src/Main.elm", toPackage = "elm/parser 1.0.0")
             checkReferenceIsResolved<ElmImportClause>("b/src/Main.elm", toPackage = "elm/parser 1.1.0")
@@ -348,6 +345,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             if (!useDefaultTestsLocation)
                 file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
+            dir("src") {}
             dir(testsFolder) {
                 elm("MyTests.elm", """
                     import Test
@@ -433,6 +431,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             if (!useDefaultTestsLocation)
                 file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
+            dir("src") {}
             dir(testsFolder) {
                 elm("MyTests.elm", """
                     import Helper
@@ -456,7 +455,11 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
+                        "elm/random": "1.0.0"
+                    },
                     "indirect": {
                         "elm/time": "1.0.0"
                     }

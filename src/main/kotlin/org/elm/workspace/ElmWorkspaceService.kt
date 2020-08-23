@@ -20,9 +20,11 @@ import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
 import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.util.SimpleModificationTracker
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.impl.source.resolve.ResolveCache
+import com.intellij.testFramework.writeChild
 import com.intellij.util.Consumer
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
@@ -37,7 +39,6 @@ import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -195,20 +196,26 @@ class ElmWorkspaceService(
                         ?: throw ProjectLoadException.General("Could not determine version of the Elm compiler")
 
                 if (installDeps) {
-                    // Ensure that the project's dependencies have been installed by choosing
-                    // an arbitrary Elm source file and compiling it. Ideally the Elm compiler
+                    // Ensure that the project's dependencies have been installed by synthesizing
+                    // a trivial Elm source file and compiling it. Ideally the Elm compiler
                     // would provide some kind of `elm install` command, but for now we will
                     // work-around its absence.
-                    val sourceDirectories = ElmProjectLoader.parseSourceDirs(manifestPath)
-                    val arbitraryElmFilePath = sourceDirectories.asSequence()
-                            .map { manifestPath.parent.resolve(it).normalize() }
-                            .flatMap { Files.newDirectoryStream(it).asSequence() }
-                            .firstOrNull()
+                    val sourceDirectory = ElmProjectLoader.parseSourceDirs(manifestPath).firstOrNull()
+                            ?: throw ProjectLoadException.General("Need at least one source-directory in `elm.json`")
 
-                    if (arbitraryElmFilePath != null) {
-                        val output = elmCLI.make(intellijProject, workDir = manifestPath.parent, path = arbitraryElmFilePath)
-                        if (!output.isSuccess) log.error("Failed to compile project $manifestPath before load")
+                    val tempFile = LocalFileSystem.getInstance()
+                            .refreshAndFindFileByPath(sourceDirectory.toString())
+                            ?.writeChild("IntellijInstallDepsWorkaround.elm", """
+                                module IntellijInstallDepsWorkaround exposing (intellijWorkaround)
+                                intellijWorkaround = 0
+                            """.trimIndent())
+                            ?: throw ProjectLoadException.General("Could not synthesize placeholder file")
+
+                    val output = elmCLI.make(intellijProject, workDir = manifestPath.parent, path = tempFile.pathAsPath)
+                    if (!output.isSuccess) {
+                        log.error("Failed to compile project $manifestPath before load: ${output.stderr}")
                     }
+                    LocalFileSystem.getInstance().deleteFile(this, tempFile)
                 }
 
                 // not thread-safe; do not reuse across threads!
@@ -272,10 +279,8 @@ class ElmWorkspaceService(
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 
-        return asyncLoadProject(guessManifest.pathAsPath)
-                .thenApply {
-                    upsertProject(it)
-                }.exceptionally { emptyList() }
+        return asyncAttachElmProject(guessManifest.pathAsPath)
+                .exceptionally { emptyList() }
     }
 
 

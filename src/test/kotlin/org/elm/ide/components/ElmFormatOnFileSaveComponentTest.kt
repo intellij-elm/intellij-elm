@@ -24,7 +24,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
                     module Main exposing (f)
 
 
-                    f x = x{-caret-}
+                    f x = x
 
                 """.trimIndent()
 
@@ -39,28 +39,28 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
     fun `test ElmFormatOnFileSaveComponent should work with elm 19`() {
 
-        val fileWithCaret: String = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", unformatted)
             }
-        }.fileWithCaret
+        }
 
-        testCorrectFormatting(fileWithCaret, unformatted, expectedFormatted)
+        testCorrectFormatting("src/Main.elm", unformatted, expectedFormatted)
     }
 
     fun `test ElmFormatOnFileSaveComponent should not add to the undo stack`() {
 
-        val fileWithCaret: String = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", unformatted)
             }
-        }.fileWithCaret
+        }
 
-        testCorrectFormatting(fileWithCaret, unformatted, expectedFormatted)
-
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val inputPath = "src/Main.elm"
+        testCorrectFormatting(inputPath, unformatted, expectedFormatted)
+        val file = myFixture.configureFromTempProjectFile(inputPath).virtualFile
         val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(file)
 
         val undoManager = UndoManager.getInstance(project)
@@ -68,44 +68,35 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
     }
 
     fun `test ElmFormatOnFileSaveComponent should not touch a file with the wrong ending like 'scala'`() {
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
-                elm("Main.scala", """
-                    module Main exposing (f)
-
-
-                    f x = x{-caret-}
-
-                """.trimIndent())
+                elm("Main.elm")
+                file("Main.scala", "blah")
             }
-        }.fileWithCaret
+        }
 
-        testCorrectFormatting(
-                fileWithCaret,
-                unformatted,
-                expected = unformatted.replace("{-caret-}", "")
-        )
+        testCorrectFormatting("src/Main.scala", unformatted, expected = unformatted)
     }
 
     fun `test ElmFormatOnFileSaveComponent should not touch a file if the save-hook is deactivated`() {
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", """
                     module Main exposing (f)
 
 
-                    f x = x{-caret-}
+                    f x = x
 
                 """.trimIndent())
             }
-        }.fileWithCaret
+        }
 
         testCorrectFormatting(
-                fileWithCaret,
+                "src/Main.elm",
                 unformatted,
-                expected = unformatted.replace("{-caret-}", ""),
+                expected = unformatted,
                 activateOnSaveHook = false
         )
     }
@@ -115,20 +106,20 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
                     m0dule Main exposing (f)
 
 
-                    f x = x{-caret-}
+                    f x = x
 
                 """.trimIndent()
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
-                elm("Main.scala", brokenElmCode)
+                elm("Main.elm", brokenElmCode)
             }
-        }.fileWithCaret
+        }
 
         testCorrectFormatting(
-                fileWithCaret,
+                "src/Main.elm",
                 brokenElmCode,
-                expected = brokenElmCode.replace("{-caret-}", "")
+                expected = brokenElmCode
         )
     }
 
@@ -142,9 +133,8 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
         // set text to mark file as unsaved
         // (can't be the unmodified document.text since this won't trigger the beforeDocumentSaving callback)
-        val newContent = unformatted.replace("{-caret-}", "")
         ApplicationManager.getApplication().runWriteAction {
-            document.setText(newContent)
+            document.setText(unformatted)
         }
 
         fileDocumentManager.saveDocument(document)
@@ -163,7 +153,10 @@ private val manifestElm19 = """
             ],
             "elm-version": "0.19.1",
             "dependencies": {
-                "direct": {},
+                "direct": {
+                    "elm/core": "1.0.0",
+                    "elm/json": "1.0.0"
+                },
                 "indirect": {}
             },
             "test-dependencies": {

@@ -4,9 +4,7 @@ import org.elm.TestClientLocation
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
 import org.elm.lang.core.psi.moduleName
-import org.elm.workspace.CustomElmStdlibVariant
 import org.elm.workspace.ElmWorkspaceTestBase
-import org.elm.workspace.Version
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 
@@ -22,7 +20,10 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0"
+                    },
                     "indirect": {}
                 },
                 "test-dependencies": {
@@ -38,6 +39,7 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
             project("elm.json", standardElmAppProject)
             dir("src") {
                 elm("Foo.elm", """
+                    module Foo exposing (..)
                     type alias Foo = ()
                 """.trimIndent())
             }
@@ -49,8 +51,12 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
     fun `test find by name excludes things outside of the Elm project`() {
         buildProject {
             project("elm.json", standardElmAppProject)
+            dir("src") {
+                elm("Main.elm")
+            }
             dir("alien") {
                 elm("Bar.elm", """
+                    module Bar exposing (..)
                     type alias Bar = ()
                 """.trimIndent())
             }
@@ -60,9 +66,6 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
 
 
     fun `test find by name excludes things which are part of unexposed modules in a package`() {
-
-        ensureElmStdlibInstalled(CustomElmStdlibVariant(mapOf("elm/parser" to Version(1, 0, 0))))
-
         buildProject {
             project("elm.json", """
             {
@@ -85,7 +88,9 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
                 }
             }
             """.trimIndent())
-            dir("src") {}
+            dir("src") {
+                elm("Main.elm")
+            }
         }
         /*
          * elm/parser v1.0.0 includes 2 modules: "Parser" and "Parser.Advanced". However,

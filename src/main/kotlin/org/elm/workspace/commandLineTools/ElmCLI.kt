@@ -7,7 +7,6 @@ import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
 import org.elm.openapiext.withWorkDirectory
-import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
 import java.nio.file.Path
@@ -17,14 +16,11 @@ import java.nio.file.Path
  */
 class ElmCLI(private val elmExecutablePath: Path) {
 
-    fun make(owner: Disposable, elmProject: ElmProject, path: Path): ProcessOutput {
-        return make(owner, elmProject.manifestPath.parent, path)
-    }
-
-    fun make(owner: Disposable, workDir: Path, path: Path): ProcessOutput {
+    fun make(owner: Disposable, workDir: Path, path: Path, jsonReport: Boolean = false): ProcessOutput {
         return GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
-                .withParameters("make", path.toString(), "--output=/dev/null", "--report=json")
+                .withParameters("make", path.toString(), "--output=/dev/null")
+                .apply { if (jsonReport) addParameter("--report=json") }
                 .execute(owner, ignoreExitCode = true)
     }
 

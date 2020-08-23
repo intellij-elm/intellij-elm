@@ -16,23 +16,21 @@ import java.nio.file.Path
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
-    val caret = "{-caret-}"
-
     fun `test build Elm application project`() {
         val source = """
                     module Main exposing (..)
                     import Html
-                    main = Html.text "hi"$caret
+                    main = Html.text "hi"
                 """.trimIndent()
 
         ensureElmStdlibInstalled(FullElmStdlibVariant)
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", source)
             }
-        }.fileWithCaret
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        }
+        val file = myFixture.configureFromTempProjectFile("src/Main.elm").virtualFile
         doTest(file, expectedNumErrors = 0, expectedOffset = source.indexOf("main"))
     }
 
@@ -41,19 +39,19 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         val source = """
                     module Main exposing (..)
                     import Html
-                    foo = bogus$caret
+                    foo = bogus
                     main = Html.text "hi"
                 """.trimIndent()
 
         ensureElmStdlibInstalled(FullElmStdlibVariant)
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", source)
             }
-        }.fileWithCaret
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
-        doTest(file, expectedNumErrors = 1, expectedOffset = source.indexOf("main") - caret.length)
+        }
+        val file = myFixture.configureFromTempProjectFile("src/Main.elm").virtualFile
+        doTest(file, expectedNumErrors = 1, expectedOffset = source.indexOf("main"))
     }
 
     fun `test build Elm project ignores nested function named 'main'`() {
@@ -62,20 +60,20 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
                     import Html
                     foo =
                         let
-                            main = Html.text "hi"$caret
+                            main = Html.text "hi"
                         in
                         main
                         
                 """.trimIndent()
 
         ensureElmStdlibInstalled(FullElmStdlibVariant)
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Foo.elm", source)
             }
-        }.fileWithCaret
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        }
+        val file = myFixture.configureFromTempProjectFile("src/Foo.elm").virtualFile
         doTestShowsErrorBalloon(file, "Cannot find your Elm app's main entry point")
     }
 
