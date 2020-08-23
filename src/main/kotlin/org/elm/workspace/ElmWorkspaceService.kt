@@ -201,6 +201,7 @@ class ElmWorkspaceService(
                     // would provide some kind of `elm install` command, but for now we will
                     // work-around its absence.
                     val sourceDirectory = ElmProjectLoader.parseSourceDirs(manifestPath).firstOrNull()
+                            ?.let { manifestPath.parent.resolve(it).normalize() }
                             ?: throw ProjectLoadException.General("Need at least one source-directory in `elm.json`")
 
                     val tempFile = LocalFileSystem.getInstance()

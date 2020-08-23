@@ -7,6 +7,7 @@ import org.elm.fileTree
 import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.intellij.lang.annotations.Language
+import java.nio.file.Paths
 
 /*
 Some of the Elm tests depend on having certain Elm packages installed in the global location.
@@ -102,6 +103,6 @@ object MinimalElmStdlibVariant : ElmStdlibVariant {
             elm("Main.elm")
         }.create(project, onDiskTmpDir)
 
-        elmCLI.installDeps(project, onDiskTmpDir.pathAsPath.resolve("elm.json"))
+        elmCLI.make(project, onDiskTmpDir.pathAsPath, Paths.get("Main.elm"))
     }
 }
