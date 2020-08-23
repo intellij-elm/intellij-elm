@@ -10,7 +10,6 @@ import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
-import org.elm.workspace.FullElmStdlibVariant
 import org.intellij.lang.annotations.Language
 import java.nio.file.Path
 
@@ -23,7 +22,6 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
                     main = Html.text "hi"
                 """.trimIndent()
 
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
@@ -43,7 +41,6 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
                     main = Html.text "hi"
                 """.trimIndent()
 
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
@@ -66,7 +63,6 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
                         
                 """.trimIndent()
 
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {

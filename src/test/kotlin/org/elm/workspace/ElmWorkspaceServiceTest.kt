@@ -117,7 +117,6 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
     fun `test can attach package json files`() {
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         val testProject = fileTree {
             project("elm.json", """
                     {
