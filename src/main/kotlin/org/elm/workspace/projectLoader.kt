@@ -57,7 +57,7 @@ class ElmProjectLoader(
                                 elmVersion = dto.elmVersion,
                                 dependencies = dto.deps.direct.keys.map { loader.load(it) },
                                 testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
-                                sourceDirectories = dto.sourceDirectories,
+                                sourceDirectories = dto.sourceDirectories.map { Paths.get(it) },
                                 testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory
                                         ?: DEFAULT_TESTS_DIR_NAME
                         )
@@ -78,10 +78,12 @@ class ElmProjectLoader(
                     }
                 }
 
-        fun parseSourceDirs(manifestPath: Path): List<Path> =
-                when (val dto = parseDTO(manifestPath)) {
-                    is ElmApplicationProjectDTO -> dto.sourceDirectories
-                    is ElmPackageProjectDTO -> packageProjectSourceDirs
+        fun isValid(manifestPath: Path): Boolean =
+                try {
+                    parseDTO(manifestPath)
+                    true
+                } catch (e: Throwable) {
+                    false
                 }
 
         // Elm 0.19.x package projects have only a single source root and it is called "src"
@@ -181,7 +183,7 @@ private sealed class ElmProjectDTO
 
 private class ElmApplicationProjectDTO(
         @JsonProperty("elm-version") val elmVersion: Version,
-        @JsonProperty("source-directories") val sourceDirectories: List<Path>,
+        @JsonProperty("source-directories") val sourceDirectories: List<String>,
         @JsonProperty("dependencies") val deps: ExactDependenciesDTO,
         @JsonProperty("test-dependencies") val testDeps: ExactDependenciesDTO
 ) : ElmProjectDTO()

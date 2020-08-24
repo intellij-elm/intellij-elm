@@ -7,6 +7,8 @@
 
 package org.elm.workspace
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.annotations.VisibleForTesting
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.notification.NotificationType
@@ -20,11 +22,10 @@ import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
 import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.util.SimpleModificationTracker
-import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.impl.source.resolve.ResolveCache
-import com.intellij.testFramework.writeChild
 import com.intellij.util.Consumer
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
@@ -37,6 +38,7 @@ import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
 import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
+import org.elm.workspace.commandLineTools.ElmCLI
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
@@ -196,27 +198,7 @@ class ElmWorkspaceService(
                         ?: throw ProjectLoadException.General("Could not determine version of the Elm compiler")
 
                 if (installDeps) {
-                    // Ensure that the project's dependencies have been installed by synthesizing
-                    // a trivial Elm source file and compiling it. Ideally the Elm compiler
-                    // would provide some kind of `elm install` command, but for now we will
-                    // work-around its absence.
-                    val sourceDirectory = ElmProjectLoader.parseSourceDirs(manifestPath).firstOrNull()
-                            ?.let { manifestPath.parent.resolve(it).normalize() }
-                            ?: throw ProjectLoadException.General("Need at least one source-directory in `elm.json`")
-
-                    val tempFile = LocalFileSystem.getInstance()
-                            .refreshAndFindFileByPath(sourceDirectory.toString())
-                            ?.writeChild("IntellijInstallDepsWorkaround.elm", """
-                                module IntellijInstallDepsWorkaround exposing (intellijWorkaround)
-                                intellijWorkaround = 0
-                            """.trimIndent())
-                            ?: throw ProjectLoadException.General("Could not synthesize placeholder file")
-
-                    val output = elmCLI.make(intellijProject, workDir = manifestPath.parent, path = tempFile.pathAsPath)
-                    if (!output.isSuccess) {
-                        log.error("Failed to compile project $manifestPath before load: ${output.stderr}")
-                    }
-                    LocalFileSystem.getInstance().deleteFile(this, tempFile)
+                    installProjectDeps(manifestPath, elmCLI)
                 }
 
                 // not thread-safe; do not reuse across threads!
@@ -235,6 +217,51 @@ class ElmWorkspaceService(
                     }
                 }
             }
+
+    private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI): Boolean {
+        // The only way to install an Elm project's dependencies is to compile
+        // the project. But the project may not be in a compilable state when
+        // we try to load it. So we will copy the `elm.json` into a temp dir
+        // and run the compiler there.
+
+        // Create temp dir to hold everything
+        val dir = FileUtil.createTempDirectory("elm_deps_hack", null)
+
+        // Re-write the `elm.json` with sane source-directories
+        val mapper = ObjectMapper()
+        val dto = mapper.readTree(manifestPath.toFile()) as ObjectNode
+        if (dto.has("source-directories")) {
+            dto.putArray("source-directories").add("src")
+        }
+        val tempManifest = dir.toPath().resolve(ELM_JSON).toFile()
+        mapper.writeValue(tempManifest, dto)
+
+        // Synthesize a dummy Elm file to make the compiler happy
+        val tempMain = dir.toPath().resolve("src/Main.elm").toFile()
+        FileUtil.writeToFile(tempMain, """
+                                module Main exposing (..)
+                                dummyValue = 0
+                            """.trimIndent())
+
+        // Before we run the Elm compiler, make sure that the `elm.json` file is valid
+        // because some inputs can hang the compiler.
+        if (!ElmProjectLoader.isValid(tempManifest.toPath())) {
+            log.error("Failed to install deps: the elm.json file is invalid")
+            return false
+        }
+
+        // Run the Elm compiler to install the dependencies
+        val output = elmCLI.make(intellijProject, workDir = dir.toPath(), path = tempMain.toPath())
+
+        // Cleanup
+        FileUtil.delete(dir)
+
+        if (!output.isSuccess) {
+            log.error("Failed to install deps: Elm compiler failed: ${output.stderr}")
+            return false
+        }
+        return true
+    }
 
 
     // WORKSPACE ACTIONS
