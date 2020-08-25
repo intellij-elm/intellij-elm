@@ -1,0 +1,5 @@
+module Example exposing (example)
+
+example =
+    """foo
+bar"""
