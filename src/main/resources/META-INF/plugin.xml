@@ -410,6 +410,14 @@
             <category>Elm</category>
         </intentionAction>
         <intentionAction>
+            <className>org.elm.ide.intentions.RegularToTripleQuotedStringIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.TripleQuotedToRegularStringIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
             <className>org.elm.ide.intentions.MakeAnnotationIntention</className>
             <category>Elm</category>
         </intentionAction>

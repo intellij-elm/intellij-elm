@@ -1,0 +1,4 @@
+module Example exposing (example)
+
+example =
+    "foo\nbar"
