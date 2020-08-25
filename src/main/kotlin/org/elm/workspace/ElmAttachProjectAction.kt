@@ -34,7 +34,7 @@ class ElmAttachProjectAction : AnAction() {
         }
 
         project.elmWorkspace.asyncAttachElmProject(file.pathAsPath)
-                .handleError { showError(it.cause!!) }
+                .handleError { showError(it) }
     }
 
     private fun showError(error: Throwable) {
