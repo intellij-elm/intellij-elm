@@ -59,11 +59,18 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
                         "./foo1"
                     ],
                     "elm-version": "0.19.1",
-                    "dependencies":      { "direct": {}, "indirect": {} },
+                    "dependencies": {
+                        "direct": {
+                            "elm/core": "1.0.0",
+                            "elm/json": "1.0.0"                        
+                        }, 
+                        "indirect": {}
+                    },
                     "test-dependencies": { "direct": {}, "indirect": {} }
                 }
                 """.trimIndent())
                 dir("src") {
+                    elm("Main.elm")
                     dir("Foo") {}
                     dir("Bar") {}
                 }

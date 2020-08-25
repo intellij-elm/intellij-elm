@@ -1,9 +1,7 @@
 package org.elm.workspace
 
-import org.elm.TestClientLocation
 import org.elm.fileTree
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.stubs.index.ElmModulesIndex
 import org.elm.openapiext.pathAsPath
 
 class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
@@ -19,7 +17,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0"
+                    },
                     "indirect": {}
                 },
                 "test-dependencies": {
@@ -30,12 +31,15 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             dir("src") {
                 elm("Main.elm", """
+                    module Main exposing (..)
                     import Foo
                            --^
+                    x = 0
                 """.trimIndent())
 
                 elm("Foo.elm", """
                     module Foo exposing (..)
+                    y = 0
                 """.trimIndent())
 
             }
@@ -55,7 +59,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                         ],
                         "elm-version": "0.19.1",
                         "dependencies": {
-                            "direct": {},
+                            "direct": {
+                                "elm/core": "1.0.0",
+                                "elm/json": "1.0.0"
+                            },
                             "indirect": {}
                         },
                         "test-dependencies": {
@@ -69,6 +76,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     module Main exposing (..)
                     import FooBar
                            --^
+                    x = 0
                     """.trimIndent())
                 }
             }
@@ -80,7 +88,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     ],
                     "elm-version": "0.19.1",
                     "dependencies": {
-                        "direct": {},
+                        "direct": {
+                            "elm/core": "1.0.0",
+                            "elm/json": "1.0.0"
+                        },
                         "indirect": {}
                     },
                     "test-dependencies": {
@@ -91,8 +102,8 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 """)
             dir("src") {
                 elm("FooBar.elm", """
-                    module FooBar exposing (x)
-                    x = 42
+                    module FooBar exposing (y)
+                    y = 42
                     """.trimIndent())
             }
         }.create(project, elmWorkspaceDirectory)
@@ -102,22 +113,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             // it's critical for the test that they are attached in this order, sequentially
             asyncAttachElmProject(rootPath.resolve("example/elm.json")).get()
             asyncAttachElmProject(rootPath.resolve("elm.json")).get()
-        }
-
-        val elmProjA = project.elmWorkspace.allProjects[0]
-        val elmProjB = project.elmWorkspace.allProjects[1]
-
-        val debug = false
-        if (debug) {
-            println("A is $elmProjA, ${elmProjA.manifestPath}")
-            println("B is $elmProjB, ${elmProjB.manifestPath}")
-            val moduleDeclsForA = ElmModulesIndex.getAll(TestClientLocation(project, elmProjA))
-            val moduleDeclsForB = ElmModulesIndex.getAll(TestClientLocation(project, elmProjB))
-            println("module decls for A")
-            moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
-            println("\n\n")
-            println("module decls for B")
-            moduleDeclsForB.forEach { println(it.elmFile.virtualFile.path) }
         }
 
         testProject.run {
@@ -136,7 +131,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0"
+                    },
                     "indirect": {}
                 },
                 "test-dependencies": {
@@ -147,13 +145,16 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             dir("src") {
                 elm("Main.elm", """
+                    module Main exposing (..)
                     import Foo
                            --^
+                    x = 0
                     """.trimIndent())
             }
             dir("other") {
                 elm("Foo.elm", """
                     module Foo exposing (..)
+                    y = 0
                     """.trimIndent())
 
             }
@@ -162,9 +163,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     fun `test resolves modules provided by packages which are direct dependencies`() {
-
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
-
         buildProject {
             project("elm.json", """
             {
@@ -197,9 +195,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     fun `test does not resolve unexposed modules provided by direct packages dependencies`() {
-
-        ensureElmStdlibInstalled(CustomElmStdlibVariant(mapOf("elm/parser" to Version(1, 0, 0))))
-
         buildProject {
             project("elm.json", """
             {
@@ -233,10 +228,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     fun `test resolves modules to correct version`() {
-
-        ensureElmStdlibInstalled(CustomElmStdlibVariant(mapOf("elm/parser" to Version(1, 0, 0))))
-        ensureElmStdlibInstalled(CustomElmStdlibVariant(mapOf("elm/parser" to Version(1, 1, 0))))
-
         // note that one depends on `elm/parser` 1.0.0 and the other on 1.1.0
         val testProject = fileTree {
             dir("a") {
@@ -263,8 +254,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     """)
                 dir("src") {
                     elm("Main.elm", """
-                    import Parser
-                           --^
+                        module Main exposing (..)
+                        import Parser
+                               --^
+                        x = 0
                     """.trimIndent())
                 }
             }
@@ -292,8 +285,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                     """)
                 dir("src") {
                     elm("Main.elm", """
-                    import Parser
-                           --^
+                        module Main exposing (..)
+                        import Parser
+                               --^
+                        x = 0
                     """.trimIndent())
                 }
             }
@@ -303,22 +298,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
         project.elmWorkspace.apply {
             asyncAttachElmProject(rootPath.resolve("a/elm.json")).get()
             asyncAttachElmProject(rootPath.resolve("b/elm.json")).get()
-        }
-
-        val elmProjA = project.elmWorkspace.allProjects.find { it.presentableName == "a" }!!
-        val elmProjB = project.elmWorkspace.allProjects.find { it.presentableName == "b" }!!
-
-        val debug = false
-        if (debug) {
-            println("A is $elmProjA, ${elmProjA.manifestPath}")
-            println("B is $elmProjB, ${elmProjB.manifestPath}")
-            val moduleDeclsForA = ElmModulesIndex.getAll(TestClientLocation(project, elmProjA))
-            val moduleDeclsForB = ElmModulesIndex.getAll(TestClientLocation(project, elmProjB))
-            println("module decls for A")
-            moduleDeclsForA.forEach { println(it.elmFile.virtualFile.path) }
-            println("\n\n")
-            println("module decls for B")
-            moduleDeclsForB.forEach { println(it.elmFile.virtualFile.path) }
         }
 
         testProject.run {
@@ -337,9 +316,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     private fun testTestDependencyResolution(useDefaultTestsLocation: Boolean) {
-
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
-
         val testsFolder = if (useDefaultTestsLocation) "tests" else "custom-tests"
 
         buildProject {
@@ -369,6 +345,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             if (!useDefaultTestsLocation)
                 file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
+            dir("src") {}
             dir(testsFolder) {
                 elm("MyTests.elm", """
                     import Test
@@ -380,9 +357,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     fun `test does not resolve test dependencies when outside of the 'tests' directory`() {
-
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
-
         buildProject {
             project("elm.json", """
             {
@@ -428,9 +402,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     private fun testTestCompanionModulesResolution(useDefaultTestsLocation: Boolean) {
-
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
-
         val testsFolder = if (useDefaultTestsLocation) "tests" else "custom-tests"
 
         buildProject {
@@ -460,6 +431,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
             """)
             if (!useDefaultTestsLocation)
                 file("elm.intellij.json", """{"test-directory": "custom-tests"}""")
+            dir("src") {}
             dir(testsFolder) {
                 elm("MyTests.elm", """
                     import Helper
@@ -483,7 +455,11 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
                 ],
                 "elm-version": "0.19.1",
                 "dependencies": {
-                    "direct": {},
+                    "direct": {
+                        "elm/core": "1.0.0",
+                        "elm/json": "1.0.0",
+                        "elm/random": "1.0.0"
+                    },
                     "indirect": {
                         "elm/time": "1.0.0"
                     }

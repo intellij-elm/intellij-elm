@@ -24,20 +24,20 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
 
     fun `test elm-format action with elm 19`() {
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", """
                     module Main exposing (f)
 
 
-                    f x = x{-caret-}
+                    f x = x
 
                 """.trimIndent())
             }
-        }.fileWithCaret
+        }
 
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val file = myFixture.configureFromTempProjectFile("src/Main.elm").virtualFile
         val document = FileDocumentManager.getInstance().getDocument(file)!!
         reformat(file)
         val expected = """
@@ -52,20 +52,15 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
     }
 
     fun `test elm-format action shouldn't be active on non-elm files`() {
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19.trimIndent())
             dir("src") {
-                elm("Main.scala", """
-                    module Main exposing (f)
-
-
-                    f x = x{-caret-}
-
-                """.trimIndent())
+                elm("Main.elm")
+                file("foo.txt", "")
             }
-        }.fileWithCaret
+        }
 
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val file = myFixture.configureFromTempProjectFile("src/foo.txt").virtualFile
         val (_, e) = makeTestAction(file)
         check(!e.presentation.isEnabledAndVisible) {
             "The elm-format action shouldn't be enabled in this context"
@@ -73,20 +68,20 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
     }
 
     fun `test elm-format action should add to the undo stack`() {
-        val fileWithCaret = buildProject {
+        buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
                 elm("Main.elm", """
                     module Main exposing (f)
 
 
-                    f x = x{-caret-}
+                    f x = x
 
                 """.trimIndent())
             }
-        }.fileWithCaret
+        }
 
-        val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
+        val file = myFixture.configureFromTempProjectFile("src/Main.elm").virtualFile
         reformat(file)
 
         val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(file)
@@ -126,7 +121,10 @@ private val manifestElm19 = """
             ],
             "elm-version": "0.19.1",
             "dependencies": {
-                "direct": {},
+                "direct": {
+                    "elm/core": "1.0.0",
+                    "elm/json": "1.0.0"                
+                },
                 "indirect": {}
             },
             "test-dependencies": {

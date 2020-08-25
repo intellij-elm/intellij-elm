@@ -17,7 +17,7 @@ class ElmRefreshProjectsAction : AnAction() {
         if (!(project.elmToolchain.looksLikeValidToolchain() && project.elmWorkspace.hasAtLeastOneValidProject())) {
             asyncAutoDiscoverWorkspace(project, explicitRequest = true)
         } else {
-            project.elmWorkspace.asyncRefreshAllProjects()
+            project.elmWorkspace.asyncRefreshAllProjects(installDeps = true)
         }.handleError {
             showError(it)
         }

@@ -56,7 +56,7 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
             dir("a") {
                 project("elm.json", elmJson)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
                 dir("tests") {
                 }
@@ -64,13 +64,13 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
             dir("without-tests") {
                 project("elm.json", elmJson)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
             }
             dir("b") {
                 project("elm.json", elmJson)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
                 dir("tests") {
                 }
@@ -93,15 +93,14 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         "elm-version": "0.19.1",
         "dependencies": {
             "direct": {
+                "elm/core": "1.0.0",
+                "elm/json": "1.0.0"
             },
-            "indirect": {
-            }
+            "indirect": {}
          },
         "test-dependencies": {
-            "direct": {
-            },
-            "indirect": {
-            }
+            "direct": {},
+            "indirect": {}
         }
     }
     """

@@ -61,7 +61,7 @@ class ElmBuildAction : AnAction() {
         }
 
         val json = try {
-            elmCLI.make(project, elmProject, filePathToCompile).stderr
+            elmCLI.make(project, elmProject.projectDirPath, filePathToCompile, jsonReport = true).stderr
         } catch (e: ExecutionException) {
             return showError(project, "Failed to run the 'elm' executable. Is the path correct?", includeFixAction = true)
         }

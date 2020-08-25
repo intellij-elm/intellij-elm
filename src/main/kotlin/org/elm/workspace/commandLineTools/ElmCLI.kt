@@ -7,7 +7,6 @@ import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
 import org.elm.openapiext.withWorkDirectory
-import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
 import java.nio.file.Path
@@ -17,22 +16,12 @@ import java.nio.file.Path
  */
 class ElmCLI(private val elmExecutablePath: Path) {
 
-    fun make(owner: Disposable, elmProject: ElmProject, path: Path): ProcessOutput {
-        val workDir = elmProject.manifestPath.parent
+    fun make(owner: Disposable, workDir: Path, path: Path, jsonReport: Boolean = false): ProcessOutput {
         return GeneralCommandLine(elmExecutablePath)
                 .withWorkDirectory(workDir)
-                .withParameters("make", path.toString(), "--output=/dev/null", "--report=json")
+                .withParameters("make", path.toString(), "--output=/dev/null")
+                .apply { if (jsonReport) addParameter("--report=json") }
                 .execute(owner, ignoreExitCode = true)
-    }
-
-    fun installDeps(owner: Disposable, elmProjectManifestPath: Path): ProcessOutput {
-        // Elm 0.19 does not have a way to install dependencies directly,
-        // so we have to compile an empty file to make it work.
-        val workDir = elmProjectManifestPath.parent
-        return GeneralCommandLine(elmExecutablePath)
-                .withWorkDirectory(workDir)
-                .withParameters("make", "./Main.elm", "--output=/dev/null")
-                .execute(owner, ignoreExitCode = false)
     }
 
     fun queryVersion(): Result<Version> {

@@ -23,7 +23,7 @@ class ElmAttachProjectAction : AnAction() {
         val descriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
                 .withFileFilter { it.name == manifestName }
                 .withTitle("Select '$manifestName' file")
-        descriptor.isForcedToUseIdeaFileChooser = true
+                .apply { isForcedToUseIdeaFileChooser = true }
 
         val file = FileChooser.chooseFile(descriptor, project, null)
                 ?: return

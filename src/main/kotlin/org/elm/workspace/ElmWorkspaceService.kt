@@ -7,6 +7,8 @@
 
 package org.elm.workspace
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.annotations.VisibleForTesting
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.notification.NotificationType
@@ -20,6 +22,7 @@ import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
 import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.util.SimpleModificationTracker
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.impl.source.resolve.ResolveCache
@@ -29,15 +32,13 @@ import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.modificationTracker
-import org.elm.openapiext.findFileBreadthFirst
-import org.elm.openapiext.findFileByPathTestAware
-import org.elm.openapiext.modules
-import org.elm.openapiext.pathAsPath
+import org.elm.openapiext.*
 import org.elm.utils.MyDirectoryIndex
 import org.elm.utils.joinAll
 import org.elm.utils.runAsyncTask
 import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
+import org.elm.workspace.commandLineTools.ElmCLI
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
@@ -188,11 +189,27 @@ class ElmWorkspaceService(
     /**
      * Asynchronously load an Elm project described by a manifest file (e.g. `elm.json`).
      */
-    private fun asyncLoadProject(manifestPath: Path): CompletableFuture<ElmProject> =
+    private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val compilerVersion = settings.toolchain.elmCLI?.queryVersion()?.orNull()
+                val elmCLI = settings.toolchain.elmCLI
                         ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
-                val repo = ElmPackageRepository(compilerVersion) // not thread-safe; do not reuse across threads!
+
+                val compilerVersion = elmCLI.queryVersion().orNull()
+                        ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
+
+                if (installDeps) {
+                    installProjectDeps(manifestPath, elmCLI)
+                }
+
+                // not thread-safe; do not reuse across threads!
+                val repo = ElmPackageRepository(compilerVersion)
+
+                // External files may have been created/modified by the Elm compiler. Refresh.
+                findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
+                    fullyRefreshDirectory(it)
+                }
+
+                // Load the project
                 ElmProjectLoader.topLevelLoad(manifestPath, repo)
             }.whenComplete { _, error ->
                 // log the result
@@ -206,12 +223,58 @@ class ElmWorkspaceService(
                 }
             }
 
+    private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI): Boolean {
+        // The only way to install an Elm project's dependencies is to compile
+        // the project. But the project may not be in a compilable state when
+        // we try to load it. So we will copy the `elm.json` into a temp dir
+        // and run the compiler there.
+
+        // Create temp dir to hold everything
+        val dir = FileUtil.createTempDirectory("elm_deps_hack", null)
+
+        // Re-write the `elm.json` with sane source-directories
+        val mapper = ObjectMapper()
+        val dto = mapper.readTree(manifestPath.toFile()) as ObjectNode
+        if (dto.has("source-directories")) {
+            dto.putArray("source-directories").add("src")
+        }
+        val tempManifest = dir.toPath().resolve(ELM_JSON).toFile()
+        mapper.writeValue(tempManifest, dto)
+
+        // Synthesize a dummy Elm file to make the compiler happy
+        val tempMain = dir.toPath().resolve("src/Main.elm").toFile()
+        FileUtil.writeToFile(tempMain, """
+                                module Main exposing (..)
+                                dummyValue = 0
+                            """.trimIndent())
+
+        // Before we run the Elm compiler, make sure that the `elm.json` file is valid
+        // because some inputs can hang the compiler.
+        if (!ElmProjectLoader.isValid(tempManifest.toPath())) {
+            log.error("Failed to install deps: the elm.json file is invalid")
+            FileUtil.delete(dir)
+            return false
+        }
+
+        // Run the Elm compiler to install the dependencies
+        val output = elmCLI.make(intellijProject, workDir = dir.toPath(), path = tempMain.toPath())
+
+        // Cleanup
+        FileUtil.delete(dir)
+
+        if (!output.isSuccess) {
+            log.error("Failed to install deps: Elm compiler failed: ${output.stderr}")
+            return false
+        }
+        return true
+    }
+
 
     // WORKSPACE ACTIONS
 
 
     fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> =
-            asyncLoadProject(manifestPath)
+            asyncLoadProject(manifestPath, installDeps = true)
                     .thenApply {
                         upsertProject(it)
                     }
@@ -224,9 +287,9 @@ class ElmWorkspaceService(
     }
 
 
-    fun asyncRefreshAllProjects(): CompletableFuture<List<ElmProject>> =
+    fun asyncRefreshAllProjects(installDeps: Boolean = false): CompletableFuture<List<ElmProject>> =
             allProjects.map { elmProject ->
-                asyncLoadProject(elmProject.manifestPath)
+                asyncLoadProject(elmProject.manifestPath, installDeps = installDeps)
                         .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
             }.joinAll()
                     .thenApply { rawProjects ->
@@ -250,10 +313,8 @@ class ElmWorkspaceService(
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 
-        return asyncLoadProject(guessManifest.pathAsPath)
-                .thenApply {
-                    upsertProject(it)
-                }.exceptionally { emptyList() }
+        return asyncAttachElmProject(guessManifest.pathAsPath)
+                .exceptionally { emptyList() }
     }
 
 
@@ -360,10 +421,6 @@ class ElmWorkspaceService(
     }
 
     @VisibleForTesting
-    // TODO [kl] make this `internal` visibility...
-    // I can't do it right now because there's something wrong with Gradle where it treats the test source set
-    // as not belonging to the same Kotlin module as the code-under-test. But according to
-    // https://kotlinlang.org/docs/reference/visibility-modifiers.html#modules it *should* work!
     fun asyncLoadState(state: Element): CompletableFuture<Unit> {
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")

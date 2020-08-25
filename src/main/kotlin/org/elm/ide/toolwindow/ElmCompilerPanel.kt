@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
@@ -23,7 +24,7 @@ import com.intellij.ui.components.labels.ActionLink
 import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
-import org.elm.openapiext.findFileByPathTestAware
+import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.toPsiFile
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.ElmError
@@ -198,7 +199,9 @@ class ElmCompilerPanel(
     private fun startFromErrorMessage(): Triple<VirtualFile, Document, Start>? {
         val elmError = compilerMessages.getOrNull(selectedCompilerMessage) ?: return null
         val elmLocation = elmError.location ?: return null
-        val virtualFile = baseDirPath?.resolve(elmLocation.path)?.let { findFileByPathTestAware(it) } ?: return null
+        val virtualFile = baseDirPath?.resolve(elmLocation.path)?.let {
+            LocalFileSystem.getInstance().findFileByPath(it)
+        } ?: return null
         val psiFile = virtualFile.toPsiFile(project) ?: return null
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
         val start = elmLocation.region?.start ?: return null

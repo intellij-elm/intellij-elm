@@ -16,8 +16,8 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             dir("a") {
                 project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
-                    elm("Main.elm", "")
-                    elm("Utils.elm", "")
+                    elm("Main.elm")
+                    elm("Utils.elm")
                 }
             }
         }.create(project, elmWorkspaceDirectory)
@@ -41,7 +41,6 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
 
     fun `test can attach application json files`() {
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         val testProject = fileTree {
             dir("a") {
                 project("elm.json", """
@@ -75,10 +74,10 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                     }
                     """)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
                 dir("vendor") {
-                    elm("VendoredPackage.elm", "")
+                    elm("VendoredPackage.elm")
                 }
             }
         }.create(project, elmWorkspaceDirectory)
@@ -118,7 +117,6 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
     fun `test can attach package json files`() {
-        ensureElmStdlibInstalled(FullElmStdlibVariant)
         val testProject = fileTree {
             project("elm.json", """
                     {
@@ -140,6 +138,9 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                         }
                     }
                     """)
+            dir("src") {
+                elm("Foo.elm")
+            }
         }.create(project, elmWorkspaceDirectory)
 
         val rootPath = testProject.root.pathAsPath
@@ -178,13 +179,13 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             dir("a") {
                 project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
             }
             dir("b") {
                 project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
             }
         }.create(project, elmWorkspaceDirectory)
@@ -212,7 +213,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         val testProject = fileTree {
             project("elm.json", BASIC_APPLICATION_MANIFEST)
             dir("src") {
-                elm("Main.elm", "")
+                elm("Main.elm")
             }
         }.create(project, elmWorkspaceDirectory)
 
@@ -226,7 +227,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         fileTree {
             project("elm.json", """ { "BOGUS": "INVALID ELM.JSON" } """)
             dir("src") {
-                elm("Main.elm", "")
+                elm("Main.elm")
             }
         }.create(project, elmWorkspaceDirectory)
 
@@ -240,7 +241,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             dir("a") {
                 project("elm.json", BASIC_APPLICATION_MANIFEST)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
             }
         }.create(project, elmWorkspaceDirectory)
@@ -305,7 +306,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
             project("elm.json", BASIC_APPLICATION_MANIFEST)
             file("elm.intellij.json", """ { "BOGUS": "INVALID ELM.INTELLIJ.JSON" } """)
             dir("src") {
-                elm("Main.elm", "")
+                elm("Main.elm")
             }
         }.create(project, elmWorkspaceDirectory)
 
@@ -331,7 +332,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 if (sidecarManifestContent != null)
                     file("elm.intellij.json", sidecarManifestContent)
                 dir("src") {
-                    elm("Main.elm", "")
+                    elm("Main.elm")
                 }
             }
         }.create(project, elmWorkspaceDirectory)
@@ -366,8 +367,7 @@ private fun makeConstraint(low: Version, high: Version): Constraint {
 }
 
 /**
- * A basic minimal `elm.json` file for an application project, with no dependencies.
- * Used in tests which don't really care about the content of the file, just that it's a valid manifest.
+ * A minimal `elm.json` file for an application project.
  */
 private const val BASIC_APPLICATION_MANIFEST = """
 {
@@ -375,7 +375,10 @@ private const val BASIC_APPLICATION_MANIFEST = """
   "source-directories": [ "src" ],
   "elm-version": "0.19.1",
   "dependencies": {
-    "direct": {},
+    "direct": {
+        "elm/core": "1.0.0",
+        "elm/json": "1.0.0"
+    },
     "indirect": {}
   },
   "test-dependencies": {
@@ -386,19 +389,20 @@ private const val BASIC_APPLICATION_MANIFEST = """
 """
 
 /**
- * A basic minimal `elm.json` file for a package project, with no dependencies.
- * Used in tests which don't really care about the content of the file, just that it's a valid manifest.
+ * A minimal `elm.json` file for a package project.
  */
 private const val BASIC_PACKAGE_MANIFEST = """
 {
   "type": "package",
-  "name": "test",
-  "summary": "Test",
-  "license": "Test",
+  "name": "foo/bar",
+  "summary": "Example package",
+  "license": "MIT",
   "version": "1.2.3",
   "exposed-modules": [],
   "elm-version": "0.19.0 <= v < 0.20.0",
-  "dependencies": { },
+  "dependencies": {
+    "elm/core": "1.0.0 <= v < 2.0.0"
+  },
   "test-dependencies": { }
 }
 """
