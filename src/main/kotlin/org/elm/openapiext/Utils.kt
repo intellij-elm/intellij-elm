@@ -164,6 +164,13 @@ fun findFileByPathTestAware(path: Path): VirtualFile? {
     return LocalFileSystem.getInstance().findFileByPath(path)
 }
 
+// TODO [kl] Rethink these "testAware" functions.
+//
+// These functions are a hack to workaround a mixed VFS environment. The crux of the problem
+// is that our ElmTestBase (non-workspace, non-"heavy" integration tests) use the in-mem,
+// light VFS. But the package dependencies exist in the real, LocalFileSystem VFS at `~/.elm`.
+// Maybe there's a better way?
+
 fun refreshAndFindFileByPathTestAware(path: Path): VirtualFile? {
     if (isUnitTestMode) {
         val vFile = TempFileSystem.getInstance().refreshAndFindFileByPath(path.toString())

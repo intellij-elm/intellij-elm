@@ -287,9 +287,9 @@ class ElmWorkspaceService(
     }
 
 
-    fun asyncRefreshAllProjects(): CompletableFuture<List<ElmProject>> =
+    fun asyncRefreshAllProjects(installDeps: Boolean = false): CompletableFuture<List<ElmProject>> =
             allProjects.map { elmProject ->
-                asyncLoadProject(elmProject.manifestPath)
+                asyncLoadProject(elmProject.manifestPath, installDeps = installDeps)
                         .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
             }.joinAll()
                     .thenApply { rawProjects ->
