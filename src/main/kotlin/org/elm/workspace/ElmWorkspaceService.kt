@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.annotations.VisibleForTesting
 import com.intellij.ide.util.PropertiesComponent
-import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.*
@@ -20,6 +19,7 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
+import com.intellij.openapi.startup.StartupManager
 import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.util.io.FileUtil
@@ -30,7 +30,6 @@ import com.intellij.util.Consumer
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
-import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.modificationTracker
 import org.elm.openapiext.*
 import org.elm.utils.MyDirectoryIndex
@@ -306,10 +305,11 @@ class ElmWorkspaceService(
     fun asyncDiscoverAndRefresh(): CompletableFuture<List<ElmProject>> {
         if (hasAtLeastOneValidProject())
             return CompletableFuture.completedFuture(allProjects)
+
         val guessManifest = intellijProject.modules
                 .asSequence()
                 .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
-                .mapNotNull { dir -> dir.findFileBreadthFirst { it.name == ELM_JSON } }
+                .mapNotNull { dir -> dir.findFileBreadthFirst(maxDepth = 3) { it.name == ELM_JSON } }
                 .firstOrNull()
                 ?: return CompletableFuture.completedFuture(allProjects)
 
@@ -467,6 +467,14 @@ class ElmWorkspaceService(
                 }
     }
 
+    override fun noStateLoaded() {
+        // The workspace is being opened for the first time. As soon as IntelliJ has
+        // fully loaded the project, we will attempt to auto-discover the Elm toolchain
+        // and the `elm.json` file.
+        StartupManager.getInstance(intellijProject).runWhenProjectIsInitialized {
+            asyncAutoDiscoverWorkspace(intellijProject)
+        }
+    }
 
     // NOTIFICATIONS
 
@@ -524,14 +532,10 @@ fun asyncAutoDiscoverWorkspace(project: Project, explicitRequest: Boolean = fals
     val suggestedToolchain = toolchain.autoDiscoverAll(project)
     if (suggestedToolchain != toolchain) {
         project.elmWorkspace.useToolchain(suggestedToolchain)
-        project.showBalloon("Using Elm at ${suggestedToolchain.presentableLocation}", NotificationType.INFORMATION)
     }
 
-    return if (!project.elmWorkspace.hasAtLeastOneValidProject()) {
-        project.elmWorkspace.asyncDiscoverAndRefresh().thenApply { Unit }
-    } else {
-        CompletableFuture.completedFuture(Unit)
-    }
+    return project.elmWorkspace.asyncDiscoverAndRefresh()
+            .thenApply { Unit }
 }
 
 
