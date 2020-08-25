@@ -27,7 +27,7 @@ class ElmProjectLoader(
 ) {
     private fun load(packageName: String): ElmPackageProject {
         val version = versionsByPackage[packageName]
-                ?: throw ProjectLoadException.General("Could not find suitable version of $packageName")
+                ?: throw ProjectLoadException("Could not find suitable version of $packageName")
         val manifestPath = repo.findPackageManifest(packageName, version)
         return when (val dto = parseDTO(manifestPath)) {
             is ElmPackageProjectDTO ->
@@ -64,14 +64,14 @@ class ElmProjectLoader(
                     }
                     is ElmPackageProjectDTO -> {
                         val deps = solve(dto.deps + dto.testDeps, repo)
-                                ?: throw ProjectLoadException.General("unsolvable constraints")
+                                ?: throw ProjectLoadException("unsolvable constraints")
                         val loader = ElmProjectLoader(repo, deps)
                         ElmPackageProject(
                                 manifestPath = manifestPath,
                                 elmVersion = dto.elmVersion,
                                 dependencies = dto.deps.keys.map { loader.load(it) },
                                 testDependencies = dto.testDeps.keys.map { loader.load(it) },
-                                sourceDirectories = packageProjectSourceDirs,
+                                sourceDirectories = listOf(Paths.get("src")),
                                 name = dto.name,
                                 version = dto.version,
                                 exposedModules = dto.exposedModulesNode.toExposedModuleMap())
@@ -85,9 +85,6 @@ class ElmProjectLoader(
                 } catch (e: Throwable) {
                     false
                 }
-
-        // Elm 0.19.x package projects have only a single source root and it is called "src"
-        private val packageProjectSourceDirs = listOf(Paths.get("src"))
     }
 }
 
@@ -159,16 +156,16 @@ class ElmPackageRepository(override val elmCompilerVersion: Version) : Repositor
 
 private fun parseDTO(manifestPath: Path): ElmProjectDTO {
     val manifestStream = refreshAndFindFileByPathTestAware(manifestPath)?.inputStream
-            ?: throw ProjectLoadException.General("Manifest file not found: $manifestPath")
+            ?: throw ProjectLoadException("Manifest file not found: $manifestPath")
     return try {
         val node = objectMapper.readTree(manifestStream)
         when (val type = node.get("type")?.textValue()) {
             "application" -> objectMapper.treeToValue(node, ElmApplicationProjectDTO::class.java)
             "package" -> objectMapper.treeToValue(node, ElmPackageProjectDTO::class.java)
-            else -> throw ProjectLoadException.General("Invalid elm.json: unexpected type '$type'")
+            else -> throw ProjectLoadException("Invalid elm.json: unexpected type '$type'")
         }
     } catch (e: JsonProcessingException) {
-        throw ProjectLoadException.General("Invalid elm.json: ${e.message}")
+        throw ProjectLoadException("Invalid elm.json: ${e.message}")
     }
 }
 
@@ -230,7 +227,7 @@ private fun findAndParseSidecarFor(manifestPath: Path): ElmSidecarManifestDTO? =
                     try {
                         objectMapper.readValue(it, ElmSidecarManifestDTO::class.java)
                     } catch (e: JsonProcessingException) {
-                        throw ProjectLoadException.General("Invalid elm.intellij.json: ${e.message}")
+                        throw ProjectLoadException("Invalid elm.intellij.json: ${e.message}")
                     }
                 }
 

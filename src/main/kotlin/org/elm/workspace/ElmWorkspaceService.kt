@@ -192,10 +192,10 @@ class ElmWorkspaceService(
     private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
                 val elmCLI = settings.toolchain.elmCLI
-                        ?: throw ProjectLoadException.General("Must specify a valid path to Elm binary in Settings")
+                        ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
 
                 val compilerVersion = elmCLI.queryVersion().orNull()
-                        ?: throw ProjectLoadException.General("Could not determine version of the Elm compiler")
+                        ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
 
                 if (installDeps) {
                     installProjectDeps(manifestPath, elmCLI)
@@ -503,16 +503,7 @@ class ElmWorkspaceService(
 }
 
 
-sealed class ProjectLoadException(msg: String, cause: Exception? = null) : RuntimeException(msg, cause) {
-    class General(
-            msg: String,
-            cause: Exception? = null
-    ) : ProjectLoadException(msg, cause)
-
-    class StaleElmStuff(
-            val sourceDirectories: List<Path>
-    ) : ProjectLoadException("the elm.json file appears to have been modified without running 'elm make'")
-}
+class ProjectLoadException(msg: String, cause: Exception? = null) : RuntimeException(msg, cause)
 
 
 // AUTO-DISCOVER
