@@ -17,7 +17,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.JDOMUtil
 import com.intellij.openapi.util.RecursionManager
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -78,12 +77,6 @@ fun checkIsBackgroundThread() {
 fun fullyRefreshDirectory(directory: VirtualFile) {
     VfsUtil.markDirtyAndRefresh(/* async = */ false, /* recursive = */ true, /* reloadChildren = */ true, directory)
 }
-
-fun VirtualFile.findFileByMaybeRelativePath(path: String): VirtualFile? =
-        if (FileUtil.isAbsolute(path))
-            fileSystem.findFileByPath(path)
-        else
-            findFileByRelativePath(path)
 
 fun VirtualFile.findFileBreadthFirst(predicate: (VirtualFile) -> Boolean): VirtualFile? {
     val queue = LinkedList<VirtualFile>().also { it.push(this) }
@@ -169,6 +162,17 @@ fun findFileByPathTestAware(path: Path): VirtualFile? {
     }
 
     return LocalFileSystem.getInstance().findFileByPath(path)
+}
+
+fun refreshAndFindFileByPathTestAware(path: Path): VirtualFile? {
+    if (isUnitTestMode) {
+        val vFile = TempFileSystem.getInstance().refreshAndFindFileByPath(path.toString())
+        if (vFile != null) {
+            return vFile
+        }
+    }
+
+    return LocalFileSystem.getInstance().refreshAndFindFileByPath(path.toString())
 }
 
 val isUnitTestMode: Boolean get() = ApplicationManager.getApplication().isUnitTestMode

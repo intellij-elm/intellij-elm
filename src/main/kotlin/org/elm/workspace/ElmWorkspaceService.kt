@@ -204,6 +204,11 @@ class ElmWorkspaceService(
                 // not thread-safe; do not reuse across threads!
                 val repo = ElmPackageRepository(compilerVersion)
 
+                // External files may have been created/modified by the Elm compiler. Refresh.
+                findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
+                    fullyRefreshDirectory(it)
+                }
+
                 // Load the project
                 ElmProjectLoader.topLevelLoad(manifestPath, repo)
             }.whenComplete { _, error ->
@@ -247,6 +252,7 @@ class ElmWorkspaceService(
         // because some inputs can hang the compiler.
         if (!ElmProjectLoader.isValid(tempManifest.toPath())) {
             log.error("Failed to install deps: the elm.json file is invalid")
+            FileUtil.delete(dir)
             return false
         }
 

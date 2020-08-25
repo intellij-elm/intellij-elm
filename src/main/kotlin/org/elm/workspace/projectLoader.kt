@@ -10,7 +10,7 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.io.exists
-import org.elm.openapiext.findFileByPathTestAware
+import org.elm.openapiext.refreshAndFindFileByPathTestAware
 import org.elm.workspace.ElmToolchain.Companion.SIDECAR_FILENAME
 import org.elm.workspace.solver.Pkg
 import org.elm.workspace.solver.PkgName
@@ -131,9 +131,6 @@ class ElmPackageRepository(override val elmCompilerVersion: Version) : Repositor
             return Paths.get("$elmHomePath/$elmCompilerVersion/$subDirName/")
         }
 
-    fun listPackages(): List<File> =
-            globalPackageCacheDir.toFile().listFiles()?.toList() ?: emptyList()
-
     /**
      * Path to the manifest file for the Elm package [name] at version [version]
      */
@@ -161,7 +158,7 @@ class ElmPackageRepository(override val elmCompilerVersion: Version) : Repositor
 // DTOs for JSON Decoding
 
 private fun parseDTO(manifestPath: Path): ElmProjectDTO {
-    val manifestStream = findFileByPathTestAware(manifestPath)?.inputStream
+    val manifestStream = refreshAndFindFileByPathTestAware(manifestPath)?.inputStream
             ?: throw ProjectLoadException.General("Manifest file not found: $manifestPath")
     return try {
         val node = objectMapper.readTree(manifestStream)
