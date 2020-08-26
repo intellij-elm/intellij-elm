@@ -101,7 +101,8 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
     private fun makeTestAction(file: VirtualFile): Pair<ElmExternalFormatAction, TestActionEvent> {
         val dataContext = MapDataContext(mapOf(
                 CommonDataKeys.PROJECT to project,
-                CommonDataKeys.VIRTUAL_FILE to file
+                CommonDataKeys.VIRTUAL_FILE to file,
+                CommonDataKeys.EDITOR to editor
         ))
         val action = ElmExternalFormatAction()
         val event = TestActionEvent(dataContext, action)

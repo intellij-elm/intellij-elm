@@ -1,13 +1,12 @@
 package org.elm.ide.actions
 
+import com.intellij.ide.DataManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import org.elm.ide.notifications.executeAction
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
@@ -33,6 +32,9 @@ class ElmExternalFormatAction : AnAction() {
         }
 
         val project = ctx.project
+        val editor = ctx.editor
+        val document = editor.document
+
         val configureFixAction = "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
 
         val elmFormat = project.elmToolchain.elmFormatCLI
@@ -41,9 +43,14 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
-        when (val result = elmFormat.formatDocumentAndSetText(project, ctx.document, ctx.elmVersion, addToUndoStack = true)) {
-            is ElmFormatResult.BadSyntax ->
-                project.showBalloon(result.msg, NotificationType.WARNING)
+        val result = elmFormat.formatDocumentAndSetText(project, document, ctx.elmVersion, addToUndoStack = true)
+        when (result) {
+            is ElmFormatResult.BadSyntax -> {
+                project.showBalloon(result.msg, NotificationType.WARNING, "Show Errors" to {
+                    val action = ActionManager.getInstance().getAction("Elm.Build")!!
+                    executeAction(action, "elm-format-notif", DataManager.getInstance().getDataContext(editor.component))
+                })
+            }
 
             is ElmFormatResult.FailedToStart ->
                 project.showBalloon(result.msg, NotificationType.ERROR, configureFixAction)
@@ -61,15 +68,15 @@ class ElmExternalFormatAction : AnAction() {
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
         if (!file.isInLocalFileSystem) return null
         if (!file.isElmFile) return null
-        val document = FileDocumentManager.getInstance().getDocument(file) ?: return null
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return null
         val elmVersion = ElmFormatCLI.getElmVersion(project, file) ?: return null
-        return Context(project, file, document, elmVersion)
+        return Context(project, file, editor, elmVersion)
     }
 
     data class Context(
             val project: Project,
             val file: VirtualFile,
-            val document: Document,
+            val editor: Editor,
             val elmVersion: Version
     )
 
