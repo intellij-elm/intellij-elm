@@ -78,16 +78,16 @@ fun fullyRefreshDirectory(directory: VirtualFile) {
     VfsUtil.markDirtyAndRefresh(/* async = */ false, /* recursive = */ true, /* reloadChildren = */ true, directory)
 }
 
-fun VirtualFile.findFileBreadthFirst(predicate: (VirtualFile) -> Boolean): VirtualFile? {
-    val queue = LinkedList<VirtualFile>().also { it.push(this) }
-    while (queue.isNotEmpty()) {
-        val candidate = queue.pop()
-        if (predicate(candidate)) {
-            return candidate
-        } else {
-            for (child in candidate.children) {
-                queue.add(child)
-            }
+fun VirtualFile.findFileBreadthFirst(maxDepth: Int, predicate: (VirtualFile) -> Boolean): VirtualFile? {
+    val queue = LinkedList<Pair<VirtualFile, Int>>()
+            .also { it.push(this to 0) }
+
+    loop@ while (queue.isNotEmpty()) {
+        val (candidate, itemDepth) = queue.pop()
+        when {
+            predicate(candidate) -> return candidate
+            itemDepth >= maxDepth -> continue@loop
+            else -> queue.addAll(candidate.children.map { it to itemDepth + 1 })
         }
     }
     return null
@@ -100,7 +100,6 @@ fun VirtualFile.toPsiFile(project: Project): PsiFile? =
 
 fun Editor.toPsiFile(project: Project): PsiFile? =
         PsiDocumentManager.getInstance(project).getPsiFile(document)
-
 
 
 inline fun <Key, reified Psi : PsiElement> getElements(
