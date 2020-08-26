@@ -101,28 +101,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         )
     }
 
-    fun `test ElmFormatOnFileSaveComponent should not touch a file syntax errors`() {
-        val brokenElmCode = """
-                    m0dule Main exposing (f)
-
-
-                    f x = x
-
-                """.trimIndent()
-        buildProject {
-            project("elm.json", manifestElm19)
-            dir("src") {
-                elm("Main.elm", brokenElmCode)
-            }
-        }
-
-        testCorrectFormatting(
-                "src/Main.elm",
-                brokenElmCode,
-                expected = brokenElmCode
-        )
-    }
-
     private fun testCorrectFormatting(fileWithCaret: String, unformatted: String, expected: String, activateOnSaveHook: Boolean = true) {
 
         project.elmWorkspace.useToolchain(toolchain.copy(isElmFormatOnSaveEnabled = activateOnSaveHook))
