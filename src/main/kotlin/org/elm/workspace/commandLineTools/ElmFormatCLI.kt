@@ -1,6 +1,7 @@
 package org.elm.workspace.commandLineTools
 
 import com.intellij.execution.ExecutionException
+import com.intellij.execution.process.ProcessNotCreatedException
 import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
@@ -13,7 +14,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
-import org.elm.openapiext.isSuccess
+import org.elm.openapiext.isNotSuccess
 import org.elm.workspace.ElmApplicationProject
 import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ParseException
@@ -40,32 +41,48 @@ class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
                 .execute(document.text)
     }
 
+    sealed class ElmFormatResult(val msg: String, val cause: Throwable? = null) {
+        class Success : ElmFormatResult("ok")
+        class BadSyntax : ElmFormatResult("elm-format encountered syntax errors that it could not fix")
+        class FailedToStart : ElmFormatResult("Failed to launch elm-format. Is the path correct?")
+        class UnknownFailure(msg: String? = null, cause: Throwable?) : ElmFormatResult(msg
+                ?: "Something went wrong running elm-format", cause)
+    }
 
-    fun formatDocumentAndSetText(project: Project, document: Document, version: Version, addToUndoStack: Boolean) {
+    fun formatDocumentAndSetText(project: Project, document: Document, version: Version, addToUndoStack: Boolean): ElmFormatResult {
+        val processOutput = try {
+            ProgressManager.getInstance().runProcessWithProgressSynchronously<ProcessOutput, ExecutionException>({
+                getFormattedContentOfDocument(version, document)
+            }, "Running elm-format on current file...", true, project)
+        } catch (e: ExecutionException) {
+            val msg = e.message ?: "unknown"
+            return when {
+                msg.contains("SYNTAX PROBLEM", ignoreCase = true) -> ElmFormatResult.BadSyntax()
+                e is ProcessNotCreatedException -> ElmFormatResult.FailedToStart()
+                else -> ElmFormatResult.UnknownFailure(cause = e)
+            }
+        }
 
-        val result = ProgressManager.getInstance().runProcessWithProgressSynchronously<ProcessOutput, ExecutionException>({
-            getFormattedContentOfDocument(version, document)
-        }, "Running elm-format on current file...", true, project)
+        if (processOutput.isNotSuccess) return ElmFormatResult.UnknownFailure("Process output exit code was non-zero", cause = null)
 
-        if (result.isSuccess) {
-            val formatted = result.stdout
-            val source = document.text
+        val formatted = processOutput.stdout
+        val source = document.text
 
-            if (source != formatted) {
-
-                val writeAction = {
-                    ApplicationManager.getApplication().runWriteAction {
-                        document.setText(formatted)
-                    }
+        if (source != formatted) {
+            val action = {
+                ApplicationManager.getApplication().runWriteAction {
+                    document.setText(formatted)
                 }
+            }
 
-                if (addToUndoStack) {
-                    CommandProcessor.getInstance().executeCommand(project, writeAction, "Run elm-format on current file", null, document)
-                } else {
-                    CommandProcessor.getInstance().runUndoTransparentAction(writeAction)
+            with(CommandProcessor.getInstance()) {
+                when {
+                    addToUndoStack -> executeCommand(project, action, "Run elm-format on current file", null, document)
+                    else -> runUndoTransparentAction(action)
                 }
             }
         }
+        return ElmFormatResult.Success()
     }
 
 

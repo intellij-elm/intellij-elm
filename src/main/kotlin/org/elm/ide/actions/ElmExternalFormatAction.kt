@@ -1,6 +1,5 @@
 package org.elm.ide.actions
 
-import com.intellij.execution.ExecutionException
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,19 +8,17 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.openapiext.isUnitTestMode
 import org.elm.workspace.Version
 import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI.ElmFormatResult
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
 
 class ElmExternalFormatAction : AnAction() {
-
 
     override fun update(e: AnActionEvent) {
         super.update(e)
@@ -35,24 +32,27 @@ class ElmExternalFormatAction : AnAction() {
             return
         }
 
-        val fixAction = "Fix" to { ctx.project.elmWorkspace.showConfigureToolchainUI() }
+        val project = ctx.project
+        val configureFixAction = "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
 
-        val elmFormat = ctx.project.elmToolchain.elmFormatCLI
+        val elmFormat = project.elmToolchain.elmFormatCLI
         if (elmFormat == null) {
-            ctx.project.showBalloon("Could not find elm-format", NotificationType.ERROR, fixAction)
+            project.showBalloon("Could not find elm-format", NotificationType.ERROR, configureFixAction)
             return
         }
 
-        try {
-            elmFormat.formatDocumentAndSetText(ctx.project, ctx.document, ctx.elmVersion, addToUndoStack = true)
-        } catch (ex: ExecutionException) {
-            if (isUnitTestMode) throw ex
-            val message = ex.message ?: "something went wrong running elm-format"
-            if (message.contains("SYNTAX PROBLEM", ignoreCase = true)) {
-                ctx.project.showBalloon("Please fix the syntax errors before running elm-format.", NotificationType.WARNING)
-            } else {
-                ctx.project.showBalloon(message, NotificationType.ERROR, fixAction)
-            }
+        when (val result = elmFormat.formatDocumentAndSetText(project, ctx.document, ctx.elmVersion, addToUndoStack = true)) {
+            is ElmFormatResult.BadSyntax ->
+                project.showBalloon(result.msg, NotificationType.WARNING)
+
+            is ElmFormatResult.FailedToStart ->
+                project.showBalloon(result.msg, NotificationType.ERROR, configureFixAction)
+
+            is ElmFormatResult.UnknownFailure ->
+                project.showBalloon(result.msg, NotificationType.ERROR)
+
+            is ElmFormatResult.Success ->
+                return
         }
     }
 

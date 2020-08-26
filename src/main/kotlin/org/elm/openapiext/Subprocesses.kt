@@ -35,9 +35,7 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.io.systemIndependentPath
-import java.io.BufferedWriter
 import java.io.OutputStreamWriter
-import java.nio.charset.Charset
 import java.nio.file.Path
 
 private val log = Logger.getInstance("org.elm.openapiext.Subprocesses")
@@ -130,3 +128,6 @@ private fun errorMessage(commandLine: GeneralCommandLine, output: ProcessOutput)
 
 val ProcessOutput.isSuccess: Boolean
     get() = !isTimeout && !isCancelled && exitCode == 0
+
+val ProcessOutput.isNotSuccess: Boolean
+    get() = !isSuccess
