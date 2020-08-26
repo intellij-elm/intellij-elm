@@ -16,6 +16,7 @@ import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.commandLineTools.ElmFormatCLI.ElmFormatResult
+import org.elm.workspace.compiler.ELM_BUILD_ACTION_ID
 import org.elm.workspace.elmSettings
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
@@ -43,7 +44,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
                         when (result) {
                             is ElmFormatResult.BadSyntax -> {
                                 project.showBalloon(result.msg, NotificationType.WARNING, "Show Errors" to {
-                                    val action = ActionManager.getInstance().getAction("Elm.Build")!!
+                                    val action = ActionManager.getInstance().getAction(ELM_BUILD_ACTION_ID)!!
                                     executeAction(action, "elm-format-notif", DataManager.getInstance().getDataContext(editor.component))
                                 })
                             }

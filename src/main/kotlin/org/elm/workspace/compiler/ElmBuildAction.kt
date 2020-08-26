@@ -24,9 +24,14 @@ import org.elm.lang.core.types.findTy
 import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.saveAllDocuments
-import org.elm.workspace.*
+import org.elm.workspace.ElmApplicationProject
+import org.elm.workspace.ElmPackageProject
+import org.elm.workspace.ElmProject
+import org.elm.workspace.elmToolchain
+import org.elm.workspace.elmWorkspace
 import java.nio.file.Path
 
+val ELM_BUILD_ACTION_ID = "Elm.Build"
 
 class ElmBuildAction : AnAction() {
 
@@ -74,9 +79,16 @@ class ElmBuildAction : AnAction() {
                             { it.location?.region?.start?.column }
                     ))
         }
-        project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages, targetPath, offset)
-        if (isUnitTestMode) return
-        ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show(null)
+
+        fun postErrors() = project.messageBus.syncPublisher(ERRORS_TOPIC)
+                .update(elmProject.projectDirPath, messages, targetPath, offset)
+
+        when {
+            isUnitTestMode -> postErrors()
+            else -> ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show {
+                postErrors()
+            }
+        }
     }
 
     private fun findMainEntryPoint(project: Project, elmProject: ElmProject): ElmFunctionDeclarationLeft? =

@@ -2,7 +2,11 @@ package org.elm.ide.actions
 
 import com.intellij.ide.DataManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -13,6 +17,7 @@ import org.elm.openapiext.isUnitTestMode
 import org.elm.workspace.Version
 import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.commandLineTools.ElmFormatCLI.ElmFormatResult
+import org.elm.workspace.compiler.ELM_BUILD_ACTION_ID
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
@@ -47,7 +52,7 @@ class ElmExternalFormatAction : AnAction() {
         when (result) {
             is ElmFormatResult.BadSyntax -> {
                 project.showBalloon(result.msg, NotificationType.WARNING, "Show Errors" to {
-                    val action = ActionManager.getInstance().getAction("Elm.Build")!!
+                    val action = ActionManager.getInstance().getAction(ELM_BUILD_ACTION_ID)!!
                     executeAction(action, "elm-format-notif", DataManager.getInstance().getDataContext(editor.component))
                 })
             }

@@ -5,7 +5,11 @@ import com.intellij.ide.OccurenceNavigator
 import com.intellij.ide.OccurenceNavigator.OccurenceInfo
 import com.intellij.ide.util.PsiNavigationSupport
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
@@ -26,6 +30,7 @@ import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.toPsiFile
+import org.elm.workspace.compiler.ELM_BUILD_ACTION_ID
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.ElmError
 import org.elm.workspace.compiler.Region
@@ -36,8 +41,14 @@ import java.awt.Component
 import java.awt.Dimension
 import java.awt.font.TextAttribute
 import java.nio.file.Path
-import javax.swing.*
-import javax.swing.ScrollPaneConstants.*
+import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.JTable
+import javax.swing.JTextPane
+import javax.swing.ListSelectionModel
+import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
+import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
@@ -174,7 +185,7 @@ class ElmCompilerPanel(
         val compilerPanel = this
         val toolbar = with(ActionManager.getInstance()) {
             val buttonGroup = DefaultActionGroup().apply {
-                add(getAction("Elm.Build"))
+                add(getAction(ELM_BUILD_ACTION_ID))
                 addSeparator()
                 add(CommonActionsManager.getInstance().createNextOccurenceAction(compilerPanel))
                 add(CommonActionsManager.getInstance().createPrevOccurenceAction(compilerPanel))
