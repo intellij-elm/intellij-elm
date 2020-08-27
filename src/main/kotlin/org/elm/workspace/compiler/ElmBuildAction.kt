@@ -57,12 +57,23 @@ class ElmBuildAction : AnAction() {
         val (filePathToCompile, targetPath, offset) = when (elmProject) {
             is ElmApplicationProject -> {
                 val mainEntryPoint = findMainEntryPoint(project, elmProject)
-                mainEntryPoint?.containingFile?.virtualFile?.let { Triple(it.pathAsPath, VfsUtilCore.getRelativePath(it, projectDir), mainEntryPoint.textOffset) }
+                mainEntryPoint?.containingFile?.virtualFile
+                        ?.let {
+                            Triple(
+                                    it.pathAsPath,
+                                    VfsUtilCore.getRelativePath(it, projectDir),
+                                    mainEntryPoint.textOffset
+                            )
+                        }
                         ?: return showError(project, "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation.")
             }
 
             is ElmPackageProject ->
-                Triple(activeFile.pathAsPath, VfsUtilCore.getRelativePath(activeFile, projectDir), 0)
+                Triple(
+                        activeFile.pathAsPath,
+                        VfsUtilCore.getRelativePath(activeFile, projectDir),
+                        0
+                )
         }
 
         val json = try {
@@ -81,7 +92,7 @@ class ElmBuildAction : AnAction() {
         }
 
         fun postErrors() = project.messageBus.syncPublisher(ERRORS_TOPIC)
-                .update(elmProject.projectDirPath, messages, targetPath, offset)
+                .update(elmProject.projectDirPath, messages, targetPath!!, offset)
 
         when {
             isUnitTestMode -> postErrors()
@@ -115,7 +126,7 @@ class ElmBuildAction : AnAction() {
     }
 
     interface ElmErrorsListener {
-        fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?, offset: Int)
+        fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String, offset: Int)
     }
 
     companion object {
