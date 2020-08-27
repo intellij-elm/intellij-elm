@@ -27,16 +27,18 @@ class ElmCompletionContributor : CompletionContributor() {
         for languages like Elm where many parse rules require a lower-case identifier.
         */
 
-        if (pre.elementType == ElmTypes.DOT || pre.parent is ElmRecordExpr) {
+        // TODO use additional context to determine whether it should be upper- vs lower-case.
+        context.dummyIdentifier = when {
             // Assume that after a dot, a lower-case identifier should follow.
             // This works well for functions qualified by their module name (e.g. `String.length`)
             // but it does NOT work for qualified types (e.g. `Task.Task`)
-            // Also assume lower-case identifiers should be used inside of elm record expressions.
-
-            // TODO use additional context to determine whether it should be upper- vs lower-case.
-            context.dummyIdentifier = LOWER_DUMMY_IDENTIFIER
+            pre.elementType == ElmTypes.DOT -> LOWER_DUMMY_IDENTIFIER
+            // Assume lower-case identifiers should be used inside of elm record expressions.
+            pre.parent is ElmRecordExpr -> LOWER_DUMMY_IDENTIFIER
+            else -> UPPER_DUMMY_IDENTIFIER
         }
     }
 }
 
 private const val LOWER_DUMMY_IDENTIFIER = "elm_code_completion_dummy"
+private const val UPPER_DUMMY_IDENTIFIER = "Elm_code_completion_dummy"

@@ -63,7 +63,8 @@ object ElmKeywordSuggestor : Suggestor {
                 result.add("exposing")
             }
 
-            if(parent is ElmRecordExpr && prevVisibleLeaf?.elementType in listOf(COMMA, LEFT_SQUARE_BRACKET)) {
+            if((parent is ElmRecordExpr || parent is ElmField)
+                    && prevVisibleLeaf?.elementType in listOf(COMMA, LEFT_BRACE)) {
                 // When in a record field (e.g. `{n }` or `{ name = "", n }`) do not suggest keywords.
             }
             // keywords that can appear at the beginning of an expression

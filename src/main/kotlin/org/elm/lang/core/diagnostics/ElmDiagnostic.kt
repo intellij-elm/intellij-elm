@@ -68,6 +68,7 @@ class InfiniteTypeError(
 
 class RecordFieldError(
         element: PsiElement,
+        val ty: TyRecord?,
         private val name: String
 ) : ElmDiagnostic(element) {
     override val message: String

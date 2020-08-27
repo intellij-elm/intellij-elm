@@ -437,6 +437,7 @@ private class InferenceScope(
             atom is ElmCaseOfExpr -> inferCase(atom)
             atom is ElmParenthesizedExpr -> inferExpression(atom.expression)
             atom is ElmRecordExpr -> inferRecord(atom)
+            atom is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
             atom.hasErrors -> TyUnknown()
             else -> when (atom) {
                 is ElmAnonymousFunctionExpr -> inferLambda(atom)
@@ -447,7 +448,6 @@ private class InferenceScope(
                 is ElmIfElseExpr -> inferIfElse(atom)
                 is ElmListExpr -> inferList(atom)
                 is ElmNegateExpr -> inferNegateExpression(atom)
-                is ElmTupleExpr -> TyTuple(atom.expressionList.map { inferExpression(it) })
                 is ElmNumberConstantExpr -> if (atom.isFloat) TyFloat else TyVar("number")
                 is ElmOperatorAsFunctionExpr -> inferOperatorAsFunction(atom)
                 is ElmStringConstantExpr -> TyString
@@ -501,7 +501,7 @@ private class InferenceScope(
 
         if (fieldName !in targetTy.fields) {
             if (!targetTy.isSubset) {
-                diagnostics += RecordFieldError(fieldIdentifier, fieldName)
+                diagnostics += RecordFieldError(fieldIdentifier, targetTy, fieldName)
             }
             return TyUnknown()
         }
@@ -583,7 +583,7 @@ private class InferenceScope(
             val expected = baseFields[name.text]
             if (expected == null) {
                 if (baseTy is TyRecord) {
-                    if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
+                    if (!baseTy.isSubset) diagnostics += RecordFieldError(name, baseTy, name.text)
                 } else if (baseTy is MutableTyRecord) {
                     baseTy.fields[name.text] = ty
                 }
@@ -1020,6 +1020,41 @@ private class InferenceScope(
         if (element is ElmCaseOfExpr) {
             return requireBranchesAssignable(element, ty1, ty2)
         }
+
+        // TODO(ryancerf) break this out into a separate method.
+        val recordExpr = element as? ElmRecordExpr
+                ?: ((element as? ElmLetInExpr)?.expression as? ElmRecordExpr)
+        if(recordExpr != null && ty1 is TyRecord && ty2 is TyRecord) {
+            // If the record expr has all the expected keys then check the types of the values individually.
+            if(ty1.fields.keys == ty2.fields.keys) {
+                return recordExpr.fieldList.map { it ->
+                    val expr = it.expression
+                    val t1 = ty1.fields.get(it.referenceName)
+                    val t2 = ty2.fields.get(it.referenceName)
+                    if (expr != null && t1 != null && t2 != null) {
+                        requireAssignable(expr, t1, t2)
+                    } else {
+                    false
+                }
+                }.all {it}
+            }
+        }
+
+        // TODO(ryancerf) break this out into a separate method.
+        val tupleExpr = element as? ElmTupleExpr
+                ?: ((element as? ElmLetInExpr)?.expression as? ElmTupleExpr)
+        // If the tuple expr is the correct size the check the type of each element of the tuple individually.
+        if(tupleExpr != null && ty1 is TyTuple && ty2 is TyTuple
+                && ty1.types.size == ty2.types.size) {
+            return IntRange(0, endInclusive = tupleExpr.expressionList.size - 1).map {
+                i -> requireAssignable(
+                        tupleExpr.expressionList[i],
+                        ty1.types[i],
+                        ty2.types[i]
+                )
+            }.all { it }
+        }
+
         val assignable = try {
             assignable(ty1, ty2)
         } catch (e: InfiniteTypeException) {
