@@ -249,12 +249,8 @@ class ElmCompilerPanel(
         if (compilerMessages.isEmpty()) return null
 
         val nextIndex = when (direction) {
-            is OccurenceDirection.Forward -> if (selectedCompilerMessage < compilerMessages.lastIndex)
-                selectedCompilerMessage + 1
-            else return null
-            is OccurenceDirection.Back -> if (selectedCompilerMessage > 0)
-                selectedCompilerMessage - 1
-            else return null
+            is OccurenceDirection.Forward -> selectedCompilerMessage + 1
+            is OccurenceDirection.Back -> selectedCompilerMessage - 1
         }
 
         val elmError = compilerMessages.getOrNull(nextIndex) ?: return null
