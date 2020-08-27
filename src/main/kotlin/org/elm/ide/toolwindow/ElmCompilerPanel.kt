@@ -6,14 +6,13 @@ import com.intellij.ide.OccurenceNavigator.OccurenceInfo
 import com.intellij.ide.util.PsiNavigationSupport
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.text.StringUtil.pluralize
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -21,10 +20,9 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.components.labels.ActionLink
+import com.intellij.ui.components.labels.LinkLabel
 import com.intellij.ui.content.ContentManager
 import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
@@ -39,9 +37,11 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.font.TextAttribute
 import java.nio.file.Path
 import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTable
 import javax.swing.JTextPane
@@ -59,10 +59,7 @@ class ElmCompilerPanel(
         private val contentManager: ContentManager
 ) : SimpleToolWindowPanel(true, false), Disposable, OccurenceNavigator {
 
-    override fun dispose() {}
-
     private var baseDirPath: Path? = null
-
     private var selectedCompilerMessage: Int = 0
 
     var compilerMessages: List<ElmError> = emptyList()
@@ -72,22 +69,24 @@ class ElmCompilerPanel(
             selectedCompilerMessage = 0
 
             // update UI
-            if (compilerMessages.isEmpty()) {
-                setContent(emptyUI)
-                errorTableUI.model = emptyErrorTable
-                messageUI.text = ""
-            } else {
-                setContent(errorUI)
-                messageUI.text = compilerMessages[0].html
-                val cellValues = compilerMessages.map {
-                    arrayOf(it.location?.moduleName ?: "n/a",
-                            it.location?.region?.pretty() ?: "n/a",
-                            toNiceName(it.title))
-                }.toTypedArray()
-                errorTableUI.model = object : DefaultTableModel(cellValues, errorTableColumnNames) {
-                    override fun isCellEditable(row: Int, column: Int) = false
+            when {
+                compilerMessages.isEmpty() -> {
+                    tableUI.model = emptyErrorTable
+                    detailsUI.text = """<p style="color:white;margin-left: 10px">No Errors</p>"""
                 }
-                errorTableUI.setRowSelectionInterval(0, 0)
+                else -> {
+                    val cellValues = compilerMessages.map {
+                        arrayOf(it.location?.moduleName ?: "n/a",
+                                it.location?.region?.pretty() ?: "n/a",
+                                toNiceName(it.title))
+                    }.toTypedArray()
+                    tableUI.model = object : DefaultTableModel(cellValues, errorTableColumnNames) {
+                        override fun isCellEditable(row: Int, column: Int) = false
+                    }
+                    tableUI.setRowSelectionInterval(0, 0)
+
+                    detailsUI.text = compilerMessages[0].html
+                }
             }
         }
 
@@ -96,25 +95,26 @@ class ElmCompilerPanel(
 
     private fun Region.pretty() = "${start.line} : ${start.column}"
 
-    // LEFT PANEL
-    private fun createCompilerTargetUI(baseDirPath: Path, targetPath: String?, offset: Int): ActionLink {
-        return ActionLink("", object : AnAction() {
-            override fun actionPerformed(e: AnActionEvent) {
-                e.project?.let {
-                    val targetFile = VfsUtil.findFile(baseDirPath.resolve(targetPath), true) ?: return
-                    val descriptor = OpenFileDescriptor(it, targetFile, offset)
-                    descriptor.navigate(true)
-                }
+    // TOOLWINDOW TOOLBAR
+
+    private fun createToolbar(): JComponent {
+        val compilerPanel = this
+        val toolbar = with(ActionManager.getInstance()) {
+            val buttonGroup = DefaultActionGroup().apply {
+                add(getAction(ELM_BUILD_ACTION_ID))
+                addSeparator()
+                add(CommonActionsManager.getInstance().createNextOccurenceAction(compilerPanel))
+                add(CommonActionsManager.getInstance().createPrevOccurenceAction(compilerPanel))
             }
-        }).apply {
-            alignmentX = Component.LEFT_ALIGNMENT
-            setNormalColor(Color.BLACK)
-            activeColor = Color.BLACK
-            text = "Compiler Target  $targetPath"
+            createActionToolbar("Elm Compiler Toolbar", buttonGroup, true)
         }
+        toolbar.setTargetComponent(this)
+        return toolbar.component
     }
 
-    private val errorTableUI = JBTable().apply {
+    // LEFT PANEL
+
+    private val tableUI = JBTable().apply {
         setShowGrid(false)
         intercellSpacing = Dimension(2, 2)
         border = EmptyBorder(3, 3, 3, 3)
@@ -135,14 +135,15 @@ class ElmCompilerPanel(
                     val cellRect = getCellRect(selectedRow, 0, true)
                     scrollRectToVisible(cellRect)
                     selectedCompilerMessage = selectedRow
-                    messageUI.text = compilerMessages[selectedCompilerMessage].html
+                    detailsUI.text = compilerMessages[selectedCompilerMessage].html
                 }
             }
         }
     }
 
     // RIGHT PANEL
-    private val messageUI = JTextPane().apply {
+
+    private val detailsUI = JTextPane().apply {
         contentType = "text/html"
         isEditable = false
         background = backgroundColorUI
@@ -150,50 +151,71 @@ class ElmCompilerPanel(
     }
 
     // TOOLWINDOW CONTENT
-    private val errorUI = JBSplitter("ElmCompilerErrorPanel", 0.4F).apply {
-        firstComponent = JPanel(BorderLayout()).apply {
-            add(JBLabel()) // dummy-placeholder component at index 0 (gets replaced by org.elm.workspace.compiler.ElmBuildAction.ElmErrorsListener.update)
-            add(JBScrollPane(errorTableUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER), BorderLayout.CENTER)
-        }
-        secondComponent = JBScrollPane(messageUI, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)
-    }
+
+    private val entryPointLabel = JLabel("No project compiled yet")
+
+    private val entryPointLink =
+            LinkLabel<String>("", null)
+
+    private val entryPointUI =
+            JPanel(FlowLayout(FlowLayout.LEADING)).apply {
+                add(entryPointLabel)
+                add(entryPointLink)
+            }
+
+
+    private val splitterUI =
+            JBSplitter("ElmCompilerErrorPanel", 0.4F).apply {
+                firstComponent =
+                        JBScrollPane(
+                                tableUI,
+                                VERTICAL_SCROLLBAR_AS_NEEDED,
+                                HORIZONTAL_SCROLLBAR_NEVER
+                        )
+                secondComponent =
+                        JBScrollPane(
+                                detailsUI,
+                                VERTICAL_SCROLLBAR_AS_NEEDED,
+                                HORIZONTAL_SCROLLBAR_AS_NEEDED
+                        )
+            }
+
+    private val contentUI =
+            JPanel(BorderLayout())
+                    .apply {
+                        add(entryPointUI, BorderLayout.NORTH)
+                        add(splitterUI, BorderLayout.CENTER)
+                    }
+
+    // INIT
 
     init {
         setToolbar(createToolbar())
-        setContent(emptyUI)
+        setContent(contentUI)
 
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?, offset: Int) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String, offset: Int) {
                     this@ElmCompilerPanel.baseDirPath = baseDirPath
 
                     compilerMessages = messages
                     selectedCompilerMessage = 0
-                    errorTableUI.setRowSelectionInterval(0, 0)
+                    tableUI.setRowSelectionInterval(0, 0)
 
-                    contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
+                    val numErrors = compilerMessages.size
+                    contentManager.getContent(0)?.displayName = "$numErrors ${pluralize("error", numErrors)}"
 
-                    val compilerTargetUI = createCompilerTargetUI(baseDirPath, targetPath, offset)
-                    errorUI.firstComponent.remove(0)
-                    errorUI.firstComponent.add(compilerTargetUI, BorderLayout.NORTH, 0)
+                    entryPointLabel.text = "$baseDirPath: elm make"
+                    entryPointLink.text = targetPath
+                    entryPointLink.setListener({ _, _ ->
+                        VfsUtil.findFile(baseDirPath.resolve(targetPath), true)
+                                ?.let {
+                                    OpenFileDescriptor(project, it, offset).navigate(true)
+                                }
+                    }, null)
                 }
             })
         }
-    }
-
-    private fun createToolbar(): JComponent {
-        val compilerPanel = this
-        val toolbar = with(ActionManager.getInstance()) {
-            val buttonGroup = DefaultActionGroup().apply {
-                add(getAction(ELM_BUILD_ACTION_ID))
-                addSeparator()
-                add(CommonActionsManager.getInstance().createNextOccurenceAction(compilerPanel))
-                add(CommonActionsManager.getInstance().createPrevOccurenceAction(compilerPanel))
-            }
-            createActionToolbar("Elm Compiler Toolbar", buttonGroup, true)
-        }
-        toolbar.setTargetComponent(this)
-        return toolbar.component
     }
 
     override fun getData(dataId: String): Any? {
@@ -214,23 +236,21 @@ class ElmCompilerPanel(
             LocalFileSystem.getInstance().findFileByPath(it)
         } ?: return null
         val psiFile = virtualFile.toPsiFile(project) ?: return null
-        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+                ?: return null
         val start = elmLocation.region?.start ?: return null
         return Triple(virtualFile, document, start)
     }
 
+    override fun dispose() {}
 
     // OCCURRENCE NAVIGATOR
     private fun calcNextOccurrence(direction: OccurenceDirection, go: Boolean = false): OccurenceInfo? {
         if (compilerMessages.isEmpty()) return null
 
-        val nextIndex = when(direction) {
-            is OccurenceDirection.Forward -> if (selectedCompilerMessage < compilerMessages.lastIndex)
-                                                selectedCompilerMessage + 1
-                                                else return null
-            is OccurenceDirection.Back    -> if (selectedCompilerMessage > 0)
-                                                selectedCompilerMessage - 1
-                                                else return null
+        val nextIndex = when (direction) {
+            is OccurenceDirection.Forward -> selectedCompilerMessage + 1
+            is OccurenceDirection.Back -> selectedCompilerMessage - 1
         }
 
         val elmError = compilerMessages.getOrNull(nextIndex) ?: return null
@@ -238,8 +258,8 @@ class ElmCompilerPanel(
         if (go) {
             // update selection
             selectedCompilerMessage = nextIndex
-            messageUI.text = elmError.html
-            errorTableUI.setRowSelectionInterval(selectedCompilerMessage, selectedCompilerMessage)
+            detailsUI.text = elmError.html
+            tableUI.setRowSelectionInterval(selectedCompilerMessage, selectedCompilerMessage)
         }
 
         // create occurrence info

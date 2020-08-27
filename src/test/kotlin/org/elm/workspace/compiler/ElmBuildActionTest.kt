@@ -78,7 +78,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         var succeeded = false
         with(project.messageBus.connect(testRootDisposable)) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
-                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String?, offset: Int) {
+                override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String, offset: Int) {
                     TestCase.assertEquals(expectedNumErrors, messages.size)
                     TestCase.assertEquals("src/Main.elm", targetPath)
                     TestCase.assertEquals(expectedOffset, offset)
