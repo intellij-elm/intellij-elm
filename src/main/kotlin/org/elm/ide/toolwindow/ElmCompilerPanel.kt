@@ -12,6 +12,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.text.StringUtil.pluralize
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -201,7 +202,8 @@ class ElmCompilerPanel(
                     selectedCompilerMessage = 0
                     tableUI.setRowSelectionInterval(0, 0)
 
-                    contentManager.getContent(0)?.displayName = "${compilerMessages.size} errors"
+                    val numErrors = compilerMessages.size
+                    contentManager.getContent(0)?.displayName = "$numErrors ${pluralize("error", numErrors)}"
 
                     entryPointLabel.text = "$baseDirPath: elm make"
                     entryPointLink.text = targetPath
