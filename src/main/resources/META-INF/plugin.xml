@@ -36,6 +36,16 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.1.0</b> <em>(2020-08-27)</em>
+                <ul>
+                    <li>Automatically configures path to Elm tools and the `elm.json` file</li>
+                    <li>Package dependencies are now installed automatically</li>
+                    <li>New project template has updated `elm.json` package dependencies</li>
+                    <li>Added intentions for converting between regular and triple-quoted strings</li>
+                    <li>Allow elm-format to run on-save even if there are syntax errors</li>
+                    <li>Fixed bugs in the Elm Compiler tool window</li>
+                </ul>
+            </li>
             <li><b>4.0.0</b> <em>(2020-08-18)</em>
                 <ul>
                     <li>Removed support for Elm 0.18</li>
