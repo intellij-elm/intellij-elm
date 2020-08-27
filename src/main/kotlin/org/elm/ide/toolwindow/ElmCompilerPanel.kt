@@ -20,7 +20,6 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.AutoScrollToSourceHandler
 import com.intellij.ui.BrowserHyperlinkListener
 import com.intellij.ui.JBSplitter
-import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.labels.LinkLabel
 import com.intellij.ui.content.ContentManager
@@ -307,7 +306,5 @@ class ElmCompilerPanel(
                         }
             }
         }
-
-        val emptyUI = JBPanelWithEmptyText()
     }
 }
