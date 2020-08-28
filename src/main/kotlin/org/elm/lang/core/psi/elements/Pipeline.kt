@@ -58,7 +58,6 @@ sealed class Pipeline {
                 }
                 val nextToAdd = PipelineSegment(
                         takeWhile.filterIsInstance<ElmBinOpPartTag>().toList(),
-//                        takeWhile.filterIsInstance<PsiComment>().toList()
                         nextComments
                 )
                 nextComments = takeWhile.filterIsInstance<PsiComment>().toList()
