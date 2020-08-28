@@ -24,6 +24,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     private fun normalizePipeline(originalPipeline: Pipeline, project: Project, editor: Editor): ElmPsiElement {
         val initial: ElmPsiElement? = null
         val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
+        val psiFactory = ElmPsiFactory(project)
         if (!isMultiline(originalPipeline)) {
             return originalPipeline.pipelineSegments()
                     .withIndex()
@@ -35,10 +36,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                 .toList()
                                 .joinToString(separator = " ")
                         if (functionCallSoFar == null) {
-                            unwrapIfPossible(ElmPsiFactory(project).createParens(expressionString, indentation))
+                            unwrapIfPossible(psiFactory.createParens(expressionString, indentation))
                         } else {
                             val innerText = listOf(expressionString).joinToString(separator = " ")
-                            unwrapIfPossible(ElmPsiFactory(project).callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
+                            unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
                         }
                     })!!
         }
@@ -50,7 +51,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     if (functionCallSoFar == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
                             unwrapIfPossible(
-                                    ElmPsiFactory(project).createParensWithComments(
+                                    psiFactory.createParensWithComments(
                                             segment.comments,
                                                     segment.expressionParts
                                                     .map { indentation +  it.text }
@@ -67,7 +68,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                     .toList()
                                     .joinToString(separator = " ")
 
-                            unwrapIfPossible(ElmPsiFactory(project).createParensWithComments(segment.comments, innerText
+                            unwrapIfPossible(psiFactory.createParensWithComments(segment.comments, innerText
                             , indentation
                             )
                             )
@@ -79,7 +80,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                         .toList()
                                 .joinToString(separator = "\n")
 
-                        unwrapIfPossible(ElmPsiFactory(project).callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
+                        unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
                     }
                 })!!
     }
