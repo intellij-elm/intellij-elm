@@ -48,39 +48,17 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 .fold(initial, { functionCallSoFar, indexedSegment ->
                     val segment = indexedSegment.value
                     val indentation = existingIndent + "    ".repeat(indexedSegment.index)
+                    val expressionString = segment.expressionParts
+                            .map { indentation + it.text }
+                            .toList().joinToString(separator = " ")
                     if (functionCallSoFar == null) {
-                        if (originalPipeline is Pipeline.RightPipeline) {
-                            unwrapIfPossible(
-                                    psiFactory.createParensWithComments(
-                                            segment.comments,
-                                                    segment.expressionParts
-                                                    .map { indentation +  it.text }
-                                                    .toList()
-                                                    .joinToString(separator = " ")
-
-                                            , indentation
-                                    )
-                            )
-                        } else {
-                            val innerText =
-                                    segment.expressionParts
-                                    .map { indentation + it.text }
-                                    .toList()
-                                    .joinToString(separator = " ")
-
-                            unwrapIfPossible(psiFactory.createParensWithComments(segment.comments, innerText
-                            , indentation
-                            )
-                            )
-                        }
+                        unwrapIfPossible(
+                                psiFactory.createParensWithComments(segment.comments,
+                                        expressionString
+                                        , indentation )
+                        )
                     } else {
-
-                        val innerText = segment.expressionParts
-                                .map { indentation +  it.text }
-                                        .toList()
-                                .joinToString(separator = "\n")
-
-                        unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
+                        unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, expressionString , functionCallSoFar, indentation))
                     }
                 })!!
     }
