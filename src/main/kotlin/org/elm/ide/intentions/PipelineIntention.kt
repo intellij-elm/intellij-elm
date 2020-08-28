@@ -69,8 +69,8 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             val psiFactory = ElmPsiFactory(project)
             when (context) {
                 is Context.NoPipes -> {
-                    val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                     val indent = context.functionCall.indentStyle.oneLevelOfIndentation
+                    val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
                     val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall))
                     replaceUnwrapped(context.functionCall, rewrittenWithPipes, psiFactory)
                 }
@@ -81,25 +81,23 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     val segments = context.pipelineExpression.pipelineSegments().drop(1).flatMap {
                         it.comments.plus(it.expressionParts.map { it.text }.joinToString(separator = " "))
                     }
-                    val splitThing =
+                    val splitApplications =
                             splitArgAndFunctionApplications(context.pipelineExpression.pipeline.parts.filterIsInstance<ElmFunctionCallExpr>().first())
-                    val splitThingTransformed = splitThing.plus(firstSegment.comments)
+                    val valueAndApplications = splitApplications.plus(firstSegment.comments)
 
-                    val firstPartRewrittenWithPipeline = psiFactory.createPipeChain(
-                            existingIndent,
-                            indent,
-                            splitThingTransformed
-                                    .plus(segments)
-                    )
-                    replaceUnwrapped(context.pipelineExpression.pipeline, firstPartRewrittenWithPipeline, psiFactory)
+                    replaceUnwrapped(context.pipelineExpression.pipeline,
+                            psiFactory.createPipeChain(
+                                    existingIndent,
+                                    indent,
+                                    valueAndApplications
+                                            .plus(segments)
+                            ), psiFactory)
                 }
             }
 
         }
     }
-
 }
-
 
 fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr, psiFactory: ElmPsiFactory) {
     val comments =replaceWith.directChildren.filterIsInstance<PsiComment>()
@@ -112,7 +110,6 @@ fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExp
     }
 }
 
-
 private fun needsParensInParent(element: ElmPsiElement): Boolean {
     return when (element.parent) {
         is ElmBinOpExpr -> true
@@ -124,19 +121,16 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
     return when (nestedFunctionCall.arguments.count()) {
         0 -> {
             val comments = nestedFunctionCall.comments.toList()
-            val commentsText = comments.toList().map { it.text }.joinToString(separator = " ")
             listOf(associatedComments, comments, nestedFunctionCall.target.text)
         }
         else -> {
             val comments = nestedFunctionCall.comments.toList()
-            val commentsText = comments.toList().map { it.text }.joinToString(separator = " ")
             val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
                     .joinToString(separator = " ")
 
             val commentsForLastArg = nestedFunctionCall.arguments.last().prevSiblings.toList().takeWhile { it is PsiWhiteSpace || it is PsiComment }.filterIsInstance<PsiComment>()
             val commentsForPreLastArg = nestedFunctionCall.comments.filter { !commentsForLastArg.contains(it) }
 
-//            processArgument(nestedFunctionCall.arguments.last()).plus(comments).plus(joinToString)
             processArgument(nestedFunctionCall.arguments.last(), commentsForLastArg).plus(associatedComments).plus(commentsForPreLastArg).plus(joinToString)
         }
     }
