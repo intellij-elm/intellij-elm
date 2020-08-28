@@ -67,10 +67,10 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         }
         return originalPipeline.pipelineSegments()
                 .withIndex()
-                .fold(initial, { acc, indexedSegment ->
+                .fold(initial, { functionCallSoFar, indexedSegment ->
                     val segment = indexedSegment.value
                     val indentation = existingIndent + "    ".repeat(indexedSegment.index)
-                    if (acc == null) {
+                    if (functionCallSoFar == null) {
                         if (originalPipeline is Pipeline.RightPipeline) {
                             unwrapIfPossible(
                                     ElmPsiFactory(project).createParensWithComments(
@@ -102,8 +102,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                         .toList()
                                 .joinToString(separator = "\n")
 
-                        val thing = ElmPsiFactory(project).callFunctionWithArgumentAndComments(segment.comments, innerText , acc, indentation)
-                        unwrapIfPossible(thing)
+                        unwrapIfPossible(ElmPsiFactory(project).callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
                     }
                 })!!
     }
