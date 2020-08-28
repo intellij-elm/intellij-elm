@@ -24,8 +24,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     private fun normalizePipeline(originalPipeline: Pipeline, project: Project, editor: Editor): ElmPsiElement {
         val initial: ElmPsiElement? = null
         val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
-        val multiline = isMultiline(originalPipeline)
-        if (!multiline) {
+        if (!isMultiline(originalPipeline)) {
             return originalPipeline.pipelineSegments()
                     .withIndex()
                     .fold(initial, { acc, indexedSegment ->
