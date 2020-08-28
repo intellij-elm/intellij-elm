@@ -25,8 +25,6 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
-
-
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
 
         // find nearest ancestor (or self) that is
@@ -37,17 +35,16 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                 .map {
             when (it) {
                 is ElmBinOpExpr -> {
-                    it.asPipeline()?.let {
-                        if (it is Pipeline.RightPipeline && it.isNonNormalizedRightPipeline()) {
-                            Context.HasRightPipes(it)
+                    it.asPipeline()?.let { pipeline ->
+                        if (pipeline is Pipeline.RightPipeline && pipeline.isNonNormalizedRightPipeline()) {
+                            Context.HasRightPipes(pipeline)
                         } else {
                             null
                         }
                     }
                 }
                 is ElmFunctionCallExpr -> {
-                    val parent = it.parent
-                    if (parent is ElmBinOpExpr && parent.asPipeline() is Pipeline.RightPipeline) {
+                    if ((it.parent as? ElmBinOpExpr)?.asPipeline() is Pipeline.RightPipeline) {
                         null
                     } else {
                         if (it.arguments.count() > 0) {
