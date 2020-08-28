@@ -100,7 +100,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 }
 
 fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr, psiFactory: ElmPsiFactory) {
-    val comments =replaceWith.directChildren.filterIsInstance<PsiComment>()
+    val comments = replaceWith.directChildren.filterIsInstance<PsiComment>()
     val hasComments = comments.toList().isNotEmpty()
     if (needsParensInParent(expression) || hasComments) {
         expression.replace(replaceWith.withoutExtraParens)
