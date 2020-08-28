@@ -138,13 +138,6 @@ class ElmPsiFactory(private val project: Project) {
         }
     }
 
-    fun createPipeChainWithComments(valueAndunctionApplications: List<Any>): ElmParenthesizedExpr {
-        val s2 = valueAndunctionApplications.joinToString(separator = "\n    |> ")
-        return createFromText("f = ($s2\n\n        )")
-                ?: error("Invalid value ElmBinOpExpr: `($s2\n\n        )`")
-    }
-
-
     fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr {
         val createFromText = if (text.lines().size > 1) {
              createFromText("f = ($text\n$indentation)\n")
