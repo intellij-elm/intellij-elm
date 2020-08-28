@@ -30,35 +30,14 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     .fold(initial, { functionCallSoFar, indexedSegment ->
                         val segment = indexedSegment.value
                         val indentation = existingIndent + "    ".repeat(indexedSegment.index)
+                        val expressionString = segment.expressionParts
+                                .map { it.text }
+                                .toList()
+                                .joinToString(separator = " ")
                         if (functionCallSoFar == null) {
-                            if (originalPipeline is Pipeline.RightPipeline) {
-                                unwrapIfPossible(
-                                        ElmPsiFactory(project).createParens(
-                                                segment.expressionParts .map { it.text } .toList() .joinToString(separator = " ")
-                                                , indentation
-                                        )
-                                )
-                            } else {
-                                val innerText =
-                                                segment.expressionParts
-                                                        .map { it.text }
-                                                        .toList()
-                                                        .joinToString(separator = " ")
-
-                                unwrapIfPossible(ElmPsiFactory(project).createParens(innerText
-                                        , indentation
-                                )
-                                )
-                            }
+                            unwrapIfPossible(ElmPsiFactory(project).createParens(expressionString, indentation))
                         } else {
-
-                            val innerText = listOf(
-                                    segment.expressionParts
-                                            .map { it.text }
-                                            .toList()
-                                            .joinToString(separator = " ")
-
-                            ).joinToString(separator = " ")
+                            val innerText = listOf(expressionString).joinToString(separator = " ")
                             unwrapIfPossible(ElmPsiFactory(project).callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
                         }
                     })!!
