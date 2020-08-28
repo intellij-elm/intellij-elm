@@ -124,14 +124,21 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
             listOf(associatedComments, comments, nestedFunctionCall.target.text)
         }
         else -> {
-            val comments = nestedFunctionCall.comments.toList()
-            val joinToString = sequenceOf(nestedFunctionCall.target).plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1)).map { it.text }
+            val functionCallString = sequenceOf(nestedFunctionCall.target)
+                    .plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1))
+                    .map { it.text }
                     .joinToString(separator = " ")
 
-            val commentsForLastArg = nestedFunctionCall.arguments.last().prevSiblings.toList().takeWhile { it is PsiWhiteSpace || it is PsiComment }.filterIsInstance<PsiComment>()
+            val commentsForLastArg = nestedFunctionCall
+                    .arguments
+                    .last()
+                    .prevSiblings
+                    .toList()
+                    .takeWhile { it is PsiWhiteSpace || it is PsiComment }.filterIsInstance<PsiComment>()
+
             val commentsForPreLastArg = nestedFunctionCall.comments.filter { !commentsForLastArg.contains(it) }
 
-            processArgument(nestedFunctionCall.arguments.last(), commentsForLastArg).plus(associatedComments).plus(commentsForPreLastArg).plus(joinToString)
+            processArgument(nestedFunctionCall.arguments.last(), commentsForLastArg).plus(associatedComments).plus(commentsForPreLastArg).plus(functionCallString)
         }
     }
 }
