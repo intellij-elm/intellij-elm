@@ -188,19 +188,6 @@ class ElmPsiFactory(private val project: Project) {
         return elmParenthesizedExpr
     }
 
-    fun callFunctionWithArgument(outer: String, inner: ElmPsiElement, indent: String = ""): ElmParenthesizedExpr {
-        val isMultiline = inner.text.lines().count() > 1 || outer.lines().count() > 1
-        val innerText = inner.text
-        val elmParenthesizedExpr: ElmParenthesizedExpr = if (isMultiline) {
-            createFromText("f = ($outer\n$indent$innerText\n$indent)")
-                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
-        } else {
-            createFromText("f = ($outer $innerText)")
-                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
-        }
-        return elmParenthesizedExpr
-    }
-
     fun createStringConstant(text: String): ElmStringConstantExpr =
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")

@@ -59,9 +59,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                                             .joinToString(separator = " ")
 
                             ).joinToString(separator = " ")
-
-                            val thing = ElmPsiFactory(project).callFunctionWithArgument(innerText , acc, indentation)
-                            unwrapIfPossible(thing)
+                            unwrapIfPossible(ElmPsiFactory(project).callFunctionWithArgumentAndComments(segment.comments, innerText , acc, indentation))
                         }
                     })!!
         }
