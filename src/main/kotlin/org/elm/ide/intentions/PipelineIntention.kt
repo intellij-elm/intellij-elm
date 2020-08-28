@@ -145,14 +145,11 @@ private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallE
 
 private fun processArgument(argument: ElmAtomTag, commentsForLastArg: List<PsiComment>): List<Any> {
     val firstArgument = argument.withoutParens
-    if (firstArgument is ElmFunctionCallExpr) {
-        return splitArgAndFunctionApplications(firstArgument, commentsForLastArg)
-    }
-    if (firstArgument.children.size != 1) {
-        return listOf(addParensIfNeeded(firstArgument), commentsForLastArg)
-    }
-
     return if (firstArgument is ElmFunctionCallExpr) {
+        splitArgAndFunctionApplications(firstArgument, commentsForLastArg)
+    } else if (firstArgument.children.size != 1) {
+        listOf(addParensIfNeeded(firstArgument), commentsForLastArg)
+    } else if (firstArgument is ElmFunctionCallExpr) {
         splitArgAndFunctionApplications(firstArgument, commentsForLastArg)
     } else {
         commentsForLastArg.plus(listOf(addParensIfNeeded(firstArgument)))
