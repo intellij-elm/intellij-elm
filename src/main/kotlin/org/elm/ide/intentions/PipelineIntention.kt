@@ -32,10 +32,10 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
         // 2) a pipeline that isn't fully piped (first part of the pipe has at least one argument)
         return element
                 .ancestors
-                .map {
-            when (it) {
+                .map { element ->
+                    when (element) {
                 is ElmBinOpExpr -> {
-                    it.asPipeline()?.let { pipeline ->
+                    element.asPipeline()?.let { pipeline ->
                         if (pipeline is Pipeline.RightPipeline && pipeline.isNonNormalizedRightPipeline()) {
                             Context.HasRightPipes(pipeline)
                         } else {
@@ -44,11 +44,11 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     }
                 }
                 is ElmFunctionCallExpr -> {
-                    if ((it.parent as? ElmBinOpExpr)?.asPipeline() is Pipeline.RightPipeline) {
+                    if ((element.parent as? ElmBinOpExpr)?.asPipeline() is Pipeline.RightPipeline) {
                         null
                     } else {
-                        if (it.arguments.count() > 0) {
-                            Context.NoPipes(it)
+                        if (element.arguments.count() > 0) {
+                            Context.NoPipes(element)
                         } else {
                             null
                         }
