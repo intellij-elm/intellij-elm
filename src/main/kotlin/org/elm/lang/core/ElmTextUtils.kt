@@ -1,8 +1,11 @@
 package org.elm.lang.core
 
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiDocumentManager
 import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.directChildren
+import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
 import org.elm.lang.core.psi.indentStyle
 import org.elm.lang.core.psi.startOffset
 import org.elm.utils.getIndent
@@ -38,6 +41,44 @@ val ElmPsiElement.textWithNormalizedIndents: String
         }.joinToString("\n")
     }
 
+val ElmPsiElement.withoutParens: ElmPsiElement get() { return unwrapParensHelp(this) }
+val ElmParenthesizedExpr.withoutExtraParens: ElmParenthesizedExpr get() { return unwrapNestedParensHelp(this) }
+
+val ElmParenthesizedExpr.comments : Sequence<PsiComment>
+    get() {
+    return directChildren.filterIsInstance<PsiComment>()
+}
+
+private fun unwrapParensHelp(expression: ElmPsiElement): ElmPsiElement {
+    return when (expression) {
+        is ElmParenthesizedExpr -> {
+            val nestedExpression = expression.expression
+            if (nestedExpression == null) {
+               expression
+            } else {
+                if (expression.comments.count() == 0) {
+                    unwrapParensHelp(nestedExpression)
+                } else {
+                    expression
+                }
+            }
+        }
+        else -> {
+            expression
+        }
+    }
+}
+
+private fun unwrapNestedParensHelp(expression: ElmParenthesizedExpr): ElmParenthesizedExpr {
+    val nestedExpression = expression.expression
+    return if (nestedExpression == null) {
+        expression
+    } else if (nestedExpression is ElmParenthesizedExpr) {
+        unwrapNestedParensHelp(nestedExpression)
+    } else {
+        expression
+    }
+}
 /**
  * Build a string of indented text lines. Useful for multi-line code generation.
  *

@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
 import com.intellij.lang.PsiBuilder
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiParserFacade
@@ -109,6 +110,77 @@ class ElmPsiFactory(private val project: Project) {
             createFromText("f = $text")
                     ?: error("Invalid value QID: `$text`")
 
+    fun createPipeChain(existingIndent: String, indent: String, valueAndFunctionApplications: List<Any>): ElmParenthesizedExpr {
+        var pipeChainBuilder = ""
+        var visitedExpression = false
+        for (segment in valueAndFunctionApplications) {
+            when (segment) {
+                is String -> {
+                    if (visitedExpression) {
+                        pipeChainBuilder += "\n$existingIndent$indent|> $segment"
+                    } else {
+                        pipeChainBuilder += "\n$existingIndent$indent $segment"
+                    }
+                    visitedExpression = true
+                }
+                is PsiComment -> {
+                    pipeChainBuilder += "\n$existingIndent$indent" + segment.text
+                }
+            }
+
+        }
+        val stringForExpression = "f = \n$existingIndent$indent($pipeChainBuilder\n$existingIndent$indent)"
+        val thing: ElmParenthesizedExpr? = createFromText(stringForExpression)
+        if (thing != null) {
+            return thing
+        } else {
+            return error("Invalid value ElmBinOpExpr: `($pipeChainBuilder\n\n$indent)`")
+        }
+    }
+
+    fun createParens(text: String, indentation: String = "    "): ElmParenthesizedExpr {
+        val createFromText = if (text.lines().size > 1) {
+             createFromText("f = ($text\n$indentation)\n")
+        } else {
+            createFromText<ElmParenthesizedExpr>("f = ($text)")
+        }
+        return createFromText
+                ?: error("Invalid value Paren Expression: `(" +
+                        "$text\n    )`")
+    }
+
+    fun createParensWithComments(comments: List<PsiComment>, text: String, indentation: String = "    "): ElmParenthesizedExpr {
+        val commentsText = comments
+                .map { indentation + it.text }
+                .toList()
+        val textWithComments = commentsText.plus(text).toList().joinToString(separator = "\n").trimStart()
+        val createFromText = if (textWithComments.lines().size > 1) {
+            createFromText<ElmParenthesizedExpr>("f = ($textWithComments\n$indentation)\n")
+        } else {
+            createFromText<ElmParenthesizedExpr>("f = ($textWithComments)")
+        }
+        return createFromText
+                ?: error("Invalid value Paren Expression: `(" +
+                        "$text\n    )`")
+    }
+
+    fun callFunctionWithArgumentAndComments(comments: List<PsiComment>, outer: String, inner: ElmPsiElement, indent: String = ""): ElmParenthesizedExpr {
+        val innerText = inner.text
+        val commentsText = comments.map { indent + it.text }
+        val outerWithComments = commentsText.plus(outer).toList().joinToString(separator = "\n").trimStart()
+        val isMultiline = inner.text.lines().count() > 1 || outerWithComments.lines().count() > 1
+
+
+        val elmParenthesizedExpr: ElmParenthesizedExpr = if (isMultiline) {
+            createFromText("f = ($outerWithComments\n$indent$innerText\n$indent)")
+                    ?: error("Invalid value Paren Expression: `($outer $innerText)`")
+        } else {
+            createFromText("f = ($outerWithComments $innerText)")
+                    ?: error("Invalid value Paren Expression: `($outerWithComments $innerText)`")
+        }
+        return elmParenthesizedExpr
+    }
+
     fun createStringConstant(text: String): ElmStringConstantExpr =
             createFromText("f = $text")
                     ?: error("Invalid string: `$text`")
@@ -157,7 +229,7 @@ class ElmPsiFactory(private val project: Project) {
                 ?: error("Failed to create case of branches from $patterns")
     }
 
-    fun createLetInWrapper(existingIndent: String, indent:String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
+    fun createLetInWrapper(existingIndent: String, indent: String, newDeclName: String, newDeclBody: String, bodyText: String): ElmLetInExpr {
         // NOTE: Assumes that each line in newDeclBody has had its indent normalized to match the indent of the first line.
         //       Each line of newDeclBody must start with a non-whitespace character.
         val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$existingIndent$indent$indent$it" }
