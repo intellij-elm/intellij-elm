@@ -5,23 +5,26 @@ import org.elm.lang.core.psi.ElmBinOpPartTag
 
 sealed class Pipeline {
     abstract val pipeline: ElmBinOpExpr
-    abstract fun segments(): List<PipelineSegment>
+    abstract fun segments(): List<Segment>
+
+    data class Segment(
+            val expressionParts: List<ElmBinOpPartTag>,
+            val comments: List<PsiComment>
+    )
 
     data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
-        override fun segments(): List<PipelineSegment> {
-
-            var segments: List<PipelineSegment> = emptyList()
+        override fun segments(): List<Segment> {
+            val segments = mutableListOf<Segment>()
             var unprocessed = pipeline.parts.toList().reversed()
             while (true) {
                 val currentPipeExpression = unprocessed
                         .takeWhile { !(it is ElmOperator && it.referenceName == "<|") }
                         .reversed()
                 unprocessed = unprocessed.drop(currentPipeExpression.size + 1)
-                val nextToAdd = PipelineSegment(
-                        currentPipeExpression.filterIsInstance<ElmBinOpPartTag>().toList(),
+                segments += Segment(
+                        currentPipeExpression.toList(),
                         currentPipeExpression.filterIsInstance<PsiComment>().toList()
                 )
-                segments = segments.plus(nextToAdd)
 
                 if (currentPipeExpression.isEmpty() || unprocessed.isEmpty()) {
                     return segments
@@ -39,8 +42,8 @@ sealed class Pipeline {
                 }
 
 
-        override fun segments(): List<PipelineSegment> {
-            var segments: List<PipelineSegment> = emptyList()
+        override fun segments(): List<Segment> {
+            var segments: List<Segment> = emptyList()
             var unprocessed = pipeline.partsWithComments
             var nextComments = emptyList<PsiComment>()
             while (true) {
@@ -49,7 +52,7 @@ sealed class Pipeline {
                 if (takeWhile.count() == 0 || unprocessed.count() == 0) {
                     nextComments += takeWhile.filterIsInstance<PsiComment>().toList()
                 }
-                val nextToAdd = PipelineSegment(
+                val nextToAdd = Segment(
                         takeWhile.filterIsInstance<ElmBinOpPartTag>().toList(),
                         nextComments
                 )
@@ -64,5 +67,3 @@ sealed class Pipeline {
     }
 
 }
-
-data class PipelineSegment(val expressionParts: List<ElmBinOpPartTag>, val comments: List<PsiComment>)
