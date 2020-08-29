@@ -106,59 +106,60 @@ private fun replaceUnwrapped(expression: ElmPsiElement, parenExpr: ElmParenthesi
 private fun needsParensInParent(element: ElmPsiElement): Boolean =
         element.parent is ElmBinOpExpr
 
-private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr, associatedComments: List<PsiComment> = emptyList()): List<Any> {
-    return when (nestedFunctionCall.arguments.count()) {
+private fun splitArgAndFunctionApplications(call: ElmFunctionCallExpr, associatedComments: List<PsiComment> = emptyList()): List<Any> {
+    val args = call.arguments
+    return when (args.count()) {
         0 -> {
-            val comments = nestedFunctionCall.comments.toList()
-            listOf(associatedComments, comments, nestedFunctionCall.target.text)
+            listOf(associatedComments, call.comments.toList(), call.target.text)
         }
         else -> {
-            val functionCallString = sequenceOf(nestedFunctionCall.target)
-                    .plus(nestedFunctionCall.arguments.take(nestedFunctionCall.arguments.count() - 1))
-                    .map { it.text }
-                    .joinToString(separator = " ")
+            val functionCallString = sequenceOf(call.target)
+                    .plus(args.take(args.count() - 1))
+                    .joinToString(separator = " ") { it.text }
 
-            val commentsForLastArg = nestedFunctionCall
-                    .arguments
+            val commentsForLastArg = args
                     .last()
                     .prevSiblings
                     .toList()
-                    .takeWhile { it is PsiWhiteSpace || it is PsiComment }.filterIsInstance<PsiComment>()
+                    .takeWhile { it is PsiWhiteSpace || it is PsiComment }
+                    .filterIsInstance<PsiComment>()
 
-            val commentsForPreLastArg = nestedFunctionCall.comments.filter { !commentsForLastArg.contains(it) }
-
-            processArgument(nestedFunctionCall.arguments.last(), commentsForLastArg).plus(associatedComments).plus(commentsForPreLastArg).plus(functionCallString)
+            processArgument(args.last(), commentsForLastArg)
+                    .plus(associatedComments)
+                    .plus(call.comments.filter { it !in commentsForLastArg })
+                    .plus(functionCallString)
         }
     }
 }
 
 private fun processArgument(argument: ElmAtomTag, commentsForLastArg: List<PsiComment>): List<Any> {
-    val firstArgument = argument.withoutParens
-    return if (firstArgument is ElmFunctionCallExpr) {
-        splitArgAndFunctionApplications(firstArgument, commentsForLastArg)
-    } else if (firstArgument.children.size != 1) {
-        listOf(addParensIfNeeded(firstArgument), commentsForLastArg)
-    } else {
-        commentsForLastArg.plus(listOf(addParensIfNeeded(firstArgument)))
+    val arg = argument.withoutParens
+    return when {
+        arg is ElmFunctionCallExpr -> {
+            splitArgAndFunctionApplications(arg, commentsForLastArg)
+        }
+        arg.children.size != 1 -> {
+            listOf(addParensIfNeeded(arg), commentsForLastArg)
+        }
+        else -> {
+            commentsForLastArg + addParensIfNeeded(arg)
+        }
     }
 }
 
-private fun addParensIfNeeded(element: ElmPsiElement): String {
-    return if (needsParens(element)) {
-        "(" + element.text + ")"
-    } else {
-        element.text
-    }
-}
+private fun addParensIfNeeded(element: ElmPsiElement): String =
+        when {
+            needsParens(element) -> "(" + element.text + ")"
+            else -> element.text
+        }
 
-private fun needsParens(element: ElmPsiElement): Boolean {
-    return when (element) {
-        is ElmFunctionCallExpr -> true
-        is ElmBinOpExpr -> true
-        is ElmAnonymousFunctionExpr -> true
-        else -> false
-    }
-}
+private fun needsParens(element: ElmPsiElement): Boolean =
+        when (element) {
+            is ElmFunctionCallExpr,
+            is ElmBinOpExpr,
+            is ElmAnonymousFunctionExpr -> true
+            else -> false
+        }
 
 private val ElmFunctionCallExpr.comments: Sequence<PsiComment>
     get() =
