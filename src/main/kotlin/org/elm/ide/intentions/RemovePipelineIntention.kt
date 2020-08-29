@@ -5,8 +5,15 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
-import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
+import org.elm.lang.core.psi.elements.ElmBinOpExpr
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
+import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
+import org.elm.lang.core.psi.elements.Pipeline
+import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
 
@@ -26,7 +33,7 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
         val psiFactory = ElmPsiFactory(project)
         if (!isMultiline(originalPipeline)) {
-            return originalPipeline.pipelineSegments()
+            return originalPipeline.segments()
                     .withIndex()
                     .fold(initial, { functionCallSoFar, indexedSegment ->
                         val segment = indexedSegment.value
@@ -39,11 +46,11 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                             unwrapIfPossible(psiFactory.createParens(expressionString, indentation))
                         } else {
                             val innerText = listOf(expressionString).joinToString(separator = " ")
-                            unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, innerText , functionCallSoFar, indentation))
+                            unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, innerText, functionCallSoFar, indentation))
                         }
                     })!!
         }
-        return originalPipeline.pipelineSegments()
+        return originalPipeline.segments()
                 .withIndex()
                 .fold(initial, { functionCallSoFar, indexedSegment ->
                     val segment = indexedSegment.value
@@ -54,17 +61,16 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                     if (functionCallSoFar == null) {
                         unwrapIfPossible(
                                 psiFactory.createParensWithComments(segment.comments,
-                                        expressionString
-                                        , indentation )
+                                        expressionString, indentation)
                         )
                     } else {
-                        unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, expressionString , functionCallSoFar, indentation))
+                        unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, expressionString, functionCallSoFar, indentation))
                     }
                 })!!
     }
 
     private fun isMultiline(pipeline: Pipeline): Boolean {
-        val pipelineSegments = pipeline.pipelineSegments()
+        val pipelineSegments = pipeline.segments()
         val hasNewlines = pipelineSegments.any { it.expressionParts.any { part -> part.textContains('\n') } }
         val hasComments = pipelineSegments.any { it.comments.isNotEmpty() }
         return hasNewlines || hasComments

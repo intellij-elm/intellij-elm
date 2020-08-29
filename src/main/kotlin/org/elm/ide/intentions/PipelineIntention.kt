@@ -65,32 +65,29 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
             val psiFactory = ElmPsiFactory(project)
             when (context) {
                 is Context.NoPipes -> {
-                    val indent = context.functionCall.indentStyle.oneLevelOfIndentation
-                    val existingIndent = DocumentUtil.getIndent(editor.document, context.functionCall.startOffset).toString()
-                    val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitArgAndFunctionApplications(context.functionCall))
-                    replaceUnwrapped(context.functionCall, rewrittenWithPipes, psiFactory)
+                    val call = context.functionCall
+                    val indent = call.indentStyle.oneLevelOfIndentation
+                    val existingIndent = DocumentUtil.getIndent(editor.document, call.startOffset).toString()
+                    val splitApplications = splitArgAndFunctionApplications(call)
+                    val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitApplications)
+                    replaceUnwrapped(call, rewrittenWithPipes, psiFactory)
                 }
                 is Context.HasRightPipes -> {
-                    val existingIndent = DocumentUtil.getIndent(editor.document, context.pipelineExpression.pipeline.startOffset).toString()
-                    val indent = context.pipelineExpression.pipeline.indentStyle.oneLevelOfIndentation
-                    val firstSegment = context.pipelineExpression.pipelineSegments().first()
-                    val segments = context.pipelineExpression.pipelineSegments().drop(1).flatMap {
-                        it.comments.plus(it.expressionParts.map { it.text }.joinToString(separator = " "))
+                    val pipe = context.pipelineExpression
+                    val existingIndent = DocumentUtil.getIndent(editor.document, pipe.pipeline.startOffset).toString()
+                    val indent = pipe.pipeline.indentStyle.oneLevelOfIndentation
+                    val firstSegment = pipe.segments().first()
+                    val segments = pipe.segments().drop(1).flatMap {
+                        it.comments.plus(it.expressionParts.joinToString(separator = " ") { it.text })
                     }
-                    val splitApplications =
-                            splitArgAndFunctionApplications(context.pipelineExpression.pipeline.parts.filterIsInstance<ElmFunctionCallExpr>().first())
-                    val valueAndApplications = splitApplications.plus(firstSegment.comments)
-
-                    replaceUnwrapped(context.pipelineExpression.pipeline,
-                            psiFactory.createPipeChain(
-                                    existingIndent,
-                                    indent,
-                                    valueAndApplications
-                                            .plus(segments)
-                            ), psiFactory)
+                    val splitApplications = splitArgAndFunctionApplications(
+                            pipe.pipeline.parts.filterIsInstance<ElmFunctionCallExpr>().first()
+                    )
+                    val valueAndApplications = splitApplications + firstSegment.comments
+                    val rewrittenFullyPiped = psiFactory.createPipeChain(existingIndent, indent, valueAndApplications + segments)
+                    replaceUnwrapped(pipe.pipeline, rewrittenFullyPiped, psiFactory)
                 }
             }
-
         }
     }
 }

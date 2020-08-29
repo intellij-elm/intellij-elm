@@ -5,10 +5,10 @@ import org.elm.lang.core.psi.ElmBinOpPartTag
 
 sealed class Pipeline {
     abstract val pipeline: ElmBinOpExpr
-    abstract fun pipelineSegments(): List<PipelineSegment>
+    abstract fun segments(): List<PipelineSegment>
 
     data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
-        override fun pipelineSegments(): List<PipelineSegment> {
+        override fun segments(): List<PipelineSegment> {
 
             var segments: List<PipelineSegment> = emptyList()
             var unprocessed = pipeline.parts.toList().reversed()
@@ -39,7 +39,7 @@ sealed class Pipeline {
                 }
 
 
-        override fun pipelineSegments(): List<PipelineSegment> {
+        override fun segments(): List<PipelineSegment> {
             var segments: List<PipelineSegment> = emptyList()
             var unprocessed = pipeline.partsWithComments
             var nextComments = emptyList<PsiComment>()
