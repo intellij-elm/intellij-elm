@@ -82,27 +82,25 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
                 })!!
     }
 
-    private fun isMultiline(pipeline: Pipeline): Boolean {
-        val pipelineSegments = pipeline.segments()
-        val hasNewlines = pipelineSegments.any { it.expressionParts.any { part -> part.textContains('\n') } }
-        val hasComments = pipelineSegments.any { it.comments.isNotEmpty() }
-        return hasNewlines || hasComments
-    }
+    private fun isMultiline(pipeline: Pipeline): Boolean =
+            pipeline.segments()
+                    .any { segment ->
+                        segment.comments.isNotEmpty() || segment.expressionParts.any { it.textContains('\n') }
+                    }
 
     private fun unwrapIfPossible(element: ElmParenthesizedExpr): ElmPsiElement {
         val wrapped = element.withoutExtraParens
         return when (val unwrapped = wrapped.withoutParens) {
-            is ElmBinOpExpr -> wrapped
-            is ElmAnonymousFunctionExpr -> wrapped
+            is ElmBinOpExpr,
+            is ElmAnonymousFunctionExpr,
             is ElmFunctionCallExpr -> wrapped
             else -> unwrapped
         }
-
     }
 }
 
 
-fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
+private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
     val unwrapped = when (replaceWith) {
         is ElmParenthesizedExpr -> replaceWith.withoutParens
         else -> replaceWith
