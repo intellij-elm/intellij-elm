@@ -16,7 +16,7 @@ import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
 import org.elm.lang.core.psi.elements.ElmBinOpExpr
 import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
-import org.elm.lang.core.psi.elements.Pipeline
+import org.elm.lang.core.psi.elements.Pipeline.RightPipeline
 import org.elm.lang.core.psi.indentStyle
 import org.elm.lang.core.psi.oneLevelOfIndentation
 import org.elm.lang.core.psi.prevSiblings
@@ -31,49 +31,33 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
 
     sealed class Context {
         data class NoPipes(val functionCall: ElmFunctionCallExpr) : Context()
-        data class HasRightPipes(val pipelineExpression: Pipeline.RightPipeline) : Context()
+        data class HasRightPipes(val pipelineExpression: RightPipeline) : Context()
     }
 
     override fun getText() = "Use pipeline of |>"
     override fun getFamilyName() = text
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-
         // find nearest ancestor (or self) that is
         // 1) a function call with at least one argument, or
         // 2) a pipeline that isn't fully piped (first part of the pipe has at least one argument)
-        return element
-                .ancestors
-                .map { element ->
-                    when (element) {
-                is ElmBinOpExpr -> {
-                    element.asPipeline()?.let { pipeline ->
-                        if (pipeline is Pipeline.RightPipeline && pipeline.isNonNormalizedRightPipeline()) {
-                            Context.HasRightPipes(pipeline)
-                        } else {
-                            null
-                        }
-                    }
-                }
+        element.ancestors.forEach {
+            when (it) {
                 is ElmFunctionCallExpr -> {
-                    if ((element.parent as? ElmBinOpExpr)?.asPipeline() is Pipeline.RightPipeline) {
-                        null
-                    } else {
-                        if (element.arguments.count() > 0) {
-                            Context.NoPipes(element)
-                        } else {
-                            null
+                    if (it.arguments.count() > 0 && !it.isPartOfAPipeline) {
+                        return Context.NoPipes(it)
+                    }
+                }
+                is ElmBinOpExpr -> {
+                    it.asPipeline().let { pipe ->
+                        if (pipe is RightPipeline && pipe.isNotFullyPiped) {
+                            return Context.HasRightPipes(pipe)
                         }
                     }
                 }
-                else -> {
-                    null
-                }
-
             }
         }
-                .filterNotNull()
-                .firstOrNull()
+        return null
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
@@ -186,3 +170,7 @@ private fun needsParens(element: ElmPsiElement): Boolean {
 private val ElmFunctionCallExpr.comments: Sequence<PsiComment>
     get() =
         directChildren.filterIsInstance<PsiComment>()
+
+private val ElmFunctionCallExpr.isPartOfAPipeline: Boolean
+    get() =
+        (parent as? ElmBinOpExpr)?.asPipeline() is RightPipeline
