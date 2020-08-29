@@ -70,7 +70,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     val existingIndent = DocumentUtil.getIndent(editor.document, call.startOffset).toString()
                     val splitApplications = splitArgAndFunctionApplications(call)
                     val rewrittenWithPipes = psiFactory.createPipeChain(existingIndent, indent, splitApplications)
-                    replaceUnwrapped(call, rewrittenWithPipes, psiFactory)
+                    replaceUnwrapped(call, rewrittenWithPipes)
                 }
                 is Context.HasRightPipes -> {
                     val pipe = context.pipelineExpression
@@ -85,30 +85,26 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
                     )
                     val valueAndApplications = splitApplications + firstSegment.comments
                     val rewrittenFullyPiped = psiFactory.createPipeChain(existingIndent, indent, valueAndApplications + segments)
-                    replaceUnwrapped(pipe.pipeline, rewrittenFullyPiped, psiFactory)
+                    replaceUnwrapped(pipe.pipeline, rewrittenFullyPiped)
                 }
             }
         }
     }
 }
 
-fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmParenthesizedExpr, psiFactory: ElmPsiFactory) {
-    val comments = replaceWith.directChildren.filterIsInstance<PsiComment>()
-    val hasComments = comments.toList().isNotEmpty()
-    if (needsParensInParent(expression) || hasComments) {
-        expression.replace(replaceWith.withoutExtraParens)
-    } else {
-        val expression1 = replaceWith.withoutParens
-        expression.replace(expression1)
+private fun replaceUnwrapped(expression: ElmPsiElement, parenExpr: ElmParenthesizedExpr) {
+    val comments = parenExpr.directChildren.filterIsInstance<PsiComment>()
+    val unwrapped = when {
+        needsParensInParent(expression) || comments.count() > 0 ->
+            parenExpr.withoutExtraParens
+        else ->
+            parenExpr.withoutParens
     }
+    expression.replace(unwrapped)
 }
 
-private fun needsParensInParent(element: ElmPsiElement): Boolean {
-    return when (element.parent) {
-        is ElmBinOpExpr -> true
-        else -> false
-    }
-}
+private fun needsParensInParent(element: ElmPsiElement): Boolean =
+        element.parent is ElmBinOpExpr
 
 private fun splitArgAndFunctionApplications(nestedFunctionCall: ElmFunctionCallExpr, associatedComments: List<PsiComment> = emptyList()): List<Any> {
     return when (nestedFunctionCall.arguments.count()) {
