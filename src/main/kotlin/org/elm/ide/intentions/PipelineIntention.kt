@@ -1,6 +1,5 @@
 package org.elm.ide.intentions
 
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
@@ -23,9 +22,10 @@ import org.elm.lang.core.psi.prevSiblings
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
+import org.elm.openapiext.runWriteCommandAction
 
 /**
- * An intention action that transforms a series of function applications to/from a pipeline.
+ * An intention action that transforms a series of function applications into a pipeline.
  */
 class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Context>() {
 
@@ -61,7 +61,7 @@ class PipelineIntention : ElmAtCaretIntentionActionBase<PipelineIntention.Contex
     }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        WriteCommandAction.writeCommandAction(project).run<Throwable> {
+        project.runWriteCommandAction {
             val psiFactory = ElmPsiFactory(project)
             when (context) {
                 is Context.NoPipes -> {

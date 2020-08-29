@@ -1,6 +1,5 @@
 package org.elm.ide.intentions
 
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -16,9 +15,10 @@ import org.elm.lang.core.psi.elements.Pipeline
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
+import org.elm.openapiext.runWriteCommandAction
 
 /**
- * An intention action that transforms a series of function applications to/from a pipeline.
+ * An intention action that transforms a series of function applications from a pipeline.
  */
 class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineIntention.Context>() {
 
@@ -26,7 +26,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
-
 
     private fun normalizePipeline(originalPipeline: Pipeline, project: Project, editor: Editor): ElmPsiElement {
         val initial: ElmPsiElement? = null
@@ -87,37 +86,26 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
 
     }
 
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? {
-        return element
-                .ancestors
-                .filterIsInstance<ElmBinOpExpr>()
-                .firstOrNull()
-                ?.asPipeline()
-                ?.let { Context(it) }
-    }
+    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? =
+            element.ancestors
+                    .filterIsInstance<ElmBinOpExpr>()
+                    .firstOrNull()
+                    ?.asPipeline()
+                    ?.let { Context(it) }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
-        WriteCommandAction.writeCommandAction(project).run<Throwable> {
-            when (val pipeline = context.pipeline) {
-                is Pipeline.RightPipeline -> {
-                    val replaceWith = normalizePipeline(pipeline, project, editor)
-                    replaceUnwrapped(pipeline.pipeline, replaceWith)
-                }
-                is Pipeline.LeftPipeline -> {
-                    replaceUnwrapped(pipeline.pipeline, normalizePipeline(pipeline, project, editor))
-                }
-            }
+        project.runWriteCommandAction {
+            val pipe = context.pipeline
+            replaceUnwrapped(pipe.pipeline, normalizePipeline(pipe, project, editor))
         }
     }
 }
 
 
 fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiElement) {
-    return if (replaceWith is ElmParenthesizedExpr) {
-        expression.replace(replaceWith.withoutParens)
-        Unit
-    } else {
-        expression.replace(replaceWith)
-        Unit
+    val unwrapped = when (replaceWith) {
+        is ElmParenthesizedExpr -> replaceWith.withoutParens
+        else -> replaceWith
     }
+    expression.replace(unwrapped)
 }
