@@ -1,8 +1,12 @@
 package org.elm.lang.core.psi.elements
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiComment
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmAtomTag
+import org.elm.lang.core.psi.ElmExpressionTag
+import org.elm.lang.core.psi.ElmFunctionCallTargetTag
+import org.elm.lang.core.psi.ElmOperandTag
+import org.elm.lang.core.psi.ElmPsiElementImpl
+import org.elm.lang.core.psi.directChildren
 
 
 /**
@@ -32,9 +36,4 @@ class ElmFunctionCallExpr(node: ASTNode) : ElmPsiElementImpl(node), ElmExpressio
     val arguments: Sequence<ElmAtomTag>
         get() =
             directChildren.filterIsInstance<ElmAtomTag>().drop(1)
-
-    /** The comments within the scope of the function call. */
-    val comments: Sequence<PsiComment>
-        get() =
-            directChildren.filterIsInstance<PsiComment>()
 }

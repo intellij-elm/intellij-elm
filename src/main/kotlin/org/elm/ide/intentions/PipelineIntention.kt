@@ -7,8 +7,20 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.util.DocumentUtil
-import org.elm.lang.core.psi.*
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.ElmAtomTag
+import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.directChildren
+import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
+import org.elm.lang.core.psi.elements.ElmBinOpExpr
+import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
+import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
+import org.elm.lang.core.psi.elements.Pipeline
+import org.elm.lang.core.psi.indentStyle
+import org.elm.lang.core.psi.oneLevelOfIndentation
+import org.elm.lang.core.psi.prevSiblings
+import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
 
@@ -170,3 +182,7 @@ private fun needsParens(element: ElmPsiElement): Boolean {
         else -> false
     }
 }
+
+private val ElmFunctionCallExpr.comments: Sequence<PsiComment>
+    get() =
+        directChildren.filterIsInstance<PsiComment>()
