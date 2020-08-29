@@ -3,6 +3,7 @@ package org.elm.lang.core.completion
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.psi.PsiReference
 import com.intellij.util.ProcessingContext
 
 interface Suggestor {
@@ -18,7 +19,7 @@ interface Suggestor {
  */
 class ElmCompletionProvider : CompletionProvider<CompletionParameters>() {
 
-    val suggestors = listOf(ElmQualifiableRefSuggestor, ElmRecordFieldSuggestor, ElmKeywordSuggestor)
+    val suggestors = listOf(ElmQualifiableRefSuggestor, ElmRecordFieldSuggestor, ElmRecordExprSuggestor, ElmKeywordSuggestor)
 
     override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) {
         suggestors.forEach { it.addCompletions(parameters, result) }
