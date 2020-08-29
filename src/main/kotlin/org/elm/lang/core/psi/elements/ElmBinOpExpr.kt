@@ -3,11 +3,7 @@ package org.elm.lang.core.psi.elements
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
-import org.elm.lang.core.psi.ElmAtomTag
-import org.elm.lang.core.psi.ElmBinOpPartTag
-import org.elm.lang.core.psi.ElmExpressionTag
-import org.elm.lang.core.psi.ElmPsiElementImpl
-import org.elm.lang.core.psi.directChildren
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.Pipeline.LeftPipeline
 import org.elm.lang.core.psi.elements.Pipeline.RightPipeline
 

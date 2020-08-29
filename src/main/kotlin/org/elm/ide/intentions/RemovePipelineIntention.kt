@@ -7,11 +7,7 @@ import com.intellij.util.DocumentUtil
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.ancestors
-import org.elm.lang.core.psi.elements.ElmAnonymousFunctionExpr
-import org.elm.lang.core.psi.elements.ElmBinOpExpr
-import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
-import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
-import org.elm.lang.core.psi.elements.Pipeline
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
