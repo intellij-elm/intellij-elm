@@ -45,48 +45,36 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
         val initial: ElmPsiElement? = null
         val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
         val psiFactory = ElmPsiFactory(project)
-        if (!isMultiline(originalPipeline)) {
-            return originalPipeline.segments()
-                    .withIndex()
-                    .fold(initial, { functionCallSoFar, indexedSegment ->
-                        val segment = indexedSegment.value
-                        val indentation = existingIndent + "    ".repeat(indexedSegment.index)
-                        val expressionString = segment.expressionParts
-                                .map { it.text }
-                                .toList()
-                                .joinToString(separator = " ")
-                        if (functionCallSoFar == null) {
-                            unwrapIfPossible(psiFactory.createParens(expressionString, indentation))
-                        } else {
-                            val innerText = listOf(expressionString).joinToString(separator = " ")
-                            unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, innerText, functionCallSoFar, indentation))
-                        }
-                    })!!
-        }
+        val isMultiline = isMultiline(originalPipeline)
         return originalPipeline.segments()
                 .withIndex()
                 .fold(initial, { functionCallSoFar, indexedSegment ->
                     val segment = indexedSegment.value
                     val indentation = existingIndent + "    ".repeat(indexedSegment.index)
-                    val expressionString = segment.expressionParts
-                            .map { indentation + it.text }
-                            .toList().joinToString(separator = " ")
-                    if (functionCallSoFar == null) {
-                        unwrapIfPossible(
-                                psiFactory.createParensWithComments(segment.comments,
-                                        expressionString, indentation)
-                        )
-                    } else {
-                        unwrapIfPossible(psiFactory.callFunctionWithArgumentAndComments(segment.comments, expressionString, functionCallSoFar, indentation))
+                    val expressionString = segment.expressionParts.joinToString(" ") {
+                        when {
+                            isMultiline -> indentation + it.text
+                            else -> it.text
+                        }
                     }
+                    val psi = when {
+                        functionCallSoFar != null ->
+                            psiFactory.callFunctionWithArgumentAndComments(segment.comments, expressionString, functionCallSoFar, indentation)
+
+                        isMultiline ->
+                            psiFactory.createParensWithComments(segment.comments, expressionString, indentation)
+
+                        else ->
+                            psiFactory.createParens(expressionString, indentation)
+                    }
+                    unwrapIfPossible(psi)
                 })!!
     }
 
     private fun isMultiline(pipeline: Pipeline): Boolean =
-            pipeline.segments()
-                    .any { segment ->
-                        segment.comments.isNotEmpty() || segment.expressionParts.any { it.textContains('\n') }
-                    }
+            pipeline.segments().any { segment ->
+                segment.comments.isNotEmpty() || segment.expressionParts.any { it.textContains('\n') }
+            }
 
     private fun unwrapIfPossible(element: ElmParenthesizedExpr): ElmPsiElement {
         val wrapped = element.withoutExtraParens
