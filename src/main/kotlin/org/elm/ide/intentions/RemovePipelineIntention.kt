@@ -27,6 +27,20 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getText() = "Remove Pipes"
     override fun getFamilyName() = text
 
+    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? =
+            element.ancestors
+                    .filterIsInstance<ElmBinOpExpr>()
+                    .firstOrNull()
+                    ?.asPipeline()
+                    ?.let { Context(it) }
+
+    override fun invoke(project: Project, editor: Editor, context: Context) {
+        project.runWriteCommandAction {
+            val pipe = context.pipeline
+            replaceUnwrapped(pipe.pipeline, normalizePipeline(pipe, project, editor))
+        }
+    }
+
     private fun normalizePipeline(originalPipeline: Pipeline, project: Project, editor: Editor): ElmPsiElement {
         val initial: ElmPsiElement? = null
         val existingIndent = DocumentUtil.getIndent(editor.document, originalPipeline.pipeline.startOffset).toString()
@@ -84,20 +98,6 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
             else -> unwrapped
         }
 
-    }
-
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? =
-            element.ancestors
-                    .filterIsInstance<ElmBinOpExpr>()
-                    .firstOrNull()
-                    ?.asPipeline()
-                    ?.let { Context(it) }
-
-    override fun invoke(project: Project, editor: Editor, context: Context) {
-        project.runWriteCommandAction {
-            val pipe = context.pipeline
-            replaceUnwrapped(pipe.pipeline, normalizePipeline(pipe, project, editor))
-        }
     }
 }
 
