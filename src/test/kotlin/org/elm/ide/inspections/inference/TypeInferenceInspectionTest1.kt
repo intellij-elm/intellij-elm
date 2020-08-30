@@ -83,7 +83,7 @@ main = <error descr="Type mismatch.Required: ((), (), ())Found: ((), ())">((), (
 
     fun `test mismatched tuple value type from wrong field type`() = checkByText("""
 main : ((), ())
-main = <error descr="Type mismatch.Required: ((), ())Found: (Float, ())">(1.0, ())</error>
+main = (<error descr="Type mismatch.Required: ()Found: Float">1.0</error>, ())
 """)
 
     fun `test mismatched tuple value type from extra field`() = checkByText("""

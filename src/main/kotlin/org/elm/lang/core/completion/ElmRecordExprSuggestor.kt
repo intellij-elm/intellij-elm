@@ -14,7 +14,8 @@ object ElmRecordExprSuggestor : Suggestor {
         val pos = parameters.position
         val field = pos.parent as? ElmField ?: return
         val record = field.parent as? ElmRecordExpr ?: return
-        val diff = record.findInference()?.recordDiffs?.get(record) ?: return
+        val findInference = record.findInference()
+        val diff = findInference?.recordDiffs?.get(record) ?: return
 
         val needsEquals = field.lowerCaseIdentifier.text.endsWith(EMPTY_RECORD_FIELD_DUMMY_IDENTIFIER)
 

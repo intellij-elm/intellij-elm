@@ -1043,6 +1043,11 @@ private class InferenceScope(
         if (!assignable) {
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
+
+            if (generateTupleTypeMismatchError(element, ty1, ty2)) {
+                return false
+            }
+
             val diff = if (t1 is TyRecord && t2 is TyRecord) calcRecordDiff(t1, t2) else null
             // For let expressions, show the diagnostic on its value expression
             // rather than the whole thing.
@@ -1053,6 +1058,21 @@ private class InferenceScope(
             }
         }
         return assignable
+    }
+
+    /**
+     * Generate type errors for specific tuple elements that mismatch rather than the entire tuple
+     * @return true if this function handled generating errors for the [element]
+     */
+    private fun generateTupleTypeMismatchError(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
+        if (element !is ElmTupleExpr || ty1 !is TyTuple || ty2 !is TyTuple || ty1.types.size != ty2.types.size) {
+            return false
+        }
+        val expressionList = element.expressionList
+        for (i in expressionList.indices) {
+            requireAssignable(expressionList[i], ty1.types[i], ty2.types[i])
+        }
+        return true
     }
 
     /**

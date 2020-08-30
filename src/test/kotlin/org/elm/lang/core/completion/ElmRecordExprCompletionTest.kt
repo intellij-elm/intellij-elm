@@ -190,4 +190,14 @@ f =
     { second = { third = Baz { foo = {-caret-} } } }
 """
     )
+
+    fun `test inside tuple`() = doSingleCompletion("""
+f : ({ foo : () }, ())
+f =
+    ({ f{-caret-} }, ())
+""", """
+f : ({ foo : () }, ())
+f =
+    ({ foo = {-caret-} }, ())
+""")
 }
