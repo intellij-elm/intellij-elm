@@ -85,10 +85,16 @@ private class InferenceScope(
      */
     private val resolvedDeclarations: MutableMap<ElmValueDeclaration, Ty> = parent?.resolvedDeclarations
             ?: mutableMapOf()
+
     /** names declared in parameters and patterns */
     private val bindings: MutableMap<ElmNamedElement, Ty> = mutableMapOf()
+
     /** errors encountered during inference */
     private val diagnostics: MutableList<ElmDiagnostic> = mutableListOf()
+
+    /** Record diffs for elements that have a type error */
+    private val recordDiffs: MutableMap<ElmPsiElement, RecordDiff> = mutableMapOf()
+
     /**
      * If this scope is a let-in, this set contains declarations that are direct children of this scope.
      *
@@ -96,6 +102,7 @@ private class InferenceScope(
      * so that we can find which ancestor to start inference from.
      */
     private val childDeclarations: MutableSet<ElmValueDeclaration> = mutableSetOf()
+
     /** The inferred types of elements that should be exposed through documentation. */
     private val expressionTypes: MutableMap<ElmPsiElement, Ty> = mutableMapOf()
 
@@ -178,7 +185,7 @@ private class InferenceScope(
         val bodyTy = inferExpression(expr)
         checkToplevelCaseBranches(expr, bodyTy)
 
-        return InferenceResult(expressionTypes, diagnostics, TyFunction(paramVars, bodyTy).uncurry())
+        return InferenceResult(expressionTypes, diagnostics, recordDiffs, TyFunction(paramVars, bodyTy).uncurry())
     }
 
     private fun beginLetInInference(letIn: ElmLetInExpr): InferenceResult {
@@ -197,7 +204,7 @@ private class InferenceScope(
         val exprTy = inferExpression(expr)
         checkToplevelCaseBranches(expr, exprTy)
 
-        return InferenceResult(expressionTypes, diagnostics, exprTy)
+        return InferenceResult(expressionTypes, diagnostics, recordDiffs, exprTy)
     }
 
     private fun beginCaseBranchInference(
@@ -207,7 +214,7 @@ private class InferenceScope(
     ): InferenceResult {
         bindPattern(pattern, caseTy, false)
         val ty = inferExpression(branchExpression)
-        return InferenceResult(expressionTypes, diagnostics, ty)
+        return InferenceResult(expressionTypes, diagnostics, recordDiffs, ty)
     }
 
     private inline fun inferChild(
@@ -217,6 +224,7 @@ private class InferenceScope(
     ): InferenceResult {
         val result = InferenceScope(shadowableNames.toMutableSet(), activeScopes, recursionAllowed, this).block()
         diagnostics += result.diagnostics
+        recordDiffs += result.recordDiffs
         expressionTypes += result.expressionTypes
         return result
     }
@@ -282,7 +290,7 @@ private class InferenceScope(
         val outerVars = ancestors.drop(1).flatMap { it.annotationVars.asSequence() }.toList()
         val ret = TypeReplacement.replace(ty, replacements, outerVars)
         if (replaceExpressionTypes) freeze(ret)
-        return InferenceResult(exprs, diagnostics, ret)
+        return InferenceResult(exprs, diagnostics, recordDiffs, ret)
     }
 
     //</editor-fold>
@@ -585,7 +593,10 @@ private class InferenceScope(
             val expected = baseFields[name.text]
             if (expected == null) {
                 if (baseTy is TyRecord) {
-                    if (!baseTy.isSubset) diagnostics += RecordFieldError(name, name.text)
+                    if (!baseTy.isSubset) {
+                        diagnostics += RecordFieldError(name, name.text)
+                        recordDiffs[record] = calcRecordDiff(TyRecord(fields.mapKeys { (k, _) -> k.text }), baseTy)
+                    }
                 } else if (baseTy is MutableTyRecord) {
                     baseTy.fields[name.text] = ty
                 }
@@ -987,6 +998,7 @@ private class InferenceScope(
                 // For pattern declarations, the elm compiler issues diagnostics on the expression
                 // rather than the pattern, but it's easier for us to issue them on the pattern instead.
                 diagnostics += TypeMismatchError(pat, actualTy, ty, patternBinding = true, recordDiff = recordDiff)
+                recordDiff?.let { recordDiffs[pat] = it }
             }
 
             for (f in fields) {
@@ -1031,13 +1043,36 @@ private class InferenceScope(
         if (!assignable) {
             val t1 = TypeReplacement.replace(ty1, replacements)
             val t2 = TypeReplacement.replace(ty2, replacements)
+
+            if (generateTupleTypeMismatchError(element, ty1, ty2)) {
+                return false
+            }
+
             val diff = if (t1 is TyRecord && t2 is TyRecord) calcRecordDiff(t1, t2) else null
             // For let expressions, show the diagnostic on its value expression
             // rather than the whole thing.
             val errorElement = (element as? ElmLetInExpr)?.expression ?: element
             diagnostics += TypeMismatchError(errorElement, t1, t2, endElement, patternBinding, diff)
+            if (diff != null && element is ElmRecordExpr) {
+                recordDiffs[element] = diff
+            }
         }
         return assignable
+    }
+
+    /**
+     * Generate type errors for specific tuple elements that mismatch rather than the entire tuple
+     * @return true if this function handled generating errors for the [element]
+     */
+    private fun generateTupleTypeMismatchError(element: PsiElement, ty1: Ty, ty2: Ty): Boolean {
+        if (element !is ElmTupleExpr || ty1 !is TyTuple || ty2 !is TyTuple || ty1.types.size != ty2.types.size) {
+            return false
+        }
+        val expressionList = element.expressionList
+        for (i in expressionList.indices) {
+            requireAssignable(expressionList[i], ty1.types[i], ty2.types[i])
+        }
+        return true
     }
 
     /**
@@ -1323,11 +1358,15 @@ private class InferenceScope(
 /**
  * @property expressionTypes the types for any psi elements inferred that should be available to inspections
  * @property diagnostics any errors encountered during inference
+ * @property recordDiffs record diffs for elements that have a type error
  * @property ty the return type of the function or expression being inferred
  */
-data class InferenceResult(val expressionTypes: Map<ElmPsiElement, Ty>,
-                           val diagnostics: List<ElmDiagnostic>,
-                           val ty: Ty) {
+data class InferenceResult(
+        val expressionTypes: Map<ElmPsiElement, Ty>,
+        val diagnostics: List<ElmDiagnostic>,
+        val recordDiffs: Map<ElmPsiElement, RecordDiff>,
+        val ty: Ty
+) {
     fun elementType(element: ElmPsiElement): Ty = expressionTypes[element] ?: TyUnknown()
 }
 

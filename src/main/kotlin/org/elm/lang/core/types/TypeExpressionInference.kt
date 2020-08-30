@@ -149,7 +149,7 @@ class TypeExpression(
 
     fun beginTypeRefInference(typeExpr: ElmTypeExpression): InferenceResult {
         val ty = typeExpressionType(typeExpr)
-        return InferenceResult(expressionTypes, diagnostics, ty)
+        return InferenceResult(expressionTypes, diagnostics, emptyMap(), ty)
     }
 
     fun beginTypeDeclarationInference(typeDeclaration: ElmTypeDeclaration): ParameterizedInferenceResult<TyUnion> {

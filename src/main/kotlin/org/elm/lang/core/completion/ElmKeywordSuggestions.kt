@@ -10,10 +10,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.elementType
-import org.elm.lang.core.psi.elements.ElmCaseOfExpr
-import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
-import org.elm.lang.core.psi.elements.ElmIfElseExpr
-import org.elm.lang.core.psi.elements.ElmLetInExpr
+import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.prevLeaves
 import org.elm.lang.core.psi.withoutErrors
 
@@ -26,6 +23,9 @@ object ElmKeywordSuggestor : Suggestor {
         val pos = parameters.position
         val parent = pos.parent
         val grandParent = pos.parent?.parent
+
+        // Don't suggest keywords for record expression field names
+        if (grandParent is ElmRecordExpr) return
 
         if (pos.elementType == LOWER_CASE_IDENTIFIER) {
             // NOTE TO SELF:
