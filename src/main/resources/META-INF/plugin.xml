@@ -404,6 +404,11 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmTopLevelDestructuringInspection"/>
 
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="Unused left pipe"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="org.elm.ide.inspections.ElmUnusedLeftPipeInspection"/>
+
 
         <!-- Intentions -->
 
