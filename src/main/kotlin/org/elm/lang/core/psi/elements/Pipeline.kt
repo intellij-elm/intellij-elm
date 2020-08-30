@@ -41,29 +41,59 @@ sealed class Pipeline {
                     else -> false
                 }
 
-
         override fun segments(): List<Segment> {
-            var segments: List<Segment> = emptyList()
-            var unprocessed = pipeline.partsWithComments
-            var nextComments = emptyList<PsiComment>()
-            while (true) {
-                val takeWhile = unprocessed.takeWhile { !(it is ElmOperator && it.referenceName == "|>") }
-                unprocessed = unprocessed.drop(takeWhile.count() + 1)
-                if (takeWhile.count() == 0 || unprocessed.count() == 0) {
-                    nextComments += takeWhile.filterIsInstance<PsiComment>().toList()
-                }
-                val nextToAdd = Segment(
-                        takeWhile.filterIsInstance<ElmBinOpPartTag>().toList(),
-                        nextComments
-                )
-                nextComments = takeWhile.filterIsInstance<PsiComment>().toList()
-                segments = segments.plus(nextToAdd)
+            val initial =
+                    listOf(Pair(listOf<PsiComment>(), listOf<ElmBinOpPartTag>()))
 
-                if (takeWhile.count() == 0 || unprocessed.count() == 0) {
-                    return segments
+            val splitPipeline = pipeline.partsWithComments.toList().fold(initial, { acc, it ->
+                if (it is ElmOperator && it.referenceName == "|>") {
+                    // add new segment group to the stack
+                    appendEmptyList(acc)
+                } else {
+                    mapLast(acc) { elementList ->
+                        when (it) {
+                            is PsiComment -> {
+                                 Pair(elementList.first.plus(it), elementList.second)
+                            }
+                            is ElmBinOpPartTag -> {
+                                Pair(elementList.first, elementList.second.plus(it))
+                            } else -> {
+                                TODO()
+                            }
+                        }
+                    }
                 }
+            })
+
+            val allComments = splitPipeline.map { it.first }
+            val allExpressions = splitPipeline.map { it.second }
+
+            val allCommentsMapped =
+                    mutableListOf<List<PsiComment>>()
+            allCommentsMapped.add(emptyList())
+            allCommentsMapped.addAll(allComments)
+            return allCommentsMapped.zip(allExpressions).map { pair ->
+                        Segment(pair.second, pair.first)
             }
         }
+
     }
 
+}
+
+private fun mapLast(acc: List<Pair<List<PsiComment>, List<ElmBinOpPartTag>>>, list: (Pair<List<PsiComment>, List<ElmBinOpPartTag>>) -> Pair<List<PsiComment>, List<ElmBinOpPartTag>>): List<Pair<List<PsiComment>, List<ElmBinOpPartTag>>> {
+    return acc.mapIndexed { index, elementList ->
+        if (index == acc.count() - 1) {
+            list(elementList)
+        } else {
+            elementList
+        }
+    }
+}
+
+private fun appendEmptyList(acc: List<Pair<List<PsiComment>, List<ElmBinOpPartTag>>>): List<Pair<List<PsiComment>, List<ElmBinOpPartTag>>> {
+    listOf(Pair(listOf<PsiComment>(), listOf<ElmBinOpPartTag>()))
+    val array = acc.toMutableList()
+    array.add(Pair(emptyList(), emptyList()))
+    return array.toList()
 }
