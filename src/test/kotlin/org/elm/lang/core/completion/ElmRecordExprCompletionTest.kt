@@ -80,13 +80,6 @@ f =
     { foo = {-caret-} }
 """)
 
-    fun `test leaf of nested record`() = checkNoCompletion(
-            """
-f : { foo : { bar: () } }
-f =
-    { foo = { s{-caret-} } }
-""")
-
     fun `test custom type declaration`() = doSingleCompletion(
             """
 type Bar = Baz { foo : () }
