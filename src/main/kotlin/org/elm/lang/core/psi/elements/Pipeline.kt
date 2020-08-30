@@ -68,17 +68,25 @@ sealed class Pipeline {
             val allComments = splitPipeline.map { it.first }
             val allExpressions = splitPipeline.map { it.second }
 
-            val allCommentsMapped =
-                    mutableListOf<List<PsiComment>>()
-            allCommentsMapped.add(emptyList())
-            allCommentsMapped.addAll(allComments)
-            return allCommentsMapped.zip(allExpressions).map { pair ->
+            return shiftComments(allComments).zip(allExpressions).map { pair ->
                         Segment(pair.second, pair.first)
             }
         }
 
     }
 
+}
+
+/* This gets us comments that will be empty at the top, and combines the last two lists of comments to ensure that the list size stays the same.
+   We might be able to simplify this in the future by changing the logic for how we traverse a pipeline to extract its comments, and/or
+   changing the logic for the order that we put comments from a Segment relative to the expressions. */
+private fun shiftComments(allComments: List<List<PsiComment>>): MutableList<List<PsiComment>> {
+    val allCommentsMapped = mutableListOf<List<PsiComment>>()
+    allCommentsMapped.add(emptyList())
+    allCommentsMapped.addAll(allComments)
+    val lastTwo = allCommentsMapped.dropLast(2)
+    allCommentsMapped.add(lastTwo.flatten())
+    return allCommentsMapped
 }
 
 private fun mapLast(acc: List<Pair<List<PsiComment>, List<ElmBinOpPartTag>>>, list: (Pair<List<PsiComment>, List<ElmBinOpPartTag>>) -> Pair<List<PsiComment>, List<ElmBinOpPartTag>>): List<Pair<List<PsiComment>, List<ElmBinOpPartTag>>> {
