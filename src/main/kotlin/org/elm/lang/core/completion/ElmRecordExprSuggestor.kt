@@ -14,8 +14,7 @@ object ElmRecordExprSuggestor : Suggestor {
         val pos = parameters.position
         val field = pos.parent as? ElmField ?: return
         val record = field.parent as? ElmRecordExpr ?: return
-        val findInference = record.findInference()
-        val diff = findInference?.recordDiffs?.get(record) ?: return
+        val diff = record.findInference()?.recordDiffs?.get(record) ?: return
 
         val needsEquals = field.lowerCaseIdentifier.text.endsWith(EMPTY_RECORD_FIELD_DUMMY_IDENTIFIER)
 
@@ -26,7 +25,13 @@ object ElmRecordExprSuggestor : Suggestor {
 }
 
 private fun CompletionResultSet.add(needsEquals: Boolean, str: String, field: Ty) {
-    val s = if (needsEquals) "$str = " else str
-    addElement(LookupElementBuilder.create(s)
-            .withTypeText(field.renderedText()))
+    addElement(LookupElementBuilder.create(str)
+            .withTypeText(field.renderedText())
+            .withInsertHandler { context, _ ->
+                if (needsEquals) {
+                    val tailOffset = context.tailOffset
+                    context.document.insertString(tailOffset, " = ")
+                    context.editor.caretModel.moveToOffset(tailOffset + 3)
+                }
+            })
 }
