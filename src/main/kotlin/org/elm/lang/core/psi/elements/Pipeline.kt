@@ -5,23 +5,26 @@ import org.elm.lang.core.psi.ElmBinOpPartTag
 
 sealed class Pipeline {
     abstract val pipeline: ElmBinOpExpr
-    abstract fun pipelineSegments(): List<PipelineSegment>
+    abstract fun segments(): List<Segment>
 
-        data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
-        override fun pipelineSegments(): List<PipelineSegment> {
+    data class Segment(
+            val expressionParts: List<ElmBinOpPartTag>,
+            val comments: List<PsiComment>
+    )
 
-            var segments: List<PipelineSegment> = emptyList()
+    data class LeftPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
+        override fun segments(): List<Segment> {
+            val segments = mutableListOf<Segment>()
             var unprocessed = pipeline.parts.toList().reversed()
-            while (true)  {
+            while (true) {
                 val currentPipeExpression = unprocessed
                         .takeWhile { !(it is ElmOperator && it.referenceName == "<|") }
                         .reversed()
                 unprocessed = unprocessed.drop(currentPipeExpression.size + 1)
-                val nextToAdd = PipelineSegment(
-                        currentPipeExpression.filterIsInstance<ElmBinOpPartTag>().toList(),
+                segments += Segment(
+                        currentPipeExpression.toList(),
                         currentPipeExpression.filterIsInstance<PsiComment>().toList()
                 )
-                segments = segments.plus(nextToAdd)
 
                 if (currentPipeExpression.isEmpty() || unprocessed.isEmpty()) {
                     return segments
@@ -31,23 +34,16 @@ sealed class Pipeline {
     }
 
     data class RightPipeline(override val pipeline: ElmBinOpExpr) : Pipeline() {
-        fun isNonNormalizedRightPipeline(): Boolean {
-            return run {
-                val firstPart =
-                        pipeline
-                                .parts
-                                .firstOrNull()
-                if (firstPart is ElmFunctionCallExpr) {
-                    firstPart.arguments.count() > 0
-                } else {
-                    false
+        val isNotFullyPiped: Boolean
+            get() =
+                when (val firstPart = pipeline.parts.firstOrNull()) {
+                    is ElmFunctionCallExpr -> firstPart.arguments.count() > 0
+                    else -> false
                 }
-            }
-        }
 
 
-        override fun pipelineSegments(): List<PipelineSegment> {
-            var segments: List<PipelineSegment> = emptyList()
+        override fun segments(): List<Segment> {
+            var segments: List<Segment> = emptyList()
             var unprocessed = pipeline.partsWithComments
             var nextComments = emptyList<PsiComment>()
             while (true) {
@@ -56,7 +52,7 @@ sealed class Pipeline {
                 if (takeWhile.count() == 0 || unprocessed.count() == 0) {
                     nextComments += takeWhile.filterIsInstance<PsiComment>().toList()
                 }
-                val nextToAdd = PipelineSegment(
+                val nextToAdd = Segment(
                         takeWhile.filterIsInstance<ElmBinOpPartTag>().toList(),
                         nextComments
                 )
@@ -71,5 +67,3 @@ sealed class Pipeline {
     }
 
 }
-
-data class PipelineSegment(val expressionParts: List<ElmBinOpPartTag>, val comments: List<PsiComment>)
