@@ -4,11 +4,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmPsiFactory
-import org.elm.lang.core.psi.ancestors
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
 import org.elm.openapiext.runWriteCommandAction
@@ -24,11 +21,9 @@ class RemovePipelineIntention : ElmAtCaretIntentionActionBase<RemovePipelineInte
     override fun getFamilyName() = text
 
     override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): Context? =
-            element.ancestors
-                    .filterIsInstance<ElmBinOpExpr>()
-                    .firstOrNull()
-                    ?.asPipeline()
-                    ?.let { Context(it) }
+            element.ancestors.filter(::isPipelineOperator).firstOrNull()?.let {
+                (it.parent as? ElmBinOpExpr)?.asPipeline()?.let { Context(it) }
+            }
 
     override fun invoke(project: Project, editor: Editor, context: Context) {
         project.runWriteCommandAction {
@@ -90,4 +85,8 @@ private fun replaceUnwrapped(expression: ElmPsiElement, replaceWith: ElmPsiEleme
         else -> replaceWith
     }
     expression.replace(unwrapped)
+}
+
+fun isPipelineOperator(element: PsiElement): Boolean {
+    return element is ElmOperator && (element.referenceName == "|>" || element.referenceName == "<|")
 }

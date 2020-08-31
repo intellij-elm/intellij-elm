@@ -9,7 +9,7 @@ class RemovePipelineIntentionTest : ElmIntentionTestBase(RemovePipelineIntention
 module Foo exposing (list)
 
 list =
-    [1, 2, 3, 4] |> List.ma{-caret-}p times2
+    [1, 2, 3, 4] |{-caret-}> List.map times2
 
 times2 m n = m * n
 """, """
@@ -31,7 +31,7 @@ list =
     [1, 2, 3, 4] {- List.map 1 -}
         -- List.map 2
         {- List.map 3 -}
-        |> List.ma{-caret-}p times2 -- identity 1
+        {-caret-}|> List.map times2 -- identity 1
         -- identity 2
         |> identity -- end of line
 
@@ -60,8 +60,8 @@ times2 m n = m * n
 module Foo exposing (value)
 
 value =
-    Editor.i{-caret-}nitEdit session slug
-        |> updateWith (Editor (Just slug)) GotEditorMsg model
+    Editor.initEdit session slug
+        {-caret-}|> updateWith (Editor (Just slug)) GotEditorMsg model
 """, """
 module Foo exposing (value)
 
@@ -76,7 +76,7 @@ module Foo exposing (value)
 value msg =
     ( msg, True )
         |> Decode.succeed
-        |> stop{-caret-}PropagationOn "click"
+        {-caret-}|> stopPropagationOn "click"
 """, """
 module Foo exposing (value)
 
@@ -91,7 +91,7 @@ module Foo exposing (toggleFavoriteButton)
 toggleFavoriteButton classStr msg attrs kids =
     i [ class "ion-heart" ] []
         :: kids
-        |> Html.but{-caret-}ton (class classStr :: onClickStopPropagation msg :: attrs)
+        {-caret-}|> Html.button (class classStr :: onClickStopPropagation msg :: attrs)
 """, """
 module Foo exposing (toggleFavoriteButton)
 
@@ -104,7 +104,7 @@ toggleFavoriteButton classStr msg attrs kids =
 module Foo exposing (example)
 
 example =
-    flo{-caret-}or <| 1.3 + 4
+    floor {-caret-}<| 1.3 + 4
 """, """
 module Foo exposing (example)
 
@@ -119,7 +119,7 @@ module Foo exposing (example)
 
 example =
     (\fn -> fn [])
-        |> List.m{-caret-}ap
+        {-caret-}|> List.map
 """, """
 module Foo exposing (example)
 
@@ -139,7 +139,7 @@ src (Avatar maybeUrl) =
             identity
                 (Asset.defaultAvatar
                     -- asdf
-                    |> Asse{-caret-}t.src
+                    |>{-caret-} Asset.src
                 ) 
 
         Just "" ->
@@ -296,9 +296,9 @@ src (Avatar maybeUrl) =
     case maybeUrl of
         Nothing ->
             -- user isn't logged in - use guest avatar
-            Asset.defau{-caret-}ltAvatar
+            Asset.defaultAvatar
                 -- normalizes trailing and leading /'s
-                |> normalizeImageUrl
+                {-caret-}|> normalizeImageUrl
                 -- sets the HTML src
                 |> Asset.src
 
@@ -338,7 +338,7 @@ module Foo exposing (example)
 
 example =
     []
-        |> List.m{-caret-}ap
+        {-caret-}|> List.map
             (identity
                 identity
             )
@@ -371,8 +371,8 @@ module Foo exposing (example)
 example =
     -- NotFound.view
     NotFound.view
-        |> -- Page.view
-           Page.v{-caret-}iew
+        {-caret-}|> -- Page.view
+           Page.view
             -- viewer
             viewer
             Page.Other
@@ -400,9 +400,9 @@ module Foo exposing (example)
 example =
     -- NotFound.view
     -- Page.view
-    NotFound.vi{-caret-}ew
+    NotFound.view
         -- viewer
-        |> Page.view viewer Page.Other
+        {-caret-}|> Page.view viewer Page.Other
 
 """, """
 module Foo exposing (example)
