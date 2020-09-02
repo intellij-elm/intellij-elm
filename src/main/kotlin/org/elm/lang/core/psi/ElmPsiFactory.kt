@@ -256,6 +256,10 @@ class ElmPsiFactory(private val project: Project) {
                     .createFileFromText("DUMMY.elm", ElmFileType, code)
                     .children.asList()
 
+    fun createTypeWithVariantsExposure(typeName: String): ElmExposedType =
+        createFromText("module Foo exposing ($typeName(..))")
+            ?: error("Failed to create type exposure")
+
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)

@@ -1,7 +1,9 @@
-package org.elm.ide.intentions
+package org.elm.ide.intentions.exposure
+
+import org.elm.ide.intentions.ElmIntentionTestBase
 
 
-class RemoveExposureIntentionTest : ElmIntentionTestBase(RemoveExposureIntention()) {
+class StopExposingIntentionTest : ElmIntentionTestBase(StopExposingIntention()) {
 
 
     fun `test hide the first value in the exposing list`() = doAvailableTest("""

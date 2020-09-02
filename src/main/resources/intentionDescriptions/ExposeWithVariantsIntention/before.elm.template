@@ -1,0 +1,7 @@
+module User exposing (<spot>name</spot>)
+
+name = "Bob"
+
+type UserType
+    = Guest
+    | Admin
