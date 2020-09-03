@@ -36,6 +36,13 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.2.0</b> <em>(2020-09-03)</em>
+                <ul>
+                    <li>Added intention for creating (and removing) pipelines</li>
+                    <li>Added code completion for fields in record expressions</li>
+                    <li>Fixed an exception that could occur when elm-format runs automatically on-save</li>
+                </ul>
+            </li>
             <li><b>4.1.0</b> <em>(2020-08-27)</em>
                 <ul>
                     <li>Automatically configures path to Elm tools and the `elm.json` file</li>
