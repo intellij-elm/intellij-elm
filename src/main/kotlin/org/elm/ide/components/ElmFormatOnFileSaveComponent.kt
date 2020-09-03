@@ -37,20 +37,15 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
                         val elmVersion = ElmFormatCLI.getElmVersion(project, vFile) ?: return
                         val elmFormat = project.elmToolchain.elmFormatCLI ?: return
 
-                        val editor = EditorFactory.getInstance().getEditors(document).first()
-
                         val result = elmFormat.formatDocumentAndSetText(project, document, elmVersion, addToUndoStack = false)
-
                         when (result) {
-                            is ElmFormatResult.BadSyntax -> {
-                                project.showBalloon(result.msg, NotificationType.WARNING, "Show Errors" to {
-                                    val action = ActionManager.getInstance().getAction(ELM_BUILD_ACTION_ID)!!
-                                    executeAction(action, "elm-format-notif", DataManager.getInstance().getDataContext(editor.component))
-                                })
-                            }
+                            is ElmFormatResult.BadSyntax ->
+                                project.showBalloon(result.msg, NotificationType.WARNING)
 
                             is ElmFormatResult.FailedToStart ->
-                                project.showBalloon(result.msg, NotificationType.ERROR, "Configure" to { project.elmWorkspace.showConfigureToolchainUI() })
+                                project.showBalloon(result.msg, NotificationType.ERROR,
+                                        "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
+                                )
 
                             is ElmFormatResult.UnknownFailure ->
                                 project.showBalloon(result.msg, NotificationType.ERROR)
