@@ -13,7 +13,8 @@ class MakeDeclarationFromUsageFix : NamedQuickFix("Create") {
 
         // addTopLevelFunction("greet", psiFactory)
         val psiFactory = ElmPsiFactory(project)
-        val valueDeclaration = psiFactory.createTopLevelFunction("greet = Debug.todo \"TODO\"")
+        val s = element.referenceName
+        val valueDeclaration = psiFactory.createTopLevelFunction("$s = Debug.todo \"TODO\"")
         // spliceIntoTopLevel
         element.elmFile.add(valueDeclaration)
     }
