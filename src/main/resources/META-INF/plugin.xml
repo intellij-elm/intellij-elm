@@ -415,7 +415,15 @@
         <!-- Intentions -->
 
         <intentionAction>
-            <className>org.elm.ide.intentions.AddExposureIntention</className>
+            <className>org.elm.ide.intentions.exposure.ExposeIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.exposure.ExposeWithVariantsIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.exposure.ExposeVariantsIntention</className>
             <category>Elm</category>
         </intentionAction>
         <intentionAction>
@@ -427,7 +435,11 @@
             <category>Elm</category>
         </intentionAction>
         <intentionAction>
-            <className>org.elm.ide.intentions.RemoveExposureIntention</className>
+            <className>org.elm.ide.intentions.exposure.StopExposingIntention</className>
+            <category>Elm</category>
+        </intentionAction>
+        <intentionAction>
+            <className>org.elm.ide.intentions.exposure.StopExposingVariantsIntention</className>
             <category>Elm</category>
         </intentionAction>
         <intentionAction>

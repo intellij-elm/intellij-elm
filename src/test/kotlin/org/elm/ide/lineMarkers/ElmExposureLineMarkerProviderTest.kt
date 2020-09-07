@@ -8,7 +8,7 @@ class ElmExposureLineMarkerProviderTest : ElmLineMarkerProviderTestBase() {
 module Main exposing (..)
 n = 0               --> Exposed
 f x = 0             --> Exposed
-type Foo = Foo      --> Exposed
+type Foo = Foo      --> Exposed (including variants)
 type alias Bar = () --> Exposed
 """)
 
@@ -49,7 +49,7 @@ type Bar = Bar
     fun `test module that exposes a union type and its constructors`() = doTestByText(
             """
 module Main exposing (Foo(..))
-type Foo = Foo --> Exposed
+type Foo = Foo --> Exposed (including variants)
 """)
 
 

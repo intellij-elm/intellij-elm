@@ -1,7 +1,9 @@
-package org.elm.ide.intentions
+package org.elm.ide.intentions.exposure
+
+import org.elm.ide.intentions.ElmIntentionTestBase
 
 
-class AddExposureIntentionTest : ElmIntentionTestBase(AddExposureIntention()) {
+class ExposeIntentionTest : ElmIntentionTestBase(ExposeIntention()) {
 
 
     fun `test expose a function`() = doAvailableTest(
