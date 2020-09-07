@@ -19,6 +19,18 @@ myString = greet{-caret-}
 myString = greet
 greet = Debug.todo "TODO"
 """
+    )
 
+    fun `test function with 1 argument`() = checkFixByTextWithoutHighlighting("Create",
+            """module Foo exposing (..)
+
+myString = exclaim{-caret-} "Hello"
+
+""",
+            """module Foo exposing (..)
+
+myString = exclaim "Hello"
+exclaim a = Debug.todo "TODO"
+"""
     )
 }
