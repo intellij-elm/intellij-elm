@@ -30,7 +30,20 @@ myString = exclaim{-caret-} "Hello"
             """module Foo exposing (..)
 
 myString = exclaim "Hello"
-exclaim a = Debug.todo "TODO"
+exclaim arg1 = Debug.todo "TODO"
 """
     )
+    fun `test function with 2 arguments`() = checkFixByTextWithoutHighlighting("Create",
+            """module Foo exposing (..)
+
+myString = greet{-caret-} "Hello" "World"
+
+""",
+            """module Foo exposing (..)
+
+myString = greet "Hello" "World"
+greet arg1 arg2 = Debug.todo "TODO"
+"""
+    )
+
 }

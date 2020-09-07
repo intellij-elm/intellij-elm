@@ -19,15 +19,20 @@ class MakeDeclarationFromUsageFix : NamedQuickFix("Create") {
 
         val arity = (element.parent as? ElmFunctionCallExpr)?.arguments?.count() ?: 0
 
-        val hasArity0 = arity == 0
+        val argList: String = argListFromArity(arity)
         val valueDeclaration =
-       if (hasArity0) {
-           psiFactory.createTopLevelFunction("$s = Debug.todo \"TODO\"")
-       } else {
-           psiFactory.createTopLevelFunction("$s a = Debug.todo \"TODO\"")
-       }
+           psiFactory.createTopLevelFunction("$s $argList= Debug.todo \"TODO\"")
         // spliceIntoTopLevel
         element.elmFile.add(valueDeclaration)
+    }
+
+    private fun argListFromArity(arity: Int): String {
+        return when (arity) {
+            0 -> ""
+            else -> {
+                (1..arity).map { "arg$it"}.joinToString(separator = " ", postfix = " ")
+            }
+        }
     }
 
 
