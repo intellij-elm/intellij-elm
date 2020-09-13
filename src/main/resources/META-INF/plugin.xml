@@ -320,8 +320,6 @@
         <enterHandlerDelegate implementation="org.elm.ide.typing.ElmOnEnterIndentHandler"/>
         <fileTypeFactory implementation="org.elm.lang.core.ElmFileTypeFactory"/>
         <internalFileTemplate name="Elm Module"/>
-        <moduleType id="ELM_MODULE" implementationClass="org.elm.ide.project.ElmModuleType"/>
-        <moduleBuilder builderClass="org.elm.ide.project.ElmModuleBuilder"/>
         <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor"/>
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher"/>
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
@@ -354,6 +352,16 @@
         <colorProvider language="Elm" implementation="org.elm.ide.color.ElmColorProvider"/>
         <codeStyleSettingsProvider implementation="org.elm.ide.formatter.settings.ElmCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider implementation="org.elm.ide.formatter.settings.ElmLanguageCodeStyleSettingsProvider"/>
+
+        <!-- New Project for IDEA -->
+        <projectTemplatesFactory implementation="org.elm.ide.project.ElmProjectTemplatesFactory" />
+
+        <!-- New Project for WebStorm -->
+        <directoryProjectGenerator implementation="org.elm.ide.project.ElmWebProjectTemplate"/>
+
+        <!-- DEPRECATED. See `ElmModuleType` for details! -->
+        <moduleType id="ELM_MODULE" implementationClass="org.elm.ide.project.ElmModuleType"/>
+
 
         <!-- Inspections -->
 
