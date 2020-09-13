@@ -2,8 +2,12 @@ package org.elm.ide.actions
 
 import com.intellij.ide.actions.CreateFileFromTemplateAction
 import com.intellij.ide.actions.CreateFileFromTemplateDialog
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFile
 import org.elm.lang.core.ElmFileType
@@ -57,6 +61,17 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
     fun testHelperCreateFile(name: String, dir: PsiDirectory): PsiFile? =
             createFile(name, ELM_MODULE_KIND, dir)
 
+    override fun isAvailable(dataContext: DataContext): Boolean {
+        if (!super.isAvailable(dataContext)) return false
+
+        val file = CommonDataKeys.VIRTUAL_FILE.getData(dataContext) ?: return false
+        val project = PlatformDataKeys.PROJECT.getData(dataContext)!!
+        val sourceDirs = project.elmWorkspace.allProjects.asSequence()
+                .flatMap { it.allSourceDirVirtualFiles.asSequence() }
+        return sourceDirs.any {
+            VfsUtil.isAncestor(it, file, /*strict=*/ false)
+        }
+    }
 
     private companion object {
         private val CAPTION = "New Elm file"

@@ -1,9 +1,12 @@
 package org.elm.workspace
 
 import com.intellij.openapi.util.UserDataHolderBase
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.indexing.LightDirectoryIndex
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicReference
 
 
 /**
@@ -83,6 +86,20 @@ sealed class ElmProject(
      */
     val allDirectDeps: Sequence<ElmPackageProject> =
             sequenceOf(dependencies, testDependencies).flatten()
+
+    private val sourceDirCache = AtomicReference<List<VirtualFile>>()
+
+    /**
+     * Returns [VirtualFile]s for each directory in [allSourceDirs].
+     */
+    val allSourceDirVirtualFiles: List<VirtualFile>
+        get() {
+            val cached = sourceDirCache.get()
+            if (cached?.all { it.isValid } == true) return cached
+            val dirs = allSourceDirs.mapNotNull { LocalFileSystem.getInstance().findFileByIoFile(it.toFile()) }.toList()
+            sourceDirCache.set(dirs)
+            return dirs
+        }
 
     /**
      * Returns the direct and indirect dependencies of the receiver, recursively.
