@@ -7,7 +7,6 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFile
 import org.elm.lang.core.ElmFileType
@@ -66,16 +65,12 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
 
         val file = CommonDataKeys.VIRTUAL_FILE.getData(dataContext) ?: return false
         val project = PlatformDataKeys.PROJECT.getData(dataContext)!!
-        val sourceDirs = project.elmWorkspace.allProjects.asSequence()
-                .flatMap { it.allSourceDirVirtualFiles.asSequence() }
-        return sourceDirs.any {
-            VfsUtil.isAncestor(it, file, /*strict=*/ false)
-        }
+        return project.elmWorkspace.findProjectForFile(file) != null
     }
 
     private companion object {
-        private val CAPTION = "New Elm file"
-        private val ELM_MODULE_KIND = "Elm Module" // must match name of internal template stored in JAR resources
+        private const val CAPTION = "New Elm file"
+        private const val ELM_MODULE_KIND = "Elm Module" // must match name of internal template stored in JAR resources
     }
 }
 
