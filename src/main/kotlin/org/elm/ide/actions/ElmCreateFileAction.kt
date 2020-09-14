@@ -2,6 +2,9 @@ package org.elm.ide.actions
 
 import com.intellij.ide.actions.CreateFileFromTemplateAction
 import com.intellij.ide.actions.CreateFileFromTemplateDialog
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDirectory
@@ -57,10 +60,17 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
     fun testHelperCreateFile(name: String, dir: PsiDirectory): PsiFile? =
             createFile(name, ELM_MODULE_KIND, dir)
 
+    override fun isAvailable(dataContext: DataContext): Boolean {
+        if (!super.isAvailable(dataContext)) return false
+
+        val file = CommonDataKeys.VIRTUAL_FILE.getData(dataContext) ?: return false
+        val project = PlatformDataKeys.PROJECT.getData(dataContext)!!
+        return project.elmWorkspace.findProjectForFile(file) != null
+    }
 
     private companion object {
-        private val CAPTION = "New Elm file"
-        private val ELM_MODULE_KIND = "Elm Module" // must match name of internal template stored in JAR resources
+        private const val CAPTION = "New Elm file"
+        private const val ELM_MODULE_KIND = "Elm Module" // must match name of internal template stored in JAR resources
     }
 }
 
