@@ -260,6 +260,15 @@ class ElmPsiFactory(private val project: Project) {
         createFromText("module Foo exposing ($typeName(..))")
             ?: error("Failed to create type exposure")
 
+    /**
+     * Creates a record expression with the passed in `args`, which is a list of the arguments to use to construct the
+     * record. Each entry in the list is a pair of strings: the first is the argument name, the second is the argument's
+     * text.
+     */
+    fun createRecordExpr(args: List<Pair<String, String>>): ElmRecordExpr =
+        createFromText("foo = { ${args.joinToString(", "){ (name, value) -> "$name = $value" }} }")
+            ?: error("Failed to create record expression")
+
     private inline fun <reified T : PsiElement> createFromText(code: String): T? =
             PsiFileFactory.getInstance(project)
                     .createFileFromText("DUMMY.elm", ElmFileType, code)

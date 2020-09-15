@@ -1,0 +1,5 @@
+type alias MyTypeAlias =
+    { foo : String, bar : Int }
+
+baz =
+    <spot>{ foo = "a", bar = 1 }</spot>
