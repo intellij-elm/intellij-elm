@@ -36,6 +36,16 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.3.0</b> <em>(2020-11-24)</em>
+                <ul>
+                    <li>Implement new project wizard for WebStorm</li>
+                    <li>Add more control over how types are exposed.</li>
+                    <li>Add intention to convert record constructor function to record literal</li>
+                    <li>Optimize 'Find Usages' so that it only looks at `*.elm` files</li>
+                    <li>Only show New Elm File option inside Elm source directories</li>
+                    <li>Added support for IntelliJ 2020.3</li>
+                </ul>
+            </li>
             <li><b>4.2.0</b> <em>(2020-09-03)</em>
                 <ul>
                     <li>Added intention for creating (and removing) pipelines</li>
