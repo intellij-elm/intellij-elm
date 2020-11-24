@@ -305,9 +305,10 @@
 
     <!--
     See http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html
-    Note that the range is half-open: [since-build, until-build)
+    Note that the range is half-open: [since-build, until-build), but if you use a wildcard in `until`,
+    it will be inclusive (i.e. 203.* is inclusive for 2020.3.x)
      -->
-    <idea-version since-build="191.4212.41" until-build="202.*"/>
+    <idea-version since-build="191.4212.41" until-build="203.*"/>
 
 
     <depends>com.intellij.modules.lang</depends>

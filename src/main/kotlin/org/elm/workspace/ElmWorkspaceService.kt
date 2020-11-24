@@ -18,6 +18,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
 import com.intellij.openapi.startup.StartupManager
 import com.intellij.openapi.util.EmptyRunnable
@@ -453,12 +454,14 @@ class ElmWorkspaceService(
                     if (rawProjects.isNotEmpty()) {
                         // Exclude `elm-stuff` directories to prevent pollution of open-by-filename, etc.
                         ApplicationManager.getApplication().invokeLater {
-                            intellijProject.modules.asSequence()
-                                    .flatMap { ModuleRootManager.getInstance(it).contentEntries.asSequence() }
-                                    .forEach {
+                            for (module in intellijProject.modules.asSequence()) {
+                                ModuleRootModificationUtil.updateModel(module) { model ->
+                                    model.contentEntries.forEach {
                                         if ("elm-stuff" !in it.excludePatterns)
                                             it.addExcludePattern("elm-stuff")
                                     }
+                                }
+                            }
                         }
                     }
 
