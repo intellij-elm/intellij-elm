@@ -25,6 +25,17 @@ f0 =
     (Debug.log "List.map f items" (List.map f items))
 """)
 
+    fun `test debugging expr with double quotes`() = doAvailableTest(
+        """
+module Foo exposing (f0)
+f0 = 
+    Str{-caret-}ing.length "foo"
+""", """
+module Foo exposing (f0)
+f0 = 
+    (Debug.log "String.length \"foo\"" (String.length "foo"))
+""")
+
     fun `test debugging pattern matching input`() = doAvailableTest(
             """
 module Foo exposing (f0)
