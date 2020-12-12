@@ -82,14 +82,16 @@ class InlineDebugIntention : ElmAtCaretIntentionActionBase<InlineDebugIntention.
                     val indentation = "    "
                     val indentedLines = textLines.mapIndexed { index, line -> baseIndent + indentation.repeat(index) + line }
                     """Debug.log
-$baseIndent    "${textLines.first()} ..."
+$baseIndent    "${textLines.first().escapeDoubleQuotes()} ..."
 $baseIndent    (
 $baseIndent    ${indentedLines.joinToString("\n")}
 $baseIndent    )"""
                 } else {
-                    """Debug.log "$itemsText" ($itemsText)"""
+                    """Debug.log "${itemsText.escapeDoubleQuotes()}" ($itemsText)"""
                 }
 
         valueExpr.replace(factory.createParens(debuggedText))
     }
 }
+
+private fun String.escapeDoubleQuotes(): String = replace("\"", "\\\"")
