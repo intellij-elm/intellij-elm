@@ -13,7 +13,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     List.map f (Debug.log "items" (items))
-""")
+""",
+            "Debug.log this value")
 
     fun `test debugging function call`() = doAvailableTest(
             """
@@ -24,10 +25,11 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "List.map f items" (List.map f items))
-""")
+""",
+            "Debug.log output of function")
 
     fun `test debugging expr with double quotes`() = doAvailableTest(
-        """
+            """
 module Foo exposing (f0)
 f0 = 
     Str{-caret-}ing.length "foo"
@@ -35,7 +37,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "String.length \"foo\"" (String.length "foo"))
-""")
+""",
+            "Debug.log output of function")
 
     fun `test debugging pattern matching input`() = doAvailableTest(
             """
@@ -54,7 +57,8 @@ f0 =
 f1 = 
     case (Debug.log "f0" (f0)) of
         _ -> 1
-""")
+""",
+            "Debug.log this value")
 
     fun `test debugging pattern matching output`() = doAvailableTest(
             """
@@ -78,7 +82,8 @@ f1 =
                 _ -> 1
         )
     )
-""")
+""",
+            "Debug.log output of case statement")
 
     fun `test debugging case branch`() = doAvailableTest(
             """
@@ -102,7 +107,8 @@ f1 =
                 _ -> 1
         )
     )
-""")
+""",
+            "Debug.log output of case statement")
 
     fun `test debugging case branch value`() = doAvailableTest(
             """
@@ -121,9 +127,10 @@ f0 =
 f1 = 
     case f0 of
         _ -> (Debug.log "1 + 1" (1 + 1))
-""")
+""",
+            "Debug.log expression")
 
-    fun `test debugging case on function call`() = doAvailableTest(
+    fun `test debugging case on function`() = doAvailableTest(
             """
 module Foo exposing (f0)
 f0 _ =
@@ -140,7 +147,8 @@ f0 _ =
 f1 = 
     case ((Debug.log "f0 42" (f0 42))) of
         _ -> 1
-""")
+""",
+            "Debug.log output of function")
 
     fun `test debugging constants with binary operators`() = doAvailableTest(
             """
@@ -155,7 +163,8 @@ f1 = 1
 
 f0 = 
     1 + (Debug.log "f1" (f1))
-""")
+""",
+            "Debug.log this value")
 
     fun `test debugging binary operator operation`() = doAvailableTest(
             """
@@ -166,7 +175,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1" (1 + 1))
-""")
+""",
+            "Debug.log expression")
 
     fun `test debugging multiple binary operator operations`() = doAvailableTest(
             """
@@ -177,7 +187,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1 + 1" (1 + 1 + 1))
-""")
+""",
+            "Debug.log expression")
 
     fun `test debugging piped operations`() = doAvailableTest(
             """
@@ -188,7 +199,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1 + 1 |> (+) 1" (1 + 1 + 1 |> (+) 1))
-""")
+""",
+            "Debug.log output of pipeline")
 
     fun `test debugging piped operations with function`() = doAvailableTest(
             """
@@ -199,7 +211,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1 + 1 |> String.fromInt" (1 + 1 + 1 |> String.fromInt))
-""")
+""",
+            "Debug.log output of pipeline")
 
     fun `test debugging multiline piped operations with function`() = doAvailableTest(
             """
@@ -217,7 +230,8 @@ f0 =
                 |> String.fromInt
         )
     )
-""")
+""",
+            "Debug.log output of pipeline")
 
     fun `test debugging function composition`() = doUnavailableTest(
             """
@@ -256,7 +270,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     Debug.log "hello" (List.map (Debug.log "identity" (identity)) [ 0 ])
-""")
+""",
+            "Debug.log this value")
 
     fun `test debugging nested log function calls with binary operators`() = doAvailableTest(
             """
@@ -267,7 +282,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     Debug.log "hello" (2 + ((Debug.log "1 + 1" (1 + 1))))
-""")
+""",
+            "Debug.log expression")
 
     fun `test debugging todo statements`() = doUnavailableTest(
             """
@@ -326,6 +342,7 @@ f0 =
     
 f1 =
     (Debug.log "f0" (f0))
-""")
+""",
+            "Debug.log this value")
 
 }
