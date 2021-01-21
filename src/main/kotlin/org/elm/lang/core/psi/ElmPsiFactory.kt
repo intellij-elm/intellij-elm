@@ -234,13 +234,13 @@ class ElmPsiFactory(private val project: Project) {
         //       Each line of newDeclBody must start with a non-whitespace character.
         val newDeclBodyIndented = newDeclBody.lines().joinToString("\n") { "$existingIndent$indent$indent$it" }
         val code = """
-        |foo =
-        |${existingIndent}let
-        |${existingIndent}$indent$newDeclName =
-        |$newDeclBodyIndented
-        |${existingIndent}in
-        |${existingIndent}$bodyText
-        """.trimMargin()
+        #foo =
+        #${existingIndent}let
+        #${existingIndent}$indent$newDeclName =
+        #$newDeclBodyIndented
+        #${existingIndent}in
+        #${existingIndent}${bodyText}
+        """.trimMargin("#")
         return createFromText<ElmValueDeclaration>(code)
                 ?.descendantOfType()
                 ?: error("Failed to create let/in wrapper")
