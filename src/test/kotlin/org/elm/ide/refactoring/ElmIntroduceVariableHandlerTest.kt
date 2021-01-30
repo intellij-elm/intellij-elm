@@ -345,6 +345,31 @@ f =
 """)
 
 
+    fun `test extract pipeline branch`() = doTest("""
+module Foo exposing (xDecoder)
+
+xDecoder : Decoder X
+xDecoder =
+    Decode.succeed X
+        |> <selection>required "username" Username.decoder</selection>
+        |> required "token" Decode.string
+
+""", listOf("required \"username\" Username.decoder"), 0, """
+module Foo exposing (xDecoder)
+
+xDecoder : Decoder X
+xDecoder =
+    let
+        required =
+            required "username" Username.decoder
+    in
+    Decode.succeed X
+        |> required
+        |> required "token" Decode.string
+
+""")
+
+
     // AJ example 9: the indentation gets screwed up because the following lines need more indent
     // TODO re-enable this test once we have a better way of formatting generated Elm code
 //    fun `test extract expr on same line as the function decl`() = doTest("""
