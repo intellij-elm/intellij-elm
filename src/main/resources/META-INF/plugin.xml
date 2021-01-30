@@ -36,6 +36,12 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.3.1</b> <em>(2021-01-30)</em>
+                <ul>
+                    <li>Fix 'extract variable' on pipeline expressions</li>
+                    <li>Add intention for inserting `Debug.log` statements</li>
+                </ul>
+            </li>
             <li><b>4.3.0</b> <em>(2020-11-24)</em>
                 <ul>
                     <li>Implement new project wizard for WebStorm</li>
