@@ -11,6 +11,8 @@ import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewDescriptor
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.elements.*
+import java.util.logging.Logger
 
 class RsMoveTopLevelItemsProcessor(
     private val project: Project,
@@ -48,6 +50,22 @@ class RsMoveTopLevelItemsProcessor(
 
             space?.delete()
             item.delete()
+        }
+
+        val moduleDeclaration: ElmModuleDeclaration? = targetMod.getModuleDecl()
+        val exposingList: ElmExposingList? = moduleDeclaration?.exposingList
+
+        if (usages.isNotEmpty() && moduleDeclaration != null && !moduleDeclaration.exposesAll && exposingList != null) {
+            itemsToMove
+                .mapNotNull {
+                    when (it) {
+                        is ElmValueDeclaration -> it.name
+                        is ElmTypeAliasDeclaration -> it.name
+                        is ElmTypeDeclaration -> it.name + "(..)"
+                        else -> null
+                    }
+                }
+                .forEach(exposingList::addItem)
         }
     }
 
