@@ -24,6 +24,19 @@ fn =
    3
 """)
 
+    fun `test uses references from base method`() = doTest("""
+f =
+   let a = 4
+   in 4 + {-caret-}a
+""", listOf("a", "4 + a"), 1, """
+f =
+   let a = 4
+   in fn a
+
+fn a =
+   4 + a
+""")
+
 
     fun `test can select alternate expression`() = doTest("""
 f =

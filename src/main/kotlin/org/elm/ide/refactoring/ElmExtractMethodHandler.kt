@@ -11,6 +11,7 @@ import com.intellij.refactoring.util.CommonRefactoringUtil
 import org.elm.ide.utils.findExpressionAtCaret
 import org.elm.ide.utils.findExpressionInRange
 import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmLetInExpr
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.openapiext.runWriteCommandAction
@@ -62,8 +63,15 @@ class ElmExtractMethodHandler : RefactoringActionHandler {
 
         val fn: ElmValueDeclaration = getValueDeclaration(chosenExpr) ?: return
 
+        val declarations: List<String> = fn.declaredNames().map { it.name }.toList() +
+            fn.expression?.descendantsOfType<ElmFunctionDeclarationLeft>()?.map { it.lowerCaseIdentifier.text }.orEmpty()
+
+        val declarationsMap = declarations.toHashSet()
+
+        val declarationUsages: List<String> = chosenExpr.text.split(" ").filter { declarationsMap.contains(it) }
+
         project.runWriteCommandAction {
-            val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(chosenExpr.text)
+            val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(chosenExpr.text, declarationUsages)
             val fnEndOffset = fn.textRange.endOffset
 
             editor.document.insertString(fnEndOffset, "\n")
