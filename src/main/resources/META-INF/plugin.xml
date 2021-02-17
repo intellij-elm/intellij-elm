@@ -340,6 +340,7 @@
         <gotoSymbolContributor implementation="org.elm.ide.navigation.ElmGoToSymbolContributor"/>
         <lang.braceMatcher language="Elm" implementationClass="org.elm.ide.ElmPairedBraceMatcher"/>
         <lang.commenter language="Elm" implementationClass="org.elm.ide.commenter.ElmCommenter"/>
+        <typedHandler implementation="org.elm.ide.ElmTypedHandler" id="ElmFile"/>
         <completion.contributor language="Elm"
                                 implementationClass="org.elm.lang.core.completion.ElmCompletionContributor"/>
         <breadcrumbsInfoProvider implementation="org.elm.ide.structure.ElmBreadcrumbsProvider"/>
