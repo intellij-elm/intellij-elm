@@ -17,22 +17,28 @@ class ElmExtractMethodHandler : ElmExtractorBase() {
 
         val fn: ElmValueDeclaration = getValueDeclaration(chosenExpr) ?: return
 
-        val declarations: List<String> = fn.declaredNames().map { it.name }.toList() +
-            fn.expression
-                ?.descendantsOfType<ElmFunctionDeclarationLeft>()
-                ?.map { it.lowerCaseIdentifier.text }
-                .orEmpty()
+        val parameters = fn.declaredNames().map { it.name }.toList()
 
-        val declarationsMap = declarations.toHashSet()
+        val localDeclarations = fn.expression
+            ?.descendantsOfType<ElmFunctionDeclarationLeft>()
+            ?.map { it.lowerCaseIdentifier.text }
+            .orEmpty()
 
-        val declarationUsages: Set<String> = chosenExpr
+        val declarations = (parameters + localDeclarations).toHashSet()
+
+        val internalDeclarations = chosenExpr
+            .descendantsOfType<ElmFunctionDeclarationLeft>()
+            .map { it.lowerCaseIdentifier.text }
+            .toHashSet()
+
+        val usages: Set<String> = chosenExpr
             .descendantsOfType<ElmValueQID>()
             .mapNotNull { it.text }
-            .filter { declarationsMap.contains(it) }
-            .toSet()
+            .filter { declarations.contains(it) && !internalDeclarations.contains(it) }
+            .toHashSet()
 
         project.runWriteCommandAction {
-            val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(chosenExpr.text, declarationUsages)
+            val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(chosenExpr.text, usages)
             val fnEndOffset = fn.textRange.endOffset
 
             editor.document.insertString(fnEndOffset, "\n")

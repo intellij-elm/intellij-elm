@@ -75,6 +75,21 @@ fn x =
    (x + x)
 """)
 
+    fun `test does not pass parameters declared inside selection`() = doTest("""
+f =
+    let x = 4
+    in <selection>let y = 5
+        in x + y</selection>
+""", emptyList(), 0, """
+f =
+    let x = 4
+    in fn x
+
+fn x =
+   let y = 5
+        in x + y
+""")
+
     // HELPERS
 
 
