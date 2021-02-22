@@ -1,12 +1,12 @@
 package org.elm.ide.actions
 
-import org.elm.TestProject
-import org.elm.workspace.ElmWorkspaceTestBase
+//import org.elm.TestProject
+//import org.elm.workspace.ElmWorkspaceTestBase
 
 
-class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
+/*class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
 
-    /*fun `test file movement between sibling dir`() {
+    *//*fun `test file movement between sibling dir`() {
         val testProject = makeTestProjectFixture()
         moveFile("src/Foo/Baz.elm", "src/Bar")
         myFixture.checkResult("src/Main.elm",
@@ -44,13 +44,13 @@ class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
 
     // https://github.com/klazuka/intellij-elm/issues/202
     fun `test normalization of leading dot-slash in source-directory`() =
-            doTest("foo1/Foo1", "Quux", "module Foo1.Quux exposing (..)")*/
+            doTest("foo1/Foo1", "Quux", "module Foo1.Quux exposing (..)")*//*
 
     private fun moveFile(baseFile: String, dirPath: String) {
 
     }
 
-    /*private fun doTest(dirPath: String, name: String, expectedContents: String) {
+    *//*private fun doTest(dirPath: String, name: String, expectedContents: String) {
         val testProject = makeTestProjectFixture()
         val action = ElmCreateFileAction()
         val dirVirtualFile = testProject.root.findFileByRelativePath(dirPath)!!
@@ -59,7 +59,7 @@ class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
         }
         val filename = name.removeSuffix(".elm")
         myFixture.checkResult("$dirPath/$filename.elm", expectedContents, true)
-    }*/
+    }*//*
 
 
     private fun makeTestProjectFixture(): TestProject =
@@ -111,4 +111,4 @@ class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
             }
             dir("outside") {}
         }
-}
+}*/
