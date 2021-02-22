@@ -3,11 +3,12 @@ package org.elm.ide.refactoring
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFileHandler
 import com.intellij.usageView.UsageInfo
-import org.elm.ide.actions.ElmCreateFileAction
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ElmProject
@@ -24,25 +25,12 @@ class ElmMoveFileHandler : MoveFileHandler() {
         moveDestination: PsiDirectory?,
         oldToNewMap: MutableMap<PsiElement, PsiElement>?
     ) {
-    }
+        if (oldToNewMap == null) return
 
-    override fun findUsages(
-        psiFile: PsiFile?,
-        newParent: PsiDirectory?,
-        searchInComments: Boolean,
-        searchInNonJavaFiles: Boolean
-    ): MutableList<UsageInfo> {
-        return emptyList<UsageInfo>().toMutableList()
-    }
-
-    override fun retargetUsages(usageInfos: MutableList<UsageInfo>?, oldToNewMap: MutableMap<PsiElement, PsiElement>?) {
-    }
-
-    override fun updateMovedFile(file: PsiFile?) {
         val elmFile: ElmFile = file as? ElmFile?: return
         val moduleDecl: ElmModuleDeclaration = elmFile.getModuleDecl()?: return
         val project: ElmProject = elmFile.elmProject?: return
-        val path: Path = elmFile.parent?.virtualFile?.pathAsPath?: return
+        val path: Path = moveDestination?.virtualFile?.pathAsPath?: return
         val relativePath =
             project.rootDirContaining(elmFile.virtualFile)?.relativize(path)?.joinToString(".")?: return
 
@@ -50,7 +38,31 @@ class ElmMoveFileHandler : MoveFileHandler() {
             .createElements("module ${relativePath}.${elmFile.name} exposing (..)")
             .first() as ElmModuleDeclaration
 
-        moduleDecl.upperCaseQID.replace(newModuleDeclaration.upperCaseQID)
+        oldToNewMap[moduleDecl.upperCaseQID] = newModuleDeclaration.upperCaseQID
+
+        ReferencesSearch
+            .search(moduleDecl)
+            .findAll()
+            .map { it.element }
+            .filterIsInstance<ElmImportClause>()
+            .map { it.moduleQID }
+            .forEach { oldToNewMap[it] = newModuleDeclaration.upperCaseQID }
+    }
+
+    override fun findUsages(
+        psiFile: PsiFile?,
+        newParent: PsiDirectory?,
+        searchInComments: Boolean,
+        searchInNonElmFiles: Boolean
+    ): MutableList<UsageInfo> {
+        return emptyList<UsageInfo>().toMutableList()
+    }
+
+    override fun retargetUsages(usageInfos: MutableList<UsageInfo>?, oldToNewMap: MutableMap<PsiElement, PsiElement>?) {
+        oldToNewMap?.forEach { (old, new) -> old.replace(new) }
+    }
+
+    override fun updateMovedFile(file: PsiFile?) {
     }
 
 }
