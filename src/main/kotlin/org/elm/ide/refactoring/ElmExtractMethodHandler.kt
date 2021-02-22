@@ -4,6 +4,7 @@ import com.intellij.openapi.editor.Editor
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
+import org.elm.lang.core.psi.elements.ElmValueQID
 import org.elm.openapiext.runWriteCommandAction
 
 class ElmExtractMethodHandler : ElmExtractorBase() {
@@ -17,11 +18,18 @@ class ElmExtractMethodHandler : ElmExtractorBase() {
         val fn: ElmValueDeclaration = getValueDeclaration(chosenExpr) ?: return
 
         val declarations: List<String> = fn.declaredNames().map { it.name }.toList() +
-            fn.expression?.descendantsOfType<ElmFunctionDeclarationLeft>()?.map { it.lowerCaseIdentifier.text }.orEmpty()
+            fn.expression
+                ?.descendantsOfType<ElmFunctionDeclarationLeft>()
+                ?.map { it.lowerCaseIdentifier.text }
+                .orEmpty()
 
         val declarationsMap = declarations.toHashSet()
 
-        val declarationUsages: List<String> = chosenExpr.text.split(" ").filter { declarationsMap.contains(it) }
+        val declarationUsages: Set<String> = chosenExpr
+            .descendantsOfType<ElmValueQID>()
+            .mapNotNull { it.text }
+            .filter { declarationsMap.contains(it) }
+            .toSet()
 
         project.runWriteCommandAction {
             val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(chosenExpr.text, declarationUsages)

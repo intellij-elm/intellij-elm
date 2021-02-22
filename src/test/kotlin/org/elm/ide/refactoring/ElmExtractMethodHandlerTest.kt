@@ -49,6 +49,32 @@ fn =
    4 + 3
 """)
 
+    fun `test does not duplicate parameters`() = doTest("""
+f =
+    let x = 4
+    in <selection>x + x</selection>
+""", emptyList(), 0, """
+f =
+    let x = 4
+    in fn x
+
+fn x =
+   x + x
+""")
+
+    fun `test passes locally declared parameters referenced inside parens`() = doTest("""
+f =
+    let x = 4
+    in <selection>(x + x)</selection>
+""", emptyList(), 0, """
+f =
+    let x = 4
+    in fn x
+
+fn x =
+   (x + x)
+""")
+
     // HELPERS
 
 

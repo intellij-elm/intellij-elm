@@ -246,7 +246,7 @@ class ElmPsiFactory(private val project: Project) {
                 ?: error("Failed to create let/in wrapper")
     }
 
-    fun createValue(bodyText: String, parameters: List<String> = emptyList()): ElmValueDeclaration {
+    fun createValue(bodyText: String, parameters: Set<String> = emptySet()): ElmValueDeclaration {
         val paramsString = if (parameters.isEmpty()) "" else parameters.joinToString(separator = " ", postfix = " ")
         val code = """
         #fn ${paramsString}=
