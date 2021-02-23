@@ -61,7 +61,7 @@ class ElmMoveTopLevelItemHandler: MoveHandlerDelegate() {
         callback: MoveCallback?
     ) {
         if (project != null && targetContainer != null && elements != null) {
-            RsMoveTopLevelItemsDialog(project, targetContainer.containingFile.virtualFile, elements).show()
+            ElmMoveTopLevelItemsDialog(project, targetContainer.containingFile.virtualFile, elements).show()
         }
     }
 }

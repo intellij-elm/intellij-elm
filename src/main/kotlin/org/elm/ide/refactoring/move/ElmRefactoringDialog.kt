@@ -15,7 +15,7 @@ import java.awt.Dimension
 import java.io.File
 import javax.swing.JComponent
 
-class RsMoveTopLevelItemsDialog(
+class ElmMoveTopLevelItemsDialog(
     project: Project,
     vsFile: VirtualFile,
     private val itemsToMove: Array<out PsiElement>
@@ -55,13 +55,13 @@ class RsMoveTopLevelItemsDialog(
 
         val targetMod = findTargetMod(targetFilePath)
         if (targetMod == null) {
-            val message = "Target file must be a Rust file"
+            val message = "Target file must be an Elm file"
 //            CommonRefactoringUtil.showErrorMessage(message("error.title"), message, null, project)
             return
         }
 
         try {
-            val processor = RsMoveTopLevelItemsProcessor(project, itemsToMove, targetMod, true)
+            val processor = ElmMoveTopLevelItemsProcessor(project, itemsToMove, targetMod, true)
             invokeRefactoring(processor)
         } catch (e: IncorrectOperationException) {
 //            CommonRefactoringUtil.showErrorMessage(message("error.title"), e.message, null, project)

@@ -15,7 +15,7 @@ import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.moduleName
 
-class RsMoveTopLevelItemsProcessor(
+class ElmMoveTopLevelItemsProcessor(
     private val project: Project,
     private val itemsToMove: Array<out PsiElement>,
     private val targetMod: ElmFile,
