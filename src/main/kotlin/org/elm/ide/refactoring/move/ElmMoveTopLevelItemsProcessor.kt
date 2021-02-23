@@ -2,6 +2,7 @@ package org.elm.ide.refactoring.move
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -9,8 +10,8 @@ import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.move.MoveMultipleElementsViewDescriptor
 import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewDescriptor
-import org.elm.lang.core.imports.ImportAdder
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.ElmPsiFactory
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.moduleName
@@ -55,54 +56,43 @@ class ElmMoveTopLevelItemsProcessor(
             targetMod.add(item.copy())
             if (space != null) targetMod.add(space.copy())
 
+            modifyExposeList(item)
+
             space?.delete()
             item.delete()
         }
 
-        val moduleDeclaration: ElmModuleDeclaration? = targetMod.getModuleDecl()
-        val exposingList: ElmExposingList? = moduleDeclaration?.exposingList
+    }
 
-        if (usages.isNotEmpty() && moduleDeclaration != null && !moduleDeclaration.exposesAll && exposingList != null) {
-            val itemNames: List<String> = itemsToMove
-                .mapNotNull {
-                    when (it) {
-                        is ElmValueDeclaration -> it.functionDeclarationLeft?.lowerCaseIdentifier?.text
-                        is ElmTypeAliasDeclaration -> it.name
-                        is ElmTypeDeclaration -> it.name + "(..)"
-                        else -> null
-                    }
-                }
+    private fun modifyExposeList(item: PsiElement) {
+        val element: PsiElement = when (item) {
+            is ElmValueDeclaration -> item.functionDeclarationLeft?.lowerCaseIdentifier
+            is ElmTypeDeclaration -> item.nameIdentifier
+            is ElmTypeAliasDeclaration -> item.upperCaseIdentifier
+            else -> null
+        } ?: return
 
-            itemNames.forEach(exposingList::addItem)
+        modifyTargetExposeList(element)
+        modifySourceExposeList(element)
+    }
 
-            usages
-                .mapNotNull { it.file as ElmFile? }
-                .distinct()
-                .forEach {
-                    var index: Int = getImportClauseIndex(it, moduleDeclaration)
-                    var fileAdded = false
-                    var names: List<String> = itemNames
+    private fun modifyTargetExposeList(element: PsiElement) {
+        val moduleDecl: ElmModuleDeclaration? = targetMod.getModuleDecl()
+        val exposingList: ElmExposingList? = moduleDecl?.exposingList
 
-                    if (index == -1 && itemNames.isNotEmpty()) {
-                        ImportAdder.addImport(
-                            ImportAdder.Import(moduleDeclaration.moduleName, null, itemNames.first()),
-                            it,
-                            false
-                        )
-                        fileAdded = true
-                        index = getImportClauseIndex(it, moduleDeclaration)
-                    }
+        if (moduleDecl == null || moduleDecl.exposesAll || exposingList == null) return
 
-                    if (!it.getImportClauses()[index].exposesAll) {
-                        if (fileAdded) {
-                            names = names.drop(1)
-                        }
+        exposingList.addItem(element.text)
+    }
 
-                        val importingList: ElmExposingList? = it.getImportClauses()[index].exposingList
-                        names.forEach { importingList?.addItem(it) }
-                    }
-                }
-        }
+    private fun modifySourceExposeList(element: PsiElement) {
+        val file: ElmFile = element.containingFile as ElmFile
+        val moduleDecl: ElmModuleDeclaration? = file.getModuleDecl()
+        val exposingList: ElmExposingList? = moduleDecl?.exposingList
+
+        if (moduleDecl == null || moduleDecl.exposesAll || exposingList == null) return
+
+        exposingList.allExposedItems.find { it.text == element.text }?.let { exposingList.removeItem(it) }
     }
 
     private fun getImportClauseIndex(

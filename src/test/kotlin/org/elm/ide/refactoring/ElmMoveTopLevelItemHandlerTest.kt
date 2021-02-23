@@ -10,7 +10,7 @@ import org.elm.workspace.ElmWorkspaceTestBase
 
 class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
 
-    fun `test basic value declaration movement`() {
+    fun `test value declaration`() {
         makeTestProjectFixture()
 
         val sourceFile: PsiFile = myFixture.configureByFile("src/Foo/Baz.elm")
@@ -18,7 +18,7 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
 
         ElmMoveTopLevelItemsProcessor(
             myFixture.project,
-            sourceFile.descendantsOfType<ElmValueDeclaration>().toTypedArray(),
+            arrayOf(sourceFile.descendantsOfType<ElmValueDeclaration>().first()),
             targetFile,
             true
         ).run()
@@ -38,15 +38,60 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
         )
     }
 
-    private fun makeTestProjectFixture(): TestProject =
+    fun `test removes and adds exposed values`() {
+        makeTestProjectFixture("SPECIFIED_EXPOSE")
+
+        val sourceFile: PsiFile = myFixture.configureByFile("src/Foo/Baz.elm")
+        val targetFile: ElmFile = myFixture.configureByFile("src/Bar/Buff.elm") as ElmFile
+
+        ElmMoveTopLevelItemsProcessor(
+            myFixture.project,
+            arrayOf(sourceFile.descendantsOfType<ElmValueDeclaration>().first()),
+            targetFile,
+            true
+        ).run()
+
+        myFixture.checkResult(
+            "src/Foo/Baz.elm", """
+            module Foo.Baz exposing (placeholderValue2)
+            
+            placeholderValue2 = 0
+        """.trimIndent(), true
+        )
+
+        myFixture.checkResult(
+            "src/Bar/Buff.elm", """
+            module Bar.Buff exposing (placeholderValue3, placeholderValue)
+            
+            placeholderValue3 = 0
+            placeholderValue = 0
+        """.trimIndent(), true
+        )
+    }
+
+    fun `test adds import statements for dependants`() {
+
+    }
+
+    fun `test adds import statements for aliased dependants`() {
+
+    }
+
+    fun `test adds import statements for dependencies`() {
+
+    }
+
+    fun `test adds import statements for aliased dependencies`() {
+
+    }
+
+    private fun makeTestProjectFixture(type: String = ""): TestProject =
         buildProject {
             project("elm.json", """
                 {
                     "type": "application",
                     "source-directories": [
-                        "src",
-                        "vendor/elm-foo",
-                        "./foo1"
+                        "src"
                     ],
                     "elm-version": "0.19.1",
                     "dependencies": {
@@ -59,32 +104,49 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
                     "test-dependencies": { "direct": {}, "indirect": {} }
                 }
                 """.trimIndent())
-            dir("src") {
-                elm("Main.elm")
-                dir("Foo") {
-                    elm("Baz.elm", """
+
+            if (type == "") {
+                dir("src") {
+                    elm("Main.elm")
+                    dir("Foo") {
+                        elm(
+                            "Baz.elm", """
                         module Foo.Baz exposing (..)
                         placeholderValue = 0
-                    """.trimIndent())
-                }
-                dir("Bar") {
-                    elm("Buff.elm", """
+                    """.trimIndent()
+                        )
+                    }
+                    dir("Bar") {
+                        elm(
+                            "Buff.elm", """
                         module Bar.Buff exposing (..)
-                    """.trimIndent())
+                    """.trimIndent()
+                        )
+                    }
+                }
+            } else if (type == "SPECIFIED_EXPOSE") {
+                dir("src") {
+                    elm("Main.elm")
+                    dir("Foo") {
+                        elm(
+                            "Baz.elm", """
+                        module Foo.Baz exposing (placeholderValue, placeholderValue2)
+                        placeholderValue = 0
+                        placeholderValue2 = 0
+                    """.trimIndent()
+                        )
+                    }
+                    dir("Bar") {
+                        elm(
+                            "Buff.elm", """
+                        module Bar.Buff exposing (placeholderValue3)
+                        
+                        placeholderValue3 = 0
+                    """.trimIndent()
+                        )
+                    }
                 }
             }
-            dir("vendor") {
-                dir("elm-foo") {
-                    dir("Internals") {}
-                }
-            }
-            dir("foo1") {
-                dir("Foo1") {}
-            }
-            dir("tests") {
-                dir("Legacy") {}
-            }
-            dir("outside") {}
         }
 }
 
