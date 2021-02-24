@@ -2,7 +2,6 @@ package org.elm.ide.refactoring.move
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -10,11 +9,10 @@ import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.move.MoveMultipleElementsViewDescriptor
 import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewDescriptor
-import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.imports.ImportAdder
+import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
-import org.elm.lang.core.psi.moduleName
+import org.elm.lang.core.resolve.ElmReferenceElement
 
 class ElmMoveTopLevelItemsProcessor(
     private val project: Project,
@@ -57,11 +55,46 @@ class ElmMoveTopLevelItemsProcessor(
             if (space != null) targetMod.add(space.copy())
 
             modifyExposeList(item)
+            modifyDependants(item, usages)
+            modifyImports(item)
 
             space?.delete()
             item.delete()
         }
 
+    }
+
+    private fun modifyImports(item: PsiElement) {
+        val qid: ElmUpperCaseQID = targetMod.getModuleDecl()?.upperCaseQID?: return
+
+        item
+            .descendantsOfType<ElmReferenceElement>()
+            .forEach {
+                val resolve: ElmNamedElement = it.reference.resolve()?: return
+                val candidate = ImportAdder.Import(resolve.moduleName, null, resolve.name?: return)
+
+                ImportAdder.addImport(candidate, targetMod, false)
+            }
+    }
+
+    private fun modifyDependants(item: PsiElement, usages: Array<out UsageInfo>) {
+        val qid: ElmUpperCaseQID = targetMod.getModuleDecl()?.upperCaseQID?: return
+        usages
+            .map { it.element to it.file }
+            .filter { it.first is ElmExposedValue }
+            .forEach {
+                val value = it.first as ElmExposedValue
+                val exposingList = value.parent as ElmExposingList
+                val candidate = ImportAdder.Import(qid.fullName, null, value.lowerCaseIdentifier.text)
+
+                ImportAdder.addImport(candidate, it.second as ElmFile, false)
+
+                if (exposingList.allExposedItems.size == 1) {
+                    exposingList.parent.delete()
+                } else {
+                    exposingList.removeItem(value)
+                }
+            }
     }
 
     private fun modifyExposeList(item: PsiElement) {

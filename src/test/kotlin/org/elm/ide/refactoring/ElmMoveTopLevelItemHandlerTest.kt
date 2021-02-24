@@ -23,17 +23,15 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
             true
         ).run()
 
-        myFixture.checkResult(
-            "src/Foo/Baz.elm", """
-            module Foo.Baz exposing (..)
+        myFixture.checkResult("src/Foo/Baz.elm", """
+        module Foo.Baz exposing (..)
             
         """.trimIndent(), true
         )
 
-        myFixture.checkResult(
-            "src/Bar/Buff.elm", """
-            module Bar.Buff exposing (..)
-            placeholderValue = 0
+        myFixture.checkResult("src/Bar/Buff.elm", """
+        module Bar.Buff exposing (..)
+        placeholderValue = 0
         """.trimIndent(), true
         )
     }
@@ -51,26 +49,44 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
             true
         ).run()
 
-        myFixture.checkResult(
-            "src/Foo/Baz.elm", """
-            module Foo.Baz exposing (placeholderValue2)
-            
-            placeholderValue2 = 0
+        myFixture.checkResult("src/Foo/Baz.elm", """
+        module Foo.Baz exposing (placeholderValue2)
+        
+        placeholderValue2 = 0
         """.trimIndent(), true
         )
 
-        myFixture.checkResult(
-            "src/Bar/Buff.elm", """
-            module Bar.Buff exposing (placeholderValue3, placeholderValue)
-            
-            placeholderValue3 = 0
-            placeholderValue = 0
+        myFixture.checkResult("src/Bar/Buff.elm", """
+        module Bar.Buff exposing (placeholderValue3, placeholderValue)
+        
+        placeholderValue3 = 0
+        placeholderValue = 0
         """.trimIndent(), true
         )
     }
 
-    fun `test adds import statements for dependants`() {
+    fun `test modifies import statements for dependants`() {
+        makeTestProjectFixture("DEPENDENCY")
 
+        val sourceFile: PsiFile = myFixture.configureByFile("src/Foo/Baz.elm")
+        val targetFile: ElmFile = myFixture.configureByFile("src/Bar/Buff.elm") as ElmFile
+
+        ElmMoveTopLevelItemsProcessor(
+            myFixture.project,
+            arrayOf(sourceFile.descendantsOfType<ElmValueDeclaration>().first()),
+            targetFile,
+            true
+        ).run()
+
+        myFixture.checkResult("src/Main.elm", """
+        module Main exposing (..)
+        
+        import Bar.Buff exposing (placeholderValue)
+        
+        
+        init = placeholderValue
+        """.trimIndent(), true
+        )
     }
 
     fun `test adds import statements for aliased dependants`() {
@@ -78,10 +94,38 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
     }
 
     fun `test adds import statements for dependencies`() {
+        makeTestProjectFixture("IMPORT")
+
+        val sourceFile: PsiFile = myFixture.configureByFile("src/Foo/Baz.elm")
+        val targetFile: ElmFile = myFixture.configureByFile("src/Bar/Buff.elm") as ElmFile
+
+        ElmMoveTopLevelItemsProcessor(
+            myFixture.project,
+            arrayOf(sourceFile.descendantsOfType<ElmValueDeclaration>().first()),
+            targetFile,
+            true
+        ).run()
+
+        myFixture.checkResult("src/Bar/Buff.elm", """
+        module Bar.Buff exposing (placeholderValue3, placeholderValue)
+        
+        import Foo.Bing exposing (placeholderValue4)
+        placeholderValue3 = 0
+        placeholderValue = placeholderValue4
+        """.trimIndent(), true
+        )
 
     }
 
     fun `test adds import statements for aliased dependencies`() {
+
+    }
+
+    fun `test does not move if circular dependency created`() {
+
+    }
+
+    fun `test does not move if identifier overlaps`() {
 
     }
 
@@ -109,18 +153,16 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
                 dir("src") {
                     elm("Main.elm")
                     dir("Foo") {
-                        elm(
-                            "Baz.elm", """
+                        elm("Baz.elm", """
                         module Foo.Baz exposing (..)
                         placeholderValue = 0
-                    """.trimIndent()
+                        """.trimIndent()
                         )
                     }
                     dir("Bar") {
-                        elm(
-                            "Buff.elm", """
+                        elm("Buff.elm", """
                         module Bar.Buff exposing (..)
-                    """.trimIndent()
+                        """.trimIndent()
                         )
                     }
                 }
@@ -128,21 +170,74 @@ class ElmMoveTopLevelItemHandlerTest : ElmWorkspaceTestBase() {
                 dir("src") {
                     elm("Main.elm")
                     dir("Foo") {
-                        elm(
-                            "Baz.elm", """
+                        elm("Baz.elm", """
                         module Foo.Baz exposing (placeholderValue, placeholderValue2)
                         placeholderValue = 0
                         placeholderValue2 = 0
-                    """.trimIndent()
+                        """.trimIndent()
                         )
                     }
                     dir("Bar") {
-                        elm(
-                            "Buff.elm", """
+                        elm("Buff.elm", """
                         module Bar.Buff exposing (placeholderValue3)
                         
                         placeholderValue3 = 0
-                    """.trimIndent()
+                        """.trimIndent()
+                        )
+                    }
+                }
+            } else if (type == "DEPENDENCY") {
+                dir("src") {
+                    elm("Main.elm", """
+                    module Main exposing (..)
+                    
+                    import Foo.Baz exposing (placeholderValue)
+                    
+                    init = placeholderValue
+                    """.trimIndent())
+                    dir("Foo") {
+                        elm("Baz.elm", """
+                        module Foo.Baz exposing (placeholderValue, placeholderValue2)
+                        placeholderValue = 0
+                        placeholderValue2 = 0
+                        """.trimIndent()
+                        )
+                    }
+                    dir("Bar") {
+                        elm("Buff.elm", """
+                        module Bar.Buff exposing (placeholderValue3)
+                        
+                        placeholderValue3 = 0
+                        """.trimIndent()
+                        )
+                    }
+                }
+            } else if (type == "IMPORT") {
+                dir("src") {
+                    elm("Main.elm")
+                    dir("Foo") {
+                        elm("Baz.elm", """
+                        module Foo.Baz exposing (placeholderValue, placeholderValue2)
+                        
+                        import Foo.Bing exposing (placeholderValue4)
+                        
+                        placeholderValue = placeholderValue4
+                        placeholderValue2 = 0
+                        """.trimIndent()
+                        )
+                        elm("Bing.elm", """
+                        module Foo.Bing exposing (placeholderValue4)
+                        
+                        placeholderValue4 = 0
+                        """.trimIndent()
+                        )
+                    }
+                    dir("Bar") {
+                        elm("Buff.elm", """
+                        module Bar.Buff exposing (placeholderValue3)
+                        
+                        placeholderValue3 = 0
+                        """.trimIndent()
                         )
                     }
                 }
