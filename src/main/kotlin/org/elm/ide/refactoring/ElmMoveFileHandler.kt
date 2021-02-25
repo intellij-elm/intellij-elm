@@ -34,8 +34,9 @@ class ElmMoveFileHandler : MoveFileHandler() {
         val relativePath =
             project.rootDirContaining(elmFile.virtualFile)?.relativize(path)?.joinToString(".")?: return
 
+        val moduleName = if (relativePath != "") "$relativePath." else ""
         val newModuleDeclaration: ElmModuleDeclaration = ElmPsiFactory(elmFile.project)
-            .createElements("module ${relativePath}.${elmFile.name} exposing (..)")
+            .createElements("module ${moduleName}${elmFile.virtualFile.nameWithoutExtension} exposing (..)")
             .first() as ElmModuleDeclaration
 
         oldToNewMap[moduleDecl.upperCaseQID] = newModuleDeclaration.upperCaseQID

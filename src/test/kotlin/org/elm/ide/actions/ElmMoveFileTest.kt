@@ -4,15 +4,15 @@ import org.elm.TestProject
 import org.elm.workspace.ElmWorkspaceTestBase
 
 
-class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
+class ElmMoveFileTest : ElmWorkspaceTestBase() {
 
     override fun setUp() {
         super.setUp()
         makeTestProjectFixture()
-        myFixture.moveFile("src/Foo/Baz.elm", "src/Bar")
     }
 
     fun `test change module declaration`() {
+        myFixture.moveFile("src/Foo/Baz.elm", "src/Bar")
         myFixture.checkResult("src/Bar/Baz.elm",
             """
             module Bar.Baz exposing (..)
@@ -23,6 +23,7 @@ class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
     }
 
     fun `test change import statements`() {
+        myFixture.moveFile("src/Foo/Baz.elm", "src/Bar")
         myFixture.checkResult("src/Main.elm",
             """
             module Main exposing (..)
@@ -30,6 +31,17 @@ class ElmMoveFileActionTest : ElmWorkspaceTestBase() {
             import Bar.Baz (placeholderValue)
                     
             init = placeholderValue
+            """.trimIndent(),
+            true)
+    }
+
+    fun `test move to base directory`() {
+        myFixture.moveFile("src/Foo/Baz.elm", "src")
+        myFixture.checkResult("src/Baz.elm",
+            """
+            module Baz exposing (..)
+            
+            placeholderValue = 0
             """.trimIndent(),
             true)
     }
