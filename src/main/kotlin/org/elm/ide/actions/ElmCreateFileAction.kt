@@ -69,7 +69,7 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
     }
 
     private companion object {
-        private const val CAPTION = "New Elm file"
+        private const val CAPTION = "Elm Module"
         private const val ELM_MODULE_KIND = "Elm Module" // must match name of internal template stored in JAR resources
     }
 }
