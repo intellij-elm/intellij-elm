@@ -90,6 +90,47 @@ fn x =
         in x + y
 """)
 
+    fun `test extracts nested expression correctly`() = doTest("""
+f maybeFox = 
+    case maybeFox of
+        Nothing -> Nothing
+        Just fox -> 
+            let 
+                age = <selection>fox.age</selection>
+            in 
+            Just age
+""", emptyList(), 0, """
+f maybeFox = 
+    case maybeFox of
+        Nothing -> Nothing
+        Just fox -> 
+            let 
+                age = fn fox
+            in 
+            Just age
+
+fn fox =
+   fox.age
+""")
+
+    fun `test does not pass parameters declared outside top level value declaration`() = doTest("""
+f a =
+    <selection>add a 1</selection>
+
+add x y =
+    x + y
+""", emptyList(), 0, """
+f a =
+    fn a
+
+fn a =
+   add a 1
+
+add x y =
+    x + y
+""")
+
+
     // HELPERS
 
 
