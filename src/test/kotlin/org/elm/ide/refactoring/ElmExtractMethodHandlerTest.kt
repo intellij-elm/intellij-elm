@@ -18,9 +18,9 @@ class ElmExtractMethodHandlerTest : ElmTestBase() {
     fun `test creates method from base expression`() = doTest("""
 f = 4 + {-caret-}3
 """, listOf("3", "4 + 3"), 0, """
-f = 4 + fn
+f = 4 + number
 
-fn =
+number =
    3
 """)
 
@@ -31,9 +31,9 @@ f =
 """, listOf("a", "4 + a"), 1, """
 f =
    let a = 4
-   in fn a
+   in number a
 
-fn a =
+number a =
    4 + a
 """)
 
@@ -43,9 +43,9 @@ f =
     4 + {-caret-}3
 """, listOf("3", "4 + 3"), 1, """
 f =
-    fn
+    number
 
-fn =
+number =
    4 + 3
 """)
 
@@ -56,9 +56,9 @@ f =
 """, emptyList(), 0, """
 f =
     let x = 4
-    in fn x
+    in number x
 
-fn x =
+number x =
    x + x
 """)
 
@@ -69,9 +69,9 @@ f =
 """, emptyList(), 0, """
 f =
     let x = 4
-    in fn x
+    in number x
 
-fn x =
+number x =
    (x + x)
 """)
 
@@ -83,9 +83,9 @@ f =
 """, emptyList(), 0, """
 f =
     let x = 4
-    in fn x
+    in number x
 
-fn x =
+number x =
    let y = 5
         in x + y
 """)
@@ -105,11 +105,11 @@ f maybeFox =
         Nothing -> Nothing
         Just fox -> 
             let 
-                age = fn fox
+                age = age1 fox
             in 
             Just age
 
-fn fox =
+age1 fox =
    fox.age
 """)
 
@@ -121,9 +121,9 @@ add x y =
     x + y
 """, emptyList(), 0, """
 f a =
-    fn a
+    add1 a
 
-fn a =
+add1 a =
    add a 1
 
 add x y =

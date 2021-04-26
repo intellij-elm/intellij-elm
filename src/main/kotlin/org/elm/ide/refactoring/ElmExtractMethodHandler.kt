@@ -27,8 +27,10 @@ class ElmExtractMethodHandler : ElmExtractorBase() {
             .map { it.name }
             .toHashSet()
 
+        val name = chosenExpr.suggestedNames().default
+
         project.runWriteCommandAction {
-            val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(chosenExpr.text, parameters)
+            val valueDeclaration: ElmValueDeclaration = psiFactory.createValue(name, chosenExpr.text, parameters)
 
             editor.document.insertString(fnEndOffset, "\n")
             editor.document.insertString(fnEndOffset, "\n")
