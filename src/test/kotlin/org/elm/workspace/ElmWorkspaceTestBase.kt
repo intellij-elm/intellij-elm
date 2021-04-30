@@ -46,7 +46,7 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
 
 
     override fun runTest() {
-        if (!toolchain.looksLikeValidToolchain()) {
+        if (!toolchain.looksLikeValidToolchain(project)) {
             System.err.println("SKIP $name: no Elm toolchain found")
             return
         }
