@@ -36,10 +36,9 @@ data class ElmToolchain(
      * path.
      * This performs file I/O.
      */
-    fun looksLikeValidToolchain(project: Project): Boolean {
+    fun looksLikeValidToolchain(overridePathSearch: Sequence<Path> = emptySequence()): Boolean {
         return if (elmCompilerPath.toString() == "elm") {
-            val suggestions = ElmSuggest.suggestTools(project)
-            suggestions["elm"] != null
+            ElmSuggest.compilerIsOnPath(overridePathSearch)
         } else {
             elmCompilerPath != null && Files.isExecutable(elmCompilerPath)
         }

@@ -61,7 +61,7 @@ class ElmNeedsConfigNotificationProvider(
             return null
 
         val toolchain = project.elmToolchain
-        if (!toolchain.looksLikeValidToolchain(project)) {
+        if (!toolchain.looksLikeValidToolchain()) {
             return badToolchainPanel("You must specify a path to the Elm compiler")
         }
 
