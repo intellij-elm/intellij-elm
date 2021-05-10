@@ -22,6 +22,7 @@ class ElmCompletionProvider : CompletionProvider<CompletionParameters>() {
     val suggestors = listOf(ElmQualifiableRefSuggestor, ElmRecordFieldSuggestor, ElmRecordExprSuggestor, ElmKeywordSuggestor)
 
     override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) {
-        suggestors.forEach { it.addCompletions(parameters, result) }
+        val result_ = result.caseInsensitive()
+        suggestors.forEach { it.addCompletions(parameters, result_) }
     }
 }
