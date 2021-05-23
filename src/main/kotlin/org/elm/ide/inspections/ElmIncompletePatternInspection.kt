@@ -25,7 +25,9 @@ class ElmIncompletePatternInspection : ElmLocalInspection() {
 
         val message = "Case expression is not exhaustive"
         holder.registerProblem(element, TextRange(0, 4), message, *fixes)
-        holder.registerProblem(element, message, ProblemHighlightType.INFORMATION, TextRange(5, element.textRange.length), *fixes)
+        if (element.textRange.length > 4) {
+            holder.registerProblem(element, message, ProblemHighlightType.INFORMATION, TextRange(5, element.textRange.length), *fixes)
+        }
     }
 }
 
