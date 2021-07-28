@@ -96,7 +96,7 @@ class ElmBuildAction : AnAction() {
 
         when {
             isUnitTestMode -> postErrors()
-            else -> ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler").show {
+            else -> ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler")?.show {
                 postErrors()
             }
         }

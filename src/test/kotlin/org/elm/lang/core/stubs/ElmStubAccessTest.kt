@@ -74,7 +74,7 @@ class ElmStubAccessTest : ElmTestBase() {
             LoggedErrorProcessor.setNewInstance(object : LoggedErrorProcessor() {
                 override fun processError(message: String?, t: Throwable?, details: Array<out String>?, logger: Logger) {
                     logger.info(message, t)
-                    throw AssertionError(message)
+                    super.processError(message, t, details, logger)
                 }
             })
             processStubsWithoutAstAccess<ElmPsiElement> {
