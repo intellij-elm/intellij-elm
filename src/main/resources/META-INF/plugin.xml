@@ -331,7 +331,7 @@
     Note that the range is half-open: [since-build, until-build), but if you use a wildcard in `until`,
     it will be inclusive (i.e. 203.* is inclusive for 2020.3.x)
      -->
-    <idea-version since-build="191.4212.41" until-build="211.*"/>
+    <idea-version since-build="191.4212.41" until-build="212.*"/>
 
 
     <depends>com.intellij.modules.lang</depends>
