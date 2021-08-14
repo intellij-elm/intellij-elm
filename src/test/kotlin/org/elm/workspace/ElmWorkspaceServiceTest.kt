@@ -272,6 +272,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         // ... and serialize the resulting state ...
         val actualXml = workspace.state.toXmlString()
         checkEquals(xml, actualXml)
+//        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
     }
 
 

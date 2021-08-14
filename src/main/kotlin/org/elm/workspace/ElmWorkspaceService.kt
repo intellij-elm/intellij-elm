@@ -465,14 +465,14 @@ class ElmWorkspaceService(
                     if (rawProjects.isNotEmpty()) {
                         // Exclude `elm-stuff` directories to prevent pollution of open-by-filename, etc.
                         ApplicationManager.getApplication().invokeLater {
-                            for (module in intellijProject.modules.asSequence()) {
-                                ModuleRootModificationUtil.updateModel(module) { model ->
-                                    model.contentEntries.forEach {
-                                        if ("elm-stuff" !in it.excludePatterns)
-                                            it.addExcludePattern("elm-stuff")
-                                    }
-                                }
-                            }
+                            // for (module in intellijProject.modules.asSequence()) {
+                            //     ModuleRootModificationUtil.updateModel(module) { model ->
+                            //         model.contentEntries.forEach {
+                            //             if ("elm-stuff" !in it.excludePatterns)
+                            //                 it.addExcludePattern("elm-stuff")
+                            //         }
+                            //     }
+                            // }
                         }
                     }
 
