@@ -41,6 +41,7 @@ import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.elm.workspace.commandLineTools.ElmCLI
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
+import java.io.FileNotFoundException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -234,7 +235,14 @@ class ElmWorkspaceService(
 
         // Re-write the `elm.json` with sane source-directories
         val mapper = ObjectMapper()
-        val dto = mapper.readTree(manifestPath.toFile()) as ObjectNode
+        val dto = try {
+            mapper.readTree(manifestPath.toFile()) as ObjectNode
+        } catch (e: FileNotFoundException) {
+            log.error("Failed to install deps: the elm.json file does not exist", e)
+            FileUtil.delete(dir)
+            return false
+        }
+
         if (dto.has("source-directories")) {
             dto.putArray("source-directories").add("src")
         }
