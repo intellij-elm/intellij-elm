@@ -129,10 +129,13 @@ class ElmWorkspaceService(
 
 
     fun useToolchain(toolchain: ElmToolchain) {
+        if (settings.toolchain == toolchain) {
+            return
+        }
         modifySettings {
-            it.copy(elmCompilerPath = toolchain.elmCompilerPath.toString(),
-                    elmFormatPath = toolchain.elmFormatPath.toString(),
-                    elmTestPath = toolchain.elmTestPath.toString(),
+            it.copy(elmCompilerPath = toolchain.elmCompilerPath?.toString() ?: "",
+                    elmFormatPath = toolchain.elmFormatPath?.toString() ?: "",
+                    elmTestPath = toolchain.elmTestPath?.toString() ?: "",
                     isElmFormatOnSaveEnabled = toolchain.isElmFormatOnSaveEnabled)
         }
     }
