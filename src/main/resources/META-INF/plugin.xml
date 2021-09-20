@@ -36,6 +36,11 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>4.4.1</b> <em>(2021-09-20)</em>
+                <ul>
+                    <li>Enable support for all newer versions of IntelliJ (future versions introduce incompatibilities)</li>
+                </ul>
+            </li>
             <li><b>4.4.0</b> <em>(2021-04-01)</em>
                 <ul>
                     <li>Enable support for IntelliJ 2021.1.x</li>
