@@ -7,7 +7,6 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
 import org.elm.ide.presentation.getPresentationForStructure
 import org.elm.lang.core.psi.ElmPsiElement
-import org.elm.lang.core.psi.descendants
 import org.elm.lang.core.psi.directChildren
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 

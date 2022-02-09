@@ -77,6 +77,7 @@ fun GeneralCommandLine.execute(
     }
 
     val output = try {
+        // TODO ? OSProcessHandler.checkEdtAndReadAction(handler)
         handler.runProcess()
     } finally {
         Disposer.dispose(processKiller)

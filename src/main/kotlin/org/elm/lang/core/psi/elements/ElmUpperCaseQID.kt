@@ -9,7 +9,6 @@ import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.UPPER_CASE_IDENTIFIER
 import org.elm.lang.core.stubs.ElmUpperCaseQIDStub
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * An identifier that refers to a Module, Union Constructor, or Record Constructor,

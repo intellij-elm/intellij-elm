@@ -10,8 +10,7 @@ import org.elm.lang.core.lexer.State.*
 import org.elm.lang.core.psi.ELM_COMMENTS
 import org.elm.lang.core.psi.ElmTypes
 import org.elm.lang.core.psi.ElmTypes.*
-import java.util.LinkedList
-import kotlin.collections.ArrayList
+import java.util.*
 
 
 /**

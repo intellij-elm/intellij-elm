@@ -10,7 +10,6 @@ package org.elm.ide.lineMarkers
 import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
 

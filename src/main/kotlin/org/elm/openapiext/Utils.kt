@@ -35,6 +35,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.io.path.relativeTo
 import kotlin.reflect.KProperty
 
 
@@ -94,6 +95,10 @@ fun VirtualFile.findFileBreadthFirst(maxDepth: Int, predicate: (VirtualFile) -> 
 }
 
 val VirtualFile.pathAsPath: Path get() = Paths.get(path)
+fun VirtualFile.pathRelative(project: Project): Path {
+    val absPath = Paths.get(path)
+    return absPath.relativeTo(Paths.get(project.basePath))
+}
 
 fun VirtualFile.toPsiFile(project: Project): PsiFile? =
         PsiManager.getInstance(project).findFile(this)

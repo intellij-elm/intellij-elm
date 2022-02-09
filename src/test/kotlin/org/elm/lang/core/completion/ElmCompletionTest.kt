@@ -1,8 +1,11 @@
 package org.elm.lang.core.completion
 
+import org.junit.Test
+
 class ElmCompletionTest : ElmCompletionTestBase() {
 
 
+    @Test
     fun `test value completion from function parameter`() = doSingleCompletion(
             """
 view model = text mo{-caret-}

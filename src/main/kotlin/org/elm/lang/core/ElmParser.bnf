@@ -1,0 +1,516 @@
+{
+    generate = [ psi = "no" ]
+    psiClassPrefix="Elm"
+    parserClass="org.elm.lang.core.parser.ElmParser"
+    elementTypeHolderClass="org.elm.lang.core.psi.ElmTypes"
+    parserUtilClass="org.elm.lang.core.parser.manual.ElmManualParseRules"
+    elementTypeClass="org.elm.lang.core.psi.ElmElementType"
+    tokenTypeClass="org.elm.lang.core.psi.ElmTokenType"
+    parserImports=[ "static com.intellij.lang.WhitespacesBinders.*" ]
+    extends(".+Expr") = Expression
+
+    elementTypeFactory("ModuleDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeAliasDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UnionVariant")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("FunctionDeclarationLeft")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("InfixDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("InfixFuncRef")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposingList")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedOperator")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedValue")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ExposedType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ValueDeclaration")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("PortAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+
+    // stubs necessary to make type inference work using stubs
+    elementTypeFactory("TypeExpression")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("RecordType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("FieldType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TupleType")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UnitExpr")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeRef")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeVariable")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("LowerTypeName")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("RecordBaseIdentifier")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("TypeAnnotation")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("ImportClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("AsClause")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+    elementTypeFactory("UpperCaseQID")="org.elm.lang.core.stubs.StubImplementationsKt.factory"
+
+    tokens = [
+        // tokens used by manual/external parse rules
+        DOT='DOT'
+
+        // tokens used by the lexer but not visible to PsiBuilder parser
+        RESERVED='RESERVED'
+        LINE_COMMENT='LINE_COMMENT'
+        BLOCK_COMMENT='BLOCK_COMMENT'
+        DOC_COMMENT='DOC_COMMENT'
+        NEWLINE='NEWLINE'
+        TAB='TAB'
+    ]
+}
+
+/*
+OVERVIEW
+========
+This BNF grammar is interpreted by GrammarKit to produce a parser. Normally GrammarKit
+will also generate the `PsiElement`s along with the grammar, but this leads to an explosion
+of interfaces, implementation classes and convoluted inheritance. So instead we configure
+GrammarKit to only generate 2 things:
+
+- the parser (gen/org/elm/lang/core/parser/ElmParser.java)
+- the element types (gen/org/elm/lang/core/psi/ElmTypes.java)
+
+The actual PsiElement sub-classes which correspond to non-private grammar rules in this
+BNF are created and maintained by hand. The upside of this is that you can freely modify
+those PsiElement classes to implement additional interfaces, add helper methods and add
+doc comments. The downside is that they must be kept in-sync with the parser (and thereby
+this file).
+
+Each non-private rule corresponds to a PsiElement subclass of the same name prefixed by
+`Elm`. For instance, the `ModuleDeclaration` rule corresponds to the `ElmModuleDeclaration`
+PsiElement subclass.
+
+CODE FORMATTING
+===============
+- tokens are in ALL_CAPS
+- grammar rules are in CamelCase
+- meta rules and recoverWhile predicates should be in snake_case
+ */
+
+ElmFile ::= !<<eof>> Module
+    {pin=1}
+
+
+private Module ::=
+    ModuleDeclaration? VIRTUAL_END_DECL? ImportList? VIRTUAL_END_DECL? TopDeclList?
+
+ModuleDeclaration ::=
+    PORT? MODULE UpperCaseQID ExposingList
+    | 'effect' MODULE UpperCaseQID WHERE RecordExpr ExposingList
+    { pin(".*")=UpperCaseQID; recoverWhile=module_recover }
+
+// Recover from a module declaration by finding the next top-level statement. Typically
+// it will be sufficient to just search for VIRTUAL_END_DECL, but in the case of an Elm
+// file without a module declaration, we also need to look for the beginning of an import
+// or a top-level declaration. For performance reasons, tokens should be checked before
+// rules.
+private module_recover ::= !(VIRTUAL_END_DECL | IMPORT | Declaration)
+
+
+private generic_recover ::= !VIRTUAL_END_DECL
+
+private ImportList ::= Import (VIRTUAL_END_DECL Import)*
+private Import ::= ImportClause
+    {pin=1 recoverWhile=generic_recover}
+
+
+private TopDeclList ::= TopDecl (VIRTUAL_END_DECL TopDecl)*
+private TopDecl ::= !<<eof>> Declaration
+    {pin=1 recoverWhile=generic_recover}
+
+
+// MODULE DECLARATION
+
+
+ExposingList ::= EXPOSING LEFT_PARENTHESIS (DOUBLE_DOT | ExposedItem MoreExposedItems?) RIGHT_PARENTHESIS
+    {pin=1}
+
+private ExposedItem ::=
+    ExposedValue
+    | ExposedType
+    | ExposedOperator
+    {recoverWhile=exposed_item_recover}
+
+private exposed_item_recover ::= !(COMMA | RIGHT_PARENTHESIS | VIRTUAL_END_DECL)
+
+private MoreExposedItems ::= (COMMA ExposedItem)+ {pin(".*")=1}
+
+ExposedValue ::= LOWER_CASE_IDENTIFIER
+
+ExposedType ::=
+    UPPER_CASE_IDENTIFIER (LEFT_PARENTHESIS DOUBLE_DOT RIGHT_PARENTHESIS)?
+    { pin = 1 }
+
+ExposedOperator ::=
+    OperatorAsFunction_inner
+
+
+// WHITESPACE-SENSITIVE RULES
+
+
+external DotWithoutWhitespace ::= parseDotWithoutWhitespace
+external DotWithoutTrailingWhitespace ::= parseDotWithoutTrailingWhitespace
+external DotWithoutLeadingWhitespace ::= parseDotWithoutLeadingWhitespace
+external MinusWithoutTrailingWhitespace ::= parseMinusWithoutTrailingWhitespace
+
+UpperCaseQID ::= UPPER_CASE_IDENTIFIER (DotWithoutWhitespace UPPER_CASE_IDENTIFIER)*
+ValueQID ::= (UPPER_CASE_IDENTIFIER DotWithoutWhitespace)* LOWER_CASE_IDENTIFIER
+FieldAccessorFunctionExpr ::= DotWithoutTrailingWhitespace LOWER_CASE_IDENTIFIER
+
+
+// IMPORT DECLARATION
+
+
+ImportClause ::= IMPORT UpperCaseQID [AsClause] [ExposingList]
+    { pin = 2 }
+
+AsClause ::= AS UPPER_CASE_IDENTIFIER
+
+
+
+// TOP-LEVEL DECLARATIONS
+
+
+private Declaration ::=
+    ValueDeclaration
+    | TypeAliasDeclaration
+    | TypeDeclaration
+    | TypeAnnotation
+    | PortAnnotation
+    | InfixDeclaration
+
+ValueDeclaration ::= InternalValueDeclarationLeft EQ Expression
+    { pin = 'EQ' }
+
+private InternalValueDeclarationLeft ::=
+    FunctionDeclarationLeft
+    | Pattern
+
+FunctionDeclarationLeft ::=
+    LOWER_CASE_IDENTIFIER FunctionDeclarationPattern*
+
+private FunctionDeclarationPattern ::=
+        AnythingPattern
+        | LowerPattern
+        | TuplePattern
+        | UnitExpr
+        | ListPattern // Always a partial pattern, but not a syntax error
+        | RecordPattern
+        | LiteralExprGroup // Always a partial pattern, but not a syntax error
+        | ParenthesizedPattern
+
+// TYPE DECLARATIONS AND REFERENCES
+
+
+TypeDeclaration ::=
+    TYPE UPPER_CASE_IDENTIFIER (LowerTypeName)* EQ UnionVariant MoreUnionVariants?
+    { pin = 2 }
+
+LowerTypeName ::= LOWER_CASE_IDENTIFIER
+
+UnionVariant ::=
+    UPPER_CASE_IDENTIFIER SingleTypeExpression*
+    { pin = 1; recoverWhile = union_variant_recover }
+
+private union_variant_recover ::= !(PIPE|VIRTUAL_END_DECL)
+
+private MoreUnionVariants ::= (PIPE UnionVariant)+
+    { pin(".*") = 1 }
+
+TypeAliasDeclaration ::=
+    TYPE ALIAS UPPER_CASE_IDENTIFIER LowerTypeName* EQ TypeExpression
+    { pin = 3 }
+
+TypeExpression ::=
+    TypeExpressionInner (ARROW TypeExpressionInner)*
+
+private TypeExpressionInner ::=
+    TypeRef
+    | SingleTypeExpression
+
+TypeRef ::= UpperCaseQID (SingleTypeExpression)+
+
+private SingleTypeExpression ::=
+    TypeRefWithoutArgs
+    | TypeVariable
+    | RecordType
+    | TupleType
+    | LEFT_PARENTHESIS TypeExpression RIGHT_PARENTHESIS
+
+TypeRefWithoutArgs ::=
+    UpperCaseQID { elementType = TypeRef }
+
+TypeVariable ::=
+    LOWER_CASE_IDENTIFIER
+
+RecordType ::=
+    LEFT_BRACE [[RecordBase] <<non_empty_list2 FieldType>>] RIGHT_BRACE
+    { pin = 1 }
+
+FieldType ::=
+    LOWER_CASE_IDENTIFIER COLON TypeExpression
+
+TupleType ::=
+    UnitExpr
+    | LEFT_PARENTHESIS TypeExpression (COMMA TypeExpression)+ RIGHT_PARENTHESIS
+
+
+TypeAnnotation ::=
+    LOWER_CASE_IDENTIFIER COLON TypeExpression
+    { pin = 'COLON' }
+
+PortAnnotation ::= PORT LOWER_CASE_IDENTIFIER COLON TypeExpression
+    { pin = 'COLON' }
+
+
+
+// EXPRESSIONS
+
+
+Expression ::=
+    CallOrAtom BinOpExprUpper?
+
+upper BinOpExprUpper ::=
+    Operator CallOrAtom (Operator CallOrAtom)*
+    { pin(".*") = 1
+      elementType = BinOpExpr
+    }
+
+fake BinOpExpr ::= 'exists solely to create an element type for BinOpExprUpper'
+
+Operator ::=
+    OPERATOR_IDENTIFIER
+
+OperatorAsFunctionExpr ::=
+    OperatorAsFunction_inner
+
+private OperatorAsFunction_inner ::=
+    LEFT_PARENTHESIS OPERATOR_IDENTIFIER RIGHT_PARENTHESIS
+
+private CallOrAtom ::=
+    Atom FunctionCallExpr?
+
+left FunctionCallExpr ::=
+    Atom+
+
+
+// NOTE: all descendants must be:
+//       either a private group (such as `LiteralExprGroup`)
+//       *or* a public rule named with `Expr` suffix
+//
+// If you see an error "Unknown element type: ATOM" in [ElmPsiFactory.createElement]
+// then you probably broke one of the above rules.
+private Atom ::=
+    LiteralExprGroup
+    | NegateExpr
+    | OperatorAsFunctionExpr
+    | UnitExpr
+    | FieldAccessExpr
+    | TupleOrParenExpr
+    | ValueExpr
+    | FieldAccessorFunctionExpr
+    | ListExpr
+    | RecordExpr
+    | IfElseExpr
+    | CaseOfExpr
+    | LetInExpr
+    | AnonymousFunctionExpr
+    | GlslCodeExpr
+{ name="expr" }
+
+// Various tokens that can begin a new expression. Useful for parse error recovery.
+private expr_delimiters ::= COMMA | LEFT_BRACE | LEFT_PARENTHESIS | LEFT_SQUARE_BRACKET
+
+
+external TupleOrParenExpr ::= parseTupleOrParenExpr Expression
+
+
+FieldAccessExpr ::= FieldAccessStart FieldAccessSegment+
+
+private FieldAccessStart ::= ValueExpr | ParenthesizedExpr | RecordExpr
+
+left FieldAccessSegment ::=
+    DotWithoutWhitespace LOWER_CASE_IDENTIFIER
+    { elementType = FieldAccessExpr }
+
+
+NegateExpr ::= MinusWithoutTrailingWhitespace Atom
+    { pin = 1 }
+
+ParenthesizedExpr ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+
+private LiteralExprGroup ::=
+    CharConstantExpr
+    | NumberConstantExpr
+    | StringConstantExpr
+
+CharConstantExpr ::= OPEN_CHAR StringPart CLOSE_CHAR
+    { pin = 1 }
+NumberConstantExpr ::= NUMBER_LITERAL
+StringConstantExpr ::= OPEN_QUOTE StringParts CLOSE_QUOTE
+    { pin = 1 }
+
+private StringPart ::= REGULAR_STRING_PART | STRING_ESCAPE | INVALID_STRING_ESCAPE
+private StringParts ::= StringPart*
+    { recoverWhile = string_recover }
+
+private string_recover ::= !(CLOSE_QUOTE|VIRTUAL_END_DECL|expr_delimiters)
+
+AnonymousFunctionExpr ::= BACKSLASH Pattern+ ARROW Expression
+
+ValueExpr ::=
+    ValueQID
+    | UpperCaseQID
+
+TupleExpr ::=
+    LEFT_PARENTHESIS Expression (COMMA Expression)+ RIGHT_PARENTHESIS
+    {pin(".*")=2}
+
+UnitExpr ::=
+    LEFT_PARENTHESIS RIGHT_PARENTHESIS
+
+ListExpr ::=
+    LEFT_SQUARE_BRACKET [<<non_empty_list2 Expression>>] RIGHT_SQUARE_BRACKET
+    { pin = 1 }
+
+RecordExpr ::=
+    LEFT_BRACE RecordInner? RIGHT_BRACE
+    { pin = 1 }
+
+RecordBaseIdentifier ::=
+    LOWER_CASE_IDENTIFIER
+
+private RecordBase ::=
+    RecordBaseIdentifier PIPE
+
+private RecordInner ::=
+    RecordBase? RecordInnerFields
+    { recoverWhile = record_inner_recover }
+
+private RecordInnerFields ::=
+    Field (COMMA Field)*
+    { pin(".*") = 1 }
+
+private record_inner_recover ::=
+    !(RIGHT_BRACE|VIRTUAL_END_SECTION|VIRTUAL_END_DECL)
+
+Field ::=
+    LOWER_CASE_IDENTIFIER EQ Expression
+    { pin = 2 }
+
+
+IfElseExpr ::=
+    IF Expression THEN Expression (ELSE IF Expression THEN Expression)* ELSE Expression
+    { pin = 'IF' }
+
+
+CaseOfExpr ::=
+    CASE Expression CaseOfTail
+    { pin = 'CASE' }
+
+// This decomposition of rules is really lame, but it's the only way I could figure out
+// how to get GrammarKit to not be too greedy and try parsing top-level declarations as
+// if they were case branches. Is there a better way?
+private CaseOfTail ::=
+    OF CaseOfTail2?
+    {pin=1}
+
+private CaseOfTail2 ::=
+    VIRTUAL_OPEN_SECTION CaseOfBranch MoreCaseOfBranches? (VIRTUAL_END_SECTION|<<eof>>)
+    {pin=1}
+
+CaseOfBranch ::=
+    Pattern ARROW Expression
+    { pin = 1; recoverWhile=case_branch_recover }
+
+private case_branch_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
+
+private MoreCaseOfBranches ::= (VIRTUAL_END_DECL CaseOfBranch)+
+    { pin(".*")=1 }
+
+
+LetInExpr ::=
+    LET LetInTail
+    { pin = 'LET' }
+
+private LetInTail ::=
+    VIRTUAL_OPEN_SECTION InnerDeclaration MoreInnerDeclarations? VIRTUAL_END_SECTION IN Expression
+    { pin = 1 }
+
+private InnerDeclaration ::=
+    ValueDeclaration
+    | TypeAnnotation
+    { recoverWhile=inner_decl_recover }
+
+private inner_decl_recover ::= !(VIRTUAL_END_DECL|VIRTUAL_END_SECTION)
+
+private MoreInnerDeclarations ::= (VIRTUAL_END_DECL InnerDeclaration)+
+    { pin(".*")=1 }
+
+
+// PATTERNS
+
+
+Pattern ::=
+    (ConsPattern | SinglePattern) [AS LowerPattern]
+
+ConsPattern ::= SinglePattern ('::' SinglePattern)+
+
+private SinglePattern ::=
+    ParenthesizedPattern
+    | AnythingPattern
+    | LowerPattern
+    | UnionPattern
+    | TuplePattern
+    | UnitExpr
+    | ListPattern
+    | RecordPattern
+    | LiteralExprGroup
+
+LowerPattern ::= LOWER_CASE_IDENTIFIER
+
+AnythingPattern ::= UNDERSCORE
+
+RecordPattern ::=
+    LEFT_BRACE <<non_empty_list LowerPattern>> RIGHT_BRACE
+
+ListPattern ::=
+    LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
+
+NullaryConstructorArgumentPattern ::= UpperCaseQID
+
+UnionPattern ::=
+    UpperCaseQID UnionArgumentPattern*
+
+private UnionArgumentPattern ::=
+    AnythingPattern
+    | LowerPattern
+    | TuplePattern
+    | NullaryConstructorArgumentPattern
+    | UnitExpr
+    | ListPattern
+    | RecordPattern
+    | LiteralExprGroup
+    | ParenthesizedPattern
+
+TuplePattern ::=
+    LEFT_PARENTHESIS Pattern (COMMA Pattern)+ RIGHT_PARENTHESIS
+
+private ParenthesizedPattern ::=
+    LEFT_PARENTHESIS Pattern RIGHT_PARENTHESIS
+
+
+
+// MISC
+
+
+InfixDeclaration ::=
+    INFIX ('left' | 'right' | 'non') NUMBER_LITERAL OperatorAsFunction_inner EQ InfixFuncRef
+    { pin = 'EQ' }
+
+InfixFuncRef ::=
+    LOWER_CASE_IDENTIFIER
+
+GlslCodeExpr ::= START_GLSL_CODE GLSL_CODE_CONTENT* END_GLSL_CODE;
+
+
+
+// UTILITY
+
+
+private meta non_empty_list ::= <<p>> (COMMA <<p>>)*
+// TODO [kl] consolidate once I make sure that this is safe to use everywhere
+private meta non_empty_list2 ::= <<p>> (COMMA <<p>>)* {pin(".*")=1}

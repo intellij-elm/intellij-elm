@@ -13,6 +13,7 @@ import org.intellij.lang.annotations.Language
 
 class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
+/*
     override fun runTest() {
         if (toolchain.elmFormatCLI == null) {
             // TODO in the future maybe we should install elm-format in the CI build environment
@@ -21,6 +22,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         }
         super.runTest()
     }
+*/
 
 
     fun `test elm-format action with elm 19`() {

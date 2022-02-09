@@ -5,12 +5,13 @@ import org.elm.fileTree
 import org.elm.openapiext.elementFromXmlString
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toXmlString
+import org.junit.Test
 import java.io.File
 import java.nio.file.Paths
 
 class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
-
+    @Test
     fun `test finds Elm project for source file`() {
         val testProject = fileTree {
             dir("a") {

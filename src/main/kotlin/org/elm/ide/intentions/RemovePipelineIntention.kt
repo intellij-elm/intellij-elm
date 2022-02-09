@@ -4,8 +4,11 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.util.DocumentUtil
-import org.elm.lang.core.psi.*
+import org.elm.lang.core.psi.ElmPsiElement
+import org.elm.lang.core.psi.ElmPsiFactory
+import org.elm.lang.core.psi.ancestors
 import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.startOffset
 import org.elm.lang.core.withoutExtraParens
 import org.elm.lang.core.withoutParens
 import org.elm.openapiext.runWriteCommandAction

@@ -9,7 +9,6 @@ package org.elm.ide.intentions
 
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.util.ui.UIUtil
 import org.elm.fileTreeFromText
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language

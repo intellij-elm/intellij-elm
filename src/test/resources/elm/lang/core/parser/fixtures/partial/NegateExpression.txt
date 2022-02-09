@@ -1,0 +1,11 @@
+Elm File
+  ElmValueDeclaration(VALUE_DECLARATION)
+    ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
+      PsiElement(LOWER_CASE_IDENTIFIER)('foo')
+    PsiWhiteSpace(' ')
+    PsiElement(EQ)('=')
+    PsiWhiteSpace(' ')
+    ElmNegateExpr(NEGATE_EXPR)
+      PsiElement(OPERATOR_IDENTIFIER)('-')
+      PsiErrorElement:<expr> expected
+        <empty list>

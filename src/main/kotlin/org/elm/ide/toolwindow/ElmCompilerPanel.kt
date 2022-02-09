@@ -27,27 +27,12 @@ import com.intellij.ui.table.JBTable
 import org.elm.openapiext.checkIsEventDispatchThread
 import org.elm.openapiext.findFileByPath
 import org.elm.openapiext.toPsiFile
-import org.elm.workspace.compiler.ELM_BUILD_ACTION_ID
-import org.elm.workspace.compiler.ElmBuildAction
-import org.elm.workspace.compiler.ElmError
-import org.elm.workspace.compiler.Region
-import org.elm.workspace.compiler.Start
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Component
-import java.awt.Dimension
-import java.awt.FlowLayout
+import org.elm.workspace.compiler.*
+import java.awt.*
 import java.awt.font.TextAttribute
 import java.nio.file.Path
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTable
-import javax.swing.JTextPane
-import javax.swing.ListSelectionModel
-import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
-import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+import javax.swing.*
+import javax.swing.ScrollPaneConstants.*
 import javax.swing.border.EmptyBorder
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
@@ -153,6 +138,7 @@ class ElmCompilerPanel(
 
     private val entryPointLabel = JLabel("No project compiled yet")
 
+    // TODO 2 entryPoints Lamdera
     private val entryPointLink =
             LinkLabel<String>("", null)
 

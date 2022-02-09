@@ -28,12 +28,7 @@ package org.elm.lang.core.psi
 
 import com.intellij.application.options.CodeStyle
 import com.intellij.extapi.psi.StubBasedPsiElementBase
-import com.intellij.psi.PsiComment
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiErrorElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.StubBasedPsiElement
+import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.psi.impl.source.PsiFileImpl
 import com.intellij.psi.stubs.StubElement
@@ -137,7 +132,7 @@ fun <T : PsiElement> getStubDescendantsOfType(
     if (strict) {
         go(stub.childrenStubs)
     } else {
-        go(listOf(stub))
+        go(listOf(stub) as List<StubElement<PsiElement>>)
     }
 
     return result
@@ -169,7 +164,7 @@ fun <T : PsiElement> getStubDescendantOfType(
     return if (strict) {
         go(stub.childrenStubs)
     } else {
-        go(listOf(stub))
+        go(listOf(stub) as List<StubElement<PsiElement>>)
     }
 }
 

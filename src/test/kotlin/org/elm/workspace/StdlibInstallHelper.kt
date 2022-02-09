@@ -7,6 +7,7 @@ import org.elm.fileTree
 import org.elm.openapiext.pathAsPath
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.intellij.lang.annotations.Language
+import java.nio.file.Path
 import java.nio.file.Paths
 
 /*
@@ -103,6 +104,11 @@ object MinimalElmStdlibVariant : ElmStdlibVariant {
             elm("Main.elm")
         }.create(project, onDiskTmpDir)
 
-        elmCLI.make(project, onDiskTmpDir.pathAsPath, Paths.get("Main.elm"))
+        val entryPoint: Triple<Path, String?, Int> = Triple(
+            Paths.get("Main.elm"),
+            null,
+            0 // mainEntryPoint.textOffset
+        )
+        elmCLI.make(project, onDiskTmpDir.pathAsPath, null, listOf(entryPoint))
     }
 }

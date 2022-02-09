@@ -11,10 +11,12 @@ import com.intellij.testFramework.TestActionEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 import java.nio.file.Path
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
+    @Test
     fun `test build Elm application project`() {
         val source = """
                     module Main exposing (..)

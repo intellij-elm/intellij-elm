@@ -42,7 +42,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixture4TestCase
 import junit.framework.AssertionFailedError
 import org.elm.FileTree
 import org.elm.TestProject
@@ -72,7 +72,7 @@ private val log = logger<ElmTestBase>()
  *
  * For "heavier" integration tests, see [org.elm.workspace.ElmWorkspaceTestBase]
  */
-abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestCase {
+abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTestCase {
 
     override fun getProjectDescriptor(): LightProjectDescriptor = ElmDefaultDescriptor
 
@@ -82,6 +82,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
     override fun getTestDataPath(): String = "${ElmTestCase.testResourcesPath}/$dataPath"
 
+/*
     override fun runTest() {
         val projectDescriptor = projectDescriptor
         val reason = (projectDescriptor as? ElmProjectDescriptorBase)?.skipTestReason
@@ -92,6 +93,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
         super.runTest()
     }
+*/
 
     protected val fileName: String
         get() = "$testName.elm"
@@ -115,7 +117,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
         action()
 
         val afterDir = getVirtualFileByName("$testDataPath/$after")
-        PlatformTestUtil.assertDirectoriesEqual(afterDir, beforeDir)
+        PlatformTestUtil.assertDirectoriesEqual(afterDir!!, beforeDir)
     }
 
     protected fun checkByDirectory(@Language("Elm") before: String, @Language("Elm") after: String, action: () -> Unit) {

@@ -1,8 +1,8 @@
 package org.elm.ide.color
 
-import com.github.ajalt.colormath.ConvertibleColor
-import com.github.ajalt.colormath.HSL
-import com.github.ajalt.colormath.RGB
+import com.github.ajalt.colormath.Color
+import com.github.ajalt.colormath.model.HSL
+import com.github.ajalt.colormath.model.RGB
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.util.ui.ColorIcon
 import org.elm.lang.ElmTestBase
@@ -218,15 +218,15 @@ main = rgb
         assertEquals(expected, actual)
     }
 
-    private fun doCssWriteTest(before: String, after: String, color: ConvertibleColor = RGB(123, 45, 67)) {
+    private fun doCssWriteTest(before: String, after: String, color: Color = RGB(123, 45, 67)) {
         doWriteTest(color, "main = \". $before {-caret-}.\"", "main = \". $after .\"")
     }
 
-    private fun doFuncWriteTest(func: String, before: String, after: String, color: ConvertibleColor = RGB(123, 45, 67)) {
+    private fun doFuncWriteTest(func: String, before: String, after: String, color: Color = RGB(123, 45, 67)) {
         doWriteTest(color, "main = $func{-caret-} $before", "main = $func $after")
     }
 
-    private fun doWriteTest(color: ConvertibleColor, @Language("Elm") before: String, @Language("Elm") after: String) {
+    private fun doWriteTest(color: Color, @Language("Elm") before: String, @Language("Elm") after: String) {
         InlineFile(before)
         val element = myFixture.file.findElementAt(myFixture.caretOffset - 1)
         requireNotNull(element)

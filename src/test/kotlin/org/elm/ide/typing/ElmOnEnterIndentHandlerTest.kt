@@ -1,6 +1,5 @@
 package org.elm.ide.typing
 
-import com.intellij.application.options.CodeStyle
 import org.elm.lang.core.psi.indentStyle
 import org.intellij.lang.annotations.Language
 

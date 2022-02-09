@@ -8,7 +8,7 @@
 package org.elm.lang.core.psi
 
 import com.intellij.injected.editor.VirtualFileWindow
-import com.intellij.openapi.components.ProjectComponent
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.psi.*
@@ -18,7 +18,8 @@ import com.intellij.psi.util.PsiModificationTracker
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 
-class ElmPsiManager(val project: Project) : ProjectComponent {
+@Service(Service.Level.PROJECT)
+class ElmPsiManager(val project: Project) {
     /**
      * A modification tracker that is incremented on PSI changes that can affect non-local references or inference.
      *
@@ -27,8 +28,8 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
      */
     val modificationTracker = SimpleModificationTracker()
 
-    override fun projectOpened() {
-        PsiManager.getInstance(project).addPsiTreeChangeListener(CacheInvalidator())
+    init {
+        PsiManager.getInstance(project).addPsiTreeChangeListener(CacheInvalidator(), project)
     }
 
     inner class CacheInvalidator : PsiTreeChangeAdapter() {
@@ -83,7 +84,7 @@ class ElmPsiManager(val project: Project) : ProjectComponent {
 }
 
 private val Project.elmPsiManager: ElmPsiManager
-    get() = getComponent(ElmPsiManager::class.java)
+    get() = getService(ElmPsiManager::class.java)
 
 /** @see ElmPsiManager.modificationTracker */
 val Project.modificationTracker: SimpleModificationTracker

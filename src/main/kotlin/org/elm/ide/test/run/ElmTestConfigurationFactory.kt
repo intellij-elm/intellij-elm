@@ -14,6 +14,8 @@ class ElmTestConfigurationFactory internal constructor(type: ConfigurationType) 
 
     override fun getIcon() = RUN_ICON
 
+    override fun getId(): String = "ELM_TEST_RUN_CONFIGURATION"
+
     companion object {
         val RUN_ICON = ElmIcons.COLORFUL
     }

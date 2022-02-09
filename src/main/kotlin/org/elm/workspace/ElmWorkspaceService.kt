@@ -257,16 +257,18 @@ class ElmWorkspaceService(
         }
 
         // Run the Elm compiler to install the dependencies
-        val output = elmCLI.make(intellijProject, workDir = dir.toPath(), path = tempMain.toPath())
+        val tmpEntryPoint: Triple<Path, String?, Int> = Triple(
+            tempMain.toPath(),
+            null,
+            0 // mainEntryPoint.textOffset
+        )
+
+        val success = elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
 
         // Cleanup
         FileUtil.delete(dir)
 
-        if (!output.isSuccess) {
-            log.error("Failed to install deps: Elm compiler failed: ${output.stderr}")
-            return false
-        }
-        return true
+        return success
     }
 
 

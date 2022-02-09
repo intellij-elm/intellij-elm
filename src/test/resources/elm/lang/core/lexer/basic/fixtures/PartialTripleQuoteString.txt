@@ -1,0 +1,3 @@
+OPEN_QUOTE ('"""')
+REGULAR_STRING_PART ('a\n!')
+REGULAR_STRING_PART ('""')

@@ -1,0 +1,7 @@
+DOC_COMMENT ('{-| #1\n-}')
+NEWLINE ('\n')
+NEWLINE ('\n')
+DOC_COMMENT ('{-| #2 -}')
+NEWLINE ('\n')
+NEWLINE ('\n')
+DOC_COMMENT ('{-| #3\nblah blah blah\nmore stuff\n-}')
