@@ -14,6 +14,7 @@ view model = text model{-caret-}
 """)
 
 
+    @Test
     fun `test value completion from let-in decl`() = doSingleCompletion(
             """
 f = let name = "Arnold" in na{-caret-}
@@ -22,6 +23,7 @@ f = let name = "Arnold" in name{-caret-}
 """)
 
 
+    @Test
     fun `test value completion from case-of pattern destructuring`() = doSingleCompletion(
             """
 f = case user of { name, age } -> nam{-caret-}
@@ -30,6 +32,7 @@ f = case user of { name, age } -> name{-caret-}
 """)
 
 
+    @Test
     fun `test union constructor completion from pattern destructuring`() = doSingleCompletion(
             """
 type MyState = State Int
@@ -40,6 +43,7 @@ f (State{-caret-} n) = n
 """)
 
 
+    @Test
     fun `test union type completion in a type annotation`() = doSingleCompletion(
             """
 type Page = Home
@@ -50,6 +54,7 @@ defaultPage : Page{-caret-}
 """)
 
 
+    @Test
     fun `test type alias completion in a type annotation`() = doSingleCompletion(
             """
 type alias User = { name : String, age : Int }
@@ -60,6 +65,7 @@ viewUser : User{-caret-}
 """)
 
 
+    @Test
     fun `test qualified value completion`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -76,6 +82,7 @@ g = User.defaultUser{-caret-}
 """)
 
 
+    @Test
     fun `test qualified value completion also includes non-imported modules`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -90,6 +97,7 @@ g = User.defaultUser{-caret-}
 """)
 
 
+    @Test
     fun `test qualified type completion`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -106,6 +114,7 @@ g : User.User{-caret-}
 """)
 
 
+    @Test
     fun `test qualified type completion also includes non-imported modules`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -120,6 +129,7 @@ g : User.User{-caret-}
 """)
 
 
+    @Test
     fun `test qualified union constructor completion in expr`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -136,6 +146,7 @@ defaultPage = Page.Home{-caret-}
 """)
 
 
+    @Test
     fun `test qualified union constructor completion in pattern`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -154,6 +165,7 @@ defaultPage p = case p of
 """)
 
 
+    @Test
     fun `test does not complete union constructors in type namespace`() = checkNoCompletion(
             """
 type Page = NotFound
@@ -161,6 +173,7 @@ f : NotF{-caret-}
 """)
 
 
+    @Test
     fun `test does not complete number literals`() = checkNoCompletion(
             """
 x = 42
@@ -171,6 +184,7 @@ y = 4{-caret-}
 // TODO [kl] eventually code completion should add a 'dot' suffix when completing a module qualifier
 
 
+    @Test
     fun `test module completion of module prefix, after dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -186,6 +200,7 @@ g = Data.User{-caret-}
 """)
 
 
+    @Test
     fun `test module name completion with caret before dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -201,6 +216,7 @@ g = Data{-caret-}
 """)
 
 
+    @Test
     fun `test module name completion with caret after dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -216,6 +232,7 @@ g = Data.User{-caret-}
 """)
 
 
+    @Test
     fun `test qualified value completion with caret after dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -239,6 +256,7 @@ g = User.defaultUser{-caret-}
     the IntelliJ dummy identifier to use an upper-case identifier in contexts such as types
     which must start with an upper-case letter.
 
+    @Test
     fun `test qualified type completion with caret after dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm
@@ -256,6 +274,7 @@ g : Foo.Bar{-caret-}
 */
 
 
+    @Test
     fun `test qualified type constructor completion with caret after dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm

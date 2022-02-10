@@ -5,6 +5,7 @@ import com.intellij.testFramework.ParsingTestCase
 import org.elm.ide.test.core.ElmPluginHelper.getPsiElement
 import org.elm.ide.test.core.LabelUtils.toPath
 import org.elm.lang.core.parser.ElmParserDefinition
+import org.junit.Test
 
 class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserDefinition()) {
 
@@ -17,21 +18,25 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
         return "Navigation"
     }
 
+    @Test
     fun testTopLevelSuite() {
         doTest(false)
         assertSuite(27, "suite1")
     }
 
+    @Test
     fun testTestInSuite() {
         doTest(false)
         assertTest(55, "suite1", "test1")
     }
 
+    @Test
     fun testTopLevelTest() {
         doTest(false)
         assertTest(137, "test1")
     }
 
+    @Test
     fun testNestedSuitesAndTests() {
         doTest(false)
         assertSuite(207, "suite2")
@@ -40,16 +45,19 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
         assertTest(324, "suite2", "nested1", "test1")
     }
 
+    @Test
     fun testMissingTopLevelSuite() {
         doTest(false)
         assertMissing("suiteMissing")
     }
 
+    @Test
     fun testMissingTopLevelTest() {
         doTest(false)
         assertMissing("testMissing")
     }
 
+    @Test
     fun testMissingNestedSuitesAndTests() {
         doTest(false)
         assertSuite(207, "suite2")
@@ -58,6 +66,7 @@ class ElmPluginHelperTest : ParsingTestCase("elmPluginHelper", "elm", ElmParserD
         assertFallback("nested1", "suite2", "nested1", "testMissing")
     }
 
+    @Test
     fun testFuzzTest() {
         doTest(false)
         assertFuzz(495, "fuzz1")

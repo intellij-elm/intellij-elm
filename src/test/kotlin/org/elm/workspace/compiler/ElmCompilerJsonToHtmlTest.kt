@@ -57,6 +57,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                                 region = Region(Start(1, 8), End(1, 14))))))
     }
 
+    @Test
     fun `test generic error without a path`() {
         @Language("JSON")
         val json = """
@@ -85,6 +86,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                         location = null)))
     }
 
+    @Test
     fun `test generic error with a path and a null color, crazy`() {
         @Language("JSON")
         val json = """
@@ -123,6 +125,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                                 region = null))))
     }
 
+    @Test
     fun `test hyperlink within a longer run of text`() {
         @Language("JSON")
         val json = """

@@ -1,13 +1,17 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
+
 class MakeDecoderIntentionTest : ElmIntentionTestBase(MakeDecoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
+    @Test
     fun `test unavailable with wrong return type`() = doUnavailableTest(
             """
 decode : String -> String{-caret-}
 """)
 
+    @Test
     fun `test unavailable with arguments`() = doUnavailableTest(
             """
 import Json.Decode as Decode
@@ -15,6 +19,7 @@ import Json.Decode as Decode
 decode : Int -> Decode Int{-caret-}
 """)
 
+    @Test
     fun `test basic type`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -28,6 +33,7 @@ decode =
     Decode.string
 """)
 
+    @Test
     fun `test existing pipeline import`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -48,6 +54,7 @@ decode =
         |> required "foo" Decode.int
 """)
 
+    @Test
     fun `test pipeline exposed`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -68,6 +75,7 @@ decode =
         |> required "foo" Decode.int
 """)
 
+    @Test
     fun `test exposed functions`() = doAvailableTest(
             """
 import Json.Decode exposing (..)
@@ -91,6 +99,7 @@ decode =
         |> required "s" (nullable string)
 """)
 
+    @Test
     fun `test aliased functions`() = doAvailableTest(
             """
 import Json.Decode as D
@@ -114,6 +123,7 @@ decode =
         |> required "s" (D.nullable D.string)
 """)
 
+    @Test
     fun `test built in types in record`() = doAvailableTest(
             """
 import Array exposing (Array)
@@ -181,6 +191,7 @@ decode =
         |> required "unitField" (Decode.succeed ())
 """)
 
+    @Test
     fun `test mixed records and unions`() = doAvailableTest(
             """
 module Main exposing (..)
@@ -234,6 +245,7 @@ fooDecoder =
         |> required "enum" enumDecoder
 """)
 
+    @Test
     fun `test nested function`() = doAvailableTest(
             """
 module Main exposing (..)
@@ -283,6 +295,7 @@ main =
     ()
 """)
 
+    @Test
     fun `test union variant wrappers`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -334,6 +347,7 @@ wrappersDecoder =
     Decode.string |> Decode.andThen get
 """)
 
+    @Test
     fun `test union variants with multiple parameters`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -363,6 +377,7 @@ decode =
     Decode.string |> Decode.andThen get
 """)
 
+    @Test
     fun `test name conflict`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -404,6 +419,7 @@ barDecoder =
         |> required "f" fooBarDecoder
 """)
 
+    @Test
     fun `test adding import`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -439,6 +455,7 @@ barDecoder =
         |> required "s" Decode.string
 """)
 
+    @Test
     fun `test adding variant imports`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -490,6 +507,7 @@ barDecoder =
     Decode.string |> Decode.andThen get
 """)
 
+    @Test
     fun `test existing union decoder`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -517,6 +535,7 @@ decode =
         |> required "foo" existing
 """)
 
+    @Test
     fun `test existing record decoder`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -544,6 +563,7 @@ decode =
         |> required "foo" existing
 """)
 
+    @Test
     fun `test existing list decoder`() = doAvailableTest(
             """
 import Json.Decode as Decode
@@ -571,6 +591,7 @@ decode =
         |> required "foo" existing
 """)
 
+    @Test
     fun `test existing union decoder in other module`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -599,6 +620,7 @@ decode =
         |> required "foo" Foo.existing
 """)
 
+    @Test
     fun `test existing union decoder in separate module with qualification`() = doAvailableTestWithFileTree(
             """
 --@ main.elm

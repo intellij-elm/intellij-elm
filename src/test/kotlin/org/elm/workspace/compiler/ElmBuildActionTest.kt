@@ -35,6 +35,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
     }
 
 
+    @Test
     fun `test build Elm application project with an error`() {
         val source = """
                     module Main exposing (..)
@@ -53,6 +54,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         doTest(file, expectedNumErrors = 1, expectedOffset = source.indexOf("main"))
     }
 
+    @Test
     fun `test build Elm project ignores nested function named 'main'`() {
         val source = """
                     module Main exposing (..)

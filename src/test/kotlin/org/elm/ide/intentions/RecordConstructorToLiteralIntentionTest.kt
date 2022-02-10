@@ -1,7 +1,10 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
+
 class RecordConstructorToLiteralIntentionTest : ElmIntentionTestBase(RecordConstructorToLiteralIntention()) {
 
+    @Test
     fun `test record type alias with two fields (caret inside type name)`() = doAvailableTest(
         """
 module Foo exposing (..)
@@ -22,6 +25,7 @@ foo =
 """
     )
 
+    @Test
     fun `test record type alias with two fields (caret at end of type name)`() = doAvailableTest(
         """
 module Foo exposing (..)
@@ -42,6 +46,7 @@ foo =
 """
     )
 
+    @Test
     fun `test record type alias with nested record`() = doAvailableTest(
         """
 module Foo exposing (..)
@@ -63,6 +68,7 @@ foo =
     )
 
 
+    @Test
     fun `test record type alias with nested record type alias (using constructor function)`() = doAvailableTest(
         """
 module Foo exposing (..)
@@ -89,6 +95,7 @@ foo =
 """
     )
 
+    @Test
     fun `test record type alias with nested record type alias (using record literal)`() = doAvailableTest(
         """
 module Foo exposing (..)
@@ -115,6 +122,7 @@ foo =
 """
     )
 
+    @Test
     fun `test record type alias with non-trivial values`() = doAvailableTest(
         """
 module Foo exposing (..)
@@ -135,6 +143,7 @@ foo =
 """
     )
 
+    @Test
     fun `test record type alias imported from another module (unqualified)`() = doAvailableTestWithFileTree(
         """
 --@ main.elm
@@ -159,6 +168,7 @@ foo =
 """
     )
 
+    @Test
     fun `test record type alias imported from another module (qualified)`() = doAvailableTestWithFileTree(
         """
 --@ main.elm
@@ -183,6 +193,7 @@ foo =
 """
     )
 
+    @Test
     fun `test not available for custom type`() = doUnavailableTest(
         """
 module Foo exposing (..)
@@ -195,6 +206,7 @@ foo =
 """
     )
 
+    @Test
     fun `test not available for function which creates record`() = doUnavailableTest(
         """
 module Foo exposing (..)

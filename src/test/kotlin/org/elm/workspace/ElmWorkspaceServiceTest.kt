@@ -41,6 +41,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
 
+    @Test
     fun `test can attach application json files`() {
         val testProject = fileTree {
             dir("a") {
@@ -117,6 +118,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         )
     }
 
+    @Test
     fun `test can attach package json files`() {
         val testProject = fileTree {
             project("elm.json", """
@@ -175,6 +177,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
                 elmProject.exposedModules.toSet())
     }
 
+    @Test
     fun `test can attach multiple Elm projects`() {
         val testProject = fileTree {
             dir("a") {
@@ -210,6 +213,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
     }
 
 
+    @Test
     fun `test auto discover Elm project at root level`() {
         val testProject = fileTree {
             project("elm.json", BASIC_APPLICATION_MANIFEST)
@@ -224,6 +228,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         check(elmProject.manifestPath == testProject.root.pathAsPath.resolve("elm.json"))
     }
 
+    @Test
     fun `test auto discover Elm project skips bad project files`() {
         fileTree {
             project("elm.json", """ { "BOGUS": "INVALID ELM.JSON" } """)
@@ -236,6 +241,7 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
         check(elmProjects.isEmpty()) { "Should have found zero Elm projects but found ${elmProjects.size}" }
     }
 
+    @Test
     fun `test persistence roundtrip`() {
         // setup real files on disk
         val testProject = fileTree {
@@ -276,32 +282,40 @@ class ElmWorkspaceServiceTest : ElmWorkspaceTestBase() {
 
     // START OF TESTS RELATED TO SIDECAR MANIFEST (elm.intellij.json)
 
+    @Test
     fun `test uses default tests location when no sidecar manifest exists (application project)`() =
             testSidecarManifest(null, "tests", false)
 
+    @Test
     fun `test uses custom tests location when sidecar manifest exists`() =
             testSidecarManifest(getSidecarManifest("custom-tests"), "custom-tests", true)
 
+    @Test
     fun `test uses default tests location when sidecar manifest specifies default location`() =
             testSidecarManifest(getSidecarManifest("tests"), "tests", false)
 
     private val nestedTestsLocation = listOf("custom", "tests", "location").joinToString(File.separator)
 
+    @Test
     fun `test handles nested custom tests location`() =
             testSidecarManifest(getSidecarManifest(nestedTestsLocation), nestedTestsLocation, true)
 
+    @Test
     fun `test normalizes custom tests location`() {
         // Repeat above test with path like "./custom/tests/location/." (i.e. leading and trailing dot).
         val denormalizedNestedTestsLocation = listOf(".", "custom", "tests", "location", ".").joinToString(File.separator)
         testSidecarManifest(getSidecarManifest(denormalizedNestedTestsLocation), nestedTestsLocation, true)
     }
 
+    @Test
     fun `test uses default tests location when no sidecar manifest exists (package project)`() =
             testSidecarManifest(null, "tests", expectedIsCustomTestsDir = false, isApplicationProject = false)
 
+    @Test
     fun `test ignores custom tests location for packages`() =
             testSidecarManifest(getSidecarManifest("custom-tests"), "tests", expectedIsCustomTestsDir = false, isApplicationProject = false)
 
+    @Test
     fun `test auto discover Elm project skips project with bad sidecar manifest`() {
         fileTree {
             project("elm.json", BASIC_APPLICATION_MANIFEST)

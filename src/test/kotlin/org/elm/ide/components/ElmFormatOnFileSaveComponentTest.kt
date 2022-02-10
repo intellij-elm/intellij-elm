@@ -8,6 +8,7 @@ import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
@@ -34,11 +35,11 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
                     module Main exposing (f)
 
 
-                    f x =
-                        x
+                    f x = x
 
                 """.trimIndent()
 
+    @Test
     fun `test ElmFormatOnFileSaveComponent should work with elm 19`() {
 
         buildProject {
@@ -51,6 +52,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         testCorrectFormatting("src/Main.elm", unformatted, expectedFormatted)
     }
 
+    @Test
     fun `test ElmFormatOnFileSaveComponent should not add to the undo stack`() {
 
         buildProject {
@@ -69,6 +71,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         TestCase.assertFalse(undoManager.isUndoAvailable(fileEditor))
     }
 
+    @Test
     fun `test ElmFormatOnFileSaveComponent should not touch a file with the wrong ending like 'scala'`() {
         buildProject {
             project("elm.json", manifestElm19)
@@ -81,6 +84,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         testCorrectFormatting("src/Main.scala", unformatted, expected = unformatted)
     }
 
+    @Test
     fun `test ElmFormatOnFileSaveComponent should not touch a file if the save-hook is deactivated`() {
         buildProject {
             project("elm.json", manifestElm19)
