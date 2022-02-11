@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.10")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.20-M1")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
