@@ -33,6 +33,10 @@ class ElmWorkspaceConfigurable(
         private val project: Project
 ) : Configurable, Disposable {
 
+    init {
+        Disposer.register(project, this)
+    }
+
     private val uiDebouncer = UiDebouncer(this)
 
     private fun toolPathTextField(programName: String): TextFieldWithBrowseButton {
