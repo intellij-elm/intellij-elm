@@ -122,6 +122,10 @@
                          enabledByDefault="true" level="ERROR"
                          implementationClass="org.elm.ide.inspections.ElmTopLevelDestructuringInspection"/>
 
+        <localInspection language="Elm" groupName="Elm"
+                         displayName="elm-review error"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="org.elm.ide.inspections.ElmReviewInspection"/>
 
         <!-- Intentions -->
 
@@ -196,6 +200,8 @@
                     factoryClass="org.elm.ide.toolwindow.ElmToolWindowFactory"/>
         <toolWindow id="Elm Compiler" anchor="bottom" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ElmCompilerToolWindowFactory"/>
+        <toolWindow id="elm-review" anchor="bottom" icon="/icons/elm-toolwindow.png"
+                    factoryClass="org.elm.ide.toolwindow.ElmReviewToolWindowFactory"/>
 
 
         <!-- STUBS -->
@@ -247,6 +253,12 @@
             <add-to-group group-id="CodeMenu" anchor="last"/>
         </action>
 
+        <action id="Elm.RunExternalElmReview"
+                class="org.elm.ide.actions.ElmExternalReviewAction"
+                text="Run elm-review">
+            <add-to-group group-id="CodeMenu"/>
+        </action>
+
         <group id="Elm.WorkspaceToolsGroup" text="Elm" popup="true">
             <reference id="Elm.RefreshElmProjects"/>
             <separator/>
@@ -267,6 +279,15 @@
         <group id="Elm.CompilerToolsGroup" text="Elm Compiler" popup="true">
             <reference id="Elm.Build"/>
             <add-to-group group-id="Elm.WorkspaceToolsGroup"/>
+        </group>
+
+        <action id="Elm.Review"
+                class="org.elm.ide.actions.ElmExternalReviewAction"
+                text="Review Elm Project"
+                icon="AllIcons.Toolwindows.ToolWindowBuild"/>
+
+        <group id="Elm.ReviewToolsGroup" text="elm-review" popup="true">
+            <reference id="Elm.Review"/>
         </group>
     </actions>
 

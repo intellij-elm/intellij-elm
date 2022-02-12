@@ -3,6 +3,7 @@ package org.elm.workspace
 import com.intellij.openapi.project.Project
 import org.elm.workspace.commandLineTools.ElmCLI
 import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmReviewCLI
 import org.elm.workspace.commandLineTools.ElmTestCLI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -12,13 +13,15 @@ data class ElmToolchain(
         val elmCompilerPath: Path?,
         val elmFormatPath: Path?,
         val elmTestPath: Path?,
+        val elmReviewPath: Path?,
         val isElmFormatOnSaveEnabled: Boolean
 ) {
-    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, isElmFormatOnSaveEnabled: Boolean) :
+    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, elmReviewPath: String, isElmFormatOnSaveEnabled: Boolean) :
             this(
                     if (elmCompilerPath.isNotBlank()) Paths.get(elmCompilerPath) else null,
                     if (elmFormatPath.isNotBlank()) Paths.get(elmFormatPath) else null,
                     if (elmTestPath.isNotBlank()) Paths.get(elmTestPath) else null,
+                    if (elmReviewPath.isNotBlank()) Paths.get(elmReviewPath) else null,
                     isElmFormatOnSaveEnabled
             )
 
@@ -27,6 +30,8 @@ data class ElmToolchain(
     val elmFormatCLI: ElmFormatCLI? = elmFormatPath?.let { ElmFormatCLI(it) }
 
     val elmTestCLI: ElmTestCLI? = elmTestPath?.let { ElmTestCLI(it) }
+
+    val elmReviewCLI: ElmReviewCLI? = elmReviewPath?.let { ElmReviewCLI(it) }
 
     val presentableLocation: String =
             elmCompilerPath?.toString() ?: "unknown location"
@@ -43,7 +48,8 @@ data class ElmToolchain(
         return copy(
                 elmCompilerPath = elmCompilerPath ?: suggestions["elm"],
                 elmFormatPath = elmFormatPath ?: suggestions["elm-format"],
-                elmTestPath = elmTestPath ?: suggestions["elm-test"]
+                elmTestPath = elmTestPath ?: suggestions["elm-test"],
+                elmReviewPath = elmReviewPath ?: suggestions["elm-review"]
         )
     }
 
@@ -69,6 +75,7 @@ data class ElmToolchain(
                 elmCompilerPath = null,
                 elmFormatPath = null,
                 elmTestPath = null,
+                elmReviewPath = null,
                 isElmFormatOnSaveEnabled = ElmToolchain.DEFAULT_FORMAT_ON_SAVE
         )
 
