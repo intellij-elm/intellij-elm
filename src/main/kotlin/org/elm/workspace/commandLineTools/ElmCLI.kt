@@ -55,7 +55,6 @@ class ElmCLI(val elmExecutablePath: Path) {
                 isUnitTestMode -> postErrors()
                 else -> {
                     val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Elm Compiler")!!
-                    toolWindow.component.grabFocus()
                     toolWindow.show { postErrors() }
                 }
             }

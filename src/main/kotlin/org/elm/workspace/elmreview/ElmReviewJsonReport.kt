@@ -14,9 +14,9 @@ fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
             listOf(ElmReviewError(
                     path = report.path,
                     rule = report.title,
-                    message = "",
+                    message = chunksToLines(report.message).joinToString("\n"),
                     region = Region(Start(1, 1), End(2, 1)),
-                    html = chunksToHtml(report.message)
+                    html = "" // chunksToHtml(report.message)
             ))
         }
         is Report.Specific -> {
@@ -25,14 +25,32 @@ fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
                     ElmReviewError(
                             path = errorsForFile.path,
                             rule = error.rule,
-                            message = error.message,
+                            message = badModuleErrorsToLines(report.errors).joinToString("\n"),
                             region = error.region,
-                            html = chunksToHtml(error.formatted)
+                            html = "" // chunksToHtml(error.formatted)
                     )
                 }
             }
         }
     }
+}
+
+private fun badModuleErrorsToLines(badModuleErrors: List<BadModuleError>): List<String> {
+    return badModuleErrors.asSequence().flatMap {
+        it.errors.map {
+            // TODO use chunks ? it.formatted
+            it.message
+        }
+    }.joinToString("").lines()
+}
+
+private fun chunksToLines(chunks: List<Chunk>): List<String> {
+    return chunks.asSequence().map {
+        when (it) {
+            is Chunk.Unstyled -> it.str
+            is Chunk.Styled -> it.string
+        }
+    }.joinToString("").lines()
 }
 
 private fun chunksToHtml(chunks: List<Chunk>): String =

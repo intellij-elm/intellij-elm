@@ -51,6 +51,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                 listOf(ElmError(
                         title = "TOO MANY ARGS",
                         html = expectedHtml,
+                        messages = emptyList(),
                         location = ElmLocation(
                                 path = "src/Foo.elm",
                                 moduleName = "Main",
@@ -83,6 +84,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                 listOf(ElmError(
                         title = "IMPORT CYCLE",
                         html = expectedHtml,
+                        messages = emptyList(),
                         location = null)))
     }
 
@@ -119,6 +121,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                 listOf(ElmError(
                         title = "UNNAMED MODULE",
                         html = expectedHtml,
+                        messages = emptyList(),
                         location = ElmLocation(
                                 path = "src/Helper.elm",
                                 moduleName = null,
@@ -171,6 +174,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
                 listOf(ElmError(
                         title = "CYCLIC DEFINITION",
                         html = expectedHtml,
+                        messages = emptyList(),
                         location = ElmLocation(
                                 path = "src/JsonTree.elm",
                                 moduleName = "JsonTree",

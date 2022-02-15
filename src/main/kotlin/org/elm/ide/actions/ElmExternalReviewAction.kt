@@ -79,7 +79,6 @@ class ElmExternalReviewAction : AnAction() {
         } else {
             processOutput.stderr
         }
-        // showError(project, "json $json")
 
         val messages = if (json.isEmpty()) emptyList() else {
             elmReviewJsonToMessages(json).sortedWith(
@@ -92,7 +91,6 @@ class ElmExternalReviewAction : AnAction() {
 
         if (isUnitTestMode) return
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("elm-review")!!
-        toolWindow.component.grabFocus()
         toolWindow.show {
             project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
         }

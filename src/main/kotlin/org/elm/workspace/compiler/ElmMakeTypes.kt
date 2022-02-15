@@ -68,10 +68,9 @@ class ChunkDeserializer : JsonDeserializer<Chunk> {
 }
 
 
-// ElmCompilerPanel UI types
-
 data class ElmError(
         val html: String,
+        val messages: List<String>,
         val title: String,
         val location: ElmLocation?
 )
