@@ -1,4 +1,6 @@
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.grammarkit.tasks.GenerateLexerTask
+import org.jetbrains.grammarkit.tasks.GenerateParserTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun properties(key: String) = project.findProperty(key).toString()
@@ -10,6 +12,8 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
     // Gradle IntelliJ Plugin
     id("org.jetbrains.intellij") version "1.3.1"
+    // GrammarKit Plugin
+    id("org.jetbrains.grammarkit") version "2021.2.1"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
@@ -25,7 +29,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.ajalt.colormath:colormath:2.1.0")
+    compileOnly("com.github.ajalt:colormath:1.4.0")
+    testCompileOnly("com.github.ajalt:colormath:1.4.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.20-M1")
 }
 
@@ -51,6 +56,30 @@ qodana {
     reportPath.set(projectDir.resolve("build/reports/inspections").canonicalPath)
     saveReport.set(true)
     showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
+}
+
+val generateSpecParser = tasks.create<GenerateParserTask>("generateElmParser") {
+    source.set("$projectDir/src/main/grammars/ElmParser.bnf")
+    targetRoot.set("$projectDir/src/main/gen")
+    pathToParser.set("/org/elm/lang/core/parser/ElmParser.java")
+    pathToPsiRoot.set("/org/elm/lang/core/psi")
+    purgeOldFiles.set(true)
+}
+
+val generateSpecLexer = tasks.create<GenerateLexerTask>("generateElmLexer") {
+    source.set("$projectDir/src/main/grammars/ElmLexer.flex")
+    skeleton.set(file("$projectDir/src/main/grammars/lexer.skeleton"))
+    targetDir.set("$projectDir/src/main/gen/org/elm/lang/core/lexer/")
+    targetClass.set("_ElmLexer")
+    purgeOldFiles.set(true)
+}
+
+val generateGrammars = tasks.register("generateGrammars") {
+    dependsOn(generateSpecParser, generateSpecLexer)
+}
+
+tasks.withType<KotlinCompile> {
+    dependsOn(generateGrammars)
 }
 
 tasks {
