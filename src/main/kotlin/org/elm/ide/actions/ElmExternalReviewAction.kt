@@ -81,12 +81,7 @@ class ElmExternalReviewAction : AnAction() {
         }
 
         val messages = if (json.isEmpty()) emptyList() else {
-            elmReviewJsonToMessages(json).sortedWith(
-                compareBy(
-                    { it.path },
-                    { it.region.start.line },
-                    { it.region.start.column }
-                ))
+            elmReviewJsonToMessages(json)
         }
 
         if (isUnitTestMode) return

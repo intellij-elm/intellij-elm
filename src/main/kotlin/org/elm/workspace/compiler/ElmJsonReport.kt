@@ -13,7 +13,6 @@ fun elmJsonToCompilerMessages(json: String): List<ElmError> {
             listOf(ElmError(
                     title = report.title,
                     html = chunksToHtml(report.message),
-                    messages = chunksToLines(report.message),
                     location = report.path?.let { ElmLocation(path = it, moduleName = null, region = null) })
             )
         }
@@ -23,7 +22,6 @@ fun elmJsonToCompilerMessages(json: String): List<ElmError> {
                     ElmError(
                             title = problem.title,
                             html = chunksToHtml(problem.message),
-                            messages = chunksToLines(problem.message),
                             location = ElmLocation(
                                     path = error.path,
                                     moduleName = error.name,
@@ -33,15 +31,6 @@ fun elmJsonToCompilerMessages(json: String): List<ElmError> {
             }
         }
     }
-}
-
-private fun chunksToLines(chunks: List<Chunk>): List<String> {
-    return chunks.filterNot { it is Chunk.Styled && it.string.contains("^") }.joinToString("") {
-        when (it) {
-            is Chunk.Unstyled -> it.string
-            is Chunk.Styled -> it.string
-        }
-    }.lines()
 }
 
 private fun chunksToHtml(chunks: List<Chunk>): String =

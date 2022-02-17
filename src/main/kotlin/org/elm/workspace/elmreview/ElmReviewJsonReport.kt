@@ -8,15 +8,14 @@ private val urlPattern = Regex("""<((http|https)://.*?)>""")
 
 
 fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
-    return when (val report = Gson().fromJson(json, Report::class.java)
-            ?: error("failed to parse JSON report from elm-review")) {
+    return when (val report = Gson().fromJson(json, Report::class.java) ?: error("failed to parse JSON report from elm-review")) {
         is Report.General -> {
             listOf(ElmReviewError(
                     path = report.path,
                     rule = report.title,
                     message = chunksToLines(report.message).joinToString("\n"),
                     region = Region(Start(1, 1), End(2, 1)),
-                    html = "" // chunksToHtml(report.message)
+                    html = chunksToHtml(report.message)
             ))
         }
         is Report.Specific -> {
@@ -25,23 +24,14 @@ fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
                     ElmReviewError(
                             path = errorsForFile.path,
                             rule = error.rule,
-                            message = badModuleErrorsToLines(report.errors).joinToString("\n"),
+                            message = error.message,
                             region = error.region,
-                            html = "" // chunksToHtml(error.formatted)
+                            html = chunksToHtml(error.formatted)
                     )
                 }
             }
         }
     }
-}
-
-private fun badModuleErrorsToLines(badModuleErrors: List<BadModuleError>): List<String> {
-    return badModuleErrors.asSequence().flatMap {
-        it.errors.map {
-            // TODO use chunks ? it.formatted
-            it.message
-        }
-    }.joinToString("").lines()
 }
 
 private fun chunksToLines(chunks: List<Chunk>): List<String> {

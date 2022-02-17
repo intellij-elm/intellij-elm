@@ -26,8 +26,7 @@ class ReportDeserializer : JsonDeserializer<Report> {
     override fun deserialize(element: JsonElement, typeOf: Type, context: JsonDeserializationContext): Report {
         if (!element.isJsonObject) throw JsonParseException("Expected a report object")
         val obj = element.asJsonObject
-        val reportType = obj["type"].asString
-        return when (reportType) {
+        return when (val reportType = obj["type"].asString) {
             "error" -> gson.fromJson(obj, Report.General::class.java)
             "compile-errors" -> gson.fromJson(obj, Report.Specific::class.java)
             else -> error("Unexpected Elm compiler report type '$reportType'")
@@ -70,7 +69,6 @@ class ChunkDeserializer : JsonDeserializer<Chunk> {
 
 data class ElmError(
         val html: String,
-        val messages: List<String>,
         val title: String,
         val location: ElmLocation?
 )
