@@ -18,7 +18,7 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
             subscribe(ElmExternalReviewAction.ERRORS_TOPIC, object : ElmExternalReviewAction.ElmReviewErrorsListener {
                 override fun update(baseDirPath: Path, messages: List<ElmReviewError>, targetPath: String?, offset: Int) {
 
-                    val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "elm-review", createExitAction = false, createToolbar = false)
+                    val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "elm-review", createExitAction = false, createToolbar = true)
                     connectFriendlyMessages(project, errorTreeViewPanel)
 
                     for (message in messages) {

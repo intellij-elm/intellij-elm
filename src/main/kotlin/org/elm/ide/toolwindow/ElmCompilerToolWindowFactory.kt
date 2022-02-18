@@ -18,7 +18,7 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String, offset: Int) {
 
-                    val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "Elm Compiler", createExitAction = false, createToolbar = false)
+                    val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "Elm Compiler", createExitAction = false, createToolbar = true)
                     connectFriendlyMessages(project, errorTreeViewPanel)
 
                     for (message in messages) {
