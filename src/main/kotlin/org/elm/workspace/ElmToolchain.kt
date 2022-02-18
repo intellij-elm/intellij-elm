@@ -9,6 +9,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+const val elmCompilerTool = "elm"
+const val elmFormatTool = "elm-format"
+const val elmTestTool = "elm-test"
+const val elmReviewTool = "elm-review"
+val elmTools = listOf(elmCompilerTool, elmFormatTool, elmTestTool, elmReviewTool)
+
 data class ElmToolchain(
         val elmCompilerPath: Path?,
         val elmFormatPath: Path?,
@@ -46,10 +52,10 @@ data class ElmToolchain(
     fun autoDiscoverAll(project: Project): ElmToolchain {
         val suggestions = ElmSuggest.suggestTools(project)
         return copy(
-                elmCompilerPath = elmCompilerPath ?: suggestions["elm"],
-                elmFormatPath = elmFormatPath ?: suggestions["elm-format"],
-                elmTestPath = elmTestPath ?: suggestions["elm-test"],
-                elmReviewPath = elmReviewPath ?: suggestions["elm-review"]
+                elmCompilerPath = elmCompilerPath ?: suggestions[elmCompilerTool],
+                elmFormatPath = elmFormatPath ?: suggestions[elmFormatTool],
+                elmTestPath = elmTestPath ?: suggestions[elmTestTool],
+                elmReviewPath = elmReviewPath ?: suggestions[elmReviewTool]
         )
     }
 

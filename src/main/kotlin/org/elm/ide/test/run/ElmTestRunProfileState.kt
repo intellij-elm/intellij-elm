@@ -26,6 +26,7 @@ import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor
 import org.elm.ide.notifications.showBalloon
 import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.ide.test.core.ElmTestJsonProcessor
+import org.elm.workspace.elmTestTool
 import org.elm.workspace.elmWorkspace
 import java.nio.file.Files
 
@@ -100,7 +101,7 @@ class ElmTestRunProfileState internal constructor(
             config: RunConfiguration,
             executor: Executor,
             private val testsRelativeDirPath: String
-    ) : SMTRunnerConsoleProperties(config, "elm-test", executor), SMCustomMessagesParsing {
+    ) : SMTRunnerConsoleProperties(config, elmTestTool, executor), SMCustomMessagesParsing {
 
         init {
 

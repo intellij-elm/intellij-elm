@@ -19,14 +19,11 @@ import org.elm.openapiext.Result
 import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.fileSystemPathTextField
 import org.elm.utils.layout
-import org.elm.workspace.ElmSuggest
-import org.elm.workspace.ElmToolchain
-import org.elm.workspace.Version
+import org.elm.workspace.*
 import org.elm.workspace.commandLineTools.ElmCLI
 import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.commandLineTools.ElmReviewCLI
 import org.elm.workspace.commandLineTools.ElmTestCLI
-import org.elm.workspace.elmWorkspace
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.*
@@ -49,10 +46,10 @@ class ElmWorkspaceConfigurable(
         { update() }
     }
 
-    private val elmPathField = toolPathTextField("elm")
-    private val elmFormatPathField = toolPathTextField("elm-format")
-    private val elmTestPathField = toolPathTextField("elm-test")
-    private val elmReviewPathField = toolPathTextField("elm-review")
+    private val elmPathField = toolPathTextField(elmCompilerTool)
+    private val elmFormatPathField = toolPathTextField(elmFormatTool)
+    private val elmTestPathField = toolPathTextField(elmTestTool)
+    private val elmReviewPathField = toolPathTextField(elmReviewTool)
 
     private val elmVersionLabel = JLabel()
     private val elmFormatVersionLabel = JLabel()
@@ -69,21 +66,21 @@ class ElmWorkspaceConfigurable(
 
         val panel = layout {
             block("Elm Compiler") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, "elm"))
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, elmCompilerTool))
                 row("Version:", elmVersionLabel)
             }
-            block("elm-format") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, "elm-format"))
+            block(elmFormatTool) {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, elmFormatTool))
                 row("Version:", elmFormatVersionLabel)
                 row("Keyboard shortcut:", elmFormatShortcutLabel)
                 row("Run when file saved?", elmFormatOnSaveCheckbox)
             }
-            block("elm-test") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmTestPathField, "elm-test"))
+            block(elmTestTool) {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmTestPathField, elmTestTool))
                 row("Version:", elmTestVersionLabel)
             }
-            block("elm-review") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmReviewPathField, "elm-review"))
+            block(elmReviewTool) {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmReviewPathField, elmReviewTool))
                 row("Version:", elmReviewVersionLabel)
             }
             block("nvm") {
@@ -162,7 +159,7 @@ class ElmWorkspaceConfigurable(
                                 }
                             is Result.Err -> {
                                 when {
-                                    !elmCompilerPath.isValidFor("elm") -> {
+                                    !elmCompilerPath.isValidFor(elmCompilerTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }
@@ -183,7 +180,7 @@ class ElmWorkspaceConfigurable(
                             }
                             is Result.Err -> {
                                 when {
-                                    !elmFormatPath.isValidFor("elm-format") -> {
+                                    !elmFormatPath.isValidFor(elmFormatTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }
@@ -204,7 +201,7 @@ class ElmWorkspaceConfigurable(
                             }
                             is Result.Err -> {
                                 when {
-                                    !elmTestPath.isValidFor("elm-test") -> {
+                                    !elmTestPath.isValidFor(elmTestTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }
@@ -225,7 +222,7 @@ class ElmWorkspaceConfigurable(
                             }
                             is Result.Err -> {
                                 when {
-                                    !elmReviewPath.isValidFor("elm-review") -> {
+                                    !elmReviewPath.isValidFor(elmReviewTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }

@@ -31,7 +31,7 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
         return GeneralCommandLine(elmReviewExecutablePath)
                 .withWorkDirectory(elmProject.projectDirPath.toString())
                 .withParameters(arguments)
-                .execute(project = project, ignoreExitCode = true, timeoutInMilliseconds = 200000)
+                .execute(elmReviewTool, project, timeoutInMilliseconds = 20000, ignoreExitCode = true)
 
     }
 

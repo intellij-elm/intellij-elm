@@ -9,6 +9,7 @@ import org.elm.workspace.ParseException
 import org.elm.workspace.Version
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.elmJsonToCompilerMessages
+import org.elm.workspace.elmCompilerTool
 import java.nio.file.Path
 
 /**
@@ -28,7 +29,7 @@ class ElmCLI(val elmExecutablePath: Path) {
             .withWorkDirectory(workDir)
             .withParameters(*params)
             .apply { if (jsonReport) addParameter("--report=json") }
-            .execute(project, ignoreExitCode = true)
+            .execute(elmCompilerTool, project, ignoreExitCode = true,)
         val json = output.stderr
         val regex = "\\{.*}".toRegex()
         val cleansedJson = regex.find(json)?.value

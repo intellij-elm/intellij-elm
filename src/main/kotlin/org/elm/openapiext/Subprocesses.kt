@@ -52,6 +52,7 @@ fun GeneralCommandLine.withWorkDirectory(path: Path?) =
 
 @Throws(ExecutionException::class)
 fun GeneralCommandLine.execute(
+    toolName: String,
     project: Project,
     timeoutInMilliseconds: Int = 2000,
     ignoreExitCode: Boolean = false
@@ -76,7 +77,11 @@ fun GeneralCommandLine.execute(
 
     try {
         // see javadoc at OSProcessHandler.checkEdtAndReadAction()
-        val future = runAsyncTask(project, "elm make") {
+/* TODO read process output (stderr) async and post them to _separate_ message bus topics !
+        runBackgroundableTask(toolName, project, true) { indicator ->
+        }
+*/
+        val future = runAsyncTask(project, toolName) {
             val output = handler.runProcess(timeoutInMilliseconds)
             if (!ignoreExitCode && output.exitCode != 0) {
                 throw ExecutionException(errorMessage(this, output))

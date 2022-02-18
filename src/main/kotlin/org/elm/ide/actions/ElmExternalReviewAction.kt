@@ -74,10 +74,8 @@ class ElmExternalReviewAction : AnAction() {
             return
         }
 
-        val json = if (processOutput.stderr.isEmpty()) {
+        val json = processOutput.stderr.ifEmpty {
             processOutput.stdout
-        } else {
-            processOutput.stderr
         }
 
         val messages = if (json.isEmpty()) emptyList() else {
