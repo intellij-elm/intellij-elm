@@ -4,7 +4,7 @@
     <vendor url="https://github.com/clojj/intellij-elm">clojj</vendor>
 
     <description><![CDATA[
-        Provides support for Elm & Lamdera projects
+        Provides support for Elm & Lamdera projects (Licensing see: https://github.com/clojj/intellij-elm/blob/master/LICENSE.txt and https://github.com/clojj/intellij-elm/tree/master/license)
     ]]></description>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
