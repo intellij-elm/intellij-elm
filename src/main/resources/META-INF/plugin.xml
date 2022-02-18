@@ -13,7 +13,6 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.elm.lang.core.psi.ElmPsiManager"/>
-        <projectService serviceImplementation="org.elm.ide.components.ElmFormatOnFileSaveComponent"/>
 
         <additionalTextAttributes scheme="Default" file="colorSchemes/ElmDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ElmDarcula.xml"/>
@@ -224,6 +223,12 @@
         <runConfigurationProducer implementation="org.elm.ide.test.run.ElmTestRunConfigurationProducer"/>
         <projectService serviceImplementation="org.elm.ide.test.run.ElmTestAutoTestManager"/>
     </extensions>
+
+    <project-components>
+        <component>
+            <implementation-class>org.elm.ide.components.ElmFormatOnFileSaveComponent</implementation-class>
+        </component>
+    </project-components>
 
     <actions>
         <action id="Elm.NewFile"

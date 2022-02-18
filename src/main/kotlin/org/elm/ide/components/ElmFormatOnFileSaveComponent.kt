@@ -2,8 +2,6 @@ package org.elm.ide.components
 
 import com.intellij.AppTopics
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
@@ -16,14 +14,11 @@ import org.elm.workspace.elmSettings
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
-@Service(Service.Level.PROJECT)
 class ElmFormatOnFileSaveComponent(val project: Project) {
 
     init {
-        val application = ApplicationManager.getApplication()
-        val bus = application.messageBus
-
-        bus.connect(project).subscribe(
+        with(project.messageBus.connect()) {
+            subscribe(
                 AppTopics.FILE_DOCUMENT_SYNC,
                 object : FileDocumentManagerListener {
                     override fun beforeDocumentSaving(document: Document) {
@@ -40,7 +35,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) {
 
                             is ElmFormatResult.FailedToStart ->
                                 project.showBalloon(result.msg, NotificationType.ERROR,
-                                        "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
+                                    "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
                                 )
 
                             is ElmFormatResult.UnknownFailure ->
@@ -51,6 +46,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) {
                         }
                     }
                 }
-        )
+            )
+        }
     }
 }
