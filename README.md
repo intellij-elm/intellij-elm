@@ -64,6 +64,7 @@ related information [here](docs/nvm.md).
 
 <!-- Plugin description -->
 Elm & Lamdera Plugin
+
 Licensing see: https://github.com/clojj/intellij-elm/blob/master/LICENSE.txt and https://github.com/clojj/intellij-elm/tree/master/license
 <!-- Plugin description end -->
 
