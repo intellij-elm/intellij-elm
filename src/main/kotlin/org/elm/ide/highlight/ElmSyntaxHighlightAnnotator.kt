@@ -3,6 +3,7 @@ package org.elm.ide.highlight
 
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.color.ElmColor
@@ -79,6 +80,6 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun AnnotationHolder.applyColor(element: PsiElement, color: ElmColor) {
-        createInfoAnnotation(element, null).textAttributes = color.textAttributesKey
+        newSilentAnnotation(HighlightSeverity.INFORMATION).textAttributes(color.textAttributesKey).range(element.textRange).create()
     }
 }

@@ -1,7 +1,6 @@
 package org.elm.ide.color
 
 import com.github.ajalt.colormath.*
-import com.intellij.ide.IdeBundle
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.ElementColorProvider
 import com.intellij.psi.PsiDocumentManager
@@ -93,8 +92,8 @@ class ElmColorProvider : ElementColorProvider {
         CommandProcessor.getInstance().executeCommand(
             element.project,
             command,
-            // This is the message that the JavaColorProvider uses
-            IdeBundle.message("change.color.command.text"),
+            // This is the message that the JavaColorProvider uses, value copied from JavaBundle.properties
+            "Change color",
             null, // groupId
             document
         )
@@ -190,7 +189,7 @@ private data class FuncCall(
     }
 }
 
-fun ConvertibleColor.toAwtColor(): Color = toRGB().let {
+fun com.github.ajalt.colormath.Color.toAwtColor(): Color = toRGB().let {
     Color(it.r, it.g, it.b, (it.a * 255).roundToInt())
 }
 
