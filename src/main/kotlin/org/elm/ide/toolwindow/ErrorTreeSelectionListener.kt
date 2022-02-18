@@ -10,8 +10,11 @@ class ErrorTreeSelectionListener(private val errorTreeViewPanel: ElmErrorTreeVie
 
     override fun valueChanged(e: TreeSelectionEvent) {
         val index = (e.source as Tree).selectionModel.leadSelectionRow - 1
-        reportUI.text = errorTreeViewPanel.messages[index]
-        reportUI.caretPosition = 0
-        toolWindow.activate(null)
+        val messages = errorTreeViewPanel.messages
+        if (index >= 0 && index < messages.size) {
+            reportUI.text = messages[index]
+            reportUI.caretPosition = 0
+            toolWindow.activate(null)
+        }
     }
 }
