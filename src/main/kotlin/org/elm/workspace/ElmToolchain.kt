@@ -66,7 +66,7 @@ data class ElmToolchain(
          */
         const val SIDECAR_FILENAME = "elm.intellij.json"
 
-        const val DEFAULT_FORMAT_ON_SAVE = false
+        const val DEFAULT_FORMAT_ON_SAVE = true
 
         /**
          * A blank, default [ElmToolchain].
