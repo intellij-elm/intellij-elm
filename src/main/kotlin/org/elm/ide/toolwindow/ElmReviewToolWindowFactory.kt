@@ -27,7 +27,8 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                             LocalFileSystem.getInstance().findFileByPath(it)
                         }
                         errorTreeViewPanel.addMessage(
-                            MessageCategory.WARNING, arrayOf(message.message), virtualFile,
+                            MessageCategory.WARNING, arrayOf(message.message),
+                            virtualFile,
                             message.region.start.let { it.line - 1 },
                             message.region.start.let { it.column - 1 },
                             message.html

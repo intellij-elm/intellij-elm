@@ -9,7 +9,7 @@ import javax.swing.event.TreeSelectionListener
 class ErrorTreeSelectionListener(private val errorTreeViewPanel: ElmErrorTreeViewPanel, private val reportUI: JTextPane, val toolWindow: ToolWindow) : TreeSelectionListener {
 
     override fun valueChanged(e: TreeSelectionEvent) {
-        val index = (e.source as Tree).selectionModel.leadSelectionRow - 1
+        val index = (e.source as Tree).selectionModel.leadSelectionRow
         val messages = errorTreeViewPanel.messages
         if (index >= 0 && index < messages.size) {
             reportUI.text = messages[index]

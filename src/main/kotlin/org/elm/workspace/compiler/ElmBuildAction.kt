@@ -125,9 +125,9 @@ class ElmBuildAction : AnAction() {
     }
 
     private fun findMainEntryPoint(project: Project, elmProject: ElmProject): List<ElmFunctionDeclarationLeft> {
-        val elmEntry =
+        val elmEntries =
             ElmLookup.findByName<ElmFunctionDeclarationLeft>("main", LookupClientLocation(project, elmProject))
-                .find { decl ->
+                .filter { decl ->
                     val key = when (val ty = decl.findTy()) {
                         is TyUnion -> ty.module to ty.name
                         is TyUnknown -> ty.alias?.let { it.module to it.name }
@@ -135,7 +135,7 @@ class ElmBuildAction : AnAction() {
                     }
                     key != null && key in elmMainTypes && decl.isTopLevel
                 }
-        return elmEntry?.let { listOf(it) } ?: emptyList()
+        return elmEntries
     }
 
     private fun findActiveFile(e: AnActionEvent, project: Project): VirtualFile? =

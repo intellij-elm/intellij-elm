@@ -8,10 +8,16 @@ import javax.swing.event.TreeSelectionListener
 
 class ElmErrorTreeViewPanel(project: Project?, helpId: String?, createExitAction: Boolean, createToolbar: Boolean) : NewErrorTreeViewPanel(project, helpId, createExitAction, createToolbar) {
 
+    private val vfiles = mutableSetOf<String>()
+
     val messages = mutableListOf<String>()
 
     override fun addMessage(type: Int, text: Array<out String>, file: VirtualFile?, line: Int, column: Int, data: Any?) {
         super.addMessage(type, text, file, line, column, data)
+        if (!vfiles.contains(file.toString())) {
+            messages.add("")
+            vfiles.add(file.toString())
+        }
         messages.add(data as String)
     }
 
