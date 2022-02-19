@@ -8,7 +8,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
-import org.elm.openapiext.executeAsync
+import org.elm.openapiext.executeReviewAsync
 import org.elm.workspace.*
 import java.nio.file.Path
 
@@ -31,7 +31,7 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
         GeneralCommandLine(elmReviewExecutablePath)
                 .withWorkDirectory(elmProject.projectDirPath.toString())
                 .withParameters(arguments)
-                .executeAsync(elmReviewTool, project, elmProject, timeoutInMilliseconds = 20000, ignoreExitCode = true)
+                .executeReviewAsync(elmReviewTool, project, elmProject, timeoutInMilliseconds = 20000, ignoreExitCode = true)
     }
 
     fun queryVersion(): Result<Version> {

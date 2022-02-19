@@ -97,7 +97,7 @@ fun GeneralCommandLine.execute(
 }
 
 @Throws(ExecutionException::class)
-fun GeneralCommandLine.executeAsync(
+fun GeneralCommandLine.executeReviewAsync(
     toolName: String,
     project: Project,
     elmProject: ElmProject,
