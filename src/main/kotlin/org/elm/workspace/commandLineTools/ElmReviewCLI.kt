@@ -1,15 +1,20 @@
 package org.elm.workspace.commandLineTools
 
 import com.intellij.execution.ExecutionException
+import com.intellij.execution.process.CapturingProcessHandler
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
-import org.elm.lang.core.psi.ElmFile
-import org.elm.openapiext.GeneralCommandLine
-import org.elm.openapiext.Result
-import org.elm.openapiext.execute
-import org.elm.openapiext.executeReviewAsync
-import org.elm.workspace.*
+import com.intellij.openapi.util.Disposer
+import org.elm.ide.actions.ElmExternalReviewAction
+import org.elm.openapiext.*
+import org.elm.workspace.ElmProject
+import org.elm.workspace.ParseException
+import org.elm.workspace.Version
+import org.elm.workspace.elmReviewTool
+import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.nio.file.Path
 
 private val log = logger<ElmReviewCLI>()
@@ -22,26 +27,57 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
 
     fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?) {
         val arguments: List<String> = listOf(
-                "--report=json",
-                // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
-                // "--debug",
-                "--namespace=intellij-elm",
-                if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
+            "--report=json",
+            // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
+            // "--debug",
+            "--namespace=intellij-elm",
+            if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
         )
-        GeneralCommandLine(elmReviewExecutablePath)
-                .withWorkDirectory(elmProject.projectDirPath.toString())
-                .withParameters(arguments)
-                .executeReviewAsync(elmReviewTool, project, elmProject, timeoutInMilliseconds = 20000, ignoreExitCode = true)
+        val generalCommandLine = GeneralCommandLine(elmReviewExecutablePath)
+            .withWorkDirectory(elmProject.projectDirPath.toString())
+            .withParameters(arguments)
+        generalCommandLine.executeReviewAsync(elmReviewTool, project) { indicator ->
+
+                val handler = CapturingProcessHandler(generalCommandLine)
+                val processKiller = Disposable { handler.destroyProcess() }
+
+                Disposer.register(project, processKiller)
+                try {
+                    val output = handler.runProcess(20000)
+                    val alreadyDisposed = runReadAction { project.isDisposed }
+                    if (alreadyDisposed) {
+                        throw ExecutionException("External command failed to start")
+                    }
+/*
+                    if (output.exitCode != 0) {
+                        throw ExecutionException(errorMessage(generalCommandLine, output))
+                    }
+*/
+                    val json = output.stderr.ifEmpty {
+                        output.stdout
+                    }
+                    val messages = if (json.isEmpty()) emptyList() else {
+                        elmReviewJsonToMessages(json)
+                    }
+                    if (!isUnitTestMode) {
+                        ApplicationManager.getApplication().invokeLater {
+                            project.messageBus.syncPublisher(ElmExternalReviewAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
+                        }
+                    }
+                } finally {
+                    Disposer.dispose(processKiller)
+                }
+            }
     }
 
     fun queryVersion(): Result<Version> {
         val firstLine = try {
             val arguments: List<String> = listOf("--version")
             GeneralCommandLine(elmReviewExecutablePath)
-                    .withParameters(arguments)
-                    .execute(timeoutInMilliseconds = 3000)
-                    .stdoutLines
-                    .firstOrNull()
+                .withParameters(arguments)
+                .execute(timeoutInMilliseconds = 3000)
+                .stdoutLines
+                .firstOrNull()
         } catch (e: ExecutionException) {
             return Result.Err("failed to run elm-review: ${e.message}")
         } ?: return Result.Err("no output from elm-review")
@@ -50,18 +86,6 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
             Result.Ok(Version.parse(firstLine))
         } catch (e: ParseException) {
             Result.Err("invalid elm-review version: ${e.message}")
-        }
-    }
-
-    companion object {
-        fun getElmVersion(project: Project, file: VirtualFile): Version? {
-            val psiFile = ElmFile.fromVirtualFile(file, project) ?: return null
-
-            return when (val elmProject = psiFile.elmProject) {
-                is ElmApplicationProject -> elmProject.elmVersion
-                is ElmPackageProject -> elmProject.elmVersion.low
-                else -> return null
-            }
         }
     }
 }

@@ -4,6 +4,8 @@ import com.intellij.ide.errorTreeView.NewErrorTreeViewPanel
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.util.ui.tree.TreeUtil
+import kotlinx.coroutines.Runnable
 import javax.swing.event.TreeSelectionListener
 
 class ElmErrorTreeViewPanel(project: Project?, helpId: String?, createExitAction: Boolean, createToolbar: Boolean) : NewErrorTreeViewPanel(project, helpId, createExitAction, createToolbar) {
@@ -11,6 +13,10 @@ class ElmErrorTreeViewPanel(project: Project?, helpId: String?, createExitAction
     private val vfiles = mutableSetOf<String>()
 
     val messages = mutableListOf<String>()
+
+    override fun expandAll() {
+        TreeUtil.expandAll(myTree, Runnable { })
+    }
 
     override fun addMessage(type: Int, text: Array<out String>, file: VirtualFile?, line: Int, column: Int, data: Any?) {
         super.addMessage(type, text, file, line, column, data)

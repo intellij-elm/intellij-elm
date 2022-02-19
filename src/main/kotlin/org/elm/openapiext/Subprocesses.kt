@@ -31,18 +31,15 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.io.systemIndependentPath
-import org.elm.ide.actions.ElmExternalReviewAction
 import org.elm.utils.runAsyncTask
-import org.elm.workspace.ElmProject
-import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.io.OutputStreamWriter
 import java.nio.file.Path
 
@@ -100,9 +97,7 @@ fun GeneralCommandLine.execute(
 fun GeneralCommandLine.executeReviewAsync(
     toolName: String,
     project: Project,
-    elmProject: ElmProject,
-    timeoutInMilliseconds: Int = 2000,
-    ignoreExitCode: Boolean = false
+    task: (indicator: ProgressIndicator) -> Unit
 ) {
 
     if (!isUnitTestMode) {
@@ -110,36 +105,7 @@ fun GeneralCommandLine.executeReviewAsync(
         toolWindow.show()
     }
 
-    runBackgroundableTask(toolName, project, true) { indicator ->
-
-        val handler = CapturingProcessHandler(this)
-        val processKiller = Disposable { handler.destroyProcess() }
-        val alreadyDisposed = runReadAction { project.isDisposed }
-        if (alreadyDisposed && !ignoreExitCode) {
-            throw ExecutionException("External command failed to start")
-        }
-
-        Disposer.register(project, processKiller)
-        try {
-            val output = handler.runProcess(timeoutInMilliseconds)
-            if (!ignoreExitCode && output.exitCode != 0) {
-                throw ExecutionException(errorMessage(this, output))
-            }
-            val json = output.stderr.ifEmpty {
-                output.stdout
-            }
-            val messages = if (json.isEmpty()) emptyList() else {
-                elmReviewJsonToMessages(json)
-            }
-            if (!isUnitTestMode) {
-                ApplicationManager.getApplication().invokeLater {
-                    project.messageBus.syncPublisher(ElmExternalReviewAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
-                }
-            }
-        } finally {
-            Disposer.dispose(processKiller)
-        }
-    }
+    runBackgroundableTask(toolName, project, true, task)
 }
 
 @Throws(ExecutionException::class)
@@ -173,7 +139,7 @@ fun GeneralCommandLine.execute(
     return output
 }
 
-private fun errorMessage(commandLine: GeneralCommandLine, output: ProcessOutput): String = """
+fun errorMessage(commandLine: GeneralCommandLine, output: ProcessOutput): String = """
         Execution failed (exit code ${output.exitCode}).
         ${commandLine.commandLineString}
         stdout : ${output.stdout}

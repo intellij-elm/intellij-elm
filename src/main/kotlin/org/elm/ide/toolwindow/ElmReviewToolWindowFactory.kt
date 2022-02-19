@@ -34,6 +34,7 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                             message.html
                         )
                     }
+                    errorTreeViewPanel.expandAll()
                     toolWindow.contentManager.removeAllContents(true)
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Elm-Review Result", true))
                     toolWindow.activate(null)
