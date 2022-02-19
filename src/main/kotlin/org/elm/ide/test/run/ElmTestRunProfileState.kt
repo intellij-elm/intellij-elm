@@ -97,7 +97,7 @@ class ElmTestRunProfileState internal constructor(
         return consoleView
     }
 
-    private class ConsoleProperties internal constructor(
+    private class ConsoleProperties constructor(
             config: RunConfiguration,
             executor: Executor,
             private val testsRelativeDirPath: String

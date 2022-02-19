@@ -18,7 +18,7 @@ import org.elm.workspace.elmWorkspace
 import org.elm.workspace.elmreview.ElmReviewError
 import java.nio.file.Path
 
-const val ELM_REVIEW_ACTION_ID = "Elm.Review"
+const val ELM_REVIEW_ACTION_ID = "Elm.RunExternalElmReview"
 
 private val log = logger<ElmExternalReviewAction>()
 
@@ -76,7 +76,6 @@ class ElmExternalReviewAction : AnAction() {
     }
 
     companion object {
-        const val ID = "Elm.RunExternalElmReview" // must stay in-sync with `plugin.xml`
         val ERRORS_TOPIC = Topic("elm-review errors", ElmReviewErrorsListener::class.java)
     }
 }
