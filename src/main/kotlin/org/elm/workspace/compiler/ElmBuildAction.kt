@@ -156,10 +156,6 @@ class ElmBuildAction : AnAction() {
 
     companion object {
         val ERRORS_TOPIC = Topic("Elm compiler-messages", ElmErrorsListener::class.java)
-        private val lamderaAppTypes = setOf(
-            "Frontend" to "app",
-            "Backend" to "app"
-        )
         private val elmMainTypes = setOf(
             "Platform" to "Program",
             "Html" to "Html",

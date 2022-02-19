@@ -1,7 +1,6 @@
 package org.elm.ide.actions
 
 import com.intellij.execution.ExecutionException
-import com.intellij.execution.process.ProcessOutput
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -10,16 +9,13 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
-import org.elm.openapiext.isUnitTestMode
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 import org.elm.workspace.elmreview.ElmReviewError
-import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.nio.file.Path
 
 const val ELM_REVIEW_ACTION_ID = "Elm.Review"
@@ -67,25 +63,11 @@ class ElmExternalReviewAction : AnAction() {
             return
         }
 
-        val processOutput: ProcessOutput = try {
+        try {
             elmReviewCLI.runReview(project, elmProject, project.elmToolchain.elmCLI)
         } catch (e: ExecutionException) {
             showError(project, "execution error $e")
             return
-        }
-
-        val json = processOutput.stderr.ifEmpty {
-            processOutput.stdout
-        }
-
-        val messages = if (json.isEmpty()) emptyList() else {
-            elmReviewJsonToMessages(json)
-        }
-
-        if (isUnitTestMode) return
-        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("elm-review")!!
-        toolWindow.show {
-            project.messageBus.syncPublisher(ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
         }
     }
 

@@ -31,12 +31,18 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.io.systemIndependentPath
+import org.elm.ide.actions.ElmExternalReviewAction
 import org.elm.utils.runAsyncTask
+import org.elm.workspace.ElmProject
+import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.io.OutputStreamWriter
 import java.nio.file.Path
 
@@ -77,10 +83,6 @@ fun GeneralCommandLine.execute(
 
     try {
         // see javadoc at OSProcessHandler.checkEdtAndReadAction()
-/* TODO read process output (stderr) async and post them to _separate_ message bus topics !
-        runBackgroundableTask(toolName, project, true) { indicator ->
-        }
-*/
         val future = runAsyncTask(project, toolName) {
             val output = handler.runProcess(timeoutInMilliseconds)
             if (!ignoreExitCode && output.exitCode != 0) {
@@ -91,6 +93,52 @@ fun GeneralCommandLine.execute(
         return future.join()
     } finally {
         Disposer.dispose(processKiller)
+    }
+}
+
+@Throws(ExecutionException::class)
+fun GeneralCommandLine.executeAsync(
+    toolName: String,
+    project: Project,
+    elmProject: ElmProject,
+    timeoutInMilliseconds: Int = 2000,
+    ignoreExitCode: Boolean = false
+) {
+
+    if (!isUnitTestMode) {
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("elm-review")!!
+        toolWindow.show()
+    }
+
+    runBackgroundableTask(toolName, project, true) { indicator ->
+
+        val handler = CapturingProcessHandler(this)
+        val processKiller = Disposable { handler.destroyProcess() }
+        val alreadyDisposed = runReadAction { project.isDisposed }
+        if (alreadyDisposed && !ignoreExitCode) {
+            throw ExecutionException("External command failed to start")
+        }
+
+        Disposer.register(project, processKiller)
+        try {
+            val output = handler.runProcess(timeoutInMilliseconds)
+            if (!ignoreExitCode && output.exitCode != 0) {
+                throw ExecutionException(errorMessage(this, output))
+            }
+            val json = output.stderr.ifEmpty {
+                output.stdout
+            }
+            val messages = if (json.isEmpty()) emptyList() else {
+                elmReviewJsonToMessages(json)
+            }
+            if (!isUnitTestMode) {
+                ApplicationManager.getApplication().invokeLater {
+                    project.messageBus.syncPublisher(ElmExternalReviewAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
+                }
+            }
+        } finally {
+            Disposer.dispose(processKiller)
+        }
     }
 }
 

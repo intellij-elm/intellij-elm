@@ -1,7 +1,6 @@
 package org.elm.workspace.commandLineTools
 
 import com.intellij.execution.ExecutionException
-import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -9,6 +8,7 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
+import org.elm.openapiext.executeAsync
 import org.elm.workspace.*
 import java.nio.file.Path
 
@@ -20,7 +20,7 @@ private val log = logger<ElmReviewCLI>()
  */
 class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
 
-    fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?): ProcessOutput {
+    fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?) {
         val arguments: List<String> = listOf(
                 "--report=json",
                 // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
@@ -28,11 +28,10 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
                 "--namespace=intellij-elm",
                 if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
         )
-        return GeneralCommandLine(elmReviewExecutablePath)
+        GeneralCommandLine(elmReviewExecutablePath)
                 .withWorkDirectory(elmProject.projectDirPath.toString())
                 .withParameters(arguments)
-                .execute(elmReviewTool, project, timeoutInMilliseconds = 20000, ignoreExitCode = true)
-
+                .executeAsync(elmReviewTool, project, elmProject, timeoutInMilliseconds = 20000, ignoreExitCode = true)
     }
 
     fun queryVersion(): Result<Version> {
