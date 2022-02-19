@@ -54,6 +54,7 @@ import org.elm.workspace.EmptyElmStdlibVariant
 import org.elm.workspace.MinimalElmStdlibVariant
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
+import java.util.*
 
 private val log = logger<ElmTestBase>()
 
@@ -265,10 +266,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         @JvmStatic
         fun camelOrWordsToSnake(name: String): String {
             if (' ' in name) return name.replace(" ", "_")
-
-            return name.split("(?=[A-Z])".toRegex())
-                    .map(String::toLowerCase)
-                    .joinToString("_")
+            return name.split("(?=[A-Z])".toRegex()).joinToString("_") { it.lowercase(Locale.US) }
         }
 
         @JvmStatic

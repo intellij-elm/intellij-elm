@@ -56,7 +56,7 @@ abstract class ElmParsingTestCaseBase(@NonNls dataPath: String)
                     hasErrors = true
                     return
                 }
-                element!!.acceptChildren(this)
+                element.acceptChildren(this)
             }
         })
         return hasErrors

@@ -185,7 +185,7 @@ val PsiElement.endOffset: Int
  * The receiver must be a descendant of [owner]
  */
 fun PsiElement.offsetIn(owner: PsiElement): Int =
-        ancestors.takeWhile { it != owner }.sumBy { it.startOffsetInParent }
+    ancestors.takeWhile { it != owner }.sumOf { it.startOffsetInParent }
 
 val PsiElement.hasErrors: Boolean
     get() = PsiTreeUtil.hasErrorElements(this)

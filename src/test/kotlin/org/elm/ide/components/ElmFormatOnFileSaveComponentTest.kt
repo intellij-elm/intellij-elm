@@ -35,7 +35,8 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
                     module Main exposing (f)
 
 
-                    f x = x
+                    f x =
+                        x
 
                 """.trimIndent()
 
