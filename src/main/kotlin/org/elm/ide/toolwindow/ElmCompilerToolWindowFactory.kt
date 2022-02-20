@@ -21,17 +21,17 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
                     val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "Elm Compiler", createExitAction = false, createToolbar = true)
                     connectFriendlyMessages(project, errorTreeViewPanel)
 
-                    for (message in messages) {
-                        val sourceLocation = message.location!!
+                    messages.forEachIndexed { index, elmError ->
+                        val sourceLocation = elmError.location!!
                         val virtualFile = baseDirPath.resolve(sourceLocation.path).let {
                             LocalFileSystem.getInstance().findFileByPath(it)
                         }
                         errorTreeViewPanel.addMessage(
-                            MessageCategory.ERROR, arrayOf(message.title),
+                            MessageCategory.ERROR, arrayOf("$index ${elmError.title}"),
                             virtualFile,
                             sourceLocation.region?.start?.let { it.line - 1 } ?: 0,
                             sourceLocation.region?.start?.let { it.column - 1 } ?: 0,
-                            message.html
+                            elmError.html
                         )
                     }
                     errorTreeViewPanel.expandAll()

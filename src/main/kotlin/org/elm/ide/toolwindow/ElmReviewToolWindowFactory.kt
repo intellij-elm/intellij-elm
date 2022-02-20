@@ -21,19 +21,20 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                     val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "elm-review", createExitAction = false, createToolbar = true)
                     connectFriendlyMessages(project, errorTreeViewPanel)
 
-                    for (message in messages) {
-                        val sourceLocation = message.path!!
+                    messages.forEachIndexed { index, elmReviewError ->
+                        val sourceLocation = elmReviewError.path!!
                         val virtualFile = baseDirPath.resolve(sourceLocation).let {
                             LocalFileSystem.getInstance().findFileByPath(it)
                         }
                         errorTreeViewPanel.addMessage(
-                            MessageCategory.WARNING, arrayOf(message.message),
+                            MessageCategory.WARNING, arrayOf("$index ${elmReviewError.message}"),
                             virtualFile,
-                            message.region.start.let { it.line - 1 },
-                            message.region.start.let { it.column - 1 },
-                            message.html
+                            elmReviewError.region.start.let { it.line - 1 },
+                            elmReviewError.region.start.let { it.column - 1 },
+                            elmReviewError.html
                         )
                     }
+
                     errorTreeViewPanel.expandAll()
                     toolWindow.contentManager.removeAllContents(true)
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Elm-Review Result", true))
