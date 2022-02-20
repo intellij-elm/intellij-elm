@@ -40,6 +40,7 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Elm-Review Result", true))
                     errorTreeViewPanel.requestFocus()
                     toolWindow.show(null)
+                    focusEditor(project)
                 }
             })
         }

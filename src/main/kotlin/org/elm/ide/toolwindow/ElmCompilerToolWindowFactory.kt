@@ -39,6 +39,7 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Compilation result", true))
                     errorTreeViewPanel.requestFocus()
                     toolWindow.show(null)
+                    focusEditor(project)
                 }
             })
         }

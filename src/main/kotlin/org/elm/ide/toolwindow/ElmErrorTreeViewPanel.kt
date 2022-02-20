@@ -1,8 +1,11 @@
 package org.elm.ide.toolwindow
 
+import com.intellij.ide.DataManager
 import com.intellij.ide.errorTreeView.NewErrorTreeViewPanel
+import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.wm.IdeFocusManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.ui.tree.TreeUtil
 import kotlinx.coroutines.Runnable
@@ -36,5 +39,12 @@ fun connectFriendlyMessages(project: Project, errorTreeViewPanel: ElmErrorTreeVi
         errorTreeViewPanel.addSelectionListener(ErrorTreeSelectionListener(errorTreeViewPanel.messages, reportUI, it))
         reportUI.background = errorTreeViewPanel.background
         reportUI.text = ""
+    }
+}
+
+fun focusEditor(project: Project) {
+    val editor = DataManager.getInstance().dataContextFromFocusAsync.blockingGet(2000)?.getData(CommonDataKeys.EDITOR)
+    if (editor != null) {
+        IdeFocusManager.getInstance(project).requestFocus(editor.contentComponent, true)
     }
 }
