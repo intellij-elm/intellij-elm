@@ -26,8 +26,9 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                         val virtualFile = baseDirPath.resolve(sourceLocation).let {
                             LocalFileSystem.getInstance().findFileByPath(it)
                         }
+                        val encodedIndex = "\u200B".repeat(index)
                         errorTreeViewPanel.addMessage(
-                            MessageCategory.WARNING, arrayOf("$index ${elmReviewError.message}"),
+                            MessageCategory.WARNING, arrayOf("$encodedIndex${elmReviewError.message}"),
                             virtualFile,
                             elmReviewError.region.start.let { it.line - 1 },
                             elmReviewError.region.start.let { it.column - 1 },

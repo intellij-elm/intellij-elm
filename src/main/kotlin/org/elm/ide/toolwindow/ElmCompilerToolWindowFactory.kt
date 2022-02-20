@@ -26,8 +26,9 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
                         val virtualFile = baseDirPath.resolve(sourceLocation.path).let {
                             LocalFileSystem.getInstance().findFileByPath(it)
                         }
+                        val encodedIndex = "\u200B".repeat(index)
                         errorTreeViewPanel.addMessage(
-                            MessageCategory.ERROR, arrayOf("$index ${elmError.title}"),
+                            MessageCategory.ERROR, arrayOf("$encodedIndex${elmError.title}"),
                             virtualFile,
                             sourceLocation.region?.start?.let { it.line - 1 } ?: 0,
                             sourceLocation.region?.start?.let { it.column - 1 } ?: 0,

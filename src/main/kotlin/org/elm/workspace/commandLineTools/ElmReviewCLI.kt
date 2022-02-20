@@ -38,36 +38,41 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
             .withParameters(arguments)
         generalCommandLine.executeReviewAsync(elmReviewTool, project) { indicator ->
 
-                val handler = CapturingProcessHandler(generalCommandLine)
-                val processKiller = Disposable { handler.destroyProcess() }
+            val handler = CapturingProcessHandler(generalCommandLine)
+            val processKiller = Disposable { handler.destroyProcess() }
 
-                Disposer.register(project, processKiller)
-                try {
-                    val output = handler.runProcess(20000)
-                    val alreadyDisposed = runReadAction { project.isDisposed }
-                    if (alreadyDisposed) {
-                        throw ExecutionException("External command failed to start")
-                    }
+            Disposer.register(project, processKiller)
+            try {
+                val output = handler.runProcess(20000)
+                val alreadyDisposed = runReadAction { project.isDisposed }
+                if (alreadyDisposed) {
+                    throw ExecutionException("External command failed to start")
+                }
 /*
                     if (output.exitCode != 0) {
                         throw ExecutionException(errorMessage(generalCommandLine, output))
                     }
 */
-                    val json = output.stderr.ifEmpty {
-                        output.stdout
-                    }
-                    val messages = if (json.isEmpty()) emptyList() else {
-                        elmReviewJsonToMessages(json)
-                    }
-                    if (!isUnitTestMode) {
-                        ApplicationManager.getApplication().invokeLater {
-                            project.messageBus.syncPublisher(ElmExternalReviewAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
-                        }
-                    }
-                } finally {
-                    Disposer.dispose(processKiller)
+                val json = output.stderr.ifEmpty {
+                    output.stdout
                 }
+                val messages = if (json.isEmpty()) emptyList() else {
+                    elmReviewJsonToMessages(json).sortedWith(
+                        compareBy(
+                            { it.path },
+                            { it.region.start.line },
+                            { it.region.start.column }
+                        ))
+                }
+                if (!isUnitTestMode) {
+                    ApplicationManager.getApplication().invokeLater {
+                        project.messageBus.syncPublisher(ElmExternalReviewAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
+                    }
+                }
+            } finally {
+                Disposer.dispose(processKiller)
             }
+        }
     }
 
     fun queryVersion(): Result<Version> {
