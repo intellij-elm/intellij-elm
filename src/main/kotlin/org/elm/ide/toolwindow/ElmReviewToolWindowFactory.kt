@@ -19,7 +19,6 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                 override fun update(baseDirPath: Path, messages: List<ElmReviewError>, targetPath: String?, offset: Int) {
 
                     val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "elm-review", createExitAction = false, createToolbar = true)
-                    connectFriendlyMessages(project, errorTreeViewPanel)
 
                     messages.forEachIndexed { index, elmReviewError ->
                         val sourceLocation = elmReviewError.path!!
