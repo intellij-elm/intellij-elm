@@ -17,7 +17,7 @@ class ErrorTreeSelectionListener(private val messages: List<String>, private val
         if (index >= 0 && index < messages.size) {
             reportUI.text = messages[index]
             reportUI.caretPosition = 0
-            toolWindow.activate(null)
+            toolWindow.show(null)
         }
     }
 }
