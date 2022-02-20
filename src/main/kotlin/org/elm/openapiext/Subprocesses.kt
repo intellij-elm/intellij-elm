@@ -94,7 +94,7 @@ fun GeneralCommandLine.execute(
 }
 
 @Throws(ExecutionException::class)
-fun GeneralCommandLine.executeReviewAsync(
+fun executeReviewAsync(
     toolName: String,
     project: Project,
     task: (indicator: ProgressIndicator) -> Unit

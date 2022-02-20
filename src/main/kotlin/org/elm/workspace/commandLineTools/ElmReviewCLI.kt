@@ -36,8 +36,10 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
         val generalCommandLine = GeneralCommandLine(elmReviewExecutablePath)
             .withWorkDirectory(elmProject.projectDirPath.toString())
             .withParameters(arguments)
-        generalCommandLine.executeReviewAsync(elmReviewTool, project) { indicator ->
 
+        executeReviewAsync(elmReviewTool, project) { indicator ->
+
+            indicator.text = "reviewing ${elmProject.projectDirPath}"
             val handler = CapturingProcessHandler(generalCommandLine)
             val processKiller = Disposable { handler.destroyProcess() }
 
