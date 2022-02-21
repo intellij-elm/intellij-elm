@@ -45,7 +45,7 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
 
             Disposer.register(project, processKiller)
             try {
-                val output = handler.runProcess(20000)
+                val output = handler.runProcess()
                 val alreadyDisposed = runReadAction { project.isDisposed }
                 if (alreadyDisposed) {
                     throw ExecutionException("External command failed to start")
@@ -67,6 +67,7 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
                         ))
                 }
                 if (!isUnitTestMode) {
+                    indicator.text = "review finished"
                     ApplicationManager.getApplication().invokeLater {
                         project.messageBus.syncPublisher(ElmExternalReviewAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, null, 0)
                     }
