@@ -20,15 +20,17 @@ fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
         }
         is Report.Specific -> {
             report.errors.flatMap { errorsForFile ->
-                errorsForFile.errors.map { error ->
-                    ElmReviewError(
-                            path = errorsForFile.path,
-                            rule = error.rule,
-                            message = error.message,
-                            region = error.region,
-                            html = chunksToHtml(error.formatted)
-                    )
-                }
+                errorsForFile.errors
+                    .filter { error -> !error.suppressed }
+                    .map { error ->
+                        ElmReviewError(
+                                path = errorsForFile.path,
+                                rule = error.rule,
+                                message = error.message,
+                                region = error.region,
+                                html = chunksToHtml(error.formatted)
+                        )
+                    }
             }
         }
     }
