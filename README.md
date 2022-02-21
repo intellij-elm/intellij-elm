@@ -11,7 +11,7 @@ You can install the plugin from within the JetBrains IDE by going to **Settings 
 - [Generate JSON Decoders & Encoders](docs/features/generate-function-json.md)
 - [Rename refactoring](docs/features/rename-refactoring.md)
 - [Lamdera support](docs/features/lamdera.md)
-- [elm-review support](https://github.com/jfmengels/elm-review)
+- [elm-review support](docs/features/elm-review.md)
 
 
 ## Additional Features 
