@@ -55,7 +55,8 @@ data class ElmReviewIntermediateError(
         val rule: String,
         val message: String,
         val region: Region,
-        val formatted: List<Chunk>
+        val formatted: List<Chunk>,
+        val suppressed: Boolean
 )
 
 data class Region(val start: Start, val end: End)
