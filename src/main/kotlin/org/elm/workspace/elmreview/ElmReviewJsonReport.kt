@@ -21,7 +21,7 @@ fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
         is Report.Specific -> {
             report.errors.flatMap { errorsForFile ->
                 errorsForFile.errors
-                    .filter { error -> !error.suppressed }
+                    .filterNot { error -> error.suppressed }
                     .map { error ->
                         ElmReviewError(
                                 path = errorsForFile.path,
