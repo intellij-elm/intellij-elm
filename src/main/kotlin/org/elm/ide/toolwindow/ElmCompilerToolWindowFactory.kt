@@ -34,11 +34,11 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
                             elmError.html
                         )
                     }
-                    errorTreeViewPanel.expandAll()
                     toolWindow.contentManager.removeAllContents(true)
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Compilation result", true))
-                    errorTreeViewPanel.requestFocus()
                     toolWindow.show(null)
+                    errorTreeViewPanel.expandAll()
+                    errorTreeViewPanel.requestFocus()
                     focusEditor(project)
                 }
             })

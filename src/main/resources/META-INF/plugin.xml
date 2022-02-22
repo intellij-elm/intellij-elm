@@ -199,9 +199,9 @@
                     factoryClass="org.elm.ide.toolwindow.ElmToolWindowFactory"/>
         <toolWindow id="Elm Compiler" anchor="bottom" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ElmCompilerToolWindowFactory"/>
-        <toolWindow id="elm-review" anchor="bottom" icon="/icons/elm-toolwindow.png"
+        <toolWindow id="elm-review" anchor="bottom" secondary="false" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ElmReviewToolWindowFactory"/>
-        <toolWindow id="Friendly Messages" anchor="right" icon="/icons/elm-toolwindow.png"
+        <toolWindow id="Friendly Messages" anchor="bottom" secondary="true" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ReportsToolWindowFactory"/>
 
 

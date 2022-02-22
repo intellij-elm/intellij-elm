@@ -51,7 +51,6 @@ class ElmCLI(val elmExecutablePath: Path) {
             return true
         } else {
             fun postErrors() = project.messageBus.syncPublisher(ElmBuildAction.ERRORS_TOPIC).update(elmProject.projectDirPath, messages, targetPath!!, offset)
-
             when {
                 isUnitTestMode -> postErrors()
                 else -> {
@@ -60,7 +59,7 @@ class ElmCLI(val elmExecutablePath: Path) {
                 }
             }
         }
-        return true
+        return messages.isEmpty()
     }
 
     fun queryVersion(): Result<Version> {

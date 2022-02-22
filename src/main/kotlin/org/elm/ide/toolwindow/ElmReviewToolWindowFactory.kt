@@ -27,7 +27,7 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                         }
                         val encodedIndex = "\u200B".repeat(index)
                         errorTreeViewPanel.addMessage(
-                            MessageCategory.WARNING, arrayOf("$encodedIndex${elmReviewError.message}"),
+                            MessageCategory.SIMPLE, arrayOf("$encodedIndex${elmReviewError.rule}:", "${elmReviewError.message}"),
                             virtualFile,
                             elmReviewError.region.start.let { it.line - 1 },
                             elmReviewError.region.start.let { it.column - 1 },
@@ -35,11 +35,11 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                         )
                     }
 
-                    errorTreeViewPanel.expandAll()
                     toolWindow.contentManager.removeAllContents(true)
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Elm-Review Result", true))
-                    errorTreeViewPanel.requestFocus()
                     toolWindow.show(null)
+                    errorTreeViewPanel.expandAll()
+                    errorTreeViewPanel.requestFocus()
                     focusEditor(project)
                 }
             })

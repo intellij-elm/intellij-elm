@@ -8,17 +8,17 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
 import org.elm.openapiext.saveAllDocuments
+import org.elm.workspace.compiler.findEntrypoints
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 import org.elm.workspace.elmreview.ElmReviewError
 import java.nio.file.Path
-
-const val ELM_REVIEW_ACTION_ID = "Elm.RunExternalElmReview"
 
 private val log = logger<ElmExternalReviewAction>()
 
@@ -45,6 +45,9 @@ class ElmExternalReviewAction : AnAction() {
         saveAllDocuments()
         val project = e.project ?: return
 
+        val elmCLI = project.elmToolchain.elmCLI
+            ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
+
         val elmReviewCLI = project.elmToolchain.elmReviewCLI
             ?: return showError(project, "Please set the path to the 'elm-review' binary", includeFixAction = true)
 
@@ -63,11 +66,22 @@ class ElmExternalReviewAction : AnAction() {
             return
         }
 
+        val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
+            ?: return showError(project, "Could not determine active Elm project's path")
+
+        val entryPoints = // list of (filePathToCompile, targetPath, offset)
+            findEntrypoints(elmProject, project, projectDir, activeFile)
+
         try {
-            elmReviewCLI.runReview(project, elmProject, project.elmToolchain.elmCLI)
+            val compiledSuccessfully = elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true)
+            if (compiledSuccessfully)
+                elmReviewCLI.runReview(project, elmProject, project.elmToolchain.elmCLI)
         } catch (e: ExecutionException) {
-            showError(project, "execution error $e")
-            return
+            return showError(
+                project,
+                "Failed to run '${elmCLI.elmExecutablePath}' or '${elmReviewCLI.elmReviewExecutablePath}' executable. Are the paths correct ?",
+                includeFixAction = true
+            )
         }
     }
 

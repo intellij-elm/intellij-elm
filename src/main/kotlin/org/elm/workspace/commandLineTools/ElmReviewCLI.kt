@@ -6,10 +6,16 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.ToolWindowManager
 import org.elm.ide.actions.ElmExternalReviewAction
-import org.elm.openapiext.*
+import org.elm.openapiext.GeneralCommandLine
+import org.elm.openapiext.Result
+import org.elm.openapiext.execute
+import org.elm.openapiext.isUnitTestMode
 import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
@@ -23,7 +29,7 @@ private val log = logger<ElmReviewCLI>()
 /**
  * Interact with external `elm-review` process.
  */
-class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
+class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
     fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?) {
         val arguments: List<String> = listOf(
@@ -37,7 +43,7 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
             .withWorkDirectory(elmProject.projectDirPath.toString())
             .withParameters(arguments)
 
-        executeReviewAsync(elmReviewTool, project) { indicator ->
+        executeReviewAsync(project) { indicator ->
 
             indicator.text = "reviewing ${elmProject.projectDirPath}"
             val handler = CapturingProcessHandler(generalCommandLine)
@@ -97,3 +103,16 @@ class ElmReviewCLI(private val elmReviewExecutablePath: Path) {
         }
     }
 }
+
+@Throws(ExecutionException::class)
+fun executeReviewAsync(
+    project: Project,
+    task: (indicator: ProgressIndicator) -> Unit
+) {
+    if (!isUnitTestMode) {
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(elmReviewTool)!!
+        toolWindow.show()
+    }
+    runBackgroundableTask(elmReviewTool, project, true, task)
+}
+

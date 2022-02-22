@@ -33,11 +33,8 @@ import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.io.systemIndependentPath
 import org.elm.utils.runAsyncTask
 import java.io.OutputStreamWriter
@@ -91,21 +88,6 @@ fun GeneralCommandLine.execute(
     } finally {
         Disposer.dispose(processKiller)
     }
-}
-
-@Throws(ExecutionException::class)
-fun executeReviewAsync(
-    toolName: String,
-    project: Project,
-    task: (indicator: ProgressIndicator) -> Unit
-) {
-
-    if (!isUnitTestMode) {
-        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("elm-review")!!
-        toolWindow.show()
-    }
-
-    runBackgroundableTask(toolName, project, true, task)
 }
 
 @Throws(ExecutionException::class)

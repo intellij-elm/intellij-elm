@@ -49,55 +49,8 @@ class ElmBuildAction : AnAction() {
         val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
             ?: return showError(project, "Could not determine active Elm project's path")
 
-        val entryPoints: List<Triple<Path, String?, Int>?> = // (filePathToCompile, targetPath, offset)
-            when (elmProject) {
-                is LamderaApplicationProject -> {
-                    val mainEntryPoints = findAppEntryPoints(project, elmProject)
-                    val result = mainEntryPoints.map { mainEntryPoint ->
-                        mainEntryPoint.containingFile.virtualFile?.let {
-                            Triple(
-                                it.pathRelative(project),
-                                VfsUtilCore.getRelativePath(it, projectDir),
-                                mainEntryPoint.textOffset
-                            )
-                        }
-                    }
-                    result.ifEmpty {
-                        return showError(
-                            project,
-                            "Cannot find your Lamdera app's Frontend & Backend entry points. Please make sure that it named 'app' in both Frontend- and Backend-module."
-                        )
-                    }
-                }
-
-                is ElmApplicationProject -> {
-                    val mainEntryPoints = findMainEntryPoint(project, elmProject)
-                    val result = mainEntryPoints.map { mainEntryPoint ->
-                        mainEntryPoint.containingFile.virtualFile?.let {
-                            Triple(
-                                it.pathRelative(project),
-                                VfsUtilCore.getRelativePath(it, projectDir),
-                                mainEntryPoint.textOffset
-                            )
-                        }
-                    }
-                    result.ifEmpty {
-                        return showError(
-                            project,
-                            "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation."
-                        )
-                    }
-                }
-
-                is ElmPackageProject ->
-                    listOf(
-                        Triple(
-                            activeFile.pathAsPath,
-                            VfsUtilCore.getRelativePath(activeFile, projectDir),
-                            0
-                        )
-                    )
-            }
+        val entryPoints = // list of (filePathToCompile, targetPath, offset)
+            findEntrypoints(elmProject, project, projectDir, activeFile)
 
         try {
             elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true)
@@ -110,45 +63,9 @@ class ElmBuildAction : AnAction() {
         }
     }
 
-    private fun findAppEntryPoints(project: Project, elmProject: ElmProject): List<ElmFunctionDeclarationLeft> {
-        val clientLocation = object : ClientLocation {
-            override val intellijProject: Project
-                get() = project
-            override val elmProject: ElmProject
-                get() = elmProject
-            override val isInTestsDirectory: Boolean
-                get() = false
-        }
-        val lamderaBackend = ElmLookup.findByNameAndModule<ElmFunctionDeclarationLeft>("app", "Backend", clientLocation)
-        val lamderaFrontend = ElmLookup.findByNameAndModule<ElmFunctionDeclarationLeft>("app", "Frontend", clientLocation)
-        return lamderaFrontend + lamderaBackend
-    }
-
-    private fun findMainEntryPoint(project: Project, elmProject: ElmProject): List<ElmFunctionDeclarationLeft> {
-        val elmEntries =
-            ElmLookup.findByName<ElmFunctionDeclarationLeft>("main", LookupClientLocation(project, elmProject))
-                .filter { decl ->
-                    val key = when (val ty = decl.findTy()) {
-                        is TyUnion -> ty.module to ty.name
-                        is TyUnknown -> ty.alias?.let { it.module to it.name }
-                        else -> null
-                    }
-                    key != null && key in elmMainTypes && decl.isTopLevel
-                }
-        return elmEntries
-    }
-
     private fun findActiveFile(e: AnActionEvent, project: Project): VirtualFile? =
         e.getData(CommonDataKeys.VIRTUAL_FILE)
             ?: FileEditorManager.getInstance(project).selectedFiles.firstOrNull { it.fileType == ElmFileType }
-
-    private fun showError(project: Project, message: String, includeFixAction: Boolean = false) {
-        val actions = if (includeFixAction)
-            arrayOf("Fix" to { project.elmWorkspace.showConfigureToolchainUI() })
-        else
-            emptyArray()
-        project.showBalloon(message, NotificationType.ERROR, *actions)
-    }
 
     interface ElmErrorsListener {
         fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String, offset: Int)
@@ -156,7 +73,7 @@ class ElmBuildAction : AnAction() {
 
     companion object {
         val ERRORS_TOPIC = Topic("Elm compiler-messages", ElmErrorsListener::class.java)
-        private val elmMainTypes = setOf(
+        val elmMainTypes = setOf(
             "Platform" to "Program",
             "Html" to "Html",
             "VirtualDom" to "Node"
@@ -169,3 +86,97 @@ class ElmBuildAction : AnAction() {
         override val isInTestsDirectory: Boolean = false
     ) : ClientLocation
 }
+
+fun findEntrypoints(
+    elmProject: ElmProject,
+    project: Project,
+    projectDir: VirtualFile,
+    activeFile: VirtualFile
+): List<Triple<Path, String?, Int>?> =
+    when (elmProject) {
+        is LamderaApplicationProject -> {
+            val mainEntryPoints = findAppEntryPoints(project, elmProject)
+            val result = mainEntryPoints.map { mainEntryPoint ->
+                mainEntryPoint.containingFile.virtualFile?.let {
+                    Triple(
+                        it.pathRelative(project),
+                        VfsUtilCore.getRelativePath(it, projectDir),
+                        mainEntryPoint.textOffset
+                    )
+                }
+            }
+            result.ifEmpty {
+                showError(
+                    project,
+                    "Cannot find your Lamdera app's Frontend & Backend entry points. Please make sure that it named 'app' in both Frontend- and Backend-module."
+                )
+                emptyList()
+            }
+        }
+
+        is ElmApplicationProject -> {
+            val mainEntryPoints = findMainEntryPoint(project, elmProject)
+            val result = mainEntryPoints.map { mainEntryPoint ->
+                mainEntryPoint.containingFile.virtualFile?.let {
+                    Triple(
+                        it.pathRelative(project),
+                        VfsUtilCore.getRelativePath(it, projectDir),
+                        mainEntryPoint.textOffset
+                    )
+                }
+            }
+            result.ifEmpty {
+                showError(
+                    project,
+                    "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation."
+                )
+                emptyList()
+            }
+        }
+
+        is ElmPackageProject ->
+            listOf(
+                Triple(
+                    activeFile.pathAsPath,
+                    VfsUtilCore.getRelativePath(activeFile, projectDir),
+                    0
+                )
+            )
+    }
+
+private fun findAppEntryPoints(project: Project, elmProject: ElmProject): List<ElmFunctionDeclarationLeft> {
+    val clientLocation = object : ClientLocation {
+        override val intellijProject: Project
+            get() = project
+        override val elmProject: ElmProject
+            get() = elmProject
+        override val isInTestsDirectory: Boolean
+            get() = false
+    }
+    val lamderaBackend = ElmLookup.findByNameAndModule<ElmFunctionDeclarationLeft>("app", "Backend", clientLocation)
+    val lamderaFrontend = ElmLookup.findByNameAndModule<ElmFunctionDeclarationLeft>("app", "Frontend", clientLocation)
+    return lamderaFrontend + lamderaBackend
+}
+
+private fun findMainEntryPoint(project: Project, elmProject: ElmProject): List<ElmFunctionDeclarationLeft> {
+    val elmEntries =
+        ElmLookup.findByName<ElmFunctionDeclarationLeft>("main", ElmBuildAction.LookupClientLocation(project, elmProject))
+            .filter { decl ->
+                val key = when (val ty = decl.findTy()) {
+                    is TyUnion -> ty.module to ty.name
+                    is TyUnknown -> ty.alias?.let { it.module to it.name }
+                    else -> null
+                }
+                key != null && key in ElmBuildAction.elmMainTypes && decl.isTopLevel
+            }
+    return elmEntries
+}
+
+private fun showError(project: Project, message: String, includeFixAction: Boolean = false) {
+    val actions = if (includeFixAction)
+        arrayOf("Fix" to { project.elmWorkspace.showConfigureToolchainUI() })
+    else
+        emptyArray()
+    project.showBalloon(message, NotificationType.ERROR, *actions)
+}
+
