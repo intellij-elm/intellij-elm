@@ -86,3 +86,4 @@ Licensing see: https://github.com/clojj/intellij-elm/blob/master/LICENSE.txt and
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
+
