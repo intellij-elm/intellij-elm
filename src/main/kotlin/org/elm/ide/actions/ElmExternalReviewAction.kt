@@ -5,6 +5,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -45,26 +46,28 @@ class ElmExternalReviewAction : AnAction() {
         saveAllDocuments()
         val project = e.project ?: return
 
-        val elmCLI = project.elmToolchain.elmCLI
-            ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
+        val activeFile = findActiveFile(e, project)
+            ?: return showError(project, "Could not determine active Elm file")
+
+        if (activeFile.nameWithoutExtension == "ReviewConfig")
+            return
 
         val elmReviewCLI = project.elmToolchain.elmReviewCLI
             ?: return showError(project, "Please set the path to the 'elm-review' binary", includeFixAction = true)
 
-        val activeFile = findActiveFile(e, project)
-            ?: return showError(project, "Could not determine active Elm file")
-
-        val elmProject = project.elmWorkspace.findProjectForFile(activeFile)
-            ?: return showError(project, "Could not determine active Elm project")
-
         val fixAction = "Fix" to { project.elmWorkspace.showConfigureToolchainUI() }
 
         val elmReview = project.elmToolchain.elmReviewCLI
-
         if (elmReview == null) {
             project.showBalloon("Could not find elm-review", NotificationType.ERROR, fixAction)
             return
         }
+
+        val elmProject = project.elmWorkspace.findProjectForFile(activeFile)
+            ?: return showError(project, "Could not determine active Elm project")
+
+        val elmCLI = project.elmToolchain.elmCLI
+            ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
 
         val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
             ?: return showError(project, "Could not determine active Elm project's path")
@@ -74,8 +77,10 @@ class ElmExternalReviewAction : AnAction() {
 
         try {
             val compiledSuccessfully = elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true)
-            if (compiledSuccessfully)
-                elmReviewCLI.runReview(project, elmProject, project.elmToolchain.elmCLI)
+            if (compiledSuccessfully) {
+                val vFile: VirtualFile? = e.getData(PlatformDataKeys.VIRTUAL_FILE)
+                elmReviewCLI.runReview(project, elmProject, project.elmToolchain.elmCLI, vFile)
+            }
         } catch (e: ExecutionException) {
             return showError(
                 project,

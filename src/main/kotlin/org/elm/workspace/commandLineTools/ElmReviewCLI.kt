@@ -10,16 +10,15 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import org.elm.ide.actions.ElmExternalReviewAction
-import org.elm.openapiext.GeneralCommandLine
-import org.elm.openapiext.Result
-import org.elm.openapiext.execute
-import org.elm.openapiext.isUnitTestMode
+import org.elm.openapiext.*
 import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
 import org.elm.workspace.elmReviewTool
+import org.elm.workspace.elmreview.ElmReviewError
 import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.nio.file.Path
 
@@ -31,7 +30,7 @@ private val log = logger<ElmReviewCLI>()
  */
 class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
-    fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?) {
+    fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?, currentFile: VirtualFile?) {
         val arguments: List<String> = listOf(
             "--report=json",
             // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
@@ -65,12 +64,17 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                     output.stdout
                 }
                 val messages = if (json.isEmpty()) emptyList() else {
-                    elmReviewJsonToMessages(json).sortedWith(
+                    val msgs = elmReviewJsonToMessages(json).sortedWith(
                         compareBy(
                             { it.path },
                             { it.region.start.line },
                             { it.region.start.column }
                         ))
+                    if (currentFile != null) {
+                        val predicate: (ElmReviewError) -> Boolean = { it.path == currentFile.pathRelative(project).toString() }
+                        val sortedMessages = msgs.filter(predicate) + msgs.filterNot(predicate)
+                        sortedMessages
+                    } else msgs
                 }
                 if (!isUnitTestMode) {
                     indicator.text = "review finished"
