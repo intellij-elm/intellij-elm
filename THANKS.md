@@ -3,7 +3,7 @@
 A lot of great work has been done on this project by the following contributors:
 
 - @ajalt (type inference and a ton of other awesome features and improvements)
-- @clojj (elm-make integration)
+- @clojj (elm compiler, elm-review integration, Lamdera support, Plugin build & Api updates)
 - @FloWi (elm-format integration)
 - @frawa (elm-test integration)
 - @d3xt3r

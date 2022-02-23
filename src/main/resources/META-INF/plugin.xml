@@ -1,11 +1,353 @@
 <idea-plugin>
     <id>Elm IntelliJ NG</id>
     <name>Elm / Lamdera</name>
-    <vendor url="https://github.com/clojj/intellij-elm">clojj</vendor>
+    <vendor url="https://github.com/klazuka">
+        Keith Lazuka
+    </vendor>
 
     <description><![CDATA[
-        Provides support for Elm & Lamdera projects
+      Provides support for the <a href="http://elm-lang.org">Elm</a> programming language.<br>
+
+      Features:<br>
+      <ul>
+          <li>Code completion</li>
+          <li>Go to declaration</li>
+          <li>Go to symbol</li>
+          <li>Find usages</li>
+          <li>Type Inference and Type Checking</li>
+          <li>Rename refactoring</li>
+          <li>Introduce "variable" refactoring (`let/in`)</li>
+          <li>Generate JSON encoders/decoders</li>
+          <li>Generate type annotation for un-annotated function</li>
+          <li>Graphical UI for running elm-test</li>
+          <li>Re-format code using elm-format</li>
+          <li>Analyze code using elm-review</li>
+          <li>Detect unused code</li>
+          <li>Detect and remove unused imports</li>
+          <li>'Add Import' quick fix for unresolved references</li>
+          <li>Code folding</li>
+          <li>Structure view</li>
+          <li>Syntax highlighting</li>
+          <li>WebGL/GLSL support</li>
+          <li>Spell checking</li>
+          <li>etc.</li>
+      </ul>
+        Provides support for Elm projects
     ]]></description>
+
+    <change-notes><![CDATA[
+        <ul>
+            <li><b>5.0.0</b> <em>(2022-03-20)</em>
+                <ul>
+                    <li>Enable support for newer versions of IntelliJ (v2021.1 and greater)</li>
+                    <li>based on new Gradle build (intellij-platform-plugin-template)</li>
+                    <li>Support Lamdera projects (https://dashboard.lamdera.app/docs)</li>
+                    <li>Support elm-review</li>
+                    <li>Improved navigation and UI for compiler- and elm-review-Toolwindows with correct IntelliJ appearance setting (light, dark, ...)</li>
+                    <li>Support multiple Elm-main entrypoints (compile all)</li>
+                </ul>
+            </li>
+            <li><b>4.4.1</b> <em>(2021-09-20)</em>
+                <ul>
+                    <li>Enable support for all newer versions of IntelliJ (future versions introduce incompatibilities)</li>
+                </ul>
+            </li>
+            <li><b>4.4.0</b> <em>(2021-04-01)</em>
+                <ul>
+                    <li>Enable support for IntelliJ 2021.1.x</li>
+                    <li>Add intention for inserting parens around expressions</li>
+                    <li>Reword 'new elm file' menu option</li>
+                </ul>
+            </li>
+            <li><b>4.3.1</b> <em>(2021-01-30)</em>
+                <ul>
+                    <li>Fix 'extract variable' on pipeline expressions</li>
+                    <li>Add intention for inserting `Debug.log` statements</li>
+                </ul>
+            </li>
+            <li><b>4.3.0</b> <em>(2020-11-24)</em>
+                <ul>
+                    <li>Implement new project wizard for WebStorm</li>
+                    <li>Add more control over how types are exposed.</li>
+                    <li>Add intention to convert record constructor function to record literal</li>
+                    <li>Optimize 'Find Usages' so that it only looks at `*.elm` files</li>
+                    <li>Only show New Elm File option inside Elm source directories</li>
+                    <li>Added support for IntelliJ 2020.3</li>
+                </ul>
+            </li>
+            <li><b>4.2.0</b> <em>(2020-09-03)</em>
+                <ul>
+                    <li>Added intention for creating (and removing) pipelines</li>
+                    <li>Added code completion for fields in record expressions</li>
+                    <li>Fixed an exception that could occur when elm-format runs automatically on-save</li>
+                </ul>
+            </li>
+            <li><b>4.1.0</b> <em>(2020-08-27)</em>
+                <ul>
+                    <li>Automatically configures path to Elm tools and the `elm.json` file</li>
+                    <li>Package dependencies are now installed automatically</li>
+                    <li>New project template has updated `elm.json` package dependencies</li>
+                    <li>Added intentions for converting between regular and triple-quoted strings</li>
+                    <li>Allow elm-format to run on-save even if there are syntax errors</li>
+                    <li>Fixed bugs in the Elm Compiler tool window</li>
+                </ul>
+            </li>
+            <li><b>4.0.0</b> <em>(2020-08-18)</em>
+                <ul>
+                    <li>Removed support for Elm 0.18</li>
+                    <li>Added a quick-fix to convert List.map to List.foldr</li>
+                    <li>Major improvements to dependency version resolution</li>
+                    <li>Go-to-declaration now works for indirect dependencies</li>
+                </ul>
+            </li>
+            <li><b>3.5.4</b> <em>(2020-07-28)</em>
+                <ul>
+                    <li>Added support for IntelliJ 2020.2</li>
+                </ul>
+            </li>
+            <li><b>3.5.3</b> <em>(2020-04-14)</em>
+                <ul>
+                    <li>Fixed missing icons in the Elm tool window when running IntelliJ 2020.1</li>
+                    <li>Fixed a regression in the 'add import' feature related to types in union variants.</li>
+                </ul>
+            </li>
+            <li><b>3.5.2</b> <em>(2020-04-08)</em>
+                <ul>
+                    <li>Improved sorting of modules when performing 'add import'.</li>
+                    <li>Added a hint popup to add an import to fix an unresolved reference.</li>
+                    <li>Fixed a 'add import' bug where types and values were mixed up in some cases.</li>
+                    <li>Fixed a shadowing error false negative involving `let/in` expressions.</li>
+                    <li>Type Inference optimizations: reduced memory usage, etc.</li>
+                </ul>
+            </li>
+            <li><b>3.5.1</b> <em>(2020-02-05)</em>
+                <ul>
+                    <li>Fixed 2 bugs related to function/type name resolution</li>
+                    <li>Enable support for IntelliJ 2020.1 EAP</li>
+                </ul>
+            </li>
+            <li><b>3.5.0</b> <em>(2020-01-23)</em>
+                <ul>
+                    <li>Major performance optimizations</li>
+                    <li>CSS colors are now shown in the gutter and can be edited using a color picker</li>
+                    <li>Added "breadcrumbs" UI</li>
+                    <li>Syntax highlighting can now distinguish between doc comments and other comments</li>
+                    <li>Generated code now honors your indent size config</li>
+                    <li>Tests can now be run from non-standard locations</li>
+                    <li>Line markers can now be disabled individually</li>
+                    <li>Duplicate function/type definitions are now marked as an error</li>
+                    <li>Tuples with more than 3 elements are now marked as an error</li>
+                    <li>Attempting to use `(..)` on a type alias is now marked as an error</li>
+                    <li>Added troubleshooting instructions for `nvm` configurations</li>
+                </ul>
+            </li>
+            <li><b>3.4.6</b> <em>(2019-12-23)</em>
+                <ul>
+                    <li>Live templates are now suggested in appropriate contexts only</li>
+                    <li>Fixed a type inference bug (ConcurrentModificationException)</li>
+                </ul>
+            </li>
+            <li><b>3.4.5</b> <em>(2019-11-30)</em>
+                <ul>
+                    <li>Added nested functions/values to Structure View</li>
+                    <li>Added scroll-from-source in Structure View</li>
+                    <li>Fixed 'New Project Wizard' bug on IntelliJ 2019.3</li>
+                </ul>
+            </li>
+            <li><b>3.4.4</b> <em>(2019-11-25)</em>
+                <ul>
+                    <li>Improved generation of function params from a type annotation</li>
+                    <li>Improved commenter to play nicely with elm-format</li>
+                    <li>Fixed a bug with the Elm Compiler panel where it found the wrong entry-point</li>
+                    <li>Fixed a stack overflow in type inference on some malformed programs</li>
+                    <li>Fixed refs to union constructors in arguments to other constructors in patterns</li>
+                </ul>
+            </li>
+            <li><b>3.4.3</b> <em>(2019-09-29)</em>
+                <ul>
+                    <li>Parser performance improvements in deeply nested functions</li>
+                    <li>Improved type checking of case expressions</li>
+                    <li>Fixed various cache invalidation bugs</li>
+                </ul>
+            </li>
+            <li><b>3.4.2</b> <em>(2019-09-06)</em>
+                <ul>
+                    <li>Fix ConcurrentModificationException</li>
+                    <li>Fix false positives for some unused record fields</li>
+                    <li>Improve type checking of recursive functions</li>
+                    <li>Improve type checking of destructured record fields</li>
+                </ul>
+            </li>
+            <li><b>3.4.1</b> <em>(2019-08-24)</em>
+                <ul>
+                    <li>Fixed bugs related to record field rename</li>
+                    <li>Fixed a bug in Elm 0.18 projects related to the `elm-stuff` directory</li>
+                </ul>
+            </li>
+            <li><b>3.4.0</b> <em>(2019-08-18)</em>
+                <ul>
+                    <li>Added record field 'rename refactoring'</li>
+                    <li>Added go-to-declaration and find usages for record fields</li>
+                    <li>Added intention to generate JSON encoders and decoders</li>
+                    <li>Added intention to qualify an unresolved ref with its module name</li>
+                    <li>Added a gutter line marker for recursive functions</li>
+                    <li>Added quick fix to rename unused patterns to `_`</li>
+                    <li>Added ability to suppress inspection with a comment</li>
+                    <li>Fixed a bug when generating type annotations</li>
+                    <li>Improved type checker errors for `case` branches</li>
+                    <li>Improved performance in very large projects</li>
+                </ul>
+            </li>
+            <li><b>3.3.0</b> <em>(2019-07-29)</em>
+                <ul>
+                    <li>Added "introduce variable" refactoring (creates a `let/in` for selected expression)</li>
+                    <li>Added syntax highlighting for record fields and made everything more consistent</li>
+                    <li>Improved record type errors by showing a diff of mismatched fields</li>
+                    <li>Added an inspection for detecting unused module alias imports</li>
+                    <li>Plus some more bug fixes</li>
+                </ul>
+            </li>
+            <li><b>3.2.1</b> <em>(2019-07-16)</em>
+                <ul>
+                    <li>Fixed a bug in 2019.2 EAP related to the Elm Settings UI</li>
+                    <li>Improved logic for locating packages in Elm's global package cache</li>
+                </ul>
+            </li>
+            <li><b>3.2.0</b> <em>(2019-07-11)</em>
+                <ul>
+                    <li>Added an intention that generates a type annotation for un-annotated functions</li>
+                    <li>Significantly reduced memory usage in large projects</li>
+                    <li>Improved handling of nested let functions</li>
+                </ul>
+            </li>
+            <li><b>3.1.2</b> <em>(2019-05-28)</em>
+                <ul>
+                    <li>Fixed a type inference bug related to curried functions</li>
+                    <li>Fixed a stack overflow crash in some recursive functions</li>
+                    <li>Allow named suffixes on special type variables: `comparable`, `number`, etc.</li>
+                </ul>
+            </li>
+            <li><b>3.1.1</b> <em>(2019-04-06)</em>
+                <ul>
+                    <li>The type system is now fully implemented!</li>
+                    <li>Finished full-program type unification/inference</li>
+                    <li>Explicit imports now shadow wildcard imports</li>
+                    <li>Elm compiler tool-window UI now shows path to file target and is scrollable</li>
+                    <li>Allowed elm-format to run even if there are syntax errors</li>
+                </ul>
+            </li>
+            <li><b>3.1.0</b> <em>(2019-03-18)</em>
+                <ul>
+                    <li>Add Elm compiler integration to check errors</li>
+                    <li>Bug fixes for type inference</li>
+                </ul>
+            </li>
+            <li><b>3.0.1</b> <em>(2019-03-06)</em>
+                <ul>
+                    <li>Added "auto test" support in the elm-test runner</li>
+                    <li>Fixed elm-test runner on Elm 0.18 projects</li>
+                    <li>Reduced false negatives in the unused code inspection</li>
+                    <li>Fixed a parse error for arithmetic negation</li>
+                    <li>Fixed a variety of minor bugs related to elm-format</li>
+                </ul>
+            </li>
+            <li><b>3.0.0</b> <em>(2019-02-25)</em>
+                <ul>
+                    <li>Added support for elm-format: via keybinding or automatically-on-save</li>
+                    <li>Added UI for running elm-test and viewing test results</li>
+                    <li>Added support for WebGL/GLSL</li>
+                    <li>Various bug fixes</li>
+                </ul>
+            </li>
+            <li><b>2.2.4</b> <em>(2019-02-13)</em>
+                <ul>
+                    <li>The type checker now detects problems with type variables</li>
+                    <li>Added support for introducing an aliased import from an unresolved qualified ref</li>
+                    <li>Added a template for creating a new Elm project</li>
+                    <li>Added quick docs for infix operators</li>
+                    <li>Lots of bug fixes</li>
+                </ul>
+            </li>
+            <li><b>2.2.3</b> <em>(2019-02-06)</em>
+                <ul>
+                    <li>Record field completion now works even in the presence of parse errors</li>
+                    <li>More performance improvements</li>
+                    <li>Bug fixes for type checker</li>
+                    <li>Added support for exponential notation on number literals</li>
+                </ul>
+            </li>
+            <li><b>2.2.2</b> <em>(2019-01-28)</em>
+                <ul>
+                    <li>Improvements to 'create function from type annotation' intention</li>
+                    <li>Bug fixes for 'new Elm file' generator</li>
+                    <li>Performance improvements</li>
+                </ul>
+            </li>
+            <li><b>2.2.1</b> <em>(2019-01-13)</em>
+                <ul>
+                    <li>Add 'complete current statement' support for case/of, let/in, if/else and function declarations</li>
+                    <li>Bug fixes for unused code inspections</li>
+                    <li>Bug fixes for type checker</li>
+                    <li>Reduced memory usage</li>
+                </ul>
+            </li>
+            <li><b>2.2.0</b> <em>(2019-01-06)</em>
+                <ul>
+                    <li>Add inspections for unused functions, parameters, imports, etc.</li>
+                    <li>Add 'optimize imports' quick fix</li>
+                    <li>New intention actions for adding/removing a function/type from the exposing list</li>
+                    <li>Improved "New Elm File" action</li>
+                    <li>Improve name resolution for test modules and dependencies</li>
+                    <li>Improve 'extend selection' to also grab the function's type annotation</li>
+                    <li>Importing and exposing a custom type variant constructor now exposes all</li>
+                    <li>Performance improvements</li>
+                </ul>
+            </li>
+            <li><b>2.1.1</b> <em>(2018-12-20)</em>
+                <ul>
+                    <li>Add inspection and enter handler to complete case branches</li>
+                    <li>Do code completion for functions & types even when module not imported</li>
+                    <li>Aliased imports now hide the original module name from qualified refs</li>
+                    <li>Improved type checking</li>
+                </ul>
+            </li>
+            <li><b>2.1.0</b> <em>(2018-12-01)</em>
+                <ul>
+                    <li>Added code completion for accessing fields in a record</li>
+                    <li>Performance improvements</li>
+                    <li>Improved type inference</li>
+                </ul>
+            </li>
+            <li><b>2.0.3</b> <em>(2018-11-16)</em>
+                <ul>
+                    <li>Improved function generation from a type annotation</li>
+                    <li>Improved type inference and added more error checking</li>
+                    <li>Added a line marker for exposed functions/types</li>
+                    <li>Fixed bugs related to 'test-dependencies'</li>
+                </ul>
+            </li>
+            <li><b>2.0.2</b> <em>(2018-11-08)</em> - type checking bug fixes; improvements to Find Usages</li>
+            <li><b>2.0.1</b> <em>(2018-11-03)</em> - added 'Parameter Info' support; bug fixes</li>
+            <li><b>2.0.0</b> <em>(2018-10-31)</em> - added type inference and type checking; added support for multiple Elm projects</li>
+            <li><b>1.3.3</b> <em>(2018-09-20)</em> - added Elm tool window listing attached projects; parser bug fix</li>
+            <li><b>1.3.2</b> <em>(2018-09-08)</em> - add code folding; various bug fixes</li>
+            <li><b>1.3.1</b> <em>(2018-08-26)</em> - add support for Elm 0.19 package projects</li>
+            <li><b>1.3.0</b> <em>(2018-08-09)</em> - add quick docs; add rename file/module refactoring; add support for Elm 0.19 beta</li>
+            <li><b>1.1.1</b> <em>(2018-05-15)</em> - fix crash on PyCharm and WebStorm</li>
+            <li><b>1.1.0</b> <em>(2018-05-10)</em> - smart indent, performance improvements, better parse error recovery</li>
+            <li><b>1.0.0</b> <em>(2018-04-11)</em> - improved parse error recovery and added keyword completion</li>
+            <li><b>0.9.1</b> <em>(2017-12-28)</em> - added 'Import' quick fix for unresolved references</li>
+            <li><b>0.9.0</b> <em>(2017-12-15)</em> - initial release</li>
+        </ul>
+    ]]>
+    </change-notes>
+
+    <!--
+    See http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html
+    Note that the range is half-open: [since-build, until-build), but if you use a wildcard in `until`,
+    it will be inclusive (i.e. 203.* is inclusive for 2020.3.x)
+     -->
+    <idea-version since-build="211"/>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
