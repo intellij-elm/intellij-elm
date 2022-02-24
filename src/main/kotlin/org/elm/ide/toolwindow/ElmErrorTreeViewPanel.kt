@@ -43,8 +43,10 @@ fun connectFriendlyMessages(project: Project, errorTreeViewPanel: ElmErrorTreeVi
 }
 
 fun focusEditor(project: Project) {
-    val editor = DataManager.getInstance().dataContextFromFocusAsync.blockingGet(2000)?.getData(CommonDataKeys.EDITOR)
-    if (editor != null) {
-        IdeFocusManager.getInstance(project).requestFocus(editor.contentComponent, true)
+    DataManager.getInstance().dataContextFromFocusAsync.then {
+        val editor = it.getData(CommonDataKeys.EDITOR)
+        if (editor != null) {
+            IdeFocusManager.getInstance(project).requestFocus(editor.contentComponent, true)
+        }
     }
 }

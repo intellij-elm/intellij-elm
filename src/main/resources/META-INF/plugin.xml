@@ -262,7 +262,9 @@
 
         <action id="Elm.RunExternalElmReview"
                 class="org.elm.ide.actions.ElmExternalReviewAction"
-                text="Run elm-review">
+                text="Review Elm Project"
+                icon="AllIcons.Toolwindows.ToolWindowBuild">
+            <keyboard-shortcut first-keystroke="alt shift V" keymap="$default"/>
             <add-to-group group-id="CodeMenu"/>
         </action>
 
@@ -288,15 +290,8 @@
             <add-to-group group-id="Elm.WorkspaceToolsGroup"/>
         </group>
 
-        <action id="Elm.Review"
-                class="org.elm.ide.actions.ElmExternalReviewAction"
-                text="Review Elm Project"
-                icon="AllIcons.Toolwindows.ToolWindowBuild">
-            <keyboard-shortcut first-keystroke="alt shift V" keymap="$default"/>
-        </action>
-
         <group id="Elm.ReviewToolsGroup" text="elm-review" popup="true">
-            <reference id="Elm.Review"/>
+            <reference id="Elm.RunExternalElmReview"/>
         </group>
     </actions>
 
