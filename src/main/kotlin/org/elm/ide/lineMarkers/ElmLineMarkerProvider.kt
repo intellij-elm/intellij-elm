@@ -23,7 +23,10 @@ class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
     // This provides the options to show in Settings > Editor > General > Gutter Icons
     override fun getOptions(): Array<Option> = OPTIONS
 
-    override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<LineMarkerInfo<PsiElement>>) {
+    override fun collectSlowLineMarkers(
+        elements: MutableList<out PsiElement>,
+        result: MutableCollection<in LineMarkerInfo<*>>
+    ) {
         val first = elements.firstOrNull() ?: return
         if (DumbService.getInstance(first.project).isDumb || first.parentOfType<ElmFile>()?.elmProject == null) return
 

@@ -1,8 +1,11 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
+
 
 class InlineDebugIntentionTest : ElmIntentionTestBase(InlineDebugIntention()) {
 
+    @Test
     fun `test debugging function argument`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -14,6 +17,7 @@ f0 =
     List.map f (Debug.log "items" (items))
 """)
 
+    @Test
     fun `test debugging function call`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -25,6 +29,7 @@ f0 =
     (Debug.log "List.map f items" (List.map f items))
 """)
 
+    @Test
     fun `test debugging expr with double quotes`() = doAvailableTest(
         """
 module Foo exposing (f0)
@@ -36,6 +41,7 @@ f0 =
     (Debug.log "String.length \"foo\"" (String.length "foo"))
 """)
 
+    @Test
     fun `test debugging pattern matching input`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -55,6 +61,7 @@ f1 =
         _ -> 1
 """)
 
+    @Test
     fun `test debugging pattern matching output`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -79,6 +86,7 @@ f1 =
     )
 """)
 
+    @Test
     fun `test debugging case branch`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -103,6 +111,7 @@ f1 =
     )
 """)
 
+    @Test
     fun `test debugging case branch value`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -122,6 +131,7 @@ f1 =
         _ -> (Debug.log "1" (1))
 """)
 
+    @Test
     fun `test debugging case on function call`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -141,6 +151,7 @@ f1 =
         _ -> 1
 """)
 
+    @Test
     fun `test debugging binary operator input`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -152,6 +163,7 @@ f0 =
     1 + (Debug.log "1" (1))
 """)
 
+    @Test
     fun `test debugging binary operator operation`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -163,6 +175,7 @@ f0 =
     (Debug.log "1 + 1" (1 + 1))
 """)
 
+    @Test
     fun `test debugging multiple binary operator operations`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -174,6 +187,7 @@ f0 =
     (Debug.log "1 + 1 + 1" (1 + 1 + 1))
 """)
 
+    @Test
     fun `test debugging piped operations`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -185,6 +199,7 @@ f0 =
     (Debug.log "1 + 1 + 1 |> (+) 1" (1 + 1 + 1 |> (+) 1))
 """)
 
+    @Test
     fun `test debugging piped operations with function`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -196,6 +211,7 @@ f0 =
     (Debug.log "1 + 1 + 1 |> String.fromInt" (1 + 1 + 1 |> String.fromInt))
 """)
 
+    @Test
     fun `test debugging multiline piped operations with function`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -214,6 +230,7 @@ f0 =
     )
 """)
 
+    @Test
     fun `test debugging function composition`() = doAvailableTest(
             """
 module Foo exposing (f0)

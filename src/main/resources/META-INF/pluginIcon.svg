@@ -1,40 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 17.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-     viewBox="0 0 323.141 322.95" enable-background="new 0 0 323.141 322.95" xml:space="preserve" width="40px"
-     height="40px">
-<g>
-  <polygon
-          fill="#F0AD00"
-          points="161.649,152.782 231.514,82.916 91.783,82.916"/>
-
-    <polygon
-            fill="#7FD13B"
-            points="8.867,0 79.241,70.375 232.213,70.375 161.838,0"/>
-
-    <rect
-            fill="#7FD13B"
-            x="192.99"
-            y="107.392"
-            transform="matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
-            width="107.676"
-            height="108.167"/>
-
-    <polygon
-            fill="#60B5CC"
-            points="323.298,143.724 323.298,0 179.573,0"/>
-
-    <polygon
-            fill="#5A6378"
-            points="152.781,161.649 0,8.868 0,314.432"/>
-
-    <polygon
-            fill="#F0AD00"
-            points="255.522,246.655 323.298,314.432 323.298,178.879"/>
-
-    <polygon
-            fill="#60B5CC"
-            points="161.649,170.517 8.869,323.298 314.43,323.298"/>
-</g>
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32.0845 7.94025V4H24.0203V7.9896H16.029V4H7.91553V7.94025H4V36H16.0044V32.0045C16.0058 30.9457 16.4274 29.9308 17.1766 29.1826C17.9258 28.4345 18.9412 28.0143 20 28.0143C21.0588 28.0143 22.0743 28.4345 22.8234 29.1826C23.5726 29.9308 23.9942 30.9457 23.9956 32.0045V36H36V7.94025H32.0845Z"
+          fill="url(#paint0_linear)"/>
+    <defs>
+        <linearGradient id="paint0_linear" x1="2.94192" y1="4.89955" x2="37.7772" y2="39.7345" gradientUnits="userSpaceOnUse">
+            <stop offset="0.15937" stop-color="#3BEA62"/>
+            <stop offset="0.5404" stop-color="#3C99CC"/>
+            <stop offset="0.93739" stop-color="#6B57FF"/>
+        </linearGradient>
+    </defs>
 </svg>

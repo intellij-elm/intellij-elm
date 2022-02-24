@@ -1,11 +1,11 @@
 package org.elm.ide.refactoring
 
-import com.intellij.application.options.CodeStyle
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmExpressionTag
 import org.elm.lang.core.psi.indentStyle
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmIntroduceVariableHandlerTest : ElmTestBase() {
 
@@ -15,6 +15,7 @@ class ElmIntroduceVariableHandlerTest : ElmTestBase() {
     // BASICS
 
 
+    @Test
     fun `test creates let-in when necessary`() = doTest("""
 f =
     4 + {-caret-}3
@@ -28,6 +29,7 @@ f =
 """)
 
 
+    @Test
     fun `test can select alternate expression`() = doTest("""
 f =
     4 + {-caret-}3
@@ -41,6 +43,7 @@ f =
 """)
 
 
+    @Test
     fun `test uses explicit selection when present`() = doTest("""
 f =
     <selection>4 + 3</selection>
@@ -54,6 +57,7 @@ f =
 """)
 
 
+    @Test
     fun `test reuses existing let-in`() = doTest("""
 f =
     let
@@ -74,6 +78,7 @@ f =
 """)
 
 
+    @Test
     fun `test creates after the last decl in a let-in`() = doTest("""
 f =
     let
@@ -103,6 +108,7 @@ f =
     // EDGE CASES
 
 
+    @Test
     fun `test creates a let within a let`() = doTest("""
 f =
     let
@@ -124,6 +130,7 @@ f =
 """)
 
 
+    @Test
     fun `test creates in a let expression body nested in a let expr inner decl`() = doTest("""
 f =
     let
@@ -152,6 +159,7 @@ f =
 """)
 
 
+    @Test
     fun `test works for very simple functions where the entire body is replaced`() = doTest("""
 f =
     {-caret-}3
@@ -165,6 +173,7 @@ f =
 """)
 
 
+    @Test
     fun `test introduces a let-in within a case branch`() = doTest("""
 f =
     case () of
@@ -182,6 +191,7 @@ f =
 """)
 
 
+    @Test
     fun `test introduces a let-in within a lambda`() = doTest("""
 f =
     \_ ->
@@ -197,6 +207,7 @@ f =
 """)
 
 
+    @Test
     fun `test extracts if predicate expr cleanly`() = doTest("""
 f k =
     if {-caret-}0 == identity k then 1 else 0
@@ -211,6 +222,7 @@ f k =
 
 
     // AJ example1 and example3
+    @Test
     fun `test caret anywhere inside a case extracts the entire case`() = doTest("""
 f x =
     case x of
@@ -227,6 +239,7 @@ f x =
 
 
     // AJ example2: throws an exception about an invalid offset when trying to do inplace rename
+    @Test
     fun `test extract lambda inside parens`() = doTest("""
 g =
     (\extractMe{-caret-} -> ())
@@ -241,6 +254,7 @@ g =
 
 
     // AJ example4: original implementation was cutting off the record literal
+    @Test
     fun `test extract record literal`() = doTest("""
 f =
     { field = 1{-caret-}
@@ -259,6 +273,7 @@ f =
 
 
     // AJ example5: multi-line expression cuts off the '+' and everything after
+    @Test
     fun `test extract multiline binary op expr`() = doTest("""
 f =
     1
@@ -277,6 +292,7 @@ f =
 
 
     // AJ example5 alt: multi-line expression cuts off the '+' and everything after
+    @Test
     fun `test extract multiline binary op expr indented`() = doTest("""
 f =
     1
@@ -295,6 +311,7 @@ f =
 
 
     // AJ example7: this is strange Elm code, but maybe people do it to control the visibility of the inner decls?
+    @Test
     fun `test extract in the context of a let nested within the body of another let`() = doTest("""
 example7 =
     let
@@ -320,6 +337,7 @@ example7 =
 
 
     // AJ example8 alt: extracting entire let-in generated code mangles previous top-level decl
+    @Test
     fun `test extract entire let-in`() = doTest("""
 module Foo exposing (f)
 
@@ -345,6 +363,7 @@ f =
 """)
 
 
+    @Test
     fun `test extract pipeline branch`() = doTest("""
 module Foo exposing (xDecoder)
 
@@ -383,6 +402,7 @@ xDecoder =
 //""")
 
 
+    @Test
     fun `test extend a let with a multi-line expression`() = doTest("""
 f =
     let
@@ -409,6 +429,7 @@ f =
 """)
 
 
+    @Test
     fun `test indented multi-line expression`() = doTest("""
 f g =
     g
@@ -430,6 +451,7 @@ f g =
 """)
 
 
+    @Test
     fun `test preserve indentation when extracting multi-line expr into an existing let-in`() = doTest("""
 f =
     let
@@ -457,6 +479,7 @@ f =
     // NAME SUGGESTIONS
 
 
+    @Test
     fun `test suggests based on function call name`() = doTest("""
 f =
     selectWidget {-caret-}3
@@ -474,6 +497,7 @@ selectWidget w = w
 """)
 
 
+    @Test
     fun `test suggests based on end of field access chain`() = doTest("""
 f model =
     {-caret-}model.currentPage.title
@@ -487,6 +511,7 @@ f model =
 """)
 
 
+    @Test
     fun `test suggest an alternate name if the default is already taken`() = doTest("""
 f number =
     {-caret-}42
@@ -501,6 +526,7 @@ f number =
 
     // CODE STYLE
 
+    @Test
     fun `test creates let-in with custom code style`() = checkByText("""
 f =
   4 + {-caret-}3

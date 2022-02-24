@@ -3,6 +3,7 @@ package org.elm.ide.highlight
 
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.elm.ide.color.ElmColor
@@ -39,17 +40,21 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun AnnotationHolder.upperCaseQID(element: ElmUpperCaseQID) {
-        val isTypeExpr = PsiTreeUtil.getParentOfType(element,
-                ElmTypeExpression::class.java,
-                ElmUnionVariant::class.java)
+        val isTypeExpr = PsiTreeUtil.getParentOfType(
+            element,
+            ElmTypeExpression::class.java,
+            ElmUnionVariant::class.java
+        )
         if (isTypeExpr != null) {
             typeExpr(element)
             return
         }
 
-        val isModuleName = PsiTreeUtil.getParentOfType(element,
-                ElmImportClause::class.java,
-                ElmModuleDeclaration::class.java) != null
+        val isModuleName = PsiTreeUtil.getParentOfType(
+            element,
+            ElmImportClause::class.java,
+            ElmModuleDeclaration::class.java
+        ) != null
         if (!isModuleName) {
             applyColor(element, ElmColor.UNION_VARIANT)
         }
@@ -75,6 +80,6 @@ class ElmSyntaxHighlightAnnotator : Annotator {
     }
 
     private fun AnnotationHolder.applyColor(element: PsiElement, color: ElmColor) {
-        createInfoAnnotation(element, null).textAttributes = color.textAttributesKey
+        newSilentAnnotation(HighlightSeverity.INFORMATION).textAttributes(color.textAttributesKey).range(element.textRange).create()
     }
 }

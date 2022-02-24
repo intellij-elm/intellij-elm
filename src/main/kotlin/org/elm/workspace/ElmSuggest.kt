@@ -22,7 +22,7 @@ object ElmSuggest {
      * in order to determine that the file exists and that it is executable.
      */
     fun suggestTools(project: Project) =
-            listOf("elm", "elm-format", "elm-test").associateWith { programPath(it, project) }
+            elmTools.associateWith { programPath(it, project) }
 
     /**
      * Attempt to find the path to [programName].

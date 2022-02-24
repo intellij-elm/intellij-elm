@@ -2,12 +2,14 @@ package org.elm.ide.inspections.import
 
 import org.elm.ide.inspections.ElmInspectionsTestBase
 import org.elm.ide.inspections.ElmUnresolvedReferenceInspection
+import org.junit.Test
 
 class MakeDeclarationFixTest : ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
 
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
 
+    @Test
     fun `test make value declaration`() = checkFixByText("Create",
             """
 f : Int{-caret-}
@@ -19,6 +21,7 @@ f =
 """)
 
 
+    @Test
     fun `test make basic function declaration`() = checkFixByText("Create",
             """
 f : Int{-caret-} -> Int
@@ -30,6 +33,7 @@ f int =
 """)
 
 
+    @Test
     fun `test make advanced function declaration`() = checkFixByText("Create",
             """
 f : (Int -> Int) -> List a -> (Char, String) -> { foo : Int } -> Bool{-caret-}
@@ -41,6 +45,7 @@ f function list (char, string) record =
 """)
 
 
+    @Test
     fun `test function parameters should be camelCased`() = checkFixByText("Create",
             """
 type FooBar = FooBar
@@ -57,6 +62,7 @@ f fooBar quuxQuuxQuux =
 
 
     // https://github.com/klazuka/intellij-elm/issues/232
+    @Test
     fun `test trailing whitespace does not mess up the generated code`() = checkFixByText("Create",
             """
 f : Int -> Int{-caret-}  --end-of-line
@@ -67,6 +73,7 @@ f int =
     {-caret-}
 """)
 
+    @Test
     fun `test make nested value declaration`() = checkFixByText("Create",
             """
 f =
@@ -86,6 +93,7 @@ f =
 """)
 
 
+    @Test
     fun `test list parameters uses plural noun`() = checkFixByText("Create",
             """
 type Color = Red | Green | Blue
@@ -100,6 +108,7 @@ f users colors =
     {-caret-}
 """)
 
+    @Test
     fun `test maybe parameters`() = checkFixByText("Create",
             """
 type Color = Red | Green | Blue

@@ -30,7 +30,7 @@ object ElmIcons {
      */
     val EXPOSED_GUTTER = getIcon("elm-exposure.png")
 
-    val RECURSIVE_CALL = AllIcons.Gutter.RecursiveMethod!!
+    val RECURSIVE_CALL = AllIcons.Gutter.RecursiveMethod
 
     // STRUCTURE VIEW ICONS
 

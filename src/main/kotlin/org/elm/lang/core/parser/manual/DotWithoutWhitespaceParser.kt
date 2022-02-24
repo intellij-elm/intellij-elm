@@ -2,9 +2,10 @@ package org.elm.lang.core.parser.manual
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase
-import com.intellij.lang.parser.GeneratedParserUtilBase.*
+import com.intellij.lang.parser.GeneratedParserUtilBase.parseTokens
+import com.intellij.lang.parser.GeneratedParserUtilBase.recursion_guard_
 import com.intellij.psi.TokenType
-import org.elm.lang.core.psi.ElmTypes.*
+import org.elm.lang.core.psi.ElmTypes.DOT
 
 /**
  * Parses a `.` token, optionally forbidding whitespace on one or both sides.

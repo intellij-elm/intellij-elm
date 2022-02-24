@@ -10,9 +10,11 @@ import com.intellij.testFramework.TestActionEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
+/*
     override fun runTest() {
         if (toolchain.elmFormatCLI == null) {
             // TODO in the future maybe we should install elm-format in the CI build environment
@@ -21,8 +23,10 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         }
         super.runTest()
     }
+*/
 
 
+    @Test
     fun `test elm-format action with elm 19`() {
         buildProject {
             project("elm.json", manifestElm19)
@@ -51,6 +55,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
+    @Test
     fun `test elm-format action shouldn't be active on non-elm files`() {
         buildProject {
             project("elm.json", manifestElm19.trimIndent())
@@ -67,6 +72,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         }
     }
 
+    @Test
     fun `test elm-format action should add to the undo stack`() {
         buildProject {
             project("elm.json", manifestElm19)

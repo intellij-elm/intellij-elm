@@ -3,22 +3,31 @@ package org.elm.workspace
 import com.intellij.openapi.project.Project
 import org.elm.workspace.commandLineTools.ElmCLI
 import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmReviewCLI
 import org.elm.workspace.commandLineTools.ElmTestCLI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+const val elmCompilerTool = "elm"
+const val elmFormatTool = "elm-format"
+const val elmTestTool = "elm-test"
+const val elmReviewTool = "elm-review"
+val elmTools = listOf(elmCompilerTool, elmFormatTool, elmTestTool, elmReviewTool)
+
 data class ElmToolchain(
         val elmCompilerPath: Path?,
         val elmFormatPath: Path?,
         val elmTestPath: Path?,
+        val elmReviewPath: Path?,
         val isElmFormatOnSaveEnabled: Boolean
 ) {
-    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, isElmFormatOnSaveEnabled: Boolean) :
+    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, elmReviewPath: String, isElmFormatOnSaveEnabled: Boolean) :
             this(
                     if (elmCompilerPath.isNotBlank()) Paths.get(elmCompilerPath) else null,
                     if (elmFormatPath.isNotBlank()) Paths.get(elmFormatPath) else null,
                     if (elmTestPath.isNotBlank()) Paths.get(elmTestPath) else null,
+                    if (elmReviewPath.isNotBlank()) Paths.get(elmReviewPath) else null,
                     isElmFormatOnSaveEnabled
             )
 
@@ -27,6 +36,8 @@ data class ElmToolchain(
     val elmFormatCLI: ElmFormatCLI? = elmFormatPath?.let { ElmFormatCLI(it) }
 
     val elmTestCLI: ElmTestCLI? = elmTestPath?.let { ElmTestCLI(it) }
+
+    val elmReviewCLI: ElmReviewCLI? = elmReviewPath?.let { ElmReviewCLI(it) }
 
     val presentableLocation: String =
             elmCompilerPath?.toString() ?: "unknown location"
@@ -41,9 +52,10 @@ data class ElmToolchain(
     fun autoDiscoverAll(project: Project): ElmToolchain {
         val suggestions = ElmSuggest.suggestTools(project)
         return copy(
-                elmCompilerPath = elmCompilerPath ?: suggestions["elm"],
-                elmFormatPath = elmFormatPath ?: suggestions["elm-format"],
-                elmTestPath = elmTestPath ?: suggestions["elm-test"]
+                elmCompilerPath = elmCompilerPath ?: suggestions[elmCompilerTool],
+                elmFormatPath = elmFormatPath ?: suggestions[elmFormatTool],
+                elmTestPath = elmTestPath ?: suggestions[elmTestTool],
+                elmReviewPath = elmReviewPath ?: suggestions[elmReviewTool]
         )
     }
 
@@ -60,7 +72,7 @@ data class ElmToolchain(
          */
         const val SIDECAR_FILENAME = "elm.intellij.json"
 
-        const val DEFAULT_FORMAT_ON_SAVE = false
+        const val DEFAULT_FORMAT_ON_SAVE = true
 
         /**
          * A blank, default [ElmToolchain].
@@ -69,6 +81,7 @@ data class ElmToolchain(
                 elmCompilerPath = null,
                 elmFormatPath = null,
                 elmTestPath = null,
+                elmReviewPath = null,
                 isElmFormatOnSaveEnabled = ElmToolchain.DEFAULT_FORMAT_ON_SAVE
         )
 

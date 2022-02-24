@@ -38,9 +38,9 @@ class ElmTestSettingsEditor internal constructor(project: Project) : SettingsEdi
     }
 
     override fun applyEditorTo(configuration: ElmTestRunConfiguration) {
-        val name : String? = projectChooser!!.selectedItem as String
-        if (name != null) {
-            configuration.options.elmFolder = helper.projectDirPathByName(name)
+        val selectedItem = projectChooser!!.selectedItem
+        if (selectedItem != null && selectedItem is String) {
+            configuration.options.elmFolder = helper.projectDirPathByName(selectedItem)
         }
     }
 }

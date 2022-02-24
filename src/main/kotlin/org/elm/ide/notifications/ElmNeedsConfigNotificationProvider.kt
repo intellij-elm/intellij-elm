@@ -135,6 +135,7 @@ class ElmNeedsConfigNotificationProvider(
 
     private fun versionConflictPanel(project: Project, elmProject: ElmProject, compilerVersion: Version): EditorNotificationPanel {
         val expectedVersionText = when (elmProject) {
+            is LamderaApplicationProject -> elmProject.elmVersion.toString()
             is ElmApplicationProject -> elmProject.elmVersion.toString()
             is ElmPackageProject -> elmProject.elmVersion.toString()
         }

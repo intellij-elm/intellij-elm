@@ -88,7 +88,7 @@ class ElmExposingList : ElmStubbedElement<ElmExposingListStub> {
             return if (importClause != null) {
                 importClause.reference.resolve() as? ElmModuleDeclaration
             } else {
-                this.parentOfType<ElmModuleDeclaration>()
+                this.parentOfType()
             }
         }
 }

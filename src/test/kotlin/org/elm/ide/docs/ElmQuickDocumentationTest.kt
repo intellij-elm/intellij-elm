@@ -1,10 +1,12 @@
 package org.elm.ide.docs
 
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmQuickDocumentationTest : ElmDocumentationProviderTest() {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
+    @Test
     fun `test variable declaration`() = doTest(
             """
 foo = 0
@@ -15,6 +17,7 @@ foo = 0
 <b>foo</b></pre></div>
 """)
 
+    @Test
     fun `test unary function`() = doTest(
             """
 foo bar = bar
@@ -25,6 +28,7 @@ foo bar = bar
 <b>foo</b> bar</pre></div>
 """)
 
+    @Test
     fun `test binary function with line comment`() = doTest(
             """
 --- this shouldn't be included
@@ -36,6 +40,7 @@ foo bar baz = bar baz
 <b>foo</b> bar baz</pre></div>
 """)
 
+    @Test
     fun `test binary function with as`() = doTest(
             """
 foo (bar as baz) qux = bar
@@ -46,6 +51,7 @@ foo (bar as baz) qux = bar
 <b>foo</b> (bar as baz) qux</pre></div>
 """)
 
+    @Test
     fun `test unannotated function`() = doTest(
             """
 foo a = ((), "", a + 1)
@@ -57,6 +63,7 @@ main = foo
 <b>foo</b> a</pre></div>
 """)
 
+    @Test
     fun `test var with later constraints`() = doTest(
             """
 foo a =
@@ -73,6 +80,7 @@ foo a =
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    @Test
     fun `test function with doc comment`() = doTest(
             """
 {-| this should be included. -}
@@ -85,6 +93,7 @@ foo bar baz = bar baz
 <div class='content'><p>this should be included.</p></div>
 """)
 
+    @Test
     fun `test function with type annotation`() = doTest(
             """
 foo : Int -> Int -> Int
@@ -96,6 +105,7 @@ foo bar baz = bar
 <b>foo</b> bar baz</pre></div>
 """)
 
+    @Test
     fun `test function with type annotation with nested types`() = doTest(
             """
 foo : List (List a) -> ()
@@ -107,6 +117,7 @@ foo bar = ()
 <b>foo</b> bar</pre></div>
 """)
 
+    @Test
     fun `test function with type annotation and parameterized alias`() = doTest(
             """
 type alias A a = {x: a, y: ()}
@@ -119,6 +130,7 @@ main = {x = (), y = ()}
 <b>main</b></pre></div>
 """)
 
+    @Test
     fun `test nested function with type annotation`() = doTest(
             """
 main a =
@@ -134,6 +146,7 @@ main a =
 <b>foo</b> bar baz</pre></div>
 """)
 
+    @Test
     fun `test function in let`() = doTest(
             """
 foo a =
@@ -149,6 +162,7 @@ foo a =
 """)
 
 
+    @Test
     fun `test function with qualified type annotation`() = doTest(
             """
 import Json.Decode
@@ -161,6 +175,7 @@ foo = Json.Decode.succeed ()
 <b>foo</b></pre></div>
 """)
 
+    @Test
     fun `test function with type and docs`() = doTest(
             """
 {-| foo some ints together -}
@@ -174,6 +189,7 @@ foo bar baz = bar baz
 <div class='content'><p>foo some ints together</p></div>
 """)
 
+    @Test
     fun `test function in module`() = doTest(
             """
 module Foo.Bar exposing (foo)
@@ -187,6 +203,7 @@ foo bar = bar
 """)
 
 
+    @Test
     fun `test doc comments with markdown`() = doTest(
             """
 {-| Map some `Int`s together,
@@ -220,6 +237,7 @@ deciding if this is what you want.</p></div>
 """)
 
 
+    @Test
     fun `test type declaration`() = doTest(
             """
 type Foo = Bar
@@ -231,6 +249,7 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
+    @Test
     fun `test type declaration in module`() = doTest(
             """
 module Foo.Bar exposing (Foo)
@@ -244,6 +263,7 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
+    @Test
     fun `test type declaration with docs`() = doTest(
             """
 {-| included *docs* -}
@@ -257,6 +277,7 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
+    @Test
     fun `test type declaration with multiple variants`() = doTest(
             """
 {-| included *docs* -}
@@ -277,6 +298,7 @@ type Foo
 <p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
 """)
 
+    @Test
     fun `test union variant with parameters`() = doTest(
             """
 type Foo a = Bar | Baz a (List Int) Int
@@ -286,6 +308,7 @@ type Foo a = Bar | Baz a (List Int) Int
 <div class='definition'><pre><i>variant</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>) <a href="psi_element://Int">Int</a><i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
+    @Test
     fun `test union variant without parameters`() = doTest(
             """
 type Foo a = Bar | Baz a Foo
@@ -295,6 +318,7 @@ type Foo a = Bar | Baz a Foo
 <div class='definition'><pre><i>variant</i> Bar<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
+    @Test
     fun `test type alias`() = doTest(
             """
 type alias Foo = Int
@@ -304,6 +328,7 @@ type alias Foo = Int
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
 """)
 
+    @Test
     fun `test type alias in module`() = doTest(
             """
 module Foo.Bar exposing (Foo)
@@ -315,6 +340,7 @@ type alias Foo = Int
 <div class='definition'><pre><b>type alias</b> Foo<i> defined in </i>Foo.Bar</pre></div>
 """)
 
+    @Test
     fun `test type alias with docs`() = doTest(
             """
 {-| included *docs* -}
@@ -326,6 +352,7 @@ type alias Foo = Int
 <div class='content'><p>included <em>docs</em></p></div>
 """)
 
+    @Test
     fun `test type alias empty record`() = doTest(
             """
 type alias Foo = { }
@@ -335,6 +362,7 @@ type alias Foo = { }
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
 """)
 
+    @Test
     fun `test type alias record with fields`() = doTest(
             """
 type alias Foo = { a: Int, b: String }
@@ -347,6 +375,7 @@ type alias Foo = { a: Int, b: String }
 <p><code>b</code> : <a href="psi_element://String">String</a></td></table>
 """)
 
+    @Test
     fun `test module`() = doTest(
             """
 module Main exposing (main)
@@ -359,6 +388,7 @@ main = ()
 
     // This test is kludgy: since a line comment before a doc comment will cause the doc comment to fail to attach to
     // the module element, we need to put the line comment inside the doc comment.
+    @Test
     fun `test module with docstring`() = doTest(
             """
 module Main exposing (main)
@@ -383,6 +413,7 @@ type Baz = Baz
 <div class='content'><p>--^</p><p>Module docs</p><h2>Header</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://Bar">Bar</a><h2>Helpers</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://Bar">Bar</a>, <a href="psi_element://Baz">Baz</a></div>
 """)
 
+    @Test
     fun `test function parameter`() = doTest(
             """
 foo bar = ()
@@ -393,6 +424,7 @@ foo bar = ()
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    @Test
     fun `test function parameter with primitive type annotation`() = doTest(
             """
 type Int = Int
@@ -405,6 +437,7 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    @Test
     fun `test function parameter with nested parametric type annotation`() = doTest(
             """
 type Foo a = Bar
@@ -417,6 +450,7 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    @Test
     fun `test function parameter with parenthesized type annotation`() = doTest(
             """
 type Int = Int
@@ -429,6 +463,7 @@ foo ((bar)) = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    @Test
     fun `test function parameter with nested tuple type annotation`() = doTest(
             """
 type Int = Int
@@ -457,6 +492,7 @@ foo (_, (bar, _)) = bar
 //<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 //""")
 
+    @Test
     fun `test function parameter with record type and as annotation`() = doTest(
             """
 type Int = Int
@@ -470,6 +506,7 @@ foo ({x, y} as z) = z
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
+    @Test
     fun `test aliased types`() = doTest(
             """
 type alias T1 t = ()
@@ -483,6 +520,7 @@ foo a = a
 <b>foo</b> a</pre></div>
 """)
 
+    @Test
     fun `test alias to unresolved type`() = doTest(
             """
 type alias Html msg = VirtualDom.Node msg
@@ -495,6 +533,7 @@ foo a = a
 <b>foo</b> a</pre></div>
 """)
 
+    @Test
     fun `test operator`() = doTest(
             """
 {-| included *docs* -}

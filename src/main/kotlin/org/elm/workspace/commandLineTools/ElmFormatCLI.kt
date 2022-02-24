@@ -15,10 +15,7 @@ import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
 import org.elm.openapiext.isNotSuccess
-import org.elm.workspace.ElmApplicationProject
-import org.elm.workspace.ElmPackageProject
-import org.elm.workspace.ParseException
-import org.elm.workspace.Version
+import org.elm.workspace.*
 import java.nio.file.Path
 
 private val log = logger<ElmFormatCLI>()
@@ -112,6 +109,7 @@ class ElmFormatCLI(private val elmFormatExecutablePath: Path) {
             return when (val elmProject = psiFile.elmProject) {
                 is ElmApplicationProject -> elmProject.elmVersion
                 is ElmPackageProject -> elmProject.elmVersion.low
+                is LamderaApplicationProject -> elmProject.elmVersion
                 else -> return null
             }
         }

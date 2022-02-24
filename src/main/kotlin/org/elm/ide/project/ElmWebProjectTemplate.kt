@@ -1,4 +1,4 @@
-package org.elm.ide.project;
+package org.elm.ide.project
 
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep
 import com.intellij.ide.util.projectWizard.CustomStepProjectGenerator

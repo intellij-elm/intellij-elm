@@ -1,0 +1,14 @@
+Elm File
+  ElmValueDeclaration(VALUE_DECLARATION)
+    ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
+      PsiElement(LOWER_CASE_IDENTIFIER)('shader')
+    PsiWhiteSpace(' ')
+    PsiElement(EQ)('=')
+  PsiWhiteSpace('\n')
+  PsiWhiteSpace('    ')
+  PsiElement(START_GLSL_CODE)('[glsl|')
+  PsiElement(GLSL_CODE_CONTENT)('\n        1 ')
+  PsiElement(GLSL_CODE_CONTENT)('|')
+  PsiElement(GLSL_CODE_CONTENT)(' 2')
+  PsiErrorElement:END_GLSL_CODE or GLSL_CODE_CONTENT expected
+    <empty list>
