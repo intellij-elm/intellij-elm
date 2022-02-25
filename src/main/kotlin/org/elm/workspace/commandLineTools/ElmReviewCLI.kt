@@ -5,7 +5,6 @@ import com.intellij.execution.ExecutionException
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.ide.DataManager
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
@@ -15,16 +14,8 @@ import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.wm.IdeFocusManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
-import org.apache.tools.ant.taskdefs.Execute.launch
-import org.elm.ide.actions.ElmExternalReviewAction
-import org.elm.ide.actions.ElmExternalReviewWatchmodeAction
 import org.elm.openapiext.*
 import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
@@ -118,6 +109,8 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
             val process = ProcessBuilder(cmd)
                 .directory(elmProject.projectDirPath.toFile())
                 .start()
+
+            Disposer.register(project) { process.destroyForcibly() }
 
             indicator.text = "review started in watchmode"
             val reader = JsonReader(process.inputStream.bufferedReader())
