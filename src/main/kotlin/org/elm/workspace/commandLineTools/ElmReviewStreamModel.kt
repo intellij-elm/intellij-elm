@@ -2,6 +2,7 @@ package org.elm.workspace.commandLineTools
 
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
+import org.elm.workspace.elmreview.Chunk
 
 data class ElmReviewWatchError(
     // TODO Add a optional fix field (For later)
@@ -117,7 +118,15 @@ fun parseReviewJsonStream(reader: JsonReader, emit: (List<ElmReviewWatchError>) 
                                 endArray()
                             }
                             ReviewOutputType.ERROR -> {
-                                println("TODO type 'error'")
+                                val elmReviewWatchError = ElmReviewWatchError()
+                                while (hasNext()) {
+                                    when (nextName()) {
+                                        "title" -> elmReviewWatchError.rule = nextString()
+                                        "path" -> elmReviewWatchError.path = nextString()
+                                        "message" -> elmReviewWatchError.message = chunksToLines(nextString()).joinToString("\n")
+                                    }
+                                }
+                                errors.add(elmReviewWatchError)
                             }
                             ReviewOutputType.COMPILE_ERRORS -> {
                                 println("TODO type 'compile-errors'")
@@ -217,3 +226,11 @@ fun String?.adjustForDisplay(): String =
         else -> this
     }
 
+private fun chunksToLines(chunks: List<Chunk>): List<String> {
+    return chunks.asSequence().map {
+        when (it) {
+            is Chunk.Unstyled -> it.str
+            is Chunk.Styled -> it.string
+        }
+    }.joinToString("").lines()
+}
