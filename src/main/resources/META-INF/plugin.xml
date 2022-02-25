@@ -268,6 +268,14 @@
             <add-to-group group-id="CodeMenu"/>
         </action>
 
+        <action id="Elm.RunExternalElmReviewWatchmode"
+                class="org.elm.ide.actions.ElmExternalReviewWatchmodeAction"
+                text="Review Elm Project in watchmode"
+                icon="AllIcons.Toolwindows.ToolWindowBuild">
+            <keyboard-shortcut first-keystroke="alt shift W" keymap="$default"/>
+            <add-to-group group-id="CodeMenu"/>
+        </action>
+
         <group id="Elm.WorkspaceToolsGroup" text="Elm" popup="true">
             <reference id="Elm.RefreshElmProjects"/>
             <separator/>
@@ -292,6 +300,9 @@
 
         <group id="Elm.ReviewToolsGroup" text="elm-review" popup="true">
             <reference id="Elm.RunExternalElmReview"/>
+        </group>
+        <group id="Elm.ReviewWatchmodeToolsGroup" text="elm-review-watchmode" popup="true">
+            <reference id="Elm.RunExternalElmReviewWatchmode"/>
         </group>
     </actions>
 

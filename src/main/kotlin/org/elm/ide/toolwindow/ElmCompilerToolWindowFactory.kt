@@ -17,7 +17,6 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
         with(project.messageBus.connect()) {
             subscribe(ElmBuildAction.ERRORS_TOPIC, object : ElmBuildAction.ElmErrorsListener {
                 override fun update(baseDirPath: Path, messages: List<ElmError>, targetPath: String, offset: Int) {
-
                     val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "Elm Compiler", createExitAction = false, createToolbar = true)
 
                     messages.forEachIndexed { index, elmError ->
@@ -34,6 +33,7 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
                             elmError.html
                         )
                     }
+
                     toolWindow.contentManager.removeAllContents(true)
                     toolWindow.contentManager.addContent(ContentImpl(errorTreeViewPanel, "Compilation result", true))
                     toolWindow.show(null)

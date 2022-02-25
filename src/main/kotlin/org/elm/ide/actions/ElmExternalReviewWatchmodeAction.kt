@@ -9,22 +9,19 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.KeyWithDefaultValue
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
 import org.elm.openapiext.saveAllDocuments
-import org.elm.workspace.commandLineTools.ElmReviewWatchError
 import org.elm.workspace.compiler.findEntrypoints
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
-import org.elm.workspace.elmreview.ElmReviewError
-import java.nio.file.Path
 
 private val log = logger<ElmExternalReviewAction>()
 
-class ElmExternalReviewAction : AnAction() {
+class ElmExternalReviewWatchmodeAction : AnAction() {
 
     override fun update(e: AnActionEvent) {
         super.update(e)
@@ -46,6 +43,13 @@ class ElmExternalReviewAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         saveAllDocuments()
         val project = e.project ?: return
+
+        if (project.getUserData(watchmodeKey) == false) {
+            project.putUserData(watchmodeKey, true)
+        } else {
+            // TODO show balloon or message
+            return
+        }
 
         val activeFile = findActiveFile(e, project)
             ?: return showError(project, "Could not determine active Elm file")
@@ -82,7 +86,7 @@ class ElmExternalReviewAction : AnAction() {
             val currentFileInEditor: VirtualFile? = e.getData(PlatformDataKeys.VIRTUAL_FILE)
             val compiledSuccessfully = elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
             if (compiledSuccessfully) {
-                elmReviewCLI.runReview(project, elmProject, project.elmToolchain.elmCLI, currentFileInEditor)
+                elmReviewCLI.watchReview(project, elmProject, project.elmToolchain.elmCLI)
             }
         } catch (e: ExecutionException) {
             return showError(
@@ -92,4 +96,8 @@ class ElmExternalReviewAction : AnAction() {
             )
         }
     }
+}
+
+val watchmodeKey = object : KeyWithDefaultValue<Boolean>("watchmodeActive") {
+    override fun getDefaultValue(): Boolean = false
 }
