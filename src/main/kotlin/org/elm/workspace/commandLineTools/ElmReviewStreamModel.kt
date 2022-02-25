@@ -78,26 +78,7 @@ fun parseReviewJsonStream(reader: JsonReader, emit: (List<ElmReviewWatchError>) 
                                                                 elmReviewWatchError.regionWatch = readRegion()
                                                             }
                                                             "formatted" -> {
-                                                                val chunkWatchList = mutableListOf<ChunkWatch>()
-                                                                beginArray()
-                                                                while (hasNext()) {
-                                                                    if (this.peek() == JsonToken.BEGIN_OBJECT) {
-                                                                        val chunkWatchStyled = ChunkWatch.Styled()
-                                                                        beginObject()
-                                                                        while (hasNext()) {
-                                                                            when (nextName()) {
-                                                                                "string" -> chunkWatchStyled.string = nextString()
-                                                                                "color" -> chunkWatchStyled.color = nextString()
-                                                                                "href" -> chunkWatchStyled.href = nextString()
-                                                                            }
-                                                                        }
-                                                                        endObject()
-                                                                        chunkWatchList.add(chunkWatchStyled)
-                                                                    } else {
-                                                                        chunkWatchList.add(ChunkWatch.Unstyled(nextString()))
-                                                                    }
-                                                                }
-                                                                endArray()
+                                                                val chunkWatchList = readChunkWatchList()
                                                                 elmReviewWatchError.html = chunksToHtml(chunkWatchList)
                                                             }
                                                             else -> {
@@ -117,30 +98,56 @@ fun parseReviewJsonStream(reader: JsonReader, emit: (List<ElmReviewWatchError>) 
                                 }
                                 endArray()
                             }
-                            ReviewOutputType.ERROR -> {
-                                val elmReviewWatchError = ElmReviewWatchError()
-                                while (hasNext()) {
-                                    when (nextName()) {
-                                        "title" -> elmReviewWatchError.rule = nextString()
-                                        "path" -> elmReviewWatchError.path = nextString()
-                                        "message" -> elmReviewWatchError.message = chunksToLines(nextString()).joinToString("\n")
-                                    }
-                                }
-                                errors.add(elmReviewWatchError)
-                            }
                             ReviewOutputType.COMPILE_ERRORS -> {
                                 println("TODO type 'compile-errors'")
                             }
                             null -> println("no type")
                         }
                     }
-                    else -> println("unexpected property $prop")
+                    else -> {
+                        val elmReviewWatchError = ElmReviewWatchError()
+                        while (hasNext()) {
+                            when (nextName()) {
+                                "title" -> elmReviewWatchError.rule = nextString()
+                                "path" -> elmReviewWatchError.path = nextString()
+                                "message" -> {
+                                    val chunkWatchList = readChunkWatchList()
+                                    elmReviewWatchError.message = chunksToLines(chunkWatchList).joinToString("\n")
+                                }
+                            }
+                        }
+                        errors.add(elmReviewWatchError)
+                    }
                 }
             }
             endObject()
             emit(errors)
         }
     }
+}
+
+private fun JsonReader.readChunkWatchList(): List<ChunkWatch> {
+    val chunkWatchList = mutableListOf<ChunkWatch>()
+    beginArray()
+    while (hasNext()) {
+        if (this.peek() == JsonToken.BEGIN_OBJECT) {
+            val chunkWatchStyled = ChunkWatch.Styled()
+            beginObject()
+            while (hasNext()) {
+                when (nextName()) {
+                    "string" -> chunkWatchStyled.string = nextString()
+                    "color" -> chunkWatchStyled.color = nextString()
+                    "href" -> chunkWatchStyled.href = nextString()
+                }
+            }
+            endObject()
+            chunkWatchList.add(chunkWatchStyled)
+        } else {
+            chunkWatchList.add(ChunkWatch.Unstyled(nextString()))
+        }
+    }
+    endArray()
+    return chunkWatchList
 }
 
 fun JsonReader.readRegion(): RegionWatch {
@@ -226,11 +233,11 @@ fun String?.adjustForDisplay(): String =
         else -> this
     }
 
-private fun chunksToLines(chunks: List<Chunk>): List<String> {
+private fun chunksToLines(chunks: List<ChunkWatch>): List<String> {
     return chunks.asSequence().map {
         when (it) {
-            is Chunk.Unstyled -> it.str
-            is Chunk.Styled -> it.string
+            is ChunkWatch.Unstyled -> it.str
+            is ChunkWatch.Styled -> it.string
         }
     }.joinToString("").lines()
 }
