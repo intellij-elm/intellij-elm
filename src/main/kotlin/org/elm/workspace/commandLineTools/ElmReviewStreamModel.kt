@@ -122,10 +122,10 @@ fun parseReviewJsonStream(reader: JsonReader, emit: (List<ElmReviewWatchError>) 
                             ReviewOutputType.COMPILE_ERRORS -> {
                                 println("TODO type 'compile-errors'")
                             }
-                            null -> throw RuntimeException("no type")
+                            null -> println("no type")
                         }
                     }
-                    else -> throw RuntimeException("unexpected property $prop")
+                    else -> println("unexpected property $prop")
                 }
             }
             endObject()
