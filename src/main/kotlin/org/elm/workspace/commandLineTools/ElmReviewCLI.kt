@@ -3,9 +3,7 @@ package org.elm.workspace.commandLineTools
 import com.google.gson.stream.JsonReader
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.process.CapturingProcessHandler
-import com.intellij.ide.DataManager
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.logger
@@ -16,6 +14,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.messages.Topic
+import org.elm.ide.actions.watchmodeKey
 import org.elm.openapiext.*
 import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
@@ -24,7 +23,7 @@ import org.elm.workspace.elmReviewTool
 import org.elm.workspace.elmreview.ElmReviewError
 import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.nio.file.Path
-import java.time.LocalDateTime
+import java.util.*
 import kotlin.io.path.absolutePathString
 
 private val log = logger<ElmReviewCLI>()
@@ -106,16 +105,21 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
         )
 
         executeReviewAsync(project) { indicator ->
-            val process = ProcessBuilder(cmd)
-                .directory(elmProject.projectDirPath.toFile())
-                .start()
 
-            Disposer.register(project) { process.destroyForcibly() }
+            val activeProcess = project.getUserData(watchmodeKey)
+            val process = if (activeProcess?.isEmpty == true) {
+                startProcess(cmd, elmProject, project)
+            } else {
+                val proc = activeProcess!!.get()
+                proc.destroyForcibly()
+                startProcess(cmd, elmProject, project)
+            }
 
             indicator.text = "review started in watchmode"
+
             val reader = JsonReader(process.inputStream.bufferedReader())
             reader.isLenient = true
-            parseReviewJsonStream(reader) { reviewErrors ->
+            parseReviewJsonStream(reader, process) { reviewErrors ->
                 val msgs = reviewErrors.sortedWith(
                     compareBy(
                         { it.path },
@@ -123,17 +127,28 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                         { it.regionWatch!!.start!!.column }
                     ))
                 ApplicationManager.getApplication().invokeLater {
-                    val currentFile = DataManager.getInstance().dataContextFromFocusAsync.then { it.getData(PlatformDataKeys.VIRTUAL_FILE) }.blockingGet(4000)
-                    val msgsSorted = if (currentFile != null) {
-                        val predicate: (ElmReviewWatchError) -> Boolean = { it.path == currentFile.pathRelative(project).toString() }
-                        val sortedMessages = msgs.filter(predicate) + msgs.filterNot(predicate)
-                        sortedMessages
-                    } else msgs
                     if (!isUnitTestMode) {
-                        indicator.text = "review updated ${LocalDateTime.now().toString()}"
-                        project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgsSorted, null, 0)
+                        indicator.text = "review has ${msgs.size} messages"
+                        project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgs, null, 0)
                     }
                 }
+/* TODO find effective way to get currentFile?
+
+                ApplicationManager.getApplication().invokeLater {
+                    DataManager.getInstance().dataContextFromFocusAsync.then {
+                        val currentFile = it.getData(PlatformDataKeys.VIRTUAL_FILE)
+                        val msgsSorted = if (currentFile != null) {
+                            val predicate: (ElmReviewWatchError) -> Boolean = { it.path == currentFile.pathRelative(project).toString() }
+                            val sortedMessages = msgs.filter(predicate) + msgs.filterNot(predicate)
+                            sortedMessages
+                        } else msgs
+                        if (!isUnitTestMode) {
+                            indicator.text = "review updated ${LocalDateTime.now().toString()}"
+                            project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgsSorted, null, 0)
+                        }
+                    }
+                }
+*/
             }
 /*
             if (!process.waitFor(10, TimeUnit.SECONDS)) {
@@ -145,6 +160,15 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
             }
 */
         }
+    }
+
+    private fun startProcess(cmd: List<String>, elmProject: ElmProject, project: Project): Process {
+        val process = ProcessBuilder(cmd)
+            .directory(elmProject.projectDirPath.toFile())
+            .start()
+        Disposer.register(project) { process.destroyForcibly() }
+        project.putUserData(watchmodeKey, Optional.of(process))
+        return process
     }
 
     fun queryVersion(): Result<Version> {

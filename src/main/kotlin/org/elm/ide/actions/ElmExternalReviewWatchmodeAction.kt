@@ -18,6 +18,7 @@ import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.compiler.findEntrypoints
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
+import java.util.*
 
 private val log = logger<ElmExternalReviewAction>()
 
@@ -43,13 +44,6 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         saveAllDocuments()
         val project = e.project ?: return
-
-        if (project.getUserData(watchmodeKey) == false) {
-            project.putUserData(watchmodeKey, true)
-        } else {
-            // TODO show balloon or message
-            return
-        }
 
         val activeFile = findActiveFile(e, project)
             ?: return showError(project, "Could not determine active Elm file")
@@ -98,6 +92,6 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
     }
 }
 
-val watchmodeKey = object : KeyWithDefaultValue<Boolean>("watchmodeActive") {
-    override fun getDefaultValue(): Boolean = false
+val watchmodeKey = object : KeyWithDefaultValue<Optional<Process>>("watchmodeActive") {
+    override fun getDefaultValue(): Optional<Process> = Optional.empty()
 }

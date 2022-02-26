@@ -21,6 +21,8 @@ class ElmCLI(val elmExecutablePath: Path) {
 
     fun make(project: Project, workDir: Path, elmProject: ElmProject?, entryPoints: List<Triple<Path, String?, Int>?>, jsonReport: Boolean = false, currentFile: VirtualFile? = null): Boolean {
 
+        if (entryPoints.isEmpty()) return true
+
         val entries = entryPoints.filterNotNull()
         val filePathsToCompile = entries.map { it.first.toString() }
         val targetPath = entries.first().second

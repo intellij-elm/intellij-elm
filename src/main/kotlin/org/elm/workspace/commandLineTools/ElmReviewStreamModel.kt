@@ -2,7 +2,6 @@ package org.elm.workspace.commandLineTools
 
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
-import org.elm.workspace.elmreview.Chunk
 
 data class ElmReviewWatchError(
     // TODO Add a optional fix field (For later)
@@ -43,21 +42,23 @@ enum class ReviewOutputType(val label: String) {
     }
 }
 
-fun parseReviewJsonStream(reader: JsonReader, emit: (List<ElmReviewWatchError>) -> Unit) {
+fun parseReviewJsonStream(reader: JsonReader, process: Process, emit: (List<ElmReviewWatchError>) -> Unit) {
     with(reader) {
-        while (hasNext()) {
+        while (process.isAlive && hasNext()) {
             val errors = readErrorReport()
             emit(errors)
         }
+        close()
     }
 }
 
 fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
     val errors = mutableListOf<ElmReviewWatchError>()
+    if (this.peek() == JsonToken.END_DOCUMENT) return emptyList()
     beginObject()
     var type: ReviewOutputType? = null
     while (hasNext()) {
-        when (val prop = nextName()) {
+        when (nextName()) {
             "type" -> {
                 type = ReviewOutputType.fromLabel(nextString())
             }
