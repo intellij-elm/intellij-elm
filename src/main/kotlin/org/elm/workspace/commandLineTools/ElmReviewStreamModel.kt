@@ -106,9 +106,40 @@ fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
                         endArray()
                     }
                     ReviewOutputType.COMPILE_ERRORS -> {
-                        println("TODO type 'compile-errors'")
+                        beginArray()
+                        while (hasNext()) {
+                            var currentPath: String? = null
+                            beginObject()
+                            while (hasNext()) {
+                                when (nextName()) {
+                                    "path" -> currentPath = nextString()
+                                    "name" -> skipValue()
+                                    "problems" -> {
+                                        beginArray()
+                                        while (hasNext()) {
+                                            val elmReviewWatchError = ElmReviewWatchError(path = currentPath)
+                                            beginObject()
+                                            while (hasNext()) {
+                                                when (nextName()) {
+                                                    "title" -> elmReviewWatchError.rule = nextString()
+                                                    else -> {
+                                                        // TODO "fix", "details", "ruleLink", "originallySuppressed"
+                                                        skipValue()
+                                                    }
+                                                }
+                                            }
+                                            endObject()
+                                            errors.add(elmReviewWatchError)
+                                        }
+                                        endArray()
+                                    }
+                                }
+                            }
+                            endObject()
+                        }
+                        endArray()
                     }
-                    null -> println("no type")
+                    null -> println("ERROR: no report 'type'")
                 }
             }
             else -> {
