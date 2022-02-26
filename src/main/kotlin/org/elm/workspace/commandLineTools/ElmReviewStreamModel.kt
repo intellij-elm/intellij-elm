@@ -46,84 +46,89 @@ enum class ReviewOutputType(val label: String) {
 fun parseReviewJsonStream(reader: JsonReader, emit: (List<ElmReviewWatchError>) -> Unit) {
     with(reader) {
         while (hasNext()) {
-            val errors = mutableListOf<ElmReviewWatchError>()
-            beginObject()
-            var type: ReviewOutputType? = null
-            while (hasNext()) {
-                when (val prop = nextName()) {
-                    "type" -> {
-                        type = ReviewOutputType.fromLabel(nextString())
-                    }
-                    "errors" -> {
-                        when (type) {
-                            ReviewOutputType.REVIEW_ERRORS -> {
-                                beginArray()
-                                while (hasNext()) {
-                                    var currentPath: String? = null
-                                    beginObject()
-                                    while (hasNext()) {
-                                        when (nextName()) {
-                                            "path" -> currentPath = nextString()
-                                            "errors" -> {
-                                                beginArray()
-                                                while (hasNext()) {
-                                                    val elmReviewWatchError = ElmReviewWatchError(path = currentPath)
-                                                    beginObject()
-                                                    while (hasNext()) {
-                                                        when (nextName()) {
-                                                            "suppressed" -> elmReviewWatchError.suppressed = nextBoolean()
-                                                            "rule" -> elmReviewWatchError.rule = nextString()
-                                                            "message" -> elmReviewWatchError.message = nextString()
-                                                            "region" -> {
-                                                                elmReviewWatchError.regionWatch = readRegion()
-                                                            }
-                                                            "formatted" -> {
-                                                                val chunkWatchList = readChunkWatchList()
-                                                                elmReviewWatchError.html = chunksToHtml(chunkWatchList)
-                                                            }
-                                                            else -> {
-                                                                // TODO "fix", "details", "ruleLink", "originallySuppressed"
-                                                                reader.skipValue()
-                                                            }
-                                                        }
-                                                    }
-                                                    endObject()
-                                                    errors.add(elmReviewWatchError)
-                                                }
-                                                endArray()
-                                            }
-                                        }
-                                    }
-                                    endObject()
-                                }
-                                endArray()
-                            }
-                            ReviewOutputType.COMPILE_ERRORS -> {
-                                println("TODO type 'compile-errors'")
-                            }
-                            null -> println("no type")
-                        }
-                    }
-                    else -> {
-                        val elmReviewWatchError = ElmReviewWatchError()
-                        while (hasNext()) {
-                            when (nextName()) {
-                                "title" -> elmReviewWatchError.rule = nextString()
-                                "path" -> elmReviewWatchError.path = nextString()
-                                "message" -> {
-                                    val chunkWatchList = readChunkWatchList()
-                                    elmReviewWatchError.message = chunksToLines(chunkWatchList).joinToString("\n")
-                                }
-                            }
-                        }
-                        errors.add(elmReviewWatchError)
-                    }
-                }
-            }
-            endObject()
+            val errors = readErrorReport()
             emit(errors)
         }
     }
+}
+
+fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
+    val errors = mutableListOf<ElmReviewWatchError>()
+    beginObject()
+    var type: ReviewOutputType? = null
+    while (hasNext()) {
+        when (val prop = nextName()) {
+            "type" -> {
+                type = ReviewOutputType.fromLabel(nextString())
+            }
+            "errors" -> {
+                when (type) {
+                    ReviewOutputType.REVIEW_ERRORS -> {
+                        beginArray()
+                        while (hasNext()) {
+                            var currentPath: String? = null
+                            beginObject()
+                            while (hasNext()) {
+                                when (nextName()) {
+                                    "path" -> currentPath = nextString()
+                                    "errors" -> {
+                                        beginArray()
+                                        while (hasNext()) {
+                                            val elmReviewWatchError = ElmReviewWatchError(path = currentPath)
+                                            beginObject()
+                                            while (hasNext()) {
+                                                when (nextName()) {
+                                                    "suppressed" -> elmReviewWatchError.suppressed = nextBoolean()
+                                                    "rule" -> elmReviewWatchError.rule = nextString()
+                                                    "message" -> elmReviewWatchError.message = nextString()
+                                                    "region" -> {
+                                                        elmReviewWatchError.regionWatch = readRegion()
+                                                    }
+                                                    "formatted" -> {
+                                                        val chunkWatchList = readChunkWatchList()
+                                                        elmReviewWatchError.html = chunksToHtml(chunkWatchList)
+                                                    }
+                                                    else -> {
+                                                        // TODO "fix", "details", "ruleLink", "originallySuppressed"
+                                                        skipValue()
+                                                    }
+                                                }
+                                            }
+                                            endObject()
+                                            errors.add(elmReviewWatchError)
+                                        }
+                                        endArray()
+                                    }
+                                }
+                            }
+                            endObject()
+                        }
+                        endArray()
+                    }
+                    ReviewOutputType.COMPILE_ERRORS -> {
+                        println("TODO type 'compile-errors'")
+                    }
+                    null -> println("no type")
+                }
+            }
+            else -> {
+                // TODO make resilient against property order, title is expected first !
+                val elmReviewWatchError = ElmReviewWatchError(rule = nextString())
+                while (hasNext()) {
+                    when (nextName()) {
+                        "path" -> elmReviewWatchError.path = nextString()
+                        "message" -> {
+                            val chunkWatchList = readChunkWatchList()
+                            elmReviewWatchError.message = chunksToLines(chunkWatchList).joinToString("\n")
+                        }
+                    }
+                }
+                errors.add(elmReviewWatchError)
+            }
+        }
+    }
+    endObject()
+    return errors
 }
 
 private fun JsonReader.readChunkWatchList(): List<ChunkWatch> {
