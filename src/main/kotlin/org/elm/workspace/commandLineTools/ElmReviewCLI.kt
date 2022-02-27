@@ -7,12 +7,14 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.util.messages.Topic
 import org.elm.ide.actions.watchmodeKey
 import org.elm.openapiext.*
@@ -127,38 +129,21 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                         { it.regionWatch!!.start!!.column }
                     ))
                 ApplicationManager.getApplication().invokeLater {
+                    val currentDoc = FileEditorManager.getInstance(project).selectedTextEditor?.document
+                    val msgsSorted =
+                        if (currentDoc != null) {
+                            val path = PsiDocumentManager.getInstance(project).getPsiFile(currentDoc)?.originalFile?.virtualFile?.pathRelative(project)
+                            if (path != null) {
+                                val pathFilter: (ElmReviewWatchError) -> Boolean = { it.path == path.toString() }
+                                msgs.filter(pathFilter) + msgs.filterNot(pathFilter)
+                            } else msgs
+                        } else msgs
                     if (!isUnitTestMode) {
                         indicator.text = "review has ${msgs.size} messages"
-                        project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgs, null, 0)
+                        project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgsSorted, null, 0)
                     }
                 }
-/* TODO find effective way to get currentFile?
-
-                ApplicationManager.getApplication().invokeLater {
-                    DataManager.getInstance().dataContextFromFocusAsync.then {
-                        val currentFile = it.getData(PlatformDataKeys.VIRTUAL_FILE)
-                        val msgsSorted = if (currentFile != null) {
-                            val predicate: (ElmReviewWatchError) -> Boolean = { it.path == currentFile.pathRelative(project).toString() }
-                            val sortedMessages = msgs.filter(predicate) + msgs.filterNot(predicate)
-                            sortedMessages
-                        } else msgs
-                        if (!isUnitTestMode) {
-                            indicator.text = "review updated ${LocalDateTime.now().toString()}"
-                            project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgsSorted, null, 0)
-                        }
-                    }
-                }
-*/
             }
-/*
-            if (!process.waitFor(10, TimeUnit.SECONDS)) {
-                process.destroy()
-                throw RuntimeException("execution timed out: $this")
-            }
-            if (process.exitValue() != 0) {
-                throw RuntimeException("execution failed with code ${process.exitValue()}: $this")
-            }
-*/
         }
     }
 
