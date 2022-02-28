@@ -26,6 +26,7 @@ import org.elm.workspace.elmreview.ElmReviewError
 import org.elm.workspace.elmreview.elmReviewJsonToMessages
 import java.nio.file.Path
 import java.util.*
+import kotlin.Comparator
 import kotlin.io.path.absolutePathString
 
 private val log = logger<ElmReviewCLI>()
@@ -108,6 +109,7 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
         executeReviewAsync(project) { indicator ->
 
+            // TODO use projectService instead of userData ?
             val activeProcess = project.getUserData(watchmodeKey)
             val process = if (activeProcess?.isEmpty == true) {
                 startProcess(cmd, elmProject, project)
@@ -117,17 +119,14 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                 startProcess(cmd, elmProject, project)
             }
 
+            // TODO: process start successful ?
+
             indicator.text = "review started in watchmode"
 
             val reader = JsonReader(process.inputStream.bufferedReader())
             reader.isLenient = true
-            parseReviewJsonStream(reader, process) { reviewErrors ->
-                val msgs = reviewErrors.sortedWith(
-                    compareBy(
-                        { it.path },
-                        { it.regionWatch!!.start!!.line },
-                        { it.regionWatch!!.start!!.column }
-                    ))
+            val errorExitCode = parseReviewJsonStream(reader, process) { reviewErrors ->
+                val msgs = reviewErrors.sortedWith(errorComparator(reviewErrors))
                 ApplicationManager.getApplication().invokeLater {
                     val currentDoc = FileEditorManager.getInstance(project).selectedTextEditor?.document
                     val msgsSorted =
@@ -144,7 +143,16 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                     }
                 }
             }
+            process.destroyForcibly()
         }
+    }
+
+    private fun errorComparator(reviewErrors: List<ElmReviewWatchError>): Comparator<ElmReviewWatchError> {
+        val firstError = reviewErrors[0]
+        return if (firstError.regionWatch == null)
+            compareBy { it.path }
+        else
+            compareBy({ it.path }, { it.regionWatch!!.start!!.line }, { it.regionWatch!!.start!!.column })
     }
 
     private fun startProcess(cmd: List<String>, elmProject: ElmProject, project: Project): Process {

@@ -4,6 +4,7 @@ import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.IdeFocusManager
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -59,13 +60,7 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                             LocalFileSystem.getInstance().findFileByPath(it)
                         }
                         val encodedIndex = "\u200B".repeat(index)
-                        errorTreeViewPanel.addErrorMessage(
-                            MessageCategory.SIMPLE, arrayOf("$encodedIndex${elmReviewError.rule}:", "${elmReviewError.message}"),
-                            virtualFile,
-                            elmReviewError.regionWatch!!.start.let { it!!.line - 1 },
-                            elmReviewError.regionWatch!!.start.let { it!!.column - 1 },
-                            elmReviewError.html!!
-                        )
+                        updateErrorTree(errorTreeViewPanel, encodedIndex, elmReviewError, virtualFile)
                     }
 
                     toolWindow.contentManager.removeAllContents(true)
@@ -76,6 +71,31 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
                     focusEditor(project)
                 }
             })
+        }
+    }
+
+    private fun updateErrorTree(
+        errorTreeViewPanel: ElmErrorTreeViewPanel,
+        encodedIndex: String,
+        elmReviewError: ElmReviewWatchError,
+        virtualFile: VirtualFile?
+    ) {
+        if (elmReviewError.regionWatch == null) {
+            errorTreeViewPanel.addErrorMessage(
+                MessageCategory.SIMPLE, arrayOf("$encodedIndex${elmReviewError.rule}:", "${elmReviewError.message}"),
+                virtualFile,
+                0,
+                0,
+                elmReviewError.html ?: "General Error !"
+            )
+        } else {
+            errorTreeViewPanel.addErrorMessage(
+                MessageCategory.SIMPLE, arrayOf("$encodedIndex${elmReviewError.rule}:", "${elmReviewError.message}"),
+                virtualFile,
+                elmReviewError.regionWatch!!.start.let { it!!.line - 1 },
+                elmReviewError.regionWatch!!.start.let { it!!.column - 1 },
+                elmReviewError.html!!
+            )
         }
     }
 }

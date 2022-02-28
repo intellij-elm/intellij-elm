@@ -42,13 +42,18 @@ enum class ReviewOutputType(val label: String) {
     }
 }
 
-fun parseReviewJsonStream(reader: JsonReader, process: Process, emit: (List<ElmReviewWatchError>) -> Unit) {
+fun parseReviewJsonStream(reader: JsonReader, process: Process, emit: (List<ElmReviewWatchError>) -> Unit): Int {
     with(reader) {
-        while (process.isAlive && hasNext()) {
-            val errors = readErrorReport()
-            emit(errors)
+        while (process.isAlive) {
+            if (process.errorStream.available() > 0)
+                return 1
+            if (hasNext()) {
+                val errors = readErrorReport()
+                emit(errors)
+            }
         }
         close()
+        return process.exitValue()
     }
 }
 
