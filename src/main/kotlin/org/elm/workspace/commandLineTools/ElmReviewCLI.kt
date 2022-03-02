@@ -124,7 +124,7 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
             val reader = JsonReader(process.inputStream.bufferedReader())
             reader.isLenient = true
             val errorExitCode = parseReviewJsonStream(reader, process) { reviewErrors ->
-                val msgs = reviewErrors.sortedWith(errorComparator(reviewErrors))
+                val msgs = reviewErrors.filterNot { it.suppressed!! }.sortedWith(errorComparator(reviewErrors))
                 ApplicationManager.getApplication().invokeLater {
                     val currentDoc = FileEditorManager.getInstance(project).selectedTextEditor?.document
                     val msgsSorted =
