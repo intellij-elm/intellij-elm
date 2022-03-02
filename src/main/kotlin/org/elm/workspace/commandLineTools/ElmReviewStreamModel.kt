@@ -57,13 +57,21 @@ fun parseReviewJsonStream(reader: JsonReader, process: Process, emit: (List<ElmR
     }
 }
 
+fun JsonReader.readProperties(propertyHandler: (String) -> Unit) {
+    beginObject()
+    while (hasNext()) {
+        propertyHandler(nextName())
+    }
+    endObject()
+}
+
 fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
     val errors = mutableListOf<ElmReviewWatchError>()
     if (this.peek() == JsonToken.END_DOCUMENT) return emptyList()
-    beginObject()
+
     var type: ReviewOutputType? = null
-    while (hasNext()) {
-        when (nextName()) {
+    readProperties { property ->
+        when (property) {
             "type" -> {
                 type = ReviewOutputType.fromLabel(nextString())
             }
@@ -73,17 +81,15 @@ fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
                         beginArray()
                         while (hasNext()) {
                             var currentPath: String? = null
-                            beginObject()
-                            while (hasNext()) {
-                                when (nextName()) {
+                            readProperties { property ->
+                                when (property) {
                                     "path" -> currentPath = nextString()
                                     "errors" -> {
                                         beginArray()
                                         while (hasNext()) {
                                             val elmReviewWatchError = ElmReviewWatchError(path = currentPath)
-                                            beginObject()
-                                            while (hasNext()) {
-                                                when (nextName()) {
+                                            readProperties { property ->
+                                                when (property) {
                                                     "suppressed" -> elmReviewWatchError.suppressed = nextBoolean()
                                                     "rule" -> elmReviewWatchError.rule = nextString()
                                                     "message" -> elmReviewWatchError.message = nextString()
@@ -100,14 +106,12 @@ fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
                                                     }
                                                 }
                                             }
-                                            endObject()
                                             errors.add(elmReviewWatchError)
                                         }
                                         endArray()
                                     }
                                 }
                             }
-                            endObject()
                         }
                         endArray()
                     }
@@ -115,18 +119,16 @@ fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
                         beginArray()
                         while (hasNext()) {
                             var currentPath: String? = null
-                            beginObject()
-                            while (hasNext()) {
-                                when (nextName()) {
+                            readProperties { property ->
+                                when (property) {
                                     "path" -> currentPath = nextString()
                                     "name" -> skipValue()
                                     "problems" -> {
                                         beginArray()
                                         while (hasNext()) {
                                             val elmReviewWatchError = ElmReviewWatchError(path = currentPath)
-                                            beginObject()
-                                            while (hasNext()) {
-                                                when (nextName()) {
+                                            readProperties { property ->
+                                                when (property) {
                                                     "title" -> elmReviewWatchError.rule = nextString()
                                                     else -> {
                                                         // TODO "fix", "details", "ruleLink", "originallySuppressed"
@@ -134,17 +136,16 @@ fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
                                                     }
                                                 }
                                             }
-                                            endObject()
                                             errors.add(elmReviewWatchError)
                                         }
                                         endArray()
                                     }
                                 }
                             }
-                            endObject()
                         }
                         endArray()
                     }
+                    ReviewOutputType.ERROR -> throw RuntimeException("Unexpected json-type 'error' with 'errors' array")
                     null -> println("ERROR: no report 'type'")
                 }
             }
@@ -164,7 +165,6 @@ fun JsonReader.readErrorReport(): List<ElmReviewWatchError> {
             }
         }
     }
-    endObject()
     return errors
 }
 

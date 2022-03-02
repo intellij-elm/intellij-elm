@@ -6,7 +6,7 @@ import com.google.gson.Gson
 // The Elm compiler emits HTTP URLs with angle brackets around them
 private val urlPattern = Regex("""<((http|https)://.*?)>""")
 
-
+@Deprecated("stream parser will replace the regular Gson parser for elm-review json output")
 fun elmReviewJsonToMessages(json: String): List<ElmReviewError> {
     return when (val report = Gson().fromJson(json, Report::class.java) ?: error("failed to parse JSON report from elm-review")) {
         is Report.General -> {
