@@ -62,11 +62,9 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                 if (alreadyDisposed) {
                     throw ExecutionException("External command failed to start")
                 }
-/*
-                    if (output.exitCode != 0) {
-                        throw ExecutionException(errorMessage(generalCommandLine, output))
-                    }
-*/
+                if (output.exitCode != 0) {
+                    throw ExecutionException(errorMessage(generalCommandLine, output))
+                }
                 val json = output.stderr.ifEmpty {
                     output.stdout
                 }
@@ -143,13 +141,13 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                     }
                 }
             }
+            log.error("elm-review exited with code $errorExitCode")
             process.destroyForcibly()
         }
     }
 
     private fun errorComparator(reviewErrors: List<ElmReviewWatchError>): Comparator<ElmReviewWatchError> {
-        val firstError = reviewErrors[0]
-        return if (firstError.regionWatch == null)
+        return if (reviewErrors.isEmpty() || reviewErrors[0].regionWatch == null)
             compareBy { it.path }
         else
             compareBy({ it.path }, { it.regionWatch!!.start!!.line }, { it.regionWatch!!.start!!.column })
