@@ -7,7 +7,6 @@ import org.elm.lang.core.psi.moduleName
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 
 class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
@@ -35,7 +34,6 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
             """.trimIndent()
 
 
-    @Test
     fun `test find by name`() {
         buildProject {
             project("elm.json", standardElmAppProject)
@@ -50,7 +48,6 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test find by name excludes things outside of the Elm project`() {
         buildProject {
             project("elm.json", standardElmAppProject)
@@ -68,7 +65,6 @@ class ElmWorkspaceNameLookupTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test find by name excludes things which are part of unexposed modules in a package`() {
         buildProject {
             project("elm.json", """

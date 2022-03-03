@@ -8,7 +8,6 @@ import org.elm.workspace.commandLineTools.LocationWatch
 import org.elm.workspace.commandLineTools.RegionWatch
 import org.elm.workspace.commandLineTools.readErrorReport
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 
 class ElmReviewJsonReportTest : ElmTestBase() {
@@ -17,7 +16,6 @@ class ElmReviewJsonReportTest : ElmTestBase() {
     // 0.19
     // $ elm-review src/Foo.elm --report=json
 
-    @Test
     fun `parses stream of specific errors`() {
         @Language("JSON")
         val json = """
@@ -163,7 +161,6 @@ class ElmReviewJsonReportTest : ElmTestBase() {
     }
 
     @Deprecated("stream parser will replace the regular Gson parser for elm-review json output")
-    @Test
     fun `test specific errors`() {
         @Language("JSON")
         val json = """
@@ -303,7 +300,6 @@ class ElmReviewJsonReportTest : ElmTestBase() {
         )
     }
 
-    @Test
     fun `parse stream of specific errors, one suppressed`() {
         @Language("JSON")
         val json = """
@@ -449,7 +445,6 @@ class ElmReviewJsonReportTest : ElmTestBase() {
     }
 
     @Deprecated("stream parser will replace the regular Gson parser for elm-review json output")
-    @Test
     fun `test specific errors, one suppressed`() {
         @Language("JSON")
         val json = """
@@ -582,7 +577,6 @@ class ElmReviewJsonReportTest : ElmTestBase() {
         )
     }
 
-    @Test
     fun `test general error`() {
         @Language("JSON")
         val json = """

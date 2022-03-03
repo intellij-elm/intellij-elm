@@ -2,12 +2,10 @@ package org.elm.ide.refactoring
 
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 class ElmImportOptimizerTest : ElmTestBase() {
 
 
-    @Test
     fun `test do nothing if no imports at all`() =
             doTest(
                     """
@@ -25,7 +23,6 @@ main = ()
 """)
 
 
-    @Test
     fun `test removes unused imports`() =
             doTest(
                     """

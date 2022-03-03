@@ -14,7 +14,6 @@ import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import org.elm.lang.ElmTestBase
-import org.junit.Test
 
 
 class ElmProjectWatcherTest : ElmTestBase() {
@@ -30,17 +29,14 @@ class ElmProjectWatcherTest : ElmTestBase() {
     }
 
 
-    @Test
     fun `test detects a change involving elm json project manifest file`() =
             testVFileWatching(ElmToolchain.ELM_JSON)
 
 
-    @Test
     fun `test detects a change involving elm intellij json project manifest file`() =
             testVFileWatching(ElmToolchain.SIDECAR_FILENAME)
 
 
-    @Test
     fun `test ignores files other than elm json`() =
             testVFileWatching("foo.json", false)
 

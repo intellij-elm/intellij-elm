@@ -4,12 +4,10 @@ import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmPsiElement
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 class ElmExpressionTypeProviderTest : ElmTestBase() {
 
 
-    @Test
     fun `test binary operator`() {
         checkChoices("""
 foo a b = a
@@ -21,7 +19,6 @@ y = x ~~ ()
     }
 
 
-    @Test
     fun `test parenthesized expressions are not provided as a separate, redundant choice`() {
         checkChoices("""
 foo a b = a
@@ -35,7 +32,6 @@ y = x0 ~~ (x1 ~~ x2)
     }
 
 
-    @Test
     fun `test function call`() {
         checkChoices("""
 f x = x
@@ -46,7 +42,6 @@ z = f (f y)
     }
 
 
-    @Test
     fun `test lists`() {
         checkChoices("""
 x = ()
@@ -56,7 +51,6 @@ y = [x, x]
     }
 
 
-    @Test
     fun `test records`() {
         checkChoices("""
 x = ()
@@ -66,7 +60,6 @@ y = { foo = x }
     }
 
 
-    @Test
     fun `test record field access`() {
         checkChoices("""
 type alias Foo = { x: { y: () } }

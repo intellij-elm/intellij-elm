@@ -37,7 +37,6 @@ import com.intellij.psi.stubs.StubElement
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
-import org.junit.Test
 import java.util.*
 
 
@@ -49,7 +48,6 @@ class ElmStubAccessTest : ElmTestBase() {
         myFixture.copyDirectoryToProject(".", "src")
     }
 
-    @Test
     fun `test presentation does not need ast`() {
         processStubsWithoutAstAccess<ElmNamedElement> { element ->
             element.getIcon(0)
@@ -63,12 +61,10 @@ class ElmStubAccessTest : ElmTestBase() {
         }
     }
 
-    @Test
     fun `test getting reference does not need ast`() {
         processStubsWithoutAstAccess<ElmPsiElement> { it.reference }
     }
 
-    @Test
     fun `test parent works correctly for stubbed elements`() {
         val parentsByStub: MutableMap<PsiElement, PsiElement> = HashMap()
         try {

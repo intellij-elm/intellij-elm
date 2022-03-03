@@ -6,11 +6,9 @@ import org.elm.ide.inspections.ElmInspectionsTestBase
 import org.elm.ide.inspections.ElmUnresolvedReferenceInspection
 import org.elm.lang.core.imports.ImportAdder.Import
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 class AddImportFixTest : ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
 
-    @Test
     fun `test un-qualified value`() = check(
             """
 --@ main.elm
@@ -25,7 +23,6 @@ main = bar
 """)
 
 
-    @Test
     fun `test annotation value`() = check(
             """
 --@ main.elm
@@ -42,7 +39,6 @@ bar = ()
 """)
 
 
-    @Test
     fun `test qualified value`() = check(
             """
 --@ main.elm
@@ -57,7 +53,6 @@ main = Foo.bar
 """)
 
 
-    @Test
     fun `test qualified type`() = check(
             """
 --@ main.elm
@@ -74,7 +69,6 @@ f bar = ()
 """)
 
 
-    @Test
     fun `test qualified union constructor`() = check(
             """
 --@ main.elm
@@ -90,7 +84,6 @@ main = Foo.BarVariant
 
 
     // see https://github.com/klazuka/intellij-elm/issues/77
-    @Test
     fun `test importing a union variant constructor exposes all variants`() = check(
             """
 --@ main.elm
@@ -104,7 +97,6 @@ import Foo exposing (Bar(..))
 main = BarVariant
 """)
 
-    @Test
     fun `test importing a union variant constructor with same name as union in value expression`() = check(
             """
 --@ main.elm
@@ -118,7 +110,6 @@ import Foo exposing (Bar(..))
 main = Bar
 """)
 
-    @Test
     fun `test importing a union with same name as constructor in type expression`() = check(
             """
 --@ main.elm
@@ -132,7 +123,6 @@ import Foo exposing (Bar)
 main : Bar
 """)
 
-    @Test
     fun `test importing a type on the RHS of a type alias declaration`() = check(
             """
 --@ main.elm
@@ -146,7 +136,6 @@ import Foo exposing (Bar)
 type alias Foo = Bar
 """)
 
-    @Test
     fun `test importing a type on the RHS of a union type declaration`() = check(
             """
 --@ main.elm
@@ -160,7 +149,6 @@ import Foo exposing (Bar)
 type Foo = Foo Bar
 """)
 
-    @Test
     fun `test multiple import candidates`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -182,7 +170,6 @@ import Foo exposing (quux)
 main = quux
 """)
 
-    @Test
     fun `test multiple import candidates sort order, exact match`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -204,7 +191,6 @@ import Two
 main = Two.foo
 """)
 
-    @Test
     fun `test multiple import candidates sort order, substring match`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -226,7 +212,6 @@ import Utils.One as One
 main = One.foo
 """)
 
-    @Test
     fun `test multiple import candidates sort order, subsequence match 1`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -245,7 +230,6 @@ import Json.Decode as JD
 main : JD.Value
 """)
 
-    @Test
     fun `test multiple import candidates sort order, subsequence match 2`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -267,7 +251,6 @@ main : JE.Value
 
     // NOTE: must use the "multiple choice" test because in order to give the user more visibility
     // about what's going on, I've decided to always show the picker when importing using an alias.
-    @Test
     fun `test qualified value using an import alias`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -283,7 +266,6 @@ import FooTooLongToType as Foo
 main = Foo.bar
 """)
 
-    @Test
     fun `test adding alias to existing import`() = checkAutoImportFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -301,7 +283,6 @@ main = Fob.bar
 """)
 
 
-    @Test
     fun `test binary infix operator`() = check(
             """
 --@ main.elm
@@ -317,7 +298,6 @@ main = 2 ** 3
 """)
 
 
-    @Test
     fun `test inserts import between module decl and value-decl`() = check(
             """
 --@ main.elm
@@ -334,7 +314,6 @@ main = Foo.bar{-caret-}
 """)
 
 
-    @Test
     fun `test inserts import between module decl and doc-comment`() = check(
             """
 --@ main.elm
@@ -353,7 +332,6 @@ main = Foo.bar{-caret-}
 """)
 
 
-    @Test
     fun `test expose a value with existing import`() = check(
             """
 --@ main.elm
@@ -369,7 +347,6 @@ main = bar
 """)
 
 
-    @Test
     fun `test expose an infix operator with existing import`() = check(
             """
 --@ main.elm
@@ -386,7 +363,6 @@ main = 2 ** 3
 """)
 
 
-    @Test
     fun `test merge with existing exposed values`() = check(
             """
 --@ main.elm
@@ -403,7 +379,6 @@ main = quux + bar
 """)
 
 
-    @Test
     fun `test merge with existing exposed union type`() = check(
             """
 --@ main.elm
@@ -419,7 +394,6 @@ main = Settings
 """)
 
 
-    @Test
     fun `test inserts import after existing import`() = check(
             """
 --@ main.elm
@@ -438,7 +412,6 @@ import Quux exposing (quux)
 main = bar + quux
 """)
 
-    @Test
     fun `test verify unavailable when value not exposed`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
@@ -449,7 +422,6 @@ bar = 42
 quux = 0
 """)
 
-    @Test
     fun `test verify unavailable when value not exposed (qualified ref)`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
@@ -460,7 +432,6 @@ bar = 42
 quux = 0
 """)
 
-    @Test
     fun `test verify unavailable when qualified ref alias is not possible`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
@@ -470,7 +441,6 @@ module Foo exposing (bar)
 bar = 0
 """)
 
-    @Test
     fun `test verify unavailable on type annotation when local function hides external name`() = checkFixIsUnavailableByFileTree("Import",
             """
 --@ main.elm
@@ -481,7 +451,6 @@ module Foo exposing (bar)
 bar = 42
 """)
 
-    @Test
     fun `test binary infix operator containing dot is never qualified`() = check(
             """
 --@ main.elm

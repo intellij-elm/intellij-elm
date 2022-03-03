@@ -1,6 +1,5 @@
 package org.elm.ide.inspections
 
-import org.junit.Test
 
 
 class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInspection()) {
@@ -8,7 +7,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
 
     // TEST UNNECESSARY IMPORTS
 
-    @Test
     fun `test with qualified ref`() = checkByFileTree("""
         --@ Main.elm
         <warning descr="Unused import">import Foo</warning>
@@ -26,7 +24,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
-    @Test
     fun `test with unqualified ref, exposing selectively`() = checkByFileTree("""
         --@ Main.elm
         <warning descr="Unused import">import Foo exposing (foo)</warning>
@@ -44,7 +41,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
-    @Test
     fun `test with unqualified ref, exposing all`() = checkByFileTree("""
         --@ Main.elm
         <warning descr="Unused import">import Foo exposing (..)</warning>
@@ -61,7 +57,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         bar = ()
     """.trimIndent())
 
-    @Test
     fun `test with module alias`() = checkByFileTree("""
         --@ Main.elm
         import Foo <warning descr="Unused alias">as F</warning> exposing (foo)
@@ -73,7 +68,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         foo = ()
     """.trimIndent())
 
-    @Test
     fun `test ignores module aliases which are actively used (value)`() = checkByFileTree("""
         --@ Main.elm
         import Foo as F
@@ -85,7 +79,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         foo = ()
     """.trimIndent())
 
-    @Test
     fun `test ignores module aliases which are actively used (type)`() = checkByFileTree("""
         --@ Main.elm
         import Foo as F
@@ -99,7 +92,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
     // https://github.com/klazuka/intellij-elm/issues/197
-    @Test
     fun `test issue 197 record update syntax also counts as usage of an exposed name`() = checkByFileTree("""
         --@ Main.elm
         import Foo exposing (defaultFoo)
@@ -114,7 +106,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
 
     // TEST UNNECESSARY ITEMS IN THE EXPOSING LIST
 
-    @Test
     fun `test unused functions in the exposing list are detected`() = checkByFileTree("""
         --@ Main.elm
         import Foo exposing (<warning descr="'f0' is exposed but unused">f0</warning>, f1)
@@ -128,7 +119,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
-    @Test
     fun `test imports of Elm 19 kernel JS modules are ignored`() = checkByText("""
         import Elm.Kernel.Dom{-caret-}
     """.trimIndent())
@@ -136,7 +126,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
 
     // TEST OPTIMIZE IMPORTS
 
-    @Test
     fun `test optimize imports basic`() = checkFixByFileTree("Optimize imports", """
         --@ Main.elm
         module Main exposing (..)
@@ -160,7 +149,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
-    @Test
     fun `test optimize imports preserves adjacent line comments`() = checkFixByFileTree("Optimize imports", """
         --@ Main.elm
         module Main exposing (..)
@@ -184,7 +172,6 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
     """.trimIndent())
 
 
-    @Test
     fun `test optimize imports also cleans-up the exposing list`() = checkFixByFileTree("Optimize imports", """
         --@ Main.elm
         module Main exposing (..)

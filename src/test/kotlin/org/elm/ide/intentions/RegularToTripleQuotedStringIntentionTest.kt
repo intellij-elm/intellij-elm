@@ -1,7 +1,6 @@
 package org.elm.ide.intentions
 
 import org.elm.lang.core.psi.elements.TRIPLE_QUOTE_STRING_DELIMITER
-import org.junit.Test
 
 class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToTripleQuotedStringIntention()) {
 
@@ -9,7 +8,6 @@ class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToT
     // Kotlin compiler assumes these terminate the Kotlin string literal. And raw Kotlin string literals can't have
     // escape characters in them. So instead use the TRIPLE_QUOTE_STRING_DELIMITER constant.
 
-    @Test
     fun `test converts non-empty regular string to triple-quoted string`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -24,7 +22,6 @@ class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToT
         """.trimIndent()
     )
 
-    @Test
     fun `test converts empty regular string to triple-quoted string`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -39,7 +36,6 @@ class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToT
         """.trimIndent()
     )
 
-    @Test
     fun `test converts white-space only regular string to triple-quoted string`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -54,7 +50,6 @@ class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToT
         """.trimIndent()
     )
 
-    @Test
     fun `test converts carriage returns and quotes`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -72,7 +67,6 @@ class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToT
 
     // If string ends in quotes then when converted to triple-quoted string, the last quote should be escaped, but any
     // other quotes shouldn't.
-    @Test
     fun `test quotes in text`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -87,7 +81,6 @@ class RegularToTripleQuotedStringIntentionTest : ElmIntentionTestBase(RegularToT
         """.trimIndent()
     )
 
-    @Test
     fun `test unavailable for triple-quoted string`() = doUnavailableTest(
         """
             module Foo exposing (s0)

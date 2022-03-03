@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve
 
-import org.junit.Test
 
 
 /**
@@ -9,7 +8,6 @@ import org.junit.Test
 class ElmTypeResolveTest: ElmResolveTestBase() {
 
 
-    @Test
     fun `test union type ref`() = checkByCode(
 """
 type Page = Home
@@ -20,7 +18,6 @@ title : Page -> String
 """)
 
 
-    @Test
     fun `test union type ref from module exposing list`() = checkByCode(
 """
 module Main exposing (Page)
@@ -31,7 +28,6 @@ type Page = Home
 """)
 
 
-    @Test
     fun `test union constructor ref`() = checkByCode(
 """
 type Page = Home
@@ -42,7 +38,6 @@ defaultPage = Home
 """)
 
 
-    @Test
     fun `test union constructor pattern matching`() = checkByCode(
 """
 type Page = Home
@@ -55,7 +50,6 @@ title page =
 """)
 
 
-    @Test
     fun `test type alias ref from module exposing list`() = checkByCode(
 """
 module Main exposing (Person)
@@ -65,7 +59,6 @@ type alias Person = { name : String, age: Int }
 """)
 
 
-    @Test
     fun `test type alias ref in type annotation`() = checkByCode(
 """
 type alias Person = { name : String, age: Int }
@@ -76,7 +69,6 @@ personToString : Person -> String
 """)
 
 
-    @Test
     fun `test type alias record constructor ref`() = checkByCode(
 """
 type alias Person = { name : String, age: Int }
@@ -87,7 +79,6 @@ defaultPerson = Person "George" 42
 """)
 
 
-    @Test
     fun `test parametric union type ref `() = checkByCode(
 """
 type Page a = Home a
@@ -98,7 +89,6 @@ title : Page a -> String
 """)
 
 
-    @Test
     fun `test parametric type alias ref `() = checkByCode(
 """
 type alias Person a = { name : String, extra : a }
@@ -110,7 +100,6 @@ title : Person a -> String
 
 
 
-    @Test
     fun `test union constructor ref should not resolve to a record constructor`() = checkByCode(
 """
 type alias User = { name : String, age : Int }
@@ -122,7 +111,6 @@ foo user =
 """)
 
 
-    @Test
     fun `test variable in union type`() = checkByCode(
             """
 type Page a = Home a
@@ -130,7 +118,6 @@ type Page a = Home a
 """)
 
 
-    @Test
     fun `test variable in a record type alias`() = checkByCode(
             """
 type alias User details = { name : String, extra : details }

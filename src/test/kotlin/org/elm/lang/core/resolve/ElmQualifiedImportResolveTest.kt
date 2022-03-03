@@ -1,11 +1,9 @@
 package org.elm.lang.core.resolve
 
-import org.junit.Test
 
 class ElmQualifiedImportResolveTest: ElmResolveTestBase() {
 
 
-    @Test
     fun `test qualified value ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -18,7 +16,6 @@ bar = 42
 """)
 
 
-    @Test
     fun `test qualified value ref with caret on the qualifier`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -31,7 +28,6 @@ bar = 42
 """)
 
 
-    @Test
     fun `test qualified union type ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -45,7 +41,6 @@ type Page = Home
 """)
 
 
-    @Test
     fun `test qualified union constructor ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -59,7 +54,6 @@ type Page = Home
 """)
 
 
-    @Test
     fun `test qualified union constructor ref in pattern destructuring`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -76,7 +70,6 @@ type Page = Home
 
 
 
-    @Test
     fun `test qualified type alias ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -90,7 +83,6 @@ type alias Person = { name : String, age: Int }
 """)
 
 
-    @Test
     fun `test qualified record constructor ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -104,7 +96,6 @@ type alias Person = { name : String, age: Int }
 """)
 
 
-    @Test
     fun `test qualified port ref`() = stubOnlyResolve(
 """
 --@ main.elm

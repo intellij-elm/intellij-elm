@@ -9,14 +9,12 @@ import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.types.*
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 /**
  * Tests that all cached TyRecords are frozen and immutable. Variant inference results don't need to be
  * frozen, since they're never used in other inference.
  */
 class TypeInferenceFrozenCacheTest : ElmTestBase() {
-    @Test
     fun `test port`() = doTest("""
 port module Main exposing (..)
 port p1 : () -> {f: ()}
@@ -24,7 +22,6 @@ type alias R = {f2 : ()}
 port p2 : () -> R
 """)
 
-    @Test
     fun `test type`() = doTest("""
 type alias R = {f2 : ()}
 type T a
@@ -35,20 +32,17 @@ main : T R
 main = V2
 """)
 
-    @Test
     fun `test parameterized alias`() = doTest("""
 type alias R a = {a | f : ()}
 type alias R2 = R { f2 : () }
 """)
 
-    @Test
     fun `test annotation`() = doTest("""
 type alias R a = {a | f : ()}
 main : R { f2 : () } -> ()
 main _ = ()
 """)
 
-    @Test
     fun `test expression types`() = doTest("""
 type alias R a = {a | f : ()}
 foo : R { f2 : () } -> R { f2 : () }
@@ -62,7 +56,6 @@ main a b =
     (bar.f2, baz.b, b)
 """)
 
-    @Test
     fun `test modifying extension record in lambda`() = doTest("""
 type alias R a = {a | f : ()}
 type alias S = { g: () }

@@ -5,10 +5,8 @@ import org.elm.fileTreeFromText
 import org.elm.ide.inspections.ElmInspectionsTestBase
 import org.elm.ide.inspections.ElmUnresolvedReferenceInspection
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 class AddQualifierFixTest : ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
-    @Test
     fun `test value`() = check(
             """
 --@ main.elm
@@ -23,7 +21,6 @@ import Foo
 main = Foo.bar
 """)
 
-    @Test
     fun `test type`() = check(
             """
 --@ main.elm
@@ -40,7 +37,6 @@ bar : Foo.Bar -> ()
 bar = ()
 """)
 
-    @Test
     fun `test constructor`() = check(
             """
 --@ main.elm
@@ -55,7 +51,6 @@ import Foo
 main = Foo.BarVariant
 """)
 
-    @Test
     fun `test pattern`() = check(
             """
 --@ main.elm
@@ -76,7 +71,6 @@ main b =
       Foo.BarVariant{-caret-} -> ()
 """)
 
-    @Test
     fun `test qualified value`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -88,7 +82,6 @@ bar = 42
 """)
 
 
-    @Test
     fun `test qualified type`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -101,7 +94,6 @@ type Bar = BarVariant
 """)
 
 
-    @Test
     fun `test qualified constructor`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -112,7 +104,6 @@ module Foo exposing (Bar(..))
 type Bar = BarVariant
 """)
 
-    @Test
     fun `test value with import alias`() = check(
             """
 --@ main.elm
@@ -128,7 +119,6 @@ main = F.bar
 """)
 
 
-    @Test
     fun `test multiple qualifier candidates`() = checkFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -155,7 +145,6 @@ import Baz
 main = Bar.quux
 """)
 
-    @Test
     fun `test multiple qualifier candidates with aliases`() = checkFixByTextWithMultipleChoice(
             """
 --@ main.elm
@@ -177,7 +166,6 @@ import Bar as B
 main = B.quux
 """)
 
-    @Test
     fun `test binary infix operator`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -189,7 +177,6 @@ infix right 5 (**) = power
 power a b = List.product (List.repeat b a)
 """)
 
-    @Test
     fun `test unavailable when value not exposed`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -201,7 +188,6 @@ bar = 42
 quux = 0
 """)
 
-    @Test
     fun `test unavailable when qualified ref alias is not possible`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -212,7 +198,6 @@ module Foo exposing (bar)
 bar = 0
 """)
 
-    @Test
     fun `test unavailable on type annotation when local function hides external name`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm
@@ -224,7 +209,6 @@ module Foo exposing (bar)
 bar = 42
 """)
 
-    @Test
     fun `test binary infix operator containing dot is never qualified`() = checkFixIsUnavailableByFileTree("Qualify name",
             """
 --@ main.elm

@@ -2,12 +2,10 @@ package org.elm.ide.inspections.inference
 
 import org.elm.ide.inspections.ElmInspectionsTestBase
 import org.elm.ide.inspections.ElmTypeInferenceInspection
-import org.junit.Test
 
 class TypeInferenceInspectionTest2 : ElmInspectionsTestBase(ElmTypeInferenceInspection()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
-    @Test
     fun `test mismatched record subset pattern in parameter`() = checkByText("""
 type alias Foo = { foo : (), bar : Int }
 main : Foo -> ()
@@ -15,7 +13,6 @@ main {bar} = <error descr="Type mismatch.Required: ()Found: Int">bar</error>
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/122
-    @Test
     fun `test matched record pattern from extension alias`() = checkByText("""
 type alias Foo a = { a | foo : ()}
 type alias Bar = { bar : () }
@@ -24,7 +21,6 @@ main : Foo Bar -> ()
 main {bar} = bar
 """)
 
-    @Test
     fun `test mismatched record pattern from extension alias`() = checkByText("""
 type alias Foo a = { a | foo : ()}
 type alias Bar = { bar : () }
@@ -33,7 +29,6 @@ main : Foo Bar -> Int
 main {bar} = <error descr="Type mismatch.Required: IntFound: ()">bar</error>
 """)
 
-    @Test
     fun `test mismatched record pattern from extension alias redefining a field`() = checkByText("""
 type alias Foo a = { a | foo : ()}
 type alias Bar = Foo { foo : Int }
@@ -42,7 +37,6 @@ main : Bar -> Int
 main {foo} = <error descr="Type mismatch.Required: IntFound: ()">foo</error>
 """)
 
-    @Test
     fun `test extension record parameter`() = checkByText("""
 type alias Extension base = { base | field : () }
 
@@ -52,14 +46,12 @@ foo e = ()
 main = foo { field = (), field2 = () }
 """)
 
-    @Test
     fun `test record pattern parameter for record type literal`() = checkByText("""
 main : { field : () } -> Int
 main { field } = 
   <error descr="Type mismatch.Required: IntFound: ()">field</error>
 """)
 
-    @Test
     fun `test let-in with mismatched type in annotated inner func`() = checkByText("""
 main : ()
 main =
@@ -71,7 +63,6 @@ main =
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/153
-    @Test
     fun `test let-in with tuple with too small arity`() = checkByText("""
 main : ()
 main =
@@ -81,7 +72,6 @@ main =
         y
 """)
 
-    @Test
     fun `test let-in with tuple with too large arity`() = checkByText("""
 main : ()
 main =
@@ -92,7 +82,6 @@ main =
 """)
 
 
-    @Test
     fun `test let-in with mismatched type from annotated inner func`() = checkByText("""
 type Foo = Bar
 main : Foo
@@ -104,7 +93,6 @@ main =
         <error descr="Type mismatch.Required: FooFound: ()">foo</error>
 """)
 
-    @Test
     fun `test let-in function without annotation and one parameter`() = checkByText("""
 main : ()
 main =
@@ -114,7 +102,6 @@ main =
         foo 1
 """)
 
-    @Test
     fun `test let-in function without annotation and two parameters`() = checkByText("""
 main : ()
 main =
@@ -124,7 +111,6 @@ main =
         foo 1 2
 """)
 
-    @Test
     fun `test mismatched return value from let-in record binding`() = checkByText("""
 main : ()
 main =
@@ -134,7 +120,6 @@ main =
         <error descr="Type mismatch.Required: ()Found: String">y</error>
 """)
 
-    @Test
     fun `test mismatched return value from let-in tuple binding`() = checkByText("""
 main : ()
 main =
@@ -144,7 +129,6 @@ main =
         <error descr="Type mismatch.Required: ()Found: String">y</error>
 """)
 
-    @Test
     fun `test matched record argument to let-in function`() = checkByText("""
 main : ()
 main =
@@ -154,7 +138,6 @@ main =
         foo {x=(), y=()}
 """)
 
-    @Test
     fun `test cyclic definition in let-in record binding`() = checkByText("""
 main : ()
 main =
@@ -164,7 +147,6 @@ main =
         y
 """)
 
-    @Test
     fun `test invalid let-in record binding`() = checkByText("""
 main : ()
 main =
@@ -174,7 +156,6 @@ main =
         y
 """)
 
-    @Test
     fun `test invalid let-in tuple binding`() = checkByText("""
 main : ()
 main =
@@ -184,7 +165,6 @@ main =
         y
 """)
 
-    @Test
     fun `test mismatch in chained let-in tuple binding`() = checkByText("""
 main : ()
 main =
@@ -196,7 +176,6 @@ main =
 """)
 
 
-    @Test
     fun `test returning function`() = checkByText("""
 main : () -> ()
 main =
@@ -206,7 +185,6 @@ main =
         foo
 """)
 
-    @Test
     fun `test returning partially applied function`() = checkByText("""
 main : () -> ()
 main =
@@ -216,7 +194,6 @@ main =
         foo ()
 """)
 
-    @Test
     fun `test matched function type alias in annotation`() = checkByText("""
 type Foo = Bar
 type alias F = Foo -> ()
@@ -225,7 +202,6 @@ foo : F -> F
 foo a b = a b
 """)
 
-    @Test
     fun `test mismatched function type alias in annotation`() = checkByText("""
 type Foo = Bar
 type alias F = Foo -> ()
@@ -234,75 +210,62 @@ foo : F -> F
 foo a b = <error descr="Type mismatch.Required: ()Found: Foo">b</error>
 """)
 
-    @Test
     fun `test partial pattern in function parameter from cons`() = checkByText("""
 main (<error descr="Pattern does not cover all possibilities">x :: []</error>) = ()
 """)
 
-    @Test
     fun `test partial pattern in function parameter from list`() = checkByText("""
 main (<error descr="Pattern does not cover all possibilities">[x]</error>) = ()
 """)
 
-    @Test
     fun `test partial pattern in function parameter from constant`() = checkByText("""
 main (<error descr="Pattern does not cover all possibilities">""</error>) = ()
 """)
 
-    @Test
     fun `test partial pattern in lambda parameter from constant`() = checkByText("""
 main = (\<error descr="Pattern does not cover all possibilities">""</error> -> "")
 """)
 
-    @Test
     fun `test bad self-recursion in annotated value`() = checkByText("""
 main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
-    @Test
     fun `test bad self-recursion in unannotated value`() = checkByText("""
 <error descr="Infinite recursion">main = main</error>
 """)
 
     // #https://github.com/klazuka/intellij-elm/issues/142
     // this tests for infinite recursion; the diagnostic is tested in TypeDeclarationInspectionTest
-    @Test
     fun `test bad self-recursion in type alias`() = checkByText("""
 type alias A = A
 foo : A
 foo = ()
 """)
 
-    @Test
     fun `test allowed self-recursion in annotated function`() = checkByText("""
 main : () -> ()
 main a = main a -- This is a runtime error, not compile time
 """)
 
-    @Test
     fun `test allowed self-recursion in unannotated function`() = checkByText("""
 main a = main a -- This is a runtime error, not compile time
 """)
 
-    @Test
     fun `test allowed self-recursion in lambda`() = checkByText("""
 main : ()
 main = (\_ -> main) 1
 """)
 
-    @Test
     fun `test allowed self-recursion in lambda in unannotated function`() = checkByText("""
 main = (\_ -> main) 1
 """)
 
-    @Test
     fun `test bad mutual recursion`() = checkByText("""
 <error descr="Infinite recursion">foo = bar</error>
 bar = foo
 """)
 
-    @Test
     fun `test bad mutual recursion in let`() = checkByText("""
 main =
     let
@@ -312,7 +275,6 @@ main =
     ()
 """)
 
-    @Test
     fun `test mapping over recursive container in annotated function`() = checkByText("""
 type Box a = Box a
 type Tree a = Node (List (Tree a))
@@ -322,7 +284,6 @@ main (Node trees) =
     <error descr="Type mismatch.Required: Box (Tree a)Found: List (Box (Tree a))">List.map main trees</error>
 """)
 
-    @Test
     fun `test uncurrying function passed as argument`() = checkByText("""
 foo : a -> a
 foo a = a
@@ -333,7 +294,6 @@ main =
 
 """)
 
-    @Test
     fun `test uncurrying return value from unannotated function`() = checkByText("""
 lazy3 : (a -> b -> c -> ()) -> a -> b -> c -> ()
 lazy3 a = a
@@ -347,7 +307,6 @@ main : (a -> ()) -> a -> a -> ()
 main fn a = <error descr="Type mismatch.Required: a → ()Found: () → ()">lazy3 apply1 fn a</error>
 """)
 
-    @Test
     fun `test function argument mismatch in case expression`() = checkByText("""
 foo : () -> ()
 foo a = a
@@ -357,7 +316,6 @@ main =
         _ -> ()
 """)
 
-    @Test
     fun `test function argument mismatch in case branch`() = checkByText("""
 foo : () -> ()
 foo a = a
@@ -367,7 +325,6 @@ main =
         _ -> foo <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test value mismatch from case`() = checkByText("""
 main : ()
 main =
@@ -375,7 +332,6 @@ main =
         _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test case branches with mismatched types`() = checkByText("""
 main : ()
 main =
@@ -385,7 +341,6 @@ main =
         _ -> ()
 """)
 
-    @Test
     fun `test case branches with multiple mismatched types`() = checkByText("""
 main : ()
 main =
@@ -395,7 +350,6 @@ main =
         _ -> ()
 """)
 
-    @Test
     fun `test case branches with mismatched types from pattern`() = checkByText("""
 main =
     case Just 42 of
@@ -403,7 +357,6 @@ main =
         Just x -> <error descr="Type mismatch.Required: StringFound: number">x</error>
 """)
 
-    @Test
     fun `test case branches with mismatched types in lambda`() = checkByText("""
 main =
     \_ ->
@@ -415,7 +368,6 @@ main =
                 <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test case branches with mismatched types in let`() = checkByText("""
 main =
     let
@@ -431,7 +383,6 @@ main =
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/113
-    @Test
     fun `test case branches with union value call`() = checkByText("""
 foo : Maybe (List a)
 foo = Nothing
@@ -443,7 +394,6 @@ main =
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/113
-    @Test
     fun `test field access on field subset`() = checkByText("""
 type alias Subset a =
     { a | extra : () }
@@ -458,7 +408,6 @@ main a =
 """)
 
 
-    @Test
     fun `test case branches with mismatched tuple type`() = checkByText("""
 type Foo = Bar
 type Baz = Qux(Foo, Foo)
@@ -469,7 +418,6 @@ main x =
         Qux (y, z) -> <error descr="Type mismatch.Required: ()Found: Foo">z</error>
 """)
 
-    @Test
     fun `test case branches with mismatched union pattern`() = checkByText("""
 type Foo = Bar
 type Baz = Qux
@@ -480,7 +428,6 @@ main arg =
          <error descr="Type mismatch.Required: BazFound: Foo">Qux</error> -> ()
 """)
 
-    @Test
     fun `test case branches with mismatched record pattern`() = checkByText("""
 type alias Foo = { a : (), b : ()}
 
@@ -490,7 +437,6 @@ main arg =
          <error descr="Invalid pattern.Required type: FooPattern type: { b : a, c : b }Extra fields: { c : b }">{ b, c }</error> -> ()
 """)
 
-    @Test
     fun `test case branches using union patterns with constructor argument`() = checkByText("""
 type Foo
     = Bar ()
@@ -505,7 +451,6 @@ main arg =
         Qux Nothing x -> x
 """)
 
-    @Test
     fun `test case branches using union patterns with tuple destructuring of var`() = checkByText("""
 type Foo
     = Bar (Maybe ((), ()))
@@ -519,7 +464,6 @@ main arg =
         _ -> ()
 """)
 
-    @Test
     fun `test case branches using union patterns with record destructuring of var`() = checkByText("""
 type Foo
     = Bar (Maybe {x: ()})
@@ -533,7 +477,6 @@ main arg =
         _ -> ()
 """)
 
-    @Test
     fun `test case branches using union patterns to unresolved type`() = checkByText("""
 -- This will lead to unresolved reference errors, but we need to test that we're still
 -- binding the parameters so that we can infer the branch expressions.
@@ -544,7 +487,6 @@ main arg =
         _ -> ()
 """)
 
-    @Test
     fun `test case branches using union patterns to mismatched type`() = checkByText("""
 type Foo a = Bar (Maybe a) | Baz a
 type Qux = Qux
@@ -558,7 +500,6 @@ main arg =
         _ -> ()
 """)
 
-    @Test
     fun `test case branches with union pattern referencing invalid arg`() = checkByText("""
 type Foo = Bar
 
@@ -568,7 +509,6 @@ main arg =
          <error descr="The type expects 0 arguments, but it got 1 instead.">Bar foo</error> -> foo
 """)
 
-    @Test
     fun `test mismatched case branch union pattern`() = checkByText("""
 main =
     case Just 42 of
@@ -577,7 +517,6 @@ main =
         Nothing -> ""
 """)
 
-    @Test
     fun `test case branch with cons pattern head`() = checkByText("""
 main =
     case [()] of
@@ -585,7 +524,6 @@ main =
         _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test case branch with cons pattern tail`() = checkByText("""
 main : List ()
 main =
@@ -594,7 +532,6 @@ main =
         _ -> []
 """)
 
-    @Test
     fun `test case branch with list pattern`() = checkByText("""
 main =
     case [()] of
@@ -602,7 +539,6 @@ main =
         _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test case branch with cons and list pattern`() = checkByText("""
 main =
     case [()] of
@@ -610,7 +546,6 @@ main =
         _ -> <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test case branches binding the same names`() = checkByText("""
 type Foo a = Foo () | Bar String | Baz ()  | Qux () | Quz ()
 
@@ -627,7 +562,6 @@ foo f =
        Quz x -> bar x
 """)
 
-    @Test
     fun `test case branches with record pattern on different field than previously accessed through pipeline`() = checkByText("""
 foo : (a -> ()) -> a -> a
 foo _ a = a
@@ -639,7 +573,6 @@ main =
             <error descr="Type mismatch.Required: StringFound: ()">f1</error>
 """)
 
-    @Test
     fun `test case branch with record pattern from previous mutable record`() = checkByText("""
 foo r =
     let
@@ -653,7 +586,6 @@ main =
   <error descr="Type mismatch.Required: ()Found: { f1 : (), f2 : String }">foo { f1 = (), f2 = "" }</error>
 """)
 
-    @Test
     fun `test invalid return value from cons pattern`() = checkByText("""
 main : ()
 main =
@@ -662,7 +594,6 @@ main =
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/247
-    @Test
     fun `test nested destructuring`() = checkByText("""
 main : ()
 main =
@@ -676,7 +607,6 @@ main =
         <error descr="Type mismatch.Required: ()Found: String">a</error>
 """)
 
-    @Test
     fun `test forward reference to destructured pattern`() = checkByText("""
 main : ()
 main =
@@ -687,7 +617,6 @@ main =
        <error descr="Type mismatch.Required: ()Found: String">a</error>
 """)
 
-    @Test
     fun `test nested forward references`() = checkByText("""
 main : () -> ()
 main m =
@@ -700,7 +629,6 @@ main m =
   x ()
 """)
 
-    @Test
     fun `test referenced pattern as`() = checkByText("""
 main : { field : String } -> ()
 main r =
@@ -710,14 +638,12 @@ main r =
     <error descr="Type mismatch.Required: ()Found: String">record.field</error>
 """)
 
-    @Test
     fun `test nested param as`() = checkByText("""
 main : (String, String) -> ()
 main ( (x) as foo, _ ) =
      <error descr="Type mismatch.Required: ()Found: String">foo</error>
 """)
 
-    @Test
     fun `test mismatched left operand to non-associative operator`() = checkByText("""
 foo : () -> () -> ()
 foo a b = a
@@ -726,7 +652,6 @@ infix non 4 (~~) = foo
 main a = <error descr="Type mismatch.Required: ()Found: String">""</error> ~~ ()
 """)
 
-    @Test
     fun `test mismatched right operand to non-associative operator`() = checkByText("""
 foo : () -> () -> ()
 foo a b = a
@@ -735,7 +660,6 @@ infix non 4 (~~) = foo
 main a = () ~~ <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    @Test
     fun `test chained non-associative operator`() = checkByText("""
 foo : () -> () -> ()
 foo a b = a
@@ -744,7 +668,6 @@ infix non 4 (~~) = foo
 main a = <error descr="Operator (~~) is not associative, and so cannot be chained">() ~~ () ~~ ()</error>
 """)
 
-    @Test
     fun `test matched left associative chain`() = checkByText("""
 type Foo = Bar
 foo : Foo -> () -> Foo
@@ -755,7 +678,6 @@ main : Foo
 main = Bar ~~ () ~~ ()
 """)
 
-    @Test
     fun `test matched right associative chain`() = checkByText("""
 type Foo = Bar
 foo : () -> Foo -> Foo
@@ -766,7 +688,6 @@ main : Foo
 main = () ~~ () ~~ Bar
 """)
 
-    @Test
     fun `test mismatched left associative chain`() = checkByText("""
 type Foo = Bar
 foo : () -> () -> Foo
@@ -776,7 +697,6 @@ infix left 4 (~~) = foo
 main a = <error descr="Type mismatch.Required: ()Found: Foo">() ~~ ()</error> ~~ ()
 """)
 
-    @Test
     fun `test mismatched right associative chain`() = checkByText("""
 type Foo = Bar
 foo : () -> () -> Foo
@@ -786,7 +706,6 @@ infix right 4 (~~) = foo
 main a = () ~~ <error descr="Type mismatch.Required: ()Found: Foo">() ~~ ()</error>
 """)
 
-    @Test
     fun `test apply-right into Maybe`() = checkByText("""
 apR : a -> (a -> b) -> b
 apR x f = f x
@@ -796,7 +715,6 @@ main : Maybe ()
 main = () |> Just
 """)
 
-    @Test
     fun `test multiple non-associative operators`() = checkByText("""
 lt : a -> a -> Bool
 lt a b = True
@@ -810,7 +728,6 @@ main : Bool
 main = 1 < 2 && 3 < 4
 """)
 
-    @Test
     fun `test operator mixed with function call`() = checkByText("""
 type Foo = Bar
 foo : Foo -> () -> Foo
@@ -820,7 +737,6 @@ infix left 4 (~~) = foo
 main = foo Bar () ~~ ()
 """)
 
-    @Test
     fun `test self reference in union variant`() = checkByText("""
 type Foo a = FooVariant Foo a
 type Bar = BarVariant Bar (Foo Bar)
@@ -830,7 +746,6 @@ main = <error descr="Type mismatch.Required: Foo ()Found: Bar → Foo Bar → Ba
 """)
 
     // https://github.com/klazuka/intellij-elm/issues/201
-    @Test
     fun `test returning bound recursive union variant`() = checkByText("""
 type Tree a = Tree a (List (Tree a))
 

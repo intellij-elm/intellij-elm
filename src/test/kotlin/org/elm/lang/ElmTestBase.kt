@@ -83,19 +83,6 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
 
     override fun getTestDataPath(): String = "${ElmTestCase.testResourcesPath}/$dataPath"
 
-/*
-    override fun runTest() {
-        val projectDescriptor = projectDescriptor
-        val reason = (projectDescriptor as? ElmProjectDescriptorBase)?.skipTestReason
-        if (reason != null) {
-            System.err.println("SKIP $name: $reason")
-            return
-        }
-
-        super.runTest()
-    }
-*/
-
     protected val fileName: String
         get() = "$testName.elm"
 

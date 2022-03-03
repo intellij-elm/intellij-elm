@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve
 
-import org.junit.Test
 
 
 /**
@@ -12,7 +11,6 @@ class ElmPatternResolveTest : ElmResolveTestBase() {
     // CASE-OF EXPRESSIONS AND PATTERNS
 
 
-    @Test
     fun `test case-of pattern wildcard`() = checkByCode(
             """
 f x =
@@ -24,7 +22,6 @@ f x =
     )
 
 
-    @Test
     fun `test case-of pattern union type constructor`() = checkByCode(
             """
 f x =
@@ -35,7 +32,6 @@ f x =
 """
     )
 
-    @Test
     fun `test case-of pattern union type constructor with constructor parameter`() = checkByCode(
             """
 type Foo = Foo
@@ -49,7 +45,6 @@ f x =
     )
 
 
-    @Test
     fun `test case-of that should not resolve`() = checkByCode(
             """
 f x =
@@ -61,7 +56,6 @@ f x =
     )
 
 
-    @Test
     fun `test nested case-of`() = checkByCode(
             """
 f x =
@@ -76,7 +70,6 @@ f x =
 
 
     // see bug https://github.com/klazuka/intellij-elm/issues/106
-    @Test
     fun `test nested case-of that should not resolve`() = checkByCode(
             """
 f x =
@@ -93,7 +86,6 @@ f x =
     // PARAMETER DESTRUCTURING
 
 
-    @Test
     fun `test function parameter record destructuring`() = checkByCode(
             """
 foo { name } = name
@@ -101,7 +93,6 @@ foo { name } = name
 """)
 
 
-    @Test
     fun `test function parameter tuple destructuring`() = checkByCode(
             """
 foo ( x, y ) = x + y
@@ -109,7 +100,6 @@ foo ( x, y ) = x + y
 """)
 
 
-    @Test
     fun `test nested function parameter destructuring`() = checkByCode(
             """
 f =
@@ -124,7 +114,6 @@ f =
     // PATTERN ALIASES
 
 
-    @Test
     fun `test pattern alias in function decl parameter`() = checkByCode(
             """
 foo ((x, y) as point) = point
@@ -132,7 +121,6 @@ foo ((x, y) as point) = point
 """)
 
 
-    @Test
     fun `test pattern alias in function parameter in let-in expr`() = checkByCode(
             """
 f =
@@ -144,7 +132,6 @@ f =
 """)
 
 
-    @Test
     fun `test pattern alias in let-in destructuring assignment`() = checkByCode(
             """
 f =
@@ -157,7 +144,6 @@ f =
 """)
 
 
-    @Test
     fun `test pattern alias in case-of branch`() = checkByCode(
             """
 f x =

@@ -1,6 +1,5 @@
 package org.elm.lang.core.resolve
 
-import org.junit.Test
 
 
 /**
@@ -9,7 +8,6 @@ import org.junit.Test
 class ElmMiscResolveTest : ElmResolveTestBase() {
 
 
-    @Test
     fun `test top-level value ref`() = checkByCode(
             """
 magicNumber = 42
@@ -23,7 +21,6 @@ f = magicNumber + 1
     // LET-IN EXPRESSIONS
 
 
-    @Test
     fun `test simple value declared by let-in`() = checkByCode(
             """
 f x =
@@ -34,7 +31,6 @@ f x =
 """)
 
 
-    @Test
     fun `test let-in should honor lexical scope in body expr`() = checkByCode(
             """
 foo =
@@ -45,7 +41,6 @@ foo =
 """)
 
 
-    @Test
     fun `test let-in should honor lexical scope in sibling decl`() = checkByCode(
             """
 foo =
@@ -61,14 +56,12 @@ foo =
     // LAMBDAS (ANONYMOUS FUNCTIONS)
 
 
-    @Test
     fun `test lambda parameter ref`() = checkByCode(
             """
 f = \x -> x
    --X  --^
 """)
 
-    @Test
     fun `test lambda parameter nested`() = checkByCode(
             """
 f = \x -> (\() -> x)
@@ -76,7 +69,6 @@ f = \x -> (\() -> x)
 """)
 
 
-    @Test
     fun `test lambda parameter nested and should not resolve`() = checkByCode(
             """
 f = \() -> x (\x -> ())
@@ -84,7 +76,6 @@ f = \() -> x (\x -> ())
 """)
 
 
-    @Test
     fun `test lambda parameter destructured record field ref`() = checkByCode(
             """
 f = \{x} -> x
@@ -92,14 +83,12 @@ f = \{x} -> x
 """)
 
 
-    @Test
     fun `test lambda parameter destructured tuple ref`() = checkByCode(
             """
 f = \(x,y) -> x
     --X     --^
 """)
 
-    @Test
     fun `test lambda parameter destructured with alias`() = checkByCode(
             """
 f = \((x,y) as point) -> point
@@ -110,7 +99,6 @@ f = \((x,y) as point) -> point
     // PORTS
 
 
-    @Test
     fun `test port ref`() = checkByCode(
             """
 port module Ports exposing (..)

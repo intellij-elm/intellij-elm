@@ -3,7 +3,6 @@ package org.elm.workspace.compiler
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 
 class ElmCompilerJsonToHtmlTest : ElmTestBase() {
@@ -12,7 +11,6 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
     // 0.19
     // $ elm make src/Foo.elm --report=json
 
-    @Test
     fun `test specific error`() {
         @Language("JSON")
         val json = """
@@ -64,7 +62,6 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
         )
     }
 
-    @Test
     fun `test generic error without a path`() {
         @Language("JSON")
         val json = """
@@ -99,7 +96,6 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
         )
     }
 
-    @Test
     fun `test generic error with a path and a null color, crazy`() {
         @Language("JSON")
         val json = """
@@ -145,7 +141,6 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
         )
     }
 
-    @Test
     fun `test hyperlink within a longer run of text`() {
         @Language("JSON")
         val json = """

@@ -1,10 +1,8 @@
 package org.elm.ide.inspections
 
-import org.junit.Test
 
 class ElmInspectionSuppressorTest : ElmInspectionsTestBase(ElmUnusedSymbolInspection()) {
 
-    @Test
     fun testWithoutSuppression() = checkByText("""
 type T = T ()
 <warning>f</warning> = g
@@ -15,7 +13,6 @@ g t <warning>x</warning> =
       T <warning>u</warning> -> ()
     """)
 
-    @Test
     fun testSuppression() = checkByText("""
 type T = T ()
 -- noinspection ElmUnusedSymbol

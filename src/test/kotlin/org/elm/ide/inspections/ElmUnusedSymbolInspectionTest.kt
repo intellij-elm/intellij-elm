@@ -1,6 +1,5 @@
 package org.elm.ide.inspections
 
-import org.junit.Test
 
 
 class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInspection()) {
@@ -8,14 +7,12 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     // FUNCTIONS
 
-    @Test
     fun `test detects unused functions`() = checkFixIsUnavailable("Rename to _", """
         <warning descr="'f' is never used">f{-caret-}</warning> = g
         g = ()
         """.trimIndent())
 
 
-    @Test
     fun `test the main function is never marked as unused`() = checkByText("""
         main = ()
         """.trimIndent())
@@ -23,7 +20,6 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     // NOTE: This test plays fast-and-loose by simulating elm-test rather than bringing in
     //       the real package dependency. But this should be good enough.
-    @Test
     fun `test elm-test entry points are never marked as unused, qualified`() = checkByFileTree("""
         --@ main.elm
         module MyTests exposing (fooTest)
@@ -38,7 +34,6 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
 
     // same as previous test but referring to the `Test` type without a module qualifier
-    @Test
     fun `test elm-test entry points are never marked as unused, unqualified`() = checkByFileTree("""
         --@ main.elm
         module MyTests exposing (fooTest)
@@ -52,7 +47,6 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         """.trimIndent())
 
 
-    @Test
     fun `test an elm-test entry point that is not exposed should be checked for usage`() = checkByFileTree("""
         --@ main.elm
         module MyTests exposing (main)
@@ -67,14 +61,12 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         """.trimIndent())
 
 
-    @Test
     fun `test port annotations are never marked as unused`() = checkByText("""
         port module Foo exposing (foo)
         port foo : () -> msg
         """.trimIndent())
 
 
-    @Test
     fun `test a port annotation that is not exposed should be checked for usage`() = checkByText("""
         port module Foo exposing (foo)
         port foo : () -> msg
@@ -82,21 +74,18 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         """.trimIndent())
 
 
-    @Test
     fun `test the type annotation does not count as usage`() = checkByText("""
         f : ()
         <warning descr="'f' is never used">f</warning> = ()
     """.trimIndent())
 
 
-    @Test
     fun `test exposing a function does not count as usage`() = checkByText("""
         module Foo exposing (f)
         <warning descr="'f' is never used">f</warning> = ()
     """.trimIndent())
 
 
-    @Test
     fun `test but a reference to a function from another file DOES count as usage`() = checkByFileTree("""
         --@ Foo.elm
         module Foo exposing (f)
@@ -111,7 +100,6 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     // PARAMETERS
 
-    @Test
     fun `test renames unused function parameters`() = checkFixByText("Rename to _", """
         f <warning descr="'x' is never used">x{-caret-}</warning> = ()
         main = f
@@ -120,12 +108,10 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
         main = f
         """.trimIndent())
 
-    @Test
     fun `test renames lambda parameters`() = checkFixByText("Rename to _",
             """main = (\<warning descr="'x' is never used">x{-caret-}</warning> -> ())""",
             """main = (\_ -> ())""")
 
-    @Test
     fun `test used record field patterns`() = checkByText("""
         type alias X  = { x : () }
         f : X -> ()
@@ -137,7 +123,6 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
 
     // TODO revisit this in the future: maybe only record aliases should be ignored?
-    @Test
     fun `test type aliases are never marked as unused`() = checkByText("""
         type alias Foo = ()
     """.trimIndent())
@@ -147,21 +132,18 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
     //      variant constructors are used, and, if so, then the type can be
     //      considered unused (assuming that there are also no refs to the type
     //      name itself).
-    @Test
     fun `test the union type is never marked as unused`() = checkByText("""
         type Foo = Bar
         main = Bar
         """.trimIndent())
 
 
-    @Test
     fun `test detects unused union variant constructor`() = checkFixIsUnavailable("Rename to _", """
         type Foo = Bar | <warning descr="'Quux' is never used">Quux</warning>
         main : Foo
         main = Bar
         """.trimIndent())
 
-    @Test
     fun `test renames unused case branch patterns`() = checkFixByText("Rename to _", """
         type T = T () ()
         main : T -> ()
@@ -181,7 +163,6 @@ class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInsp
 
     // MISC
 
-    @Test
     fun `test detects unused alias when importing a module`() = checkByFileTree("""
         --@ main.elm
         import FooBar as <warning descr="'FB' is never used">FB</warning>

@@ -3,12 +3,10 @@ package org.elm.workspace
 import org.elm.fileTree
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.openapiext.pathAsPath
-import org.junit.Test
 
 class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
-    @Test
     fun `test resolves modules found within source-directories`() {
         buildProject {
             project("elm.json", """
@@ -49,7 +47,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test resolves modules using double-dot src dir`() {
         val testProject = fileTree {
             dir("example") {
@@ -124,7 +121,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test does not resolve modules outside of source-directories`() {
         buildProject {
             project("elm.json", """
@@ -166,7 +162,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test resolves modules provided by packages which are direct dependencies`() {
         buildProject {
             project("elm.json", """
@@ -199,7 +194,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test does not resolve unexposed modules provided by direct packages dependencies`() {
         buildProject {
             project("elm.json", """
@@ -233,7 +227,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test resolves modules to correct version`() {
         // note that one depends on `elm/parser` 1.0.0 and the other on 1.1.0
         val testProject = fileTree {
@@ -314,12 +307,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test resolves modules provided by packages which are direct test dependencies`() =
             testTestDependencyResolution(true)
 
 
-    @Test
     fun `test resolves modules provided by packages which are direct test dependencies in custom tests folder`() =
             testTestDependencyResolution(false)
 
@@ -365,7 +356,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test does not resolve test dependencies when outside of the 'tests' directory`() {
         buildProject {
             project("elm.json", """
@@ -403,12 +393,10 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
 
 
     // See https://github.com/klazuka/intellij-elm/issues/189
-    @Test
     fun `test resolves companion modules inside the default tests directory`() =
             testTestCompanionModulesResolution(true)
 
 
-    @Test
     fun `test resolves companion modules inside a custom tests directory`() =
             testTestCompanionModulesResolution(false)
 
@@ -457,7 +445,6 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    @Test
     fun `test does not resolve modules which are not direct dependencies`() {
         buildProject {
             project("elm.json", """

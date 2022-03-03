@@ -1,10 +1,8 @@
 package org.elm.ide.inspections
 
-import org.junit.Test
 
 
 class ElmExposingAliasVariantsInspectionTest : ElmInspectionsTestBase(ElmExposingAliasVariantsInspection()) {
-    @Test
     fun `test fix`() = checkFixByFileTree("Remove (..)", """
 --@ Main.elm
 module Main exposing (..)

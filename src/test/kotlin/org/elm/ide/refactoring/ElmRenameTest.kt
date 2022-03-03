@@ -33,13 +33,11 @@ import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.intellij.lang.annotations.Language
-import org.junit.Test
 
 
 class ElmRenameTest : ElmTestBase() {
 
 
-    @Test
     fun `test value decl rename`() = doTest("quux", """
 foo : Int
 foo = 42
@@ -50,17 +48,14 @@ quux = 42
 bar = quux + 2
 """)
 
-    @Test
     fun `test value decl invalid rename`() = doInvalidNameTest("Bar", """
 foo{-caret-} = 42
 """)
 
-    @Test
     fun `test type decl invalid rename`() = doInvalidNameTest("bar", """
 type Foo{-caret-} = Foo
 """)
 
-    @Test
     fun `test function parameter rename`() = doTest("z", """
 f x{-caret-} y = x + y
 """, """
@@ -68,7 +63,6 @@ f z y = z + y
 """)
 
 
-    @Test
     fun `test let destructuring rename`() = doTest("z", """
 f p =
     let (x{-caret-}, y) = p
@@ -80,7 +74,6 @@ f p =
 """)
 
 
-    @Test
     fun `test case destructuring rename`() = doTest("z", """
 f p =
     case p of
@@ -92,7 +85,6 @@ f p =
 """)
 
 
-    @Test
     fun `test union type rename`() = doTest("Quux", """
 type Foo{-caret-} = A | B
 type Bar = C Foo
@@ -104,7 +96,6 @@ f : Quux -> String
 """)
 
 
-    @Test
     fun `test type alias rename`() = doTest("Quux", """
 type alias Foo{-caret-} = Int
 type Bar = C Foo
@@ -116,7 +107,6 @@ f : Quux -> String
 """)
 
 
-    @Test
     fun `test field access rename`() = doTest("quux", """
 foo : { b : String }
 foo a{-caret-} = a.b
@@ -128,7 +118,6 @@ foo quux = quux.b
 
     // disabled until https://github.com/klazuka/intellij-elm/issues/240 is fixed
 /*
-    @Test
     fun `test file rename from Data_User to Data_Quux`() = checkByDirectory("""
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -152,7 +141,6 @@ g = Data.Quux.User "joe"
 */
 
 
-    @Test
     fun `test module decl rename from Data_User to Data_Quux`() = checkByDirectory("""
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -177,7 +165,6 @@ g = Data.Quux.User "joe"
     }
 
 
-    @Test
     fun `test import alias rename`() = checkByDirectory("""
 --@ Data/User.elm
 module Data.User exposing (..)

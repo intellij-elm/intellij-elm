@@ -1,11 +1,9 @@
 package org.elm.ide.intentions
 
-import org.junit.Test
 
 class MakeAnnotationIntentionTest : ElmIntentionTestBase(MakeAnnotationIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
-    @Test
     fun `test value`() = doAvailableTest(
             """
 module Test exposing (f)
@@ -21,7 +19,6 @@ f =
     1.0
 """)
 
-    @Test
     fun `test value with docstring`() = doAvailableTest(
             """
 {- docs -}
@@ -35,7 +32,6 @@ f =
     1.0
 """)
 
-    @Test
     fun `test value with caret in name`() = doAvailableTest(
             """
 module Test exposing (function)
@@ -51,7 +47,6 @@ function =
     1.0
 """)
 
-    @Test
     fun `test value with caret before name`() = doAvailableTest(
             """
 module Test exposing (f)
@@ -68,7 +63,6 @@ f =
 """)
 
 
-    @Test
     fun `test function with unconstrained params`() = doAvailableTest(
             """
 f{-caret-} a b =
@@ -80,7 +74,6 @@ f a b =
     a
 """)
 
-    @Test
     fun `test function with constrained params`() = doAvailableTest(
             """
 f{-caret-} a b =
@@ -92,7 +85,6 @@ f a b =
     a < b
 """)
 
-    @Test
     fun `test nested value`() = doAvailableTest(
             """
 f =
@@ -112,7 +104,6 @@ f =
         g
 """)
 
-    @Test
     fun `test nested function`() = doAvailableTest(
             """
 f =
@@ -132,7 +123,6 @@ f =
         g
 """)
 
-    @Test
     fun `test nested value with previous sibling`() = doAvailableTest(
             """
 f =
@@ -156,7 +146,6 @@ f =
         g
 """)
 
-    @Test
     fun `test nested value with caret before name`() = doAvailableTest(
             """
 f =
@@ -176,7 +165,6 @@ f =
         function
 """)
 
-    @Test
     fun `test nested value with caret in name`() = doAvailableTest(
             """
 f =
@@ -196,7 +184,6 @@ f =
         function
 """)
 
-    @Test
     fun `test qualified name`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
