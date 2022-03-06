@@ -11,16 +11,12 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.util.messages.Topic
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
 import org.elm.openapiext.saveAllDocuments
-import org.elm.workspace.commandLineTools.ElmReviewWatchError
 import org.elm.workspace.compiler.findEntrypoints
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
-import org.elm.workspace.elmreview.ElmReviewError
-import java.nio.file.Path
 
 private val log = logger<ElmExternalReviewAction>()
 

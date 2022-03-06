@@ -137,10 +137,10 @@ class ElmWorkspaceConfigurable(
         uiDebouncer.run(
                 onPooledThread = {
                     Results(
-                            elmCLI.queryVersion(),
-                            elmFormatCLI.queryVersion(),
-                            elmTestCLI.queryVersion(),
-                            elmReviewCLI.queryVersion()
+                            elmCLI.queryVersion(project),
+                            elmFormatCLI.queryVersion(project),
+                            elmTestCLI.queryVersion(project),
+                            elmReviewCLI.queryVersion(project)
                     )
                 },
                 onUiThread = { (compilerResult, elmFormatResult, elmTestResult, elmReviewResult) ->

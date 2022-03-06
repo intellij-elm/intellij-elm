@@ -106,7 +106,7 @@ class ElmNeedsConfigNotificationProvider(
 
     private fun asyncQueryElmCompilerVersion(toolchain: ElmToolchain) {
         ProcessIOExecutorService.INSTANCE.submit {
-            val v = toolchain.elmCLI?.queryVersion()?.orNull()
+            val v = toolchain.elmCLI?.queryVersion(project)?.orNull()
             synchronized(lock) {
                 versionCheck = VersionCheck.Checked(v)
             }

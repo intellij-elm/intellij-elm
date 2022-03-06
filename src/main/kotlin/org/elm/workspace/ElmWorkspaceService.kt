@@ -197,7 +197,7 @@ class ElmWorkspaceService(
                 val elmCLI = settings.toolchain.elmCLI
                         ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
 
-                val compilerVersion = elmCLI.queryVersion().orNull()
+                val compilerVersion = elmCLI.queryVersion(intellijProject).orNull()
                         ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
 
                 if (installDeps) {
@@ -336,7 +336,7 @@ class ElmWorkspaceService(
 
 
     private val directoryIndex: MyDirectoryIndex<ElmProject> =
-            MyDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
+            MyDirectoryIndex(intellijProject, noProjectSentinel) { index ->
                 fun put(path: Path?, elmProject: ElmProject) {
                     if (path == null) return
                     val file = findFileByPathTestAware(path) ?: return
@@ -383,7 +383,7 @@ class ElmWorkspaceService(
                     log.debug("Registering tests directory ${project.testsDirPath} for $project")
                     put(project.testsDirPath, project)
                 }
-            })
+            }
 
 
     // INTEGRATION TEST SUPPORT

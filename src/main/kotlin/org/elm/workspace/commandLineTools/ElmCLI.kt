@@ -32,7 +32,7 @@ class ElmCLI(val elmExecutablePath: Path) {
             .withWorkDirectory(workDir)
             .withParameters(*params)
             .apply { if (jsonReport) addParameter("--report=json") }
-            .execute(elmCompilerTool, project, ignoreExitCode = true,)
+            .execute(elmCompilerTool, project)
         val json = output.stderr
         val regex = "\\{.*}".toRegex()
         val cleansedJson = regex.find(json)?.value
@@ -70,11 +70,11 @@ class ElmCLI(val elmExecutablePath: Path) {
         return messages.isEmpty()
     }
 
-    fun queryVersion(): Result<Version> {
+    fun queryVersion(project: Project): Result<Version> {
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
         val firstLine = try {
             GeneralCommandLine(elmExecutablePath).withParameters("--version")
-                    .execute(timeoutInMilliseconds = 3000)
+                    .execute(elmCompilerTool, project)
                     .stdoutLines
                     .firstOrNull()
         } catch (e: ExecutionException) {

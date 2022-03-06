@@ -22,8 +22,7 @@ import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
 import org.elm.workspace.elmReviewTool
-import org.elm.workspace.elmreview.ElmReviewError
-import org.elm.workspace.elmreview.elmReviewJsonToMessages
+import org.elm.workspace.elmreview.*
 import java.nio.file.Path
 import java.util.*
 import kotlin.Comparator
@@ -63,17 +62,21 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                     throw ExecutionException("External command failed to start")
                 }
                 if (output.exitCode != 0) {
-                    throw ExecutionException(errorMessage(generalCommandLine, output))
+                    log.warn("elm-review exited with code ${output.exitCode} and output ${output.stdoutLines}")
                 }
                 val json = output.stderr.ifEmpty {
                     output.stdout
                 }
-                val messages = if (json.isEmpty()) emptyList() else {
-                    val msgs = elmReviewJsonToMessages(json).sortedWith(
+                val messages = if (json.isEmpty())
+                    emptyList()
+                else {
+                    val reader = JsonReader(json.byteInputStream().bufferedReader())
+                    reader.isLenient = true
+                    val msgs = reader.readErrorReport().sortedWith(
                         compareBy(
                             { it.path },
-                            { it.region.start.line },
-                            { it.region.start.column }
+                            { it.region!!.start!!.line },
+                            { it.region!!.start!!.column }
                         ))
                     if (currentFile != null) {
                         val predicate: (ElmReviewError) -> Boolean = { it.path == currentFile.pathRelative(project).toString() }
@@ -119,38 +122,42 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
             // TODO: process start successful ?
 
-            indicator.text = "review started in watchmode"
-
-            val reader = JsonReader(process.inputStream.bufferedReader())
-            reader.isLenient = true
-            val errorExitCode = parseReviewJsonStream(reader, process) { reviewErrors ->
-                val msgs = reviewErrors.filterNot { it.suppressed!! }.sortedWith(errorComparator(reviewErrors))
-                ApplicationManager.getApplication().invokeLater {
-                    val currentDoc = FileEditorManager.getInstance(project).selectedTextEditor?.document
-                    val msgsSorted =
-                        if (currentDoc != null) {
-                            val path = PsiDocumentManager.getInstance(project).getPsiFile(currentDoc)?.originalFile?.virtualFile?.pathRelative(project)
-                            if (path != null) {
-                                val pathFilter: (ElmReviewWatchError) -> Boolean = { it.path == path.toString() }
-                                msgs.filter(pathFilter) + msgs.filterNot(pathFilter)
-                            } else msgs
-                        } else msgs
-                    if (!isUnitTestMode) {
-                        indicator.text = "review has ${msgs.size} messages"
-                        project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).updateWatchmode(elmProject.projectDirPath, msgsSorted, null, 0)
+            try {
+                indicator.text = "review started in watchmode"
+                val reader = JsonReader(process.inputStream.bufferedReader())
+                reader.isLenient = true
+                val exitCode = parseReviewJsonStream(reader, process) { reviewErrors ->
+                    val msgs = reviewErrors.filterNot { it.suppressed != null && it.suppressed!! }.sortedWith(errorComparator(reviewErrors))
+                    if (msgs.isNotEmpty()) {
+                        ApplicationManager.getApplication().invokeLater {
+                            val currentDoc = FileEditorManager.getInstance(project).selectedTextEditor?.document
+                            val msgsSorted =
+                                if (currentDoc != null) {
+                                    val path = PsiDocumentManager.getInstance(project).getPsiFile(currentDoc)?.originalFile?.virtualFile?.pathRelative(project)
+                                    if (path != null) {
+                                        val pathFilter: (ElmReviewError) -> Boolean = { it.path == path.toString() }
+                                        msgs.filter(pathFilter) + msgs.filterNot(pathFilter)
+                                    } else msgs
+                                } else msgs
+                            if (!isUnitTestMode) {
+                                indicator.text = "review has ${msgs.size} messages"
+                                project.messageBus.syncPublisher(ELM_REVIEW_ERRORS_TOPIC).update(elmProject.projectDirPath, msgsSorted, null, 0)
+                            }
+                        }
                     }
                 }
+                if (exitCode != 0) log.warn("elm-review exited with code $exitCode")
+            } finally {
+                process.destroyForcibly()
             }
-            log.error("elm-review exited with code $errorExitCode")
-            process.destroyForcibly()
         }
     }
 
-    private fun errorComparator(reviewErrors: List<ElmReviewWatchError>): Comparator<ElmReviewWatchError> {
-        return if (reviewErrors.isEmpty() || reviewErrors[0].regionWatch == null)
+    private fun errorComparator(reviewErrors: List<ElmReviewError>): Comparator<ElmReviewError> {
+        return if (reviewErrors.isEmpty() || reviewErrors[0].region == null)
             compareBy { it.path }
         else
-            compareBy({ it.path }, { it.regionWatch!!.start!!.line }, { it.regionWatch!!.start!!.column })
+            compareBy({ it.path }, { it.region!!.start!!.line }, { it.region!!.start!!.column })
     }
 
     private fun startProcess(cmd: List<String>, elmProject: ElmProject, project: Project): Process {
@@ -162,12 +169,12 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
         return process
     }
 
-    fun queryVersion(): Result<Version> {
+    fun queryVersion(project: Project): Result<Version> {
         val firstLine = try {
             val arguments: List<String> = listOf("--version")
             GeneralCommandLine(elmReviewExecutablePath)
                 .withParameters(arguments)
-                .execute(timeoutInMilliseconds = 3000)
+                .execute(elmReviewTool, project)
                 .stdoutLines
                 .firstOrNull()
         } catch (e: ExecutionException) {
@@ -198,5 +205,4 @@ val ELM_REVIEW_ERRORS_TOPIC = Topic("elm-review errors", ElmReviewErrorsListener
 
 interface ElmReviewErrorsListener {
     fun update(baseDirPath: Path, messages: List<ElmReviewError>, targetPath: String?, offset: Int)
-    fun updateWatchmode(baseDirPath: Path, messages: List<ElmReviewWatchError>, targetPath: String?, offset: Int)
 }
