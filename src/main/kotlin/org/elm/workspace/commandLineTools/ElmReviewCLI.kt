@@ -119,6 +119,7 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
                 proc.destroyForcibly()
                 startProcess(cmd, elmProject, project)
             }
+            project.putUserData(watchmodeKey, Optional.of(process))
 
             // TODO: process start successful ?
 
@@ -165,7 +166,6 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
             .directory(elmProject.projectDirPath.toFile())
             .start()
         Disposer.register(project) { process.destroyForcibly() }
-        project.putUserData(watchmodeKey, Optional.of(process))
         return process
     }
 
