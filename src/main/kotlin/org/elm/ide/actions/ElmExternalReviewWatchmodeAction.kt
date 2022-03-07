@@ -91,7 +91,3 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
         }
     }
 }
-
-val watchmodeKey = object : KeyWithDefaultValue<Optional<Process>>("watchmodeActive") {
-    override fun getDefaultValue(): Optional<Process> = Optional.empty()
-}

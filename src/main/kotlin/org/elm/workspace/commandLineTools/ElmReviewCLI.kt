@@ -16,16 +16,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.util.messages.Topic
-import org.elm.ide.actions.watchmodeKey
 import org.elm.openapiext.*
-import org.elm.workspace.ElmProject
-import org.elm.workspace.ParseException
-import org.elm.workspace.Version
-import org.elm.workspace.elmReviewTool
-import org.elm.workspace.elmreview.*
+import org.elm.workspace.*
+import org.elm.workspace.elmreview.ElmReviewError
+import org.elm.workspace.elmreview.parseReviewJsonStream
+import org.elm.workspace.elmreview.readErrorReport
 import java.nio.file.Path
-import java.util.*
-import kotlin.Comparator
 import kotlin.io.path.absolutePathString
 
 private val log = logger<ElmReviewCLI>()
@@ -110,18 +106,12 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
         executeReviewAsync(project) { indicator ->
 
-            // TODO use projectService instead of userData ?
-            val activeProcess = project.getUserData(watchmodeKey)
-            val process = if (activeProcess?.isEmpty == true) {
-                startProcess(cmd, elmProject, project)
-            } else {
-                val proc = activeProcess!!.get()
-                proc.destroyForcibly()
-                startProcess(cmd, elmProject, project)
-            }
-            project.putUserData(watchmodeKey, Optional.of(process))
+            val elmReviewService = project.getService(ElmReviewService::class.java)
+            elmReviewService.activeWatchmodeProcess?.destroyForcibly()
+            val process = startProcess(cmd, elmProject, project)
+            elmReviewService.activeWatchmodeProcess = process
 
-            // TODO: process start successful ?
+            Disposer.register(project) { process.destroyForcibly() }
 
             try {
                 indicator.text = "review started in watchmode"
@@ -161,13 +151,10 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
             compareBy({ it.path }, { it.region!!.start!!.line }, { it.region!!.start!!.column })
     }
 
-    private fun startProcess(cmd: List<String>, elmProject: ElmProject, project: Project): Process {
-        val process = ProcessBuilder(cmd)
+    private fun startProcess(cmd: List<String>, elmProject: ElmProject, project: Project): Process =
+        ProcessBuilder(cmd)
             .directory(elmProject.projectDirPath.toFile())
             .start()
-        Disposer.register(project) { process.destroyForcibly() }
-        return process
-    }
 
     fun queryVersion(project: Project): Result<Version> {
         val firstLine = try {
