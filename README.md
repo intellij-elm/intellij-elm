@@ -78,7 +78,7 @@ Licensing see: https://github.com/clojj/intellij-elm/blob/master/LICENSE.txt and
 
 - Manually:
 
-  Download the [latest release](https://github.com/clojj/IntelliElm/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/utiliteez/intellij-elm/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 
