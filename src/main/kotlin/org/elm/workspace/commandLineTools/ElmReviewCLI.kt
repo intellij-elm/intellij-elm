@@ -33,16 +33,15 @@ private val log = logger<ElmReviewCLI>()
 class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
     fun runReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?, currentFile: VirtualFile? = null) {
-        val arguments: List<String> = listOf(
-            "--report=json",
-            // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
-            // "--debug",
-            "--namespace=intellij-elm",
-            if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
-        )
-        val generalCommandLine = GeneralCommandLine(elmReviewExecutablePath)
-            .withWorkDirectory(elmProject.projectDirPath.toString())
-            .withParameters(arguments)
+
+        // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
+        // "--debug",
+
+        val arguments = listOf("--report=json", "--namespace=intellij-elm") +
+                if (elmProject is ElmApplicationProject) "--config=." else "" +
+                        if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
+
+        val generalCommandLine = GeneralCommandLine(elmReviewExecutablePath).withWorkDirectory(elmProject.projectDirPath.toString()).withParameters(arguments)
 
         executeReviewAsync(project) { indicator ->
 
@@ -94,21 +93,20 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
     fun watchReview(project: Project, elmProject: ElmProject, elmCompiler: ElmCLI?) {
 
-        val cmd: List<String> = listOf(
-            elmReviewExecutablePath.absolutePathString(),
-            "--watch",
-            "--report=json",
-            // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
-            // "--debug",
-            "--namespace=intellij-elm",
-            if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
-        )
+        // This option makes the CLI output non-JSON output, but can be useful to debug what is happening
+        // "--debug",
+
+        val arguments = listOf("--watch", "--report=json", "--namespace=intellij-elm") +
+                if (elmProject is ElmApplicationProject) "--config=." else "" +
+                        if (elmCompiler == null) "" else "--compiler=${elmCompiler.elmExecutablePath}"
+
+        val command: List<String> = listOf(elmReviewExecutablePath.absolutePathString(), *arguments.toTypedArray())
 
         executeReviewAsync(project) { indicator ->
 
             val elmReviewService = project.getService(ElmReviewService::class.java)
             elmReviewService.activeWatchmodeProcess?.destroyForcibly()
-            val process = startProcess(cmd, elmProject, project)
+            val process = startProcess(command, elmProject, project)
             elmReviewService.activeWatchmodeProcess = process
 
             Disposer.register(project) { process.destroyForcibly() }

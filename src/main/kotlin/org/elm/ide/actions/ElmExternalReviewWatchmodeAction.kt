@@ -15,9 +15,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
 import org.elm.openapiext.saveAllDocuments
+import org.elm.workspace.*
 import org.elm.workspace.compiler.findEntrypoints
-import org.elm.workspace.elmToolchain
-import org.elm.workspace.elmWorkspace
 import java.util.*
 
 private val log = logger<ElmExternalReviewAction>()
@@ -70,6 +69,9 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
         val elmCLI = project.elmToolchain.elmCLI
             ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
 
+        val lamderaCLI = project.elmToolchain.lamderaCLI
+            ?: return showError(project, "Please set the path to the 'lamdera' binary", includeFixAction = true)
+
         val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
             ?: return showError(project, "Could not determine active Elm project's path")
 
@@ -78,7 +80,10 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
 
         try {
             val currentFileInEditor: VirtualFile? = e.getData(PlatformDataKeys.VIRTUAL_FILE)
-            val compiledSuccessfully = elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
+            val compiledSuccessfully = if (elmProject is LamderaApplicationProject)
+                lamderaCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
+            else
+                elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
             if (compiledSuccessfully) {
                 elmReviewCLI.watchReview(project, elmProject, project.elmToolchain.elmCLI)
             }

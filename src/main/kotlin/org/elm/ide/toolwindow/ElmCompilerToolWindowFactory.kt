@@ -20,16 +20,17 @@ class ElmCompilerToolWindowFactory : ToolWindowFactory {
                     val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "Elm Compiler", createExitAction = false, createToolbar = true)
 
                     messages.forEachIndexed { index, elmError ->
-                        val sourceLocation = elmError.location!!
-                        val virtualFile = baseDirPath.resolve(sourceLocation.path).let {
-                            LocalFileSystem.getInstance().findFileByPath(it)
-                        }
+                        val sourceLocation = elmError.location
+                        val virtualFile = sourceLocation?.let {
+                            baseDirPath.resolve(sourceLocation.path).let {
+                                LocalFileSystem.getInstance().findFileByPath(it)
+                            }                        }
                         val encodedIndex = "\u200B".repeat(index)
                         errorTreeViewPanel.addMessage(
                             MessageCategory.ERROR, arrayOf("$encodedIndex${elmError.title}"),
                             virtualFile,
-                            sourceLocation.region?.start?.let { it.line - 1 } ?: 0,
-                            sourceLocation.region?.start?.let { it.column - 1 } ?: 0,
+                            sourceLocation?.region?.start?.let { it.line - 1 } ?: 0,
+                            sourceLocation?.region?.start?.let { it.column - 1 } ?: 0,
                             elmError.html
                         )
                     }

@@ -138,6 +138,7 @@ class ElmNeedsConfigNotificationProvider(
             is LamderaApplicationProject -> elmProject.elmVersion.toString()
             is ElmApplicationProject -> elmProject.elmVersion.toString()
             is ElmPackageProject -> elmProject.elmVersion.toString()
+            is ElmReviewProject -> elmProject.elmVersion.toString()
         }
         val manifestFileName = elmProject.manifestPath.fileName.toString()
         return EditorNotificationPanel().apply {

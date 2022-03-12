@@ -24,10 +24,10 @@ import com.intellij.openapi.startup.StartupManager
 import com.intellij.openapi.util.EmptyRunnable
 import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.impl.source.resolve.ResolveCache
-import com.intellij.util.Consumer
 import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
@@ -39,6 +39,7 @@ import org.elm.utils.runAsyncTask
 import org.elm.workspace.ElmToolchain.Companion.DEFAULT_FORMAT_ON_SAVE
 import org.elm.workspace.ElmToolchain.Companion.ELM_JSON
 import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.LamderaCLI
 import org.elm.workspace.ui.ElmWorkspaceConfigurable
 import org.jdom.Element
 import java.nio.file.Path
@@ -86,13 +87,13 @@ class ElmWorkspaceService(
 
     // SETTINGS AND TOOLCHAIN
 
-
     /* A nice view of the settings to the outside world */
     data class Settings(val toolchain: ElmToolchain)
 
     /* Representation of settings suitable for editor UI and serialization */
     data class RawSettings(
             val elmCompilerPath: String = "",
+            val lamderaCompilerPath: String = "",
             val elmFormatPath: String = "",
             val elmTestPath: String = "",
             val elmReviewPath: String = "",
@@ -105,6 +106,7 @@ class ElmWorkspaceService(
             val raw = rawSettingsRef.get()
             val toolchain = ElmToolchain(
                     elmCompilerPath = raw.elmCompilerPath,
+                    lamderaCompilerPath = raw.lamderaCompilerPath,
                     elmFormatPath = raw.elmFormatPath,
                     elmTestPath = raw.elmTestPath,
                     elmReviewPath = raw.elmReviewPath,
@@ -194,18 +196,23 @@ class ElmWorkspaceService(
      */
     private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
+
                 val elmCLI = settings.toolchain.elmCLI
                         ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
-
-                val compilerVersion = elmCLI.queryVersion(intellijProject).orNull()
+                val elmCompilerVersion = elmCLI.queryVersion(intellijProject).orNull()
                         ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
+                val lamderaCLI = settings.toolchain.lamderaCLI
+                        ?: throw ProjectLoadException("Must specify a valid path to Lamdera binary in Settings")
+                val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
+                        ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
 
                 if (installDeps) {
-                    installProjectDeps(manifestPath, elmCLI)
+                    installProjectDeps(manifestPath, elmCLI, lamderaCLI)
                 }
 
                 // not thread-safe; do not reuse across threads!
-                val repo = ElmPackageRepository(compilerVersion)
+                // TODO lamderaCompilerVersion
+                val repo = ElmPackageRepository(elmCompilerVersion)
 
                 // External files may have been created/modified by the Elm compiler. Refresh.
                 findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
@@ -226,7 +233,7 @@ class ElmWorkspaceService(
                 }
             }
 
-    private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI): Boolean {
+    private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI, lamderaCLI: LamderaCLI): Boolean {
         // The only way to install an Elm project's dependencies is to compile
         // the project. But the project may not be in a compilable state when
         // we try to load it. So we will copy the `elm.json` into a temp dir
@@ -262,11 +269,15 @@ class ElmWorkspaceService(
         // Run the Elm compiler to install the dependencies
         val tmpEntryPoint: Triple<Path, String?, Int> = Triple(
             tempMain.toPath(),
-            null,
+            tempMain.path, // VfsUtilCore.getRelativePath(it, projectDir),
             0 // mainEntryPoint.textOffset
         )
 
-        val success = elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
+        val success =
+            if (dto.has("lamdera/core"))
+                elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
+            else
+                lamderaCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint))
 
         // Cleanup
         FileUtil.delete(dir)
@@ -545,8 +556,7 @@ fun asyncAutoDiscoverWorkspace(project: Project, explicitRequest: Boolean = fals
         project.elmWorkspace.useToolchain(suggestedToolchain)
     }
 
-    return project.elmWorkspace.asyncDiscoverAndRefresh()
-            .thenApply { Unit }
+    return project.elmWorkspace.asyncDiscoverAndRefresh().thenApply { }
 }
 
 

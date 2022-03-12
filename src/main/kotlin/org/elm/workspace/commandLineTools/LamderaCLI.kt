@@ -1,23 +1,23 @@
 package org.elm.workspace.commandLineTools
 
 import com.intellij.execution.ExecutionException
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import org.elm.openapiext.*
-import org.elm.workspace.ElmProject
-import org.elm.workspace.ParseException
-import org.elm.workspace.Version
+import org.elm.workspace.*
 import org.elm.workspace.compiler.ElmBuildAction
 import org.elm.workspace.compiler.ElmError
 import org.elm.workspace.compiler.elmJsonToCompilerMessages
-import org.elm.workspace.elmCompilerTool
 import java.nio.file.Path
 
+private val log = logger<LamderaCLI>()
+
 /**
- * Interact with external `elm` process (the compiler, package manager, etc.)
+ * Interact with external `lamdera` process (the compiler, package manager, etc.)
  */
-class ElmCLI(val elmExecutablePath: Path) {
+class LamderaCLI(val lamderaExecutablePath: Path) {
 
     fun make(project: Project, workDir: Path, elmProject: ElmProject?, entryPoints: List<Triple<Path, String?, Int>?>, jsonReport: Boolean = false, currentFile: VirtualFile? = null): Boolean {
 
@@ -28,7 +28,7 @@ class ElmCLI(val elmExecutablePath: Path) {
         val targetPath = entries.first().second
         val offset = entries.first().third
         val params = (listOf("make") + filePathsToCompile + listOf("--output=/dev/null")).toTypedArray()
-        val output = GeneralCommandLine(elmExecutablePath)
+        val output = GeneralCommandLine(lamderaExecutablePath)
             .withWorkDirectory(workDir)
             .withParameters(*params)
             .apply { if (jsonReport) addParameter("--report=json") }
@@ -52,8 +52,7 @@ class ElmCLI(val elmExecutablePath: Path) {
         if (elmProject == null) {
             // from ElmWorkSpaceService
             if (!output.isSuccess) {
-                // TODO Lamdera
-                //  org.elm.workspace.log.error("Failed to install deps: Elm compiler failed: ${output.stderr}")
+                log.error("Failed to install dependencies: Lamdera compiler failed: ${output.stderr}")
                 return false
             }
             return true
@@ -73,7 +72,7 @@ class ElmCLI(val elmExecutablePath: Path) {
     fun queryVersion(project: Project): Result<Version> {
         // Output of `elm --version` is a single line containing the version number (e.g. `0.19.0\n`)
         val firstLine = try {
-            GeneralCommandLine(elmExecutablePath).withParameters("--version")
+            GeneralCommandLine(lamderaExecutablePath).withParameters("--version")
                     .execute(elmCompilerTool, project)
                     .stdoutLines
                     .firstOrNull()

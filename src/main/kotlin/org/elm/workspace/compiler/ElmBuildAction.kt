@@ -17,7 +17,9 @@ import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.lookup.ClientLocation
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmFile
+import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
+import org.elm.lang.core.types.Ty
 import org.elm.lang.core.types.TyUnion
 import org.elm.lang.core.types.TyUnknown
 import org.elm.lang.core.types.findTy
@@ -38,6 +40,9 @@ class ElmBuildAction : AnAction() {
         val elmCLI = project.elmToolchain.elmCLI
             ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
 
+        val lamderaCLI = project.elmToolchain.lamderaCLI
+            ?: return showError(project, "Please set the path to the 'lamdera' binary", includeFixAction = true)
+
         val activeFile = findActiveFile(e, project)
             ?: return showError(project, "Could not determine active Elm file")
 
@@ -55,7 +60,10 @@ class ElmBuildAction : AnAction() {
 
         try {
             val currentFileInEditor: VirtualFile? = e.getData(PlatformDataKeys.VIRTUAL_FILE)
-            elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
+            if (elmProject is LamderaApplicationProject)
+                lamderaCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
+            else
+                elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
         } catch (e: ExecutionException) {
             return showError(
                 project,
@@ -144,6 +152,35 @@ fun findEntrypoints(
                     0
                 )
             )
+
+        is ElmReviewProject -> {
+            val configEntryPoints = findReviewConfigEntryPoint(project, elmProject)
+            val result = configEntryPoints.map { configEntryPoint ->
+                configEntryPoint.containingFile.virtualFile?.let {
+                    Triple(
+                        it.pathRelative(project),
+                        VfsUtilCore.getRelativePath(it, projectDir),
+                        configEntryPoint.textOffset
+                    )
+                }
+            }
+            result.ifEmpty {
+                showError(
+                    project,
+                    "Cannot find your Elm app's main entry point. Please make sure that it has a type annotation."
+                )
+                emptyList()
+            }
+/* TODO compile any file !
+            listOf(
+                Triple(
+                    activeFile.pathAsPath,
+                    VfsUtilCore.getRelativePath(activeFile, projectDir),
+                    0
+                )
+            )
+*/
+        }
     }
 
 private fun findAppEntryPoints(project: Project, elmProject: ElmProject): List<ElmFunctionDeclarationLeft> {
@@ -172,6 +209,14 @@ private fun findMainEntryPoint(project: Project, elmProject: ElmProject): List<E
                 key != null && key in ElmBuildAction.elmMainTypes && decl.isTopLevel
             }
     return elmEntries
+}
+
+private fun findReviewConfigEntryPoint(project: Project, elmProject: ElmProject): List<ElmNamedElement> {
+    val configEntries =
+        // TODO check type too !?
+        ElmLookup.findByName<ElmFunctionDeclarationLeft>("config", ElmBuildAction.LookupClientLocation(project, elmProject))
+            .filter { decl -> (decl.findTy() is Ty) && decl.isTopLevel }
+    return configEntries
 }
 
 private fun showError(project: Project, message: String, includeFixAction: Boolean = false) {

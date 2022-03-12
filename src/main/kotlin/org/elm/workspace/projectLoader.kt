@@ -62,14 +62,27 @@ class ElmProjectLoader(
                                 testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
                             )
                         } else {
-                            ElmApplicationProject(
-                                manifestPath = manifestPath,
-                                elmVersion = dto.elmVersion,
-                                dependencies = dto.deps.direct.keys.map { loader.load(it) },
-                                testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
-                                sourceDirectories = dto.sourceDirectories.map { Paths.get(it) },
-                                testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
-                            )
+                            // TODO improve detection elm-review ONLY project: toplevel type `List Rule` ?
+                            val reviewDeps = setOf("jfmengels/elm-review", "elm/core", "stil4m/elm-syntax")
+                            if (dto.deps.direct.keys.intersect(reviewDeps).size == reviewDeps.size) {
+                                ElmReviewProject(
+                                    manifestPath = manifestPath,
+                                    elmVersion = dto.elmVersion,
+                                    dependencies = dto.deps.direct.keys.map { loader.load(it) },
+                                    testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
+                                    sourceDirectories = dto.sourceDirectories.map { Paths.get(it) },
+                                    testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
+                                )
+                            } else {
+                                ElmApplicationProject(
+                                    manifestPath = manifestPath,
+                                    elmVersion = dto.elmVersion,
+                                    dependencies = dto.deps.direct.keys.map { loader.load(it) },
+                                    testDependencies = dto.testDeps.direct.keys.map { loader.load(it) },
+                                    sourceDirectories = dto.sourceDirectories.map { Paths.get(it) },
+                                    testsRelativeDirPath = findAndParseSidecarFor(manifestPath)?.testDirectory ?: DEFAULT_TESTS_DIR_NAME
+                                )
+                            }
                         }
                     }
                     is ElmPackageProjectDTO -> {
