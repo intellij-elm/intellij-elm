@@ -134,6 +134,7 @@ class ElmWorkspaceService(
     fun useToolchain(toolchain: ElmToolchain) {
         modifySettings {
             it.copy(elmCompilerPath = toolchain.elmCompilerPath.toString(),
+                    lamderaCompilerPath = toolchain.lamderaCompilerPath.toString(),
                     elmFormatPath = toolchain.elmFormatPath.toString(),
                     elmTestPath = toolchain.elmTestPath.toString(),
                     elmReviewPath = toolchain.elmReviewPath.toString(),
@@ -426,6 +427,7 @@ class ElmWorkspaceService(
         state.addContent(settingsElement)
         val raw = rawSettingsRef.get()
         settingsElement.setAttribute("elmCompilerPath", raw.elmCompilerPath)
+        settingsElement.setAttribute("lamderaCompilerPath", raw.lamderaCompilerPath)
         settingsElement.setAttribute("elmFormatPath", raw.elmFormatPath)
         settingsElement.setAttribute("elmTestPath", raw.elmTestPath)
         settingsElement.setAttribute("elmReviewPath", raw.elmReviewPath)
@@ -443,6 +445,7 @@ class ElmWorkspaceService(
         // Must load the Settings before the Elm Projects in order to have an ElmToolchain ready
         val settingsElement = state.getChild("settings")
         val elmCompilerPath = settingsElement.getAttributeValue("elmCompilerPath") ?: ""
+        val lamderaCompilerPath = settingsElement.getAttributeValue("lamderaCompilerPath") ?: ""
         val elmFormatPath = settingsElement.getAttributeValue("elmFormatPath") ?: ""
         val elmTestPath = settingsElement.getAttributeValue("elmTestPath") ?: ""
         val elmReviewPath = settingsElement.getAttributeValue("elmReviewPath") ?: ""
@@ -454,6 +457,7 @@ class ElmWorkspaceService(
         modifySettings(notify = false) {
             RawSettings(
                     elmCompilerPath = elmCompilerPath,
+                    lamderaCompilerPath = lamderaCompilerPath,
                     elmFormatPath = elmFormatPath,
                     elmTestPath = elmTestPath,
                     elmReviewPath = elmReviewPath,
