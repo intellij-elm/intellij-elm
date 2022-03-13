@@ -16,6 +16,7 @@ import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.ElmFileType
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.*
+import org.elm.workspace.commandLineTools.makeProject
 import org.elm.workspace.compiler.findEntrypoints
 import java.util.*
 
@@ -66,12 +67,6 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
         val elmProject = project.elmWorkspace.findProjectForFile(activeFile)
             ?: return showError(project, "Could not determine active Elm project")
 
-        val elmCLI = project.elmToolchain.elmCLI
-            ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
-
-        val lamderaCLI = project.elmToolchain.lamderaCLI
-            ?: return showError(project, "Please set the path to the 'lamdera' binary", includeFixAction = true)
-
         val projectDir = VfsUtil.findFile(elmProject.projectDirPath, true)
             ?: return showError(project, "Could not determine active Elm project's path")
 
@@ -80,17 +75,14 @@ class ElmExternalReviewWatchmodeAction : AnAction() {
 
         try {
             val currentFileInEditor: VirtualFile? = e.getData(PlatformDataKeys.VIRTUAL_FILE)
-            val compiledSuccessfully = if (elmProject is LamderaApplicationProject)
-                lamderaCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
-            else
-                elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
+            val compiledSuccessfully = makeProject(elmProject, project, entryPoints, currentFileInEditor)
             if (compiledSuccessfully) {
                 elmReviewCLI.watchReview(project, elmProject, project.elmToolchain.elmCLI)
             }
         } catch (e: ExecutionException) {
             return showError(
                 project,
-                "Failed to run '${elmCLI.elmExecutablePath}' or '${elmReviewCLI.elmReviewExecutablePath}' executable. Are the paths correct ?",
+                "Failed to 'make' or 'review'. Are the path settings correct ?",
                 includeFixAction = true
             )
         }

@@ -27,6 +27,7 @@ import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.pathRelative
 import org.elm.openapiext.saveAllDocuments
 import org.elm.workspace.*
+import org.elm.workspace.commandLineTools.makeProject
 import java.nio.file.Path
 
 val ELM_BUILD_ACTION_ID = "Elm.Build"
@@ -36,12 +37,6 @@ class ElmBuildAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         saveAllDocuments()
         val project = e.project ?: return
-
-        val elmCLI = project.elmToolchain.elmCLI
-            ?: return showError(project, "Please set the path to the 'elm' binary", includeFixAction = true)
-
-        val lamderaCLI = project.elmToolchain.lamderaCLI
-            ?: return showError(project, "Please set the path to the 'lamdera' binary", includeFixAction = true)
 
         val activeFile = findActiveFile(e, project)
             ?: return showError(project, "Could not determine active Elm file")
@@ -60,14 +55,11 @@ class ElmBuildAction : AnAction() {
 
         try {
             val currentFileInEditor: VirtualFile? = e.getData(PlatformDataKeys.VIRTUAL_FILE)
-            if (elmProject is LamderaApplicationProject)
-                lamderaCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
-            else
-                elmCLI.make(project, elmProject.projectDirPath, elmProject, entryPoints, jsonReport = true, currentFileInEditor)
+            makeProject(elmProject, project, entryPoints, currentFileInEditor)
         } catch (e: ExecutionException) {
             return showError(
                 project,
-                "Failed to run the '${elmCLI.elmExecutablePath}' executable. Is the path correct?",
+                "Failed to 'make'. Are the path settings correct ?",
                 includeFixAction = true
             )
         }
