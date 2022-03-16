@@ -198,18 +198,14 @@ class ElmWorkspaceService(
     private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
             runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
 
-                val elmCLI = settings.toolchain.elmCLI
-                        ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
-                val elmCompilerVersion = elmCLI.queryVersion(intellijProject).orNull()
-                        ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
-                val lamderaCLI = settings.toolchain.lamderaCLI
-                        ?: throw ProjectLoadException("Must specify a valid path to Lamdera binary in Settings")
-                val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
-                        ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
+            val elmCLI = settings.toolchain.elmCLI
+                ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
+            val elmCompilerVersion = elmCLI.queryVersion(intellijProject).orNull()
+                ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
 
-                if (installDeps) {
-                    installProjectDeps(manifestPath, elmCLI, lamderaCLI)
-                }
+            if (installDeps) {
+                installProjectDeps(manifestPath, elmCLI)
+            }
 
                 // not thread-safe; do not reuse across threads!
                 // TODO lamderaCompilerVersion
@@ -234,7 +230,7 @@ class ElmWorkspaceService(
                 }
             }
 
-    private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI, lamderaCLI: LamderaCLI): Boolean {
+    private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI): Boolean {
         // The only way to install an Elm project's dependencies is to compile
         // the project. But the project may not be in a compilable state when
         // we try to load it. So we will copy the `elm.json` into a temp dir
@@ -277,8 +273,15 @@ class ElmWorkspaceService(
         val success =
             if (dto.has("lamdera/core"))
                 elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
-            else
+            else {
+                val lamderaCLI = settings.toolchain.lamderaCLI
+                    ?: throw ProjectLoadException("Must specify a valid path to Lamdera binary in Settings")
+/* TODO check version for something important
+                val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
+                    ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
+*/
                 lamderaCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint))
+            }
 
         // Cleanup
         FileUtil.delete(dir)
