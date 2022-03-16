@@ -65,20 +65,18 @@ related information [here](docs/nvm.md).
 
 <!-- Plugin description -->
 Elm & Lamdera Plugin
-
-Licensing see: https://github.com/clojj/intellij-elm/blob/master/LICENSE.txt and https://github.com/clojj/intellij-elm/tree/master/license
 <!-- Plugin description end -->
 
 ## Installation
 
 - Using IDE built-in plugin system:
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "IntelliElm"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Elm"</kbd> >
   <kbd>Install Plugin</kbd>
 
 - Manually:
 
-  Download the [latest release](https://github.com/utiliteez/intellij-elm/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/klazuka/intellij-elm/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 
