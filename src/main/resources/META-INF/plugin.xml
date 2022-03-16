@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>Elm IntelliJ NG</id>
     <name>Elm / Lamdera</name>
-    <vendor url="https://github.com/clojj/intellij-elm">clojj</vendor>
+    <vendor url="https://github.com/klazuka/intellij-elm">Keith Lazuka</vendor>
 
     <description><![CDATA[
         Provides support for Elm & Lamdera projects
