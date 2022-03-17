@@ -1,5 +1,6 @@
 package org.elm.ide.inspections
 
+
 class ElmInspectionSuppressorTest : ElmInspectionsTestBase(ElmUnusedSymbolInspection()) {
 
     fun testWithoutSuppression() = checkByText("""

@@ -107,7 +107,9 @@ sealed class ElmProject(
     fun isCompatibleWith(version: Version) =
             when (this) {
                 is ElmApplicationProject -> elmVersion.xyz == version.xyz
+                is LamderaApplicationProject -> elmVersion.xyz == version.xyz
                 is ElmPackageProject -> elmVersion.contains(version.xyz)
+                is ElmReviewProject -> elmVersion.xyz == version.xyz
             }
 
     /**
@@ -116,6 +118,15 @@ sealed class ElmProject(
     open fun isCore(): Boolean = false
 }
 
+
+class ElmReviewProject(
+    manifestPath: Path,
+    val elmVersion: Version,
+    dependencies: List<ElmPackageProject>,
+    testDependencies: List<ElmPackageProject>,
+    sourceDirectories: List<Path>,
+    testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
 
 /**
  * Represents an Elm application
@@ -128,6 +139,23 @@ class ElmApplicationProject(
         sourceDirectories: List<Path>,
         testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
 ) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
+
+
+/**
+ * Represents a Lamdera application
+ */
+class LamderaApplicationProject(
+        manifestPath: Path,
+        val elmVersion: Version,
+        dependencies: List<ElmPackageProject>,
+        testDependencies: List<ElmPackageProject>,
+        sourceDirectories: List<Path>,
+        testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
+
+
+// TODO ?
+// class ElmLamderaProgramTest: ElmProject()
 
 
 /**

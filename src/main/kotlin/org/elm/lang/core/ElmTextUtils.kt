@@ -9,6 +9,7 @@ import org.elm.lang.core.psi.elements.ElmParenthesizedExpr
 import org.elm.lang.core.psi.indentStyle
 import org.elm.lang.core.psi.startOffset
 import org.elm.utils.getIndent
+import java.util.*
 import kotlin.math.ceil
 
 /**
@@ -21,8 +22,8 @@ import kotlin.math.ceil
 fun String.toElmLowerId(): String =
         when {
             isEmpty() -> ""
-            all { it.isUpperCase() } -> toLowerCase()
-            else -> first().toLowerCase() + substring(1)
+            all { it.isUpperCase() } -> lowercase(Locale.US)
+            else -> first().lowercaseChar() + substring(1)
         }
 
 /**
@@ -90,11 +91,11 @@ class IndentedTextBuilder(startLevel: Int, val indentSize: Int) {
 
     fun appendLine(str: String = "") {
         if (str.isBlank()) {
-            buffer.appendln()
+            buffer.appendLine()
             return
         }
         buffer.append(" ".repeat(level * indentSize))
-        buffer.appendln(str)
+        buffer.appendLine(str)
     }
 
     fun build() = buffer.toString()

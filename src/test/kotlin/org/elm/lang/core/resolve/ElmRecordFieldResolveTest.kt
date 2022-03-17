@@ -1,6 +1,7 @@
 package org.elm.lang.core.resolve
 
 
+
 class ElmRecordFieldResolveTest : ElmResolveTestBase() {
     fun `test simple field access`() = checkByCode(
             """

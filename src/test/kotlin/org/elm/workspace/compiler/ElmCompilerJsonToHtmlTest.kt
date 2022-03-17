@@ -43,16 +43,23 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
               ]
             }""".trimIndent()
 
-        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">This&nbsp;value&nbsp;is&nbsp;not&nbsp;a&nbsp;function,&nbsp;but&nbsp;it&nbsp;was&nbsp;given&nbsp;1&nbsp;argument.<br><br>1|&nbsp;blah&nbsp;=&nbsp;"blah"&nbsp;32<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF5959;">^^^^^^</span><span style="color: #4F9DA6"><br>Are&nbsp;there&nbsp;any&nbsp;missing&nbsp;commas?&nbsp;Or&nbsp;missing&nbsp;parentheses?</span></body></html>"""
+        val expectedHtml =
+            """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">This&nbsp;value&nbsp;is&nbsp;not&nbsp;a&nbsp;function,&nbsp;but&nbsp;it&nbsp;was&nbsp;given&nbsp;1&nbsp;argument.<br><br>1|&nbsp;blah&nbsp;=&nbsp;"blah"&nbsp;32<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF5959;">^^^^^^</span><span style="color: #4F9DA6"><br>Are&nbsp;there&nbsp;any&nbsp;missing&nbsp;commas?&nbsp;Or&nbsp;missing&nbsp;parentheses?</span></body></html>"""
 
-        TestCase.assertEquals(elmJsonToCompilerMessages(json),
-                listOf(ElmError(
-                        title = "TOO MANY ARGS",
-                        html = expectedHtml,
-                        location = ElmLocation(
-                                path = "src/Foo.elm",
-                                moduleName = "Main",
-                                region = Region(Start(1, 8), End(1, 14))))))
+        TestCase.assertEquals(
+            listOf(
+                ElmError(
+                    title = "TOO MANY ARGS",
+                    html = expectedHtml,
+                    location = ElmLocation(
+                        path = "src/Foo.elm",
+                        moduleName = "Main",
+                        region = Region(Start(1, 8), End(1, 14))
+                    )
+                )
+            ),
+            elmJsonToCompilerMessages(json)
+        )
     }
 
     fun `test generic error without a path`() {
@@ -74,13 +81,19 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
               ]
             }""".trimIndent()
 
-        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">Your&nbsp;module&nbsp;imports&nbsp;form&nbsp;a&nbsp;cycle:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;┌─────┐<br>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">Main</span><span style="color: #4F9DA6"><br>&nbsp;&nbsp;&nbsp;&nbsp;└─────┘<br><br>Learn&nbsp;more&nbsp;about&nbsp;why&nbsp;this&nbsp;is&nbsp;disallowed&nbsp;and&nbsp;how&nbsp;to&nbsp;break&nbsp;cycles<br>here:<a href="https://elm-lang.org/0.19.0/import-cycles">https://elm-lang.org/0.19.0/import-cycles</a></span></body></html>"""
+        val expectedHtml =
+            """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">Your&nbsp;module&nbsp;imports&nbsp;form&nbsp;a&nbsp;cycle:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;┌─────┐<br>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">Main</span><span style="color: #4F9DA6"><br>&nbsp;&nbsp;&nbsp;&nbsp;└─────┘<br><br>Learn&nbsp;more&nbsp;about&nbsp;why&nbsp;this&nbsp;is&nbsp;disallowed&nbsp;and&nbsp;how&nbsp;to&nbsp;break&nbsp;cycles<br>here:<a href="https://elm-lang.org/0.19.0/import-cycles">https://elm-lang.org/0.19.0/import-cycles</a></span></body></html>"""
 
-        TestCase.assertEquals(elmJsonToCompilerMessages(json),
-                listOf(ElmError(
-                        title = "IMPORT CYCLE",
-                        html = expectedHtml,
-                        location = null)))
+        TestCase.assertEquals(
+            listOf(
+                ElmError(
+                    title = "IMPORT CYCLE",
+                    html = expectedHtml,
+                    location = null
+                )
+            ),
+            elmJsonToCompilerMessages(json)
+        )
     }
 
     fun `test generic error with a path and a null color, crazy`() {
@@ -109,16 +122,23 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
               ]
             }""".trimIndent()
 
-        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">The&nbsp;`Helper`&nbsp;module&nbsp;must&nbsp;start&nbsp;with&nbsp;a&nbsp;line&nbsp;like&nbsp;this:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">module&nbsp;Helper&nbsp;exposing&nbsp;(..)</span><span style="color: #4F9DA6"><br><br>Try&nbsp;adding&nbsp;that&nbsp;as&nbsp;the&nbsp;first&nbsp;line&nbsp;of&nbsp;your&nbsp;file!<br><br></span><span style="text-decoration: underline;color: white;">Note</span><span style="color: #4F9DA6">:&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;replace&nbsp;(..)&nbsp;with&nbsp;an&nbsp;explicit&nbsp;list&nbsp;of&nbsp;types&nbsp;and&nbsp;functions<br>you&nbsp;want&nbsp;to&nbsp;expose.&nbsp;If&nbsp;you&nbsp;know&nbsp;a&nbsp;value&nbsp;is&nbsp;only&nbsp;used&nbsp;WITHIN&nbsp;this&nbsp;module,&nbsp;it&nbsp;is<br>extra&nbsp;easy&nbsp;to&nbsp;refactor.&nbsp;This&nbsp;kind&nbsp;of&nbsp;information&nbsp;is&nbsp;great,&nbsp;especially&nbsp;as&nbsp;your<br>project&nbsp;grows!</span></body></html>"""
+        val expectedHtml =
+            """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">The&nbsp;`Helper`&nbsp;module&nbsp;must&nbsp;start&nbsp;with&nbsp;a&nbsp;line&nbsp;like&nbsp;this:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">module&nbsp;Helper&nbsp;exposing&nbsp;(..)</span><span style="color: #4F9DA6"><br><br>Try&nbsp;adding&nbsp;that&nbsp;as&nbsp;the&nbsp;first&nbsp;line&nbsp;of&nbsp;your&nbsp;file!<br><br></span><span style="text-decoration: underline;color: white;">Note</span><span style="color: #4F9DA6">:&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;replace&nbsp;(..)&nbsp;with&nbsp;an&nbsp;explicit&nbsp;list&nbsp;of&nbsp;types&nbsp;and&nbsp;functions<br>you&nbsp;want&nbsp;to&nbsp;expose.&nbsp;If&nbsp;you&nbsp;know&nbsp;a&nbsp;value&nbsp;is&nbsp;only&nbsp;used&nbsp;WITHIN&nbsp;this&nbsp;module,&nbsp;it&nbsp;is<br>extra&nbsp;easy&nbsp;to&nbsp;refactor.&nbsp;This&nbsp;kind&nbsp;of&nbsp;information&nbsp;is&nbsp;great,&nbsp;especially&nbsp;as&nbsp;your<br>project&nbsp;grows!</span></body></html>"""
 
-        TestCase.assertEquals(elmJsonToCompilerMessages(json),
-                listOf(ElmError(
-                        title = "UNNAMED MODULE",
-                        html = expectedHtml,
-                        location = ElmLocation(
-                                path = "src/Helper.elm",
-                                moduleName = null,
-                                region = null))))
+        TestCase.assertEquals(
+            listOf(
+                ElmError(
+                    title = "UNNAMED MODULE",
+                    html = expectedHtml,
+                    location = ElmLocation(
+                        path = "src/Helper.elm",
+                        moduleName = null,
+                        region = null
+                    )
+                )
+            ),
+            elmJsonToCompilerMessages(json)
+        )
     }
 
     fun `test hyperlink within a longer run of text`() {
@@ -160,17 +180,25 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
 }
 """.trimIndent()
 
-        val expectedHtml = """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">The&nbsp;`foo`&nbsp;value&nbsp;is&nbsp;defined&nbsp;directly&nbsp;in&nbsp;terms&nbsp;of&nbsp;itself,&nbsp;causing&nbsp;an&nbsp;infinite&nbsp;loop.</span><span style="text-decoration: underline;color: white;">Hint</span><span style="color: #4F9DA6">:&nbsp;The&nbsp;root&nbsp;problem&nbsp;is&nbsp;often&nbsp;a&nbsp;typo&nbsp;in&nbsp;some&nbsp;variable&nbsp;name,&nbsp;but&nbsp;I&nbsp;recommend<br>reading&nbsp;<a href="https://elm-lang.org/0.19.0/bad-recursion">https://elm-lang.org/0.19.0/bad-recursion</a>&nbsp;for&nbsp;more&nbsp;detailed&nbsp;advice,<br>especially&nbsp;if&nbsp;you&nbsp;actually&nbsp;do&nbsp;need&nbsp;a&nbsp;recursive&nbsp;value.</span></body></html>"""
+        val expectedHtml =
+            """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">The&nbsp;`foo`&nbsp;value&nbsp;is&nbsp;defined&nbsp;directly&nbsp;in&nbsp;terms&nbsp;of&nbsp;itself,&nbsp;causing&nbsp;an&nbsp;infinite&nbsp;loop.</span><span style="text-decoration: underline;color: white;">Hint</span><span style="color: #4F9DA6">:&nbsp;The&nbsp;root&nbsp;problem&nbsp;is&nbsp;often&nbsp;a&nbsp;typo&nbsp;in&nbsp;some&nbsp;variable&nbsp;name,&nbsp;but&nbsp;I&nbsp;recommend<br>reading&nbsp;<a href="https://elm-lang.org/0.19.0/bad-recursion">https://elm-lang.org/0.19.0/bad-recursion</a>&nbsp;for&nbsp;more&nbsp;detailed&nbsp;advice,<br>especially&nbsp;if&nbsp;you&nbsp;actually&nbsp;do&nbsp;need&nbsp;a&nbsp;recursive&nbsp;value.</span></body></html>"""
 
-        TestCase.assertEquals(elmJsonToCompilerMessages(json),
-                listOf(ElmError(
-                        title = "CYCLIC DEFINITION",
-                        html = expectedHtml,
-                        location = ElmLocation(
-                                path = "src/JsonTree.elm",
-                                moduleName = "JsonTree",
-                                region = Region(
-                                        start = Start(line = 54, column = 1),
-                                        end = End(line = 54, column = 4))))))
+        TestCase.assertEquals(
+            listOf(
+                ElmError(
+                    title = "CYCLIC DEFINITION",
+                    html = expectedHtml,
+                    location = ElmLocation(
+                        path = "src/JsonTree.elm",
+                        moduleName = "JsonTree",
+                        region = Region(
+                            start = Start(line = 54, column = 1),
+                            end = End(line = 54, column = 4)
+                        )
+                    )
+                )
+            ),
+            elmJsonToCompilerMessages(json)
+        )
     }
 }

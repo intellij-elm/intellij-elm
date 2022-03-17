@@ -3,7 +3,6 @@ package org.elm.lang.core.resolve.reference
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.resolve.scope.VisibleNames
 
 
 class SimpleUnionOrRecordConstructorReference(element: ElmReferenceElement)

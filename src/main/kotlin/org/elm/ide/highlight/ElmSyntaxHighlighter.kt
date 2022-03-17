@@ -6,7 +6,6 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import org.elm.ide.color.ElmColor
 import org.elm.lang.core.lexer.ElmIncrementalLexer
-import org.elm.lang.core.psi.ELM_COMMENTS
 import org.elm.lang.core.psi.ELM_KEYWORDS
 import org.elm.lang.core.psi.ELM_OPERATORS
 import org.elm.lang.core.psi.ElmTypes.*

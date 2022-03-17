@@ -1,32 +1,45 @@
 package org.elm.workspace
 
 import com.intellij.openapi.project.Project
-import org.elm.workspace.commandLineTools.ElmCLI
-import org.elm.workspace.commandLineTools.ElmFormatCLI
-import org.elm.workspace.commandLineTools.ElmTestCLI
+import org.elm.workspace.commandLineTools.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+const val elmCompilerTool = "elm"
+const val lamderaCompilerTool = "lamdera"
+const val elmFormatTool = "elm-format"
+const val elmTestTool = "elm-test"
+const val elmReviewTool = "elm-review"
+val elmTools = listOf(elmCompilerTool, lamderaCompilerTool, elmFormatTool, elmTestTool, elmReviewTool)
+
 data class ElmToolchain(
         val elmCompilerPath: Path?,
+        val lamderaCompilerPath: Path?,
         val elmFormatPath: Path?,
         val elmTestPath: Path?,
+        val elmReviewPath: Path?,
         val isElmFormatOnSaveEnabled: Boolean
 ) {
-    constructor(elmCompilerPath: String, elmFormatPath: String, elmTestPath: String, isElmFormatOnSaveEnabled: Boolean) :
+    constructor(elmCompilerPath: String, lamderaCompilerPath: String, elmFormatPath: String, elmTestPath: String, elmReviewPath: String, isElmFormatOnSaveEnabled: Boolean) :
             this(
                     if (elmCompilerPath.isNotBlank()) Paths.get(elmCompilerPath) else null,
+                    if (lamderaCompilerPath.isNotBlank()) Paths.get(lamderaCompilerPath) else null,
                     if (elmFormatPath.isNotBlank()) Paths.get(elmFormatPath) else null,
                     if (elmTestPath.isNotBlank()) Paths.get(elmTestPath) else null,
+                    if (elmReviewPath.isNotBlank()) Paths.get(elmReviewPath) else null,
                     isElmFormatOnSaveEnabled
             )
 
     val elmCLI: ElmCLI? = elmCompilerPath?.let { ElmCLI(it) }
 
+    val lamderaCLI: LamderaCLI? = lamderaCompilerPath?.let { LamderaCLI(it) }
+
     val elmFormatCLI: ElmFormatCLI? = elmFormatPath?.let { ElmFormatCLI(it) }
 
     val elmTestCLI: ElmTestCLI? = elmTestPath?.let { ElmTestCLI(it) }
+
+    val elmReviewCLI: ElmReviewCLI? = elmReviewPath?.let { ElmReviewCLI(it) }
 
     val presentableLocation: String =
             elmCompilerPath?.toString() ?: "unknown location"
@@ -41,9 +54,11 @@ data class ElmToolchain(
     fun autoDiscoverAll(project: Project): ElmToolchain {
         val suggestions = ElmSuggest.suggestTools(project)
         return copy(
-                elmCompilerPath = elmCompilerPath ?: suggestions["elm"],
-                elmFormatPath = elmFormatPath ?: suggestions["elm-format"],
-                elmTestPath = elmTestPath ?: suggestions["elm-test"]
+                elmCompilerPath = elmCompilerPath ?: suggestions[elmCompilerTool],
+                lamderaCompilerPath = lamderaCompilerPath ?: suggestions[lamderaCompilerTool],
+                elmFormatPath = elmFormatPath ?: suggestions[elmFormatTool],
+                elmTestPath = elmTestPath ?: suggestions[elmTestTool],
+                elmReviewPath = elmReviewPath ?: suggestions[elmReviewTool]
         )
     }
 
@@ -60,19 +75,22 @@ data class ElmToolchain(
          */
         const val SIDECAR_FILENAME = "elm.intellij.json"
 
-        const val DEFAULT_FORMAT_ON_SAVE = false
+        const val DEFAULT_FORMAT_ON_SAVE = true
 
         /**
          * A blank, default [ElmToolchain].
          */
         val BLANK = ElmToolchain(
                 elmCompilerPath = null,
+                lamderaCompilerPath = null,
                 elmFormatPath = null,
                 elmTestPath = null,
+                elmReviewPath = null,
                 isElmFormatOnSaveEnabled = ElmToolchain.DEFAULT_FORMAT_ON_SAVE
         )
 
         val MIN_SUPPORTED_COMPILER_VERSION = Version(0, 19, 0)
+        val MIN_SUPPORTED_LAMDERA_COMPILER_VERSION = Version(0, 19, 1) // TODO ? 0.19.1-1.0.1
 
         /**
          * Suggest a default toolchain based on common locations where Elm tools are frequently installed.

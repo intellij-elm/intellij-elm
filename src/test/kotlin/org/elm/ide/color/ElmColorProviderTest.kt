@@ -1,6 +1,6 @@
 package org.elm.ide.color
 
-import com.github.ajalt.colormath.ConvertibleColor
+import com.github.ajalt.colormath.Color
 import com.github.ajalt.colormath.HSL
 import com.github.ajalt.colormath.RGB
 import com.intellij.openapi.application.runWriteAction
@@ -9,7 +9,7 @@ import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
 
 
-internal class ElmColorProviderTest : ElmTestBase() {
+class ElmColorProviderTest : ElmTestBase() {
     //<editor-fold desc="css">
     fun `test value with other string content`() = doGutterTest(1, """
 main = ("border", "1px solid #aabbcc")
@@ -69,9 +69,9 @@ main = ("border", "1px solid #aabbcc")
     fun `test write hsl(270, 60%, 50%, 15%)`() = doCssWriteTest("hsl(270, 60%, 50%, 15%)", "hsl(123, 45%, 67%, 20%)", HSL(123, 45, 67, .2f))
     fun `test write hsl(270 60% 50% _ _15)`() = doCssWriteTest("hsl(270 60% 50% / .15)", "hsl(123 45% 67% / .2)", HSL(123, 45, 67, .2f))
     fun `test write hsl(270 60% 50% _ 15%)`() = doCssWriteTest("hsl(270 60% 50% / 15%)", "hsl(123 45% 67% / 20%)", HSL(123, 45, 67, .2f))
-    fun `test write hsl(270grad,60%,70%)`() = doCssWriteTest("hsl(270grad,60%,70%)", "hsl(136.6667grad, 45%, 67%, .2)", HSL(123, 45, 67, .2f))
-    fun `test write hsl(270rad,60%,70%)`() = doCssWriteTest("hsl(270rad,60%,70%)", "hsl(2.1468rad, 45%, 67%, .2)", HSL(123, 45, 67, .2f))
-    fun `test write hsl(270turn,60%,70%)`() = doCssWriteTest("hsl(270turn,60%,70%)", "hsl(.3417turn, 45%, 67%, .2)", HSL(123, 45, 67, .2f))
+    fun `test write hsl(270grad,60%,70%)`() = doCssWriteTest("hsl(270grad,60%,70%)", "hsl(136.6666grad, 45%, 67%, .2)", HSL(123, 45, 67, .2f))
+    fun `test write hsl(270rad,60%,70%)`() = doCssWriteTest("hsl(270rad,60%,70%)", "hsl(2.1467rad, 45%, 67%, .2)", HSL(123, 45, 67, .2f))
+    fun `test write hsl(270turn,60%,70%)`() = doCssWriteTest("hsl(270turn,60%,70%)", "hsl(.3416turn, 45%, 67%, .2)", HSL(123, 45, 67, .2f))
     //</editor-fold>
 
     //<editor-fold desc="functions">
@@ -218,15 +218,15 @@ main = rgb
         assertEquals(expected, actual)
     }
 
-    private fun doCssWriteTest(before: String, after: String, color: ConvertibleColor = RGB(123, 45, 67)) {
+    private fun doCssWriteTest(before: String, after: String, color: Color = RGB(123, 45, 67)) {
         doWriteTest(color, "main = \". $before {-caret-}.\"", "main = \". $after .\"")
     }
 
-    private fun doFuncWriteTest(func: String, before: String, after: String, color: ConvertibleColor = RGB(123, 45, 67)) {
+    private fun doFuncWriteTest(func: String, before: String, after: String, color: Color = RGB(123, 45, 67)) {
         doWriteTest(color, "main = $func{-caret-} $before", "main = $func $after")
     }
 
-    private fun doWriteTest(color: ConvertibleColor, @Language("Elm") before: String, @Language("Elm") after: String) {
+    private fun doWriteTest(color: Color, @Language("Elm") before: String, @Language("Elm") after: String) {
         InlineFile(before)
         val element = myFixture.file.findElementAt(myFixture.caretOffset - 1)
         requireNotNull(element)

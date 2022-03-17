@@ -1,6 +1,5 @@
 package org.elm.ide.typing
 
-import com.intellij.application.options.CodeStyle
 import com.intellij.lang.SmartEnterProcessorWithFixers
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement

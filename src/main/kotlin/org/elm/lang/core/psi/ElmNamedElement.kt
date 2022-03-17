@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.*
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
-import com.intellij.util.IncorrectOperationException
 import org.elm.ide.presentation.getPresentation
 import org.elm.lang.core.psi.ElmTypes.*
 import org.elm.lang.core.psi.IdentifierCase.LOWER

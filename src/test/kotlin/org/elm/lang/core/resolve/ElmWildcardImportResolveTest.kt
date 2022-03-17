@@ -1,5 +1,6 @@
 package org.elm.lang.core.resolve
 
+
 class ElmWildcardImportResolveTest : ElmResolveTestBase() {
 
     fun `test explicit import shadowing wildcard`() = stubOnlyResolve(

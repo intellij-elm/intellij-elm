@@ -19,12 +19,8 @@ import org.elm.openapiext.Result
 import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.fileSystemPathTextField
 import org.elm.utils.layout
-import org.elm.workspace.ElmSuggest
-import org.elm.workspace.ElmToolchain
-import org.elm.workspace.commandLineTools.ElmCLI
-import org.elm.workspace.commandLineTools.ElmFormatCLI
-import org.elm.workspace.commandLineTools.ElmTestCLI
-import org.elm.workspace.elmWorkspace
+import org.elm.workspace.*
+import org.elm.workspace.commandLineTools.*
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.*
@@ -32,6 +28,10 @@ import javax.swing.*
 class ElmWorkspaceConfigurable(
         private val project: Project
 ) : Configurable, Disposable {
+
+    init {
+        Disposer.register(project, this)
+    }
 
     private val uiDebouncer = UiDebouncer(this)
 
@@ -43,15 +43,19 @@ class ElmWorkspaceConfigurable(
         { update() }
     }
 
-    private val elmPathField = toolPathTextField("elm")
-    private val elmFormatPathField = toolPathTextField("elm-format")
-    private val elmTestPathField = toolPathTextField("elm-test")
+    private val elmPathField = toolPathTextField(elmCompilerTool)
+    private val lamderaPathField = toolPathTextField(lamderaCompilerTool)
+    private val elmFormatPathField = toolPathTextField(elmFormatTool)
+    private val elmTestPathField = toolPathTextField(elmTestTool)
+    private val elmReviewPathField = toolPathTextField(elmReviewTool)
 
     private val elmVersionLabel = JLabel()
+    private val lamderaVersionLabel = JLabel()
     private val elmFormatVersionLabel = JLabel()
     private val elmFormatOnSaveCheckbox = JCheckBox()
     private val elmFormatShortcutLabel = HyperlinkLabel()
     private val elmTestVersionLabel = JLabel()
+    private val elmReviewVersionLabel = JLabel()
 
     override fun createComponent(): JComponent {
         elmFormatOnSaveCheckbox.addChangeListener { update() }
@@ -61,18 +65,26 @@ class ElmWorkspaceConfigurable(
 
         val panel = layout {
             block("Elm Compiler") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, "elm"))
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, elmCompilerTool))
                 row("Version:", elmVersionLabel)
             }
-            block("elm-format") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, "elm-format"))
+            block("Lamdera Compiler") {
+                row("Location:", pathFieldPlusAutoDiscoverButton(lamderaPathField, lamderaCompilerTool))
+                row("Version:", lamderaVersionLabel)
+            }
+            block(elmFormatTool) {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, elmFormatTool))
                 row("Version:", elmFormatVersionLabel)
                 row("Keyboard shortcut:", elmFormatShortcutLabel)
                 row("Run when file saved?", elmFormatOnSaveCheckbox)
             }
-            block("elm-test") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(elmTestPathField, "elm-test"))
+            block(elmTestTool) {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmTestPathField, elmTestTool))
                 row("Version:", elmTestVersionLabel)
+            }
+            block(elmReviewTool) {
+                row("Location:", pathFieldPlusAutoDiscoverButton(elmReviewPathField, elmReviewTool))
+                row("Version:", elmReviewVersionLabel)
             }
             block("nvm") {
                 val nvmUrl = "https://github.com/nvm-sh/nvm"
@@ -82,7 +94,7 @@ class ElmWorkspaceConfigurable(
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
-        UiNotifyConnector(panel, object : Activatable.Adapter() {
+        UiNotifyConnector(panel, object : Activatable {
             override fun showNotify() = update()
         }).also { Disposer.register(this, it) }
 
@@ -109,23 +121,36 @@ class ElmWorkspaceConfigurable(
             keymapPanel.selectAction(actionId)
         }
     }
-
+    data class Results(
+            val compilerResult: Result<Version>,
+            val lamderaResult: Result<Version>,
+            val elmFormatResult: Result<Version>,
+            val elmTestResult: Result<Version>,
+            val elmReviewResult: Result<Version>
+    )
+    
     private fun update() {
         val elmCompilerPath = Paths.get(elmPathField.text)
+        val lamderaCompilerPath = Paths.get(lamderaPathField.text)
         val elmFormatPath = Paths.get(elmFormatPathField.text)
         val elmTestPath = Paths.get(elmTestPathField.text)
+        val elmReviewPath = Paths.get(elmReviewPathField.text)
         val elmCLI = ElmCLI(elmCompilerPath)
+        val lamderaCLI = LamderaCLI(lamderaCompilerPath)
         val elmFormatCLI = ElmFormatCLI(elmFormatPath)
         val elmTestCLI = ElmTestCLI(elmTestPath)
+        val elmReviewCLI = ElmReviewCLI(elmReviewPath)
         uiDebouncer.run(
                 onPooledThread = {
-                    Triple(
-                            elmCLI.queryVersion(),
-                            elmFormatCLI.queryVersion(),
-                            elmTestCLI.queryVersion()
+                    Results(
+                            elmCLI.queryVersion(project),
+                            lamderaCLI.queryVersion(project),
+                            elmFormatCLI.queryVersion(project),
+                            elmTestCLI.queryVersion(project),
+                            elmReviewCLI.queryVersion(project)
                     )
                 },
-                onUiThread = { (compilerResult, elmFormatResult, elmTestResult) ->
+                onUiThread = { (compilerResult, lamderaCompilerResult, elmFormatResult, elmTestResult, elmReviewResult) ->
                     with(elmVersionLabel) {
                         when (compilerResult) {
                             is Result.Ok ->
@@ -141,12 +166,40 @@ class ElmWorkspaceConfigurable(
                                 }
                             is Result.Err -> {
                                 when {
-                                    !elmCompilerPath.isValidFor("elm") -> {
+                                    !elmCompilerPath.isValidFor(elmCompilerTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }
                                     else -> {
                                         text = compilerResult.reason
+                                        foreground = JBColor.RED
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    with(lamderaVersionLabel) {
+                        when (lamderaCompilerResult) {
+                            is Result.Ok ->
+                                when {
+                                    lamderaCompilerResult.value < ElmToolchain.MIN_SUPPORTED_LAMDERA_COMPILER_VERSION -> {
+                                        text = "${lamderaCompilerResult.value} (not supported)"
+                                        foreground = JBColor.RED
+                                    }
+                                    else -> {
+                                        text = lamderaCompilerResult.value.toString()
+                                        foreground = JBColor.foreground()
+                                    }
+                                }
+                            is Result.Err -> {
+                                when {
+                                    !elmCompilerPath.isValidFor(elmCompilerTool) -> {
+                                        text = ""
+                                        foreground = JBColor.foreground()
+                                    }
+                                    else -> {
+                                        text = lamderaCompilerResult.reason
                                         foreground = JBColor.RED
                                     }
                                 }
@@ -162,7 +215,7 @@ class ElmWorkspaceConfigurable(
                             }
                             is Result.Err -> {
                                 when {
-                                    !elmFormatPath.isValidFor("elm-format") -> {
+                                    !elmFormatPath.isValidFor(elmFormatTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }
@@ -183,12 +236,33 @@ class ElmWorkspaceConfigurable(
                             }
                             is Result.Err -> {
                                 when {
-                                    !elmTestPath.isValidFor("elm-test") -> {
+                                    !elmTestPath.isValidFor(elmTestTool) -> {
                                         text = ""
                                         foreground = JBColor.foreground()
                                     }
                                     else -> {
                                         text = elmTestResult.reason
+                                        foreground = JBColor.RED
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    with(elmReviewVersionLabel) {
+                        when (elmReviewResult) {
+                            is Result.Ok -> {
+                                text = elmReviewResult.value.toString()
+                                foreground = JBColor.foreground()
+                            }
+                            is Result.Err -> {
+                                when {
+                                    !elmReviewPath.isValidFor(elmReviewTool) -> {
+                                        text = ""
+                                        foreground = JBColor.foreground()
+                                    }
+                                    else -> {
+                                        text = elmReviewResult.reason
                                         foreground = JBColor.RED
                                     }
                                 }
@@ -205,6 +279,7 @@ class ElmWorkspaceConfigurable(
             else -> shortcuts.joinToString(", ") { KeymapUtil.getShortcutText(it) }
         }
         elmFormatShortcutLabel.setHyperlinkText(shortcutStatus + " ", "Change", "")
+        // TODO use: elmFormatShortcutLabel.setTextWithHyperlink("$shortcutStatus ")
     }
 
     override fun dispose() {
@@ -218,14 +293,18 @@ class ElmWorkspaceConfigurable(
     override fun reset() {
         val settings = project.elmWorkspace.rawSettings
         val elmCompilerPath = settings.elmCompilerPath
+        val lamderaCompilerPath = settings.lamderaCompilerPath
         val elmFormatPath = settings.elmFormatPath
         val isElmFormatOnSaveEnabled = settings.isElmFormatOnSaveEnabled
         val elmTestPath = settings.elmTestPath
+        val elmReviewPath = settings.elmReviewPath
 
         elmPathField.text = elmCompilerPath
+        lamderaPathField.text = lamderaCompilerPath
         elmFormatPathField.text = elmFormatPath
         elmFormatOnSaveCheckbox.isSelected = isElmFormatOnSaveEnabled
         elmTestPathField.text = elmTestPath
+        elmReviewPathField.text = elmReviewPath
 
         update()
     }
@@ -233,8 +312,10 @@ class ElmWorkspaceConfigurable(
     override fun apply() {
         project.elmWorkspace.modifySettings {
             it.copy(elmCompilerPath = elmPathField.text,
+                    lamderaCompilerPath = lamderaPathField.text,
                     elmFormatPath = elmFormatPathField.text,
                     elmTestPath = elmTestPathField.text,
+                    elmReviewPath = elmReviewPathField.text,
                     isElmFormatOnSaveEnabled = isOnSaveHookEnabledAndSelected()
             )
         }
@@ -246,8 +327,10 @@ class ElmWorkspaceConfigurable(
     override fun isModified(): Boolean {
         val settings = project.elmWorkspace.rawSettings
         return elmPathField.text != settings.elmCompilerPath
+                || lamderaPathField.text != settings.lamderaCompilerPath
                 || elmFormatPathField.text != settings.elmFormatPath
                 || elmTestPathField.text != settings.elmTestPath
+                || elmReviewPathField.text != settings.elmReviewPath
                 || isOnSaveHookEnabledAndSelected() != settings.isElmFormatOnSaveEnabled
     }
 

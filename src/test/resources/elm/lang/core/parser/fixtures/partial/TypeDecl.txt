@@ -1,0 +1,77 @@
+Elm File
+  ElmTypeDeclaration(TYPE_DECLARATION)
+    PsiElement(TYPE)('type')
+    PsiWhiteSpace(' ')
+    PsiElement(UPPER_CASE_IDENTIFIER)('User')
+    PsiErrorElement:EQ or LOWER_CASE_IDENTIFIER expected, got '{'
+      <empty list>
+    PsiWhiteSpace(' ')
+    PsiElement(DUMMY_BLOCK)
+      PsiErrorElement:EQ, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected, got '{'
+        PsiElement(LEFT_BRACE)('{')
+      PsiElement(DUMMY_BLOCK)
+        PsiWhiteSpace(' ')
+        PsiElement(LOWER_CASE_IDENTIFIER)('xyz')
+      PsiWhiteSpace(' ')
+      PsiElement(RIGHT_BRACE)('}')
+    PsiErrorElement:unmatched input
+      <empty list>
+  PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
+  ElmTypeDeclaration(TYPE_DECLARATION)
+    PsiElement(TYPE)('type')
+    PsiWhiteSpace(' ')
+    PsiElement(UPPER_CASE_IDENTIFIER)('User')
+    PsiWhiteSpace(' ')
+    PsiElement(EQ)('=')
+    PsiWhiteSpace(' ')
+    PsiErrorElement:UPPER_CASE_IDENTIFIER expected, got 'if'
+      PsiElement(IF)('if')
+    PsiWhiteSpace(' ')
+    PsiElement(NUMBER_LITERAL)('0')
+    PsiWhiteSpace(' ')
+    PsiElement(THEN)('then')
+    PsiWhiteSpace(' ')
+    PsiElement(NUMBER_LITERAL)('1')
+    PsiWhiteSpace(' ')
+    PsiElement(ELSE)('else')
+    PsiWhiteSpace(' ')
+    PsiElement(NUMBER_LITERAL)('2')
+    PsiErrorElement:unmatched input
+      <empty list>
+  PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
+  ElmTypeDeclaration(TYPE_DECLARATION)
+    PsiElement(TYPE)('type')
+    PsiWhiteSpace(' ')
+    PsiElement(UPPER_CASE_IDENTIFIER)('User')
+    PsiErrorElement:EQ or LOWER_CASE_IDENTIFIER expected, got '['
+      <empty list>
+    PsiWhiteSpace(' ')
+    PsiErrorElement:EQ, LOWER_CASE_IDENTIFIER or UPPER_CASE_IDENTIFIER expected, got '['
+      PsiElement(LEFT_SQUARE_BRACKET)('[')
+    PsiElement(LOWER_CASE_IDENTIFIER)('garbage')
+    PsiElement(RIGHT_SQUARE_BRACKET)(']')
+    PsiErrorElement:unmatched input
+      <empty list>
+  PsiElement(VIRTUAL_END_DECL)('\n')
+  PsiWhiteSpace('\n')
+  ElmTypeDeclaration(TYPE_DECLARATION)
+    PsiElement(TYPE)('type')
+    PsiWhiteSpace(' ')
+    PsiElement(UPPER_CASE_IDENTIFIER)('User')
+    PsiWhiteSpace(' ')
+    PsiElement(EQ)('=')
+    PsiWhiteSpace(' ')
+    ElmUnionVariant(UNION_VARIANT)
+      PsiElement(UPPER_CASE_IDENTIFIER)('A')
+    PsiWhiteSpace(' ')
+    PsiElement(PIPE)('|')
+    PsiWhiteSpace(' ')
+    PsiErrorElement:UPPER_CASE_IDENTIFIER expected, got 'bogus_identifier'
+      PsiElement(LOWER_CASE_IDENTIFIER)('bogus_identifier')
+    PsiWhiteSpace(' ')
+    PsiElement(PIPE)('|')
+    PsiWhiteSpace(' ')
+    ElmUnionVariant(UNION_VARIANT)
+      PsiElement(UPPER_CASE_IDENTIFIER)('C')

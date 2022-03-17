@@ -1,33 +1,24 @@
 package org.elm.ide.components
 
 import com.intellij.AppTopics
-import com.intellij.ide.DataManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.project.Project
-import org.elm.ide.notifications.executeAction
 import org.elm.ide.notifications.showBalloon
 import org.elm.lang.core.psi.isElmFile
 import org.elm.workspace.commandLineTools.ElmFormatCLI
 import org.elm.workspace.commandLineTools.ElmFormatCLI.ElmFormatResult
-import org.elm.workspace.compiler.ELM_BUILD_ACTION_ID
 import org.elm.workspace.elmSettings
 import org.elm.workspace.elmToolchain
 import org.elm.workspace.elmWorkspace
 
-class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
+class ElmFormatOnFileSaveComponent(val project: Project) {
 
-    override fun initComponent() {
-        val application = ApplicationManager.getApplication()
-        val bus = application.messageBus
-
-        bus.connect(project).subscribe(
+    init {
+        with(project.messageBus.connect()) {
+            subscribe(
                 AppTopics.FILE_DOCUMENT_SYNC,
                 object : FileDocumentManagerListener {
                     override fun beforeDocumentSaving(document: Document) {
@@ -44,7 +35,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
 
                             is ElmFormatResult.FailedToStart ->
                                 project.showBalloon(result.msg, NotificationType.ERROR,
-                                        "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
+                                    "Configure" to { project.elmWorkspace.showConfigureToolchainUI() }
                                 )
 
                             is ElmFormatResult.UnknownFailure ->
@@ -55,6 +46,7 @@ class ElmFormatOnFileSaveComponent(val project: Project) : ProjectComponent {
                         }
                     }
                 }
-        )
+            )
+        }
     }
 }

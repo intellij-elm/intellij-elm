@@ -1,7 +1,10 @@
 package org.elm.lang.core.resolve.reference
 
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementResolveResult
+import com.intellij.psi.PsiPolyVariantReferenceBase
+import com.intellij.psi.ResolveResult
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.resolve.ElmReferenceElement
 

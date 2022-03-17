@@ -1,6 +1,5 @@
 package org.elm.ide.inspections
 
-import com.intellij.application.options.CodeStyle
 import com.intellij.psi.PsiDocumentManager
 import org.elm.lang.core.lookup.ElmLookup
 import org.elm.lang.core.psi.ElmPsiFactory

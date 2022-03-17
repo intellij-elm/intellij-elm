@@ -1,0 +1,7 @@
+BLOCK_COMMENT ('{-\n    #1\n-}')
+NEWLINE ('\n')
+NEWLINE ('\n')
+BLOCK_COMMENT ('{-\n    #2\n    {-\n        #3\n    -}\n-}')
+NEWLINE ('\n')
+NEWLINE ('\n')
+BLOCK_COMMENT ('{-\n    #4\n    foo\n    bar -- baz\n-}')

@@ -12,11 +12,11 @@ import com.intellij.psi.util.CachedValuesManager
 import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.ElmLanguage
 import org.elm.lang.core.lookup.ClientLocation
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmImportClause
+import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.elm.lang.core.stubs.ElmFileStub
 import org.elm.openapiext.pathAsPath
 import org.elm.openapiext.toPsiFile
-import org.elm.workspace.ElmPackageProject
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
 

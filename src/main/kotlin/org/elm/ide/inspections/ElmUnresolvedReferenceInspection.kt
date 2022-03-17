@@ -15,11 +15,7 @@ import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmTypeAnnotation
 import org.elm.lang.core.psi.elements.ElmTypeRef
 import org.elm.lang.core.psi.elements.ElmValueExpr
-import org.elm.lang.core.resolve.reference.ModuleNameQualifierReference
-import org.elm.lang.core.resolve.reference.QualifiedConstructorReference
-import org.elm.lang.core.resolve.reference.QualifiedReference
-import org.elm.lang.core.resolve.reference.QualifiedTypeReference
-import org.elm.lang.core.resolve.reference.QualifiedValueReference
+import org.elm.lang.core.resolve.reference.*
 import org.elm.lang.core.resolve.scope.GlobalScope
 import org.elm.lang.core.resolve.scope.ImportScope
 import org.elm.lang.core.resolve.scope.ModuleScope

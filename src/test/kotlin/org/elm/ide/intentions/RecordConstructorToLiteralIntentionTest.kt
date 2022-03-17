@@ -1,5 +1,6 @@
 package org.elm.ide.intentions
 
+
 class RecordConstructorToLiteralIntentionTest : ElmIntentionTestBase(RecordConstructorToLiteralIntention()) {
 
     fun `test record type alias with two fields (caret inside type name)`() = doAvailableTest(

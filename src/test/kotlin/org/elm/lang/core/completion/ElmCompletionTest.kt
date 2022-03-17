@@ -1,5 +1,6 @@
 package org.elm.lang.core.completion
 
+
 class ElmCompletionTest : ElmCompletionTestBase() {
 
 

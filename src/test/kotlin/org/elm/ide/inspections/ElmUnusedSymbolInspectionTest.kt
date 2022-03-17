@@ -1,6 +1,7 @@
 package org.elm.ide.inspections
 
 
+
 class ElmUnusedSymbolInspectionTest : ElmInspectionsTestBase(ElmUnusedSymbolInspection()) {
 
 

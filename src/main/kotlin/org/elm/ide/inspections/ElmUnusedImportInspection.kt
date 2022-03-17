@@ -1,7 +1,10 @@
 package org.elm.ide.inspections
 
 import com.intellij.codeInsight.actions.OptimizeImportsProcessor
-import com.intellij.codeInspection.*
+import com.intellij.codeInspection.LocalInspectionTool
+import com.intellij.codeInspection.LocalInspectionToolSession
+import com.intellij.codeInspection.ProblemHighlightType
+import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
@@ -88,7 +91,7 @@ class ImportVisitor(initialImports: List<ElmImportClause>) : PsiElementVisitor()
         return import !in unusedImports && !import.safeToIgnore
     }
 
-    override fun visitElement(element: PsiElement?) {
+    override fun visitElement(element: PsiElement) {
         super.visitElement(element)
         if (element is ElmReferenceElement && element !is ElmImportClause && element !is ElmExposedItemTag) {
             val reference = element.reference

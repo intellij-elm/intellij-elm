@@ -15,10 +15,12 @@ class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationI
     We relied on this behavior to report the error, so now our only choice is to fork the code
     restoring the original behavior or to just settle for a false negative. We have chosen the latter.
 
+    @Test
     fun `test bad self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = A</error>
 """)
 
+    @Test
     fun `test bad mutual self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = B</error>
 type alias B = A

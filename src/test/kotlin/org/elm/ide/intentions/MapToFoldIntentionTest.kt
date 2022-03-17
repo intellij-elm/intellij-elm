@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
 
+
 class MapToFoldIntentionTest : ElmIntentionTestBase(MapToFoldIntention()) {
 
 

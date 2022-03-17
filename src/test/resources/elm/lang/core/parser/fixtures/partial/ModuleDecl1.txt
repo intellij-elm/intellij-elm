@@ -1,0 +1,20 @@
+Elm File
+  ElmModuleDeclaration(MODULE_DECLARATION)
+    PsiElement(MODULE)('module')
+    PsiWhiteSpace(' ')
+    ElmUpperCaseQID(UPPER_CASE_QID)
+      PsiElement(UPPER_CASE_IDENTIFIER)('Foo')
+    PsiWhiteSpace(' ')
+    ElmExposingList(EXPOSING_LIST)
+      PsiElement(EXPOSING)('exposing')
+      PsiErrorElement:LEFT_PARENTHESIS expected
+        <empty list>
+  PsiElement(VIRTUAL_END_DECL)('\n')
+  ElmValueDeclaration(VALUE_DECLARATION)
+    ElmFunctionDeclarationLeft(FUNCTION_DECLARATION_LEFT)
+      PsiElement(LOWER_CASE_IDENTIFIER)('bar')
+    PsiWhiteSpace(' ')
+    PsiElement(EQ)('=')
+    PsiWhiteSpace(' ')
+    ElmNumberConstantExpr(NUMBER_CONSTANT_EXPR)
+      PsiElement(NUMBER_LITERAL)('42')

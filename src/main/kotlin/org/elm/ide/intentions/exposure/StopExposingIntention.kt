@@ -5,7 +5,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmExposedItemTag
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmExposingList
+import org.elm.lang.core.psi.elements.removeItem
 
 /**
  * An intention action that removes a function from a module's `exposing` list.

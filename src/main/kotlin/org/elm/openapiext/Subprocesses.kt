@@ -33,8 +33,10 @@ import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.util.io.systemIndependentPath
+import org.elm.utils.runAsyncTask
 import java.io.OutputStreamWriter
 import java.nio.file.Path
 
@@ -42,89 +44,58 @@ private val log = Logger.getInstance("org.elm.openapiext.Subprocesses")
 
 @Suppress("FunctionName")
 fun GeneralCommandLine(path: Path, vararg args: String) =
-        GeneralCommandLine(path.systemIndependentPath, *args)
+    GeneralCommandLine(path.systemIndependentPath, *args)
 
 fun GeneralCommandLine.withWorkDirectory(path: Path?) =
-        withWorkDirectory(path?.systemIndependentPath)
+    withWorkDirectory(path?.systemIndependentPath)
 
 
 @Throws(ExecutionException::class)
 fun GeneralCommandLine.execute(
-        owner: Disposable,
-        ignoreExitCode: Boolean = false
+    toolName: String,
+    project: Project,
+    timeoutInMilliseconds: Int = 3000,
+    stdIn: String? = null
 ): ProcessOutput {
 
-    val handler = CapturingProcessHandler(this)
-    val processKiller = Disposable {
-        handler.destroyProcess()
-    }
-
-    val alreadyDisposed = runReadAction {
-        if (Disposer.isDisposed(owner)) {
-            true
+    val handler =
+        if (stdIn != null) {
+            val process = createProcess()
+            val stdInStream = process.outputStream
+            val writer = OutputStreamWriter(stdInStream, Charsets.UTF_8)
+            try {
+                writer.write(stdIn)
+            } finally {
+                writer.flush()
+                writer.close()
+            }
+            CapturingProcessHandler(process, Charsets.UTF_8, commandLineString)
         } else {
-            Disposer.register(owner, processKiller)
-            false
+            CapturingProcessHandler(this)
         }
-    }
 
+    val processKiller = Disposable { handler.destroyProcess() }
+    val alreadyDisposed = runReadAction { project.isDisposed }
     if (alreadyDisposed) {
-        if (ignoreExitCode) {
-            return ProcessOutput().apply { setCancelled() }
-        } else {
-            throw ExecutionException("External command failed to start")
-        }
+        return ProcessOutput().apply { setCancelled() }
     }
 
-    val output = try {
-        handler.runProcess()
+    Disposer.register(project, processKiller)
+
+    try {
+        // see javadoc at OSProcessHandler.checkEdtAndReadAction()
+        val future = runAsyncTask(project, toolName) {
+            val output = handler.runProcess(timeoutInMilliseconds)
+            if (output.exitCode != 0) {
+                log.warn("Command $toolName exited with code ${output.exitCode}")
+            }
+            output
+        }
+        return future.join()
     } finally {
         Disposer.dispose(processKiller)
     }
-
-    if (!ignoreExitCode && output.exitCode != 0) {
-        throw ExecutionException(errorMessage(this, output))
-    }
-    return output
 }
-
-@Throws(ExecutionException::class)
-fun GeneralCommandLine.execute(
-        stdIn: String? = null,
-        timeoutInMilliseconds: Int? = 2000,
-        ignoreExitCode: Boolean = false
-): ProcessOutput {
-
-    val handler = if (stdIn == null) {
-        CapturingProcessHandler(this)
-    } else {
-        val process = createProcess()
-        val stdInStream = process.outputStream
-        val writer = OutputStreamWriter(stdInStream, Charsets.UTF_8)
-        writer.write(stdIn)
-        writer.flush()
-        writer.close()
-        CapturingProcessHandler(process, Charsets.UTF_8, commandLineString)
-    }
-
-    val output = if(timeoutInMilliseconds == null) {
-        handler.runProcess()
-    } else {
-        handler.runProcess(timeoutInMilliseconds, true)
-    }
-
-    if (!ignoreExitCode && output.exitCode != 0) {
-        throw ExecutionException(errorMessage(this, output))
-    }
-    return output
-}
-
-private fun errorMessage(commandLine: GeneralCommandLine, output: ProcessOutput): String = """
-        Execution failed (exit code ${output.exitCode}).
-        ${commandLine.commandLineString}
-        stdout : ${output.stdout}
-        stderr : ${output.stderr}
-    """.trimIndent()
 
 val ProcessOutput.isSuccess: Boolean
     get() = !isTimeout && !isCancelled && exitCode == 0

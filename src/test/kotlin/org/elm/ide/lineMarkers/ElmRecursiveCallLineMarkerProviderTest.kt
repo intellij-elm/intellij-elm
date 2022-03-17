@@ -1,5 +1,6 @@
 package org.elm.ide.lineMarkers
 
+
 class ElmRecursiveCallLineMarkerProviderTest : ElmLineMarkerProviderTestBase() {
     fun `test non-recursive functions`() = doTestByText(
             """
