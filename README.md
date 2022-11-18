@@ -64,7 +64,7 @@ related information [here](docs/nvm.md).
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 <!-- Plugin description -->
-Elm & Lamdera Plugin
+Elm Plugin
 <!-- Plugin description end -->
 
 ## Installation

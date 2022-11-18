@@ -270,18 +270,19 @@ class ElmWorkspaceService(
             0 // mainEntryPoint.textOffset
         )
 
-        val success =
-            if (dto.has("lamdera/core"))
-                elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
-            else {
-                val lamderaCLI = settings.toolchain.lamderaCLI
+        val lamderaEnabled = settings.toolchain.lamderaCompilerPath != null;
+
+        val success = if(lamderaEnabled) {
+            val lamderaCLI = settings.toolchain.lamderaCLI
                     ?: throw ProjectLoadException("Must specify a valid path to Lamdera binary in Settings")
-/* TODO check version for something important
-                val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
-                    ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
-*/
-                lamderaCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint))
-            }
+            /* TODO check version for something important
+                            val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
+                                ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
+            */
+            lamderaCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint))
+        } else {
+            elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
+        }
 
         // Cleanup
         FileUtil.delete(dir)
