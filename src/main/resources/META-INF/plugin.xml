@@ -1,10 +1,38 @@
 <idea-plugin>
-    <id>Elm IntelliJ NG</id>
-    <name>Elm / Lamdera</name>
-    <vendor url="https://github.com/klazuka/intellij-elm">Keith Lazuka</vendor>
+    <id>org.elm.klazuka</id>
+    <name>Elm</name>
+    <version>x.y.z</version>
+    <vendor url="https://github.com/klazuka/intellij-elm">
+        Keith Lazuka
+    </vendor>
 
     <description><![CDATA[
-        Provides support for Elm & Lamdera projects
+      Provides support for the <a href="http://elm-lang.org">Elm</a> programming language.<br>
+
+      Features:<br>
+      <ul>
+          <li>Code completion</li>
+          <li>Go to declaration</li>
+          <li>Go to symbol</li>
+          <li>Find usages</li>
+          <li>Type Inference and Type Checking</li>
+          <li>Rename refactoring</li>
+          <li>Introduce "variable" refactoring (`let/in`)</li>
+          <li>Generate JSON encoders/decoders</li>
+          <li>Generate type annotation for un-annotated function</li>
+          <li>Graphical UI for running elm-test</li>
+          <li>Re-format code using elm-format</li>
+          <li>Detect unused code</li>
+          <li>Detect and remove unused imports</li>
+          <li>'Add Import' quick fix for unresolved references</li>
+          <li>Code folding</li>
+          <li>Structure view</li>
+          <li>Syntax highlighting</li>
+          <li>WebGL/GLSL support</li>
+          <li>Spell checking</li>
+          <li>Lamdera platform support</li>
+          <li>etc.</li>
+      </ul>
     ]]></description>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
