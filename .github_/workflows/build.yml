@@ -19,7 +19,7 @@ on:
     branches: [main]
   # Trigger the workflow on any pull request
   pull_request:
-
+  workflow_dispatch:
 jobs:
 
   # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
@@ -41,12 +41,12 @@ jobs:
       - name: Gradle Wrapper Validation
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      # Setup Java 11 environment for the next steps
+      # Setup Java 17 environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
           distribution: zulu
-          java-version: 11
+          java-version: 17
           cache: gradle
 
       # Set environment variables

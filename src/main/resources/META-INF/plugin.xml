@@ -13,7 +13,6 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.elm.lang.core.psi.ElmPsiManager"/>
-
         <additionalTextAttributes scheme="Default" file="colorSchemes/ElmDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ElmDarcula.xml"/>
         <annotator language="Elm" implementationClass="org.elm.ide.highlight.ElmSyntaxHighlightAnnotator"/>
