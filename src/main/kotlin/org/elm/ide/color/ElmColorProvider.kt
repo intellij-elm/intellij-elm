@@ -1,6 +1,8 @@
 package org.elm.ide.color
 
 import com.github.ajalt.colormath.*
+import com.github.ajalt.colormath.model.HSL
+import com.github.ajalt.colormath.model.RGB
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.ElementColorProvider
 import com.intellij.psi.PsiDocumentManager
@@ -30,7 +32,7 @@ class ElmColorProvider : ElementColorProvider {
     private fun getCssColorFromString(element: PsiElement): AwtColor? {
         if (element.elementType != REGULAR_STRING_PART) return null
         return colorRegex.find(element.text)
-            ?.let { runCatching { Color.fromCss(it.value) }.getOrNull() }
+            ?.let { runCatching { Color.parse(it.value) }.getOrNull() }
             ?.toAwtColor()
     }
 
@@ -137,29 +139,10 @@ class ElmColorProvider : ElementColorProvider {
         val match = colorRegex.find(element.text)?.value ?: return
 
         val rgb = color.toRGB()
-        val percentCount = match.count { it == '%' }
-        val commas = ',' in match
-
         val newColor = when {
             match.startsWith("#") -> rgb.toHex()
-            match.startsWith("rgb") -> rgb.toCssRgb(
-                commas = commas,
-                namedRgba = match.startsWith("rgba"),
-                rgbPercent = percentCount > 1,
-                alphaPercent = percentCount == 1 || percentCount == 4
-            )
-            match.startsWith("hsl") -> rgb.toCssHsl(
-                commas = commas,
-                namedHsla = match.startsWith("hsla"),
-                hueUnit = when {
-                    "deg" in match -> AngleUnit.DEGREES
-                    "grad" in match -> AngleUnit.GRADIANS
-                    "rad" in match -> AngleUnit.RADIANS
-                    "turn" in match -> AngleUnit.TURNS
-                    else -> AngleUnit.AUTO
-                },
-                alphaPercent = percentCount == 1 || percentCount == 3
-            )
+            match.startsWith("rgb") -> rgb.formatCssString()
+            match.startsWith("hsl") -> rgb.toHSL().formatCssString()
             else -> return
         }
 
@@ -189,8 +172,8 @@ private data class FuncCall(
     }
 }
 
-fun com.github.ajalt.colormath.Color.toAwtColor(): AwtColor = toRGB().let {
-    AwtColor(it.r, it.g, it.b, (it.a * 255).roundToInt())
+fun Color.toAwtColor(): AwtColor = toSRGB().let {
+    AwtColor(it.r, it.g, it.b, (it.alpha * 255))
 }
 
 private fun AwtColor.toRGB() = RGB(red, green, blue, alpha / 255f)

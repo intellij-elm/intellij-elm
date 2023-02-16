@@ -1,6 +1,5 @@
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.grammarkit.tasks.GenerateLexerTask
-import org.jetbrains.grammarkit.tasks.GenerateParserTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.changelog.Changelog
 
 fun properties(key: String) = project.findProperty(key).toString()
@@ -64,27 +63,24 @@ qodana {
     showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
 }
 
-val generateSpecParser = tasks.create<GenerateParserTask>("generateElmParser") {
-    source.set("$projectDir/src/main/grammars/ElmParser.bnf")
-    targetRoot.set("$projectDir/src/main/gen")
-    pathToParser.set("/org/elm/lang/core/parser/ElmParser.java")
-    pathToPsiRoot.set("/org/elm/lang/core/psi")
-    purgeOldFiles.set(true)
-}
-
-val generateSpecLexer = tasks.create<GenerateLexerTask>("generateElmLexer") {
-    source.set("$projectDir/src/main/grammars/ElmLexer.flex")
-    skeleton.set(file("$projectDir/src/main/grammars/lexer.skeleton"))
-    targetDir.set("$projectDir/src/main/gen/org/elm/lang/core/lexer/")
-    targetClass.set("_ElmLexer")
-    purgeOldFiles.set(true)
-}
-
-val generateGrammars = tasks.register("generateGrammars") {
-    dependsOn(generateSpecParser, generateSpecLexer)
-}
-
 tasks {
+    generateLexer {
+        source.set("src/main/grammars/ElmLexer.flex")
+        targetDir.set("src/gen/org/elm/lang/core/lexer")
+        targetClass.set("_ElmLexer")
+        purgeOldFiles.set(true)
+    }
+    generateParser {
+        source.set("src/main/grammars/ElmParser.bnf")
+        targetRoot.set("src/gen")
+        pathToParser.set("org/elm/lang/core/parser/ElmParser.java")
+        pathToPsiRoot.set("org/elm/lang/core/psi")
+        purgeOldFiles.set(true)
+    }
+    withType<KotlinCompile> {
+        dependsOn(generateLexer, generateParser)
+    }
+
     sourceSets {
         java.sourceSets["main"].java {
             srcDir("src/main/gen")
