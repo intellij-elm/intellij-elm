@@ -56,7 +56,7 @@ f fooBar quuxQuuxQuux =
 """)
 
 
-    // https://github.com/klazuka/intellij-elm/issues/232
+    // https://github.com/intellij-elm/intellij-elm/issues/232
     fun `test trailing whitespace does not mess up the generated code`() = checkFixByText("Create",
             """
 f : Int -> Int{-caret-}  --end-of-line
