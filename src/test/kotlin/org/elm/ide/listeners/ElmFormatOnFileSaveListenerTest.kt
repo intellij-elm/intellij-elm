@@ -1,4 +1,4 @@
-package org.elm.ide.components
+package org.elm.ide.listeners
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.undo.UndoManager
@@ -9,7 +9,7 @@ import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 
-class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
+class ElmFormatOnFileSaveListenerTest : ElmWorkspaceTestBase() {
 
 /*
     override fun runTest() {

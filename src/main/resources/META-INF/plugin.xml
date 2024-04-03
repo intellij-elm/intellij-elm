@@ -223,13 +223,9 @@
         <programRunner implementation="org.elm.ide.test.run.ElmTestProgramRunner"/>
         <runConfigurationProducer implementation="org.elm.ide.test.run.ElmTestRunConfigurationProducer"/>
         <projectService serviceImplementation="org.elm.ide.test.run.ElmTestAutoTestManager"/>
-    </extensions>
 
-    <project-components>
-        <component>
-            <implementation-class>org.elm.ide.components.ElmFormatOnFileSaveComponent</implementation-class>
-        </component>
-    </project-components>
+        <fileDocumentManagerListener id="hook" implementation="org.elm.ide.listeners.ElmFormatOnFileSaveListener"/>
+    </extensions>
 
     <actions>
         <action id="Elm.NewFile"
