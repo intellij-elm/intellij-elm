@@ -1,10 +1,10 @@
 <idea-plugin>
-    <id>Elm IntelliJ NG</id>
-    <name>Elm / Lamdera</name>
-    <vendor url="https://github.com/klazuka/intellij-elm">Keith Lazuka</vendor>
+    <id>intellij-elm</id>
+    <name>Elm</name>
+    <vendor url="https://github.com/intellij-elm">The Elm Plugin Contributors</vendor>
 
     <description><![CDATA[
-        Provides support for Elm & Lamdera projects
+        Provides support for the Elm programming language
     ]]></description>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html

@@ -71,7 +71,7 @@ object ElmSuggest {
     }
 
     private fun suggestionsFromNVM(): Sequence<Path> {
-        // nvm (Node Version Manager): see https://github.com/klazuka/intellij-elm/issues/252
+        // nvm (Node Version Manager): see https://github.com/intellij-elm/intellij-elm/issues/252
         // nvm is not available on Windows
         if (SystemInfo.isWindows) return emptySequence()
         return sequenceOf(Paths.get(FileUtil.expandUserHome("~/.config/yarn/global/node_modules/elm/unpacked_bin")))

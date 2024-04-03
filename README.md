@@ -49,7 +49,7 @@ related information [here](docs/nvm.md).
 
 # Elm IntelliJ Plugin
 
-![Build](https://github.com/klazuka/intellij-elm/workflows/Build/badge.svg)
+![Build](https://github.com/intellij-elm/intellij-elm/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 
@@ -64,7 +64,7 @@ related information [here](docs/nvm.md).
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 <!-- Plugin description -->
-Elm & Lamdera Plugin
+Provides support for the Elm programming language
 <!-- Plugin description end -->
 
 ## Installation
@@ -76,7 +76,7 @@ Elm & Lamdera Plugin
 
 - Manually:
 
-  Download the [latest release](https://github.com/klazuka/intellij-elm/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/intellij-elm/intellij-elm/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 

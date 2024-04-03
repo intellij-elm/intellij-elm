@@ -1,1 +1,1 @@
-rootProject.name = "Elm IntelliJ"
+rootProject.name = "Elm IntelliJ Plugin"
