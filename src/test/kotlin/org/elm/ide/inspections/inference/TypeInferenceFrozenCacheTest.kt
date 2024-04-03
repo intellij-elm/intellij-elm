@@ -99,11 +99,10 @@ main r =
                 ret.assertFrozen()
                 parameters.forEach { it.assertFrozen() }
             }
-
-            TyInProgressBinding -> TODO()
-            is TyUnit -> TODO()
-            is TyUnknown -> TODO()
-            is TyVar -> TODO()
+            is TyInProgressBinding -> {}
+            is TyUnit -> {}
+            is TyUnknown -> {}
+            is TyVar -> {}
         }
         alias?.parameters?.forEach { it.assertFrozen() }
     }

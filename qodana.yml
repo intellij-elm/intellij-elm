@@ -2,5 +2,10 @@
 # https://www.jetbrains.com/help/qodana/qodana-yaml.html
 
 version: 1.0
+projectJDK: "17"
 profile:
   name: qodana.recommended
+exclude:
+  - name: All
+    paths:
+      - .qodana

@@ -8,13 +8,13 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.8.10"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
     // Gradle IntelliJ Plugin
-    id("org.jetbrains.intellij") version "1.13.0"
+    id("org.jetbrains.intellij") version "1.16.1"
     // GrammarKit Plugin
-    id("org.jetbrains.grammarkit") version "2022.3"
+    id("org.jetbrains.grammarkit") version "2022.3.2.1"
     // Gradle Changelog Plugin
-    id("org.jetbrains.changelog") version "2.0.0"
+    id("org.jetbrains.changelog") version "2.2.0"
     // Gradle Qodana Plugin
     id("org.jetbrains.qodana") version "0.1.13"
 }
@@ -65,13 +65,13 @@ qodana {
 
 tasks {
     generateLexer {
-        source.set("src/main/grammars/ElmLexer.flex")
+        sourceFile.set(file("$projectDir/src/main/grammars/ElmLexer.flex"))
         targetDir.set("src/gen/org/elm/lang/core/lexer")
         targetClass.set("_ElmLexer")
         purgeOldFiles.set(true)
     }
     generateParser {
-        source.set("src/main/grammars/ElmParser.bnf")
+        sourceFile.set(file("$projectDir/src/main/grammars/ElmParser.bnf"))
         targetRoot.set("src/gen")
         pathToParser.set("org/elm/lang/core/parser/ElmParser.java")
         pathToPsiRoot.set("org/elm/lang/core/psi")
@@ -111,13 +111,9 @@ tasks {
 
         // Get the latest available change notes from the changelog file
         changeNotes.set(provider {
-            with(changelog) {
-                renderItem(
-                    getOrNull(properties("pluginVersion"))
-                        ?: runCatching { getLatest() }.getOrElse { getUnreleased() },
-                    Changelog.OutputType.HTML,
-                )
-            }
+            changelog.renderItem(changelog.run{
+                getOrNull(properties("pluginVersion")) ?: runCatching { getLatest() }.getOrElse { getUnreleased() }
+            }, Changelog.OutputType.HTML)
         })
     }
 
