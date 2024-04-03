@@ -1,5 +1,13 @@
 # Elm Plugin for JetBrains IDEs
 
+<!--
+Fix these badges once the plugin in uploaded...
+
+![Build](https://github.com/intellij-elm/intellij-elm/workflows/Build/badge.svg)
+[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+-->
+
 <!-- Plugin description -->
 Provides support for the Elm programming language.
 <!-- Plugin description end -->
@@ -47,28 +55,8 @@ installing it with `Settings` -> `Plugins` -> `⚙️ (gear icon)` -> `Install p
 Want to see it in action? This [10 minute video](https://www.youtube.com/watch?v=CC2TdNuZztI) demonstrates many of the features and how they work together.
 
 
-## FAQ
-
-- Is this free?
-    - Yes, the plugin itself is free and it works with the free version of IntelliJ.
-- What versions of IntelliJ does this work with?
-    - IntelliJ IDEA Ultimate
-    - IntelliJ IDEA Community Edition (**free!**)
-    - PyCharm Professional
-    - PyCharm Community (**free!**)
-    - WebStorm (amazing JS and CSS support)
-    - and others (untested)
-
-<!--
-Fix these badges once the plugin in uploaded...
-
-![Build](https://github.com/intellij-elm/intellij-elm/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
--->
-
-
 ## Template ToDo list
+
 - [x] Create a new [IntelliJ Platform Plugin Template][template] project.
 - [ ] Get familiar with the [template documentation][template].
 - [ ] Verify the [pluginGroup](/gradle.properties), [plugin ID](/src/main/resources/META-INF/plugin.xml) and [sources package](/src/main/kotlin).
@@ -79,20 +67,11 @@ Fix these badges once the plugin in uploaded...
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 
-## Installation
+## License
 
-- Using IDE built-in plugin system:
-
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Elm"</kbd> >
-  <kbd>Install Plugin</kbd>
-
-- Manually:
-
-  Download the [latest release](https://github.com/intellij-elm/intellij-elm/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+MIT licensed.
 
 
----
-Plugin based on the [IntelliJ Platform Plugin Template][template].
+## Contributing
 
-[template]: https://github.com/JetBrains/intellij-platform-plugin-template
+Yes, please! See [our guide](/docs/contributing.md) on this topic. 
