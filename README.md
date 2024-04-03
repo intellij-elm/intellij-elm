@@ -9,11 +9,11 @@ Should work on IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and mo
 
 ## Install
 
-From within a JetBrains IDE, go to **Settings -> Plugins -> Marketplace** and search for "Elm".
+From within a JetBrains IDE, go to `Settings` -> `Plugins` -> `Marketplace` and search for "Elm".
 After installing the plugin, restart the IDE and then [open your existing Elm project](docs/existing-project.md) or [create a new project](docs/new-project.md).
 
 Alternatively you can install it manually by downloading a [release](https://github.com/intellij-elm/intellij-elm/releases) (or downloading the source and building it yourself) and
-installing it with `Settings -> Plugins -> ⚙️ (gear icon) -> Install plugin from disk...`
+installing it with `Settings` -> `Plugins` -> `⚙️ (gear icon)` -> `Install plugin from disk...`
 
 **NOTE**: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), make sure to read [our NVM setup guide](docs/nvm.md).
 
