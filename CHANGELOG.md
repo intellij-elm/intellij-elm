@@ -221,24 +221,42 @@ Changelog for intellij-elm
 *   Added a line marker for exposed functions/types
 *   Fixed bugs related to 'test-dependencies'
 
-**2.0.2** _(2018-11-08)_ - type checking bug fixes; improvements to Find Usages
+**2.0.2** _(2018-11-08)_
+*   Type checking bug fixes
+*   Improvemented 'Find Usages'
 
-**2.0.1** _(2018-11-03)_ - added 'Parameter Info' support; bug fixes
+**2.0.1** _(2018-11-03)_
+*   Added 'Parameter Info' support; bug fixes
 
-**2.0.0** _(2018-10-31)_ - added type inference and type checking; added support for multiple Elm projects
+**2.0.0** _(2018-10-31)_
+*   Added type inference and type checking
+*   Added support for multiple Elm projects
 
-**1.3.3** _(2018-09-20)_ - added Elm tool window listing attached projects; parser bug fix
+**1.3.3** _(2018-09-20)_
+*   Add Elm tool window listing attached projects
+*   Parser bug fix
 
-**1.3.2** _(2018-09-08)_ - add code folding; various bug fixes
+**1.3.2** _(2018-09-08)_
+*   Add code folding; various bug fixes
 
-**1.3.1** _(2018-08-26)_ - add support for Elm 0.19 package projects
+**1.3.1** _(2018-08-26)_
+*   Add support for Elm 0.19 package projects
 
-**1.3.0** _(2018-08-09)_ - add quick docs; add rename file/module refactoring; add support for Elm 0.19 beta
+**1.3.0** _(2018-08-09)_
+*   Add quick docs
+*   Add rename file/module refactoring
+*   Add support for Elm 0.19 beta
 
-**1.1.1** _(2018-05-15)_ - fix crash on PyCharm and WebStorm
+**1.1.1** _(2018-05-15)_
+*   Fix crash on PyCharm and WebStorm
 
-**1.1.0** _(2018-05-10)_ - smart indent, performance improvements, better parse error recovery
+**1.1.0** _(2018-05-10)_
+*   Smart indent
+*   Performance improvements
+*   Better parse error recovery
 
-**1.0.0** _(2018-04-11)_ - improved parse error recovery and added keyword completion
+**1.0.0** _(2018-04-11)_
+*   Improved parse error recovery and added keyword completion
 
-**0.9.1** _(2017-12-28)_ - added 'Import' quick fix for unresolved references
+**0.9.1** _(2017-12-28)_
+*   Added 'Import' quick fix for unresolved references
