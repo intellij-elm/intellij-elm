@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>Elm plugin</id>
+    <id>intellij-elm</id>
     <name>Elm</name>
     <vendor url="https://github.com/intellij-elm">The Elm Plugin Contributors</vendor>
 

@@ -1,11 +1,41 @@
-<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M32.0845 7.94025V4H24.0203V7.9896H16.029V4H7.91553V7.94025H4V36H16.0044V32.0045C16.0058 30.9457 16.4274 29.9308 17.1766 29.1826C17.9258 28.4345 18.9412 28.0143 20 28.0143C21.0588 28.0143 22.0743 28.4345 22.8234 29.1826C23.5726 29.9308 23.9942 30.9457 23.9956 32.0045V36H36V7.94025H32.0845Z"
-          fill="url(#paint0_linear)"/>
-    <defs>
-        <linearGradient id="paint0_linear" x1="2.94192" y1="4.89955" x2="37.7772" y2="39.7345" gradientUnits="userSpaceOnUse">
-            <stop offset="0.15937" stop-color="#3BEA62"/>
-            <stop offset="0.5404" stop-color="#3C99CC"/>
-            <stop offset="0.93739" stop-color="#6B57FF"/>
-        </linearGradient>
-    </defs>
-</svg>
+<svg:svg version="1.1" x="0" y="0" viewBox="0 0 323.141 322.95" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svg="http://www.w3.org/2000/svg">
+    <svg:defs>
+        <svg:linearGradient id="b">
+            <svg:stop style="stop-color:#087cfa;stop-opacity:1" offset="0"/>
+            <svg:stop style="stop-color:#21d789;stop-opacity:1" offset="1"/>
+        </svg:linearGradient>
+        <svg:linearGradient id="d">
+            <svg:stop style="stop-color:#fc801d;stop-opacity:1" offset="0"/>
+            <svg:stop style="stop-color:#fe2857;stop-opacity:1" offset="1"/>
+        </svg:linearGradient>
+        <svg:linearGradient id="c">
+            <svg:stop style="stop-color:#21d789;stop-opacity:1" offset="0"/>
+            <svg:stop style="stop-color:#fcf84a;stop-opacity:1" offset="1"/>
+        </svg:linearGradient>
+        <svg:linearGradient id="e">
+            <svg:stop style="stop-color:#087cfa;stop-opacity:1" offset="0"/>
+            <svg:stop style="stop-color:#553eb4;stop-opacity:1" offset="1"/>
+        </svg:linearGradient>
+        <svg:linearGradient id="a">
+            <svg:stop style="stop-color:#553eb4;stop-opacity:1" offset="0"/>
+            <svg:stop style="stop-color:#ff318c;stop-opacity:1" offset="1"/>
+        </svg:linearGradient>
+        <svg:linearGradient xlink:href="#a" id="j" x1="45.966" y1="124.51" x2="120.686" y2="279.939" gradientUnits="userSpaceOnUse"/>
+        <svg:linearGradient xlink:href="#b" id="l" x1="229.02" y1="342.861" x2="156.727" y2="221.754" gradientUnits="userSpaceOnUse"/>
+        <svg:linearGradient xlink:href="#c" id="f" x1="201.55" y1="100.662" x2="162.23" y2="148.716" gradientUnits="userSpaceOnUse"/>
+        <svg:linearGradient xlink:href="#d" id="g" x1="154.947" y1="67.526" x2="108.468" y2="4.393" gradientUnits="userSpaceOnUse"/>
+        <svg:linearGradient xlink:href="#c" id="k" x1="312.305" y1="276.052" x2="277.906" y2="215.554" gradientUnits="userSpaceOnUse"/>
+        <svg:linearGradient xlink:href="#e" id="i" x1="322.66" y1="139.848" x2="292.069" y2="13.526" gradientUnits="userSpaceOnUse"/>
+        <svg:linearGradient xlink:href="#a" id="h" x1="335.55" y1="-13.529" x2="249.193" y2="-99.585" gradientUnits="userSpaceOnUse"/>
+    </svg:defs>
+    <svg:rect style="fill:#000;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none" width="323.069" height="322.648" x=".197" y=".191"/>
+    <svg:g transform="matrix(.93036 0 0 .93036 11.258 11.258)">
+        <svg:polygon fill="#f0ad00" points="161.649,152.782 231.514,82.916 91.783,82.916" style="fill:url(#f);fill-opacity:1"/>
+        <svg:polygon fill="#7fd13b" points="161.838,0 8.867,0 79.241,70.375 232.213,70.375" style="fill:url(#g);fill-opacity:1"/>
+        <svg:rect fill="#7fd13b" x="234.873" y="-114.436" transform="rotate(45)" width="107.675" height="108.166" style="fill:url(#h);fill-opacity:1;stroke-width:.99999"/>
+        <svg:polygon fill="#60b5cc" points="323.298,143.724 323.298,0 179.573,0" style="fill:url(#i);fill-opacity:1"/>
+        <svg:polygon fill="#5a6378" points="152.781,161.649 0,8.868 0,314.432" style="fill:url(#j);fill-opacity:1"/>
+        <svg:polygon fill="#f0ad00" points="255.522,246.655 323.298,314.432 323.298,178.879" style="fill:url(#k);fill-opacity:1"/>
+        <svg:polygon fill="#60b5cc" points="161.649,170.517 8.869,323.298 314.43,323.298" style="fill:url(#l);fill-opacity:1"/>
+    </svg:g>
+</svg:svg>
