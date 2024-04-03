@@ -6,6 +6,7 @@ import org.elm.lang.core.psi.ElmNamedElement
 import org.intellij.lang.annotations.Language
 
 class ElmResolveLinkTest : ElmTestBase(){
+
     fun `test type`() = doTest(
 """
 type Foo = Bar
