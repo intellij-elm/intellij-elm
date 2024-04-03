@@ -7,6 +7,7 @@
 
 package org.elm.workspace
 
+import com.intellij.execution.process.ProcessIOExecutorService
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.builders.ModuleFixtureBuilder
 import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase
@@ -15,6 +16,7 @@ import org.elm.FileTreeBuilder
 import org.elm.TestProject
 import org.elm.fileTree
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 /**
  * Base class for "heavy" integration tests such as those that depend on the Elm toolchain
@@ -47,6 +49,9 @@ abstract class ElmWorkspaceTestBase : CodeInsightFixtureTestCase<ModuleFixtureBu
 
     override fun tearDown() {
         project.elmWorkspace.useToolchain(originalToolchain)
+        ProcessIOExecutorService.INSTANCE.shutdown()
+        ProcessIOExecutorService.INSTANCE.awaitTermination(1, TimeUnit.SECONDS)
+        super.tearDown()
     }
 
 

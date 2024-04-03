@@ -111,9 +111,9 @@ class ElmNeedsConfigNotificationProvider(
                 versionCheck = VersionCheck.Checked(v)
             }
             // refresh the UI
-            ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().invokeLater({
                 notifications.updateAllNotifications()
-            }
+            }, { project.isDisposed })
         }
     }
 
