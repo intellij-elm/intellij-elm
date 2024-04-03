@@ -1,39 +1,51 @@
-# Elm Plugin for IntelliJ IDEs (WebStorm, IDEA, PyCharm, etc.)
+# Elm Plugin for JetBrains IDEs
+
+<!-- Plugin description -->
+Provides support for the Elm programming language.
+<!-- Plugin description end -->
+
+Should work on IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
+
 
 ## Install
 
-You can install the plugin from within the JetBrains IDE by going to **Settings -> Plugins** and then searching for "Elm". After installing the plugin, restart the IDE and then [open your existing Elm project](docs/existing-project.md) or [create a new project](docs/new-project.md).
+From within a JetBrains IDE, go to **Settings -> Plugins -> Marketplace** and search for "Elm".
+After installing the plugin, restart the IDE and then [open your existing Elm project](docs/existing-project.md) or [create a new project](docs/new-project.md).
+
+Alternatively you can install it manually by downloading a [release](https://github.com/intellij-elm/intellij-elm/releases) (or downloading the source and building it yourself) and
+installing it with `Settings -> Plugins -> ⚙️ (gear icon) -> Install plugin from disk...`
+
+**NOTE**: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), make sure to read [our NVM setup guide](docs/nvm.md).
 
 
-## Highlighted Features
+## Features
 
-- [Live Error Checking](docs/features/live-error-checking.md)
-- [Generate JSON Decoders & Encoders](docs/features/generate-function-json.md)
-- [Rename refactoring](docs/features/rename-refactoring.md)
-- [Lamdera support](docs/features/lamdera.md)
-- [elm-review support](docs/features/elm-review.md)
-
-
-## Additional Features 
-
-* [Type Inference](docs/features/type-inference.md)
-* [Find Usages](docs/features/find-usages.md)
-* [Run Tests](docs/features/elm-test.md) (elm-test)
-* [Reformat File](docs/features/elm-format.md) (elm-format)
+* [Live error checking](docs/features/live-error-checking.md)
+* [Generate JSON encoder and decoder functions](docs/features/generate-function-json.md)
+* [Rename refactoring](docs/features/rename-refactoring.md)
+* [Lamdera support](docs/features/lamdera.md)
+* [Support for `elm-review`](docs/features/elm-review.md)
+* [Type inference and type checking](docs/features/type-inference.md)
+* [Find usages](docs/features/find-usages.md)
+* [Run tests](docs/features/elm-test.md) (elm-test)
+* [Reformat code using `elm-fomrat`](docs/features/elm-format.md) (elm-format)
 * [Cleanup unused imports](docs/features/unused-imports.md)
 * [Detect unused code](docs/features/unused-code.md)
-* [Add Imports](docs/features/add-imports.md)
+* ['Add Import' quick fix for unresolved references](docs/features/add-imports.md)
 * [Quick Docs](docs/features/quick-docs.md)
-* [Structure View & Quick Nav](docs/features/structure-view.md)
+* [Structure view and quick navigation](docs/features/structure-view.md)
 * [WebGL/GLSL support](docs/features/webgl.md)
-* [Code Folding](docs/features/code-folding.md)
-* [Manage the Exposing List](docs/features/exposure.md)
-* Plus the usual IDE stuff: code completion, go-to-declaration, spell-checking, etc.
+* [Code folding](docs/features/code-folding.md)
+* [Manage exposing lists](docs/features/exposure.md)
+* Detect and remove unused imports
+* Go to symbol
+* Go to declaration
+* Syntax highlighting
+* Spell checking
+* and more...
 
 Want to see it in action? This [10 minute video](https://www.youtube.com/watch?v=CC2TdNuZztI) demonstrates many of the features and how they work together.
 
-_Note_: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), please see the
-related information [here](docs/nvm.md).
 
 ## FAQ
 
@@ -47,11 +59,14 @@ related information [here](docs/nvm.md).
     - WebStorm (amazing JS and CSS support)
     - and others (untested)
 
-# Elm IntelliJ Plugin
+<!--
+Fix these badges once the plugin in uploaded...
 
 ![Build](https://github.com/intellij-elm/intellij-elm/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+-->
+
 
 ## Template ToDo list
 - [x] Create a new [IntelliJ Platform Plugin Template][template] project.
@@ -63,9 +78,6 @@ related information [here](docs/nvm.md).
 - [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html).
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
-<!-- Plugin description -->
-Provides support for the Elm programming language
-<!-- Plugin description end -->
 
 ## Installation
 
