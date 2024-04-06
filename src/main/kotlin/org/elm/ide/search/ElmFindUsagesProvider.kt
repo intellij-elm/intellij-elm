@@ -34,7 +34,6 @@ class ElmFindUsagesProvider : FindUsagesProvider {
 
 
     override fun getType(element: PsiElement): String {
-        // TODO [kl] handle more cases
         return when (element) {
             is ElmModuleDeclaration -> "Module"
             is ElmAsClause -> "Aliased Module Import"
@@ -46,6 +45,8 @@ class ElmFindUsagesProvider : FindUsagesProvider {
             is ElmLowerPattern -> "Value Binding"
             is ElmPortAnnotation -> "Port Annotation"
             is ElmFieldType -> "Record Field"
+            is ElmLowerTypeName -> "Type variable" // in type definition
+            is ElmTypeVariable -> "Type variable"// in type declaration
             else -> "unknown type for $element"
         }
     }
