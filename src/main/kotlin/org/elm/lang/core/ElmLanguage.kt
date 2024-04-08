@@ -7,29 +7,20 @@ import com.intellij.openapi.fileTypes.LanguageFileType
 import org.elm.ide.icons.ElmIcons
 
 
-object ElmLanguage : Language("Elm", "text/elm", "text/x-elm", "application/x-elm")
+object ElmLanguage : Language("Elm", "text/elm", "text/x-elm", "application/x-elm") {
+    private fun readResolve(): Any = ElmLanguage
+}
 
 
 object ElmFileType : LanguageFileType(ElmLanguage) {
 
     const val EXTENSION = "elm"
 
-    override fun getIcon() =
-            ElmIcons.FILE
+    override fun getIcon() = ElmIcons.FILE
 
-    override fun getName() =
-            "Elm file"
+    override fun getName() = "Elm file"
 
-    override fun getDefaultExtension() =
-            EXTENSION
+    override fun getDefaultExtension() = EXTENSION
 
-    override fun getDescription() =
-            "Elm language file"
-}
-
-
-class ElmFileTypeFactory : FileTypeFactory() {
-    override fun createFileTypes(consumer: FileTypeConsumer) {
-        consumer.consume(ElmFileType, ElmFileType.EXTENSION)
-    }
+    override fun getDescription() = "Elm language file"
 }

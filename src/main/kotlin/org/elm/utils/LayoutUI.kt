@@ -99,7 +99,7 @@ private class ElmLayoutUIBuilderImpl(
             Pattern.compile("<a(?:\\s+href\\s*=\\s*[\"']([^\"']*)[\"'])?\\s*>([^<]*)</a>")
 
     private val LINK_TEXT_ATTRIBUTES: SimpleTextAttributes
-        get() = SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, JBUI.CurrentTheme.Link.linkColor())
+        get() = SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, JBUI.CurrentTheme.Link.Foreground.ENABLED)
 
 
     override fun noteRow(text: String) {
