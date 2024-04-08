@@ -74,7 +74,9 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+      # Commented out as this should work with intellij-platform-gradle-plugin v1.5+, see:
+      # https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/909
+      #    ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # Build plugin
       - name: Build plugin
