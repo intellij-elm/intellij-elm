@@ -15,10 +15,12 @@ class TypeDeclarationInspectionTest : ElmInspectionsTestBase(ElmTypeDeclarationI
     We relied on this behavior to report the error, so now our only choice is to fork the code
     restoring the original behavior or to just settle for a false negative. We have chosen the latter.
 
+    @Test
     fun `test bad self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = A</error>
 """)
 
+    @Test
     fun `test bad mutual self-recursion in type alias`() = checkByText("""
 <error descr="Infinite recursion">type alias A = B</error>
 type alias B = A
@@ -30,7 +32,7 @@ type alias Alias = { value : Union }
 type Union = Variant Alias
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/188
+    // https://github.com/intellij-elm/intellij-elm/issues/188
     fun `test allowed recursion through two aliases`() = checkByText("""
 type Foo = Foo Alias1
 type alias Alias1 = Alias2

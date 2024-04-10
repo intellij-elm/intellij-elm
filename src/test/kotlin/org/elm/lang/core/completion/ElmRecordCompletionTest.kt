@@ -1,5 +1,6 @@
 package org.elm.lang.core.completion
 
+
 class ElmRecordCompletionTest : ElmCompletionTestBase() {
 
     fun `test access name field from one letter`() = doSingleCompletion(

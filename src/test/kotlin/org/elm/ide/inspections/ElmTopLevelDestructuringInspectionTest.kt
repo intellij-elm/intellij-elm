@@ -1,6 +1,7 @@
 package org.elm.ide.inspections
 
 
+
 class ElmTopLevelDestructuringInspectionTest : ElmInspectionsTestBase(ElmTopLevelDestructuringInspection()) {
 
     fun `test top-level destructuring is forbidden`() = checkByText("""

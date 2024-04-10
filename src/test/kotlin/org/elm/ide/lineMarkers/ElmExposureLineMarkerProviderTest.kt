@@ -1,5 +1,6 @@
 package org.elm.ide.lineMarkers
 
+
 class ElmExposureLineMarkerProviderTest : ElmLineMarkerProviderTestBase() {
 
 

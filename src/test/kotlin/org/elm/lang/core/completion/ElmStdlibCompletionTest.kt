@@ -1,5 +1,6 @@
 package org.elm.lang.core.completion
 
+
 /**
  * Test completion for values and types built-in to the language,
  * such as List, as well as implicit imports from `elm/core` provided

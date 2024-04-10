@@ -1,6 +1,7 @@
 package org.elm.lang.core.resolve
 
 
+
 /**
  * Tests related to pattern matching and destructuring
  */
@@ -68,7 +69,7 @@ f x =
     )
 
 
-    // see bug https://github.com/klazuka/intellij-elm/issues/106
+    // see bug https://github.com/intellij-elm/intellij-elm/issues/106
     fun `test nested case-of that should not resolve`() = checkByCode(
             """
 f x =

@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
 
+
 class PipelineIntentionTest : ElmIntentionTestBase(PipelineIntention()) {
 
 

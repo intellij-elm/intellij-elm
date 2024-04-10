@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.PsiElement
 import org.elm.ide.inspections.NamedQuickFix
-import org.elm.ide.inspections.QuickFixInvocationTracker
 import org.elm.lang.core.psi.*
 import org.elm.lang.core.psi.elements.*
 import org.elm.lang.core.psi.elements.Flavor.*

@@ -28,11 +28,11 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
     fun `test file creation outside of a source root uses an empty module qualifier`() =
             doTest("outside", "Quux", "module Quux exposing (..)")
 
-    // https://github.com/klazuka/intellij-elm/issues/231
+    // https://github.com/intellij-elm/intellij-elm/issues/231
     fun `test file creation including file extension`() =
             doTest("src", "Quux.elm", "module Quux exposing (..)")
 
-    // https://github.com/klazuka/intellij-elm/issues/202
+    // https://github.com/intellij-elm/intellij-elm/issues/202
     fun `test normalization of leading dot-slash in source-directory`() =
             doTest("foo1/Foo1", "Quux", "module Foo1.Quux exposing (..)")
 

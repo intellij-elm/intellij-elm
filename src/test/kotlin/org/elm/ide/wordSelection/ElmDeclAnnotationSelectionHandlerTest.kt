@@ -1,6 +1,7 @@
 package org.elm.ide.wordSelection
 
 
+
 class ElmDeclAnnotationSelectionHandlerTest : ElmExtendSelectionTestBase() {
 
 

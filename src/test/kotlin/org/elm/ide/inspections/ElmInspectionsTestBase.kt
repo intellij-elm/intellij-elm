@@ -147,7 +147,7 @@ abstract class ElmInspectionsTestBase(
 ) : ElmAnnotationTestBase() {
 
     fun `test inspection has documentation`() {
-        val description = "inspectionDescriptions/${inspection.javaClass.simpleName?.dropLast("Inspection".length)}.html"
+        val description = "inspectionDescriptions/${inspection.javaClass.simpleName.dropLast("Inspection".length)}.html"
         val text = getResourceAsString(description)
                 ?: error("No inspection description for ${inspection.javaClass} ($description)")
         checkHtmlStyle(text)

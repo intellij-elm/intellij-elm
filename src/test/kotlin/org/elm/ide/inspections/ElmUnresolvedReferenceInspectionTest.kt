@@ -1,5 +1,6 @@
 package org.elm.ide.inspections
 
+
 class ElmUnresolvedReferenceInspectionTest: ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
     fun `test unresolved refs`() = checkByText("""
 f = <error descr="Unresolved reference 'foobar'">foobar</error>

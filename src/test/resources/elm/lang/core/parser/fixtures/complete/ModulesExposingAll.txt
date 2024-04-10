@@ -1,0 +1,13 @@
+Elm File
+  ElmModuleDeclaration(MODULE_DECLARATION)
+    PsiElement(MODULE)('module')
+    PsiWhiteSpace(' ')
+    ElmUpperCaseQID(UPPER_CASE_QID)
+      PsiElement(UPPER_CASE_IDENTIFIER)('Foo')
+    PsiWhiteSpace(' ')
+    ElmExposingList(EXPOSING_LIST)
+      PsiElement(EXPOSING)('exposing')
+      PsiWhiteSpace(' ')
+      PsiElement(LEFT_PARENTHESIS)('(')
+      PsiElement(DOUBLE_DOT)('..')
+      PsiElement(RIGHT_PARENTHESIS)(')')

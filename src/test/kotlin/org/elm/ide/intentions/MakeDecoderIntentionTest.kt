@@ -1,5 +1,6 @@
 package org.elm.ide.intentions
 
+
 class MakeDecoderIntentionTest : ElmIntentionTestBase(MakeDecoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 

@@ -1,12 +1,12 @@
 package org.elm.ide.intentions
 
-import com.intellij.codeInsight.intention.IntentionManager
+import com.intellij.codeInsight.intention.impl.config.IntentionManagerImpl.EP_INTENTION_ACTIONS
 import org.elm.lang.ElmTestBase
 
 class ElmIntentionDocsTest : ElmTestBase() {
 
     fun `test intentions has documentation`() {
-        IntentionManager.EP_INTENTION_ACTIONS
+        EP_INTENTION_ACTIONS
                 .extensions
                 .filter { it.category?.startsWith("Elm") == true }
                 .forEach {

@@ -1,5 +1,6 @@
 package org.elm.lang.core.resolve
 
+
 /**
  * Tests related to resolving binary operator references
  *

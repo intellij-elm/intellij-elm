@@ -6,7 +6,6 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmTypeDeclaration
 import org.elm.lang.core.toElmLowerId
 import org.elm.lang.core.types.*
-import org.elm.lang.core.types.TyInProgressBinding.alias
 
 class MakeDecoderIntention : AnnotationBasedGeneratorIntention() {
     override fun getText() = "Generate Decoder"

@@ -83,7 +83,7 @@ main = Foo.BarVariant
 """)
 
 
-    // see https://github.com/klazuka/intellij-elm/issues/77
+    // see https://github.com/intellij-elm/intellij-elm/issues/77
     fun `test importing a union variant constructor exposes all variants`() = check(
             """
 --@ main.elm

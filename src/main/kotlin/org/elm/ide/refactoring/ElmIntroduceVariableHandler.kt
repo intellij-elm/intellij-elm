@@ -1,6 +1,5 @@
 package org.elm.ide.refactoring
 
-import com.intellij.application.options.CodeStyle
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project

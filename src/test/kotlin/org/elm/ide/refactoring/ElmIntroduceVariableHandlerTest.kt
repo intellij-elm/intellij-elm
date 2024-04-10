@@ -1,6 +1,5 @@
 package org.elm.ide.refactoring
 
-import com.intellij.application.options.CodeStyle
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmExpressionTag

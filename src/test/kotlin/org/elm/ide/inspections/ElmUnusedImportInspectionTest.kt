@@ -1,6 +1,7 @@
 package org.elm.ide.inspections
 
 
+
 class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInspection()) {
 
 
@@ -90,7 +91,7 @@ class ElmUnusedImportInspectionTest : ElmInspectionsTestBase(ElmUnusedImportInsp
         type alias Bar = ()
     """.trimIndent())
 
-    // https://github.com/klazuka/intellij-elm/issues/197
+    // https://github.com/intellij-elm/intellij-elm/issues/197
     fun `test issue 197 record update syntax also counts as usage of an exposed name`() = checkByFileTree("""
         --@ Main.elm
         import Foo exposing (defaultFoo)

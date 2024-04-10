@@ -4,14 +4,9 @@ import org.elm.lang.core.imports.ImportAdder.Import
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.elements.ElmFunctionDeclarationLeft
 import org.elm.lang.core.psi.elements.ElmImportClause
-import org.elm.lang.core.resolve.scope.ModuleScope
-import org.elm.lang.core.types.AliasInfo
-import org.elm.lang.core.types.DeclarationInTy
-import org.elm.lang.core.types.Ty
-import org.elm.lang.core.types.TyUnion
-import org.elm.lang.core.types.allDeclarations
-import org.elm.lang.core.types.findTy
 import org.elm.lang.core.psi.moduleName
+import org.elm.lang.core.resolve.scope.ModuleScope
+import org.elm.lang.core.types.*
 
 
 abstract class TyFunctionGenerator(

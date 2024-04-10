@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
 
+
 class InlineDebugIntentionTest : ElmIntentionTestBase(InlineDebugIntention()) {
 
     fun `test debugging function argument`() = doAvailableTest(

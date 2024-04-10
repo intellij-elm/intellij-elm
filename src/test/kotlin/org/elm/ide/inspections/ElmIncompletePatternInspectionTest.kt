@@ -327,7 +327,7 @@ foo it =
 """)
 
     /*
-    https://github.com/klazuka/intellij-elm/issues/260
+    https://github.com/intellij-elm/intellij-elm/issues/260
 
     A project with multiple Elm files each with the same module name and each defining
     a union type by the same name. This causes trouble for the 'missing case branch adder'

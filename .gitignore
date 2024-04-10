@@ -1,6 +1,6 @@
-.idea
 *.iml
 *.ipr
+*.hprof
 .gradle
 
 build/
@@ -8,4 +8,4 @@ out/
 gen/
 dist/
 testData/
-
+todos/

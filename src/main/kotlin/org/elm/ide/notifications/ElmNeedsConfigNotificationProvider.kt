@@ -106,7 +106,7 @@ class ElmNeedsConfigNotificationProvider(
 
     private fun asyncQueryElmCompilerVersion(toolchain: ElmToolchain) {
         ProcessIOExecutorService.INSTANCE.submit {
-            val v = toolchain.elmCLI?.queryVersion()?.orNull()
+            val v = toolchain.elmCLI?.queryVersion(project)?.orNull()
             synchronized(lock) {
                 versionCheck = VersionCheck.Checked(v)
             }
@@ -135,8 +135,10 @@ class ElmNeedsConfigNotificationProvider(
 
     private fun versionConflictPanel(project: Project, elmProject: ElmProject, compilerVersion: Version): EditorNotificationPanel {
         val expectedVersionText = when (elmProject) {
+            is LamderaApplicationProject -> elmProject.elmVersion.toString()
             is ElmApplicationProject -> elmProject.elmVersion.toString()
             is ElmPackageProject -> elmProject.elmVersion.toString()
+            is ElmReviewProject -> elmProject.elmVersion.toString()
         }
         val manifestFileName = elmProject.manifestPath.fileName.toString()
         return EditorNotificationPanel().apply {

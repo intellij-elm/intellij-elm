@@ -6,8 +6,10 @@ import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.util.treeView.smartTree.Sorter
 import com.intellij.openapi.editor.Editor
 import org.elm.lang.core.psi.ElmFile
-import org.elm.lang.core.psi.ElmNamedElement
-import org.elm.lang.core.psi.elements.*
+import org.elm.lang.core.psi.elements.ElmPortAnnotation
+import org.elm.lang.core.psi.elements.ElmTypeAliasDeclaration
+import org.elm.lang.core.psi.elements.ElmTypeDeclaration
+import org.elm.lang.core.psi.elements.ElmValueDeclaration
 
 class ElmStructureViewModel(editor: Editor?, elmFile: ElmFile) :
         StructureViewModelBase(elmFile, editor, ElmFileTreeElement(elmFile)),

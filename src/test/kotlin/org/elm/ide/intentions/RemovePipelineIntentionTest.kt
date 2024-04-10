@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
 
+
 class RemovePipelineIntentionTest : ElmIntentionTestBase(RemovePipelineIntention()) {
 
 

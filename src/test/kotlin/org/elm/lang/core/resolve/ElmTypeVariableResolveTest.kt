@@ -1,6 +1,7 @@
 package org.elm.lang.core.resolve
 
 
+
 class ElmTypeVariableResolveTest : ElmResolveTestBase() {
     fun `test return value to param`() = checkByCode(
             """

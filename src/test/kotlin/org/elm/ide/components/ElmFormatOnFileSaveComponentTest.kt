@@ -11,6 +11,7 @@ import org.intellij.lang.annotations.Language
 
 class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
+/*
     override fun runTest() {
         if (toolchain.elmFormatCLI == null) {
             // TODO in the future maybe we should install elm-format in the CI build environment
@@ -19,6 +20,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         }
         super.runTest()
     }
+*/
 
     val unformatted = """
                     module Main exposing (f)

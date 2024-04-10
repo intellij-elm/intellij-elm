@@ -1,7 +1,6 @@
 package org.elm.ide.color
 
 import com.github.ajalt.colormath.*
-import com.intellij.ide.IdeBundle
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.ElementColorProvider
 import com.intellij.psi.PsiDocumentManager
@@ -22,7 +21,7 @@ class ElmColorProvider : ElementColorProvider {
         // Like all line markers, we should only provide colors on leaf elements
         if (element.firstChild != null) return null
         return getCssColorFromString(element)
-                ?: getColorFromFuncCall(element)
+            ?: getColorFromFuncCall(element)
     }
 
     // Parse a CSS color from any string that contains one, since "1px solid #1a2b3c" probably
@@ -31,8 +30,8 @@ class ElmColorProvider : ElementColorProvider {
     private fun getCssColorFromString(element: PsiElement): Color? {
         if (element.elementType != REGULAR_STRING_PART) return null
         return colorRegex.find(element.text)
-                ?.let { runCatching { ConvertibleColor.fromCss(it.value) }.getOrNull() }
-                ?.toAwtColor()
+            ?.let { runCatching { ConvertibleColor.fromCss(it.value) }.getOrNull() }
+            ?.toAwtColor()
     }
 
     private fun getColorFromFuncCall(element: PsiElement): Color? {
@@ -71,32 +70,32 @@ class ElmColorProvider : ElementColorProvider {
         args as List<ElmNumberConstantExpr>
 
         return FuncCall(
-                c1 = args[0].text.toFloatOrNull() ?: return null,
-                c2 = args[1].text.toFloatOrNull() ?: return null,
-                c3 = args[2].text.toFloatOrNull() ?: return null,
-                // the alpha channel is optional
-                a = args.getOrNull(3)?.text?.let { it.toFloatOrNull() ?: return null },
-                name = valueExpr.referenceName,
-                containsFloats = args.take(3).any { it.isFloat },
-                target = valueExpr,
-                args = args
+            c1 = args[0].text.toFloatOrNull() ?: return null,
+            c2 = args[1].text.toFloatOrNull() ?: return null,
+            c3 = args[2].text.toFloatOrNull() ?: return null,
+            // the alpha channel is optional
+            a = args.getOrNull(3)?.text?.let { it.toFloatOrNull() ?: return null },
+            name = valueExpr.referenceName,
+            containsFloats = args.take(3).any { it.isFloat },
+            target = valueExpr,
+            args = args
         )
     }
 
     override fun setColorTo(element: PsiElement, color: Color) {
         if (element.firstChild != null) return
         val command = stringColorSettingRunnable(element, color)
-                ?: functionColorSettingRunnable(element, color)
-                ?: return
+            ?: functionColorSettingRunnable(element, color)
+            ?: return
 
         val document = PsiDocumentManager.getInstance(element.project).getDocument(element.containingFile)
         CommandProcessor.getInstance().executeCommand(
-                element.project,
-                command,
-                // This is the message that the JavaColorProvider uses
-                IdeBundle.message("change.color.command.text"),
-                null, // groupId
-                document
+            element.project,
+            command,
+            // This is the message that the JavaColorProvider uses, value copied from JavaBundle.properties
+            "Change color",
+            null, // groupId
+            document
         )
     }
 
@@ -144,22 +143,22 @@ class ElmColorProvider : ElementColorProvider {
         val newColor = when {
             match.startsWith("#") -> rgb.toHex()
             match.startsWith("rgb") -> rgb.toCssRgb(
-                    commas = commas,
-                    namedRgba = match.startsWith("rgba"),
-                    rgbPercent = percentCount > 1,
-                    alphaPercent = percentCount == 1 || percentCount == 4
+                commas = commas,
+                namedRgba = match.startsWith("rgba"),
+                rgbPercent = percentCount > 1,
+                alphaPercent = percentCount == 1 || percentCount == 4
             )
             match.startsWith("hsl") -> rgb.toCssHsl(
-                    commas = commas,
-                    namedHsla = match.startsWith("hsla"),
-                    hueUnit = when {
-                        "deg" in match -> AngleUnit.DEGREES
-                        "grad" in match -> AngleUnit.GRADIANS
-                        "rad" in match -> AngleUnit.RADIANS
-                        "turn" in match -> AngleUnit.TURNS
-                        else -> AngleUnit.AUTO
-                    },
-                    alphaPercent = percentCount == 1 || percentCount == 3
+                commas = commas,
+                namedHsla = match.startsWith("hsla"),
+                hueUnit = when {
+                    "deg" in match -> AngleUnit.DEGREES
+                    "grad" in match -> AngleUnit.GRADIANS
+                    "rad" in match -> AngleUnit.RADIANS
+                    "turn" in match -> AngleUnit.TURNS
+                    else -> AngleUnit.AUTO
+                },
+                alphaPercent = percentCount == 1 || percentCount == 3
             )
             else -> return
         }
@@ -172,25 +171,25 @@ class ElmColorProvider : ElementColorProvider {
 }
 
 private data class FuncCall(
-        val c1: Float,
-        val c2: Float,
-        val c3: Float,
-        val a: Float?,
-        val name: String,
-        private val containsFloats: Boolean,
-        val target: ElmValueExpr,
-        val args: List<ElmNumberConstantExpr>
+    val c1: Float,
+    val c2: Float,
+    val c3: Float,
+    val a: Float?,
+    val name: String,
+    private val containsFloats: Boolean,
+    val target: ElmValueExpr,
+    val args: List<ElmNumberConstantExpr>
 ) {
     val colors = listOf(c1, c2, c3)
     val useFloat = when {
-            containsFloats -> true
-            colors.all { it == 0f } -> false // literal `0` can be used for both
-            colors.any { it > 1 } -> false
-            else -> true // Args are a mix of `0` and `1`. Assume a float, but we could be wrong.
-        }
+        containsFloats -> true
+        colors.all { it == 0f } -> false // literal `0` can be used for both
+        colors.any { it > 1 } -> false
+        else -> true // Args are a mix of `0` and `1`. Assume a float, but we could be wrong.
+    }
 }
 
-fun ConvertibleColor.toAwtColor(): Color = toRGB().let {
+fun com.github.ajalt.colormath.Color.toAwtColor(): Color = toRGB().let {
     Color(it.r, it.g, it.b, (it.a * 255).roundToInt())
 }
 

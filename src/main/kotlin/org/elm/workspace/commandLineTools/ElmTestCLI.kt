@@ -6,12 +6,14 @@ import com.intellij.execution.process.ColoredProcessHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.openapi.diagnostic.debug
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.project.Project
 import org.elm.openapiext.GeneralCommandLine
 import org.elm.openapiext.Result
 import org.elm.openapiext.execute
 import org.elm.workspace.ElmProject
 import org.elm.workspace.ParseException
 import org.elm.workspace.Version
+import org.elm.workspace.elmTestTool
 import java.nio.file.Path
 
 private val log = logger<ElmTestCLI>()
@@ -50,12 +52,12 @@ class ElmTestCLI(private val executablePath: Path) {
     }
 
 
-    fun queryVersion(): Result<Version> {
+    fun queryVersion(project: Project): Result<Version> {
         // Output of `elm-test --version` is a single line containing the version number,
         // e.g. `0.19.0-beta9\n`, trimming off the "-betaN" suffix, if present.
         val firstLine = try {
             GeneralCommandLine(executablePath).withParameters("--version")
-                    .execute(timeoutInMilliseconds = 3000)
+                    .execute(elmTestTool, project)
                     .stdoutLines
                     .firstOrNull()
         } catch (e: ExecutionException) {

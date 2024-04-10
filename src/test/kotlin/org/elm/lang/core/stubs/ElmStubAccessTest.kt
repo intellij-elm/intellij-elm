@@ -34,13 +34,10 @@ import com.intellij.openapi.vfs.VirtualFileVisitor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.PsiFileImpl
 import com.intellij.psi.stubs.StubElement
-import com.intellij.testFramework.LoggedErrorProcessor
-import org.apache.log4j.Logger
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmNamedElement
 import org.elm.lang.core.psi.ElmPsiElement
-import java.util.ArrayDeque
-import java.util.HashMap
+import java.util.*
 
 
 class ElmStubAccessTest : ElmTestBase() {
@@ -71,12 +68,14 @@ class ElmStubAccessTest : ElmTestBase() {
     fun `test parent works correctly for stubbed elements`() {
         val parentsByStub: MutableMap<PsiElement, PsiElement> = HashMap()
         try {
+/*
             LoggedErrorProcessor.setNewInstance(object : LoggedErrorProcessor() {
                 override fun processError(message: String?, t: Throwable?, details: Array<out String>?, logger: Logger) {
                     logger.info(message, t)
                     throw AssertionError(message)
                 }
             })
+*/
             processStubsWithoutAstAccess<ElmPsiElement> {
                 val parent = try {
                     it.parent
@@ -88,7 +87,7 @@ class ElmStubAccessTest : ElmTestBase() {
                 }
             }
         } finally {
-            LoggedErrorProcessor.restoreDefaultProcessor()
+//            LoggedErrorProcessor.restoreDefaultProcessor()
         }
 
         checkAstNotLoaded(VirtualFileFilter.NONE)

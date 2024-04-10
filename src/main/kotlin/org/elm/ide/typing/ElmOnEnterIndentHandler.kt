@@ -7,7 +7,6 @@
 
 package org.elm.ide.typing
 
-import com.intellij.application.options.CodeStyle
 import com.intellij.codeInsight.CodeInsightSettings
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegate.Result
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegateAdapter

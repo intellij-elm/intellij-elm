@@ -22,7 +22,7 @@ object ElmSuggest {
      * in order to determine that the file exists and that it is executable.
      */
     fun suggestTools(project: Project) =
-            listOf("elm", "elm-format", "elm-test").associateWith { programPath(it, project) }
+            elmTools.associateWith { programPath(it, project) }
 
     /**
      * Checks the system's path to verify whether the Elm compiler is present. The search locations are overridable so
@@ -96,7 +96,7 @@ object ElmSuggest {
     }
 
     private fun suggestionsFromNVM(): Sequence<Path> {
-        // nvm (Node Version Manager): see https://github.com/klazuka/intellij-elm/issues/252
+        // nvm (Node Version Manager): see https://github.com/intellij-elm/intellij-elm/issues/252
         // nvm is not available on Windows
         if (SystemInfo.isWindows) return emptySequence()
         return sequenceOf(Paths.get(FileUtil.expandUserHome("~/.config/yarn/global/node_modules/elm/unpacked_bin")))

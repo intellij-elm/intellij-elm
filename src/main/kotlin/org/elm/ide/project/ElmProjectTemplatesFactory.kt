@@ -18,6 +18,6 @@ class ElmProjectTemplatesFactory : ProjectTemplatesFactory() {
                 else -> super.getGroupIcon(group)
             }
 
-    override fun createTemplates(group: String?, context: WizardContext?): Array<ProjectTemplate> =
+    override fun createTemplates(group: String?, context: WizardContext): Array<out ProjectTemplate> =
             arrayOf(ElmWebProjectTemplate())
 }

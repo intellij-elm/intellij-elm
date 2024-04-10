@@ -1,5 +1,6 @@
 package org.elm.lang.core.completion
 
+
 class ElmKeywordCompletionTest : ElmCompletionTestBase() {
 
     fun `test 'type' keyword preceded by module decl`() = doSingleCompletion(
