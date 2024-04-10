@@ -180,8 +180,8 @@ jobs:
 
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
+    if: false # Temporarily disable (re-enable also in `needs` of `releaseDraft`)
     name: Verify plugin
-    if: ${{ !always() }}
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
@@ -234,7 +234,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, inspectCode, verify ]
+    needs: [ build, test, inspectCode ] # , verify ]  disabled for now
     runs-on: ubuntu-latest
     permissions:
       contents: write
