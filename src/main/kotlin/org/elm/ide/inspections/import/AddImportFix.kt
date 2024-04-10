@@ -1,7 +1,7 @@
 package org.elm.ide.inspections.import
 
 import com.intellij.codeInsight.intention.PriorityAction.Priority
-import com.intellij.codeInsight.navigation.NavigationUtil
+import com.intellij.codeInsight.navigation.hidePopupIfDumbModeStarts
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
@@ -145,7 +145,7 @@ private class RealImportPickerUI(
                 .setNamerForFiltering { it.moduleName }
                 .setRenderer(CandidateRenderer())
                 .createPopup()
-        NavigationUtil.hidePopupIfDumbModeStarts(popup, project)
+        hidePopupIfDumbModeStarts(popup, project)
         popup.showInBestPositionFor(dataContext)
     }
 }
