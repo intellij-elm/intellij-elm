@@ -1,4 +1,5 @@
 <idea-plugin>
+    <!-- Changing the ID will prohibit upgrades of version of the plugin with a previous ID. -->
     <id>intellij-elm</id>
     <name>Elm</name>
     <vendor url="https://github.com/intellij-elm">The Elm Plugin Contributors</vendor>
@@ -6,6 +7,11 @@
     <description><![CDATA[
         Provides support for the Elm programming language
     ]]></description>
+
+    <!-- We set the lower bound for the required IntelliJ version (build) manually, so we can omit the upper bound.
+         This since we will always try to be compatible with the latest version of the IDEs.
+         The build number here should reflect the `platformVersion` in `gradle.properties`. -->
+    <idea-version since-build="213"/>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
