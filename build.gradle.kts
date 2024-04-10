@@ -106,8 +106,10 @@ tasks {
 
     patchPluginXml {
         version.set(properties("pluginVersion"))
-        sinceBuild.set(properties("pluginSinceBuild"))
-        untilBuild.set(properties("pluginUntilBuild"))
+
+        // This prevents the patching `plugin.xml`. as set these manually as `patchPluginXml` can mess it up.
+        // See: https://intellij-support.jetbrains.com/hc/en-us/community/posts/360010590059-Why-pluginUntilBuild-is-mandatory
+        intellij.updateSinceUntilBuild.set(false)
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
@@ -122,10 +124,11 @@ tasks {
             }.joinToString("\n").run { markdownToHTML(this) }
         )
 
+        val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
         changeNotes.set(provider {
             changelog.run {
-                getOrNull(properties("pluginVersion")) ?: getLatest()
+                (getOrNull(properties("pluginVersion")) ?: getUnreleased()).withHeader(false)
             }.toHTML()
         })
     }
