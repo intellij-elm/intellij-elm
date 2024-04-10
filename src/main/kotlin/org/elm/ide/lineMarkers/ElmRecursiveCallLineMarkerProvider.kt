@@ -15,6 +15,7 @@ import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.psi.elements.ElmValueQID
+import java.util.function.Supplier
 
 /**
  * Put an icon in the gutter for top-level declarations (types, functions, values)
@@ -38,19 +39,20 @@ class ElmRecursiveCallLineMarkerProvider : LineMarkerProvider {
 
         val ref = valueExpr.reference.resolve()
         val nearestFunc = functionCall.ancestorsStrict.filterIsInstance<ElmValueDeclaration>()
-                .firstOrNull()?.functionDeclarationLeft
+            .firstOrNull()?.functionDeclarationLeft
         if (nearestFunc != ref) return null // not recursive
 
         val doc = PsiDocumentManager.getInstance(el.project).getDocument(el.containingFile) ?: return null
         val lineNumber = doc.getLineNumber(el.textOffset)
         if (lines.add(lineNumber)) {
             return LineMarkerInfo(
-                    el,
-                    el.textRange,
-                    ElmIcons.RECURSIVE_CALL,
-                    FunctionUtil.constant("Recursive call"),
-                    null,
-                    GutterIconRenderer.Alignment.RIGHT)
+                el,
+                el.textRange,
+                ElmIcons.RECURSIVE_CALL,
+                FunctionUtil.constant("Recursive call"),
+                null,
+                GutterIconRenderer.Alignment.RIGHT,
+                Supplier { "Recursive call" })
         }
         return null
     }
