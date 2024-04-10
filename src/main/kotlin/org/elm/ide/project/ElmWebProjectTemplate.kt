@@ -41,6 +41,7 @@ class ElmWebProjectTemplate : WebProjectTemplate<Any>(), CustomStepProjectGenera
 
     override fun generateProject(project: Project, baseDir: VirtualFile, settings: Any, module: Module) {
         log.debug("Generating a new project")
+        // `runWhenProjectIsInitialized` is deprecated: Consider using extension point {@link ProjectActivity} instead
         StartupManager.getInstance(project).runWhenProjectIsInitialized {
             val rootModel = ModuleRootManager.getInstance(module).modifiableModel
             val contentEntry = rootModel.contentEntries.single()
@@ -63,12 +64,12 @@ class ElmWebProjectTemplate : WebProjectTemplate<Any>(), CustomStepProjectGenera
                 project.save()
             }
 
-            // attempt to auto-configure the Elm toolchain and attach `elm.json`.
+            // attempt to autoconfigure the Elm toolchain and attach `elm.json`.
             asyncAutoDiscoverWorkspace(project, explicitRequest = true).whenCompleteAsync { _, _ ->
                 // open the Elm source file that we just created
-                val vfile = VfsUtil.findRelativeFile(root, "src", "Main.elm") ?: return@whenCompleteAsync
+                val vFile = VfsUtil.findRelativeFile(root, "src", "Main.elm") ?: return@whenCompleteAsync
                 project.runWriteCommandAction {
-                    FileEditorManager.getInstance(project).openFile(vfile, /*focusEditor*/ true)
+                    FileEditorManager.getInstance(project).openFile(vFile, /*focusEditor*/ true)
                 }
             }
         }

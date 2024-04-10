@@ -78,15 +78,15 @@ fun JsonReader.readErrorReport(): List<ElmReviewError> {
                         beginArray()
                         while (hasNext()) {
                             var currentPath: String? = null
-                            readProperties { property ->
-                                when (property) {
+                            readProperties { outerProperty ->
+                                when (outerProperty) {
                                     "path" -> currentPath = nextString()
                                     "errors" -> {
                                         beginArray()
                                         while (hasNext()) {
                                             val elmReviewError = ElmReviewError(path = currentPath)
-                                            readProperties { property ->
-                                                when (property) {
+                                            readProperties { innerProperty ->
+                                                when (innerProperty) {
                                                     "suppressed" -> elmReviewError.suppressed = nextBoolean()
                                                     "rule" -> elmReviewError.rule = nextString()
                                                     "message" -> elmReviewError.message = nextString()
@@ -117,16 +117,16 @@ fun JsonReader.readErrorReport(): List<ElmReviewError> {
                         while (hasNext()) {
                             var currentPath: String? = null
                             // TODO type 'compile-errors' with property errors ARRAY !?
-                            readProperties { property ->
-                                when (property) {
+                            readProperties { outerProperty ->
+                                when (outerProperty) {
                                     "path" -> currentPath = nextString()
                                     "name" -> skipValue()
                                     "problems" -> {
                                         beginArray()
                                         while (hasNext()) {
                                             val elmReviewError = ElmReviewError(path = currentPath)
-                                            readProperties { property ->
-                                                when (property) {
+                                            readProperties { innerProperty ->
+                                                when (innerProperty) {
                                                     "title" -> elmReviewError.rule = nextString()
                                                     else -> {
                                                         // TODO "fix", "details", "ruleLink", "originallySuppressed"

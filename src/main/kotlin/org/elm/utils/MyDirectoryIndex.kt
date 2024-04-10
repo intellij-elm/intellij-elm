@@ -40,9 +40,9 @@ import com.intellij.util.Consumer
 
 private val log = logger<MyDirectoryIndex<*>>()
 
-class MyDirectoryIndex<T>(parentDisposable: Disposable,
-                          private val myDefValue: T,
-                          private val myInitializer: Consumer<MyDirectoryIndex<T>>) {
+class MyDirectoryIndex<T : Any>(parentDisposable: Disposable,
+                                private val myDefValue: T,
+                                private val myInitializer: Consumer<MyDirectoryIndex<T>>) {
 
     private val myInfoCache = ConcurrentCollectionFactory.createConcurrentIntObjectMap<T>()
 

@@ -37,7 +37,7 @@ class ElmReviewService(val intellijProject: Project) : PersistentStateComponent<
     }
 
     @VisibleForTesting
-    fun asyncLoadState(state: Element): CompletableFuture<Unit> {
+    fun asyncLoadState(@Suppress("UNUSED_PARAMETER") state: Element): CompletableFuture<Unit> {
 
 /*
         val settingsElement = state.getChild("settings")

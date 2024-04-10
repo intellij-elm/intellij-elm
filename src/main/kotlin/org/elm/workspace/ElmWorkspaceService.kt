@@ -17,6 +17,7 @@ import com.intellij.openapi.components.*
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.RootsChangeRescanningInfo.TOTAL_RESCAN
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx
@@ -517,7 +518,7 @@ class ElmWorkspaceService(
 
                 // Refresh library roots
                 ProjectRootManagerEx.getInstanceEx(intellijProject)
-                        .makeRootsChange(EmptyRunnable.getInstance(), false, true)
+                    .makeRootsChange(EmptyRunnable.getInstance(), TOTAL_RESCAN)
             }
         }
         intellijProject.messageBus.syncPublisher(WORKSPACE_TOPIC)

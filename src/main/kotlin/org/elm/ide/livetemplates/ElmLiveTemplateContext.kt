@@ -16,11 +16,7 @@ import org.elm.lang.core.psi.elements.ElmStringConstantExpr
 import org.elm.lang.core.psi.elements.ElmTypeExpression
 import kotlin.reflect.KClass
 
-sealed class ElmLiveTemplateContext(
-        id: String,
-        presentableName: String,
-        baseContextType: KClass<out TemplateContextType>
-) : TemplateContextType(id, presentableName, baseContextType.java) {
+sealed class ElmLiveTemplateContext(presentableName: String) : TemplateContextType(presentableName) {
     override fun isInContext(file: PsiFile, offset: Int): Boolean {
         if (!PsiUtilCore.getLanguageAtOffset(file, offset).isKindOf(ElmLanguage)) {
             return false
@@ -39,24 +35,19 @@ sealed class ElmLiveTemplateContext(
 
     protected abstract fun isInContext(element: PsiElement): Boolean
 
-    class Generic : ElmLiveTemplateContext("ELM", "Elm", EverywhereContextType::class) {
+    class Generic : ElmLiveTemplateContext("Elm") {
         override fun isInContext(element: PsiElement): Boolean = true
     }
 
-    class TopLevel : ElmLiveTemplateContext("ELM_TOP_LEVEL", "Top level statement", Generic::class) {
-        override fun isInContext(element: PsiElement): Boolean {
-            return isTopLevel(element)
-        }
+    class TopLevel : ElmLiveTemplateContext("Top level statement") {
+        override fun isInContext(element: PsiElement): Boolean = isTopLevel(element)
     }
 
-    class ValueDecl : ElmLiveTemplateContext("ELM_VALUE_DECL", "Function declaration", Generic::class) {
-        override fun isInContext(element: PsiElement): Boolean {
-            return isTopLevel(element)
-                    || element.parent is ElmLetInExpr
-        }
+    class ValueDecl : ElmLiveTemplateContext("Function declaration") {
+        override fun isInContext(element: PsiElement): Boolean = isTopLevel(element) || element.parent is ElmLetInExpr
     }
 
-    class Expression : ElmLiveTemplateContext("ELM_EXPRESSION", "Expression", Generic::class) {
+    class Expression : ElmLiveTemplateContext("Expression") {
         override fun isInContext(element: PsiElement): Boolean {
             if (element.parent is ElmLetInExpr) return false
 

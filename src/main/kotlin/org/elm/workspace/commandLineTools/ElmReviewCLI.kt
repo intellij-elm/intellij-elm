@@ -106,7 +106,7 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
 
             val elmReviewService = project.getService(ElmReviewService::class.java)
             elmReviewService.activeWatchmodeProcess?.destroyForcibly()
-            val process = startProcess(command, elmProject, project)
+            val process = startProcess(command, elmProject)
             elmReviewService.activeWatchmodeProcess = process
 
             Disposer.register(project) { process.destroyForcibly() }
@@ -149,10 +149,8 @@ class ElmReviewCLI(val elmReviewExecutablePath: Path) {
             compareBy({ it.path }, { it.region!!.start!!.line }, { it.region!!.start!!.column })
     }
 
-    private fun startProcess(cmd: List<String>, elmProject: ElmProject, project: Project): Process =
-        ProcessBuilder(cmd)
-            .directory(elmProject.projectDirPath.toFile())
-            .start()
+    private fun startProcess(cmd: List<String>, elmProject: ElmProject): Process =
+        ProcessBuilder(cmd).directory(elmProject.projectDirPath.toFile()).start()
 
     fun queryVersion(project: Project): Result<Version> {
         val firstLine = try {
