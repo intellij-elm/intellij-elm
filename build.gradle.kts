@@ -1,7 +1,6 @@
-import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.grammarkit.tasks.GenerateLexerTask
-import org.jetbrains.grammarkit.tasks.GenerateParserTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.changelog.Changelog
+import org.jetbrains.changelog.markdownToHTML
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -9,11 +8,11 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
+    id("org.jetbrains.kotlin.jvm") version "1.6.0"
     // Gradle IntelliJ Plugin
-    id("org.jetbrains.intellij") version "1.4.0" // Does not work with Gradle 8.6
+    id("org.jetbrains.intellij") version "1.10.0" // Does not work with Gradle 8.6
     // GrammarKit Plugin
-    id("org.jetbrains.grammarkit") version "2021.2.1"
+    id("org.jetbrains.grammarkit") version "2022.3.2.2"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
@@ -58,24 +57,8 @@ qodana {
     showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
 }
 
-val generateSpecParser = tasks.create<GenerateParserTask>("generateElmParser") {
-    source.set("$projectDir/src/main/grammars/ElmParser.bnf")
-    targetRoot.set("$projectDir/src/main/gen")
-    pathToParser.set("/org/elm/lang/core/parser/ElmParser.java")
-    pathToPsiRoot.set("/org/elm/lang/core/psi")
-    purgeOldFiles.set(true)
-}
-
-val generateSpecLexer = tasks.create<GenerateLexerTask>("generateElmLexer") {
-    source.set("$projectDir/src/main/grammars/ElmLexer.flex")
-    skeleton.set(file("$projectDir/src/main/grammars/lexer.skeleton"))
-    targetDir.set("$projectDir/src/main/gen/org/elm/lang/core/lexer/")
-    targetClass.set("_ElmLexer")
-    purgeOldFiles.set(true)
-}
-
 val generateGrammars = tasks.register("generateGrammars") {
-    dependsOn(generateSpecParser, generateSpecLexer)
+    dependsOn("generateParser", "generateLexer")
 }
 
 tasks.withType<KotlinCompile> {
@@ -98,6 +81,23 @@ tasks {
         withType<KotlinCompile> {
             kotlinOptions.jvmTarget = it
         }
+    }
+
+    generateLexer {
+        // ("generateElmLexer") {
+        sourceFile.set(file("$projectDir/src/main/grammars/ElmLexer.flex"))
+        skeleton.set(file("$projectDir/src/main/grammars/lexer.skeleton"))
+        targetOutputDir.set(file("$projectDir/src/main/gen/org/elm/lang/core/lexer/"))
+        purgeOldFiles.set(true)
+    }
+
+    generateParser {
+        //("generateElmParser") {
+        sourceFile.set(file("$projectDir/src/main/grammars/ElmParser.bnf"))
+        targetRootOutputDir.set(file("$projectDir/src/main/gen"))
+        pathToParser.set("/org/elm/lang/core/parser/ElmParser.java")
+        pathToPsiRoot.set("/org/elm/lang/core/psi")
+        purgeOldFiles.set(true)
     }
 
     wrapper {

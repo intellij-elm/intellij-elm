@@ -28,8 +28,9 @@ private val log = logger<ElmNeedsConfigNotificationProvider>()
  * Presents actionable notifications at the top of an Elm file whenever the Elm plugin
  * needs configuration (e.g. the path to the Elm compiler).
  */
+// TODO(cies): Replace deprecated Provider with {@link EditorNotificationProvider}
 class ElmNeedsConfigNotificationProvider(
-        private val project: Project
+    private val project: Project
 ) : EditorNotifications.Provider<EditorNotificationPanel>() {
 
     private val notifications = EditorNotifications.getInstance(project)
@@ -40,15 +41,15 @@ class ElmNeedsConfigNotificationProvider(
     init {
         project.messageBus.connect(project).apply {
             subscribe(ElmWorkspaceService.WORKSPACE_TOPIC,
-                    object : ElmWorkspaceService.ElmWorkspaceListener {
-                        override fun didUpdate() {
-                            log.debug("Workspace did change; invalidating cache and refreshing UI")
-                            synchronized(lock) {
-                                versionCheck = VersionCheck.NotChecked // Elm toolchain may have changed
-                            }
-                            notifications.updateAllNotifications()
+                object : ElmWorkspaceService.ElmWorkspaceListener {
+                    override fun didUpdate() {
+                        log.debug("Workspace did change; invalidating cache and refreshing UI")
+                        synchronized(lock) {
+                            versionCheck = VersionCheck.NotChecked // Elm toolchain may have changed
                         }
-                    })
+                        notifications.updateAllNotifications()
+                    }
+                })
         }
     }
 
@@ -71,7 +72,7 @@ class ElmNeedsConfigNotificationProvider(
         }
 
         val elmProject = project.elmWorkspace.findProjectForFile(file)
-                ?: return noElmProjectPanel("Could not find Elm project for this file")
+            ?: return noElmProjectPanel("Could not find Elm project for this file")
 
         // Check that the toolchain path to the Elm binary corresponds to a version of the compiler
         // that is compatible with the Elm project. We have to do this async because this function
@@ -85,14 +86,16 @@ class ElmNeedsConfigNotificationProvider(
                     asyncQueryElmCompilerVersion(toolchain)
                     return null
                 }
+
                 VersionCheck.Checking -> {
                     log.debug("Skipping version check")
                     return null
                 }
+
                 is VersionCheck.Checked -> {
                     log.debug("Using cached version ${vc.version}")
                     val compilerVersion = vc.version
-                            ?: return badToolchainPanel("Could not determine Elm compiler version")
+                        ?: return badToolchainPanel("Could not determine Elm compiler version")
 
                     if (!elmProject.isCompatibleWith(compilerVersion)) {
                         return versionConflictPanel(project, elmProject, compilerVersion)
@@ -118,22 +121,26 @@ class ElmNeedsConfigNotificationProvider(
     }
 
     private fun badToolchainPanel(message: String) =
-            EditorNotificationPanel().apply {
-                setText(message)
-                createActionLabel("Setup toolchain") {
-                    project.elmWorkspace.showConfigureToolchainUI()
-                }
+        EditorNotificationPanel().apply {
+            setText(message)
+            createActionLabel("Setup toolchain") {
+                project.elmWorkspace.showConfigureToolchainUI()
             }
+        }
 
 
     private fun noElmProjectPanel(message: String) =
-            EditorNotificationPanel().apply {
-                setText(message)
-                createActionLabel("Attach elm.json", "Elm.AttachElmProject")
-            }
+        EditorNotificationPanel().apply {
+            setText(message)
+            createActionLabel("Attach elm.json", "Elm.AttachElmProject")
+        }
 
 
-    private fun versionConflictPanel(project: Project, elmProject: ElmProject, compilerVersion: Version): EditorNotificationPanel {
+    private fun versionConflictPanel(
+        project: Project,
+        elmProject: ElmProject,
+        compilerVersion: Version
+    ): EditorNotificationPanel {
         val expectedVersionText = when (elmProject) {
             is LamderaApplicationProject -> elmProject.elmVersion.toString()
             is ElmApplicationProject -> elmProject.elmVersion.toString()
@@ -145,8 +152,8 @@ class ElmNeedsConfigNotificationProvider(
             setText("Your $manifestFileName file requires Elm $expectedVersionText but your Elm compiler is $compilerVersion")
             createActionLabel("Open $manifestFileName") {
                 val didNavigate = LocalFileSystem.getInstance().findFileByPath(elmProject.manifestPath)
-                        ?.let { OpenFileDescriptor(project, it) }
-                        ?.navigateInEditor(project, true)
+                    ?.let { OpenFileDescriptor(project, it) }
+                    ?.navigateInEditor(project, true)
                 if (didNavigate != true)
                     project.showBalloon("Cannot open $manifestFileName", NotificationType.ERROR)
             }

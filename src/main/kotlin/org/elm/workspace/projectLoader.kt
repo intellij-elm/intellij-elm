@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.util.io.exists
 import org.elm.openapiext.refreshAndFindFileByPathTestAware
 import org.elm.workspace.ElmToolchain.Companion.SIDECAR_FILENAME
 import org.elm.workspace.solver.Pkg
@@ -19,6 +18,7 @@ import org.elm.workspace.solver.solve
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.exists
 
 
 class ElmProjectLoader(
@@ -121,11 +121,8 @@ class ElmPackageRepository(override val elmCompilerVersion: Version) : Repositor
 
     val elmHomePath: String
         get() {
-            /*
-            The Elm compiler first checks the ELM_HOME environment variable. If not found,
-            it will fallback to the path returned by Haskell's `System.Directory.getAppUserDataDirectory`
-            function.
-            */
+            // The Elm compiler first checks the ELM_HOME environment variable. If not found, it will fall back to the
+            // path returned by Haskell's `System.Directory.getAppUserDataDirectory` function.
             val elmHomeVar = System.getenv("ELM_HOME")
             if (elmHomeVar != null && Paths.get(elmHomeVar).exists())
                 return elmHomeVar

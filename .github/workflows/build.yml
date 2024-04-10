@@ -45,12 +45,12 @@ jobs:
       - name: Gradle Wrapper Validation
         uses: gradle/wrapper-validation-action@v2
 
-      # Setup Java 11 environment for the next steps
+      # Setup Java 17 environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: corretto
-          java-version: 11
+          java-version: 17
 
       # Setup Gradle
       - name: Setup Gradle
@@ -117,7 +117,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: corretto
-          java-version: 11
+          java-version: 17
 
       # Setup Gradle
       - name: Setup Gradle
@@ -170,7 +170,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: corretto
-          java-version: 11
+          java-version: 17
 
       # Run Qodana inspections
       - name: Qodana - Code Inspection
@@ -202,7 +202,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: corretto
-          java-version: 11
+          java-version: 17
 
       # Setup Gradle
       - name: Setup Gradle

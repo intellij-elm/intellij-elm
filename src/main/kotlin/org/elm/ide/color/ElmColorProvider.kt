@@ -20,8 +20,7 @@ class ElmColorProvider : ElementColorProvider {
     override fun getColorFrom(element: PsiElement): Color? {
         // Like all line markers, we should only provide colors on leaf elements
         if (element.firstChild != null) return null
-        return getCssColorFromString(element)
-            ?: getColorFromFuncCall(element)
+        return getCssColorFromString(element) ?: getColorFromFuncCall(element)
     }
 
     // Parse a CSS color from any string that contains one, since "1px solid #1a2b3c" probably

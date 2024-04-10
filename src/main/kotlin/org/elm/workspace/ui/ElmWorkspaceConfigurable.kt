@@ -94,7 +94,7 @@ class ElmWorkspaceConfigurable(
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
-        UiNotifyConnector(panel, object : Activatable {
+        UiNotifyConnector.installOn(panel, object : Activatable {
             override fun showNotify() = update()
         }).also { Disposer.register(this, it) }
 
@@ -278,8 +278,7 @@ class ElmWorkspaceConfigurable(
             shortcuts.isEmpty() -> "No Shortcut"
             else -> shortcuts.joinToString(", ") { KeymapUtil.getShortcutText(it) }
         }
-        elmFormatShortcutLabel.setHyperlinkText(shortcutStatus + " ", "Change", "")
-        // TODO use: elmFormatShortcutLabel.setTextWithHyperlink("$shortcutStatus ")
+        elmFormatShortcutLabel.setTextWithHyperlink("$shortcutStatus <hyperlink>Change</hyperlink>")
     }
 
     override fun dispose() {

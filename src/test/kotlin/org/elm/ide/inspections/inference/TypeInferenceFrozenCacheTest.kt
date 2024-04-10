@@ -99,6 +99,7 @@ main r =
                 ret.assertFrozen()
                 parameters.forEach { it.assertFrozen() }
             }
+            else -> {}
         }
         alias?.parameters?.forEach { it.assertFrozen() }
     }
