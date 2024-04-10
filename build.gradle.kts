@@ -111,7 +111,7 @@ tasks {
         // See: https://intellij-support.jetbrains.com/hc/en-us/community/posts/360010590059-Why-pluginUntilBuild-is-mandatory
         // Commented out for now as it breaks certain GitHub Workflows
         // intellij.updateSinceUntilBuild.set(false)
-        
+
         sinceBuild.set(properties("pluginSinceBuild"))
         untilBuild.set(properties("pluginUntilBuild"))
 

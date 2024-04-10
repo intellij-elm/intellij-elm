@@ -1,0 +1,9 @@
+/*
+!/.gitignore
+!/dictionaries
+!/inspectionProfiles
+!/runConfigurations
+
+# Default ignored files
+/shelf/
+/workspace.xml
