@@ -1,4 +1,5 @@
-# Elm Plugin for JetBrains IDEs
+Elm Plugin for JetBrains IDEs
+=============================
 
 <!--
 Fix these badges once the plugin in uploaded...

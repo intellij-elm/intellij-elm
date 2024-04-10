@@ -74,7 +74,9 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+      # Commented out as this should work with intellij-platform-gradle-plugin v1.5+, see:
+      # https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/909
+      #    ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # Build plugin
       - name: Build plugin
@@ -114,8 +116,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
-          java-version: 17
+          distribution: corretto
+          java-version: 11
 
       # Setup Gradle
       - name: Setup Gradle
@@ -167,8 +169,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
-          java-version: 17
+          distribution: corretto
+          java-version: 11
 
       # Run Qodana inspections
       - name: Qodana - Code Inspection
@@ -178,6 +180,7 @@ jobs:
 
   # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
+    if: false # Temporarily disable (re-enable also in `needs` of `releaseDraft`)
     name: Verify plugin
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -198,8 +201,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
-          java-version: 17
+          distribution: corretto
+          java-version: 11
 
       # Setup Gradle
       - name: Setup Gradle
@@ -231,7 +234,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, inspectCode, verify ]
+    needs: [ build, test, inspectCode ] # , verify ]  disabled for now
     runs-on: ubuntu-latest
     permissions:
       contents: write

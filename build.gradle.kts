@@ -109,7 +109,11 @@ tasks {
 
         // This prevents the patching `plugin.xml`. as set these manually as `patchPluginXml` can mess it up.
         // See: https://intellij-support.jetbrains.com/hc/en-us/community/posts/360010590059-Why-pluginUntilBuild-is-mandatory
-        intellij.updateSinceUntilBuild.set(false)
+        // Commented out for now as it breaks certain GitHub Workflows
+        // intellij.updateSinceUntilBuild.set(false)
+
+        sinceBuild.set(properties("pluginSinceBuild"))
+        untilBuild.set(properties("pluginUntilBuild"))
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
