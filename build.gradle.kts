@@ -52,7 +52,6 @@ changelog {
     repositoryUrl = properties("pluginRepositoryUrl")
 }
 
-<<<<<<< HEAD
 // Configure Gradle Kover Plugin - read more: https://github.com/Kotlin/kotlinx-kover#configuration
 koverReport {
     defaults {
@@ -60,14 +59,6 @@ koverReport {
             onCheck = true
         }
     }
-=======
-// Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
-qodana {
-    cachePath.set(projectDir.resolve(".qodana").canonicalPath)
-    reportPath.set(projectDir.resolve("build/reports/inspections").canonicalPath)
-    saveReport.set(true)
-    showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
->>>>>>> master
 }
 
 val generateGrammars = tasks.register("generateGrammars") {
