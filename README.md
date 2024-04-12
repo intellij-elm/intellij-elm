@@ -17,6 +17,10 @@ Should work on IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and mo
 
 ## Install
 
+First make sure to uninstall all other Elm plugins you may have installed (this requires a restart of the IDE).
+Some have reported that having two Elm plugins installed results in the IDE not starting but showing a seemingly unreleated error
+(if you have this problem, there are [ways to fix it](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000524244-Disable-Uninstall-plugin-without-launching-Idea)).
+
 From within a JetBrains IDE, go to `Settings` -> `Plugins` -> `Marketplace` and search for "Elm".
 After installing the plugin, restart the IDE and then [open your existing Elm project](docs/existing-project.md) or [create a new project](docs/new-project.md).
 
