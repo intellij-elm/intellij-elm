@@ -1,8 +1,6 @@
 package org.elm.ide.color
 
 import com.github.ajalt.colormath.*
-import com.github.ajalt.colormath.model.HSL
-import com.github.ajalt.colormath.model.RGB
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.ElementColorProvider
 import com.intellij.psi.PsiDocumentManager
@@ -12,14 +10,14 @@ import org.elm.lang.core.psi.ElmTypes.LOWER_CASE_IDENTIFIER
 import org.elm.lang.core.psi.ElmTypes.REGULAR_STRING_PART
 import org.elm.lang.core.psi.elementType
 import org.elm.lang.core.psi.elements.*
-import java.awt.Color as AwtColor
-
+import java.awt.Color
+import kotlin.math.roundToInt
 
 private val colorRegex = Regex("""#[0-9a-fA-F]{3,8}\b|\b(?:rgb|hsl)a?\([^)]+\)""")
 
 /** Adds color blocks to the gutter when hex colors exist in a string */
 class ElmColorProvider : ElementColorProvider {
-    override fun getColorFrom(element: PsiElement): AwtColor? {
+    override fun getColorFrom(element: PsiElement): Color? {
         // Like all line markers, we should only provide colors on leaf elements
         if (element.firstChild != null) return null
         return getCssColorFromString(element) ?: getColorFromFuncCall(element)
@@ -28,14 +26,14 @@ class ElmColorProvider : ElementColorProvider {
     // Parse a CSS color from any string that contains one, since "1px solid #1a2b3c" probably
     // contains a color. We don't parse color keywords, since "The red fire truck" is probably not
     // supposed to contain a color.
-    private fun getCssColorFromString(element: PsiElement): AwtColor? {
+    private fun getCssColorFromString(element: PsiElement): Color? {
         if (element.elementType != REGULAR_STRING_PART) return null
         return colorRegex.find(element.text)
-            ?.let { runCatching { Color.parse(it.value) }.getOrNull() }
+            ?.let { runCatching { ConvertibleColor.fromCss(it.value) }.getOrNull() }
             ?.toAwtColor()
     }
 
-    private fun getColorFromFuncCall(element: PsiElement): AwtColor? {
+    private fun getColorFromFuncCall(element: PsiElement): Color? {
         val call = getFuncCall(element) ?: return null
         val color = runCatching {
             // color constructors will throw if the args are out of bounds
@@ -45,7 +43,6 @@ class ElmColorProvider : ElementColorProvider {
                     if (call.useFloat) RGB(call.c1, call.c2, call.c3, call.a ?: 1f)
                     else RGB(call.c1.toInt(), call.c2.toInt(), call.c3.toInt(), call.a ?: 1f)
                 }
-
                 "rgb255" -> RGB(call.c1.toInt(), call.c2.toInt(), call.c3.toInt())
                 "rgba255" -> RGB(call.c1.toInt(), call.c2.toInt(), call.c3.toInt(), call.a ?: return null)
                 "hsl" -> HSL(call.c1, call.c2, call.c3)
@@ -84,7 +81,7 @@ class ElmColorProvider : ElementColorProvider {
         )
     }
 
-    override fun setColorTo(element: PsiElement, color: AwtColor) {
+    override fun setColorTo(element: PsiElement, color: Color) {
         if (element.firstChild != null) return
         val command = stringColorSettingRunnable(element, color)
             ?: functionColorSettingRunnable(element, color)
@@ -101,13 +98,13 @@ class ElmColorProvider : ElementColorProvider {
         )
     }
 
-    private fun functionColorSettingRunnable(element: PsiElement, color: AwtColor): Runnable? {
+    private fun functionColorSettingRunnable(element: PsiElement, color: Color): Runnable? {
         val funcCall = getFuncCall(element)
         val call = funcCall ?: return null
         return Runnable { setColorInFunctionCall(element, color, call) }
     }
 
-    private fun setColorInFunctionCall(element: PsiElement, color: AwtColor, call: FuncCall) {
+    private fun setColorInFunctionCall(element: PsiElement, color: Color, call: FuncCall) {
         val factory = ElmPsiFactory(element.project)
 
         fun ElmNumberConstantExpr.replace(c: Int, float: Boolean) {
@@ -129,12 +126,12 @@ class ElmColorProvider : ElementColorProvider {
         call.args.getOrNull(3)?.replace(color.alpha, true)
     }
 
-    private fun stringColorSettingRunnable(element: PsiElement, color: AwtColor): Runnable? {
+    private fun stringColorSettingRunnable(element: PsiElement, color: Color): Runnable? {
         if (element.elementType != REGULAR_STRING_PART) return null
         return Runnable { setCssColorInString(element, color) }
     }
 
-    private fun setCssColorInString(element: PsiElement, color: AwtColor) {
+    private fun setCssColorInString(element: PsiElement, color: Color) {
         val parent = element.parent as? ElmStringConstantExpr ?: return
         val match = colorRegex.find(element.text)?.value ?: return
 
@@ -144,8 +141,24 @@ class ElmColorProvider : ElementColorProvider {
 
         val newColor = when {
             match.startsWith("#") -> rgb.toHex()
-            match.startsWith("rgb") -> rgb.formatCssString()
-            match.startsWith("hsl") -> rgb.toHSL().formatCssString()
+            match.startsWith("rgb") -> rgb.toCssRgb(
+                commas = commas,
+                namedRgba = match.startsWith("rgba"),
+                rgbPercent = percentCount > 1,
+                alphaPercent = percentCount == 1 || percentCount == 4
+            )
+            match.startsWith("hsl") -> rgb.toCssHsl(
+                commas = commas,
+                namedHsla = match.startsWith("hsla"),
+                hueUnit = when {
+                    "deg" in match -> AngleUnit.DEGREES
+                    "grad" in match -> AngleUnit.GRADIANS
+                    "rad" in match -> AngleUnit.RADIANS
+                    "turn" in match -> AngleUnit.TURNS
+                    else -> AngleUnit.AUTO
+                },
+                alphaPercent = percentCount == 1 || percentCount == 3
+            )
             else -> return
         }
 
@@ -175,9 +188,11 @@ private data class FuncCall(
     }
 }
 
-fun Color.toAwtColor(): AwtColor = toSRGB().let { AwtColor(it.r, it.g, it.b, it.alpha * 255) }
+fun com.github.ajalt.colormath.Color.toAwtColor(): Color = toRGB().let {
+    Color(it.r, it.g, it.b, (it.a * 255).roundToInt())
+}
 
-private fun AwtColor.toRGB() = RGB(red, green, blue, alpha / 255f)
+private fun Color.toRGB() = RGB(red, green, blue, alpha / 255f)
 
 private fun Float.render(): String = when (this) {
     0f -> "0"
