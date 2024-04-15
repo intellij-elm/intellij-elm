@@ -2,16 +2,17 @@ package org.elm.workspace.compiler
 
 import com.intellij.notification.Notification
 import com.intellij.notification.Notifications
-import com.intellij.notification.NotificationsAdapter
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
-import com.intellij.testFramework.TestActionEvent
+import com.intellij.testFramework.TestActionEvent.createTestEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
 import java.nio.file.Path
+
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
@@ -150,13 +151,13 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
     }
 
 
-    private fun makeTestAction(file: VirtualFile): Pair<ElmBuildAction, TestActionEvent> {
+    private fun makeTestAction(file: VirtualFile): Pair<ElmBuildAction, AnActionEvent> {
         val dataContext = MapDataContext(mapOf(
                 CommonDataKeys.PROJECT to project,
                 CommonDataKeys.VIRTUAL_FILE to file
         ))
         val action = ElmBuildAction()
-        val event = TestActionEvent(dataContext, action)
+        val event = createTestEvent(action, dataContext)
         action.beforeActionPerformedUpdate(event)
         return Pair(action, event)
     }
@@ -164,7 +165,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
     private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
         val notificationRef = Ref<Notification>()
         project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
-                object : NotificationsAdapter() {
+                object : Notifications {
                     override fun notify(notification: Notification) =
                             notificationRef.set(notification)
                 })

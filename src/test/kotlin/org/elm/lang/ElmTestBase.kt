@@ -32,7 +32,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -69,7 +68,8 @@ private val log = logger<ElmTestBase>()
  *   and make it easy to check facts about the PsiElement at the indicated position
  *
  * We don't use this base class for lexing and parsing because IntelliJ already
- * provides [LexerTestCase] and [ParsingTestCase] for that purpose.
+ * provides [org.elm.lang.core.lexer.ElmLexerTestCaseBase] and [org.elm.lang.core.parser.ElmParsingTestCaseBase]
+ * for that purpose.
  *
  * For "heavier" integration tests, see [org.elm.workspace.ElmWorkspaceTestBase]
  */
@@ -271,7 +271,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
             val stream = ElmTestBase::class.java.classLoader.getResourceAsStream(path)
                     ?: return null
 
-            return StreamUtil.readText(stream, Charsets.UTF_8)
+            return stream.bufferedReader().use { it.readText() }
         }
     }
 
