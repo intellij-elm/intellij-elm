@@ -8,7 +8,7 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.6.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.20"
     // Gradle IntelliJ Plugin
     id("org.jetbrains.intellij") version "1.10.0" // Does not work with Gradle 8.6
     // GrammarKit Plugin

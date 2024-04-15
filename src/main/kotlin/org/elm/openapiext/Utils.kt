@@ -40,16 +40,11 @@ import kotlin.reflect.KProperty
 
 
 fun <T> Project.runWriteCommandAction(command: () -> T): T {
-    return WriteCommandAction.runWriteCommandAction(this, Computable<T> { command() })
+    return WriteCommandAction.runWriteCommandAction(this, Computable { command() })
 }
 
 val Project.modules: Collection<Module>
     get() = ModuleManager.getInstance(this).modules.toList()
-
-
-fun <T> recursionGuard(key: Any, block: Computable<T>, memoize: Boolean = true): T? =
-    RecursionManager.doPreventingRecursion(key, memoize, block)
-
 
 fun checkWriteAccessAllowed() {
     check(ApplicationManager.getApplication().isWriteAccessAllowed) {
@@ -97,44 +92,18 @@ fun VirtualFile.findFileBreadthFirst(maxDepth: Int, predicate: (VirtualFile) -> 
 val VirtualFile.pathAsPath: Path get() = Paths.get(path)
 fun VirtualFile.pathRelative(project: Project): Path {
     val absPath = Paths.get(path)
-    return absPath.relativeTo(Paths.get(project.basePath))
+    return absPath.relativeTo(Paths.get(project.basePath!!))
 }
 
 fun VirtualFile.toPsiFile(project: Project): PsiFile? =
     PsiManager.getInstance(project).findFile(this)
 
-fun Editor.toPsiFile(project: Project): PsiFile? =
-    PsiDocumentManager.getInstance(project).getPsiFile(document)
-
-
-inline fun <Key, reified Psi : PsiElement> getElements(
-    indexKey: StubIndexKey<Key, Psi>,
-    key: Key, project: Project,
-    scope: GlobalSearchScope?
-): Collection<Psi> =
-    StubIndex.getElements(indexKey, key, project, scope, Psi::class.java)
-
-
 fun Element.toXmlString() =
     JDOMUtil.writeElement(this)
 
-fun elementFromXmlString(xml: String): org.jdom.Element =
+fun elementFromXmlString(xml: String): Element =
     // TODO(cies) Use JDOMUtil or JDK API (StAX) or XmlDomReader.readXmlAsModel instead (first decide which)
     SAXBuilder().build(xml.byteInputStream()).rootElement
-
-
-class CachedVirtualFile(private val url: String?) {
-    private val cache = AtomicReference<VirtualFile>()
-
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): VirtualFile? {
-        if (url == null) return null
-        val cached = cache.get()
-        if (cached != null && cached.isValid) return cached
-        val file = VirtualFileManager.getInstance().findFileByUrl(url)
-        cache.set(file)
-        return file
-    }
-}
 
 /**
  * Unless you are absolutely certain that the file will only ever exist

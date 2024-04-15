@@ -1,8 +1,10 @@
 package org.elm.ide.color
 
-import com.github.ajalt.colormath.*
+import com.github.ajalt.colormath.Color
+import com.github.ajalt.colormath.formatCssString
 import com.github.ajalt.colormath.model.HSL
 import com.github.ajalt.colormath.model.RGB
+import com.github.ajalt.colormath.parse
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.ElementColorProvider
 import com.intellij.psi.PsiDocumentManager
