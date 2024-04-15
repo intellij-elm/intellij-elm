@@ -117,7 +117,7 @@ class ElmColorProvider : ElementColorProvider {
 
         if (call.name.startsWith("hsl")) {
             val hsl = color.toRGB().toHSL()
-            call.args[0].replace(factory.createNumberConstant(hsl.h.toFloat().render()))
+            call.args[0].replace(factory.createNumberConstant(hsl.h.render()))
             call.args[1].replace(factory.createNumberConstant((hsl.s / 100f).render()))
             call.args[2].replace(factory.createNumberConstant((hsl.l / 100f).render()))
         } else {
@@ -139,8 +139,6 @@ class ElmColorProvider : ElementColorProvider {
         val match = colorRegex.find(element.text)?.value ?: return
 
         val rgb = color.toRGB()
-        val percentCount = match.count { it == '%' }
-        val commas = ',' in match
 
         val newColor = when {
             match.startsWith("#") -> rgb.toHex()
