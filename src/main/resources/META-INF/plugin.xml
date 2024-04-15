@@ -8,10 +8,8 @@
         Provides support for the Elm programming language
     ]]></description>
 
-    <!-- We set the lower bound for the required IntelliJ version (build) manually, so we can omit the upper bound.
-         This since we will always try to be compatible with the latest version of the IDEs.
-         The build number here should reflect the `platformVersion` in `gradle.properties`. -->
-    <idea-version since-build="213"/>
+    <!-- `<idea-version since-build="..."/>` and `<idea-version until-build="..."/>` are set by the `patchPluginXml`
+         Gradle task, with values from `gradle.properties`. -->
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
@@ -213,7 +211,7 @@
 
 
         <!-- STUBS -->
-        <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes"/>
+        <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes" externalIdPrefix="elm"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex"/>
 

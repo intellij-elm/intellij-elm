@@ -94,7 +94,7 @@ class ElmWorkspacePanel(private val project: Project) : SimpleToolWindowPanel(tr
                     true // horizontal layout
             )
         }
-        toolbar.setTargetComponent(this)
+        toolbar.targetComponent = this
         return toolbar.component
     }
 

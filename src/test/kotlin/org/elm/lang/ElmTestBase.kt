@@ -26,13 +26,11 @@ SOFTWARE.
 
 package org.elm.lang
 
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -56,7 +54,6 @@ import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 import java.util.*
 
-private val log = logger<ElmTestBase>()
 
 /**
  * Base class for basically all Elm tests *except* lexing, parsing and stuff that depends
@@ -69,7 +66,8 @@ private val log = logger<ElmTestBase>()
  *   and make it easy to check facts about the PsiElement at the indicated position
  *
  * We don't use this base class for lexing and parsing because IntelliJ already
- * provides [LexerTestCase] and [ParsingTestCase] for that purpose.
+ * provides [org.elm.lang.core.lexer.ElmLexerTestCaseBase] and [org.elm.lang.core.parser.ElmParsingTestCaseBase]
+ * for that purpose.
  *
  * For "heavier" integration tests, see [org.elm.workspace.ElmWorkspaceTestBase]
  */
@@ -86,7 +84,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
     protected val fileName: String
         get() = "$testName.elm"
 
-    protected val testName: String
+    private val testName: String
         get() = camelOrWordsToSnake(getTestName(true))
 
     protected fun checkByFile(ignoreTrailingWhitespace: Boolean = true, action: () -> Unit) {
@@ -108,7 +106,11 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         PlatformTestUtil.assertDirectoriesEqual(afterDir!!, beforeDir)
     }
 
-    protected fun checkByDirectory(@Language("Elm") before: String, @Language("Elm") after: String, action: () -> Unit) {
+    protected fun checkByDirectory(
+        @Language("Elm") before: String,
+        @Language("Elm") after: String,
+        action: () -> Unit
+    ) {
         fileTreeFromText(before).create()
         action()
         FileDocumentManager.getInstance().saveAllDocuments()
@@ -116,9 +118,9 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
     }
 
     protected fun checkByText(
-            @Language("Elm") before: String,
-            @Language("Elm") after: String,
-            action: () -> Unit
+        @Language("Elm") before: String,
+        @Language("Elm") after: String,
+        action: () -> Unit
     ) {
         InlineFile(before)
         action()
@@ -130,7 +132,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
     }
 
     protected fun getVirtualFileByName(path: String): VirtualFile? =
-            LocalFileSystem.getInstance().findFileByPath(path)
+        LocalFileSystem.getInstance().findFileByPath(path)
 
     protected inline fun <reified X : Throwable> expect(f: () -> Unit) {
         try {
@@ -172,7 +174,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         val (data, offset) = findDataAndOffsetInEditor(marker)
         val elementAtMarker = myFixture.file.findElementAt(offset)!!
         val element = elementAtMarker.parentOfType<T>(strict = false)
-                ?: error("No ${T::class.java.simpleName} at ${elementAtMarker.text}")
+            ?: error("No ${T::class.java.simpleName} at ${elementAtMarker.text}")
         return Triple(element, data, offset)
     }
 
@@ -201,7 +203,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
     }
 
     protected fun replaceCaretMarker(@Language("Elm") text: String) =
-            text.replace("{-caret-}", "<caret>")
+        text.replace("{-caret-}", "<caret>")
 
     protected fun applyQuickFix(name: String) {
         val action = myFixture.findSingleIntention(name)
@@ -269,14 +271,14 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         @JvmStatic
         fun getResourceAsString(path: String): String? {
             val stream = ElmTestBase::class.java.classLoader.getResourceAsStream(path)
-                    ?: return null
+                ?: return null
 
-            return StreamUtil.readText(stream, Charsets.UTF_8)
+            return stream.bufferedReader().use { it.readText() }
         }
     }
 
     protected fun FileTree.create(): TestProject =
-            create(myFixture.project, myFixture.findFileInTempDir("."))
+        create(myFixture.project, myFixture.findFileInTempDir("."))
 
     protected fun FileTree.createAndOpenFileWithCaretMarker(): TestProject {
         val testProject = create()

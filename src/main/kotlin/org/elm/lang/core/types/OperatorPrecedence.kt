@@ -29,9 +29,8 @@ sealed class BinaryExprTree<T : Any> {
             return parseExpression(expression, operatorPrecedences, DEFAULT_PRECEDENCE, 0).first
         }
 
-        /*
-         * This is a pure functional Pratt parser with optimizations based on the fact that all operators
-         * are infix and binary.
+        /**
+         * A pure functional Pratt parser with optimizations based on the fact that all operators are infix and binary.
          */
         private fun <T : Any> parseExpression(
                 expression: List<T>,
@@ -48,7 +47,13 @@ sealed class BinaryExprTree<T : Any> {
             var i = idx + 1
             fun nextPrecedence(): Int = when {
                 i >= expression.lastIndex -> DEFAULT_PRECEDENCE
-                else -> operatorPrecedences[expression[i]]!!.precedence
+                else -> {
+                    // Spread this over three lines in order to find the operation that caused an NPE.
+                    // May be folded back into one line when the bug is fixed.
+                    val index = expression[i]
+                    val operatorPrecedence = operatorPrecedences[index]
+                    operatorPrecedence!!.precedence
+                }
             }
             while (precedence < nextPrecedence()) {
                 val operator = expression[i]
