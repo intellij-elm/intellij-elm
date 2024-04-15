@@ -9,7 +9,7 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.8.10"
+    id("org.jetbrains.kotlin.jvm") version "1.8.10" // Keep in sync with `kotlin-test`
     // Gradle IntelliJ Plugin
     id("org.jetbrains.intellij") version "1.17.3"
     // GrammarKit Plugin
@@ -33,7 +33,7 @@ repositories {
 dependencies {
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.20-M1")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.8.10") // Keep in sync with `"org.jetbrains.kotlin.jvm`
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html

@@ -1,8 +1,8 @@
 package org.elm.ide.inspections
 
 
-
 class ElmTupleSizeInspectionTest : ElmInspectionsTestBase(ElmTupleSizeInspection()) {
+
     fun `test 2-tuple`() = checkByText("""
 main = (1, 2)
 """)

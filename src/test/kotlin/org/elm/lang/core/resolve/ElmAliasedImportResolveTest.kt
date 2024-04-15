@@ -3,7 +3,6 @@ package org.elm.lang.core.resolve
 
 class ElmAliasedImportResolveTest : ElmResolveTestBase() {
 
-
     fun `test aliased, qualified value ref`() = stubOnlyResolve(
 """
 --@ main.elm

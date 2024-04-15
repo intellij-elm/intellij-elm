@@ -44,7 +44,7 @@ class MyDirectoryIndex<T : Any>(parentDisposable: Disposable,
                                 private val myDefValue: T,
                                 private val myInitializer: Consumer<MyDirectoryIndex<T>>) {
 
-    private val myInfoCache = ConcurrentCollectionFactory.createConcurrentIntObjectMap<T>()
+    private val myInfoCache = ConcurrentCollectionFactory.createConcurrentIntObjectMap<T?>()
 
     init {
         resetIndex()
@@ -121,20 +121,20 @@ class MyDirectoryIndex<T : Any>(parentDisposable: Disposable,
         return info
     }
 
-    private fun cacheInfo(file: VirtualFile, info: T) {
+    private fun cacheInfo(file: VirtualFile, info: T?) {
         val id = (file as VirtualFileWithId).id
         if (log.isDebugEnabled) {
-            val thing = if (info == myDefValue) "sentinel" else info.toString()
+            val thing = if (info == myDefValue) "sentinel" else info?.toString() ?: "Null"
             log.debug("Putting $thing for $file using id $id")
         }
-        myInfoCache.put(id, info)
+        if (info != null) myInfoCache.put(id, info)
     }
 
     private fun getCachedInfo(file: VirtualFile): T? {
         val id = (file as VirtualFileWithId).id
         val info = myInfoCache.get(id)
         if (log.isDebugEnabled) {
-            val thing = if (info == myDefValue) "sentinel" else info.toString()
+            val thing = if (info == myDefValue) "sentinel" else info?.toString() ?: "Null"
             log.debug("Got $thing for $file using id $id")
         }
         return info
