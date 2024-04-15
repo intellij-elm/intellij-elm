@@ -80,9 +80,7 @@ class MyDirectoryIndex<T : Any>(parentDisposable: Disposable,
 
     fun getInfoForFile(file: VirtualFile?): T {
         if (file !is VirtualFileWithId) return myDefValue
-
-        val dir: VirtualFile
-        dir = if (!file.isDirectory) {
+        val dir: VirtualFile = if (!file.isDirectory) {
             val info = getCachedInfo(file)
             if (info != null) {
                 return info
