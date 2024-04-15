@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.ajalt.colormath:colormath:2.1.0")
+    implementation("com.github.ajalt.colormath:colormath:3.4.0")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.20-M1")
 }
