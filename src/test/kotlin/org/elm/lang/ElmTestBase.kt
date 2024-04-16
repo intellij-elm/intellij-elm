@@ -43,6 +43,7 @@ import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase
+import com.intellij.util.ThrowableRunnable
 import junit.framework.AssertionFailedError
 import org.elm.FileTree
 import org.elm.TestProject
@@ -82,15 +83,14 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixtureTestCase(), ElmTestC
 
     override fun getTestDataPath(): String = "${ElmTestCase.testResourcesPath}/$dataPath"
 
-    override fun runTest() {
+    override fun runTestRunnable(testRunnable: ThrowableRunnable<Throwable>) {
         val projectDescriptor = projectDescriptor
         val reason = (projectDescriptor as? ElmProjectDescriptorBase)?.skipTestReason
         if (reason != null) {
             System.err.println("SKIP $name: $reason")
             return
         }
-
-        super.runTest()
+        testRunnable.run()
     }
 
     protected val fileName: String

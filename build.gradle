@@ -1,44 +1,26 @@
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
-        maven { url "https://dl.bintray.com/kotlin/kotlin-dev" }
-        maven { url 'https://jitpack.io' }
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70"
-        classpath "com.github.JetBrains:gradle-grammar-kit-plugin:2019.1"
-    }
-}
-
 plugins {
-    id "org.jetbrains.intellij" version "0.4.9"
+  id "org.jetbrains.kotlin.jvm" version "1.4.0"
+  id "org.jetbrains.intellij" version "0.4.26"
+  id "org.jetbrains.grammarkit" version "2021.1.3"
 }
 
 repositories {
-    mavenLocal()
+//    mavenLocal()
     mavenCentral()
-    maven {
-        url "http://repository.jetbrains.com/all"
-    }
-    maven {
-        url "https://dl.bintray.com/kotlin/kotlin-dev"
-    }
-    maven { url 'http://dl.bintray.com/jetbrains/markdown' }
 }
 
-ext.kotlinVersion = '1.3.71'
+ext.kotlinVersion = '1.4.0'
 ext.junitVersion = '4.12'
 ext.jacksonVersion = '2.9.8'
-ext.markdownVersion = '0.1.31'
+ext.markdownVersion = '0.1.46'
 
 // ---------------
 // JAVA AND KOTLIN
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
+apply plugin: "org.jetbrains.intellij"
+apply plugin: "org.jetbrains.grammarkit"
 
 // JDK compatibility
 sourceCompatibility = javaVersion
@@ -48,9 +30,7 @@ tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
 // Kotlin compatibility
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     kotlinOptions {
-        jvmTarget = javaTargetVersion
-        languageVersion = "1.3"
-        apiVersion = "1.3"
+        jvmTarget = "11"
     }
 }
 
@@ -133,7 +113,7 @@ dependencies {
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
     compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
-    compile 'com.github.ajalt:colormath:1.4.0'
+    compile 'com.github.ajalt:colormath:1.4.1'
     compile("org.jetbrains:markdown:$markdownVersion") {
         exclude module: "kotlin-runtime"
         exclude module: "kotlin-stdlib"

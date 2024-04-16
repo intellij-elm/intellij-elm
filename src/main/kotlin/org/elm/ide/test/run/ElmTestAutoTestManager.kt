@@ -9,21 +9,30 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import org.elm.lang.core.ElmFileType
+import java.util.function.Consumer
+import java.util.function.IntConsumer
+import java.util.function.Predicate
+
 
 @State(
-        name = "ElmTestAutoTestManager",
-        storages = [Storage(StoragePathMacros.WORKSPACE_FILE)]
+    name = "ElmTestAutoTestManager",
+    storages = [Storage(StoragePathMacros.WORKSPACE_FILE)]
 )
 class ElmTestAutoTestManager internal constructor(
-        project: Project
-) : AbstractAutoTestManager(project) {
+    project: Project
+) : AbstractAutoTestManager(project), IntConsumer {
+
+    override fun accept(value: Int) {
+        TODO("Not yet implemented")
+    }
 
     override fun createWatcher(project: Project) =
-            DelayedDocumentWatcher(project,
-                    myDelayMillis,
-                    { restartAllAutoTests(it) },
-                    { it.fileType == ElmFileType && FileEditorManager.getInstance(project).isFileOpen(it) }
-            )
+        DelayedDocumentWatcher(
+            project,
+            myDelayMillis,
+            this,
+            Predicate { it.fileType == ElmFileType && FileEditorManager.getInstance(project).isFileOpen(it) }
+        )
 }
 
 val Project.elmAutoTestManager

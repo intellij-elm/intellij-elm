@@ -19,13 +19,11 @@ class ElmCreateFileAction : CreateFileFromTemplateAction(CAPTION, "", ElmFileTyp
 
     private val log = logger<ElmCreateFileAction>()
 
-    override fun getActionName(directory: PsiDirectory?, newName: String, templateName: String?): String =
-            CAPTION
+    override fun getActionName(directory: PsiDirectory?, newName: String, templateName: String?): String = CAPTION
 
-    override fun buildDialog(project: Project?, directory: PsiDirectory?, builder: CreateFileFromTemplateDialog.Builder) {
+    override fun buildDialog(project: Project, directory: PsiDirectory, builder: CreateFileFromTemplateDialog.Builder) {
         // TODO add additional "kinds" here (e.g. an `elm-test` skeleton module)
-        builder.setTitle(CAPTION)
-                .addKind("Module", ElmFileType.icon, ELM_MODULE_KIND)
+        builder.setTitle(CAPTION).addKind("Module", ElmFileType.icon, ELM_MODULE_KIND)
     }
 
     override fun createFile(name: String?, templateName: String, dir: PsiDirectory): PsiFile? {

@@ -8,22 +8,22 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.parentOfType
 
-class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
-    companion object {
-        private val optionProviders = mapOf(
-                ElmExposureLineMarkerProvider.OPTION to { ElmExposureLineMarkerProvider() },
-                ElmRecursiveCallLineMarkerProvider.OPTION to { ElmRecursiveCallLineMarkerProvider() }
-        )
-        private val OPTIONS = optionProviders.keys.toTypedArray()
-    }
 
-    override fun getName(): String? = "Elm line markers"
+private val optionProviders = mapOf(
+    ElmExposureLineMarkerProvider.OPTION to { ElmExposureLineMarkerProvider() },
+    ElmRecursiveCallLineMarkerProvider.OPTION to { ElmRecursiveCallLineMarkerProvider() }
+)
+
+private val OPTIONS = optionProviders.keys.toTypedArray()
+
+class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
+    override fun getName(): String = "Elm line markers"
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
 
     // This provides the options to show in Settings > Editor > General > Gutter Icons
     override fun getOptions(): Array<Option> = OPTIONS
 
-    override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<LineMarkerInfo<PsiElement>>) {
+    override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<in LineMarkerInfo<*>>) {
         val first = elements.firstOrNull() ?: return
         if (DumbService.getInstance(first.project).isDumb || first.parentOfType<ElmFile>()?.elmProject == null) return
 

@@ -18,7 +18,7 @@ import org.elm.lang.core.resolve.scope.ModuleScope
 class ElmDuplicateDeclarationInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement?) {
+            override fun visitElement(element: PsiElement) {
                 super.visitElement(element)
                 when (element) {
                     is ElmFile -> checkFile(element, holder)
