@@ -9,7 +9,7 @@ Elm Plugin for JetBrains IDEs
 Provides support for the Elm programming language.
 <!-- Plugin description end -->
 
-Should work on most, if not all, IntelliJ Platofrm IDEs: IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
+Should work on most, if not all, IntelliJ Platform IDEs: IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
 
 
 ## Install
