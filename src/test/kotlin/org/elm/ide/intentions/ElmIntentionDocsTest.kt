@@ -2,9 +2,11 @@ package org.elm.ide.intentions
 
 import com.intellij.codeInsight.intention.impl.config.IntentionManagerImpl.EP_INTENTION_ACTIONS
 import org.elm.lang.ElmTestBase
+import org.junit.Test
 
 class ElmIntentionDocsTest : ElmTestBase() {
 
+    @Test
     fun `test intentions has documentation`() {
         EP_INTENTION_ACTIONS
                 .extensions

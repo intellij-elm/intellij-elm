@@ -1,9 +1,12 @@
 package org.elm.ide.lineMarkers
 
+import org.junit.Test
+
 
 class ElmExposureLineMarkerProviderTest : ElmLineMarkerProviderTestBase() {
 
 
+    @Test
     fun `test module that exposes all`() = doTestByText(
             """
 module Main exposing (..)
@@ -14,6 +17,7 @@ type alias Bar = () --> Exposed
 """)
 
 
+    @Test
     fun `test module that exposes a single function`() = doTestByText(
             """
 module Main exposing (f)
@@ -22,6 +26,7 @@ g x = 0
 """)
 
 
+    @Test
     fun `test module that exposes a single value`() = doTestByText(
             """
 module Main exposing (a)
@@ -30,6 +35,7 @@ b = 0
 """)
 
 
+    @Test
     fun `test functions declared in a let-in do NOT get a line marker`() = doTestByText(
             """
 module Main exposing (..)
@@ -39,6 +45,7 @@ f x = --> Exposed
 """)
 
 
+    @Test
     fun `test module that exposes a union type`() = doTestByText(
             """
 module Main exposing (Foo)
@@ -47,6 +54,7 @@ type Bar = Bar
 """)
 
 
+    @Test
     fun `test module that exposes a union type and its constructors`() = doTestByText(
             """
 module Main exposing (Foo(..))
@@ -54,6 +62,7 @@ type Foo = Foo --> Exposed (including variants)
 """)
 
 
+    @Test
     fun `test module that exposes a type alias`() = doTestByText(
             """
 module Main exposing (Foo)
@@ -63,6 +72,7 @@ type alias Bar = ()
     )
 
 
+    @Test
     fun `test module that exposes a port`() = doTestByText(
             """
 port module Main exposing (foo)

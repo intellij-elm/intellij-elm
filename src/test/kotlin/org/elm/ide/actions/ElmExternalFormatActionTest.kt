@@ -1,5 +1,6 @@
 package org.elm.ide.actions
 
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -7,13 +8,16 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.MapDataContext
 import com.intellij.testFramework.TestActionEvent
+import com.intellij.testFramework.TestActionEvent.createTestEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
 
 
+    @Test
     fun `test elm-format action with elm 19`() {
         buildProject {
             project("elm.json", manifestElm19)
@@ -42,6 +46,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         TestCase.assertEquals(expected, document.text)
     }
 
+    @Test
     fun `test elm-format action shouldn't be active on non-elm files`() {
         buildProject {
             project("elm.json", manifestElm19.trimIndent())
@@ -58,6 +63,7 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         }
     }
 
+    @Test
     fun `test elm-format action should add to the undo stack`() {
         buildProject {
             project("elm.json", manifestElm19)
@@ -89,14 +95,15 @@ class ElmExternalFormatActionTest : ElmWorkspaceTestBase() {
         action.actionPerformed(event)
     }
 
-    private fun makeTestAction(file: VirtualFile): Pair<ElmExternalFormatAction, TestActionEvent> {
+    private fun makeTestAction(file: VirtualFile): Pair<ElmExternalFormatAction, AnActionEvent> {
         val dataContext = MapDataContext(mapOf(
                 CommonDataKeys.PROJECT to project,
                 CommonDataKeys.VIRTUAL_FILE to file,
                 CommonDataKeys.EDITOR to editor
         ))
         val action = ElmExternalFormatAction()
-        val event = TestActionEvent(dataContext, action)
+        val event = createTestEvent(action, dataContext)
+        event.presentation.setEnabled(true)
         action.beforeActionPerformedUpdate(event)
         return Pair(action, event)
     }

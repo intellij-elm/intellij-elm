@@ -30,21 +30,27 @@ import com.intellij.psi.util.PsiModificationTracker
 import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.resolve.ElmReferenceElement
 import org.elm.utils.Timings
+import org.junit.Test
 
 class ElmHighlightingPerformanceTest : ElmRealProjectTestBase() {
 
+    @Test
     fun `test highlighting elm-json-tree-view`() =
             repeatTest { highlightProjectFile(JSON_TREE_VIEW, "src/JsonTree.elm") }
 
+    @Test
     fun `test highlighting elm-spa-example`() =
             repeatTest { highlightProjectFile(SPA, "src/Page/Article/Editor.elm") }
 
+    @Test
     fun `test highlighting elm-css`() =
             repeatTest { highlightProjectFile(ELM_CSS, "src/Css/Transitions.elm") }
 
+    @Test
     fun `test highlighting elm-list-extra`() =
             repeatTest { highlightProjectFile(LIST_EXTRA, "src/List/Extra.elm") }
 
+    @Test
     fun `test highlighting elm-dev-tools`() =
             repeatTest { highlightProjectFile(DEV_TOOLS, "src/Browser/DevTools/Main.elm") }
 

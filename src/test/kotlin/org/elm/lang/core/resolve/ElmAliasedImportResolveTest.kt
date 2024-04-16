@@ -1,9 +1,12 @@
 package org.elm.lang.core.resolve
 
+import org.junit.Test
+
 
 class ElmAliasedImportResolveTest : ElmResolveTestBase() {
 
 
+    @Test
     fun `test aliased, qualified value ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -17,6 +20,7 @@ bar = 42
 """)
 
 
+    @Test
     fun `test aliased, qualified union type ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -30,6 +34,7 @@ type Page = Home
 """)
 
 
+    @Test
     fun `test aliased, qualified union constructor ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -43,6 +48,7 @@ type Page = Home
 """)
 
 
+    @Test
     fun `test aliased, qualified type alias ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -56,6 +62,7 @@ type alias Person = { name : String, age: Int }
 """)
 
 
+    @Test
     fun `test aliased, qualified record constructor ref`() = stubOnlyResolve(
 """
 --@ main.elm
@@ -70,6 +77,7 @@ type alias Person = { name : String, age: Int }
 
 
     // issue #93
+    @Test
     fun `test introducing an alias hides the original module name from qualified refs`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -83,6 +91,7 @@ bar = 42
 """)
 
 
+    @Test
     fun `test an import with an alias still provides a ref for the original module name`() = stubOnlyResolve(
             """
 --@ main.elm

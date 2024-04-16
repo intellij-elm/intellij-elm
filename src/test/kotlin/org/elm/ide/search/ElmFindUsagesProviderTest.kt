@@ -30,11 +30,13 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmNamedElement
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 
 class ElmFindUsagesProviderTest: ElmTestBase() {
 
 
+    @Test
     fun `test function parameter usage`() = doTestByText(
 """
 foo x =
@@ -46,6 +48,7 @@ foo x =
 """)
 
 
+    @Test
     fun `test binary operator usage`() = doTestByText(
 """
 power a b = List.product (List.repeat b a)

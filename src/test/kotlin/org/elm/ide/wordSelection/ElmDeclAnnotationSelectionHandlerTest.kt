@@ -1,10 +1,12 @@
 package org.elm.ide.wordSelection
 
+import org.junit.Test
 
 
 class ElmDeclAnnotationSelectionHandlerTest : ElmExtendSelectionTestBase() {
 
 
+    @Test
     fun `test extends selection from func body to include type annotation`() = doTestWithTrimmedMargins("""
 x = "hi"
 f : Int
@@ -32,6 +34,7 @@ f = 0<caret></selection>
 """)
 
 
+    @Test
     fun `test extends selection from type annotation to include func body`() = doTestWithTrimmedMargins("""
 x = "hi"
 f : Int<caret>

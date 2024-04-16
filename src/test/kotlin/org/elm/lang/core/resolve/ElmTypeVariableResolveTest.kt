@@ -1,8 +1,10 @@
 package org.elm.lang.core.resolve
 
+import org.junit.Test
 
 
 class ElmTypeVariableResolveTest : ElmResolveTestBase() {
+    @Test
     fun `test return value to param`() = checkByCode(
             """
 foo : a -> a
@@ -10,6 +12,7 @@ foo : a -> a
 foo a = a
 """)
 
+    @Test
     fun `test param to param`() = checkByCode(
             """
 foo : a -> b -> a -> ()
@@ -17,6 +20,7 @@ foo : a -> b -> a -> ()
 foo _ _ _ = ()
 """)
 
+    @Test
     fun `test function param to top level param`() = checkByCode(
             """
 foo : a -> (a -> a) -> ()
@@ -24,6 +28,7 @@ foo : a -> (a -> a) -> ()
 foo _ _ = ()
 """)
 
+    @Test
     fun `test record field to top level param`() = checkByCode(
             """
 foo : a -> { f : a } -> ()
@@ -31,6 +36,7 @@ foo : a -> { f : a } -> ()
 foo _ _ = ()
 """)
 
+    @Test
     fun `test nested annotation return value to param`() = checkByCode(
             """
 foo : a -> ()
@@ -43,6 +49,7 @@ foo _ =
         ()
 """)
 
+    @Test
     fun `test nested annotation param to outer param 1`() = checkByCode(
             """
 foo : a -> ()
@@ -56,6 +63,7 @@ foo _ =
         ()
 """)
 
+    @Test
     fun `test nested annotation param to outer param 2`() = checkByCode(
             """
 foo : a -> ()
@@ -69,6 +77,7 @@ foo _ =
         ()
 """)
 
+    @Test
     fun `test nested record field to outer param`() = checkByCode(
             """
 foo : b -> a -> ()

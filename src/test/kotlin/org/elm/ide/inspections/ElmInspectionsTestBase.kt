@@ -3,6 +3,7 @@ package org.elm.ide.inspections
 import com.intellij.codeInspection.LocalInspectionTool
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 
 abstract class ElmAnnotationTestBase : ElmTestBase() {
@@ -146,6 +147,7 @@ abstract class ElmInspectionsTestBase(
         val inspection: LocalInspectionTool
 ) : ElmAnnotationTestBase() {
 
+    @Test
     fun `test inspection has documentation`() {
         val description = "inspectionDescriptions/${inspection.javaClass.simpleName.dropLast("Inspection".length)}.html"
         val text = getResourceAsString(description)

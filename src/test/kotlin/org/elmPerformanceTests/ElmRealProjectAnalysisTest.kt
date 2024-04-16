@@ -32,6 +32,7 @@ import org.elm.lang.core.ElmFileType
 import org.elm.lang.core.psi.ElmFile
 import org.elm.openapiext.toPsiFile
 import org.junit.ComparisonFailure
+import org.junit.Test
 import java.lang.reflect.Field
 
 /**
@@ -45,11 +46,17 @@ import java.lang.reflect.Field
  */
 class ElmRealProjectAnalysisTest : ElmRealProjectTestBase() {
 
+    @Test
     fun `test analyze elm-css`() = doTest(ELM_CSS)
+    @Test
     fun `test analyze elm-dev-tools`() = doTest(DEV_TOOLS)
+    @Test
     fun `test analyze elm-json-tree-view`() = doTest(JSON_TREE_VIEW)
+    @Test
     fun `test analyze elm-list-extra`() = doTest(LIST_EXTRA)
+    @Test
     fun `test analyze elm-physics`() = doTest(ELM_PHYSICS)
+    @Test
     fun `test analyze elm-spa-example`() = doTest(SPA)
 
     private fun doTest(info: RealProjectInfo, failOnFirstFileWithErrors: Boolean = false) {
