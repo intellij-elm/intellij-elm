@@ -20,7 +20,11 @@ import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.fileSystemPathTextField
 import org.elm.utils.layout
 import org.elm.workspace.*
-import org.elm.workspace.commandLineTools.*
+import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmReviewCLI
+import org.elm.workspace.commandLineTools.ElmTestCLI
+import org.elm.workspace.commandLineTools.LamderaCLI
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.*
