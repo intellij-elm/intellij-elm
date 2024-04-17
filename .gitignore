@@ -9,3 +9,4 @@ dist/
 testData/
 todos/
 src/main/gen
+*.hprof
