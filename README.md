@@ -1,19 +1,15 @@
 Elm Plugin for JetBrains IDEs
 =============================
 
-<!--
-Fix these badges once the plugin in uploaded...
-
 ![Build](https://github.com/intellij-elm/intellij-elm/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
--->
+[![Version](https://img.shields.io/jetbrains/plugin/v/24075-elm.svg)](https://plugins.jetbrains.com/plugin/24075-elm)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/24075-elm.svg)](https://plugins.jetbrains.com/plugin/24075-elm)
 
 <!-- Plugin description -->
 Provides support for the Elm programming language.
 <!-- Plugin description end -->
 
-Should work on IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
+Should work on most, if not all, IntelliJ Platform IDEs: IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
 
 
 ## Install
