@@ -48,7 +48,7 @@ val Project.modules: Collection<Module>
 
 
 fun <T> recursionGuard(key: Any, block: Computable<T>, memoize: Boolean = true): T? =
-        RecursionManager.doPreventingRecursion(key, memoize, block)
+    RecursionManager.doPreventingRecursion(key, memoize, block)
 
 
 fun checkWriteAccessAllowed() {
@@ -81,7 +81,7 @@ fun fullyRefreshDirectory(directory: VirtualFile) {
 
 fun VirtualFile.findFileBreadthFirst(maxDepth: Int, predicate: (VirtualFile) -> Boolean): VirtualFile? {
     val queue = LinkedList<Pair<VirtualFile, Int>>()
-            .also { it.push(this to 0) }
+        .also { it.push(this to 0) }
 
     loop@ while (queue.isNotEmpty()) {
         val (candidate, itemDepth) = queue.pop()
@@ -101,25 +101,26 @@ fun VirtualFile.pathRelative(project: Project): Path {
 }
 
 fun VirtualFile.toPsiFile(project: Project): PsiFile? =
-        PsiManager.getInstance(project).findFile(this)
+    PsiManager.getInstance(project).findFile(this)
 
 fun Editor.toPsiFile(project: Project): PsiFile? =
-        PsiDocumentManager.getInstance(project).getPsiFile(document)
+    PsiDocumentManager.getInstance(project).getPsiFile(document)
 
 
-inline fun <Key, reified Psi : PsiElement> getElements(
-        indexKey: StubIndexKey<Key, Psi>,
-        key: Key, project: Project,
-        scope: GlobalSearchScope?
+inline fun <Key : Any, reified Psi : PsiElement> getElements(
+    indexKey: StubIndexKey<Key, Psi>,
+    key: Key, project: Project,
+    scope: GlobalSearchScope?
 ): Collection<Psi> =
-        StubIndex.getElements(indexKey, key, project, scope, Psi::class.java)
+    StubIndex.getElements(indexKey, key, project, scope, Psi::class.java)
 
 
 fun Element.toXmlString() =
-        JDOMUtil.writeElement(this)
+    JDOMUtil.writeElement(this)
 
 fun elementFromXmlString(xml: String): org.jdom.Element =
-        SAXBuilder().build(xml.byteInputStream()).rootElement
+    // TODO(cies) Use JDOMUtil or JDK API (StAX) or XmlDomReader.readXmlAsModel instead (first decide which)
+    SAXBuilder().build(xml.byteInputStream()).rootElement
 
 
 class CachedVirtualFile(private val url: String?) {

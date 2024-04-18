@@ -1,7 +1,7 @@
 package org.elm.ide.inspections.import
 
 import com.intellij.codeInsight.intention.PriorityAction.Priority
-import com.intellij.codeInsight.navigation.NavigationUtil
+import com.intellij.codeInsight.navigation.hidePopupIfDumbModeStarts
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.project.Project
@@ -104,7 +104,7 @@ class AddImportFix : NamedQuickFix("Import", Priority.HIGH) {
                 val candidate = context.candidates.first()
                 // Normally we would just directly perform the import here without prompting,
                 // but if it's an alias-based import, we should show the user some UI so that
-                // they know what they're getting into. See https://github.com/klazuka/intellij-elm/issues/309
+                // they know what they're getting into. See https://github.com/intellij-elm/intellij-elm/issues/309
                 when {
                     candidate.moduleAlias != null -> promptToSelectCandidate(project, context, file)
                     else -> project.runWriteCommandAction {
@@ -145,7 +145,7 @@ private class RealImportPickerUI(
                 .setNamerForFiltering { it.moduleName }
                 .setRenderer(CandidateRenderer())
                 .createPopup()
-        NavigationUtil.hidePopupIfDumbModeStarts(popup, project)
+        hidePopupIfDumbModeStarts(popup, project)
         popup.showInBestPositionFor(dataContext)
     }
 }
