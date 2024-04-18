@@ -11,7 +11,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.9.23"
     // Gradle IntelliJ Plugin
     id("org.jetbrains.intellij") version "1.13.3" // Does not work with Gradle 8.6 (1.14+ requires Gradle 7.6+)
-    // GrammarKit Plugin
+    // GrammarKit Plugin (versions > 2021.2.2 require JDK17)
     id("org.jetbrains.grammarkit") version "2022.3.2.2"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
