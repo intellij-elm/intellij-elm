@@ -80,26 +80,6 @@ qodana {
     showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
 }
 
-//val generateSpecParser = tasks.create<GenerateParserTask>("generateElmParser") {
-//    source.set("$projectDir/src/main/grammars/ElmParser.bnf")
-//    targetRoot.set("$projectDir/src/main/gen")
-//    pathToParser.set("/org/elm/lang/core/parser/ElmParser.java")
-//    pathToPsiRoot.set("/org/elm/lang/core/psi")
-//    purgeOldFiles.set(true)
-//}
-//
-//val generateSpecLexer = tasks.create<GenerateLexerTask>("generateElmLexer") {
-//    source.set("$projectDir/src/main/grammars/ElmLexer.flex")
-//    skeleton.set(file("$projectDir/src/main/grammars/lexer.skeleton"))
-//    targetDir.set("$projectDir/src/main/gen/org/elm/lang/core/lexer/")
-//    targetClass.set("_ElmLexer")
-//    purgeOldFiles.set(true)
-//}
-//
-//val generateGrammars = tasks.register("generateGrammars") {
-//    dependsOn(generateSpecParser, generateSpecLexer)
-//}
-
 tasks.withType<org.gradle.jvm.tasks.Jar> {    duplicatesStrategy = DuplicatesStrategy.INCLUDE}
 
 val generateGrammars = tasks.register("generateGrammars") {
