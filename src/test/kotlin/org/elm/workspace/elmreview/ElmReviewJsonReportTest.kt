@@ -447,7 +447,7 @@ class ElmReviewJsonReportTest : ElmTestBase() {
     }
 
     // TODO
-    @Ignore
+    // @Ignore
     fun `parses type 'compile-errors' with errors array`() {
         @Language("JSON")
         val json = """

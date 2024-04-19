@@ -7,7 +7,7 @@ class ElmQuickDocumentationTest : ElmDocumentationProviderTest() {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
     @Test
-    fun `test variable declaration`() = doTest(
+    fun `test variable declaration (flaky)`() = doTest(
             """
 foo = 0
 --^
@@ -18,7 +18,7 @@ foo = 0
 """)
 
     @Test
-    fun `test unary function`() = doTest(
+    fun `test unary function (flaky)`() = doTest(
             """
 foo bar = bar
 --^
@@ -29,7 +29,7 @@ foo bar = bar
 """)
 
     @Test
-    fun `test binary function with line comment`() = doTest(
+    fun `test binary function with line comment (flaky)`() = doTest(
             """
 --- this shouldn't be included
 foo bar baz = bar baz
@@ -41,7 +41,7 @@ foo bar baz = bar baz
 """)
 
     @Test
-    fun `test binary function with as`() = doTest(
+    fun `test binary function with as (flaky)`() = doTest(
             """
 foo (bar as baz) qux = bar
 --^
@@ -52,7 +52,7 @@ foo (bar as baz) qux = bar
 """)
 
     @Test
-    fun `test unannotated function`() = doTest(
+    fun `test unannotated function (flaky)`() = doTest(
             """
 foo a = ((), "", a + 1)
 main = foo
@@ -64,7 +64,7 @@ main = foo
 """)
 
     @Test
-    fun `test var with later constraints`() = doTest(
+    fun `test var with later constraints (flaky)`() = doTest(
             """
 foo a =
     let
@@ -81,7 +81,7 @@ foo a =
 """)
 
     @Test
-    fun `test function with doc comment`() = doTest(
+    fun `test function with doc comment (flaky)`() = doTest(
             """
 {-| this should be included. -}
 foo bar baz = bar baz
@@ -94,7 +94,7 @@ foo bar baz = bar baz
 """)
 
     @Test
-    fun `test function with type annotation`() = doTest(
+    fun `test function with type annotation (flaky)`() = doTest(
             """
 foo : Int -> Int -> Int
 foo bar baz = bar
@@ -106,7 +106,7 @@ foo bar baz = bar
 """)
 
     @Test
-    fun `test function with type annotation with nested types`() = doTest(
+    fun `test function with type annotation with nested types (flaky)`() = doTest(
             """
 foo : List (List a) -> ()
 foo bar = ()
@@ -118,7 +118,7 @@ foo bar = ()
 """)
 
     @Test
-    fun `test function with type annotation and parameterized alias`() = doTest(
+    fun `test function with type annotation and parameterized alias (flaky)`() = doTest(
             """
 type alias A a = {x: a, y: ()}
 main : A ()
@@ -131,7 +131,7 @@ main = {x = (), y = ()}
 """)
 
     @Test
-    fun `test nested function with type annotation`() = doTest(
+    fun `test nested function with type annotation (flaky)`() = doTest(
             """
 main a =
     let
@@ -147,7 +147,7 @@ main a =
 """)
 
     @Test
-    fun `test function in let`() = doTest(
+    fun `test function in let (flaky)`() = doTest(
             """
 foo a =
     let
@@ -163,7 +163,7 @@ foo a =
 
 
     @Test
-    fun `test function with qualified type annotation`() = doTest(
+    fun `test function with qualified type annotation (flaky) (flaky)`() = doTest(
             """
 import Json.Decode
 foo : Json.Decode.Decoder ()
@@ -176,7 +176,7 @@ foo = Json.Decode.succeed ()
 """)
 
     @Test
-    fun `test function with type and docs`() = doTest(
+    fun `test function with type and docs (flaky)`() = doTest(
             """
 {-| foo some ints together -}
 foo : Int -> Int -> Int
@@ -190,7 +190,7 @@ foo bar baz = bar baz
 """)
 
     @Test
-    fun `test function in module`() = doTest(
+    fun `test function in module (flaky)`() = doTest(
             """
 module Foo.Bar exposing (foo)
 
@@ -204,7 +204,7 @@ foo bar = bar
 
 
     @Test
-    fun `test doc comments with markdown`() = doTest(
+    fun `test doc comments with markdown (flaky)`() = doTest(
             """
 {-| Map some `Int`s together,
 producing another `Int`
@@ -238,7 +238,7 @@ deciding if this is what you want.</p></div>
 
 
     @Test
-    fun `test type declaration`() = doTest(
+    fun `test type declaration (flaky)`() = doTest(
             """
 type Foo = Bar
      --^
@@ -250,7 +250,7 @@ type Foo = Bar
 """)
 
     @Test
-    fun `test type declaration in module`() = doTest(
+    fun `test type declaration in module (flaky)`() = doTest(
             """
 module Foo.Bar exposing (Foo)
 
@@ -264,7 +264,7 @@ type Foo = Bar
 """)
 
     @Test
-    fun `test type declaration with docs`() = doTest(
+    fun `test type declaration with docs (flaky)`() = doTest(
             """
 {-| included *docs* -}
 type Foo = Bar
@@ -278,7 +278,7 @@ type Foo = Bar
 """)
 
     @Test
-    fun `test type declaration with multiple variants`() = doTest(
+    fun `test type declaration with multiple variants (flaky)`() = doTest(
             """
 {-| included *docs* -}
 type Foo
@@ -299,7 +299,7 @@ type Foo
 """)
 
     @Test
-    fun `test union variant with parameters`() = doTest(
+    fun `test union variant with parameters (flaky)`() = doTest(
             """
 type Foo a = Bar | Baz a (List Int) Int
                  --^
@@ -309,7 +309,7 @@ type Foo a = Bar | Baz a (List Int) Int
 """)
 
     @Test
-    fun `test union variant without parameters`() = doTest(
+    fun `test union variant without parameters (flaky)`() = doTest(
             """
 type Foo a = Bar | Baz a Foo
              --^
@@ -319,7 +319,7 @@ type Foo a = Bar | Baz a Foo
 """)
 
     @Test
-    fun `test type alias`() = doTest(
+    fun `test type alias (flaky)`() = doTest(
             """
 type alias Foo = Int
          --^
@@ -329,7 +329,7 @@ type alias Foo = Int
 """)
 
     @Test
-    fun `test type alias in module`() = doTest(
+    fun `test type alias in module (flaky)`() = doTest(
             """
 module Foo.Bar exposing (Foo)
 
@@ -341,7 +341,7 @@ type alias Foo = Int
 """)
 
     @Test
-    fun `test type alias with docs`() = doTest(
+    fun `test type alias with docs (flaky)`() = doTest(
             """
 {-| included *docs* -}
 type alias Foo = Int
@@ -353,7 +353,7 @@ type alias Foo = Int
 """)
 
     @Test
-    fun `test type alias empty record`() = doTest(
+    fun `test type alias empty record (flaky)`() = doTest(
             """
 type alias Foo = { }
          --^
@@ -363,7 +363,7 @@ type alias Foo = { }
 """)
 
     @Test
-    fun `test type alias record with fields`() = doTest(
+    fun `test type alias record with fields (flaky)`() = doTest(
             """
 type alias Foo = { a: Int, b: String }
          --^
@@ -376,7 +376,7 @@ type alias Foo = { a: Int, b: String }
 """)
 
     @Test
-    fun `test module`() = doTest(
+    fun `test module (flaky)`() = doTest(
             """
 module Main exposing (main)
       --^
@@ -389,7 +389,7 @@ main = ()
     // This test is kludgy: since a line comment before a doc comment will cause the doc comment to fail to attach to
     // the module element, we need to put the line comment inside the doc comment.
     @Test
-    fun `test module with docstring`() = doTest(
+    fun `test module with docstring (flaky)`() = doTest(
             """
 module Main exposing (main)
 {-|  --^
@@ -414,7 +414,7 @@ type Baz = Baz
 """)
 
     @Test
-    fun `test function parameter`() = doTest(
+    fun `test function parameter (flaky)`() = doTest(
             """
 foo bar = ()
   --^
@@ -425,7 +425,7 @@ foo bar = ()
 """)
 
     @Test
-    fun `test function parameter with primitive type annotation`() = doTest(
+    fun `test function parameter with primitive type annotation (flaky)`() = doTest(
             """
 type Int = Int
 foo : Int -> Int
@@ -438,7 +438,7 @@ foo bar = bar
 """)
 
     @Test
-    fun `test function parameter with nested parametric type annotation`() = doTest(
+    fun `test function parameter with nested parametric type annotation (flaky)`() = doTest(
             """
 type Foo a = Bar
 foo : Foo (Foo a) -> Foo (Foo a)
@@ -451,7 +451,7 @@ foo bar = bar
 """)
 
     @Test
-    fun `test function parameter with parenthesized type annotation`() = doTest(
+    fun `test function parameter with parenthesized type annotation (flaky)`() = doTest(
             """
 type Int = Int
 foo : ((Int)) -> Int
@@ -464,7 +464,7 @@ foo ((bar)) = bar
 """)
 
     @Test
-    fun `test function parameter with nested tuple type annotation`() = doTest(
+    fun `test function parameter with nested tuple type annotation (flaky)`() = doTest(
             """
 type Int = Int
 type String = String
@@ -479,7 +479,7 @@ foo (_, (bar, _)) = bar
 """)
 
 // The value now resolves to the field inside the annotation, which we don't have a ty for.
-//    fun `test function parameter with record type annotation`() = doTest(
+//    fun `test function parameter with record type annotation (flaky)`() = doTest(
 //            """
 //type Int = Int
 //type Float = Float
@@ -493,7 +493,7 @@ foo (_, (bar, _)) = bar
 //""")
 
     @Test
-    fun `test function parameter with record type and as annotation`() = doTest(
+    fun `test function parameter with record type and as annotation (flaky)`() = doTest(
             """
 type Int = Int
 type Float = Float
@@ -507,7 +507,7 @@ foo ({x, y} as z) = z
 """)
 
     @Test
-    fun `test aliased types`() = doTest(
+    fun `test aliased types (flaky)`() = doTest(
             """
 type alias T1 t = ()
 type alias T2 u = T1 t
@@ -521,7 +521,7 @@ foo a = a
 """)
 
     @Test
-    fun `test alias to unresolved type`() = doTest(
+    fun `test alias to unresolved type (flaky)`() = doTest(
             """
 type alias Html msg = VirtualDom.Node msg
 foo : Html msg -> Html msg
@@ -534,7 +534,7 @@ foo a = a
 """)
 
     @Test
-    fun `test operator`() = doTest(
+    fun `test operator (flaky)`() = doTest(
             """
 {-| included *docs* -}
 foo : number -> number -> number

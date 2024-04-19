@@ -261,6 +261,12 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         fileTreeFromText(text).createAndOpenFileWithCaretMarker()
     }
 
+    protected fun elm(@Language("Elm") elmContent: String) = elmContent
+
+    protected fun joinElmFiles(vararg fileNameContentPair: Pair<String, String>): String {
+        return fileNameContentPair.map { "--@ ${it.first}\n${it.second}" }.joinToString(separator = "\n\n")
+    }
+
     companion object {
         // XXX: hides `Assert.fail`
         fun fail(message: String): Nothing {

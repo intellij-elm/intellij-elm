@@ -9,21 +9,24 @@ import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
 import org.intellij.lang.annotations.Language
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 
+@RunWith(JUnit4::class)
 class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
-/*
-    override fun runTest() {
-        if (toolchain.elmFormatCLI == null) {
-            // TODO in the future maybe we should install elm-format in the CI build environment
-            System.err.println("SKIP $name: elm-format not found")
-            return
+    /*
+        override fun runTest() {
+            if (toolchain.elmFormatCLI == null) {
+                // TODO in the future maybe we should install elm-format in the CI build environment
+                System.err.println("SKIP $name: elm-format not found")
+                return
+            }
+            super.runTest()
         }
-        super.runTest()
-    }
-*/
+    */
 
-    val unformatted = """
+    private val unformatted = """
                     module Main exposing (f)
 
 
@@ -31,7 +34,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
                 """.trimIndent()
 
-    val expectedFormatted = """
+    private val expectedFormatted = """
                     module Main exposing (f)
 
 
@@ -54,7 +57,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
     }
 
     @Test
-    fun `test ElmFormatOnFileSaveComponent should not add to the undo stack`() {
+    fun `test ElmFormatOnFileSaveComponent should not add to the undo stack (flaky)`() {
 
         buildProject {
             project("elm.json", manifestElm19)
@@ -90,25 +93,32 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
-                elm("Main.elm", """
+                elm(
+                    "Main.elm", """
                     module Main exposing (f)
 
 
                     f x = x
 
-                """.trimIndent())
+                """.trimIndent()
+                )
             }
         }
 
         testCorrectFormatting(
-                "src/Main.elm",
-                unformatted,
-                expected = unformatted,
-                activateOnSaveHook = false
+            "src/Main.elm",
+            unformatted,
+            expected = unformatted,
+            activateOnSaveHook = false
         )
     }
 
-    private fun testCorrectFormatting(fileWithCaret: String, unformatted: String, expected: String, activateOnSaveHook: Boolean = true) {
+    private fun testCorrectFormatting(
+        fileWithCaret: String,
+        unformatted: String,
+        expected: String,
+        activateOnSaveHook: Boolean = true
+    ) {
 
         project.elmWorkspace.useToolchain(toolchain.copy(isElmFormatOnSaveEnabled = activateOnSaveHook))
 
@@ -131,22 +141,22 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
 @Language("JSON")
 private val manifestElm19 = """
-        {
-            "type": "application",
-            "source-directories": [
-                "src"
-            ],
-            "elm-version": "0.19.1",
-            "dependencies": {
-                "direct": {
-                    "elm/core": "1.0.0",
-                    "elm/json": "1.0.0"
-                },
-                "indirect": {}
+    {
+        "type": "application",
+        "source-directories": [
+            "src"
+        ],
+        "elm-version": "0.19.1",
+        "dependencies": {
+            "direct": {
+                "elm/core": "1.0.0",
+                "elm/json": "1.0.0"
             },
-            "test-dependencies": {
-                "direct": {},
-                "indirect": {}
-            }
+            "indirect": {}
+        },
+        "test-dependencies": {
+            "direct": {},
+            "indirect": {}
         }
-        """.trimIndent()
+    }
+""".trimIndent()

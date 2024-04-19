@@ -72,10 +72,6 @@ class ElmWorkspaceConfigurable(
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, elmCompilerTool))
                 row("Version:", elmVersionLabel)
             }
-            block("Lamdera Compiler") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(lamderaPathField, lamderaCompilerTool))
-                row("Version:", lamderaVersionLabel)
-            }
             block(elmFormatTool) {
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, elmFormatTool))
                 row("Version:", elmFormatVersionLabel)
@@ -90,7 +86,11 @@ class ElmWorkspaceConfigurable(
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmReviewPathField, elmReviewTool))
                 row("Version:", elmReviewVersionLabel)
             }
-            block("nvm") {
+            block("Lamdera Compiler") {
+                row("Location:", pathFieldPlusAutoDiscoverButton(lamderaPathField, lamderaCompilerTool))
+                row("Version:", lamderaVersionLabel)
+            }
+            block("") {
                 val nvmUrl = "https://github.com/nvm-sh/nvm"
                 val docsUrl = "https://github.com/intellij-elm/intellij-elm/blob/master/docs/nvm.md"
                 noteRow("""Using <a href="$nvmUrl">nvm</a>? Please read <a href="$docsUrl">our troubleshooting tips</a>.""")
