@@ -7,4 +7,4 @@ Ready to start a new Elm project in IntelliJ? First, make sure that you have the
 3. Click the 'Next' button
 4. Give your project a name and a location on disk
 
-**WebStorm users**: Due to [a bug](https://github.com/klazuka/intellij-elm/issues/414), the above steps will not work. Instead, you can create a new project by first creating a directory, run `elm init`, and then open that directory in WebStorm.
+**WebStorm users**: Due to [a bug](https://github.com/intellij-elm/intellij-elm/issues/414), the above steps will not work. Instead, you can create a new project by first creating a directory, run `elm init`, and then open that directory in WebStorm.

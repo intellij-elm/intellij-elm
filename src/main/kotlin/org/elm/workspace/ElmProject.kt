@@ -15,7 +15,7 @@ import java.nio.file.Paths
  * @param testDependencies Additional Elm packages that this project's **tests** depends on directly
  * @param sourceDirectories The relative paths to one-or-more directories containing Elm source files belonging to this project.
  * @param testsRelativeDirPath The path to the directory containing unit tests, relative to the [projectDirPath].
- * Typically this will be "tests": see [testsDirPath] for more info.
+ * Typically, this will be "tests": see [testsDirPath] for more info.
  */
 sealed class ElmProject(
         val manifestPath: Path,
@@ -109,6 +109,7 @@ sealed class ElmProject(
                 is ElmApplicationProject -> elmVersion.xyz == version.xyz
                 is LamderaApplicationProject -> elmVersion.xyz == version.xyz
                 is ElmPackageProject -> elmVersion.contains(version.xyz)
+                is ElmReviewProject -> elmVersion.xyz == version.xyz
             }
 
     /**
@@ -117,6 +118,15 @@ sealed class ElmProject(
     open fun isCore(): Boolean = false
 }
 
+
+class ElmReviewProject(
+    manifestPath: Path,
+    val elmVersion: Version,
+    dependencies: List<ElmPackageProject>,
+    testDependencies: List<ElmPackageProject>,
+    sourceDirectories: List<Path>,
+    testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
+) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
 
 /**
  * Represents an Elm application
@@ -142,6 +152,10 @@ class LamderaApplicationProject(
         sourceDirectories: List<Path>,
         testsRelativeDirPath: String = DEFAULT_TESTS_DIR_NAME
 ) : ElmProject(manifestPath, dependencies, testDependencies, sourceDirectories, testsRelativeDirPath)
+
+
+// TODO ?
+// class ElmLamderaProgramTest: ElmProject()
 
 
 /**

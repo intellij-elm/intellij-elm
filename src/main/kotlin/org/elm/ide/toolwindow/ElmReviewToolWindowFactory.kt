@@ -10,8 +10,9 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.impl.ContentImpl
 import com.intellij.util.ui.MessageCategory
-import org.elm.ide.actions.ElmExternalReviewAction
 import org.elm.openapiext.findFileByPath
+import org.elm.workspace.commandLineTools.ELM_REVIEW_ERRORS_TOPIC
+import org.elm.workspace.commandLineTools.ElmReviewErrorsListener
 import org.elm.workspace.elmreview.ElmReviewError
 import java.nio.file.Path
 
@@ -19,7 +20,8 @@ class ElmReviewToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         with(project.messageBus.connect()) {
-            subscribe(ElmExternalReviewAction.ERRORS_TOPIC, object : ElmExternalReviewAction.ElmReviewErrorsListener {
+            subscribe(ELM_REVIEW_ERRORS_TOPIC, object : ElmReviewErrorsListener {
+
                 override fun update(baseDirPath: Path, messages: List<ElmReviewError>, targetPath: String?, offset: Int) {
                     val errorTreeViewPanel = ElmErrorTreeViewPanel(project, "elm-review", createExitAction = false, createToolbar = true)
 

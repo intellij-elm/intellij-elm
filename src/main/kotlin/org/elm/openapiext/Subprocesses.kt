@@ -54,23 +54,30 @@ fun GeneralCommandLine.withWorkDirectory(path: Path?) =
 fun GeneralCommandLine.execute(
     toolName: String,
     project: Project,
-    timeoutInMilliseconds: Int = 2000,
-    ignoreExitCode: Boolean = false
+    timeoutInMilliseconds: Int = 3000,
+    stdIn: String? = null
 ): ProcessOutput {
 
-    val handler = CapturingProcessHandler(this)
-    val processKiller = Disposable {
-        handler.destroyProcess()
-    }
-
-    val alreadyDisposed = runReadAction { project.isDisposed }
-
-    if (alreadyDisposed) {
-        if (ignoreExitCode) {
-            return ProcessOutput().apply { setCancelled() }
+    val handler =
+        if (stdIn != null) {
+            val process = createProcess()
+            val stdInStream = process.outputStream
+            val writer = OutputStreamWriter(stdInStream, Charsets.UTF_8)
+            try {
+                writer.write(stdIn)
+            } finally {
+                writer.flush()
+                writer.close()
+            }
+            CapturingProcessHandler(process, Charsets.UTF_8, commandLineString)
         } else {
-            throw ExecutionException("External command failed to start")
+            CapturingProcessHandler(this)
         }
+
+    val processKiller = Disposable { handler.destroyProcess() }
+    val alreadyDisposed = runReadAction { project.isDisposed }
+    if (alreadyDisposed) {
+        return ProcessOutput().apply { setCancelled() }
     }
 
     Disposer.register(project, processKiller)
@@ -79,8 +86,8 @@ fun GeneralCommandLine.execute(
         // see javadoc at OSProcessHandler.checkEdtAndReadAction()
         val future = runAsyncTask(project, toolName) {
             val output = handler.runProcess(timeoutInMilliseconds)
-            if (!ignoreExitCode && output.exitCode != 0) {
-                throw ExecutionException(errorMessage(this, output))
+            if (output.exitCode != 0) {
+                log.warn("Command $toolName exited with code ${output.exitCode}")
             }
             output
         }
@@ -89,44 +96,6 @@ fun GeneralCommandLine.execute(
         Disposer.dispose(processKiller)
     }
 }
-
-@Throws(ExecutionException::class)
-fun GeneralCommandLine.execute(
-    stdIn: String? = null,
-    timeoutInMilliseconds: Int? = 2000,
-    ignoreExitCode: Boolean = false
-): ProcessOutput {
-
-    val handler = if (stdIn == null) {
-        CapturingProcessHandler(this)
-    } else {
-        val process = createProcess()
-        val stdInStream = process.outputStream
-        val writer = OutputStreamWriter(stdInStream, Charsets.UTF_8)
-        writer.write(stdIn)
-        writer.flush()
-        writer.close()
-        CapturingProcessHandler(process, Charsets.UTF_8, commandLineString)
-    }
-
-    val output = if (timeoutInMilliseconds == null) {
-        handler.runProcess()
-    } else {
-        handler.runProcess(timeoutInMilliseconds, true)
-    }
-
-    if (!ignoreExitCode && output.exitCode != 0) {
-        throw ExecutionException(errorMessage(this, output))
-    }
-    return output
-}
-
-fun errorMessage(commandLine: GeneralCommandLine, output: ProcessOutput): String = """
-        Execution failed (exit code ${output.exitCode}).
-        ${commandLine.commandLineString}
-        stdout : ${output.stdout}
-        stderr : ${output.stderr}
-    """.trimIndent()
 
 val ProcessOutput.isSuccess: Boolean
     get() = !isTimeout && !isCancelled && exitCode == 0
