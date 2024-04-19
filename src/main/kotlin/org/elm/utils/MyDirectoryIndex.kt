@@ -24,6 +24,7 @@
  */
 package org.elm.utils
 
+import com.intellij.concurrency.ConcurrentCollectionFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.logger
@@ -36,15 +37,14 @@ import com.intellij.openapi.vfs.VirtualFileWithId
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.util.Consumer
-import com.intellij.util.containers.ContainerUtil
 
 private val log = logger<MyDirectoryIndex<*>>()
 
-class MyDirectoryIndex<T>(parentDisposable: Disposable,
-                          private val myDefValue: T,
-                          private val myInitializer: Consumer<MyDirectoryIndex<T>>) {
+class MyDirectoryIndex<T : Any>(parentDisposable: Disposable,
+                                private val myDefValue: T,
+                                private val myInitializer: Consumer<MyDirectoryIndex<T>>) {
 
-    private val myInfoCache = ContainerUtil.createConcurrentIntObjectMap<T>()
+    private val myInfoCache = ConcurrentCollectionFactory.createConcurrentIntObjectMap<T>()
 
     init {
         resetIndex()
@@ -80,9 +80,7 @@ class MyDirectoryIndex<T>(parentDisposable: Disposable,
 
     fun getInfoForFile(file: VirtualFile?): T {
         if (file !is VirtualFileWithId) return myDefValue
-
-        val dir: VirtualFile
-        dir = if (!file.isDirectory) {
+        val dir: VirtualFile = if (!file.isDirectory) {
             val info = getCachedInfo(file)
             if (info != null) {
                 return info
@@ -136,7 +134,7 @@ class MyDirectoryIndex<T>(parentDisposable: Disposable,
         val id = (file as VirtualFileWithId).id
         val info = myInfoCache.get(id)
         if (log.isDebugEnabled) {
-            val thing = if (info == myDefValue) "sentinel" else info.toString()
+            val thing = if (info == myDefValue) "sentinel" else info?.toString() ?: "null"
             log.debug("Got $thing for $file using id $id")
         }
         return info

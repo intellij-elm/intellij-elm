@@ -34,8 +34,6 @@ import org.junit.Test
 
 class ElmHighlightingPerformanceTest : ElmRealProjectTestBase() {
 
-    // It is a performance test, but we will measure performance ourselves
-    override fun isPerformanceTest(): Boolean = false
 
     @Test
     fun `test highlighting elm-json-tree-view`() =

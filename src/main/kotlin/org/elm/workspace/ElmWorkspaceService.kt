@@ -27,8 +27,6 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.impl.source.resolve.ResolveCache
-import com.intellij.util.Consumer
-import com.intellij.util.io.exists
 import com.intellij.util.io.systemIndependentPath
 import com.intellij.util.messages.Topic
 import org.elm.lang.core.psi.modificationTracker
@@ -46,6 +44,7 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.io.path.exists
 
 
 private val log = logger<ElmWorkspaceService>()
@@ -192,39 +191,40 @@ class ElmWorkspaceService(
     /**
      * Asynchronously load an Elm project described by a manifest file (e.g. `elm.json`).
      */
-    private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
-            runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
-                val elmCLI = settings.toolchain.elmCLI
-                        ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
+    private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> {
+        return runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
+            val elmCLI = settings.toolchain.elmCLI
+                ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
 
-                val compilerVersion = elmCLI.queryVersion().orNull()
-                        ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
+            val compilerVersion = elmCLI.queryVersion().orNull()
+                ?: throw ProjectLoadException("Could not determine version of the Elm compiler")
 
-                if (installDeps) {
-                    installProjectDeps(manifestPath, elmCLI)
-                }
+            if (installDeps) {
+                installProjectDeps(manifestPath, elmCLI)
+            }
 
-                // not thread-safe; do not reuse across threads!
-                val repo = ElmPackageRepository(compilerVersion)
+            // not thread-safe; do not reuse across threads!
+            val repo = ElmPackageRepository(compilerVersion)
 
-                // External files may have been created/modified by the Elm compiler. Refresh.
-                findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
-                    fullyRefreshDirectory(it)
-                }
+            // External files may have been created/modified by the Elm compiler. Refresh.
+            findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
+                fullyRefreshDirectory(it)
+            }
 
-                // Load the project
-                ElmProjectLoader.topLevelLoad(manifestPath, repo)
-            }.whenComplete { _, error ->
-                // log the result
-                if (error == null) {
-                    log.info("Successfully loaded Elm project $manifestPath")
-                } else {
-                    when (error) {
-                        is ProjectLoadException -> log.warn("Failed to load $manifestPath: ${error.message}")
-                        else -> log.error("Unexpected error when loading $manifestPath", error)
-                    }
+            // Load the project
+            ElmProjectLoader.topLevelLoad(manifestPath, repo)
+        }.whenComplete { _, error ->
+            // log the result
+            if (error == null) {
+                log.info("Successfully loaded Elm project $manifestPath")
+            } else {
+                when (error) {
+                    is ProjectLoadException -> log.warn("Failed to load $manifestPath: ${error.message}")
+                    else -> log.error("Unexpected error when loading $manifestPath", error)
                 }
             }
+        }
+    }
 
     private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI): Boolean {
         // The only way to install an Elm project's dependencies is to compile
@@ -336,7 +336,7 @@ class ElmWorkspaceService(
 
 
     private val directoryIndex: MyDirectoryIndex<ElmProject> =
-            MyDirectoryIndex(intellijProject, noProjectSentinel, Consumer { index ->
+            MyDirectoryIndex(intellijProject, noProjectSentinel) { index ->
                 fun put(path: Path?, elmProject: ElmProject) {
                     if (path == null) return
                     val file = findFileByPathTestAware(path) ?: return
@@ -383,7 +383,7 @@ class ElmWorkspaceService(
                     log.debug("Registering tests directory ${project.testsDirPath} for $project")
                     put(project.testsDirPath, project)
                 }
-            })
+            }
 
 
     // INTEGRATION TEST SUPPORT
