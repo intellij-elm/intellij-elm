@@ -1,6 +1,6 @@
-.idea
 *.iml
 *.ipr
+*.hprof
 .gradle
 
 build/
@@ -9,4 +9,3 @@ dist/
 testData/
 todos/
 src/main/gen
-*.hprof

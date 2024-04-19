@@ -98,7 +98,9 @@ class ElmWorkspaceConfigurable(
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
-        UiNotifyConnector.installOn(panel, object : Activatable {
+        // For IntelliJ Platform >2022.2.4:
+        //    UiNotifyConnector.installOn(panel, object : Activatable {
+        UiNotifyConnector(panel, object : Activatable.Adapter() {
             override fun showNotify() = update()
         }).also { Disposer.register(this, it) }
 

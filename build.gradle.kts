@@ -1,7 +1,6 @@
-import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.grammarkit.tasks.GenerateLexerTask
-import org.jetbrains.grammarkit.tasks.GenerateParserTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.changelog.Changelog
+import org.jetbrains.changelog.markdownToHTML
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -9,11 +8,11 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.9.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.23"
     // Gradle IntelliJ Plugin
-    id("org.jetbrains.intellij") version "1.4.0"
-    // GrammarKit Plugin
-    id("org.jetbrains.grammarkit") version "2022.3.2.2" // "2021.2.2"
+    id("org.jetbrains.intellij") version "1.13.3" // Does not work with Gradle 8.6 (1.14+ requires Gradle 7.6+)
+    // GrammarKit Plugin (versions > 2021.2.2 require JDK17)
+    id("org.jetbrains.grammarkit") version "2022.3.2.2"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
@@ -31,7 +30,7 @@ repositories {
 dependencies {
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.20")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.23")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -50,6 +49,23 @@ changelog {
     groups.set(emptyList())
 }
 
+// Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
+qodana {
+    cachePath.set(projectDir.resolve(".qodana").canonicalPath)
+    reportPath.set(projectDir.resolve("build/reports/inspections").canonicalPath)
+    saveReport.set(true)
+    showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
+}
+
+val generateGrammars = tasks.register("generateGrammars") {
+    dependsOn("generateParser", "generateLexer")
+}
+
+tasks.withType<KotlinCompile> {
+    dependsOn(generateGrammars)
+}
+
+// This was needed on the `clojj-master` branch for the tests to pass
 tasks.withType<Test> {
     jvmArgs(
         "--add-exports=java.base/jdk.internal.vm=ALL-UNNAMED",
@@ -70,24 +86,6 @@ tasks.withType<Test> {
         "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
         "--add-opens=java.desktop/sun.font=ALL-UNNAMED"
     )
-}
-
-// Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
-qodana {
-    cachePath.set(projectDir.resolve(".qodana").canonicalPath)
-    reportPath.set(projectDir.resolve("build/reports/inspections").canonicalPath)
-    saveReport.set(true)
-    showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
-}
-
-tasks.withType<org.gradle.jvm.tasks.Jar> {    duplicatesStrategy = DuplicatesStrategy.INCLUDE}
-
-val generateGrammars = tasks.register("generateGrammars") {
-    dependsOn("generateParser", "generateLexer")
-}
-
-tasks.withType<KotlinCompile> {
-    dependsOn(generateGrammars)
 }
 
 tasks {
@@ -131,6 +129,12 @@ tasks {
 
     patchPluginXml {
         version.set(properties("pluginVersion"))
+
+        // This prevents the patching `plugin.xml`. as set these manually as `patchPluginXml` can mess it up.
+        // See: https://intellij-support.jetbrains.com/hc/en-us/community/posts/360010590059-Why-pluginUntilBuild-is-mandatory
+        // Commented out for now as it breaks certain GitHub Workflows
+        // intellij.updateSinceUntilBuild.set(false)
+
         sinceBuild.set(properties("pluginSinceBuild"))
         untilBuild.set(properties("pluginUntilBuild"))
 
@@ -147,10 +151,11 @@ tasks {
             }.joinToString("\n").run { markdownToHTML(this) }
         )
 
+        val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
         changeNotes.set(provider {
             changelog.run {
-                getOrNull(properties("pluginVersion")) ?: getLatest()
+                (getOrNull(properties("pluginVersion")) ?: getUnreleased()).withHeader(false)
             }.toHTML()
         })
     }

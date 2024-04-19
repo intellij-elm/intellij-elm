@@ -90,7 +90,7 @@ object MinimalElmStdlibVariant : ElmStdlibVariant {
         val elmCLI = toolchain.elmCLI
                 ?: error("Must have a path to the Elm compiler to install Elm stdlib")
 
-        val compilerVersion = elmCLI.queryVersion().orNull()
+        val compilerVersion = elmCLI.queryVersion(project).orNull()
                 ?: error("Could not query the Elm compiler version")
         require(compilerVersion != Version(0, 18, 0))
 

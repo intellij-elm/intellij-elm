@@ -8,8 +8,10 @@ import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Condition
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.Consumer
 import org.elm.lang.core.ElmFileType
-import java.util.function.IntConsumer
 
 @State(
     name = "ElmTestAutoTestManager",
@@ -22,8 +24,9 @@ class ElmTestAutoTestManager internal constructor(
     override fun createWatcher(project: Project) =
         DelayedDocumentWatcher(project,
             myDelayMillis,
-            IntConsumer { value -> restartAllAutoTests(value) }
-        ) { it.fileType == ElmFileType && FileEditorManager.getInstance(project).isFileOpen(it) }
+            Consumer { value: Int -> restartAllAutoTests(value) },
+            Condition { it: VirtualFile -> it.fileType == ElmFileType && FileEditorManager.getInstance(project).isFileOpen(it) }
+        )
 }
 
 val Project.elmAutoTestManager
