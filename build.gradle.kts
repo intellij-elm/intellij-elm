@@ -52,6 +52,7 @@ changelog {
 
 tasks.withType<Test> {
     jvmArgs(
+        "--add-exports=java.base/jdk.internal.vm=ALL-UNNAMED",
         "--add-opens=java.base/java.io=ALL-UNNAMED",
         "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
         "--add-opens=java.base/java.lang.ref=ALL-UNNAMED",
@@ -67,8 +68,7 @@ tasks.withType<Test> {
         "--add-opens=java.desktop/javax.swing=ALL-UNNAMED",
         "--add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED",
         "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.font=ALL-UNNAMED",
-        "--illegal-access=warn", // show all violations as warnings (not just the first)
+        "--add-opens=java.desktop/sun.font=ALL-UNNAMED"
     )
 }
 
