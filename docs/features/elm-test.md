@@ -26,6 +26,7 @@ Once you have configured the path to `elm-test` (see above), right-click anywher
 
 
 ## Custom Tests Location
+
 By default, `elm-test` expects unit tests to exist in a folder called `tests` at the root of the Elm project, i.e. as a
 sibling of `elm.json`. For _application_ projects (as opposed to _package_ projects) using _Elm 19_ (or later) a custom
 location can be used, as discussed [here](https://github.com/rtfeldman/node-test-runner/pull/306#issuecomment-432835586).

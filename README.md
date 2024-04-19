@@ -14,7 +14,22 @@ Should work on most, if not all, IntelliJ Platform IDEs: IDEA (Community and Ult
 
 ## Install
 
-First make sure to uninstall all other Elm plugins you may have installed (this requires a restart of the IDE).
+You need to have some CLI tools --`elm` (the Elm compiler), [`elm-test`](docs/elm-test.md), [`elm-format`](docs/features/elm-format.md),
+[`elm-review`](docs/features/elm-review.md) and [`lamdera`](docs/features/lamdera.md)-- installed for certain features of this plugin to work.
+
+Install the first three with:
+
+```bash
+sudo npm install -g elm elm-test elm-format elm-review
+```
+
+**NOTE**: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), make sure to read [our NVM setup guide](docs/nvm.md).
+
+To install Lamdera follow [their instructions](https://lamdera.com/start).
+Unlike this plugin and IntelliJ IDEA Community Edition, Lamdera is **not open source software**.
+By installing Lamdera you trust the vendor, as their software is only shipped as binary.
+
+To install the plugin itself first make sure to uninstall all other Elm plugins you may have installed (this requires a restart of the IDE).
 Some have reported that having two Elm plugins installed results in the IDE not starting but showing a seemingly unrelated error
 (if you have this problem, there are [ways to fix it](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000524244-Disable-Uninstall-plugin-without-launching-Idea)).
 
@@ -24,7 +39,8 @@ After installing the plugin, restart the IDE and then [open your existing Elm pr
 Alternatively you can install it manually by downloading a [release](https://github.com/intellij-elm/intellij-elm/releases) (or downloading the source and building it yourself) and
 installing it with `Settings` -> `Plugins` -> `⚙️ (gear icon)` -> `Install plugin from disk...`
 
-**NOTE**: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), make sure to read [our NVM setup guide](docs/nvm.md).
+Once the plugin is installed it is advised to double check all CLI tools are found by going to
+**Settings** -> **Languages & Frameworks** -> **Elm** and see the CLI tools. 
 
 
 ## Features
