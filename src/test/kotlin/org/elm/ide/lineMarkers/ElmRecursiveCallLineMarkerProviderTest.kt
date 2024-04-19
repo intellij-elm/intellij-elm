@@ -2,6 +2,7 @@ package org.elm.ide.lineMarkers
 
 import org.junit.Test
 
+
 class ElmRecursiveCallLineMarkerProviderTest : ElmLineMarkerProviderTestBase() {
     @Test
     fun `test non-recursive functions`() = doTestByText(

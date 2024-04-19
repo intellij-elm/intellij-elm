@@ -2,6 +2,7 @@ package org.elm.ide.intentions
 
 import org.junit.Test
 
+
 class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeEncoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 

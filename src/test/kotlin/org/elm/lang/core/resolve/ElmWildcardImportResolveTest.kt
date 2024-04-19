@@ -2,6 +2,7 @@ package org.elm.lang.core.resolve
 
 import org.junit.Test
 
+
 class ElmWildcardImportResolveTest : ElmResolveTestBase() {
 
     @Test

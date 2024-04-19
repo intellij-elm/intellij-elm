@@ -2,6 +2,7 @@ package org.elm.lang.core.resolve
 
 import org.junit.Test
 
+
 /**
  * Tests related to resolving binary operator references
  *

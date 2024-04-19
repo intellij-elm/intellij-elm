@@ -2,7 +2,6 @@ package org.elm.workspace.compiler
 
 import com.intellij.notification.Notification
 import com.intellij.notification.Notifications
-import com.intellij.notification.NotificationsAdapter
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
@@ -13,6 +12,7 @@ import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
 import org.junit.Test
 import java.nio.file.Path
+
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
@@ -169,7 +169,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
     private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
         val notificationRef = Ref<Notification>()
         project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
-                object : NotificationsAdapter() {
+                object : Notifications {
                     override fun notify(notification: Notification) =
                             notificationRef.set(notification)
                 })

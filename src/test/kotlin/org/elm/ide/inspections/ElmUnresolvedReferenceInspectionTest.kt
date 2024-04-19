@@ -2,6 +2,7 @@ package org.elm.ide.inspections
 
 import org.junit.Test
 
+
 class ElmUnresolvedReferenceInspectionTest: ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
     @Test
     fun `test unresolved refs`() = checkByText("""

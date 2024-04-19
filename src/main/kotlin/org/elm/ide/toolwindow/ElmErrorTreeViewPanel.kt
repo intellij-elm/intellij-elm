@@ -1,14 +1,9 @@
 package org.elm.ide.toolwindow
 
-import com.intellij.ide.DataManager
 import com.intellij.ide.errorTreeView.NewErrorTreeViewPanel
-import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.wm.IdeFocusManager
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.util.ui.tree.TreeUtil
-import kotlinx.coroutines.Runnable
 import javax.swing.event.TreeSelectionListener
 
 class ElmErrorTreeViewPanel(project: Project, helpId: String?, createExitAction: Boolean, createToolbar: Boolean) :

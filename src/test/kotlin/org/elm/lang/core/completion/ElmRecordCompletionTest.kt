@@ -2,6 +2,7 @@ package org.elm.lang.core.completion
 
 import org.junit.Test
 
+
 class ElmRecordCompletionTest : ElmCompletionTestBase() {
 
     @Test

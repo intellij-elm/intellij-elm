@@ -2,6 +2,7 @@ package org.elm.lang.core.completion
 
 import org.junit.Test
 
+
 class ElmCompletionTest : ElmCompletionTestBase() {
 
 
@@ -256,7 +257,6 @@ g = User.defaultUser{-caret-}
     the IntelliJ dummy identifier to use an upper-case identifier in contexts such as types
     which must start with an upper-case letter.
 
-    @Test
     fun `test qualified type completion with caret after dot`() = doSingleCompletionMultiFile(
             """
 --@ main.elm

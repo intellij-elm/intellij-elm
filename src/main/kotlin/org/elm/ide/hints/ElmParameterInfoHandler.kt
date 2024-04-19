@@ -34,12 +34,6 @@ class ElmParameterInfoHandler : ParameterInfoHandler<PsiElement, ElmParametersDe
 
     var hintText: String = ""
 
-    override fun couldShowInLookup() = false
-
-    override fun getParametersForLookup(item: LookupElement?, context: ParameterInfoContext?): Array<Any>? =
-    // TODO maybe we should implement this. I'm not sure what it does, though.
-            null
-
     override fun findElementForParameterInfo(context: CreateParameterInfoContext): PsiElement? {
         val caretElement = context.file.findElementAt(context.editor.caretModel.offset) ?: return null
         val element = findFuncCall(caretElement)

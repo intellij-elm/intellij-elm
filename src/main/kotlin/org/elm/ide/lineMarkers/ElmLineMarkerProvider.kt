@@ -9,15 +9,9 @@ import org.elm.lang.core.psi.ElmFile
 import org.elm.lang.core.psi.parentOfType
 
 class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
-    companion object {
-        private val optionProviders = mapOf(
-                ElmExposureLineMarkerProvider.OPTION to { ElmExposureLineMarkerProvider() },
-                ElmRecursiveCallLineMarkerProvider.OPTION to { ElmRecursiveCallLineMarkerProvider() }
-        )
-        private val OPTIONS = optionProviders.keys.toTypedArray()
-    }
 
-    override fun getName(): String? = "Elm line markers"
+    // No type declaration as we implement (override) a nullable return value such that it is no longer nullable
+    override fun getName() = "Elm line markers"
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
 
     // This provides the options to show in Settings > Editor > General > Gutter Icons
@@ -45,3 +39,10 @@ class ElmLineMarkerProvider : LineMarkerProviderDescriptor() {
         }
     }
 }
+
+private val optionProviders = mapOf(
+    ElmExposureLineMarkerProvider.OPTION to { ElmExposureLineMarkerProvider() },
+    ElmRecursiveCallLineMarkerProvider.OPTION to { ElmRecursiveCallLineMarkerProvider() }
+)
+
+private val OPTIONS = optionProviders.keys.toTypedArray()

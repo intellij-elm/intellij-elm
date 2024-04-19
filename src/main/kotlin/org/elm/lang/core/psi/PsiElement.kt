@@ -117,7 +117,7 @@ fun <T : PsiElement> getStubDescendantsOfType(
 
     val result = SmartList<T>()
 
-    fun go(childrenStubs: List<StubElement<PsiElement>>) {
+    fun go(childrenStubs: List<StubElement<out PsiElement>>) {
         for (childStub in childrenStubs) {
             val child = childStub.psi
             if (aClass.isInstance(child)) {
@@ -132,7 +132,7 @@ fun <T : PsiElement> getStubDescendantsOfType(
     if (strict) {
         go(stub.childrenStubs)
     } else {
-        go(listOf(stub) as List<StubElement<PsiElement>>)
+        go(listOf(stub))
     }
 
     return result
@@ -148,7 +148,7 @@ fun <T : PsiElement> getStubDescendantOfType(
             ?: (element as? StubBasedPsiElement<*>)?.greenStub
             ?: return PsiTreeUtil.findChildOfType<T>(element, aClass, strict)
 
-    fun go(childrenStubs: List<StubElement<PsiElement>>): T? {
+    fun go(childrenStubs: List<StubElement<out PsiElement>>): T? {
         for (childStub in childrenStubs) {
             val child = childStub.psi
             if (aClass.isInstance(child)) {
@@ -164,7 +164,7 @@ fun <T : PsiElement> getStubDescendantOfType(
     return if (strict) {
         go(stub.childrenStubs)
     } else {
-        go(listOf(stub) as List<StubElement<PsiElement>>)
+        go(listOf(stub))
     }
 }
 

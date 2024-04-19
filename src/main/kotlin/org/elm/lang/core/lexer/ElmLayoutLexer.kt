@@ -197,7 +197,7 @@ private fun isSingleLineLetIn(index: Int, tokens: List<Token>): Boolean {
     Elm allows for a let/in expression on a single line:
     e.g. ```foo = let x = 0 in x + 1```
     I don't know why you would ever do this, but some people do:
-    https://github.com/klazuka/intellij-elm/issues/20#issuecomment-374843581
+    https://github.com/intellij-elm/intellij-elm/issues/20#issuecomment-374843581
 
     If we didn't have special handling for it, the `let` section wouldn't
     get closed-out until a subsequent line with less indent, which would be wrong.

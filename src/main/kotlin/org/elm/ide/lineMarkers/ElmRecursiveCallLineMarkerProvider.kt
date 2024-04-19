@@ -38,19 +38,20 @@ class ElmRecursiveCallLineMarkerProvider : LineMarkerProvider {
 
         val ref = valueExpr.reference.resolve()
         val nearestFunc = functionCall.ancestorsStrict.filterIsInstance<ElmValueDeclaration>()
-                .firstOrNull()?.functionDeclarationLeft
+            .firstOrNull()?.functionDeclarationLeft
         if (nearestFunc != ref) return null // not recursive
 
         val doc = PsiDocumentManager.getInstance(el.project).getDocument(el.containingFile) ?: return null
         val lineNumber = doc.getLineNumber(el.textOffset)
         if (lines.add(lineNumber)) {
             return LineMarkerInfo(
-                    el,
-                    el.textRange,
-                    ElmIcons.RECURSIVE_CALL,
-                    FunctionUtil.constant("Recursive call"),
-                    null,
-                    GutterIconRenderer.Alignment.RIGHT)
+                el,
+                el.textRange,
+                ElmIcons.RECURSIVE_CALL,
+                FunctionUtil.constant("Recursive call"),
+                null,
+                GutterIconRenderer.Alignment.RIGHT
+            ) { "Recursive call" }
         }
         return null
     }

@@ -402,7 +402,7 @@ class ElmWorkspaceResolveTest : ElmWorkspaceTestBase() {
     }
 
 
-    // See https://github.com/klazuka/intellij-elm/issues/189
+    // See https://github.com/intellij-elm/intellij-elm/issues/189
     @Test
     fun `test resolves companion modules inside the default tests directory`() =
             testTestCompanionModulesResolution(true)

@@ -126,7 +126,7 @@ foo quux = quux.b
 """)
 
 
-    // disabled until https://github.com/klazuka/intellij-elm/issues/240 is fixed
+    // disabled until https://github.com/intellij-elm/intellij-elm/issues/240 is fixed
 /*
     @Test
     fun `test file rename from Data_User to Data_Quux`() = checkByDirectory("""

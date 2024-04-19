@@ -1,11 +1,15 @@
 <idea-plugin>
-    <id>Elm IntelliJ NG</id>
-    <name>Elm / Lamdera</name>
-    <vendor url="https://github.com/clojj/intellij-elm">clojj</vendor>
+    <!-- Changing the ID will prohibit upgrades of version of the plugin with a previous ID. -->
+    <id>intellij-elm</id>
+    <name>Elm</name>
+    <vendor url="https://github.com/intellij-elm">The Elm Plugin Contributors</vendor>
 
     <description><![CDATA[
-        Provides support for Elm & Lamdera projects
+        Provides support for the Elm programming language
     ]]></description>
+
+    <!-- `<idea-version since-build="..."/>` and `<idea-version until-build="..."/>` are set by the `patchPluginXml`
+         Gradle task, with values from `gradle.properties`. -->
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
@@ -203,19 +207,21 @@
                     factoryClass="org.elm.ide.toolwindow.ElmReviewToolWindowFactory"/>
         <toolWindow id="Friendly Messages" anchor="bottom" secondary="true" icon="/icons/elm-toolwindow.png"
                     factoryClass="org.elm.ide.toolwindow.ReportsToolWindowFactory"/>
+        <projectService serviceImplementation="org.elm.workspace.ElmReviewService"/>
 
 
         <!-- STUBS -->
+        <!-- Adding `externalIdPrefix="elm"` breaks the tests -->
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex"/>
 
         <multiHostInjector implementation="org.elm.ide.injection.ElmGlslInjector"/>
 
-        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$Generic"/>
-        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$TopLevel"/>
-        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$Expression"/>
-        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$ValueDecl"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$Generic" contextId="ELM" baseContextId="EverywhereContextType"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$TopLevel" contextId="ELM_TOP_LEVEL" baseContextId="Generic"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$Expression" contextId="ELM_EXPRESSION" baseContextId="Generic"/>
+        <liveTemplateContext implementation="org.elm.ide.livetemplates.ElmLiveTemplateContext$ValueDecl" contextId="ELM_VALUE_DECL" baseContextId="Generic"/>
         <defaultLiveTemplatesProvider implementation="org.elm.ide.livetemplates.ElmLiveTemplateProvider"/>
 
         <configurationType implementation="org.elm.ide.test.run.ElmTestRunConfigurationType"/>
@@ -262,7 +268,17 @@
 
         <action id="Elm.RunExternalElmReview"
                 class="org.elm.ide.actions.ElmExternalReviewAction"
-                text="Run elm-review">
+                text="Review Elm Project"
+                icon="AllIcons.Toolwindows.ToolWindowBuild">
+            <keyboard-shortcut first-keystroke="alt shift V" keymap="$default"/>
+            <add-to-group group-id="CodeMenu"/>
+        </action>
+
+        <action id="Elm.RunExternalElmReviewWatchmode"
+                class="org.elm.ide.actions.ElmExternalReviewWatchmodeAction"
+                text="Review Elm Project in watchmode"
+                icon="AllIcons.Toolwindows.ToolWindowBuild">
+            <keyboard-shortcut first-keystroke="alt shift W" keymap="$default"/>
             <add-to-group group-id="CodeMenu"/>
         </action>
 
@@ -288,15 +304,11 @@
             <add-to-group group-id="Elm.WorkspaceToolsGroup"/>
         </group>
 
-        <action id="Elm.Review"
-                class="org.elm.ide.actions.ElmExternalReviewAction"
-                text="Review Elm Project"
-                icon="AllIcons.Toolwindows.ToolWindowBuild">
-            <keyboard-shortcut first-keystroke="alt shift V" keymap="$default"/>
-        </action>
-
         <group id="Elm.ReviewToolsGroup" text="elm-review" popup="true">
-            <reference id="Elm.Review"/>
+            <reference id="Elm.RunExternalElmReview"/>
+        </group>
+        <group id="Elm.ReviewWatchmodeToolsGroup" text="elm-review-watchmode" popup="true">
+            <reference id="Elm.RunExternalElmReviewWatchmode"/>
         </group>
     </actions>
 

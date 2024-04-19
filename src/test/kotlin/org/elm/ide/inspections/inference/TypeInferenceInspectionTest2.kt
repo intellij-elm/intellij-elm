@@ -14,7 +14,7 @@ main : Foo -> ()
 main {bar} = <error descr="Type mismatch.Required: ()Found: Int">bar</error>
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/122
+    // https://github.com/intellij-elm/intellij-elm/issues/122
     @Test
     fun `test matched record pattern from extension alias`() = checkByText("""
 type alias Foo a = { a | foo : ()}
@@ -70,7 +70,7 @@ main =
         foo
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/153
+    // https://github.com/intellij-elm/intellij-elm/issues/153
     @Test
     fun `test let-in with tuple with too small arity`() = checkByText("""
 main : ()
@@ -265,7 +265,7 @@ main : ()
 <error descr="Infinite recursion">main = main</error>
 """)
 
-    // #https://github.com/klazuka/intellij-elm/issues/142
+    // #https://github.com/intellij-elm/intellij-elm/issues/142
     // this tests for infinite recursion; the diagnostic is tested in TypeDeclarationInspectionTest
     @Test
     fun `test bad self-recursion in type alias`() = checkByText("""
@@ -430,7 +430,7 @@ main =
             <error descr="Type mismatch.Required: ()Found: String">""</error>
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/113
+    // https://github.com/intellij-elm/intellij-elm/issues/113
     @Test
     fun `test case branches with union value call`() = checkByText("""
 foo : Maybe (List a)
@@ -442,7 +442,7 @@ main =
        _ -> ()
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/113
+    // https://github.com/intellij-elm/intellij-elm/issues/113
     @Test
     fun `test field access on field subset`() = checkByText("""
 type alias Subset a =
@@ -661,7 +661,7 @@ main =
         x :: xs -> <error descr="Type mismatch.Required: ()Found: String">x</error>
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/247
+    // https://github.com/intellij-elm/intellij-elm/issues/247
     @Test
     fun `test nested destructuring`() = checkByText("""
 main : ()
@@ -829,7 +829,7 @@ main : Foo ()
 main = <error descr="Type mismatch.Required: Foo ()Found: Bar → Foo Bar → Bar">BarVariant</error>
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/201
+    // https://github.com/intellij-elm/intellij-elm/issues/201
     @Test
     fun `test returning bound recursive union variant`() = checkByText("""
 type Tree a = Tree a (List (Tree a))

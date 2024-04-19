@@ -2,6 +2,7 @@ package org.elm.lang.core.completion
 
 import org.junit.Test
 
+
 /**
  * Test completion for values and types built-in to the language,
  * such as List, as well as implicit imports from `elm/core` provided

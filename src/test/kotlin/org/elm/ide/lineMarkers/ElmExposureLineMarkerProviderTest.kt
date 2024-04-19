@@ -2,6 +2,7 @@ package org.elm.ide.lineMarkers
 
 import org.junit.Test
 
+
 class ElmExposureLineMarkerProviderTest : ElmLineMarkerProviderTestBase() {
 
 

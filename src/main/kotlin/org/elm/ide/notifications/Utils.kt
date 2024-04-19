@@ -7,12 +7,10 @@
 
 package org.elm.ide.notifications
 
-import com.intellij.notification.NotificationAction
-import com.intellij.notification.NotificationGroup
-import com.intellij.notification.NotificationType
-import com.intellij.notification.Notifications
+import com.intellij.notification.*
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.AnActionResult
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.project.Project
@@ -36,8 +34,8 @@ fun Project.showBalloon(
     val notification = pluginNotifications.createNotification(content, type)
     actions.forEach { (title, fn) ->
         notification.addAction(
-                NotificationAction.create(title) { _, notif ->
-                    notif.hideBalloon()
+                NotificationAction.create(title) { _, notification ->
+                    notification.hideBalloon()
                     fn()
                 }
         )
@@ -52,8 +50,8 @@ fun executeAction(action: AnAction, place: String, dataContext: DataContext) {
 
     if (event.presentation.isEnabled && event.presentation.isVisible) {
         val actionManager = ActionManagerEx.getInstanceEx()
-        actionManager.fireBeforeActionPerformed(action, event.dataContext, event)
+        actionManager.fireBeforeActionPerformed(action, event)
         action.actionPerformed(event)
-        actionManager.fireAfterActionPerformed(action, event.dataContext, event)
+        actionManager.fireAfterActionPerformed(action, event, AnActionResult.PERFORMED)
     }
 }

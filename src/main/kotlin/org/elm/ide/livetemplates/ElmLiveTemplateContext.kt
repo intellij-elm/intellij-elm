@@ -16,6 +16,8 @@ import org.elm.lang.core.psi.elements.ElmStringConstantExpr
 import org.elm.lang.core.psi.elements.ElmTypeExpression
 import kotlin.reflect.KClass
 
+// For IntelliJ Platform >2022.2.4:
+//    sealed class ElmLiveTemplateContext(presentableName: String) : TemplateContextType(presentableName) {
 sealed class ElmLiveTemplateContext(
         id: String,
         presentableName: String,
@@ -38,6 +40,15 @@ sealed class ElmLiveTemplateContext(
     }
 
     protected abstract fun isInContext(element: PsiElement): Boolean
+
+    // For IntelliJ Platform >2022.2.4:
+    //    class Generic : ElmLiveTemplateContext("Elm") {
+    //    ...
+    //    class TopLevel : ElmLiveTemplateContext("Top level statement") {
+    //    ...
+    //    class ValueDecl : ElmLiveTemplateContext("Function declaration") {
+    //    ...
+    //    class Expression : ElmLiveTemplateContext("Expression") {
 
     class Generic : ElmLiveTemplateContext("ELM", "Elm", EverywhereContextType::class) {
         override fun isInContext(element: PsiElement): Boolean = true

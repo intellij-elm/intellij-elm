@@ -70,7 +70,7 @@ class Timings(
     }
 
     private fun <T> measureInternal(name: String, f: () -> T): T {
-        var result: T? = null
+        var result: T?
         val time = measureTimeMillis { result = f() }
         valuesTotal.merge(name, time, Long::plus)
         invokes.merge(name, 1, Long::plus)

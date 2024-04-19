@@ -2,6 +2,7 @@ package org.elm.ide.intentions
 
 import org.junit.Test
 
+
 class RecordConstructorToLiteralIntentionTest : ElmIntentionTestBase(RecordConstructorToLiteralIntention()) {
 
     @Test

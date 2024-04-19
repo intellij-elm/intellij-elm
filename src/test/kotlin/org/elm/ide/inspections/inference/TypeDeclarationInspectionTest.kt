@@ -34,7 +34,7 @@ type alias Alias = { value : Union }
 type Union = Variant Alias
 """)
 
-    // https://github.com/klazuka/intellij-elm/issues/188
+    // https://github.com/intellij-elm/intellij-elm/issues/188
     @Test
     fun `test allowed recursion through two aliases`() = checkByText("""
 type Foo = Foo Alias1
