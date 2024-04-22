@@ -54,7 +54,7 @@ bar = ()
 """, "foo", "bar")
 
     private fun doTest(type: String, @Language("Elm") code: String, vararg expected: String) {
-        InlineFile(code).withCaret()
+        addFileWithCaretToFixture(code)
         val before = collectInference()
 
         myFixture.type(type)

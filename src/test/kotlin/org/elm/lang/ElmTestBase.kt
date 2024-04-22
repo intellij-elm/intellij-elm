@@ -27,13 +27,11 @@ SOFTWARE.
 package org.elm.lang
 
 import com.intellij.openapi.application.runWriteAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -44,7 +42,6 @@ import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixture4TestCase
-import com.jetbrains.rd.util.remove
 import junit.framework.AssertionFailedError
 import org.elm.FileTree
 import org.elm.TestProject
@@ -144,7 +141,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         @Language("Elm") after: String,
         action: () -> Unit
     ) {
-        InlineFile(before)
+        addFileToFixture(before)
         action()
         myFixture.checkResult(replaceCaretMarker(after))
     }
@@ -153,32 +150,29 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         myFixture.configureFromExistingVirtualFile(myFixture.findFileInTempDir(path))
     }
 
-    protected fun getVirtualFileByName(path: String): VirtualFile? =
+    private fun getVirtualFileByName(path: String): VirtualFile? =
         LocalFileSystem.getInstance().findFileByPath(path)
 
     protected inline fun <reified X : Throwable> expect(f: () -> Unit) {
         try {
             f()
         } catch (e: Throwable) {
-            if (e is X)
-                return
+            if (e is X) return
             throw e
         }
         fail("No ${X::class.java} was thrown during the test")
     }
 
-    inner class InlineFile(@Language("Elm") private val code: String, val name: String = "main.elm") {
-        private val hasCaretMarker = "{-caret-}" in code
 
-        init {
-            myFixture.configureByText(name, replaceCaretMarker(code))
+    fun addFileToFixture(@Language("Elm") code: String, name: String = "main.elm", withCaret: Boolean = false) {
+        if (withCaret) {
+            check("{-caret-}" in code) { "Please add `{-caret-}` marker to\n$code" }
         }
+        myFixture.configureByText(name, replaceCaretMarker(code))
+    }
 
-        fun withCaret() {
-            check(hasCaretMarker) {
-                "Please add `{-caret-}` marker to\n$code"
-            }
-        }
+    fun addFileWithCaretToFixture(@Language("Elm") code: String, name: String = "main.elm") {
+        addFileToFixture(code, name, withCaret = true)
     }
 
     protected inline fun <reified T : PsiElement> findElementInEditor(marker: String = "^"): T {
@@ -261,7 +255,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
     }
 
     protected open fun configureByText(text: String) {
-        InlineFile(text.trimIndent())
+        addFileToFixture(text.trimIndent())
     }
 
     protected open fun configureByFileTree(text: String) {
@@ -271,7 +265,7 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
     protected fun elm(@Language("Elm") elmContent: String) = elmContent
 
     protected fun joinElmFiles(vararg fileNameContentPair: Pair<String, String>): String {
-        return fileNameContentPair.map { "--@ ${it.first}\n${it.second}" }.joinToString(separator = "\n\n")
+        return fileNameContentPair.joinToString(separator = "\n\n") { "--@ ${it.first}\n${it.second}" }
     }
 
     companion object {

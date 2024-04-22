@@ -267,13 +267,13 @@ g =
     }
 
     fun doTest(newName: String, @Language("Elm") before: String, @Language("Elm") after: String) {
-        InlineFile(before).withCaret()
+        addFileWithCaretToFixture(before)
         myFixture.renameElementAtCaret(newName)
         myFixture.checkResult(after)
     }
 
     private fun doInvalidNameTest(newName: String, @Language("Elm") before: String) {
-        InlineFile(before).withCaret()
+        addFileWithCaretToFixture(before)
         try {
             myFixture.renameElementAtCaret(newName)
         } catch (e: RuntimeException) {

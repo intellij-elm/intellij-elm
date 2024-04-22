@@ -26,23 +26,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         }
     */
 
-    private val unformatted = """
-                    module Main exposing (f)
-
-
-                    f x = x
-
-                """.trimIndent()
-
-    private val expectedFormatted = """
-                    module Main exposing (f)
-
-
-                    f x =
-                        x
-
-                """.trimIndent()
-
     @Test
     fun `test ElmFormatOnFileSaveComponent should work with elm 19 (flaky)`() {
         buildProject {
@@ -117,7 +100,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
         expected: String,
         activateOnSaveHook: Boolean = true
     ) {
-
         project.elmWorkspace.useToolchain(toolchain.copy(isElmFormatOnSaveEnabled = activateOnSaveHook))
 
         val file = myFixture.configureFromTempProjectFile(fileWithCaret).virtualFile
@@ -157,4 +139,21 @@ private val manifestElm19 = """
             "indirect": {}
         }
     }
+""".trimIndent()
+
+private val unformatted = """
+    module Main exposing (f)
+
+
+    f x = x
+
+""".trimIndent()
+
+private val expectedFormatted = """
+    module Main exposing (f)
+
+
+    f x =
+        x
+
 """.trimIndent()

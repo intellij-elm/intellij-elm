@@ -22,6 +22,7 @@ class ElmTestAutoTestManager internal constructor(
 ) : AbstractAutoTestManager(project) {
 
     override fun createWatcher(project: Project) =
+        // This is the only constructor that is available both in Platform versions 2022.2.4 and master
         DelayedDocumentWatcher(project,
             myDelayMillis,
             Consumer { value: Int -> restartAllAutoTests(value) },

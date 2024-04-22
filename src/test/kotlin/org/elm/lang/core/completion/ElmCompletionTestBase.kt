@@ -49,7 +49,7 @@ abstract class ElmCompletionTestBase: ElmTestBase() {
     }
 
     protected fun checkContainsCompletion(text: String, @Language("Elm") code: String) {
-        InlineFile(code).withCaret()
+        addFileWithCaretToFixture(code)
         val variants = myFixture.completeBasic()
         when {
             variants == null -> {
@@ -71,7 +71,7 @@ abstract class ElmCompletionTestBase: ElmTestBase() {
     }
 
     protected fun checkNoCompletion(@Language("Elm") code: String) {
-        InlineFile(code).withCaret()
+        addFileWithCaretToFixture(code)
         noCompletionCheck()
     }
 

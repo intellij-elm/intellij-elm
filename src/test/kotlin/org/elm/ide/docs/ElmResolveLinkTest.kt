@@ -30,7 +30,7 @@ foo = 0
 """, "Foo")
 
     private fun doTest(@Language("Elm") code: String, link: String) {
-        InlineFile(code)
+        addFileToFixture(code)
         val context = findElementInEditor<ElmNamedElement>("^")
         val expectedElement = findElementInEditor<ElmNamedElement>("X")
         val actualElement = ElmDocumentationProvider()

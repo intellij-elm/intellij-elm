@@ -160,7 +160,7 @@ foo = ()
     }
 
     private fun checkModCount(op: TestAction, @Language("Elm") code: String, text: String) {
-        InlineFile(code).withCaret()
+        addFileWithCaretToFixture(code)
         checkModCount(op) { myFixture.type(text) }
     }
 

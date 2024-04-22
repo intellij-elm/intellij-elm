@@ -175,7 +175,7 @@ f x = Result.withDefault x 42
 
 
     @Test
-    fun `test Result type exposed`() = stubOnlyResolve(
+    fun `test Result type exposed (flaky)`() = stubOnlyResolve(
             """
 --@ main.elm
 type alias Foo = Result String Int

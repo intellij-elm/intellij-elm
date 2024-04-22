@@ -80,7 +80,7 @@ f foo = foo.x.y
     private fun checkChoices(@Language("Elm") str: String, choices: List<String>) {
         val provider = ElmExpressionTypeProvider()
 
-        InlineFile(str)
+        addFileToFixture(str)
         val elem = findElementInEditor<ElmPsiElement>()
 
         TestCase.assertEquals(choices, provider.getExpressionsAt(elem).map { it.text })

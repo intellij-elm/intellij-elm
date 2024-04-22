@@ -73,7 +73,7 @@ main r =
 """)
 
     private fun doTest(@Language("Elm") code: String) {
-        InlineFile(code)
+        addFileToFixture(code)
         myFixture.file.directChildrenOfType<ElmPsiElement>().forEach { elem ->
             when (elem) {
                 is ElmValueDeclaration -> checkResult(elem.findInference()!!)

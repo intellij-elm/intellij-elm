@@ -11,7 +11,7 @@ internal class ElmBreadcrumbsProviderTest : ElmTestBase() {
 
     @Test
     fun `test breadcrumbs`() {
-        InlineFile("""
+        addFileToFixture("""
 type alias A = {a = ()}
 type T = U | V ()
 
