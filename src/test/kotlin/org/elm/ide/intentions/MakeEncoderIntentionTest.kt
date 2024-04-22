@@ -1,14 +1,18 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
+
 
 class MakeEncoderIntentionTest : ElmIntentionTestBase(MakeEncoderIntention()) {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
+    @Test
     fun `test unavailable with wrong return type`() = doUnavailableTest(
             """
 encode : String -> String{-caret-}
 """)
 
+    @Test
     fun `test unavailable with no arguments`() = doUnavailableTest(
             """
 import Json.Encode as Encode
@@ -16,6 +20,7 @@ import Json.Encode as Encode
 encode : Encode.Value{-caret-}
 """)
 
+    @Test
     fun `test unavailable with too many arguments`() = doUnavailableTest(
             """
 import Json.Encode as Encode
@@ -23,6 +28,7 @@ import Json.Encode as Encode
 encode : String -> String -> Encode.Value{-caret-}
 """)
 
+    @Test
     fun `test basic type`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -36,6 +42,7 @@ encode string =
     Encode.string string
 """)
 
+    @Test
     fun `test exposed functions`() = doAvailableTest(
             """
 import Json.Encode exposing (..)
@@ -59,6 +66,7 @@ encode foo =
         ]
 """)
 
+    @Test
     fun `test aliased functions`() = doAvailableTest(
             """
 import Json.Encode as E
@@ -82,6 +90,7 @@ encode foo =
         ]
 """)
 
+    @Test
     fun `test built in types in record`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -149,6 +158,7 @@ foo foo =
         ]
 """)
 
+    @Test
     fun `test mixed records and unions`() = doAvailableTest(
             """
 module Main exposing (..)
@@ -196,6 +206,7 @@ encodeFoo foo =
         ]
 """)
 
+    @Test
     fun `test nested function`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -236,6 +247,7 @@ main =
     ()
 """)
 
+    @Test
     fun `test union variant wrappers`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -280,6 +292,7 @@ encodeWrappers wrappers =
             Encode.string "Qux"
 """)
 
+    @Test
     fun `test union variants with multiple parameters`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -302,6 +315,7 @@ encode foo =
             Debug.todo "Cannot generate encoder for variant with multiple parameters"
 """)
 
+    @Test
     fun `test name conflict`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -345,6 +359,7 @@ encodeBar bar =
         ]
 """)
 
+    @Test
     fun `test adding import`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -379,6 +394,7 @@ encodeBar bar =
         ]
 """)
 
+    @Test
     fun `test adding variant imports`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -423,6 +439,7 @@ encodeBar bar =
             Encode.string "Qux"
 """)
 
+    @Test
     fun `test existing union encoder`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -450,6 +467,7 @@ encode bar =
         ]
 """)
 
+    @Test
     fun `test existing record encoder`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -477,6 +495,7 @@ encode bar =
         ]
 """)
 
+    @Test
     fun `test existing list encoder`() = doAvailableTest(
             """
 import Json.Encode as Encode
@@ -504,6 +523,7 @@ encode bar =
         ]
 """)
 
+    @Test
     fun `test existing union encoder in other module`() = doAvailableTestWithFileTree(
             """
 --@ main.elm
@@ -535,6 +555,7 @@ encode bar =
 
 """)
 
+    @Test
     fun `test existing union encoder in separate module with qualification`() = doAvailableTestWithFileTree(
             """
 --@ main.elm

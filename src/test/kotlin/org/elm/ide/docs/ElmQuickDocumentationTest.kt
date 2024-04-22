@@ -1,11 +1,13 @@
 package org.elm.ide.docs
 
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmQuickDocumentationTest : ElmDocumentationProviderTest() {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
-    fun `test variable declaration`() = doTest(
+    @Test
+    fun `test variable declaration (flaky)`() = doTest(
             """
 foo = 0
 --^
@@ -15,7 +17,8 @@ foo = 0
 <b>foo</b></pre></div>
 """)
 
-    fun `test unary function`() = doTest(
+    @Test
+    fun `test unary function (flaky)`() = doTest(
             """
 foo bar = bar
 --^
@@ -25,7 +28,8 @@ foo bar = bar
 <b>foo</b> bar</pre></div>
 """)
 
-    fun `test binary function with line comment`() = doTest(
+    @Test
+    fun `test binary function with line comment (flaky)`() = doTest(
             """
 --- this shouldn't be included
 foo bar baz = bar baz
@@ -36,7 +40,8 @@ foo bar baz = bar baz
 <b>foo</b> bar baz</pre></div>
 """)
 
-    fun `test binary function with as`() = doTest(
+    @Test
+    fun `test binary function with as (flaky)`() = doTest(
             """
 foo (bar as baz) qux = bar
 --^
@@ -46,7 +51,8 @@ foo (bar as baz) qux = bar
 <b>foo</b> (bar as baz) qux</pre></div>
 """)
 
-    fun `test unannotated function`() = doTest(
+    @Test
+    fun `test unannotated function (flaky)`() = doTest(
             """
 foo a = ((), "", a + 1)
 main = foo
@@ -57,7 +63,8 @@ main = foo
 <b>foo</b> a</pre></div>
 """)
 
-    fun `test var with later constraints`() = doTest(
+    @Test
+    fun `test var with later constraints (flaky)`() = doTest(
             """
 foo a =
     let
@@ -73,7 +80,8 @@ foo a =
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function with doc comment`() = doTest(
+    @Test
+    fun `test function with doc comment (flaky)`() = doTest(
             """
 {-| this should be included. -}
 foo bar baz = bar baz
@@ -85,7 +93,8 @@ foo bar baz = bar baz
 <div class='content'><p>this should be included.</p></div>
 """)
 
-    fun `test function with type annotation`() = doTest(
+    @Test
+    fun `test function with type annotation (flaky)`() = doTest(
             """
 foo : Int -> Int -> Int
 foo bar baz = bar
@@ -96,7 +105,8 @@ foo bar baz = bar
 <b>foo</b> bar baz</pre></div>
 """)
 
-    fun `test function with type annotation with nested types`() = doTest(
+    @Test
+    fun `test function with type annotation with nested types (flaky)`() = doTest(
             """
 foo : List (List a) -> ()
 foo bar = ()
@@ -107,7 +117,8 @@ foo bar = ()
 <b>foo</b> bar</pre></div>
 """)
 
-    fun `test function with type annotation and parameterized alias`() = doTest(
+    @Test
+    fun `test function with type annotation and parameterized alias (flaky)`() = doTest(
             """
 type alias A a = {x: a, y: ()}
 main : A ()
@@ -119,7 +130,8 @@ main = {x = (), y = ()}
 <b>main</b></pre></div>
 """)
 
-    fun `test nested function with type annotation`() = doTest(
+    @Test
+    fun `test nested function with type annotation (flaky)`() = doTest(
             """
 main a =
     let
@@ -134,7 +146,8 @@ main a =
 <b>foo</b> bar baz</pre></div>
 """)
 
-    fun `test function in let`() = doTest(
+    @Test
+    fun `test function in let (flaky)`() = doTest(
             """
 foo a =
     let
@@ -149,7 +162,8 @@ foo a =
 """)
 
 
-    fun `test function with qualified type annotation`() = doTest(
+    @Test
+    fun `test function with qualified type annotation (flaky) (flaky)`() = doTest(
             """
 import Json.Decode
 foo : Json.Decode.Decoder ()
@@ -161,7 +175,8 @@ foo = Json.Decode.succeed ()
 <b>foo</b></pre></div>
 """)
 
-    fun `test function with type and docs`() = doTest(
+    @Test
+    fun `test function with type and docs (flaky)`() = doTest(
             """
 {-| foo some ints together -}
 foo : Int -> Int -> Int
@@ -174,7 +189,8 @@ foo bar baz = bar baz
 <div class='content'><p>foo some ints together</p></div>
 """)
 
-    fun `test function in module`() = doTest(
+    @Test
+    fun `test function in module (flaky)`() = doTest(
             """
 module Foo.Bar exposing (foo)
 
@@ -187,7 +203,8 @@ foo bar = bar
 """)
 
 
-    fun `test doc comments with markdown`() = doTest(
+    @Test
+    fun `test doc comments with markdown (flaky)`() = doTest(
             """
 {-| Map some `Int`s together,
 producing another `Int`
@@ -220,7 +237,8 @@ deciding if this is what you want.</p></div>
 """)
 
 
-    fun `test type declaration`() = doTest(
+    @Test
+    fun `test type declaration (flaky)`() = doTest(
             """
 type Foo = Bar
      --^
@@ -231,7 +249,8 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
-    fun `test type declaration in module`() = doTest(
+    @Test
+    fun `test type declaration in module (flaky)`() = doTest(
             """
 module Foo.Bar exposing (Foo)
 
@@ -244,7 +263,8 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
-    fun `test type declaration with docs`() = doTest(
+    @Test
+    fun `test type declaration with docs (flaky)`() = doTest(
             """
 {-| included *docs* -}
 type Foo = Bar
@@ -257,7 +277,8 @@ type Foo = Bar
 <p><code>Bar</code></td></table>
 """)
 
-    fun `test type declaration with multiple variants`() = doTest(
+    @Test
+    fun `test type declaration with multiple variants (flaky)`() = doTest(
             """
 {-| included *docs* -}
 type Foo
@@ -277,7 +298,8 @@ type Foo
 <p><code>Lorem</code> { ipsum : <a href="psi_element://Int">Int</a> }</td></table>
 """)
 
-    fun `test union variant with parameters`() = doTest(
+    @Test
+    fun `test union variant with parameters (flaky)`() = doTest(
             """
 type Foo a = Bar | Baz a (List Int) Int
                  --^
@@ -286,7 +308,8 @@ type Foo a = Bar | Baz a (List Int) Int
 <div class='definition'><pre><i>variant</i> Baz a (<a href="psi_element://List">List</a> <a href="psi_element://Int">Int</a>) <a href="psi_element://Int">Int</a><i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
-    fun `test union variant without parameters`() = doTest(
+    @Test
+    fun `test union variant without parameters (flaky)`() = doTest(
             """
 type Foo a = Bar | Baz a Foo
              --^
@@ -295,7 +318,8 @@ type Foo a = Bar | Baz a Foo
 <div class='definition'><pre><i>variant</i> Bar<i> of type </i><a href="psi_element://Foo">Foo</a></pre></div>
 """)
 
-    fun `test type alias`() = doTest(
+    @Test
+    fun `test type alias (flaky)`() = doTest(
             """
 type alias Foo = Int
          --^
@@ -304,7 +328,8 @@ type alias Foo = Int
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
 """)
 
-    fun `test type alias in module`() = doTest(
+    @Test
+    fun `test type alias in module (flaky)`() = doTest(
             """
 module Foo.Bar exposing (Foo)
 
@@ -315,7 +340,8 @@ type alias Foo = Int
 <div class='definition'><pre><b>type alias</b> Foo<i> defined in </i>Foo.Bar</pre></div>
 """)
 
-    fun `test type alias with docs`() = doTest(
+    @Test
+    fun `test type alias with docs (flaky)`() = doTest(
             """
 {-| included *docs* -}
 type alias Foo = Int
@@ -326,7 +352,8 @@ type alias Foo = Int
 <div class='content'><p>included <em>docs</em></p></div>
 """)
 
-    fun `test type alias empty record`() = doTest(
+    @Test
+    fun `test type alias empty record (flaky)`() = doTest(
             """
 type alias Foo = { }
          --^
@@ -335,7 +362,8 @@ type alias Foo = { }
 <div class='definition'><pre><b>type alias</b> Foo</pre></div>
 """)
 
-    fun `test type alias record with fields`() = doTest(
+    @Test
+    fun `test type alias record with fields (flaky)`() = doTest(
             """
 type alias Foo = { a: Int, b: String }
          --^
@@ -347,7 +375,8 @@ type alias Foo = { a: Int, b: String }
 <p><code>b</code> : <a href="psi_element://String">String</a></td></table>
 """)
 
-    fun `test module`() = doTest(
+    @Test
+    fun `test module (flaky)`() = doTest(
             """
 module Main exposing (main)
       --^
@@ -359,7 +388,8 @@ main = ()
 
     // This test is kludgy: since a line comment before a doc comment will cause the doc comment to fail to attach to
     // the module element, we need to put the line comment inside the doc comment.
-    fun `test module with docstring`() = doTest(
+    @Test
+    fun `test module with docstring (flaky)`() = doTest(
             """
 module Main exposing (main)
 {-|  --^
@@ -383,7 +413,8 @@ type Baz = Baz
 <div class='content'><p>--^</p><p>Module docs</p><h2>Header</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://Bar">Bar</a><h2>Helpers</h2><a href="psi_element://main">main</a>, <a href="psi_element://foo">foo</a>, <a href="psi_element://Bar">Bar</a>, <a href="psi_element://Baz">Baz</a></div>
 """)
 
-    fun `test function parameter`() = doTest(
+    @Test
+    fun `test function parameter (flaky)`() = doTest(
             """
 foo bar = ()
   --^
@@ -393,7 +424,8 @@ foo bar = ()
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function parameter with primitive type annotation`() = doTest(
+    @Test
+    fun `test function parameter with primitive type annotation (flaky)`() = doTest(
             """
 type Int = Int
 foo : Int -> Int
@@ -405,7 +437,8 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function parameter with nested parametric type annotation`() = doTest(
+    @Test
+    fun `test function parameter with nested parametric type annotation (flaky)`() = doTest(
             """
 type Foo a = Bar
 foo : Foo (Foo a) -> Foo (Foo a)
@@ -417,7 +450,8 @@ foo bar = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function parameter with parenthesized type annotation`() = doTest(
+    @Test
+    fun `test function parameter with parenthesized type annotation (flaky)`() = doTest(
             """
 type Int = Int
 foo : ((Int)) -> Int
@@ -429,7 +463,8 @@ foo ((bar)) = bar
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test function parameter with nested tuple type annotation`() = doTest(
+    @Test
+    fun `test function parameter with nested tuple type annotation (flaky)`() = doTest(
             """
 type Int = Int
 type String = String
@@ -444,7 +479,7 @@ foo (_, (bar, _)) = bar
 """)
 
 // The value now resolves to the field inside the annotation, which we don't have a ty for.
-//    fun `test function parameter with record type annotation`() = doTest(
+//    fun `test function parameter with record type annotation (flaky)`() = doTest(
 //            """
 //type Int = Int
 //type Float = Float
@@ -457,7 +492,8 @@ foo (_, (bar, _)) = bar
 //<i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 //""")
 
-    fun `test function parameter with record type and as annotation`() = doTest(
+    @Test
+    fun `test function parameter with record type and as annotation (flaky)`() = doTest(
             """
 type Int = Int
 type Float = Float
@@ -470,7 +506,8 @@ foo ({x, y} as z) = z
 <i>of function </i><a href="psi_element://foo">foo</a></pre></div>
 """)
 
-    fun `test aliased types`() = doTest(
+    @Test
+    fun `test aliased types (flaky)`() = doTest(
             """
 type alias T1 t = ()
 type alias T2 u = T1 t
@@ -483,7 +520,8 @@ foo a = a
 <b>foo</b> a</pre></div>
 """)
 
-    fun `test alias to unresolved type`() = doTest(
+    @Test
+    fun `test alias to unresolved type (flaky)`() = doTest(
             """
 type alias Html msg = VirtualDom.Node msg
 foo : Html msg -> Html msg
@@ -495,7 +533,8 @@ foo a = a
 <b>foo</b> a</pre></div>
 """)
 
-    fun `test operator`() = doTest(
+    @Test
+    fun `test operator (flaky)`() = doTest(
             """
 {-| included *docs* -}
 foo : number -> number -> number

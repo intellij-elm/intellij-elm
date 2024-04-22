@@ -1,6 +1,7 @@
 package org.elm.ide.intentions
 
 import org.elm.lang.core.psi.elements.TRIPLE_QUOTE_STRING_DELIMITER
+import org.junit.Test
 
 class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuotedToRegularStringIntention()) {
 
@@ -8,6 +9,7 @@ class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuot
     // Kotlin compiler assumes these terminate the Kotlin string literal. And raw Kotlin string literals can't have
     // escape characters in them. So instead use the TRIPLE_QUOTE_STRING_DELIMITER constant.
 
+    @Test
     fun `test converts non-empty triple-quoted string to regular string`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -22,6 +24,7 @@ class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuot
         """.trimIndent()
     )
 
+    @Test
     fun `test converts empty triple-quoted string to regular string`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -36,6 +39,7 @@ class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuot
         """.trimIndent()
     )
 
+    @Test
     fun `test converts white-space only triple-quoted string to regular string`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -50,6 +54,7 @@ class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuot
         """.trimIndent()
     )
 
+    @Test
     fun `test converts carriage returns and quotes`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -66,6 +71,7 @@ class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuot
     )
 
     // Last quote in a triple-quoted string is escaped, the rest aren't.
+    @Test
     fun `test quotes in text`() = doAvailableTest(
         """
             module Foo exposing (s0)
@@ -80,6 +86,7 @@ class TripleQuotedToRegularStringIntentionTest : ElmIntentionTestBase(TripleQuot
         """.trimIndent()
     )
 
+    @Test
     fun `test unavailable for regular-quoted string`() = doUnavailableTest(
         """
             module Foo exposing (s0)

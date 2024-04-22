@@ -20,7 +20,11 @@ import org.elm.openapiext.UiDebouncer
 import org.elm.openapiext.fileSystemPathTextField
 import org.elm.utils.layout
 import org.elm.workspace.*
-import org.elm.workspace.commandLineTools.*
+import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmReviewCLI
+import org.elm.workspace.commandLineTools.ElmTestCLI
+import org.elm.workspace.commandLineTools.LamderaCLI
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.*
@@ -68,10 +72,6 @@ class ElmWorkspaceConfigurable(
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmPathField, elmCompilerTool))
                 row("Version:", elmVersionLabel)
             }
-            block("Lamdera Compiler") {
-                row("Location:", pathFieldPlusAutoDiscoverButton(lamderaPathField, lamderaCompilerTool))
-                row("Version:", lamderaVersionLabel)
-            }
             block(elmFormatTool) {
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmFormatPathField, elmFormatTool))
                 row("Version:", elmFormatVersionLabel)
@@ -86,7 +86,11 @@ class ElmWorkspaceConfigurable(
                 row("Location:", pathFieldPlusAutoDiscoverButton(elmReviewPathField, elmReviewTool))
                 row("Version:", elmReviewVersionLabel)
             }
-            block("nvm") {
+            block("Lamdera Compiler") {
+                row("Location:", pathFieldPlusAutoDiscoverButton(lamderaPathField, lamderaCompilerTool))
+                row("Version:", lamderaVersionLabel)
+            }
+            block("") {
                 val nvmUrl = "https://github.com/nvm-sh/nvm"
                 val docsUrl = "https://github.com/intellij-elm/intellij-elm/blob/master/docs/nvm.md"
                 noteRow("""Using <a href="$nvmUrl">nvm</a>? Please read <a href="$docsUrl">our troubleshooting tips</a>.""")
@@ -94,7 +98,9 @@ class ElmWorkspaceConfigurable(
         }
 
         // Whenever this panel appears, refresh just in case the user made changes on the Keymap settings screen.
-        UiNotifyConnector.installOn(panel, object : Activatable {
+        // For IntelliJ Platform >2022.2.4:
+        //    UiNotifyConnector.installOn(panel, object : Activatable {
+        UiNotifyConnector(panel, object : Activatable.Adapter() {
             override fun showNotify() = update()
         }).also { Disposer.register(this, it) }
 

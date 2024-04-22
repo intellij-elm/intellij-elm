@@ -4,12 +4,14 @@ import com.intellij.testFramework.UsefulTestCase
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmPsiElement
 import org.elm.lang.core.psi.descendantsOfType
+import org.junit.Test
 
 
 internal class ElmBreadcrumbsProviderTest : ElmTestBase() {
 
+    @Test
     fun `test breadcrumbs`() {
-        InlineFile("""
+        addFileToFixture("""
 type alias A = {a = ()}
 type T = U | V ()
 

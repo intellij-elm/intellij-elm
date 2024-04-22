@@ -15,7 +15,7 @@ abstract class ElmDocumentationProviderTest : ElmTestBase() {
             @Language("Html") expected: String,
             block: ElmDocumentationProvider.(PsiElement, PsiElement?) -> String?
     ) {
-        InlineFile(code)
+        addFileToFixture(code)
 
         val (originalElement, _, offset) = findElementWithDataAndOffsetInEditor<PsiElement>()
         val element = DocumentationManager.getInstance(project)

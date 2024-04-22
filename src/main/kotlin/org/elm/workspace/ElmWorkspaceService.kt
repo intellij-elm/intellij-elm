@@ -50,7 +50,6 @@ import kotlin.io.path.exists
 
 private val log = logger<ElmWorkspaceService>()
 
-
 /**
  * The workspace can hold multiple [ElmProject]s. Most of the time there will only be one
  * [ElmProject], but you might have multiple if you are working on multiple Elm apps in
@@ -58,13 +57,11 @@ private val log = logger<ElmWorkspaceService>()
  *
  * There is only one workspace for the entire IntelliJ [Project].
  *
- * The state includes user-specific paths so it is persisted to IntelliJ's workspace file
+ * The state includes user-specific paths, so it is persisted to IntelliJ's workspace file
  * (which is _not_ placed in version control).
  */
 @State(name = "ElmWorkspace", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
-class ElmWorkspaceService(
-        val intellijProject: Project
-) : PersistentStateComponent<Element> {
+class ElmWorkspaceService(val intellijProject: Project) : PersistentStateComponent<Element> {
 
 
     init {
@@ -86,17 +83,17 @@ class ElmWorkspaceService(
 
     // SETTINGS AND TOOLCHAIN
 
-    /* A nice view of the settings to the outside world */
+    /** A nice view of the settings to the outside world */
     data class Settings(val toolchain: ElmToolchain)
 
-    /* Representation of settings suitable for editor UI and serialization */
+    /** Representation of settings suitable for editor UI and serialization */
     data class RawSettings(
-            val elmCompilerPath: String = "",
-            val lamderaCompilerPath: String = "",
-            val elmFormatPath: String = "",
-            val elmTestPath: String = "",
-            val elmReviewPath: String = "",
-            val isElmFormatOnSaveEnabled: Boolean = DEFAULT_FORMAT_ON_SAVE
+        val elmCompilerPath: String = "",
+        val lamderaCompilerPath: String = "",
+        val elmFormatPath: String = "",
+        val elmTestPath: String = "",
+        val elmReviewPath: String = "",
+        val isElmFormatOnSaveEnabled: Boolean = DEFAULT_FORMAT_ON_SAVE
     )
 
 
@@ -104,12 +101,13 @@ class ElmWorkspaceService(
         get() {
             val raw = rawSettingsRef.get()
             val toolchain = ElmToolchain(
-                    elmCompilerPath = raw.elmCompilerPath,
-                    lamderaCompilerPath = raw.lamderaCompilerPath,
-                    elmFormatPath = raw.elmFormatPath,
-                    elmTestPath = raw.elmTestPath,
-                    elmReviewPath = raw.elmReviewPath,
-                    isElmFormatOnSaveEnabled = raw.isElmFormatOnSaveEnabled)
+                elmCompilerPath = raw.elmCompilerPath,
+                lamderaCompilerPath = raw.lamderaCompilerPath,
+                elmFormatPath = raw.elmFormatPath,
+                elmTestPath = raw.elmTestPath,
+                elmReviewPath = raw.elmReviewPath,
+                isElmFormatOnSaveEnabled = raw.isElmFormatOnSaveEnabled
+            )
             return Settings(toolchain = toolchain)
         }
 
@@ -126,25 +124,27 @@ class ElmWorkspaceService(
      */
     fun modifySettings(notify: Boolean = true, f: (RawSettings) -> RawSettings): RawSettings {
         return rawSettingsRef.getAndUpdate(f)
-                .also { if (notify) notifyDidChangeWorkspace() }
+            .also { if (notify) notifyDidChangeWorkspace() }
     }
 
 
     fun useToolchain(toolchain: ElmToolchain) {
         modifySettings {
-            it.copy(elmCompilerPath = toolchain.elmCompilerPath.toString(),
-                    lamderaCompilerPath = toolchain.lamderaCompilerPath.toString(),
-                    elmFormatPath = toolchain.elmFormatPath.toString(),
-                    elmTestPath = toolchain.elmTestPath.toString(),
-                    elmReviewPath = toolchain.elmReviewPath.toString(),
-                    isElmFormatOnSaveEnabled = toolchain.isElmFormatOnSaveEnabled)
+            it.copy(
+                elmCompilerPath = toolchain.elmCompilerPath.toString(),
+                lamderaCompilerPath = toolchain.lamderaCompilerPath.toString(),
+                elmFormatPath = toolchain.elmFormatPath.toString(),
+                elmTestPath = toolchain.elmTestPath.toString(),
+                elmReviewPath = toolchain.elmReviewPath.toString(),
+                isElmFormatOnSaveEnabled = toolchain.isElmFormatOnSaveEnabled
+            )
         }
     }
 
 
     fun showConfigureToolchainUI() {
         ShowSettingsUtil.getInstance()
-                .showSettingsDialog(intellijProject, ElmWorkspaceConfigurable::class.java)
+            .showSettingsDialog(intellijProject, ElmWorkspaceConfigurable::class.java)
     }
 
 
@@ -185,17 +185,17 @@ class ElmWorkspaceService(
      * with the newer one.
      */
     private fun upsertProject(elmProject: ElmProject): List<ElmProject> =
-            modifyProjects { projects ->
-                val otherProjects = projects.filter { it.manifestPath != elmProject.manifestPath }
-                otherProjects + elmProject
-            }
+        modifyProjects { projects ->
+            val otherProjects = projects.filter { it.manifestPath != elmProject.manifestPath }
+            otherProjects + elmProject
+        }
 
 
     /**
      * Asynchronously load an Elm project described by a manifest file (e.g. `elm.json`).
      */
     private fun asyncLoadProject(manifestPath: Path, installDeps: Boolean = false): CompletableFuture<ElmProject> =
-            runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
+        runAsyncTask(intellijProject, "Loading Elm project '$manifestPath'") {
 
             val elmCLI = settings.toolchain.elmCLI
                 ?: throw ProjectLoadException("Must specify a valid path to Elm binary in Settings")
@@ -206,28 +206,28 @@ class ElmWorkspaceService(
                 installProjectDeps(manifestPath, elmCLI)
             }
 
-                // not thread-safe; do not reuse across threads!
-                // TODO lamderaCompilerVersion
-                val repo = ElmPackageRepository(elmCompilerVersion)
+            // not thread-safe; do not reuse across threads!
+            // TODO lamderaCompilerVersion
+            val repo = ElmPackageRepository(elmCompilerVersion)
 
-                // External files may have been created/modified by the Elm compiler. Refresh.
-                findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
-                    fullyRefreshDirectory(it)
-                }
+            // External files may have been created/modified by the Elm compiler. Refresh.
+            findFileByPathTestAware(Paths.get(repo.elmHomePath))?.also {
+                fullyRefreshDirectory(it)
+            }
 
-                // Load the project
-                ElmProjectLoader.topLevelLoad(manifestPath, repo)
-            }.whenComplete { _, error ->
-                // log the result
-                if (error == null) {
-                    log.info("Successfully loaded Elm project $manifestPath")
-                } else {
-                    when (error) {
-                        is ProjectLoadException -> log.warn("Failed to load $manifestPath: ${error.message}")
-                        else -> log.error("Unexpected error when loading $manifestPath", error)
-                    }
+            // Load the project
+            ElmProjectLoader.topLevelLoad(manifestPath, repo)
+        }.whenComplete { _, error ->
+            // log the result
+            if (error == null) {
+                log.info("Successfully loaded Elm project $manifestPath")
+            } else {
+                when (error) {
+                    is ProjectLoadException -> log.warn("Failed to load $manifestPath: ${error.message}")
+                    else -> log.error("Unexpected error when loading $manifestPath", error)
                 }
             }
+        }
 
     private fun installProjectDeps(manifestPath: Path, elmCLI: ElmCLI): Boolean {
         // The only way to install an Elm project's dependencies is to compile
@@ -249,10 +249,12 @@ class ElmWorkspaceService(
 
         // Synthesize a dummy Elm file to make the compiler happy
         val tempMain = dir.toPath().resolve("src/Main.elm").toFile()
-        FileUtil.writeToFile(tempMain, """
+        FileUtil.writeToFile(
+            tempMain, """
                                 module Main exposing (..)
                                 dummyValue = 0
-                            """.trimIndent())
+                            """.trimIndent()
+        )
 
         // Before we run the Elm compiler, make sure that the `elm.json` file is valid
         // because some inputs can hang the compiler.
@@ -271,14 +273,19 @@ class ElmWorkspaceService(
 
         val success =
             if (dto.has("lamdera/core"))
-                elmCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint)) // path = tempMain.toPath()
+                elmCLI.make(
+                    intellijProject,
+                    workDir = dir.toPath(),
+                    null,
+                    listOf(tmpEntryPoint)
+                ) // path = tempMain.toPath()
             else {
                 val lamderaCLI = settings.toolchain.lamderaCLI
                     ?: throw ProjectLoadException("Must specify a valid path to Lamdera binary in Settings")
-/* TODO check version for something important
-                val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
-                    ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
-*/
+                /* TODO check version for something important
+                                val lamderaCompilerVersion = lamderaCLI.queryVersion(intellijProject).orNull()
+                                    ?: throw ProjectLoadException("Could not determine version of the Lamdera compiler")
+                */
                 lamderaCLI.make(intellijProject, workDir = dir.toPath(), null, listOf(tmpEntryPoint))
             }
 
@@ -293,10 +300,10 @@ class ElmWorkspaceService(
 
 
     fun asyncAttachElmProject(manifestPath: Path): CompletableFuture<List<ElmProject>> =
-            asyncLoadProject(manifestPath, installDeps = true)
-                    .thenApply {
-                        upsertProject(it)
-                    }
+        asyncLoadProject(manifestPath, installDeps = true)
+            .thenApply {
+                upsertProject(it)
+            }
 
 
     fun detachElmProject(manifestPath: Path) {
@@ -307,19 +314,23 @@ class ElmWorkspaceService(
 
 
     fun asyncRefreshAllProjects(installDeps: Boolean = false): CompletableFuture<List<ElmProject>> =
-            allProjects.map { elmProject ->
-                asyncLoadProject(elmProject.manifestPath, installDeps = installDeps)
-                        .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
-            }.joinAll()
-                    .thenApply { rawProjects ->
-                        val freshProjects = rawProjects.filterNotNull().associateBy { it.manifestPath }
-                        modifyProjects { currentProjects ->
-                            // replace existing projects with the fresh ones, if possible
-                            currentProjects.map {
-                                freshProjects[it.manifestPath] ?: it
-                            }
-                        }
+        allProjects.map { elmProject ->
+            asyncLoadProject(elmProject.manifestPath, installDeps = installDeps)
+                .exceptionally {
+                    // TODO Communicate this error in the UI (while warnings may be fine for tests)
+                    log.warn("Could not load elm project", it)
+                    null
+                }
+        }.joinAll()
+            .thenApply { rawProjects ->
+                val freshProjects = rawProjects.filterNotNull().associateBy { it.manifestPath }
+                modifyProjects { currentProjects ->
+                    // replace existing projects with the fresh ones, if possible
+                    currentProjects.map {
+                        freshProjects[it.manifestPath] ?: it
                     }
+                }
+            }
 
 
     fun asyncDiscoverAndRefresh(): CompletableFuture<List<ElmProject>> {
@@ -327,77 +338,79 @@ class ElmWorkspaceService(
             return CompletableFuture.completedFuture(allProjects)
 
         val guessManifest = intellijProject.modules
-                .asSequence()
-                .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
-                .mapNotNull { dir -> dir.findFileBreadthFirst(maxDepth = 3) { it.name == ELM_JSON } }
-                .firstOrNull()
-                ?: return CompletableFuture.completedFuture(allProjects)
+            .asSequence()
+            .flatMap { ModuleRootManager.getInstance(it).contentRoots.asSequence() }
+            .mapNotNull { dir -> dir.findFileBreadthFirst(maxDepth = 3) { it.name == ELM_JSON } }
+            .firstOrNull()
+            ?: return CompletableFuture.completedFuture(allProjects)
 
-        return asyncAttachElmProject(guessManifest.pathAsPath)
-                .exceptionally { emptyList() }
+        return asyncAttachElmProject(guessManifest.pathAsPath).exceptionally {
+            log.warn("Could not attach elm project ${it.message}")
+            emptyList()
+        }
     }
 
 
     fun hasAtLeastOneValidProject() =
-            allProjects.any { it.manifestPath.exists() }
+        allProjects.any { it.manifestPath.exists() }
 
 
     // PROJECT LOOKUP
 
 
     fun findProjectForFile(file: VirtualFile): ElmProject? =
-            directoryIndex.getInfoForFile(file).takeIf { it !== noProjectSentinel }
+        directoryIndex.getInfoForFile(file).takeIf { it !== noProjectSentinel }
 
 
     private val directoryIndex: MyDirectoryIndex<ElmProject> =
-            MyDirectoryIndex(intellijProject, noProjectSentinel) { index ->
-                fun put(path: Path?, elmProject: ElmProject) {
-                    if (path == null) return
-                    val file = findFileByPathTestAware(path) ?: return
-                    val existingElmProject = findProjectForFile(file)
-                    if (existingElmProject == null) {
+        MyDirectoryIndex(intellijProject, noProjectSentinel) { index ->
+            fun put(path: Path?, elmProject: ElmProject) {
+                if (path == null) return
+                val file = findFileByPathTestAware(path) ?: return
+                val existingElmProject = findProjectForFile(file)
+                if (existingElmProject == null) {
+                    index.putInfo(file, elmProject)
+                } else {
+                    /*
+                    Conflict: There is already an Elm project associated with this directory.
+
+                    Elm's source directories can be shared between Elm projects.
+                    The "right" thing to do would be to model this fully, allowing an Elm file
+                    to belong to multiple Elm projects. But that would complicate things everywhere,
+                    and so I have chosen to instead keep things simple by associating each Elm file
+                    with a SINGLE Elm project only.
+
+                    The conflict will be resolved by always associating an Elm file with
+                    the Elm project that is nearest in the file system hierarchy. This is by no
+                    means perfect, but it should be good enough in nearly all cases.
+
+                    In the future we may want to re-visit this decision.
+                    */
+                    val oldDistance = existingElmProject.projectDirPath.relativize(path.normalize()).toList().size
+                    val newDistance = elmProject.projectDirPath.relativize(path.normalize()).toList().size
+                    if (newDistance < oldDistance) {
+                        log.debug("Resolved conflict by by re-associating $file with $elmProject")
                         index.putInfo(file, elmProject)
                     } else {
-                        /*
-                        Conflict: There is already an Elm project associated with this directory.
-
-                        Elm's source directories can be shared between Elm projects.
-                        The "right" thing to do would be to model this fully, allowing an Elm file
-                        to belong to multiple Elm projects. But that would complicate things everywhere,
-                        and so I have chosen to instead keep things simple by associating each Elm file
-                        with a SINGLE Elm project only.
-
-                        The conflict will be resolved by always associating an Elm file with
-                        the Elm project that is nearest in the file system hierarchy. This is by no
-                        means perfect, but it should be good enough in nearly all cases.
-
-                        In the future we may want to re-visit this decision.
-                        */
-                        val oldDistance = existingElmProject.projectDirPath.relativize(path.normalize()).toList().size
-                        val newDistance = elmProject.projectDirPath.relativize(path.normalize()).toList().size
-                        if (newDistance < oldDistance) {
-                            log.debug("Resolved conflict by by re-associating $file with $elmProject")
-                            index.putInfo(file, elmProject)
-                        } else {
-                            log.debug("Resolved conflict by keeping the existing association of $file with $existingElmProject")
-                        }
+                        log.debug("Resolved conflict by keeping the existing association of $file with $existingElmProject")
                     }
-                }
-
-                for (project in allProjects) {
-                    for (sourceDir in project.absoluteSourceDirectories) {
-                        log.debug("Registering source directory $sourceDir for $project")
-                        put(sourceDir, project)
-                    }
-                    for (pkg in project.deepDeps()) {
-                        log.debug("Registering dependency directory ${pkg.projectDirPath} for $pkg")
-                        put(pkg.projectDirPath, pkg)
-                    }
-
-                    log.debug("Registering tests directory ${project.testsDirPath} for $project")
-                    put(project.testsDirPath, project)
                 }
             }
+
+            for (project in allProjects) {
+                for (sourceDir in project.absoluteSourceDirectories) {
+                    log.debug("Registering source directory $sourceDir for $project")
+                    put(sourceDir, project)
+                }
+                for (pkg in project.deepDeps()) {
+                    log.debug("Registering dependency directory ${pkg.projectDirPath} for $pkg")
+                    put(pkg.projectDirPath, pkg)
+                }
+
+                log.debug("Registering tests directory ${project.testsDirPath} for $project")
+                put(project.testsDirPath, project)
+            }
+        }
 
 
     // INTEGRATION TEST SUPPORT
@@ -407,8 +420,8 @@ class ElmWorkspaceService(
     fun setupForTests(toolchain: ElmToolchain, manifestFile: VirtualFile) {
         useToolchain(toolchain)
         asyncLoadProject(manifestFile.pathAsPath)
-                .get(5, TimeUnit.SECONDS)
-                .run { upsertProject(this) }
+            .get(5, TimeUnit.SECONDS)
+            .run { upsertProject(this) }
     }
 
 
@@ -452,47 +465,50 @@ class ElmWorkspaceService(
         val elmTestPath = settingsElement.getAttributeValue("elmTestPath") ?: ""
         val elmReviewPath = settingsElement.getAttributeValue("elmReviewPath") ?: ""
         val isElmFormatOnSaveEnabled = settingsElement
-                .getAttributeValue("isElmFormatOnSaveEnabled")
-                .takeIf { it != null && it.isNotBlank() }?.toBoolean()
-                ?: ElmToolchain.DEFAULT_FORMAT_ON_SAVE
+            .getAttributeValue("isElmFormatOnSaveEnabled")
+            .takeIf { it != null && it.isNotBlank() }?.toBoolean()
+            ?: ElmToolchain.DEFAULT_FORMAT_ON_SAVE
 
         modifySettings(notify = false) {
             RawSettings(
-                    elmCompilerPath = elmCompilerPath,
-                    lamderaCompilerPath = lamderaCompilerPath,
-                    elmFormatPath = elmFormatPath,
-                    elmTestPath = elmTestPath,
-                    elmReviewPath = elmReviewPath,
-                    isElmFormatOnSaveEnabled = isElmFormatOnSaveEnabled
+                elmCompilerPath = elmCompilerPath,
+                lamderaCompilerPath = lamderaCompilerPath,
+                elmFormatPath = elmFormatPath,
+                elmTestPath = elmTestPath,
+                elmReviewPath = elmReviewPath,
+                isElmFormatOnSaveEnabled = isElmFormatOnSaveEnabled
             )
         }
 
         return state.getChild("elmProjects")
-                .getChildren("project")
-                .mapNotNull { it.getAttributeValue("path") }
-                .mapNotNull { Paths.get(it) }
-                .map { path ->
-                    asyncLoadProject(path)
-                            .exceptionally { null } // TODO [kl] capture info about projects that failed to load and show to user
-                }.joinAll()
-                .thenApply { rawProjects ->
-                    if (rawProjects.isNotEmpty()) {
-                        // Exclude `elm-stuff` directories to prevent pollution of open-by-filename, etc.
-                        ApplicationManager.getApplication().invokeLater {
-                            for (module in intellijProject.modules.asSequence()) {
-                                ModuleRootModificationUtil.updateModel(module) { model ->
-                                    model.contentEntries.forEach {
-                                        if ("elm-stuff" !in it.excludePatterns)
-                                            it.addExcludePattern("elm-stuff")
-                                    }
+            .getChildren("project")
+            .mapNotNull { it.getAttributeValue("path") }
+            .mapNotNull { Paths.get(it) }
+            .map { path ->
+                asyncLoadProject(path).exceptionally {
+                    // TODO Communicate this error in the UI (while warnings may be fine for tests)
+                    log.warn("Could not load child project", it)
+                    null
+                }
+            }.joinAll()
+            .thenApply { rawProjects ->
+                if (rawProjects.isNotEmpty()) {
+                    // Exclude `elm-stuff` directories to prevent pollution of open-by-filename, etc.
+                    ApplicationManager.getApplication().invokeLater {
+                        for (module in intellijProject.modules.asSequence()) {
+                            ModuleRootModificationUtil.updateModel(module) { model ->
+                                model.contentEntries.forEach {
+                                    if ("elm-stuff" !in it.excludePatterns)
+                                        it.addExcludePattern("elm-stuff")
                                 }
                             }
                         }
                     }
-
-                    modifyProjects { _ -> rawProjects.filterNotNull() }
-                    Unit
                 }
+
+                modifyProjects { _ -> rawProjects.filterNotNull() }
+                Unit
+            }
     }
 
     override fun noStateLoaded() {
@@ -522,7 +538,7 @@ class ElmWorkspaceService(
             }
         }
         intellijProject.messageBus.syncPublisher(WORKSPACE_TOPIC)
-                .didUpdate()
+            .didUpdate()
     }
 
 

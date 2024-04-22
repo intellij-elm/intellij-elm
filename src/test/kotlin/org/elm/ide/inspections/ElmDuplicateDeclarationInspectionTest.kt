@@ -1,12 +1,16 @@
 package org.elm.ide.inspections
 
+import org.junit.Test
+
 
 class ElmDuplicateDeclarationInspectionTest : ElmInspectionsTestBase(ElmDuplicateDeclarationInspection()) {
+    @Test
     fun `test no dupes`() = checkByText("""
 type Foo = Foo
 foo = Foo
 """)
 
+    @Test
     fun `test function dupes`() = checkByText("""
 <error descr="Multiple declarations with name 'foo'">foo</error> = ()
 <error descr="Multiple declarations with name 'bar'">bar</error> = ()
@@ -16,6 +20,7 @@ port <error descr="Multiple declarations with name 'foo'">foo</error> : () -> ()
 <error descr="Multiple declarations with name 'foo'">foo</error> = ()
 """)
 
+    @Test
     fun `test type dupes`() = checkByText("""
 type <error descr="Multiple declarations with name 'Foo'">Foo</error> = Foo
 type Bar = Foo
@@ -23,6 +28,7 @@ type alias <error descr="Multiple declarations with name 'Foo'">Foo</error> = ()
 type alias <error descr="Multiple declarations with name 'Foo'">Foo</error> = ()
 """)
 
+    @Test
     fun `test nested dupe of top level`() = checkByText("""
 <error descr="Multiple declarations with name 'foo'">foo</error> = 1
 main =
@@ -32,6 +38,7 @@ main =
     foo
 """)
 
+    @Test
     fun `test nested dupe of param`() = checkByText("""
 main <error descr="Multiple declarations with name 'foo'">foo</error> =
     let
@@ -41,6 +48,7 @@ main <error descr="Multiple declarations with name 'foo'">foo</error> =
 """)
 
 
+    @Test
     fun `test nested dupe of sibling`() = checkByText("""
 main =
     let
@@ -50,6 +58,7 @@ main =
     foo
 """)
 
+    @Test
     fun `test nested dupe outer`() = checkByText("""
 main =
     let
@@ -63,6 +72,7 @@ main =
     foo
 """)
 
+    @Test
     fun `test nested dupe parent`() = checkByText("""
 main =
     let
@@ -75,6 +85,7 @@ main =
     foo
 """)
 
+    @Test
     fun `test nested dupe of top-level in destructured assignment`() = checkByText("""
 <error descr="Multiple declarations with name 'foo'">foo</error> = 0
 main =
@@ -84,6 +95,7 @@ main =
     foo
 """)
 
+    @Test
     fun `test no dupes in right-hand-side of destructured assignment`() = checkByText("""
 main =
     let
@@ -95,6 +107,7 @@ main =
     x
 """)
 
+    @Test
     fun `test no dupes of imported names`() = checkByFileTree("""
         --@ Main.elm
         import Foo exposing (foo)

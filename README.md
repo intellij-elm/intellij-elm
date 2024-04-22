@@ -1,24 +1,37 @@
 Elm Plugin for JetBrains IDEs
 =============================
 
-<!--
-Fix these badges once the plugin in uploaded...
-
 ![Build](https://github.com/intellij-elm/intellij-elm/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
--->
+[![Version](https://img.shields.io/jetbrains/plugin/v/24075-elm.svg)](https://plugins.jetbrains.com/plugin/24075-elm)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/24075-elm.svg)](https://plugins.jetbrains.com/plugin/24075-elm)
+
+_(build is failing, but 98.5% tests pass!)_
 
 <!-- Plugin description -->
 Provides support for the Elm programming language.
 <!-- Plugin description end -->
 
-Should work on IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
+Should work on most, if not all, IntelliJ Platform IDEs: IDEA (Community and Ultimate), WebStorm, PyCharm, RubyMine and more. If not please raise an issue.
 
 
 ## Install
 
-First make sure to uninstall all other Elm plugins you may have installed (this requires a restart of the IDE).
+You need to have some CLI tools --`elm` (the Elm compiler), [`elm-test`](docs/elm-test.md), [`elm-format`](docs/features/elm-format.md),
+[`elm-review`](docs/features/elm-review.md) and [`lamdera`](docs/features/lamdera.md)-- installed for certain features of this plugin to work.
+
+Install the first three with:
+
+```bash
+sudo npm install -g elm elm-test elm-format elm-review
+```
+
+**NOTE**: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), make sure to read [our NVM setup guide](docs/nvm.md).
+
+To install Lamdera follow [their instructions](https://lamdera.com/start).
+Unlike this plugin and IntelliJ IDEA Community Edition, Lamdera is **not open source software**.
+By installing Lamdera you trust the vendor, as their software is only shipped as binary.
+
+To install the plugin itself first make sure to uninstall all other Elm plugins you may have installed (this requires a restart of the IDE).
 Some have reported that having two Elm plugins installed results in the IDE not starting but showing a seemingly unrelated error
 (if you have this problem, there are [ways to fix it](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000524244-Disable-Uninstall-plugin-without-launching-Idea)).
 
@@ -28,7 +41,8 @@ After installing the plugin, restart the IDE and then [open your existing Elm pr
 Alternatively you can install it manually by downloading a [release](https://github.com/intellij-elm/intellij-elm/releases) (or downloading the source and building it yourself) and
 installing it with `Settings` -> `Plugins` -> `⚙️ (gear icon)` -> `Install plugin from disk...`
 
-**NOTE**: if you have [node](https://nodejs.org) installed using [nvm](https://github.com/nvm-sh/nvm), make sure to read [our NVM setup guide](docs/nvm.md).
+Once the plugin is installed it is advised to double check all CLI tools are found by going to
+**Settings** -> **Languages & Frameworks** -> **Elm** and see the CLI tools. 
 
 
 ## Features

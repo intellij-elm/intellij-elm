@@ -8,7 +8,6 @@ import org.junit.Ignore
 import org.junit.Test
 
 
-@Ignore // These 4 test fail, probably better in future versions of intellij-platform-gradle-plugin (1.5+)
 class ElmReviewJsonReportTest : ElmTestBase() {
 
     // $ elm --version
@@ -447,8 +446,7 @@ class ElmReviewJsonReportTest : ElmTestBase() {
         )
     }
 
-    // TODO
-    @Ignore
+    // TODO: complete this test, then add @Test annotation
     fun `parses type 'compile-errors' with errors array`() {
         @Language("JSON")
         val json = """

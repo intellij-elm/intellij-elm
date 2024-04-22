@@ -1,10 +1,12 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
 
 
 class MapToFoldIntentionTest : ElmIntentionTestBase(MapToFoldIntention()) {
 
 
+    @Test
     fun `test converts to fold`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -17,6 +19,7 @@ f0 =
 """)
 
 
+    @Test
     fun `test transforms functions with case statements`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -61,6 +64,7 @@ f0 =
         names
 """)
 
+    @Test
     fun `test not available for functions besides map`() = doUnavailableTest(
             """
 module Foo exposing (f0)
@@ -69,6 +73,7 @@ f0 =
 """)
 
 
+    @Test
     fun `test not available when inner func call is not map but outer func call is map`() = doUnavailableTest(
             """
 module Foo exposing (f0)
@@ -77,6 +82,7 @@ f0 =
 """)
 
 
+    @Test
     fun `test piped function`() = doAvailableTest(
             """
 module Foo exposing (f0)
@@ -91,6 +97,7 @@ f0 =
 """)
 
 
+    @Test
     fun `test preserves indentation from surrounding context`() = doAvailableTest(
             """
 module Foo exposing (view)
@@ -161,6 +168,7 @@ view model =
                             []
 """)
 
+    @Test
     fun `test introduces unique parameter names`() = doAvailableTest(
             """
 module Foo exposing (f0)

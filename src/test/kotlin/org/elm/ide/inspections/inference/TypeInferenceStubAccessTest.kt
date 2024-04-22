@@ -13,6 +13,7 @@ import org.elm.lang.core.types.findTy
 import org.elm.lang.core.types.renderedText
 import org.elm.lang.core.types.typeExpressionInference
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class TypeInferenceStubAccessTest : ElmTestBase() {
 
@@ -39,6 +40,7 @@ class TypeInferenceStubAccessTest : ElmTestBase() {
     */
 
 
+    @Test
     fun `test infer basic value expr across modules`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -53,6 +55,7 @@ type alias Bar = ()
 """)
 
 
+    @Test
     fun `test infer function across modules with type annotation`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -67,6 +70,7 @@ foo = ()
 """)
 
 
+    @Test
     fun `test infer function across modules where type does not exist`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -81,6 +85,7 @@ foo = 42
 """)
 
 
+    @Test
     fun `test infer record field across modules`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -96,6 +101,7 @@ type alias Bar =
 """)
 
 
+    @Test
     fun `test infer type expr across modules`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
             """
 --@ Main.elm
@@ -109,6 +115,7 @@ type alias Bar = ()
 """)
 
 
+    @Test
     fun `test infer union type with type variable expr`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
             """
 --@ Main.elm
@@ -122,6 +129,7 @@ type Bar a = Bar a
 """)
 
 
+    @Test
     fun `test infer with union type variable reference`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -137,6 +145,7 @@ foo x y = x
 """)
 
 
+    @Test
     fun `test infer type via exposed import`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
             """
 --@ Main.elm
@@ -155,6 +164,7 @@ type alias Bar = ()
 """)
 
 
+    @Test
     fun `test infer qualified type expr in other file`() = stubOnlyTypeInfer<ElmTypeAliasDeclaration>(
             """
 --@ Main.elm
@@ -173,6 +183,7 @@ type alias Bar = ()
 """)
 
 
+    @Test
     fun `test infer func that destructures union type parameter`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -189,6 +200,7 @@ foo (Foo x) = x
 """)
 
 
+    @Test
     fun `test infer infix operator`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -205,6 +217,7 @@ foo x y = x
 """)
 
 
+    @Test
     fun `test infer port annotation`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm
@@ -218,6 +231,7 @@ port foo : ()
 """)
 
 
+    @Test
     fun `test infer function with extensible record param`() = stubOnlyTypeInfer<ElmValueExpr>(
             """
 --@ Main.elm

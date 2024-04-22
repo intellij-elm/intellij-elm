@@ -7,39 +7,46 @@ import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.types.InferenceResult
 import org.elm.lang.core.types.findInference
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class InferenceCacheInvalidationTest : ElmTestBase() {
     override fun getProjectDescriptor() = ElmWithStdlibDescriptor
 
+    @Test
     fun `test reinferred only current function after insert in annotated function`() = doTest("1", """
 foo: List Int
 foo = [ {-caret-} ]
 bar = ()
 """, "foo")
 
+    @Test
     fun `test reinferred only current function after remove in annotated function`() = doTest("\b", """
 foo: List Int
 foo = [ 2{-caret-} ]
 bar = ()
 """, "foo")
 
+    @Test
     fun `test reinferred only current function after replace in annotated function`() = doTest("\b3", """
 foo: List Int
 foo = [ 2{-caret-} ]
 bar = ()
 """, "foo")
 
+    @Test
     fun `test reinferred everything on insert in unannotated function`() = doTest("1", """
 foo = [ {-caret-} ]
 bar = ()
 """, "foo", "bar")
 
+    @Test
     fun `test reinferred everything on type change`() = doTest("a", """
 type Foo a = Bar {-caret-}
 foo = ()
 bar = ()
 """, "foo", "bar")
 
+    @Test
     fun `test reinferred everything on type alias change`() = doTest(", baz: a", """
 type alias Foo a = { bar: a{-caret-} }
 foo = ()
@@ -47,7 +54,7 @@ bar = ()
 """, "foo", "bar")
 
     private fun doTest(type: String, @Language("Elm") code: String, vararg expected: String) {
-        InlineFile(code).withCaret()
+        addFileWithCaretToFixture(code)
         val before = collectInference()
 
         myFixture.type(type)

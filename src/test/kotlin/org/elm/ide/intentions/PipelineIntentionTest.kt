@@ -1,10 +1,12 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
 
 
 class PipelineIntentionTest : ElmIntentionTestBase(PipelineIntention()) {
 
 
+    @Test
     fun `test function call to pipeline`() = doAvailableTest(
             """
 module Foo exposing (list)
@@ -22,6 +24,7 @@ times2 m n = m * n
 """)
 
 
+    @Test
     fun `test function call to pipeline retains precedence with parens`() = doAvailableTest(
             """
 module Foo exposing (exclaimGreeting)
@@ -46,6 +49,7 @@ greet first last = first ++ " " ++ last
 
 """)
 
+    @Test
     fun `test multiple pipes in one chain`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -66,6 +70,7 @@ value = 123.45
 """)
 
 
+    @Test
     fun `test with nested parentheses`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -86,6 +91,7 @@ value = 123.45
 """)
 
 
+    @Test
     fun `test new thing`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -105,6 +111,7 @@ value =
 
 """)
 
+    @Test
     fun `test pipe with multiple arguments`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -130,6 +137,7 @@ value =
 """)
 
 
+    @Test
     fun `test example from elm-spa-example`() = doAvailableTest(
             """
 module Foo exposing (fetch)
@@ -152,6 +160,7 @@ fetch maybeCred articleSlug =
 """)
 
 
+    @Test
     fun `test example2 from elm-spa-example`() = doAvailableTest(
             """
 module Foo exposing (decoder)
@@ -170,6 +179,7 @@ decoder =
 
 """)
 
+    @Test
     fun `test split pipeline with a list as last argument`() = doAvailableTest(
             """
 module Foo exposing (foobar)
@@ -186,6 +196,7 @@ foobar =
 
 """)
 
+    @Test
     fun `test to full pipeline from partial pipeline`() = doAvailableTest(
             """
 module Foo exposing (initForm)
@@ -203,6 +214,7 @@ initForm =
         |> Http.send CompletedFormLoad
 """)
 
+    @Test
     fun `test preseves comments`() = doAvailableTest(
             """
 module Foo exposing (initForm)
@@ -222,6 +234,7 @@ initForm =
         |> Http.send CompletedFormLoad
 """)
 
+    @Test
     fun `test preseves multiple comments`() = doAvailableTest(
             """
 module Foo exposing (initForm)
@@ -251,6 +264,7 @@ initForm =
 """)
 
 
+    @Test
     fun `test chain is merged into parent pipeline`() = doAvailableTest(
             """
 module Foo exposing (initForm)
@@ -267,6 +281,7 @@ initForm =
         |> updateWith (Profile username) GotProfileMsg model
 """)
 
+    @Test
     fun `test lambda is wrapped in parens when pipelined`() = doAvailableTest(
             """
 module Foo exposing (urlParser)
@@ -281,6 +296,7 @@ urlParser =
         |> Url.Parser.custom "USERNAME"
 """)
 
+    @Test
     fun `test not available when already fully piped`() = doUnavailableTest(
             """
 module Foo exposing (decoder)
@@ -295,6 +311,7 @@ decoder =
 """)
 
 
+    @Test
     fun `test not available when already fully piped with lambda`() = doUnavailableTest(
             """
 module Foo exposing (decoder)
@@ -305,6 +322,7 @@ decoder =
         |> Api.{-caret-}viewerChanges (\maybeViewer -> toMsg (fromViewer key maybeViewer))
 """)
 
+    @Test
     fun `test pipeline parts that need parens include it`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -324,6 +342,7 @@ value =
 """)
 
 
+    @Test
     fun `test to pipeline preserves comments above the right parts of the pipeline`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -359,6 +378,7 @@ value =
 """)
 
 
+    @Test
     fun `test preserves comments`() = doAvailableTest(
             """
 module Foo exposing (src)
@@ -400,6 +420,7 @@ src (Avatar maybeUrl) =
             Html.Attributes.src url
 """)
 
+    @Test
     fun `test preserves comments with ordering`() = doAvailableTest(
             """
 module Foo exposing (src)

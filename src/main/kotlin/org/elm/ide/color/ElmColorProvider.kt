@@ -47,7 +47,6 @@ class ElmColorProvider : ElementColorProvider {
                     if (call.useFloat) RGB(call.c1, call.c2, call.c3, call.a ?: 1f)
                     else RGB(call.c1.toInt(), call.c2.toInt(), call.c3.toInt(), call.a ?: 1f)
                 }
-
                 "rgb255" -> RGB(call.c1.toInt(), call.c2.toInt(), call.c3.toInt())
                 "rgba255" -> RGB(call.c1.toInt(), call.c2.toInt(), call.c3.toInt(), call.a ?: return null)
                 "hsl" -> HSL(call.c1, call.c2, call.c3)

@@ -211,6 +211,7 @@
 
 
         <!-- STUBS -->
+        <!-- Adding `externalIdPrefix="elm"` breaks the tests -->
         <stubElementTypeHolder class="org.elm.lang.core.psi.ElmTypes"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmModulesIndex"/>
         <stubIndex implementation="org.elm.lang.core.stubs.index.ElmNamedElementIndex"/>

@@ -3,8 +3,10 @@ package org.elm.lang.core.psi
 import org.elm.fileTree
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.elm.workspace.elmWorkspace
+import org.junit.Test
 
 internal class ElmGlobalModificationTrackerWorkspaceTest : ElmWorkspaceTestBase() {
+    @Test
     fun `test mod count incremented on workspace refresh`() {
         fileTree {
             dir("a") {

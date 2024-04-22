@@ -4,9 +4,11 @@ import org.elm.TestProject
 import org.elm.fileTree
 import org.elm.ide.test.core.ElmProjectTestsHelper
 import org.elm.openapiext.pathAsPath
+import org.junit.Test
 
 class ElmProjectHelperTest : ElmWorkspaceTestBase() {
 
+    @Test
     fun `test all names`() {
         testProject()
 
@@ -14,6 +16,7 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         checkEquals(listOf("a", "b"), helper.allNames())
     }
 
+    @Test
     fun `test by name`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
@@ -25,6 +28,7 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         assertNull(helper.projectDirPathByName("without-tests"))
     }
 
+    @Test
     fun `test by path`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath
@@ -35,6 +39,7 @@ class ElmProjectHelperTest : ElmWorkspaceTestBase() {
         assertNull(helper.nameByProjectDirPath(root.resolve("Toto").toString()))
     }
 
+    @Test
     fun `test elm project by path`() {
         val testProject = testProject()
         val root = testProject.root.pathAsPath

@@ -1,5 +1,6 @@
 package org.elm.lang.core.resolve
 
+import org.junit.Test
 
 
 /**
@@ -18,6 +19,7 @@ class ElmStdlibImportResolveTest : ElmResolveTestBase() {
     // BASICS MODULE
 
 
+    @Test
     fun `test Basics module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -26,6 +28,7 @@ f = Basics.toFloat 42
 """)
 
 
+    @Test
     fun `test Basics exposes all values`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -34,6 +37,7 @@ f = toFloat 42
 """)
 
 
+    @Test
     fun `test Basics exposes all types`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -42,6 +46,7 @@ type alias Config = { ordering : Order }
 """)
 
 
+    @Test
     fun `test Basics exposes all constructors`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -50,6 +55,7 @@ f = LT
 """)
 
 
+    @Test
     fun `test Basics exposes binary operators`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -58,6 +64,7 @@ f = 2 + 2
 """)
 
 
+    @Test
     fun `test Basics can be shadowed by local definitions`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -67,6 +74,7 @@ f = and 1 1
 """)
 
 
+    @Test
     fun `test Basics can be shadowed by explicit imports`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -79,6 +87,7 @@ f = and 1 1
     // LIST MODULE
 
 
+    @Test
     fun `test List module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -87,6 +96,7 @@ n = List.length [0, 1, 2]
 """)
 
 
+    @Test
     fun `test List cons op exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -95,6 +105,7 @@ f = 0 :: []
 """)
 
 
+    @Test
     fun `test List doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -106,6 +117,7 @@ f = foldl (+) [0,1,2]
     // MAYBE MODULE
 
 
+    @Test
     fun `test Maybe module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -114,6 +126,7 @@ f x = Maybe.withDefault x 42
 """)
 
 
+    @Test
     fun `test Maybe type exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -122,6 +135,7 @@ type alias Foo = Maybe Int
 """)
 
 
+    @Test
     fun `test Maybe Just exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -130,6 +144,7 @@ f = Just 42
 """)
 
 
+    @Test
     fun `test Maybe Nothing exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -138,6 +153,7 @@ f = Nothing
 """)
 
 
+    @Test
     fun `test Maybe doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -149,6 +165,7 @@ f = withDefault
     // RESULT MODULE
 
 
+    @Test
     fun `test Result module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -157,7 +174,8 @@ f x = Result.withDefault x 42
 """)
 
 
-    fun `test Result type exposed`() = stubOnlyResolve(
+    @Test
+    fun `test Result type exposed (flaky)`() = stubOnlyResolve(
             """
 --@ main.elm
 type alias Foo = Result String Int
@@ -165,6 +183,7 @@ type alias Foo = Result String Int
 """)
 
 
+    @Test
     fun `test Result Ok exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -173,6 +192,7 @@ f = Ok 42
 """)
 
 
+    @Test
     fun `test Result Err exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -181,6 +201,7 @@ f = Err "uh oh"
 """)
 
 
+    @Test
     fun `test Result module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -192,6 +213,7 @@ f x = toMaybe x 42
     // STRING MODULE
 
 
+    @Test
     fun `test String module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -200,6 +222,7 @@ f x = String.length x
 """)
 
 
+    @Test
     fun `test String type exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -208,6 +231,7 @@ type alias Foo = String
 """)
 
 
+    @Test
     fun `test String module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -219,6 +243,7 @@ f = length "hello"
     // CHAR MODULE
 
 
+    @Test
     fun `test Char module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -227,6 +252,7 @@ f x = Char.isUpper x
 """)
 
 
+    @Test
     fun `test Char type exposed`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -235,6 +261,7 @@ type alias Foo = Char
 """)
 
 
+    @Test
     fun `test Char module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -246,6 +273,7 @@ f = isUpper 'A'
     // TUPLE MODULE
 
 
+    @Test
     fun `test Tuple module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -254,6 +282,7 @@ f = Tuple.first (0, 0)
 """)
 
 
+    @Test
     fun `test Tuple module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -265,6 +294,7 @@ f = pair 0 0
     // DEBUG MODULE
 
 
+    @Test
     fun `test Debug module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -273,6 +303,7 @@ f = Debug.toString
 """)
 
 
+    @Test
     fun `test Debug module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -284,6 +315,7 @@ f = toString
     // PLATFORM MODULE
 
 
+    @Test
     fun `test Platform module imported`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -292,6 +324,7 @@ f = Platform.worker
 """)
 
 
+    @Test
     fun `test Platform module exposes Program type`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -300,6 +333,7 @@ type alias Foo = Program
 """)
 
 
+    @Test
     fun `test Platform module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -311,6 +345,7 @@ f = worker
     // PLATFORM.CMD MODULE
 
 
+    @Test
     fun `test Platform Cmd module imported using Cmd alias (module ref)`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -319,6 +354,7 @@ f = Cmd.none
 """)
 
 
+    @Test
     fun `test Platform Cmd module imported using Cmd alias (value ref)`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -327,6 +363,7 @@ f = Cmd.none
 """)
 
 
+    @Test
     fun `test Platform Cmd module exposes Cmd type`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -335,6 +372,7 @@ type alias Foo = Cmd
 """)
 
 
+    @Test
     fun `test Platform Cmd module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -346,6 +384,7 @@ f = batch
     // PLATFORM.SUB MODULE
 
 
+    @Test
     fun `test Platform Sub module imported using Sub alias (module ref)`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -354,6 +393,7 @@ f = Sub.none
 """)
 
 
+    @Test
     fun `test Platform Sub module imported using Sub alias (value ref)`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -362,6 +402,7 @@ f = Sub.none
 """)
 
 
+    @Test
     fun `test Platform Sub module exposes Sub type`() = stubOnlyResolve(
             """
 --@ main.elm
@@ -370,6 +411,7 @@ type alias Foo = Sub
 """)
 
 
+    @Test
     fun `test Platform Sub module doesn't expose anything else`() = stubOnlyResolve(
             """
 --@ main.elm

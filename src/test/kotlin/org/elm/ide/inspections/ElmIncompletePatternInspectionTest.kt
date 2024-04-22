@@ -1,9 +1,11 @@
 package org.elm.ide.inspections
 
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmIncompletePatternInspectionTest : ElmInspectionsTestBase(ElmIncompletePatternInspection()) {
 
+    @Test
     fun `test all branches present`() = checkFixIsUnavailable("Add missing case branches", """
 type Foo = Bar | Baz
 
@@ -17,6 +19,7 @@ foo it =
             ()
 """)
 
+    @Test
     fun `test no existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
@@ -39,6 +42,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test one existing branch`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
@@ -63,6 +67,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test two existing branches`() = checkFixByText("Add missing case branches", """
 type Foo = Bar | Baz | Qux
 
@@ -90,6 +95,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test params`() = checkFixByText("Add missing case branches", """
 type Foo = Foo
 type alias BarBaz = Foo
@@ -139,6 +145,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test one existing branch, wildcard pattern`() = checkFixByText("Add '_' branch", """
 type Foo = Bar | Baz | Qux
 
@@ -160,6 +167,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test no branches with non-union, wildcard pattern`() = checkFixByText("Add '_' branch", """
 foo =
     <error>case{-caret-}</error> 1 of
@@ -170,6 +178,7 @@ foo =
             --EOL
 """)
 
+    @Test
     fun `test no leading whitespace`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
@@ -184,6 +193,7 @@ foo it = case it of
         --EOL
 """)
 
+    @Test
     fun `test nesting in let`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
@@ -208,6 +218,7 @@ foo it =
         ()
 """)
 
+    @Test
     fun `test nesting in let-in`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
@@ -231,6 +242,7 @@ foo it =
 """)
 
 
+    @Test
     fun `test nesting in case`() = checkFixByText("Add missing case branches", """
 type Foo = Bar
 
@@ -251,6 +263,7 @@ foo it =
                     --EOL
 """)
 
+    @Test
     fun `test qualified import`() = checkFixByFileTree("Add missing case branches", """
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -276,6 +289,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test import with alias`() = checkFixByFileTree("Add missing case branches", """
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -301,6 +315,7 @@ foo it =
             --EOL
 """)
 
+    @Test
     fun `test exposed import`() = checkFixByFileTree("Add missing case branches", """
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -335,6 +350,7 @@ foo it =
     and module name. These tests ensure that the ambiguity is resolved correctly.
     */
 
+    @Test
     fun `test issue 260 - needs branches`() = checkFixByFileTree("Add missing case branches", """
 --@ File1.elm
 type Msg = Qux
@@ -357,6 +373,7 @@ foo it =
 
 """.trimIndent())
 
+    @Test
     fun `test issue 260 - ok`() = checkFixIsUnavailableByFileTree("Add missing case branches", """
 --@ File1.elm
 type Msg = Qux

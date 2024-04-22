@@ -3,6 +3,7 @@ package org.elm.workspace.compiler
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 
 class ElmCompilerJsonToHtmlTest : ElmTestBase() {
@@ -11,7 +12,8 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
     // 0.19
     // $ elm make src/Foo.elm --report=json
 
-    fun `test specific error`() {
+    @Test
+    fun `test specific error (possibly flaky)`() {
         @Language("JSON")
         val json = """
             {
@@ -62,6 +64,7 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
         )
     }
 
+    @Test
     fun `test generic error without a path`() {
         @Language("JSON")
         val json = """
@@ -96,7 +99,8 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
         )
     }
 
-    fun `test generic error with a path and a null color, crazy`() {
+    @Test
+    fun `test generic error with a path and a null color, crazy (flaky)`() {
         @Language("JSON")
         val json = """
             {
@@ -125,22 +129,22 @@ class ElmCompilerJsonToHtmlTest : ElmTestBase() {
         val expectedHtml =
             """<html><body style="font-family: monospace; font-weight: bold"><span style="color: #4F9DA6">The&nbsp;`Helper`&nbsp;module&nbsp;must&nbsp;start&nbsp;with&nbsp;a&nbsp;line&nbsp;like&nbsp;this:<br><br>&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FACF5A;">module&nbsp;Helper&nbsp;exposing&nbsp;(..)</span><span style="color: #4F9DA6"><br><br>Try&nbsp;adding&nbsp;that&nbsp;as&nbsp;the&nbsp;first&nbsp;line&nbsp;of&nbsp;your&nbsp;file!<br><br></span><span style="text-decoration: underline;color: white;">Note</span><span style="color: #4F9DA6">:&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;replace&nbsp;(..)&nbsp;with&nbsp;an&nbsp;explicit&nbsp;list&nbsp;of&nbsp;types&nbsp;and&nbsp;functions<br>you&nbsp;want&nbsp;to&nbsp;expose.&nbsp;If&nbsp;you&nbsp;know&nbsp;a&nbsp;value&nbsp;is&nbsp;only&nbsp;used&nbsp;WITHIN&nbsp;this&nbsp;module,&nbsp;it&nbsp;is<br>extra&nbsp;easy&nbsp;to&nbsp;refactor.&nbsp;This&nbsp;kind&nbsp;of&nbsp;information&nbsp;is&nbsp;great,&nbsp;especially&nbsp;as&nbsp;your<br>project&nbsp;grows!</span></body></html>"""
 
-        TestCase.assertEquals(
-            listOf(
-                ElmError(
-                    title = "UNNAMED MODULE",
-                    html = expectedHtml,
-                    location = ElmLocation(
-                        path = "src/Helper.elm",
-                        moduleName = null,
-                        region = null
-                    )
+        val expectedValue = listOf(
+            ElmError(
+                title = "UNNAMED MODULE",
+                html = expectedHtml,
+                location = ElmLocation(
+                    path = "src/Helper.elm",
+                    moduleName = null,
+                    region = null
                 )
-            ),
-            elmJsonToCompilerMessages(json)
+            )
         )
+
+        TestCase.assertEquals(expectedValue, elmJsonToCompilerMessages(json))
     }
 
+    @Test
     fun `test hyperlink within a longer run of text`() {
         @Language("JSON")
         val json = """
