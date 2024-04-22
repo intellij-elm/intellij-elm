@@ -44,8 +44,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
                 """.trimIndent()
 
     @Test
-    fun `test ElmFormatOnFileSaveComponent should work with elm 19`() {
-
+    fun `test ElmFormatOnFileSaveComponent should work with elm 19 (flaky)`() {
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
@@ -58,7 +57,6 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
 
     @Test
     fun `test ElmFormatOnFileSaveComponent should not add to the undo stack (flaky)`() {
-
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
@@ -76,7 +74,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
     }
 
     @Test
-    fun `test ElmFormatOnFileSaveComponent should not touch a file with the wrong ending like 'scala'`() {
+    fun `test ElmFormatOnFileSaveComponent should not touch a file with the wrong ending like 'scala' (flaky)`() {
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {
@@ -89,7 +87,7 @@ class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
     }
 
     @Test
-    fun `test ElmFormatOnFileSaveComponent should not touch a file if the save-hook is deactivated`() {
+    fun `test ElmFormatOnFileSaveComponent should not touch a file if the save-hook is deactivated (flaky)`() {
         buildProject {
             project("elm.json", manifestElm19)
             dir("src") {

@@ -57,7 +57,7 @@ fun fileTreeFromText(@Language("Elm") text: String): FileTree {
         if (path.size == 1) {
             dir.children[name] = Entry.File(contents)
         } else {
-            val childDir = dir.children.getOrPut(name, { Entry.Directory(mutableMapOf()) }) as Entry.Directory
+            val childDir = dir.children.getOrPut(name) { Entry.Directory(mutableMapOf()) } as Entry.Directory
             fill(childDir, path.drop(1), contents)
         }
     }
@@ -70,22 +70,22 @@ fun fileTreeFromText(@Language("Elm") text: String): FileTree {
 }
 
 interface FileTreeBuilder {
-    /* Creates a directory */
+    /** Creates a directory */
     fun dir(name: String, builder: FileTreeBuilder.() -> Unit)
 
-    /* Creates a plain files */
+    /** Creates a plain files */
     fun file(name: String, code: String)
 
-    /* Creates an Elm source file */
+    /** Creates an Elm source file */
     fun elm(name: String, @Language("Elm") code: String) = file(name, code)
 
-    /* Creates an Elm source file where the content doesn't matter but it does compile */
+    /** Creates an Elm source file where the content doesn't matter, but it does compile */
     fun elm(name: String) = file(name, """
         module ${name.removeSuffix(".elm")} exposing (..)
         placeholderValue = 0
     """.trimIndent())
 
-    /* Creates an `elm.json` project file */
+    /** Creates an `elm.json` project file */
     fun project(name: String, @Language("JSON") code: String) = file(name, code)
 }
 

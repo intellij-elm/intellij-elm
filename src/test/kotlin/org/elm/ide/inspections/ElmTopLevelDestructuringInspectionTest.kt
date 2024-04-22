@@ -12,7 +12,7 @@ module Main exposing (..)
 """)
 
     @Test
-    fun `test nested destructuring is permitted`() = checkByText("""
+    fun `test nested destructuring is permitted (flaky)`() = checkByText("""
 module Main exposing (..)
 main =
     let

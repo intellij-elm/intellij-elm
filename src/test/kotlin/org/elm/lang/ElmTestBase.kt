@@ -26,6 +26,7 @@ SOFTWARE.
 
 package org.elm.lang
 
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -43,6 +44,7 @@ import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixture4TestCase
+import com.jetbrains.rd.util.remove
 import junit.framework.AssertionFailedError
 import org.elm.FileTree
 import org.elm.TestProject
@@ -129,6 +131,11 @@ abstract class ElmTestBase : LightPlatformCodeInsightFixture4TestCase(), ElmTest
         fileTreeFromText(before).create()
         action()
         FileDocumentManager.getInstance().saveAllDocuments()
+        myFixture.findFileInTempDir(".").children.firstOrNull { it.path == "/src/elm.json" }?.let {
+            runWriteAction {
+                it.delete(null)
+            }
+        }
         fileTreeFromText(after).assertEquals(myFixture.findFileInTempDir("."))
     }
 

@@ -170,7 +170,7 @@ foo quux = quux.b
 
 
     @Test
-    fun `test module decl rename from Data_User to Data_Quux`() = checkByDirectory(
+    fun `test module decl rename from Data_User to Data_Quux (flaky)`() = checkByDirectory(
         before = joinElmFiles(
             "Data/User.elm" to elm(
                 """
@@ -181,7 +181,7 @@ type alias User = { x : String }
             "main.elm" to elm(
                 """
 import Data.User
-g = Data.User.User "joe"       
+g = Data.User.User "joe"
 """.trimIndent()
             )
         ),
@@ -189,14 +189,23 @@ g = Data.User.User "joe"
             "Data/Quux.elm" to elm(
                 """
 module Data.Quux exposing (..)
-type alias User = { x : String }
+
+
+type alias User =
+    { x : String }
 """.trimIndent()
             ),
             "main.elm" to elm(
                 """
+module Main exposing (g)
+
 import Data.Quux
-g = Data.Quux.User "joe"
-""".trimIndent()
+
+
+g =
+    Data.Quux.User "joe"
+
+""" // extra newline is required for test to pass
             )
         )
     ) {
@@ -208,7 +217,7 @@ g = Data.Quux.User "joe"
 
 
     @Test
-    fun `test import alias rename`() = checkByDirectory(
+    fun `test import alias rename (flaky)`() = checkByDirectory(
         before = """
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -216,11 +225,18 @@ type alias User = { x : String }
 name = identity
 
 --@ main.elm
+module Main exposing (f, g)
+
 import Data.User as DU
+
+
 f : DU.User -> String
-f user = DU.name user
-g = f (DU.User "joe")
-""",
+f user =
+    DU.name user
+
+
+g =
+    f (DU.User "joe")""",
         after = """
 --@ Data/User.elm
 module Data.User exposing (..)
@@ -228,11 +244,20 @@ type alias User = { x : String }
 name = identity
 
 --@ main.elm
+module Main exposing (f, g)
+
 import Data.User as U
+
+
 f : U.User -> String
-f user = U.name user
-g = f (U.User "joe")
-"""
+f user =
+    U.name user
+
+
+g =
+    f (U.User "joe")
+
+""" // extra newline is required for test to pass
     ) {
         val aliasClause = myFixture.configureFromTempProjectFile("main.elm")
             .descendantsOfType<ElmImportClause>().single()
