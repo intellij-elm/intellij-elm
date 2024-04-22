@@ -5,6 +5,8 @@ Elm Plugin for JetBrains IDEs
 [![Version](https://img.shields.io/jetbrains/plugin/v/24075-elm.svg)](https://plugins.jetbrains.com/plugin/24075-elm)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/24075-elm.svg)](https://plugins.jetbrains.com/plugin/24075-elm)
 
+_(build is failing, but 98.5% tests pass!)_
+
 <!-- Plugin description -->
 Provides support for the Elm programming language.
 <!-- Plugin description end -->
