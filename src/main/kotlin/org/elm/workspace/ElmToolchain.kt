@@ -1,7 +1,11 @@
 package org.elm.workspace
 
 import com.intellij.openapi.project.Project
-import org.elm.workspace.commandLineTools.*
+import org.elm.workspace.commandLineTools.ElmCLI
+import org.elm.workspace.commandLineTools.ElmFormatCLI
+import org.elm.workspace.commandLineTools.ElmReviewCLI
+import org.elm.workspace.commandLineTools.ElmTestCLI
+import org.elm.workspace.commandLineTools.LamderaCLI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

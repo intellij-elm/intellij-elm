@@ -8,10 +8,10 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.6.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.23"
     // Gradle IntelliJ Plugin
-    id("org.jetbrains.intellij") version "1.10.0" // Does not work with Gradle 8.6
-    // GrammarKit Plugin
+    id("org.jetbrains.intellij") version "1.13.3" // Does not work with Gradle 8.6 (1.14+ requires Gradle 7.6+)
+    // GrammarKit Plugin (versions > 2021.2.2 require JDK17)
     id("org.jetbrains.grammarkit") version "2022.3.2.2"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
@@ -30,7 +30,7 @@ repositories {
 dependencies {
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.20-M1")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.23")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -65,6 +65,29 @@ tasks.withType<KotlinCompile> {
     dependsOn(generateGrammars)
 }
 
+// This was needed on the `clojj-master` branch for the tests to pass
+tasks.withType<Test> {
+    jvmArgs(
+        "--add-exports=java.base/jdk.internal.vm=ALL-UNNAMED",
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.ref=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+        // "--add-opens=java.base/java.security=ALL-UNNAMED", // saw this once, did not see it again
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+        "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.awt=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.awt.event=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.beans=ALL-UNNAMED",
+        "--add-opens=java.desktop/javax.swing=ALL-UNNAMED",
+        "--add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.font=ALL-UNNAMED"
+    )
+}
+
 tasks {
     sourceSets {
         java.sourceSets["main"].java {
@@ -83,6 +106,10 @@ tasks {
         }
     }
 
+    wrapper {
+        gradleVersion = properties("gradleVersion")
+    }
+
     generateLexer {
         // ("generateElmLexer") {
         sourceFile.set(file("$projectDir/src/main/grammars/ElmLexer.flex"))
@@ -98,10 +125,6 @@ tasks {
         pathToParser.set("/org/elm/lang/core/parser/ElmParser.java")
         pathToPsiRoot.set("/org/elm/lang/core/psi")
         purgeOldFiles.set(true)
-    }
-
-    wrapper {
-        gradleVersion = properties("gradleVersion")
     }
 
     patchPluginXml {

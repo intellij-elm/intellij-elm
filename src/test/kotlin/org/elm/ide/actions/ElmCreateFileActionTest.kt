@@ -3,36 +3,46 @@ package org.elm.ide.actions
 import org.elm.TestProject
 import org.elm.openapiext.runWriteCommandAction
 import org.elm.workspace.ElmWorkspaceTestBase
+import org.junit.Test
 
 
 class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
 
+    @Test
     fun `test file creation in a root src-dir`() =
             doTest("src", "Quux", "module Quux exposing (..)")
 
+    @Test
     fun `test file creation within a sub-dir`() =
             doTest("src/Foo", "Quux", "module Foo.Quux exposing (..)")
 
+    @Test
     fun `test file creation within a deeper source root`() =
             doTest("vendor/elm-foo", "Bar", "module Bar exposing (..)")
 
+    @Test
     fun `test file creation within a deeper source root and within a sub-dir`() =
             doTest("vendor/elm-foo/Internals", "Baz", "module Internals.Baz exposing (..)")
 
+    @Test
     fun `test file creation in root of 'tests' directory`() =
             doTest("tests", "Quux", "module Quux exposing (..)")
 
+    @Test
     fun `test file creation in sub-dir of 'tests' directory`() =
             doTest("tests/Legacy", "Quux", "module Legacy.Quux exposing (..)")
 
+    @Test
     fun `test file creation outside of a source root uses an empty module qualifier`() =
             doTest("outside", "Quux", "module Quux exposing (..)")
 
     // https://github.com/intellij-elm/intellij-elm/issues/231
+    @Test
     fun `test file creation including file extension`() =
             doTest("src", "Quux.elm", "module Quux exposing (..)")
 
     // https://github.com/intellij-elm/intellij-elm/issues/202
+    @Test
     fun `test normalization of leading dot-slash in source-directory`() =
             doTest("foo1/Foo1", "Quux", "module Foo1.Quux exposing (..)")
 

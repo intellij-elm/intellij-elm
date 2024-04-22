@@ -33,6 +33,7 @@ import junit.framework.AssertionFailedError
 import junit.framework.TestCase
 import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmParameterInfoHandlerTest : ElmTestBase() {
     // must include Elm stdlib because the type inference code must resolve types like String, Char, Int
@@ -43,17 +44,20 @@ class ElmParameterInfoHandlerTest : ElmTestBase() {
     // SOLO ARGUMENT
 
 
+    @Test
     fun `test function with one arg`() = checkByText("""
 f x = 42
 main = f "foo"{-caret-}
 """, "f : String → number")
 
+    @Test
     fun `test function with one arg nested in another function call`() = checkByText("""
 f x = "blah"
 g x = 99
 main = f (g 'c'{-caret-})
 """, "g : Char → number")
 
+    @Test
     fun `test higher-order function renders the hint with parens`() = checkByText("""
 f g = 0
 main = f {-caret-}(\s -> 'x')
@@ -63,16 +67,19 @@ main = f {-caret-}(\s -> 'x')
     // MULTIPLE ARGUMENTS
 
 
+    @Test
     fun `test function with two args, caret on first arg`() = checkByText("""
 f x y = 42
 main = f "hi"{-caret-}
 """, "f : String → b → number")
 
+    @Test
     fun `test function with two args, caret on second arg`() = checkByText("""
 f x y = 42
 main = f "x" {-caret-}
 """, "f : String → b → number")
 
+    @Test
     fun `test function with two args nested in another function call`() = checkByText("""
 f x = 42
 g x y = 99
@@ -83,10 +90,12 @@ main = f (g 'x' {-caret-})
     // UNNAMED FUNCTIONS
 
 
+    @Test
     fun `test lambda`() = checkByText("""
 main = (\a b -> "done") "hi"{-caret-}
 """, "String → b → String")
 
+    @Test
     fun `test expression`() = checkByText("""
 main = ((+) 1) 1{-caret-}
 """, "number → number")
@@ -94,6 +103,7 @@ main = ((+) 1) 1{-caret-}
 
     // INVALID CALLS
 
+    @Test
     fun `test non-function call`() = checkByText("""
 main = () "foo"{-caret-}
 """, "")

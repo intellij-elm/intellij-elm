@@ -4,8 +4,10 @@ import com.intellij.openapi.actionSystem.IdeActions
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.indentStyle
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 class ElmSmartEnterProcessorTest : ElmTestBase() {
+    @Test
     fun `test case expression`() = doTest("""
 type Foo = Bar | Baz | Qux
 
@@ -28,6 +30,7 @@ foo it =
 
 """)
 
+    @Test
     fun `test single case branch `() = doTest("""
 type Foo = Bar | Baz | Qux
 
@@ -45,6 +48,7 @@ foo it =
             {-caret-}
 """)
 
+    @Test
     fun `test let with no body`() = doTest("""
 foo =
     let{-caret-}
@@ -56,6 +60,7 @@ foo =
         --EOL
 """)
 
+    @Test
     fun `test nested let with no body and no parent in-keyword`() = doTest("""
 foo =
     let
@@ -71,6 +76,7 @@ foo =
                 --EOL
 """)
 
+    @Test
     fun `test if with no then`() = doTest("""
 foo =
     if True{-caret-}
@@ -82,6 +88,7 @@ foo =
         --EOL
 """)
 
+    @Test
     fun `test if with no body`() = doTest("""
 foo =
     if True then{-caret-}
@@ -93,6 +100,7 @@ foo =
         --EOL
 """)
 
+    @Test
     fun `test if with no body, caret before then`() = doTest("""
 foo =
     if True{-caret-} then
@@ -104,6 +112,7 @@ foo =
         --EOL
 """)
 
+    @Test
     fun `test if with no else`() = doTest("""
 foo =
     if True then
@@ -116,6 +125,7 @@ foo =
         {-caret-}
 """)
 
+    @Test
     fun `test chained if with no then`() = doTest("""
 foo =
     if True then
@@ -131,6 +141,7 @@ foo =
         --EOL
 """)
 
+    @Test
     fun `test chained if with no else`() = doTest("""
 foo =
     if True then
@@ -148,6 +159,7 @@ foo =
 """)
 
     // Need module statement to prevent `foo` from being parsed inside an error element
+    @Test
     fun `test function declaration with no params`() = doTest("""
 module Main exposing (..)
 foo{-caret-}
@@ -157,6 +169,7 @@ foo =
     {-caret-}
 """)
 
+    @Test
     fun `test function declaration with params`() = doTest("""
 module Main exposing (..)
 foo a b{-caret-}
@@ -166,6 +179,7 @@ foo a b =
     {-caret-}
 """)
 
+    @Test
     fun `test nested function declaration with no params`() = doTest("""
 foo =
     let
@@ -181,6 +195,7 @@ foo =
         ()
 """)
 
+    @Test
     fun `test nested function declaration with params`() = doTest("""
 foo =
     let
@@ -196,6 +211,7 @@ foo =
         ()
 """)
 
+    @Test
     fun `test nested tuple destructuring with no params`() = doTest("""
 foo =
     let
@@ -211,6 +227,7 @@ foo =
         ()
 """)
 
+    @Test
     fun `test nested record destructuring with no params`() = doTest("""
 foo =
     let
@@ -226,6 +243,7 @@ foo =
         ()
 """)
 
+    @Test
     fun `test case expression with custom indent`() = checkByText("""
 type Foo = Bar | Baz | Qux
 

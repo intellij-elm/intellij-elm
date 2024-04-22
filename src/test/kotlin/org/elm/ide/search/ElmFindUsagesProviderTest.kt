@@ -30,35 +30,43 @@ import com.intellij.psi.PsiElement
 import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.ElmNamedElement
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 
-class ElmFindUsagesProviderTest: ElmTestBase() {
+private const val MARKER = "-- : "
+private const val COMPARE_SEPARATOR = " | "
+
+class ElmFindUsagesProviderTest : ElmTestBase() {
 
 
+    @Test
     fun `test function parameter usage`() = doTestByText(
-"""
+        """
 foo x =
   --^
     let
         a = x -- : foobar
     in
         x -- : foobar
-""")
-
-
-    fun `test binary operator usage`() = doTestByText(
 """
+    )
+
+
+    @Test
+    fun `test binary operator usage`() = doTestByText(
+        """
 power a b = List.product (List.repeat b a)
 infix right 5 (**) = power
               --^
 
 foo = 2 ** 3 -- : foobar
 bar = (**) 2 -- : foobar
-""")
+"""
+    )
 
 
     private fun doTestByText(@Language("Elm") code: String) {
-        InlineFile(code)
+        addFileToFixture(code)
         val source = findElementInEditor<ElmNamedElement>()
 
         val actual = markersActual(source)
@@ -67,23 +75,18 @@ bar = (**) 2 -- : foobar
     }
 
     private fun markersActual(source: ElmNamedElement) =
-            myFixture.findUsages(source)
-                    .filter { it.element != null }
-                    // TODO [kl] implement a UsageTypeProvider and replace "foobar" with the expected usage type
-                    // both here and in the test cases themselves.
-//                    .map { Pair(it.element?.line ?: -1, RsUsageTypeProvider.getUsageType(it.element).toString()) }
-                    .map { Pair(it.element?.line ?: -1, "foobar") }
+        myFixture.findUsages(source)
+            .filter { it.element != null }
+            // TODO [kl] implement a UsageTypeProvider and replace "foobar" with the expected usage type
+            // both here and in the test cases themselves.
+            // .map { Pair(it.element?.line ?: -1, RsUsageTypeProvider.getUsageType(it.element).toString()) }
+            .map { Pair(it.element?.line ?: -1, "foobar") }
 
     private fun markersFrom(text: String) =
-            text.split('\n')
-                    .withIndex()
-                    .filter { it.value.contains(MARKER) }
-                    .map { Pair(it.index, it.value.substring(it.value.indexOf(MARKER) + MARKER.length).trim()) }
-
-    private companion object {
-        val MARKER = "-- : "
-        val COMPARE_SEPARATOR = " | "
-    }
+        text.split('\n')
+            .withIndex()
+            .filter { it.value.contains(MARKER) }
+            .map { Pair(it.index, it.value.substring(it.value.indexOf(MARKER) + MARKER.length).trim()) }
 
     val PsiElement.line: Int? get() = containingFile.viewProvider.document?.getLineNumber(textRange.startOffset)
 

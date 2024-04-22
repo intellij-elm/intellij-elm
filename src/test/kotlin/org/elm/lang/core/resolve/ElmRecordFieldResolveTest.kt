@@ -1,8 +1,10 @@
 package org.elm.lang.core.resolve
 
+import org.junit.Test
 
 
 class ElmRecordFieldResolveTest : ElmResolveTestBase() {
+    @Test
     fun `test simple field access`() = checkByCode(
             """
 type alias R = { field : () }
@@ -12,6 +14,7 @@ main r = r.field
            --^
 """)
 
+    @Test
     fun `test chained field access at end of chain`() = checkByCode(
             """
 type alias S = { nested : () }
@@ -22,6 +25,7 @@ main r = r.field.nested
                   --^
 """)
 
+    @Test
     fun `test chained field access at middle of chain`() = checkByCode(
             """
 type alias S = { nested : () }
@@ -32,6 +36,7 @@ main r = r.field.nested
            --^
 """)
 
+    @Test
     fun `test simple field accessor function`() = checkByCode(
             """
 type alias R = { field : () }
@@ -42,6 +47,7 @@ main r =
       --^
 """)
 
+    @Test
     fun `test field access on return value inside unannotated function`() = checkByCode(
             """
 type alias R = { field : () }
@@ -54,6 +60,7 @@ main = (r ()).field
 """)
 
 
+    @Test
     fun `test field access to parameterized record`() = checkByCode(
             """
 type alias R a = { field : a }
@@ -63,6 +70,7 @@ main r = r.field
            --^
 """)
 
+    @Test
     fun `test field access to field in record parameter`() = checkByCode(
             """
 type alias R a = { a | field : () }
@@ -73,6 +81,7 @@ main r = r.s.field2
                --^
 """)
 
+    @Test
     fun `test field access to nested parameterized record`() = checkByCode(
             """
 type alias S = { nested : () }
@@ -83,6 +92,7 @@ main r = r.field.nested
                   --^
 """)
 
+    @Test
     fun `test field access in lambda call`() = checkByCode(
             """
 type alias R = { field : () }
@@ -92,6 +102,7 @@ main r = (\rr -> rr.field) r
                      --^
 """)
 
+    @Test
     fun `test record update`() = checkByCode(
             """
 type alias R = { field : () }
@@ -101,6 +112,7 @@ main r = { r | field = ()}
                 --^
 """)
 
+    @Test
     fun `test record update access`() = checkByCode(
             """
 type alias R = { field : () }
@@ -110,6 +122,7 @@ main r = { r | field = () }.field
                            --^
 """)
 
+    @Test
     fun `test field access of variant param`() = checkByCode(
             """
 type T = T { field : () }
@@ -122,6 +135,7 @@ main t =
                      --^
 """)
 
+    @Test
     fun `test record value in function call`() = checkByCode(
             """
 type alias R = { field : () }
@@ -134,6 +148,7 @@ main = func { field = () }
                --^
 """)
 
+    @Test
     fun `test record value in forward pipeline`() = checkByCode(
             """
 infix left  0 (|>) = apR
@@ -150,6 +165,7 @@ main = { field = () } |> func
           --^
 """)
 
+    @Test
     fun `test record value in backward pipeline`() = checkByCode(
             """
 infix right 0 (<|) = apL
@@ -167,6 +183,7 @@ main = func <| { field = () }
                  --^
 """)
 
+    @Test
     fun `test record value returned from function`() = checkByCode(
             """
 type alias R = { field : () }
@@ -176,6 +193,7 @@ main = { field = () }
           --^
 """)
 
+    @Test
     fun `test record value returned from lambda`() = checkByCode(
             """
 type alias R = { field : () }
@@ -185,6 +203,7 @@ main = (\_ -> { field = () }) 1
                  --^
 """)
 
+    @Test
     fun `test nested decl field access`() = checkByCode(
             """
 type alias R = { field : () }
@@ -198,6 +217,7 @@ main r =
   nest
 """)
 
+    @Test
     fun `test nested decl mapper`() = checkByCode(
             """                                        
 type alias R = { field : () }                          
@@ -216,6 +236,7 @@ main box =
     map f box                                          
 """)
 
+    @Test
     fun `test multi resolve`() = checkMultiResolve(
             """
 type alias R = { field : () }
@@ -231,6 +252,7 @@ main r s =
   first (nest r) (nest s)        
     """)
 
+    @Test
     fun `test ref to destructuring in function parameter`() = checkByCode(
             """
 type alias R = { field : () }
@@ -240,6 +262,7 @@ main { field } = field
        --^
 """)
 
+    @Test
     fun `test value ref through destructuring in function parameter`() = checkByCode(
             """
 type alias R = { field : () }
@@ -249,6 +272,7 @@ main { field } = field
                  --^
 """)
 
+    @Test
     fun `test ref through destructuring in case`() = checkByCode(
             """
 type alias R = { field : () }
@@ -260,6 +284,7 @@ main r =
                     --^
 """)
 
+    @Test
     fun `test ref to destructuring in case`() = checkByCode(
             """
 type alias R = { field : () }
@@ -271,6 +296,7 @@ main r =
         --^
 """)
 
+    @Test
     fun `test repeated reference in list 1`() = checkByCode(
             """
 type alias R = { field : () }
@@ -282,6 +308,7 @@ main =
     ]                           
 """)
 
+    @Test
     fun `test repeated reference in list 2`() = checkByCode(
             """
 type alias R = { field : () }
@@ -294,6 +321,7 @@ main =
     ]
 """)
 
+    @Test
     fun `test repeated reference in list 3`() = checkByCode(
             """
 type alias R = { field : () }
@@ -307,6 +335,7 @@ main =
     ]
 """)
 
+    @Test
     fun `test nested extension aliases with funcion in type variable passed through another variable via forward pipeline`() = checkByCode(
             """
 infix left  0 (|>) = apR

@@ -15,7 +15,7 @@ import java.nio.file.Paths
  * @param testDependencies Additional Elm packages that this project's **tests** depends on directly
  * @param sourceDirectories The relative paths to one-or-more directories containing Elm source files belonging to this project.
  * @param testsRelativeDirPath The path to the directory containing unit tests, relative to the [projectDirPath].
- * Typically this will be "tests": see [testsDirPath] for more info.
+ * Typically, this will be "tests": see [testsDirPath] for more info.
  */
 sealed class ElmProject(
         val manifestPath: Path,

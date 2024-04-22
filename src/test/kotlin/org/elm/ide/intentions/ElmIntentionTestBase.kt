@@ -17,7 +17,7 @@ import org.intellij.lang.annotations.Language
 abstract class ElmIntentionTestBase(val intention: IntentionAction) : ElmTestBase() {
 
     protected fun doAvailableTest(@Language("Elm") before: String, @Language("Elm") after: String) {
-        InlineFile(before).withCaret()
+        addFileWithCaretToFixture(before)
         launchAction()
         myFixture.checkResult(replaceCaretMarker(after))
     }
@@ -29,7 +29,7 @@ abstract class ElmIntentionTestBase(val intention: IntentionAction) : ElmTestBas
     }
 
     protected fun doUnavailableTest(@Language("Elm") before: String) {
-        InlineFile(before).withCaret()
+        addFileWithCaretToFixture(before)
         check(intention.familyName !in myFixture.availableIntentions.mapNotNull { it.familyName }) {
             "\"$intention\" intention should not be available"
         }

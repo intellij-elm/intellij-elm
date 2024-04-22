@@ -79,7 +79,7 @@ private fun documentationFor(decl: ElmFunctionDeclarationLeft): String? = buildS
     renderDocContent(parent)
 }
 
-private fun documentationFor(decl: ElmTypeDeclaration): String? = buildString {
+private fun documentationFor(decl: ElmTypeDeclaration): String = buildString {
     val ty = decl.typeExpressionInference().value
 
     definition {
@@ -171,7 +171,7 @@ private fun documentationFor(element: ElmUnionVariant): String? = buildString {
     }
 }
 
-private fun documentationFor(decl: ElmModuleDeclaration): String? = buildString {
+private fun documentationFor(decl: ElmModuleDeclaration): String = buildString {
     val ids = decl.upperCaseQID.upperCaseIdentifierList
 
     definition {

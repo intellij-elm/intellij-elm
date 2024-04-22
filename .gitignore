@@ -5,7 +5,7 @@
 
 build/
 out/
-gen/
 dist/
 testData/
 todos/
+src/main/gen

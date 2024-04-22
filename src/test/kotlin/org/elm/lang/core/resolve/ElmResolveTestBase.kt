@@ -36,7 +36,7 @@ import org.intellij.lang.annotations.Language
 abstract class ElmResolveTestBase : ElmTestBase() {
 
     protected fun checkByCode(@Language("Elm") code: String) {
-        InlineFile(code)
+        addFileToFixture(code)
 
         val (ref, data) = findReferenceWithDataInEditor("^")
 
@@ -101,7 +101,7 @@ abstract class ElmResolveTestBase : ElmTestBase() {
     }
 
     protected fun checkMultiResolve(@Language("Elm") code: String) {
-        InlineFile(code)
+        addFileToFixture(code)
         val ref = findElementInEditor<ElmReferenceElement>().reference
         check(ref.multiResolve().size == 2) {
             "Expected 2 variants, got ${ref.multiResolve()}"

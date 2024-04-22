@@ -2,7 +2,6 @@ package org.elm.workspace.compiler
 
 import com.intellij.notification.Notification
 import com.intellij.notification.Notifications
-import com.intellij.notification.NotificationsAdapter
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
@@ -11,10 +10,13 @@ import com.intellij.testFramework.TestActionEvent
 import junit.framework.TestCase
 import org.elm.workspace.ElmWorkspaceTestBase
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 import java.nio.file.Path
+
 
 class ElmBuildActionTest : ElmWorkspaceTestBase() {
 
+    @Test
     fun `test build Elm application project`() {
         val source = """
                     module Main exposing (..)
@@ -32,6 +34,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         doTest(file, expectedNumErrors = 0, expectedOffset = source.indexOf("main"))
     }
 
+    @Test
     fun `test build Lamdera application project`() {
         val frontend = """
                     module Frontend exposing (..)
@@ -54,6 +57,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         doTest(listOf(fileFrontend, fileBackend), expectedNumErrors = 0, expectedOffset = listOf(frontend.indexOf("app"), backend.indexOf("app")), listOf("src/Frontend.elm", "src/Backend.elm"))
     }
 
+    @Test
     fun `test build Elm application project with an error`() {
         val source = """
                     module Main exposing (..)
@@ -72,6 +76,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
         doTest(file, expectedNumErrors = 1, expectedOffset = source.indexOf("main"))
     }
 
+    @Test
     fun `test build Elm project ignores nested function named 'main'`() {
         val source = """
                     module Main exposing (..)
@@ -164,7 +169,7 @@ class ElmBuildActionTest : ElmWorkspaceTestBase() {
     private fun connectToBusAndGetNotificationRef(): Ref<Notification> {
         val notificationRef = Ref<Notification>()
         project.messageBus.connect(testRootDisposable).subscribe(Notifications.TOPIC,
-                object : NotificationsAdapter() {
+                object : Notifications {
                     override fun notify(notification: Notification) =
                             notificationRef.set(notification)
                 })

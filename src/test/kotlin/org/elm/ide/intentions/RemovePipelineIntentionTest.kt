@@ -1,10 +1,12 @@
 package org.elm.ide.intentions
 
+import org.junit.Test
 
 
 class RemovePipelineIntentionTest : ElmIntentionTestBase(RemovePipelineIntention()) {
 
 
+    @Test
     fun `test right pipe to no pipe`() = doAvailableTest(
             """
 module Foo exposing (list)
@@ -23,6 +25,7 @@ times2 m n = m * n
 """)
 
 
+    @Test
     fun `test preserves comments`() = doAvailableTest(
             """
 module Foo exposing (list)
@@ -56,6 +59,7 @@ list =
 times2 m n = m * n
 """)
 
+    @Test
     fun `test remove pipeline example from elm-spa`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -70,6 +74,7 @@ value =
     updateWith (Editor (Just slug)) GotEditorMsg model (Editor.initEdit session slug)
 """)
 
+    @Test
     fun `test remove pipeline example 2 from elm-spa`() = doAvailableTest(
             """
 module Foo exposing (value)
@@ -85,6 +90,7 @@ value msg =
     stopPropagationOn "click" (Decode.succeed ( msg, True ))
 """)
 
+    @Test
     fun `test remove pipeline example 3 from elm-spa`() = doAvailableTest(
             """
 module Foo exposing (toggleFavoriteButton)
@@ -100,6 +106,7 @@ toggleFavoriteButton classStr msg attrs kids =
     Html.button (class classStr :: onClickStopPropagation msg :: attrs) (i [ class "ion-heart" ] [] :: kids)
 """)
 
+    @Test
     fun `test remove left pipeline`() = doAvailableTest(
             """
 module Foo exposing (example)
@@ -114,6 +121,7 @@ example =
 """)
 
 
+    @Test
     fun `test keeps parens around lambdas`() = doAvailableTest(
             """
 module Foo exposing (example)
@@ -129,6 +137,7 @@ example =
 """)
 
 
+    @Test
     fun `test preserves indentation as starting point`() = doAvailableTest(
             """
 module Foo exposing (src)
@@ -169,6 +178,7 @@ src (Avatar maybeUrl) =
             Html.Attributes.src url
 """)
 
+    @Test
     fun `test paren is indented less than case statements to make valid whitespace`() = doAvailableTest(
             """
 module Foo exposing (view)
@@ -288,6 +298,7 @@ view model =
     }
 """)
 
+    @Test
     fun `test preserves comments with ordering`() = doAvailableTest(
             """
 module Foo exposing (src)
@@ -333,6 +344,7 @@ src (Avatar maybeUrl) =
             Html.Attributes.src url
 """)
 
+    @Test
     fun `test multiline without comments`() = doAvailableTest(
             """
 module Foo exposing (example)
@@ -365,6 +377,7 @@ example =
 
 """)
 
+    @Test
     fun `test preserve comments right next to pipeline`() = doAvailableTest(
             """
 module Foo exposing (example)
@@ -394,6 +407,7 @@ example =
 """)
 
 
+    @Test
     fun `test preserve comments right next to pipeline 2`() = doAvailableTest(
             """
 module Foo exposing (example)

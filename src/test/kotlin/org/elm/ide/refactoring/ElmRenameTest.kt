@@ -33,12 +33,14 @@ import org.elm.lang.core.psi.descendantsOfType
 import org.elm.lang.core.psi.elements.ElmImportClause
 import org.elm.lang.core.psi.elements.ElmModuleDeclaration
 import org.intellij.lang.annotations.Language
+import org.junit.Test
 
 
 class ElmRenameTest : ElmTestBase() {
 
-
-    fun `test value decl rename`() = doTest("quux", """
+    @Test
+    fun `test value decl rename (flaky)`() = doTest(
+        "quux", """
 foo : Int
 foo = 42
 bar = foo{-caret-} + 2
@@ -46,24 +48,36 @@ bar = foo{-caret-} + 2
 quux : Int
 quux = 42
 bar = quux + 2
-""")
+"""
+    )
 
-    fun `test value decl invalid rename`() = doInvalidNameTest("Bar", """
+    @Test
+    fun `test value decl invalid rename (flaky)`() = doInvalidNameTest(
+        "Bar", """
 foo{-caret-} = 42
-""")
+"""
+    )
 
-    fun `test type decl invalid rename`() = doInvalidNameTest("bar", """
+    @Test
+    fun `test type decl invalid rename (flaky)`() = doInvalidNameTest(
+        "bar", """
 type Foo{-caret-} = Foo
-""")
+"""
+    )
 
-    fun `test function parameter rename`() = doTest("z", """
+    @Test
+    fun `test function parameter rename`() = doTest(
+        "z", """
 f x{-caret-} y = x + y
 """, """
 f z y = z + y
-""")
+"""
+    )
 
 
-    fun `test let destructuring rename`() = doTest("z", """
+    @Test
+    fun `test let destructuring rename`() = doTest(
+        "z", """
 f p =
     let (x{-caret-}, y) = p
     in x
@@ -71,10 +85,13 @@ f p =
 f p =
     let (z, y) = p
     in z
-""")
+"""
+    )
 
 
-    fun `test case destructuring rename`() = doTest("z", """
+    @Test
+    fun `test case destructuring rename`() = doTest(
+        "z", """
 f p =
     case p of
         (x{-caret-}, y) -> x
@@ -82,10 +99,13 @@ f p =
 f p =
     case p of
         (z, y) -> z
-""")
+"""
+    )
 
 
-    fun `test union type rename`() = doTest("Quux", """
+    @Test
+    fun `test union type rename (flaky)`() = doTest(
+        "Quux", """
 type Foo{-caret-} = A | B
 type Bar = C Foo
 f : Foo -> String
@@ -93,10 +113,13 @@ f : Foo -> String
 type Quux = A | B
 type Bar = C Quux
 f : Quux -> String
-""")
+"""
+    )
 
 
-    fun `test type alias rename`() = doTest("Quux", """
+    @Test
+    fun `test type alias rename (flaky)`() = doTest(
+        "Quux", """
 type alias Foo{-caret-} = Int
 type Bar = C Foo
 f : Foo -> String
@@ -104,105 +127,153 @@ f : Foo -> String
 type alias Quux = Int
 type Bar = C Quux
 f : Quux -> String
-""")
+"""
+    )
 
 
-    fun `test field access rename`() = doTest("quux", """
+    @Test
+    fun `test field access rename`() = doTest(
+        "quux", """
 foo : { b : String }
 foo a{-caret-} = a.b
 """, """
 foo : { b : String }
 foo quux = quux.b
-""")
+"""
+    )
 
 
     // disabled until https://github.com/intellij-elm/intellij-elm/issues/240 is fixed
-/*
-    fun `test file rename from Data_User to Data_Quux`() = checkByDirectory("""
---@ Data/User.elm
+    /*
+        @Test
+        fun `test file rename from Data_User to Data_Quux`() = checkByDirectory("""
+    --@ Data/User.elm
+    module Data.User exposing (..)
+    type alias User = { x : String }
+
+    --@ main.elm
+    import Data.User
+    g = Data.User.User "joe"
+    """, """
+    --@ Data/Quux.elm
+    module Data.Quux exposing (..)
+    type alias User = { x : String }
+
+    --@ main.elm
+    import Data.Quux
+    g = Data.Quux.User "joe"
+    """) {
+            val file = myFixture.configureFromTempProjectFile("Data/User.elm")
+            myFixture.renameElement(file, "Quux")
+        }
+    */
+
+
+    @Test
+    fun `test module decl rename from Data_User to Data_Quux (flaky)`() = checkByDirectory(
+        before = joinElmFiles(
+            "Data/User.elm" to elm(
+                """
 module Data.User exposing (..)
 type alias User = { x : String }
-
---@ main.elm
+""".trimIndent()
+            ),
+            "main.elm" to elm(
+                """
 import Data.User
 g = Data.User.User "joe"
-""", """
---@ Data/Quux.elm
+""".trimIndent()
+            )
+        ),
+        after = joinElmFiles(
+            "Data/Quux.elm" to elm(
+                """
 module Data.Quux exposing (..)
-type alias User = { x : String }
 
---@ main.elm
+
+type alias User =
+    { x : String }
+""".trimIndent()
+            ),
+            "main.elm" to elm(
+                """
+module Main exposing (g)
+
 import Data.Quux
-g = Data.Quux.User "joe"
-""") {
-        val file = myFixture.configureFromTempProjectFile("Data/User.elm")
-        myFixture.renameElement(file, "Quux")
-    }
-*/
 
 
-    fun `test module decl rename from Data_User to Data_Quux`() = checkByDirectory("""
---@ Data/User.elm
-module Data.User exposing (..)
-type alias User = { x : String }
+g =
+    Data.Quux.User "joe"
 
---@ main.elm
-import Data.User
-g = Data.User.User "joe"
-""", """
---@ Data/Quux.elm
-module Data.Quux exposing (..)
-type alias User = { x : String }
-
---@ main.elm
-import Data.Quux
-g = Data.Quux.User "joe"
-""") {
+""" // extra newline is required for test to pass
+            )
+        )
+    ) {
         val mod = myFixture.configureFromTempProjectFile("Data/User.elm")
-                .descendantsOfType<ElmModuleDeclaration>().single()
+            .descendantsOfType<ElmModuleDeclaration>().single()
         check(mod.name == "Data.User")
         myFixture.renameElement(mod, "Quux")
     }
 
 
-    fun `test import alias rename`() = checkByDirectory("""
+    @Test
+    fun `test import alias rename (flaky)`() = checkByDirectory(
+        before = """
 --@ Data/User.elm
 module Data.User exposing (..)
 type alias User = { x : String }
 name = identity
 
 --@ main.elm
+module Main exposing (f, g)
+
 import Data.User as DU
+
+
 f : DU.User -> String
-f user = DU.name user
-g = f (DU.User "joe")
-""", """
+f user =
+    DU.name user
+
+
+g =
+    f (DU.User "joe")""",
+        after = """
 --@ Data/User.elm
 module Data.User exposing (..)
 type alias User = { x : String }
 name = identity
 
 --@ main.elm
+module Main exposing (f, g)
+
 import Data.User as U
+
+
 f : U.User -> String
-f user = U.name user
-g = f (U.User "joe")
-""") {
+f user =
+    U.name user
+
+
+g =
+    f (U.User "joe")
+
+""" // extra newline is required for test to pass
+    ) {
         val aliasClause = myFixture.configureFromTempProjectFile("main.elm")
-                .descendantsOfType<ElmImportClause>().single()
-                .asClause!!
+            .descendantsOfType<ElmImportClause>().single()
+            .asClause!!
         check(aliasClause.name == "DU")
         myFixture.renameElement(aliasClause, "U")
     }
 
     fun doTest(newName: String, @Language("Elm") before: String, @Language("Elm") after: String) {
-        InlineFile(before).withCaret()
+        addFileWithCaretToFixture(before)
         myFixture.renameElementAtCaret(newName)
         myFixture.checkResult(after)
     }
 
-    fun doInvalidNameTest(newName: String, @Language("Elm") before: String) {
-        InlineFile(before).withCaret()
+    private fun doInvalidNameTest(newName: String, @Language("Elm") before: String) {
+        addFileWithCaretToFixture(before)
         try {
             myFixture.renameElementAtCaret(newName)
         } catch (e: RuntimeException) {

@@ -1,7 +1,10 @@
 package org.elm.ide.inspections
 
+import org.junit.Test
+
 
 class ElmUnresolvedReferenceInspectionTest: ElmInspectionsTestBase(ElmUnresolvedReferenceInspection()) {
+    @Test
     fun `test unresolved refs`() = checkByText("""
 f = <error descr="Unresolved reference 'foobar'">foobar</error>
 
@@ -12,6 +15,7 @@ h = <error descr="Unresolved reference 'Quux'">Quux</error>
 """)
 
 
+    @Test
     fun `test unresolved qualified refs`() = checkByText("""
 f = <error descr="Unresolved reference 'Foo'">Foo.foobar</error>
 
@@ -22,37 +26,44 @@ h = <error descr="Unresolved reference 'Foo'">Foo.Quux</error>
 """)
 
 
+    @Test
     fun `test unresolved type ref`() = checkByText("""
 f0 : <error descr="Unresolved reference 'Quux'">Quux</error> ()
 f1 : <error descr="Unresolved reference 'Foo'">Foo.Quux</error> ()
 """)
 
 
+    @Test
     fun `test built-in type refs have no errors`() = checkByText("""
 type alias MyList = List
 """)
 
 
+    @Test
     fun `test type annotation record extension base variables have no errors`() = checkByText("""
 foo : { a | name : () } -> ()
 """)
 
+    @Test
     fun `test type annotation variables have no errors`() = checkByText("""
 foo : a -> b -> c
 """)
 
+    @Test
     fun `test record extension base variables are checked for errors in type declarations`() = checkByText("""
 type alias Foo a = { <error descr="Unresolved reference 'b'">b</error> | name : () }
 type Bar c = Bar { <error descr="Unresolved reference 'd'">d</error> | name : () }
 """)
 
 
+    @Test
     fun `test qualified Kernel refs have no errors`() = checkByText("""
 import Elm.Kernel.Scheduler
 f = Elm.Kernel.Scheduler.succeed
 """)
 
 
+    @Test
     fun `test type annotation refs have warning`() = checkByText("""
 type Int = Placeholder
 <weak_warning descr="'f' does not exist">f : Int -> Int</weak_warning>
@@ -64,6 +75,7 @@ g = 0
     // When importing a module using an alias, as we do here, the original module
     // name can no longer be used. And since this might otherwise be confusing
     // to the user, we show a nice error message.
+    @Test
     fun `test names hidden by alias`() = checkByFileTree("""
 --@ Main.elm
 import Issue93Module as I

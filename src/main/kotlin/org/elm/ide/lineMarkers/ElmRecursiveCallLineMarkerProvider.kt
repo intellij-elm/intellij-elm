@@ -15,7 +15,6 @@ import org.elm.lang.core.psi.elements.ElmFunctionCallExpr
 import org.elm.lang.core.psi.elements.ElmValueDeclaration
 import org.elm.lang.core.psi.elements.ElmValueExpr
 import org.elm.lang.core.psi.elements.ElmValueQID
-import java.util.function.Supplier
 
 /**
  * Put an icon in the gutter for top-level declarations (types, functions, values)
@@ -51,8 +50,8 @@ class ElmRecursiveCallLineMarkerProvider : LineMarkerProvider {
                 ElmIcons.RECURSIVE_CALL,
                 FunctionUtil.constant("Recursive call"),
                 null,
-                GutterIconRenderer.Alignment.RIGHT,
-                Supplier { "Recursive call" })
+                GutterIconRenderer.Alignment.RIGHT
+            ) { "Recursive call" }
         }
         return null
     }
