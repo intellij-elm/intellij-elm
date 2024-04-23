@@ -1,12 +1,12 @@
 package org.elm.ide.typing
 
+import org.elm.lang.ElmTestBase
 import org.elm.lang.core.psi.indentStyle
 import org.intellij.lang.annotations.Language
 import org.junit.Test
 
 
-class ElmOnEnterIndentHandlerTest : ElmTypingTestBase() {
-
+class ElmOnEnterIndentHandlerTest : ElmTestBase() {
 
     @Test
     fun `test after function equals at EOF`() = doTest("""

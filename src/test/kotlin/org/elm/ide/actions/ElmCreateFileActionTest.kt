@@ -29,7 +29,7 @@ class ElmCreateFileActionTest : ElmWorkspaceTestBase() {
             doTest("tests", "Quux", "module Quux exposing (..)")
 
     @Test
-    fun `test file creation in sub-dir of 'tests' directory`() =
+    fun `test file creation in sub-dir of 'tests' directory (flaky)`() =
             doTest("tests/Legacy", "Quux", "module Legacy.Quux exposing (..)")
 
     @Test

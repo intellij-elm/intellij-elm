@@ -1,10 +1,11 @@
 package org.elm.ide.typing
 
+import org.elm.lang.ElmTestBase
 import org.intellij.lang.annotations.Language
 import org.junit.Test
 
 
-class ElmOnBraceInsertHandlerTest : ElmTypingTestBase() {
+class ElmOnBraceInsertHandlerTest : ElmTestBase() {
 
     @Test
     fun `test add parentheses around selection`() = doTest("""
