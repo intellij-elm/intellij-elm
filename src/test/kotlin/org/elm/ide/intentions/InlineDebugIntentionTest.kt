@@ -15,7 +15,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     List.map f (Debug.log "items" (items))
-""")
+""",
+            "Debug.log this value")
 
     @Test
     fun `test debugging function call`() = doAvailableTest(
@@ -27,11 +28,12 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "List.map f items" (List.map f items))
-""")
+""",
+            "Debug.log output of function")
 
     @Test
     fun `test debugging expr with double quotes`() = doAvailableTest(
-        """
+            """
 module Foo exposing (f0)
 f0 = 
     Str{-caret-}ing.length "foo"
@@ -39,7 +41,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "String.length \"foo\"" (String.length "foo"))
-""")
+""",
+            "Debug.log output of function")
 
     @Test
     fun `test debugging pattern matching input`() = doAvailableTest(
@@ -59,7 +62,8 @@ f0 =
 f1 = 
     case (Debug.log "f0" (f0)) of
         _ -> 1
-""")
+""",
+            "Debug.log this value")
 
     @Test
     fun `test debugging pattern matching output`() = doAvailableTest(
@@ -84,7 +88,8 @@ f1 =
                 _ -> 1
         )
     )
-""")
+""",
+            "Debug.log output of case statement")
 
     @Test
     fun `test debugging case branch`() = doAvailableTest(
@@ -109,7 +114,8 @@ f1 =
                 _ -> 1
         )
     )
-""")
+""",
+            "Debug.log output of case statement")
 
     @Test
     fun `test debugging case branch value`() = doAvailableTest(
@@ -120,7 +126,7 @@ f0 =
 
 f1 = 
     case f0 of
-        _ -> 1{-caret-}
+        _ -> 1 + 1{-caret-}
 """, """
 module Foo exposing (f0)
 f0 =
@@ -128,11 +134,12 @@ f0 =
 
 f1 = 
     case f0 of
-        _ -> (Debug.log "1" (1))
-""")
+        _ -> (Debug.log "1 + 1" (1 + 1))
+""",
+            "Debug.log expression")
 
     @Test
-    fun `test debugging case on function call`() = doAvailableTest(
+    fun `test debugging case on function`() = doAvailableTest(
             """
 module Foo exposing (f0)
 f0 _ =
@@ -149,19 +156,25 @@ f0 _ =
 f1 = 
     case ((Debug.log "f0 42" (f0 42))) of
         _ -> 1
-""")
+""",
+            "Debug.log output of function")
 
     @Test
-    fun `test debugging binary operator input`() = doAvailableTest(
+    fun `test debugging constants with binary operators`() = doAvailableTest(
             """
 module Foo exposing (f0)
+f1 = 1
+
 f0 = 
-    1 + 1{-caret-}
+    1 + f1{-caret-}
 """, """
 module Foo exposing (f0)
+f1 = 1
+
 f0 = 
-    1 + (Debug.log "1" (1))
-""")
+    1 + (Debug.log "f1" (f1))
+""",
+            "Debug.log this value")
 
     @Test
     fun `test debugging binary operator operation`() = doAvailableTest(
@@ -173,7 +186,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1" (1 + 1))
-""")
+""",
+            "Debug.log expression")
 
     @Test
     fun `test debugging multiple binary operator operations`() = doAvailableTest(
@@ -185,7 +199,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1 + 1" (1 + 1 + 1))
-""")
+""",
+            "Debug.log expression")
 
     @Test
     fun `test debugging piped operations`() = doAvailableTest(
@@ -197,7 +212,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1 + 1 |> (+) 1" (1 + 1 + 1 |> (+) 1))
-""")
+""",
+            "Debug.log output of pipeline")
 
     @Test
     fun `test debugging piped operations with function`() = doAvailableTest(
@@ -209,7 +225,8 @@ f0 =
 module Foo exposing (f0)
 f0 = 
     (Debug.log "1 + 1 + 1 |> String.fromInt" (1 + 1 + 1 |> String.fromInt))
-""")
+""",
+            "Debug.log output of pipeline")
 
     @Test
     fun `test debugging multiline piped operations with function`() = doAvailableTest(
@@ -228,18 +245,120 @@ f0 =
                 |> String.fromInt
         )
     )
-""")
+""",
+            "Debug.log output of pipeline")
 
-    @Test
-    fun `test debugging function composition`() = doAvailableTest(
+    fun `test debugging function composition`() = doUnavailableTest(
             """
 module Foo exposing (f0)
 f0 = 
     (+) 1 >> String.fr{-caret-}omInt
+""")
+
+    fun `test debugging log statements`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.l{-caret-}og "hello" "hello"
+""")
+
+    @Test
+    fun `test debugging log arguments`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.log "hello" (2 + 2){-caret-}
+""")
+
+    fun `test debugging ignoring nested log function calls`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.log "hello" (List.ma{-caret-}p identity [ 0 ])
+""")
+
+    fun `test debugging arguments for nested log function calls`() = doAvailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.log "hello" (List.map ident{-caret-}ity [ 0 ])
 """, """
 module Foo exposing (f0)
 f0 = 
-    (+) 1 >> String.fromInt
+    Debug.log "hello" (List.map (Debug.log "identity" (identity)) [ 0 ])
+""",
+            "Debug.log this value")
+
+    fun `test debugging nested log function calls with binary operators`() = doAvailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.log "hello" (2 + ({-caret-}1 + 1))
+""", """
+module Foo exposing (f0)
+f0 = 
+    Debug.log "hello" (2 + ((Debug.log "1 + 1" (1 + 1))))
+""",
+            "Debug.log expression")
+
+    fun `test debugging todo statements`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.tod{-caret-}o "hello"
 """)
+
+    fun `test debugging todo arguments`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    Debug.todo (2 + 2){-caret-}
+""")
+
+    fun `test debugging string literals`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    "he{-caret-}llo"
+""")
+
+    fun `test debugging char literals`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    'e{-caret-}'
+""")
+
+    fun `test debugging numeric literals`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    1{-caret-}
+""")
+
+    fun `test debugging float literals`() = doUnavailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    1{-caret-}.2
+""")
+
+    fun `test debugging constants`() = doAvailableTest(
+            """
+module Foo exposing (f0)
+f0 = 
+    1
+    
+f1 =
+    f0{-caret-}
+""", """
+module Foo exposing (f0)
+f0 = 
+    1
+    
+f1 =
+    (Debug.log "f0" (f0))
+""",
+            "Debug.log this value")
 
 }
