@@ -191,6 +191,7 @@ private FunctionDeclarationPattern ::=
         | RecordPattern
         | LiteralExprGroup // Always a partial pattern, but not a syntax error
         | ParenthesizedPattern
+        | SingularUnionPattern
 
 // TYPE DECLARATIONS AND REFERENCES
 
@@ -491,6 +492,9 @@ TuplePattern ::=
 
 private ParenthesizedPattern ::=
     LEFT_PARENTHESIS Pattern RIGHT_PARENTHESIS
+
+private SingularUnionPattern ::=
+    Pattern
 
 
 
