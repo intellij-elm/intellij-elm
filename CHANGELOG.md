@@ -5,7 +5,7 @@
 ## [Unreleased]
 *   Some unmerged PRs 
 
-## [5.0.1] - 2022-03-20
+## [5.0.1] - 2022-04-23
 *   Fix parse error when pattern matching in function-argument (issue #742)
 *   Make plugin dynamic (Component -> Listener): (un)install the plugin without restarting the IDE
 *   Remove `projectService` entries from `plugin.xml`
