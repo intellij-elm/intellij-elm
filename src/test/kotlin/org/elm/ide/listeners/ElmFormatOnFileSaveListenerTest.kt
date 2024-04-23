@@ -1,4 +1,4 @@
-package org.elm.ide.components
+package org.elm.ide.listeners
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.undo.UndoManager
@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
-class ElmFormatOnFileSaveComponentTest : ElmWorkspaceTestBase() {
+class ElmFormatOnFileSaveListenerTest : ElmWorkspaceTestBase() {
 
     /*
         override fun runTest() {
