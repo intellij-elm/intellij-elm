@@ -5,13 +5,17 @@
 ## [Unreleased]
 *   Some unmerged PRs 
 
-## [5.0.0] - 2022-03-20
-*   Enable support for newer versions of IntelliJ (v2021.1 and greater)
-*   Based on [intellij-platform-plugin-template](https://github.com/JetBrains/intellij-platform-plugin-template) (new Gradle build spec)
-*   Support [Lamdera](https://dashboard.lamdera.app/docs) projects
+## [5.0.0] - 2024-04-23
+*   Moved the plugin into a [GitHub organization of its own](https://github.com/intellij-elm/intellij-elm)
+*   Got the test suite in a "mostly working" state
+*   Got CI back up and running (not "all green" yet, the reason found in the previous point)
+*   Enable support for newer versions of IntelliJ (2022.2.4 and newer)
+*   Various dependencies have had an upgrade
+*   Retrofitted to be based on [intellij-platform-plugin-template](https://github.com/JetBrains/intellij-platform-plugin-template) (new `.kts` Gradle build spec)
+*   Support multiple Elm-main entry points (compile all)
 *   Support [`elm-review`](https://github.com/jfmengels/elm-review)
 *   Improved navigation and UI for compiler and `elm-review` Toolwindows with correct IntelliJ appearance setting (light, dark, ...)
-*   Support multiple Elm-main entry points (compile all)
+*   Support [Lamdera](https://dashboard.lamdera.app/docs) projects
 
 ## [4.4.1] - 2021-09-20
 *   Enable support for all newer versions of IntelliJ (future versions introduce incompatibilities)
