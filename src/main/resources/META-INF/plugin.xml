@@ -34,6 +34,7 @@
                                 implementationClass="org.elm.lang.core.completion.ElmCompletionContributor"/>
         <breadcrumbsInfoProvider implementation="org.elm.ide.structure.ElmBreadcrumbsProvider"/>
         <lang.findUsagesProvider language="Elm" implementationClass="org.elm.ide.search.ElmFindUsagesProvider"/>
+        <usageTypeProvider implementation="org.elm.ide.search.ElmUsageTypeProvider"/>
         <lang.namesValidator language="Elm" implementationClass="org.elm.ide.refactoring.ElmNamesValidator"/>
         <lang.parserDefinition language="Elm" implementationClass="org.elm.lang.core.parser.ElmParserDefinition"/>
         <lang.psiStructureViewFactory language="Elm"
