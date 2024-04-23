@@ -91,7 +91,7 @@ main foo =
     @Test
     fun `test mismatched tuple value type from missing field`() = checkByText("""
 main : ((), (), ())
-main = <error descr="Type mismatch.Required: ((), (), ())Found: ((), ())">((), ())</error>
+main = <error descr="Type mismatch.Required: ( (), (), () )Found: ( (), () )">((), ())</error>
 """)
 
     @Test
@@ -103,7 +103,7 @@ main = (<error descr="Type mismatch.Required: ()Found: Float">1.0</error>, ())
     @Test
     fun `test mismatched tuple value type from extra field`() = checkByText("""
 main : ((), ())
-main = <error descr="Type mismatch.Required: ((), ())Found: ((), (), ())">((), (), ())</error>
+main = <error descr="Type mismatch.Required: ( (), () )Found: ( (), (), () )">((), (), ())</error>
 """)
 
     @Test
