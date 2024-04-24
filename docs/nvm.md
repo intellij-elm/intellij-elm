@@ -1,8 +1,9 @@
 # NVM
 
 ## Overview
-Some of the external tools used by this plugin (e.g. [elm-format](https://github.com/avh4/elm-format) and
-[elm-test](https://github.com/elm-explorations/test)) rely on [node](https://nodejs.org). In order for the plugin to
+Some of the external tools used by this plugin (e.g. [elm-format](https://github.com/avh4/elm-format),
+[elm-test](https://github.com/elm-explorations/test) and [elm-review](https://github.com/jfmengels/elm-review/tree/2.13.2))
+rely on [node](https://nodejs.org). In order for the plugin to
 fully function, it needs to be able to execute `node` from within the IntelliJ environment. In most cases it will be able
 to do this because when `node` is installed, it is put on the system path. However, if `node` is installed using `nvm`
 then, depending on how IntelliJ is launched, this might not be the case.
