@@ -16,7 +16,7 @@ Should work on most, if not all, IntelliJ Platform IDEs: IDEA (Community and Ult
 
 ## Install
 
-You need to have some CLI tools --`elm` (the Elm compiler), [`elm-test`](docs/elm-test.md), [`elm-format`](docs/features/elm-format.md),
+You may want to have some CLI tools --`elm` (the Elm compiler), [`elm-test`](docs/elm-test.md), [`elm-format`](docs/features/elm-format.md),
 [`elm-review`](docs/features/elm-review.md) and [`lamdera`](docs/features/lamdera.md)-- installed for certain features of this plugin to work.
 
 Install the first three with:
