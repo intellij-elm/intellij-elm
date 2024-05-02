@@ -191,6 +191,7 @@ private FunctionDeclarationPattern ::=
         | RecordPattern
         | LiteralExprGroup // Always a partial pattern, but not a syntax error
         | ParenthesizedPattern
+        | SingularUnionPattern
 
 // TYPE DECLARATIONS AND REFERENCES
 
@@ -465,7 +466,7 @@ LowerPattern ::= LOWER_CASE_IDENTIFIER
 AnythingPattern ::= UNDERSCORE
 
 RecordPattern ::=
-    LEFT_BRACE <<non_empty_list LowerPattern>> RIGHT_BRACE
+    LEFT_BRACE [<<non_empty_list LowerPattern>>] RIGHT_BRACE
 
 ListPattern ::=
     LEFT_SQUARE_BRACKET [<<non_empty_list Pattern>>] RIGHT_SQUARE_BRACKET
@@ -491,6 +492,9 @@ TuplePattern ::=
 
 private ParenthesizedPattern ::=
     LEFT_PARENTHESIS Pattern RIGHT_PARENTHESIS
+
+private SingularUnionPattern ::=
+    Pattern
 
 
 

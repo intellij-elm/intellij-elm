@@ -76,7 +76,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Invalid pattern.Required type: ((), ())Pattern type: (a, b, c)">(x, y, z)</error> = ((), ())
+        <error descr="Invalid pattern.Required type: ( (), () )Pattern type: ( a, b, c )">(x, y, z)</error> = ((), ())
     in
         y
 """)
@@ -86,7 +86,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Invalid pattern.Required type: ((), (), ())Pattern type: (a, b)">(x, y)</error> = ((), (), ())
+        <error descr="Invalid pattern.Required type: ( (), (), () )Pattern type: ( a, b )">(x, y)</error> = ((), (), ())
     in
         y
 """)
@@ -179,7 +179,7 @@ main =
 main : ()
 main =
     let
-        <error descr="Invalid pattern.Required type: ()Pattern type: (a, b)">(x, y)</error> = ()
+        <error descr="Invalid pattern.Required type: ()Pattern type: ( a, b )">(x, y)</error> = ()
     in
         y
 """)

@@ -21,7 +21,7 @@ main =
 main : ()
 main =
     let
-        foo<EOLError descr="COLON, EQ, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE or UNDERSCORE expected"></EOLError>
+        foo<EOLError descr="<pattern>, COLON, EQ, LEFT_BRACE, LEFT_PARENTHESIS, LEFT_SQUARE_BRACKET, LOWER_CASE_IDENTIFIER, NUMBER_LITERAL, OPEN_CHAR, OPEN_QUOTE or UNDERSCORE expected"></EOLError>
     in
     <error descr="Type mismatch.Required: ()Found: Float">1.0</error>
 """)

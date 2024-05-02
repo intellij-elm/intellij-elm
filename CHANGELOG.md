@@ -5,6 +5,18 @@
 ## [Unreleased]
 *   Some unmerged PRs 
 
+## [5.0.1] - 2022-04-23
+*   Fix parse error when pattern matching in function-argument (issue #742)
+*   Make plugin dynamic (Component -> Listener): (un)install the plugin without restarting the IDE
+*   Remove `projectService` entries from `plugin.xml`
+*   Don't require Lamdera during project setup (@JEphron)
+*   Support parsing empty records in patterns (@jfmengels)
+*   Add spacing around parens in tuples (@jfmengels)
+*   Toolchain config allows bare `elm` executable if it is on the `$PATH` (@adamnfish)
+*   Restricts the InlineDebugIntention from showing in several cases (@KasMA1990)
+*   Add usage type provider (@ktosiek)
+*   Documentation improvements
+
 ## [5.0.0] - 2024-04-23
 *   Moved the plugin into a [GitHub organization of its own](https://github.com/intellij-elm/intellij-elm)
 *   Got the test suite in a "mostly working" state

@@ -13,6 +13,7 @@ Enabling this feature has no significant performance implications beyond the wor
 2. Select **Languages & Frameworks** from the left-side pane
 3. Select **Elm**
 4. Fill out the section titled **elm-test** (use the **Auto Discover** button to search common locations) 
+5. Restart the IDE
 
 
 ## Usage
