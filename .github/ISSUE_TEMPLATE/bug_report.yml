@@ -37,10 +37,17 @@ body:
       required: true
 
   - type: textarea
-    id: gradle
+    id: intellij-about
     attributes:
       label: IntelliJ IDE details (should contain the Elm plugin version and OS details)
       description: Go to `Help` -> `About` then press `Copy and Close` and paste it here
     validations:
       required: true
 
+  - type: textarea
+    id: intellij-elm-config
+    attributes:
+      label: Content of the Elm configuration in IntelliJ IDE settings
+      description: Go to `Settings` -> `Languages & Frameworks` -> `Elm` make a screenshot of the Elm configuration details and paste it here
+    validations:
+      required: false
