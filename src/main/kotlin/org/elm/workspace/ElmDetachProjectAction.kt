@@ -1,5 +1,6 @@
 package org.elm.workspace
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DataKey
@@ -18,6 +19,9 @@ class ElmDetachProjectAction : AnAction() {
         val elmProject = e.associatedElmProject ?: return
         project.elmWorkspace.detachElmProject(elmProject.manifestPath)
     }
+
+    // Possibly EDT is a better choice here than BGT; though BGT seemed to be the safest bet.
+    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
 
 
     private val AnActionEvent.associatedElmProject: ElmProject?
