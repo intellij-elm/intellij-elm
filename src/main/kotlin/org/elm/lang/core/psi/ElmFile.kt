@@ -20,18 +20,16 @@ import org.elm.openapiext.toPsiFile
 import org.elm.workspace.ElmProject
 import org.elm.workspace.elmWorkspace
 
+
 private val IS_IN_TESTS_DIRECTORY_KEY: Key<CachedValue<Boolean>> = Key.create("IS_IN_TESTS_DIRECTORY_KEY")
 
 class ElmFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, ElmLanguage), ClientLocation {
 
-    override fun getFileType() =
-            ElmFileType
+    override fun getFileType() = ElmFileType
 
-    override fun toString() =
-            "Elm File"
+    override fun toString() = "Elm File"
 
-    override fun getStub(): ElmFileStub? =
-            super.getStub() as ElmFileStub?
+    override fun getStub(): ElmFileStub? = super.getStub() as ElmFileStub?
 
     fun isCore(): Boolean = elmProject?.isCore() ?: false
 

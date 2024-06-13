@@ -22,7 +22,7 @@ class TypeReplacement(
          *
          * @param varsToRemainRigid If given, all [TyVar]s will be replaced with flexible copies,
          *  except for vars that occur in this collection, which will be left unchanged.
-         * @param keepRecordsMutable If false, [MutableTyRecord]s will be replaces with [TyRecord]s
+         * @param keepRecordsMutable If false, [MutableTyRecord]s will be replaced with [TyRecord]s
          */
         fun replace(
                 ty: Ty,
