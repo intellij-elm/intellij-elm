@@ -26,6 +26,16 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
     EQ("Punctuation//Equals", Default.OPERATION_SIGN),
     PIPE("Punctuation//Pipe", Default.OPERATION_SIGN),
 
+    FUNCTION_ARGUMENT("Function Argument", Default.PARAMETER),
+    LOCAL_FUNCTION("Local Function//Declaration", Default.INSTANCE_METHOD),
+    LOCAL_FUNCTION_ARGUMENT("Local Function//Argument", Default.LOCAL_VARIABLE),
+    PATTERN_ARGUMENT("Pattern Argument", Default.LOCAL_VARIABLE),
+    INLINE_FUNCTION_ARGUMENT("Inline Function Argument", Default.LOCAL_VARIABLE),
+
+    EXTERNAL_MODULE("Module//Qualifier", Default.CLASS_REFERENCE),
+    EXTERNAL_FUNCTION_CALL("Module//Function Call", Default.STATIC_METHOD),
+    PORT("Port", Default.CLASS_REFERENCE),
+
     /**
      * The name of a definition.
      *
@@ -43,7 +53,8 @@ enum class ElmColor(humanName: String, default: TextAttributesKey) {
      *
      * e.g. 'String' and 'Cmd msg' in 'foo : String -> Cmd msg'
      */
-    TYPE_EXPR("Type", Default.CLASS_REFERENCE),
+    TYPE_EXPR("Type//Reference", Default.CLASS_REFERENCE),
+    TYPE_DECLARATION("Type//Declaration", Default.CLASS_REFERENCE),
 
     RECORD_FIELD("Records//Field", Default.INSTANCE_FIELD),
     RECORD_FIELD_ACCESSOR("Records//Field Accessor", Default.STATIC_FIELD);
