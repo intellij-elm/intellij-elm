@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 fun properties(key: String) = project.findProperty(key).toString()
 
@@ -8,10 +9,10 @@ plugins {
     // Java support
     id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.9.23"
+    id("org.jetbrains.kotlin.jvm") version "1.9.25"
     // Gradle IntelliJ Plugin
-    id("org.jetbrains.intellij") version "1.13.3" // Does not work with Gradle 8.6 (1.14+ requires Gradle 7.6+)
-    // GrammarKit Plugin (versions > 2021.2.2 require JDK17)
+    id("org.jetbrains.intellij.platform") version "2.1.0"
+    // GrammarKit Plugin
     id("org.jetbrains.grammarkit") version "2022.3.2.2"
     // Gradle Changelog Plugin
     id("org.jetbrains.changelog") version "1.3.1"
@@ -25,22 +26,32 @@ version = properties("pluginVersion")
 // Configure project's dependencies
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity(properties("platformVersion"))
+
+        plugins(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+
+        instrumentationTools()
+        pluginVerifier()
+        testFramework(TestFrameworkType.Platform)
+    }
+
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.23")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.25")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-intellij {
-    pluginName.set(properties("pluginName"))
-    version.set(properties("platformVersion"))
-    type.set(properties("platformType"))
-
-    // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
-    plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+intellijPlatform {
+    pluginConfiguration {
+        name = properties("pluginName")
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -128,7 +139,7 @@ tasks {
     }
 
     patchPluginXml {
-        version.set(properties("pluginVersion"))
+        version = properties("pluginVersion")
 
         // This prevents the patching `plugin.xml`. as set these manually as `patchPluginXml` can mess it up.
         // See: https://intellij-support.jetbrains.com/hc/en-us/community/posts/360010590059-Why-pluginUntilBuild-is-mandatory
@@ -160,15 +171,6 @@ tasks {
         })
     }
 
-    // Configure UI tests plugin
-    // Read more: https://github.com/JetBrains/intellij-ui-test-robot
-    runIdeForUiTests {
-        systemProperty("robot-server.port", "8082")
-        systemProperty("ide.mac.message.dialogs.as.sheets", "false")
-        systemProperty("jb.privacy.policy.text", "<!--999.999-->")
-        systemProperty("jb.consents.confirmation.enabled", "false")
-    }
-
     signPlugin {
         certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
         privateKey.set(System.getenv("PRIVATE_KEY"))
@@ -182,5 +184,28 @@ tasks {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
+    }
+}
+
+intellijPlatformTesting {
+    // Configure UI tests plugin
+    // Read more: https://github.com/JetBrains/intellij-ui-test-robot
+    runIde {
+        register("runIdeForUiTests") {
+            task {
+                jvmArgumentProviders += CommandLineArgumentProvider {
+                    listOf(
+                        "-Drobot-server.port=8082",
+                        "-Dide.mac.message.dialogs.as.sheets=false",
+                        "-Djb.privacy.policy.text=<!--999.999-->",
+                        "-Djb.consents.confirmation.enabled=false",
+                    )
+                }
+            }
+
+            plugins {
+                robotServerPlugin()
+            }
+        }
     }
 }
